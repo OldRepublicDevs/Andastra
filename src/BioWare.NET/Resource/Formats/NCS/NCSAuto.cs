@@ -12,6 +12,7 @@ using BioWare.NET.Resource.Formats.NCS.Decomp;
 using BioWare.NET.Resource.Formats.NCS.Decomp.Utils;
 using BioWare.NET.Resource.Formats.NCS.Optimizers;
 using JetBrains.Annotations;
+using AST = BioWare.NET.Resource.Formats.NCS.Compiler.NSS.AST;
 
 namespace BioWare.NET.Resource.Formats.NCS
 {
@@ -212,7 +213,7 @@ namespace BioWare.NET.Resource.Formats.NCS
 
             // Matching Python: nss_parser = NssParser(...)
             var parser = new NssParser(functions, constants, library, lookupArg);
-            CodeRoot block = parser.Parse(source);
+            AST.CodeRoot block = parser.Parse(source);
 
             // Matching Python: ncs = NCS()
             var ncs = new NCS();

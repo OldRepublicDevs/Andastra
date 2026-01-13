@@ -1,13 +1,13 @@
 using System;
 using System.Threading.Tasks;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Engines.Common;
+using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Game.Engines.Odyssey
+namespace Andastra.Game.Games.Odyssey
 {
     /// <summary>
     /// Odyssey Engine game session implementation for KOTOR 1/2.

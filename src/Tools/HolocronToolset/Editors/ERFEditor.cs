@@ -12,6 +12,7 @@ using Avalonia.Markup.Xaml;
 using BioWare.NET;
 using BioWare.NET.Resource.Formats.ERF;
 using BioWare.NET.Resource.Formats.RIM;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using HolocronToolset.Common;
 using HolocronToolset.Data;

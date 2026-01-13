@@ -1,20 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Andastra.Game.Stride.Converters;
+using Andastra.Game.Stride.Graphics;
+using Andastra.Runtime.Graphics;
 using Avalonia.Controls;
 using Avalonia.Media;
-using Avalonia;
-using HolocronToolset.Data;
-using UTC = BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTC;
+using BioWare.NET.Resource.Formats.GFF.Generics.UTC;
+using BioWare.NET.Resource.Formats.MDL;
 using BioWare.NET.Resource.Formats.MDLData;
-using BioWare.NET.Resource;
-using Andastra.Runtime.Stride.Converters;
-using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Stride.Graphics;
-using StrideGraphics = Stride.Graphics;
-using Stride.Core.Mathematics;
-using JetBrains.Annotations;
 using BioWare.NET.Resource.Formats.TPC;
+using HolocronToolset.Data;
+using JetBrains.Annotations;
+using StrideGraphics = Stride.Graphics;
 
 namespace HolocronToolset.Widgets
 {
@@ -35,14 +33,11 @@ namespace HolocronToolset.Widgets
         // Original: @property def installation(self) -> Installation | None:
         public HTInstallation Installation
         {
-            get { return _installation; }
-            set
-            {
-                _installation = value;
-                // If scene already exists, update its installation too
-                // This is critical because initializeGL() may have created the scene before installation was set
-                // Matching PyKotor implementation: if self._scene is not None and value is not None and self._scene.installation is None:
-            }
+            get => _installation;
+            // If scene already exists, update its installation too
+            // This is critical because initializeGL() may have created the scene before installation was set
+            // Matching PyKotor implementation: if self._scene is not None and value is not None and self._scene.installation is None:
+            set => _installation = value;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/renderer/model.py:196-200
@@ -62,7 +57,7 @@ namespace HolocronToolset.Widgets
                 {
                     // Parse MDL starting after the 12-byte header (data[12:] in Python)
                     // This matches the Python implementation behavior
-                    _parsedModel = BioWare.NET.Resource.Formats.MDL.MDLAuto.ReadMdl(
+                    _parsedModel = MDLAuto.ReadMdl(
                         _mdlData, 12, 0, _mdxData, 0, 0);
 
                     // Convert to Stride rendering structures
@@ -175,7 +170,7 @@ namespace HolocronToolset.Widgets
                 }
 
                 // Create StrideBasicEffect with or without texture
-                IBasicEffect effect = null;
+                IBasicEffect effect;
                 if (_graphicsDevice is StrideGraphics.GraphicsDevice strideDevice)
                 {
                     effect = new StrideBasicEffect(strideDevice);
@@ -186,12 +181,12 @@ namespace HolocronToolset.Widgets
                         try
                         {
                             // Get command list for texture operations
-                            StrideGraphics.CommandList commandList = null;
+                            StrideGraphics.CommandList commandList;
                             if (_graphicsDevice is StrideGraphicsDevice strideGraphicsDevice)
                             {
                                 commandList = strideGraphicsDevice.ImmediateContext;
                             }
-                            else if (strideDevice != null)
+                            else
                             {
                                 commandList = strideDevice.ImmediateContext();
                             }
@@ -303,9 +298,9 @@ namespace HolocronToolset.Widgets
         private void UpdateViewMatrix()
         {
             _viewMatrix = Matrix4x4.CreateLookAt(
-                new System.Numerics.Vector3(_cameraPosition.X, _cameraPosition.Y, _cameraPosition.Z),
-                new System.Numerics.Vector3(_cameraTarget.X, _cameraTarget.Y, _cameraTarget.Z),
-                new System.Numerics.Vector3(_cameraUp.X, _cameraUp.Y, _cameraUp.Z)
+                new Vector3(_cameraPosition.X, _cameraPosition.Y, _cameraPosition.Z),
+                new Vector3(_cameraTarget.X, _cameraTarget.Y, _cameraTarget.Z),
+                new Vector3(_cameraUp.X, _cameraUp.Y, _cameraUp.Z)
             );
         }
 

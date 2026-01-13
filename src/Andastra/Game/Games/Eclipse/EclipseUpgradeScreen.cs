@@ -5,7 +5,8 @@ using BioWare.NET;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.GFF.Generics;
 using BioWare.NET.Resource.Formats.GFF.Generics.GUI;
@@ -2394,10 +2395,10 @@ namespace Andastra.Game.Games.Eclipse
                     ResourceResult propertyDefResult = _installation.Resource("itempropdef", ResourceType.TwoDA, null, null);
                     if (propertyDefResult != null && propertyDefResult.Data != null)
                     {
-                        Parsing.Formats.TwoDA.TwoDA propertyDefTable = Parsing.Formats.TwoDA.TwoDA.FromBytes(propertyDefResult.Data);
+                        BioWare.NET.Resource.Formats.TwoDA.TwoDA propertyDefTable = BioWare.NET.Resource.Formats.TwoDA.TwoDA.FromBytes(propertyDefResult.Data);
                         if (propertyDefTable != null && propertyType >= 0 && propertyType < propertyDefTable.GetHeight())
                         {
-                            Parsing.Formats.TwoDA.TwoDARow propertyDefRow = propertyDefTable.GetRow(propertyType);
+                            BioWare.NET.Resource.Formats.TwoDA.TwoDARow propertyDefRow = propertyDefTable.GetRow(propertyType);
                             if (propertyDefRow != null)
                             {
                                 // Check for ability-scaling indicators in property definition

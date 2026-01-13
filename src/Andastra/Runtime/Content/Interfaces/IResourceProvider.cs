@@ -1,4 +1,5 @@
 using System.IO;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 
 namespace Andastra.Runtime.Content.Interfaces

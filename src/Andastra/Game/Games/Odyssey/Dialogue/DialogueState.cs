@@ -4,7 +4,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Game.Games.Common.Dialogue;
 using JetBrains.Annotations;
 
-namespace Andastra.Game.Engines.Odyssey.Dialogue
+namespace Andastra.Game.Games.Odyssey.Dialogue
 {
     /// <summary>
     /// Tracks the current state of a dialogue conversation in Odyssey engine (DLG-based).

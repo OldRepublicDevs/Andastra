@@ -9,6 +9,7 @@ using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.SSF;
 using BioWare.NET.Resource.Formats.TwoDA;
 using BioWare.NET.Common.Logger;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using JetBrains.Annotations;
 
@@ -713,7 +714,7 @@ namespace BioWare.NET.Tools
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:758-903
     // Original: def find_all_strref_references(...) -> tuple[dict[int, list[StrRefSearchResult]], StrRefReferenceCache]:
     /// <summary>
-    /// Find all references to multiple StrRefs in an BioWare.NET.Extract.Installation using batch processing.
+    /// Find all references to multiple StrRefs in an Installation using batch processing.
     /// This function scans resources once and finds references to all requested StrRefs,
     /// providing significant performance improvement over calling FindStrRefReferences multiple times.
     /// </summary>
@@ -722,7 +723,7 @@ namespace BioWare.NET.Tools
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:758-903
         // Original: def find_all_strref_references(...):
         public static (Dictionary<int, List<StrRefSearchResult>> results, StrRefReferenceCache cache) FindAllStrRefReferences(
-            BioWare.NET.Extract.Installation installation,
+            Installation installation,
             List<int> strrefs,
             StrRefReferenceCache cache = null,
             Action<string> logger = null)
@@ -735,7 +736,7 @@ namespace BioWare.NET.Tools
             // Build cache if not provided
             if (cache == null)
             {
-                logger?.Invoke($"Building StrRef cache for {strrefs.Count} StrRefs for BioWare.NET.Extract.Installation {installation.Path}...");
+                logger?.Invoke($"Building StrRef cache for {strrefs.Count} StrRefs for Installation {installation.Path}...");
                 cache = new StrRefReferenceCache(installation.Game);
 
                 // Scan all resources to build the cache
@@ -773,7 +774,7 @@ namespace BioWare.NET.Tools
                         // Log progress periodically
                         if (logger != null && resourceCount - lastLoggedCount >= logInterval)
                         {
-                            logger($"  Scanning for StrRefs... {resourceCount} resources processed for BioWare.NET.Extract.Installation {installation.Path}");
+                            logger($"  Scanning for StrRefs... {resourceCount} resources processed for Installation {installation.Path}");
                             lastLoggedCount = resourceCount;
                         }
                     }
@@ -783,13 +784,13 @@ namespace BioWare.NET.Tools
                     }
                 }
 
-                logger?.Invoke($"Cache built: scanned {resourceCount} resources (skipped {skippedCount} files) for BioWare.NET.Extract.Installation {installation.Path}");
+                logger?.Invoke($"Cache built: scanned {resourceCount} resources (skipped {skippedCount} files) for Installation {installation.Path}");
             }
 
             // Convert cache entries to StrRefSearchResult format
             var results = new Dictionary<int, List<StrRefSearchResult>>();
 
-            // Build a map of ResourceIdentifier -> FileResource by iterating BioWare.NET.Extract.Installation ONCE
+            // Build a map of ResourceIdentifier -> FileResource by iterating Installation ONCE
             var identifierToResource = new Dictionary<ResourceIdentifier, FileResource>();
             var allResourcesForMapping = GetAllResources(installation);
             foreach (var res in allResourcesForMapping)
@@ -889,7 +890,7 @@ namespace BioWare.NET.Tools
         /// and returns complete location information for each reference.
         /// </summary>
         public static List<StrRefSearchResult> FindStrRefReferences(
-            BioWare.NET.Extract.Installation installation,
+            Installation installation,
             int strref,
             StrRefReferenceCache cache = null,
             Action<string> logger = null)
@@ -1022,7 +1023,7 @@ namespace BioWare.NET.Tools
         }
 
         // Helper method to get all resources from an Installation
-        private static List<FileResource> GetAllResources(BioWare.NET.Extract.Installation installation)
+        private static List<FileResource> GetAllResources(Installation installation)
         {
             var allResources = new List<FileResource>();
 
@@ -1058,7 +1059,7 @@ namespace BioWare.NET.Tools
             // Get module resources
             // TODO: HACK - Using fully qualified name to avoid circular dependency
             // Installation.GetModulesPath is a static method, so we can call it without a project reference
-            string modulesPath = BioWare.NET.Extract.Installation.GetModulesPath(installation.Path);
+            string modulesPath = Installation.GetModulesPath(installation.Path);
             if (Directory.Exists(modulesPath))
             {
                 var moduleFiles = Directory.GetFiles(modulesPath, "*.rim")
@@ -1084,7 +1085,7 @@ namespace BioWare.NET.Tools
         }
 
         // Helper to scan 2DA file for StrRef
-        private static StrRefSearchResult Scan2DAForStrRef(FileResource resource, BioWare.NET.Extract.Installation installation, int strref, Action<string> logger)
+        private static StrRefSearchResult Scan2DAForStrRef(FileResource resource, Installation installation, int strref, Action<string> logger)
         {
             try
             {
@@ -1127,7 +1128,7 @@ namespace BioWare.NET.Tools
         }
 
         // Helper to scan SSF file for StrRef
-        private static StrRefSearchResult ScanSSFForStrRef(FileResource resource, BioWare.NET.Extract.Installation installation, int strref, Action<string> logger)
+        private static StrRefSearchResult ScanSSFForStrRef(FileResource resource, Installation installation, int strref, Action<string> logger)
         {
             try
             {
@@ -1153,7 +1154,7 @@ namespace BioWare.NET.Tools
         }
 
         // Helper to scan GFF file for StrRef
-        private static StrRefSearchResult ScanGFFForStrRef(FileResource resource, BioWare.NET.Extract.Installation installation, int strref, Action<string> logger)
+        private static StrRefSearchResult ScanGFFForStrRef(FileResource resource, Installation installation, int strref, Action<string> logger)
         {
             try
             {

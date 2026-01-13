@@ -8,7 +8,8 @@ using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.LYT;
 using BioWare.NET.Resource.Formats.VIS;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Enums;
@@ -18,7 +19,7 @@ using JetBrains.Annotations;
 using LYT = BioWare.NET.Resource.Formats.LYT.LYT;
 using Vector3 = System.Numerics.Vector3;
 
-namespace Andastra.Game.Engines.Odyssey.Loading
+namespace Andastra.Game.Games.Odyssey.Loading
 {
     /// <summary>
     /// Loads KotOR modules from BioWare.NET data structures into Odyssey runtime format.
@@ -813,7 +814,7 @@ namespace Andastra.Game.Engines.Odyssey.Loading
         /// This avoids creating a new Module object every time resources are accessed.
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module objects are cached and reused for resource lookups.
         /// </summary>
-        private BioWare.NET.Extract.Installation.Module _cachedParsingModule;
+        private BioWare.NET.Common.Module _cachedParsingModule;
 
         /// <summary>
         /// Gets the currently loaded module.
@@ -830,7 +831,7 @@ namespace Andastra.Game.Engines.Odyssey.Loading
         /// Returns the cached Module object to avoid recreating it on every access.
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module objects are cached and reused for resource lookups.
         /// </summary>
-        public BioWare.NET.Extract.Installation.Module GetCurrentModule()
+        public BioWare.NET.Common.Module GetCurrentModule()
         {
             return _cachedParsingModule;
         }

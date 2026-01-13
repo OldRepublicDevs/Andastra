@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Engines.Odyssey.Systems;
+using Andastra.Game.Games.Odyssey.Systems;
 using Andastra.Game.Games.Common.Components;
 
-namespace Andastra.Game.Engines.Odyssey.Components
+namespace Andastra.Game.Games.Odyssey.Components
 {
     /// <summary>
     /// Odyssey-specific implementation of perception component for KOTOR (K1 and K2).

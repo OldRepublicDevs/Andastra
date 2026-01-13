@@ -4,15 +4,16 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
-using Andastra.Runtime.Engines.Odyssey.Profiles;
+using Andastra.Game.Games.Odyssey.Profiles;
 using AppearanceData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.AppearanceData;
 using BaseItemData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.BaseItemData;
 using FeatData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.FeatData;
 using SpellData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.SpellData;
 
-namespace Andastra.Game.Engines.Odyssey.Data
+namespace Andastra.Game.Games.Odyssey.Data
 {
     /// <summary>
     /// Manages loading and caching of 2DA tables for game data lookup.

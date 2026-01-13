@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using BioWare.NET.Common;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using JetBrains.Annotations;
 

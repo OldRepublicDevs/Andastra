@@ -187,7 +187,7 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Parser
         private Node.Node Pop()
         {
             State s = (State)this.stack.Previous();
-            return (Node)s.node;
+            return (Node.Node)s.node;
         }
 
         private int Index(Switchable token)
@@ -1090,7 +1090,7 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Parser
 
         protected virtual Node.Node New25()
         {
-            AST.PActionCommand node1 = (AST.PActionCommand)this.Pop();
+            PActionCommand node1 = (PActionCommand)this.Pop();
             AActionCmd node2 = new AActionCmd(node1);
             return node2;
         }

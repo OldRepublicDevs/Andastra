@@ -1,15 +1,14 @@
 using System;
 using BioWare.NET.Common;
 using Andastra.Runtime.Core;
-using Andastra.Runtime.Game.Core;
+using Andastra.Game.Core;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
-using Core = Andastra.Runtime.Game.Core;
 
-namespace Andastra.Game.Game
+namespace Andastra.Game
 {
     /// <summary>
     /// Entry point for the Odyssey Engine game launcher.

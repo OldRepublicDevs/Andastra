@@ -11,6 +11,7 @@ using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.TwoDA;
 using BioWare.NET.Resource.Formats.GFF.Generics;
 using BioWare.NET.Resource.Formats.GFF.Generics.ARE;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;

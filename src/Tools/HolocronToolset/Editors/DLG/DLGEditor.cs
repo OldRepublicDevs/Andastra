@@ -15,6 +15,7 @@ using BioWare.NET;
 using BioWare.NET.Common;
 using BioWare.NET.Installation;
 using BioWare.NET.Common.Logger;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.GFF.Generics.CNV;
 using BioWare.NET.Resource.Formats.GFF.Generics.DLG;

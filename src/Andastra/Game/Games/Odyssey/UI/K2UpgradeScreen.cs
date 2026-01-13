@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using BioWare.NET;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
 using BioWare.NET.Resource.Formats.GFF.Generics;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using UTI = BioWare.NET.Resource.Formats.GFF.Generics.UTI.UTI;
 
-namespace Andastra.Game.Engines.Odyssey.UI
+namespace Andastra.Game.Games.Odyssey.UI
 {
     /// <summary>
     /// Upgrade screen implementation for KOTOR 2: TSL (swkotor2.exe).

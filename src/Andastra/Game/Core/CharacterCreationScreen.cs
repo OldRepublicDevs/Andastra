@@ -5,15 +5,15 @@ using System.Numerics;
 using BioWare.NET;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.TPC;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Engines.Odyssey.Components;
-using Andastra.Runtime.Engines.Odyssey.Data;
-using Andastra.Runtime.Engines.Odyssey.Systems;
+using Andastra.Game.Games.Odyssey.Components;
+using Andastra.Game.Games.Odyssey.Data;
+using Andastra.Game.Games.Odyssey.Systems;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Odyssey.Components;
 using Andastra.Game.Games.Odyssey.Systems;
@@ -23,10 +23,10 @@ using JetBrains.Annotations;
 using GraphicsColor = Andastra.Runtime.Graphics.Color;
 using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
 using ParsingColor = BioWare.NET.Common.Color;
-using ParsingObjectType = BioWare.NET.Common.ParsingObjectType;
+using ParsingObjectType = BioWare.NET.Common.ObjectType;
 using RuntimeObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 
-namespace Andastra.Game.Game.Core
+namespace Andastra.Game.Core
 {
     /// <summary>
     /// Character creation screen for KOTOR 1 and KOTOR 2.
@@ -1913,9 +1913,9 @@ namespace Andastra.Game.Game.Core
                     portraitResRef,
                     new[]
                     {
-                        BioWare.NET.Extract.Installation.SearchLocation.OVERRIDE,
-                        BioWare.NET.Extract.Installation.SearchLocation.CUSTOM_FOLDERS,
-                        BioWare.NET.Extract.Installation.SearchLocation.CHITIN
+                        BioWare.NET.Extract.SearchLocation.OVERRIDE,
+                        BioWare.NET.Extract.SearchLocation.CUSTOM_FOLDERS,
+                        BioWare.NET.Extract.SearchLocation.CHITIN
                     }
                 );
 

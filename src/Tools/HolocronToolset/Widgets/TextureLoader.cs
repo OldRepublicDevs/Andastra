@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using BioWare.NET.Installation;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.TPC;
 using TGAImage = BioWare.NET.Resource.Formats.TPC.TGAImage;

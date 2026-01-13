@@ -1,6 +1,6 @@
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Engines.Eclipse.Systems;
+using Andastra.Game.Games.Eclipse.Systems;
 using Andastra.Game.Games.Common.Components;
 
 namespace Andastra.Game.Games.Eclipse.Components

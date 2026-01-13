@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using Andastra.Runtime.Content.Interfaces;
-using Andastra.Runtime.MonoGame.Culling;
-using Andastra.Runtime.MonoGame.Loading;
-using Andastra.Runtime.MonoGame.LOD;
-using Andastra.Runtime.MonoGame.Memory;
+using Andastra.Game.Graphics.MonoGame.Culling;
+using Andastra.Game.Graphics.MonoGame.Loading;
+using Andastra.Game.Graphics.MonoGame.LOD;
+using Andastra.Game.Graphics.MonoGame.Memory;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 

@@ -46,8 +46,8 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics.DLG.IO
                 try
                 {
                     // Color.FromHexString handles # prefix and various hex formats
-                    Color parsedColor = Color.FromHexString(colorStr);
-                    return new Color(parsedColor);
+                    BioWare.NET.Common.Color parsedColor = BioWare.NET.Common.Color.FromHexString(colorStr);
+                    return parsedColor;
                 }
                 catch (ArgumentException)
                 {
@@ -233,7 +233,7 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics.DLG.IO
                         {
                             // Fallback to default color if parsing fails
                             Color fallbackColor = Color.FromBgrInteger(0);
-                            twineMetadata.TagColors[prop.Name] = new Color(fallbackColor);
+                            twineMetadata.TagColors[prop.Name] = fallbackColor;
                         }
                     }
                 }
@@ -465,7 +465,7 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics.DLG.IO
                     {
                         // Fallback to default color if parsing fails
                         Color fallbackColor = Color.FromBgrInteger(0);
-                        twineMetadata.TagColors[name] = new Color(fallbackColor);
+                        twineMetadata.TagColors[name] = fallbackColor;
                     }
                 }
             }

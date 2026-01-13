@@ -4,7 +4,7 @@ using System.Linq;
 using Andastra.Runtime.Core.Save;
 using Andastra.Runtime.Graphics;
 
-namespace Andastra.Game.Game.GUI
+namespace Andastra.Game.GUI
 {
     /// <summary>
     /// Handles save/load menu rendering and input.

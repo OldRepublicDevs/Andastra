@@ -7,7 +7,8 @@ using BioWare.NET;
 using BioWare.NET.Common.Script;
 using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.GFF.Generics;
 using BioWare.NET.Resource.Formats.GFF.Generics.UTI;
@@ -20,20 +21,20 @@ using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Module;
-using Andastra.Runtime.Engines.Odyssey.Combat;
-using Andastra.Runtime.Engines.Odyssey.Components;
-using Andastra.Runtime.Engines.Odyssey.Dialogue;
-using Andastra.Runtime.Engines.Odyssey.Game;
-using Andastra.Runtime.Engines.Odyssey.Loading;
-using Andastra.Runtime.Engines.Odyssey.Systems;
-using Andastra.Runtime.Scripting.EngineApi;
-using Andastra.Runtime.Scripting.Interfaces;
-using Andastra.Runtime.Scripting.Types;
-using Andastra.Runtime.Scripting.VM;
+using Andastra.Game.Games.Odyssey.Combat;
+using Andastra.Game.Games.Odyssey.Components;
+using Andastra.Game.Games.Odyssey.Dialogue;
+using Andastra.Game.Games.Odyssey.Game;
+using Andastra.Game.Games.Odyssey.Loading;
+using Andastra.Game.Games.Odyssey.Systems;
+using Andastra.Game.Scripting.EngineApi;
+using Andastra.Game.Scripting.Interfaces;
+using Andastra.Game.Scripting.Types;
+using Andastra.Game.Scripting.VM;
 using CoreCombat = Andastra.Runtime.Core.Combat;
-using VMExecutionContext = Andastra.Runtime.Scripting.VM.ExecutionContext;
+using VMExecutionContext = Andastra.Game.Scripting.VM.ExecutionContext;
 
-namespace Andastra.Game.Engines.Odyssey.EngineApi
+namespace Andastra.Game.Games.Odyssey.EngineApi
 {
     /// <summary>
     /// KOTOR 1 engine API implementation.
@@ -2286,9 +2287,9 @@ namespace Andastra.Game.Engines.Odyssey.EngineApi
                         }
                     }
                     // Fallback to BioWare.NET Installation provider
-                    else if (ctx.ResourceProvider is BioWare.NET.Extract.Installation.Installation installation)
+                    else if (ctx.ResourceProvider is BioWare.NET.Extract.Installation installation)
                     {
-                        BioWare.NET.Extract.Installation.ResourceResult result = installation.Resource(itemTemplate, ResourceType.UTI, null, null);
+                        BioWare.NET.Extract.ResourceResult result = installation.Resource(itemTemplate, ResourceType.UTI, null, null);
                         if (result != null && result.Data != null)
                         {
                             using (var stream = new MemoryStream(result.Data))
@@ -6128,7 +6129,7 @@ namespace Andastra.Game.Engines.Odyssey.EngineApi
             {
                 if (services.ModuleLoader is Andastra.Runtime.Engines.Odyssey.Game.ModuleLoader moduleLoader)
                 {
-                    BioWare.NET.Extract.Installation.Module parsingModule = moduleLoader.GetParsingModule();
+                    BioWare.NET.Common.Module parsingModule = moduleLoader.GetParsingModule();
                     if (parsingModule == null)
                     {
                         return Variable.FromObject(ObjectInvalid);

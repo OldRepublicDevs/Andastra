@@ -11,6 +11,7 @@ using Avalonia.Markup.Xaml;
 using BioWare.NET;
 using System.Numerics;
 using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using HolocronToolset.Common;
 using HolocronToolset.Data;

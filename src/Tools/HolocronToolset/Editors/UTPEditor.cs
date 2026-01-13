@@ -11,6 +11,7 @@ using BioWare.NET.Extract;
 using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.TwoDA;
 using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using DLGType = BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLG;
 using DLGHelper = BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLGHelper;

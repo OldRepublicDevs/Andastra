@@ -1,11 +1,11 @@
 using System;
 using BioWare.NET;
 using BioWare.NET.Common;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Game.Games.Common;
 
-namespace Andastra.Game.Engines.Odyssey.UI
+namespace Andastra.Game.Games.Odyssey.UI
 {
     /// <summary>
     /// UI system implementation for Odyssey engine (KOTOR/TSL).

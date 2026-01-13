@@ -4,6 +4,7 @@ using System.IO;
 using BioWare.NET;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.TPC;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Graphics;

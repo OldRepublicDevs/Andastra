@@ -7,7 +7,7 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Navigation;
 using JetBrains.Annotations;
 
-namespace Andastra.Game.Engines.Odyssey.Input
+namespace Andastra.Game.Games.Odyssey.Input
 {
     /// <summary>
     /// Handles player input and movement using click-to-move with pathfinding.

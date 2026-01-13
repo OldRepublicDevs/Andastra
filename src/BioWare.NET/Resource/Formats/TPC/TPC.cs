@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.TXI;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 
 namespace BioWare.NET.Resource.Formats.TPC

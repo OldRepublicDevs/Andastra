@@ -9,6 +9,7 @@ using System.Linq;
 using BioWare.NET;
 using BioWare.NET.Extract;
 using BioWare.NET.Installation;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.TSLPatcher.Mods;
 using KotorDiff.Diff;

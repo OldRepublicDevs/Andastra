@@ -1,10 +1,10 @@
 using System;
 using System.Numerics;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.MonoGame.Converters;
-using Andastra.Runtime.MonoGame.Rendering;
+using Andastra.Game.Graphics.MonoGame.Converters;
+using Andastra.Game.Graphics.MonoGame.Rendering;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -17,7 +17,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
     public class MonoGameEntityModelRenderer : IEntityModelRenderer
     {
         private readonly GraphicsDevice _graphicsDevice;
-        private readonly Andastra.Runtime.MonoGame.Rendering.EntityModelRenderer _renderer;
+        private readonly Andastra.Game.Graphics.MonoGame.Rendering.EntityModelRenderer _renderer;
 
         public MonoGameEntityModelRenderer(
             [NotNull] GraphicsDevice device,

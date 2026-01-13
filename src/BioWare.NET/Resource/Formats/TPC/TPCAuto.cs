@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 using BioWare.NET.Common;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 
 namespace BioWare.NET.Resource.Formats.TPC

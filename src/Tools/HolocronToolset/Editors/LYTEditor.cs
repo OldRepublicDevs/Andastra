@@ -9,6 +9,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using HolocronToolset.Data;
 using BioWare.NET.Resource.Formats.LYT;

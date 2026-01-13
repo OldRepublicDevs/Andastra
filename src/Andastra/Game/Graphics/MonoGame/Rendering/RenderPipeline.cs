@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Andastra.Runtime.Content.Interfaces;
-using Andastra.Runtime.MonoGame.Interfaces;
-using Andastra.Runtime.MonoGame.Performance;
+using Andastra.Game.Graphics.MonoGame.Interfaces;
+using Andastra.Game.Graphics.MonoGame.Performance;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 

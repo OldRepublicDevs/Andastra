@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using BioWare.NET.Common;
-using InstallationClass = BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
 
 namespace BioWare.NET.TSLPatcher
 {
@@ -68,7 +68,7 @@ namespace BioWare.NET.TSLPatcher
 
             try
             {
-                var installation = new InstallationClass(path);
+                var installation = new Installation(path);
                 // Installation constructor throws if game cannot be determined, so if we get here, it's valid
                 return true;
             }
@@ -123,7 +123,7 @@ namespace BioWare.NET.TSLPatcher
                 foreach (object p in filesAndFoldersAndInstallations)
                 {
                     // Already an Installation object
-                    if (p is InstallationClass installation)
+                    if (p is Installation installation)
                     {
                         hasAnyInstall = true;
                         break;
@@ -134,7 +134,7 @@ namespace BioWare.NET.TSLPatcher
                     {
                         try
                         {
-                            var _ = new InstallationClass(pathStr);
+                            var _ = new Installation(pathStr);
                             hasAnyInstall = true;
                             break;
                         }
@@ -152,7 +152,7 @@ namespace BioWare.NET.TSLPatcher
                     {
                         try
                         {
-                            var _ = new InstallationClass(dirInfo.FullName);
+                            var _ = new Installation(dirInfo.FullName);
                             hasAnyInstall = true;
                             break;
                         }

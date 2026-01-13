@@ -9,6 +9,7 @@ using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using HolocronToolset.Common;
 using HolocronToolset.Data;

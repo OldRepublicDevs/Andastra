@@ -7,6 +7,7 @@ using System.Text;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.ERF;
 using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.GFF.Generics;
 using Andastra.Runtime.Core.Combat;
@@ -14,16 +15,17 @@ using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Save;
-using Andastra.Runtime.Engines.Odyssey.Components;
-using Andastra.Runtime.Engines.Odyssey.Data;
+using Andastra.Game.Games.Odyssey.Components;
+using Andastra.Game.Games.Odyssey.Data;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Odyssey.Systems;
 using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.Types;
 using JetBrains.Annotations;
-using Loading = Andastra.Runtime.Engines.Odyssey.Loading;
+using Loading = Andastra.Game.Games.Odyssey.Loading;
 using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using RuntimeIModule = Andastra.Runtime.Core.Interfaces.IModule;
+using Andastra.Game.Scripting.Types;
 
 namespace Andastra.Game.Games.Odyssey
 {
@@ -2571,18 +2573,15 @@ namespace Andastra.Game.Games.Odyssey
             // Cameras in GIT have position and FOV but don't have standard ObjectType or ObjectId
             // Since cameras are not runtime entities, they're stored in RuntimeArea when loading from GIT
             // Camera states are extracted from RuntimeArea.GetCameraStates() which was populated during area loading
-            Andastra.Runtime.Core.Module.RuntimeArea runtimeArea = area as Andastra.Runtime.Core.Module.RuntimeArea;
-            if (runtimeArea != null)
+            RuntimeArea runtimeArea = area as RuntimeArea;
+            IReadOnlyList<EntityState> cameraStates = runtimeArea?.GetCameraStates();
+            if (cameraStates != null)
             {
-                IReadOnlyList<EntityState> cameraStates = runtimeArea.GetCameraStates();
-                if (cameraStates != null)
+                foreach (EntityState cameraState in cameraStates)
                 {
-                    foreach (EntityState cameraState in cameraStates)
+                    if (cameraState != null)
                     {
-                        if (cameraState != null)
-                        {
-                            areaState.CameraStates.Add(cameraState);
-                        }
+                        areaState.CameraStates.Add(cameraState);
                     }
                 }
             }
@@ -2594,10 +2593,9 @@ namespace Andastra.Game.Games.Odyssey
             // Extract area-level local variables
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area local variables are extracted from area's variable storage
             // Original implementation: FUN_005226d0 @ 0x005226d0 extracts area variables when saving
-            OdysseyArea odysseyArea = area as OdysseyArea;
-            if (odysseyArea != null)
+            if (area is OdysseyArea odysseyArea)
             {
-                Andastra.Runtime.Core.Save.LocalVariableSet areaVars = odysseyArea.GetLocalVariables();
+                LocalVariableSet areaVars = odysseyArea.GetLocalVariables();
                 if (areaVars != null && !areaVars.IsEmpty)
                 {
                     // Copy all variable types from area to areaState
@@ -2664,10 +2662,13 @@ namespace Andastra.Game.Games.Odyssey
                 return null;
             }
 
-            var entityState = new EntityState();
-            entityState.ObjectId = entity.ObjectId;
-            entityState.Tag = entity.Tag ?? "";
-            entityState.ObjectType = entity.ObjectType;
+            var entityState = new EntityState
+            {
+                ObjectId = entity.ObjectId,
+                Tag = entity.Tag ?? "",
+                ObjectType = entity.ObjectType,
+                TemplateResRef = entity.GetData<string>("TemplateResRef")
+            };
 
             // Extract transform component (position and facing)
             var transformComponent = entity.GetComponent<ITransformComponent>();
@@ -2707,9 +2708,9 @@ namespace Andastra.Game.Games.Odyssey
                     try
                     {
                         object isDestroyedValue = isDestroyedProperty.GetValue(placeableComponent);
-                        if (isDestroyedValue is bool)
+                        if (isDestroyedValue is bool v)
                         {
-                            entityState.IsDestroyed = (bool)isDestroyedValue;
+                            entityState.IsDestroyed = v;
                         }
                     }
                     catch
@@ -2726,11 +2727,11 @@ namespace Andastra.Game.Games.Odyssey
                 // Extract local variables using reflection (local variables are stored in private fields)
                 // Based on BaseScriptHooksComponent implementation which stores _localInts, _localFloats, _localStrings
                 Type componentType = scriptHooksComponent.GetType();
-                System.Reflection.FieldInfo localIntsField = componentType.GetField("_localInts", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                System.Reflection.FieldInfo localFloatsField = componentType.GetField("_localFloats", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                System.Reflection.FieldInfo localStringsField = componentType.GetField("_localStrings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                System.Reflection.FieldInfo localObjectsField = componentType.GetField("_localObjects", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                System.Reflection.FieldInfo localLocationsField = componentType.GetField("_localLocations", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                FieldInfo localIntsField = componentType.GetField("_localInts", BindingFlags.NonPublic | BindingFlags.Instance);
+                FieldInfo localFloatsField = componentType.GetField("_localFloats", BindingFlags.NonPublic | BindingFlags.Instance);
+                FieldInfo localStringsField = componentType.GetField("_localStrings", BindingFlags.NonPublic | BindingFlags.Instance);
+                FieldInfo localObjectsField = componentType.GetField("_localObjects", BindingFlags.NonPublic | BindingFlags.Instance);
+                FieldInfo localLocationsField = componentType.GetField("_localLocations", BindingFlags.NonPublic | BindingFlags.Instance);
 
                 if (localIntsField != null)
                 {
@@ -4176,12 +4177,12 @@ namespace Andastra.Game.Games.Odyssey
 
             // Use reflection to access private entity collections
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entities are removed from area's entity collections
-            var creaturesField = typeof(OdysseyArea).GetField("_creatures", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var placeablesField = typeof(OdysseyArea).GetField("_placeables", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var doorsField = typeof(OdysseyArea).GetField("_doors", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var triggersField = typeof(OdysseyArea).GetField("_triggers", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var waypointsField = typeof(OdysseyArea).GetField("_waypoints", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var soundsField = typeof(OdysseyArea).GetField("_sounds", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var creaturesField = typeof(OdysseyArea).GetField("_creatures", BindingFlags.NonPublic | BindingFlags.Instance);
+            var placeablesField = typeof(OdysseyArea).GetField("_placeables", BindingFlags.NonPublic | BindingFlags.Instance);
+            var doorsField = typeof(OdysseyArea).GetField("_doors", BindingFlags.NonPublic | BindingFlags.Instance);
+            var triggersField = typeof(OdysseyArea).GetField("_triggers", BindingFlags.NonPublic | BindingFlags.Instance);
+            var waypointsField = typeof(OdysseyArea).GetField("_waypoints", BindingFlags.NonPublic | BindingFlags.Instance);
+            var soundsField = typeof(OdysseyArea).GetField("_sounds", BindingFlags.NonPublic | BindingFlags.Instance);
 
             System.Collections.IList[] collections = new System.Collections.IList[]
             {
@@ -4218,7 +4219,7 @@ namespace Andastra.Game.Games.Odyssey
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Destroyed entities are marked as invalid
                 if (entity is OdysseyEntity odysseyEntity)
                 {
-                    var isValidField = typeof(OdysseyEntity).GetField("_isValid", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    var isValidField = typeof(OdysseyEntity).GetField("_isValid", BindingFlags.NonPublic | BindingFlags.Instance);
                     if (isValidField != null)
                     {
                         isValidField.SetValue(odysseyEntity, false);
@@ -4280,7 +4281,7 @@ namespace Andastra.Game.Games.Odyssey
 
             // Get parsing Module for resource loading
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module resources (UTC, UTP, etc.) are loaded from module archives
-            BioWare.NET.Extract.Installation.Module parsingModule = GetParsingModuleFromRuntimeModule(runtimeModule);
+            BioWare.NET.Common.Module parsingModule = GetParsingModuleFromRuntimeModule(runtimeModule);
             if (parsingModule == null)
             {
                 System.Diagnostics.Debug.WriteLine("[OdysseySaveSerializer] SpawnDynamicEntities: Cannot spawn entities - parsing module not available");
@@ -4367,7 +4368,7 @@ namespace Andastra.Game.Games.Odyssey
 
                 // Set TemplateResRef for reference
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): TemplateResRef is stored in entity data
-                if (entity is Core.Entities.Entity coreEntity)
+                if (entity is Runtime.Core.Entities.Entity coreEntity)
                 {
                     coreEntity.SetData("TemplateResRef", spawnedState.BlueprintResRef);
                     if (!string.IsNullOrEmpty(spawnedState.SpawnedBy))
@@ -4451,7 +4452,7 @@ namespace Andastra.Game.Games.Odyssey
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module resources are accessed via parsing Module
         /// Runtime Module may contain reference to parsing Module for resource loading
         /// </remarks>
-        private BioWare.NET.Extract.Installation.Module GetParsingModuleFromRuntimeModule(RuntimeIModule runtimeModule)
+        private BioWare.NET.Common.Module GetParsingModuleFromRuntimeModule(RuntimeIModule runtimeModule)
         {
             if (runtimeModule == null)
             {
@@ -4464,19 +4465,19 @@ namespace Andastra.Game.Games.Odyssey
             var parsingModuleProperty = runtimeModule.GetType().GetProperty("ParsingModule");
             if (parsingModuleProperty != null)
             {
-                return parsingModuleProperty.GetValue(runtimeModule) as BioWare.NET.Extract.Installation.Module;
+                return parsingModuleProperty.GetValue(runtimeModule) as BioWare.NET.Common.Module;
             }
 
             // Try to get via GetParsingModule method if available
             var getParsingModuleMethod = runtimeModule.GetType().GetMethod("GetParsingModule");
             if (getParsingModuleMethod != null)
             {
-                return getParsingModuleMethod.Invoke(runtimeModule, null) as BioWare.NET.Extract.Installation.Module;
+                return getParsingModuleMethod.Invoke(runtimeModule, null) as BioWare.NET.Common.Module;
             }
 
             // Try to access ModuleLoader if available
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ModuleLoader provides Module access
-            var moduleLoaderField = runtimeModule.GetType().GetField("_moduleLoader", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var moduleLoaderField = runtimeModule.GetType().GetField("_moduleLoader", BindingFlags.NonPublic | BindingFlags.Instance);
             if (moduleLoaderField != null)
             {
                 object moduleLoader = moduleLoaderField.GetValue(runtimeModule);
@@ -4485,7 +4486,7 @@ namespace Andastra.Game.Games.Odyssey
                     var getParsingModuleMethod2 = moduleLoader.GetType().GetMethod("GetParsingModule");
                     if (getParsingModuleMethod2 != null)
                     {
-                        return getParsingModuleMethod2.Invoke(moduleLoader, null) as BioWare.NET.Extract.Installation.Module;
+                        return getParsingModuleMethod2.Invoke(moduleLoader, null) as BioWare.NET.Common.Module;
                     }
                 }
             }
@@ -4500,7 +4501,7 @@ namespace Andastra.Game.Games.Odyssey
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Template resource types determine ObjectType
         /// UTC = Creature, UTP = Placeable, UTD = Door, UTT = Trigger, UTW = Waypoint, UTS = Sound
         /// </remarks>
-        private Andastra.Runtime.Core.Enums.ObjectType InferObjectTypeFromBlueprint(string blueprintResRef, BioWare.NET.Extract.Installation.Module module)
+        private Andastra.Runtime.Core.Enums.ObjectType InferObjectTypeFromBlueprint(string blueprintResRef, BioWare.NET.Common.Module module)
         {
             if (string.IsNullOrEmpty(blueprintResRef) || module == null)
             {
@@ -4558,11 +4559,11 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entities can be created with specific ObjectId to preserve save game references
         /// </remarks>
-        private IEntity CreateEntityWithObjectId(Andastra.Runtime.Core.Enums.ObjectType objectType, uint objectId, System.Numerics.Vector3 position, float facing)
+        private IEntity CreateEntityWithObjectId(Runtime.Core.Enums.ObjectType objectType, uint objectId, Vector3 position, float facing)
         {
             // Create entity using Core.Entities.Entity constructor with specific ObjectId
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity constructor accepts ObjectId parameter
-            var entity = new Core.Entities.Entity(objectId, objectType);
+            var entity = new Runtime.Core.Entities.Entity(objectId, objectType);
             entity.Position = position;
             entity.Facing = facing;
             return entity;
@@ -4574,7 +4575,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EntityFactory creates entities from templates
         /// </remarks>
-        private IEntity CreateEntityFromTemplate(Loading.EntityFactory entityFactory, BioWare.NET.Extract.Installation.Module module, string templateResRef, Andastra.Runtime.Core.Enums.ObjectType objectType, System.Numerics.Vector3 position, float facing)
+        private IEntity CreateEntityFromTemplate(Loading.EntityFactory entityFactory, BioWare.NET.Common.Module module, string templateResRef, Andastra.Runtime.Core.Enums.ObjectType objectType, System.Numerics.Vector3 position, float facing)
         {
             if (entityFactory == null || module == null || string.IsNullOrEmpty(templateResRef))
             {
@@ -4610,7 +4611,7 @@ namespace Andastra.Game.Games.Odyssey
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Template data is loaded into entity after creation
         /// Used when entity is created with specific ObjectId (not via EntityFactory)
         /// </remarks>
-        private void LoadTemplateIntoEntity(IEntity entity, BioWare.NET.Extract.Installation.Module module, string templateResRef, Andastra.Runtime.Core.Enums.ObjectType objectType)
+        private void LoadTemplateIntoEntity(IEntity entity, BioWare.NET.Common.Module module, string templateResRef, Andastra.Runtime.Core.Enums.ObjectType objectType)
         {
             if (entity == null || module == null || string.IsNullOrEmpty(templateResRef))
             {
@@ -4623,31 +4624,31 @@ namespace Andastra.Game.Games.Odyssey
 
             // Use reflection to access private template loading methods
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Template loading is internal to EntityFactory
-            System.Reflection.MethodInfo loadMethod = null;
+            MethodInfo loadMethod = null;
             switch (objectType)
             {
                 case ObjectType.Creature:
-                    loadMethod = typeof(Loading.EntityFactory).GetMethod("LoadCreatureTemplate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    loadMethod = typeof(Loading.EntityFactory).GetMethod("LoadCreatureTemplate", BindingFlags.NonPublic | BindingFlags.Instance);
                     break;
 
                 case ObjectType.Placeable:
-                    loadMethod = typeof(Loading.EntityFactory).GetMethod("LoadPlaceableTemplate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    loadMethod = typeof(Loading.EntityFactory).GetMethod("LoadPlaceableTemplate", BindingFlags.NonPublic | BindingFlags.Instance);
                     break;
 
                 case ObjectType.Door:
-                    loadMethod = typeof(Loading.EntityFactory).GetMethod("LoadDoorTemplate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    loadMethod = typeof(Loading.EntityFactory).GetMethod("LoadDoorTemplate", BindingFlags.NonPublic | BindingFlags.Instance);
                     break;
 
                 case ObjectType.Store:
-                    loadMethod = typeof(Loading.EntityFactory).GetMethod("LoadStoreTemplate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    loadMethod = typeof(Loading.EntityFactory).GetMethod("LoadStoreTemplate", BindingFlags.NonPublic | BindingFlags.Instance);
                     break;
             }
 
-            if (loadMethod != null && entity is Core.Entities.Entity coreEntity)
+            if (loadMethod != null && entity is Runtime.Core.Entities.Entity coreEntity)
             {
                 try
                 {
-                    loadMethod.Invoke(entityFactory, new object[] { coreEntity, module, templateResRef });
+                    loadMethod.Invoke(entityFactory, new object[] { coreEntity as object, module, templateResRef });
                 }
                 catch (Exception ex)
                 {
@@ -4665,7 +4666,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Original implementation: FUN_005226d0 @ 0x005226d0 applies area variables from save file
         /// Variables are restored to area's variable storage system when area is loaded from save
         /// </remarks>
-        private void ApplyAreaLocalVariables(Andastra.Runtime.Core.Save.LocalVariableSet localVariables, OdysseyArea odysseyArea)
+        private void ApplyAreaLocalVariables(LocalVariableSet localVariables, OdysseyArea odysseyArea)
         {
             if (localVariables == null || localVariables.IsEmpty)
             {
@@ -4678,7 +4679,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Get area's variable storage
-            Andastra.Runtime.Core.Save.LocalVariableSet areaVars = odysseyArea.GetLocalVariables();
+            LocalVariableSet areaVars = odysseyArea.GetLocalVariables();
 
             // Copy integer variables
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Integer variables are restored from save file
@@ -4738,8 +4739,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Serializes entity collection.
         /// </summary>
         /// <remarks>
-        /// Based on FUN_004e28c0 @ 0x004e28c0 in swkotor2.exe.
-        /// Saves creature stats, inventory, position, scripts.
+        /// Based on [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x004e28c0) - Saves creature stats, inventory, position, scripts.
         /// Uses GFF format with entity ObjectId as key.
         ///
         /// Entity data includes:
@@ -4751,26 +4751,26 @@ namespace Andastra.Game.Games.Odyssey
         /// - AI state and waypoints
         ///
         /// Implementation details:
-        /// - Creates GFF with "Creature List" list (swkotor2.exe: 0x007c0c80)
+        /// - Creates GFF with "Creature List" list ([TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x007c0c80))
         /// - For each entity, serializes to GFF and adds root struct to list
         /// - Each list entry contains ObjectId and all entity component data
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e28c0 creates "Creature List" structure
-        /// - FUN_005226d0 serializes individual entity data into struct
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x004e28c0): FUN_004e28c0 creates "Creature List" structure
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x005226d0): FUN_005226d0 serializes individual entity data into struct
         /// </remarks>
         public override byte[] SerializeEntities(IEnumerable<IEntity> entities)
         {
             if (entities == null)
             {
                 // Return empty GFF with empty CreatureList
-                var emptyGff = new GFF(GFFContent.GFF);
+                var emptyGff = new GFF();
                 emptyGff.Root.SetList("Creature List", new GFFList());
                 return emptyGff.ToBytes();
             }
 
             // Create GFF structure for entity collection
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e28c0 @ 0x004e28c0 creates "Creature List" structure
-            // Located via string reference: "Creature List" @ 0x007c0c80
-            var gff = new GFF(GFFContent.GFF);
+            // Located via string reference: "Creature List" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007c0c80))
+            var gff = new GFF();
             var root = gff.Root;
             var creatureList = new GFFList();
 
@@ -4930,15 +4930,15 @@ namespace Andastra.Game.Games.Odyssey
         /// Deserializes entity collection.
         /// </summary>
         /// <remarks>
-        /// Based on FUN_005fb0f0 @ 0x005fb0f0 in swkotor2.exe.
+        /// Based on [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x005fb0f0) - Recreates entities from save data.
         /// Recreates entities from save data.
         /// Restores all components and state information.
         /// Handles entity interdependencies.
         ///
         /// Implementation details:
-        /// - Parses GFF with "Creature List" list (swkotor2.exe: 0x007c0c80)
+        /// - Parses GFF with "Creature List" list ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007c0c80))
         /// - For each entity struct, creates OdysseyEntity and deserializes data
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 loads entities from "Creature List" structure
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x005fb0f0): FUN_005fb0f0 loads entities from "Creature List" structure
         /// - Each list entry contains ObjectId and all entity component data
         /// - Note: Full deserialization requires OdysseyEntity.Deserialize() to be implemented
         /// </remarks>
@@ -4997,7 +4997,10 @@ namespace Andastra.Game.Games.Odyssey
                 // Create entity with ObjectId, ObjectType, and Tag
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 creates entities from save data
                 // Entity creation: ObjectId, ObjectType, Tag are required for entity creation
-                // Located via string references: "ObjectId" @ 0x007bce5c, "ObjectType" @ 0x007bd00c, "Tag" @ 0x007bd00c
+                // Located via string references:
+                // - "ObjectId"   ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007bce5c))
+                // - "ObjectType" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007bd00c))
+                // - "Tag"        ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007bd00c))
                 OdysseyEntity entity = new OdysseyEntity(objectId, objectType, tag);
 
                 // Initialize all components based on ObjectType
@@ -5012,7 +5015,7 @@ namespace Andastra.Game.Games.Odyssey
                 // This matches the component initialization pattern used in EntityFactory and ModuleLoader
                 try
                 {
-                    ComponentInitializer.InitializeComponents(entity);
+                    Runtime.Core.Entities.ComponentInitializer.InitializeComponents(entity);
                 }
                 catch (Exception ex)
                 {
@@ -5022,7 +5025,7 @@ namespace Andastra.Game.Games.Odyssey
 
                 // Restore AreaId if present
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): AreaId links entity to area for area-specific operations
-                // Located via string references: "AreaId" @ 0x007bef48
+                // Located via string references: "AreaId" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007bef48))
                 if (entityStruct.Exists("AreaId"))
                 {
                     entity.AreaId = entityStruct.GetUInt32("AreaId");
@@ -5031,7 +5034,7 @@ namespace Andastra.Game.Games.Odyssey
                 // Convert entity struct to GFF bytes for deserialization
                 // Create a new GFF with this struct as root
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity data is stored as GFF structure within "Creature List"
-                var entityGff = new GFF(GFFContent.GFF);
+                var entityGff = new GFF();
                 CopyGffStructFields(entityStruct, entityGff.Root);
                 byte[] entityData = entityGff.ToBytes();
 
@@ -5099,12 +5102,12 @@ namespace Andastra.Game.Games.Odyssey
         /// - savegame.sav: Main save data (ERF archive with "MOD V1.0" signature)
         /// - screen.tga: Screenshot (TGA format)
         ///
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004eb750 @ 0x004eb750
-        /// Located via string references: "savenfo" @ 0x007be1f0, "SAVEGAME" @ 0x007be28c, "SAVES:" @ 0x007be284
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x004eb750): Creates save directory with format "%06d - %s" (save number and name)
+        /// Located via string references: "savenfo" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007be1f0)), "SAVEGAME" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007be28c)), "SAVES:" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007be284))
         /// Original implementation: Creates save directory with format "%06d - %s" (save number and name)
         /// Path format: "SAVES:\{saveNumber:06d} - {saveName}\"
         /// </remarks>
-        public override void CreateSaveDirectory(string saveName, Andastra.Runtime.Games.Common.SaveGameData saveData)
+        public override void CreateSaveDirectory(string saveName, SaveGameData saveData)
         {
             if (string.IsNullOrEmpty(saveName))
             {
@@ -5165,8 +5168,8 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Format save directory name using common format: "%06d - %s"
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Format string "SAVES:%06d - %s" @ 0x007be298
-            // Located via string reference: "%06d - %s" @ 0x007be298
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x007be298) - Format string "SAVES:%06d - %s"
+            // Located via string reference: "%06d - %s" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007be298))
             string formattedSaveName = string.Format("{0:D6} - {1}", saveNumber, saveName);
             string saveDir = Path.Combine(savesDirectory, formattedSaveName);
 
@@ -5177,8 +5180,8 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Write NFO file (save metadata)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004eb750 @ 0x004eb750 creates NFO GFF
-            // Located via string reference: "savenfo" @ 0x007be1f0
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x004eb750): FUN_004eb750 @ 0x004eb750 creates NFO GFF
+            // Located via string reference: "savenfo" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007be1f0))
             byte[] nfoData = SerializeSaveNfo(saveData);
             if (nfoData != null && nfoData.Length > 0)
             {
@@ -5187,8 +5190,8 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Write SAV file (ERF archive with save data)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004eb750 @ 0x004eb750 creates ERF archive
-            // Located via string reference: "SAVEGAME" @ 0x007be28c, "MOD V1.0" @ 0x007be0d4
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x004eb750): FUN_004eb750 @ 0x004eb750 creates ERF archive
+            // Located via string reference: "SAVEGAME" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007be28c)), "MOD V1.0" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007be0d4))
             // Original implementation: Creates ERF archive with "MOD V1.0" signature
             byte[] savData = SerializeSaveArchive(saveData);
             if (savData != null && savData.Length > 0)
@@ -5198,7 +5201,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Write screenshot if available
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Screenshot saved as screen.tga
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x004eb750): Screenshot saved as screen.tga
             if (saveData.Screenshot != null && saveData.Screenshot.Length > 0)
             {
                 string screenshotPath = Path.Combine(saveDir, "screen.tga");
@@ -5216,11 +5219,11 @@ namespace Andastra.Game.Games.Odyssey
         /// - PARTYTABLE.res: Party state (GFF with "PT  " signature)
         /// - [module]_s.rim: Per-module state ERF archive (area states, entity positions, etc.)
         ///
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004eb750 @ 0x004eb750
-        /// Located via string reference: "MOD V1.0" @ 0x007be0d4
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x004eb750) 
+        /// Located via string reference: "MOD V1.0" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007be0d4))
         /// Original implementation: Creates ERF archive with "MOD V1.0" signature
         /// </remarks>
-        private byte[] SerializeSaveArchive(Andastra.Runtime.Games.Common.SaveGameData saveData)
+        private byte[] SerializeSaveArchive(SaveGameData saveData)
         {
             if (saveData == null)
             {
@@ -5244,7 +5247,7 @@ namespace Andastra.Game.Games.Odyssey
             {
                 try
                 {
-                    byte[] globalVarsData = SerializeGlobals(saveData.GameState);
+                    byte[] globalVarsData = SerializeGlobals(GameState.FromInterface(saveData.GameState));
                     if (globalVarsData != null && globalVarsData.Length > 0)
                     {
                         erf.SetData("GLOBALVARS", ResourceType.GFF, globalVarsData);
@@ -5258,11 +5261,11 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Add PARTYTABLE.res (party state)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057bd70 @ 0x0057bd70 saves party state
-            // Located via string reference: "PARTYTABLE" @ 0x007c1910
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x0057bd70): FUN_0057bd70 @ 0x0057bd70 saves party state
+            // Located via string reference: "PARTYTABLE" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007c1910))
             if (saveData.PartyState != null)
             {
-                byte[] partyData = SerializeParty(saveData.PartyState);
+                byte[] partyData = SerializeParty(PartyState.FromInterface(saveData.PartyState));
                 if (partyData != null && partyData.Length > 0)
                 {
                     erf.SetData("PARTYTABLE", ResourceType.GFF, partyData);
@@ -5439,9 +5442,9 @@ namespace Andastra.Game.Games.Odyssey
         /// Returns compatibility status with details.
         ///
         /// Based on reverse engineering of:
-        /// - swkotor2.exe: FUN_00707290 @ 0x00707290 loads save and checks for corruption
-        /// - swkotor2.exe: FUN_00708990 @ 0x00708990 validates save structure during load
-        /// - Located via string references: "savenfo" @ 0x007be1f0, "SAVEGAME" @ 0x007be28c, "CORRUPT" @ 0x00707602
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x00707290): FUN_00707290 @ 0x00707290 loads save and checks for corruption
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x00708990): FUN_00708990 @ 0x00708990 validates save structure during load
+        /// - Located via string references: "savenfo" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007be1f0)), "SAVEGAME" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007be28c)), "CORRUPT" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x00707602))
         ///
         /// Compatibility checks performed:
         /// 1. Save path existence and directory structure
@@ -5467,8 +5470,8 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 2. Check for corruption marker (CORRUPT file)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00707290 @ 0x00707290 checks for "CORRUPT" file
-            // Located via string reference: "CORRUPT" @ 0x00707602
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x00707290): FUN_00707290 @ 0x00707290 checks for "CORRUPT" file
+            // Located via string reference: "CORRUPT" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x00707602))
             string corruptPath = System.IO.Path.Combine(savePath, "CORRUPT");
             if (System.IO.File.Exists(corruptPath))
             {

@@ -6,11 +6,11 @@ using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Engines.Odyssey.Components;
-using Andastra.Runtime.Engines.Odyssey.Dialogue;
-using Andastra.Runtime.Engines.Odyssey.Systems;
+using Andastra.Game.Games.Odyssey.Components;
+using Andastra.Game.Games.Odyssey.Dialogue;
+using Andastra.Game.Games.Odyssey.Systems;
 
-namespace Andastra.Game.Engines.Odyssey.Game
+namespace Andastra.Game.Games.Odyssey.Game
 {
     /// <summary>
     /// Handles player input and movement.

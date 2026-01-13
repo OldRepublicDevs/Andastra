@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Andastra.Game.Games.Common;
+using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Module;
-using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
 
 namespace Andastra.Game.Games.Odyssey
@@ -39,7 +40,7 @@ namespace Andastra.Game.Games.Odyssey
     {
         private readonly Queue<PendingEvent> _eventQueue = new Queue<PendingEvent>();
         private readonly ILoadingScreen _loadingScreen;
-        private readonly Andastra.Runtime.Engines.Odyssey.Loading.ModuleLoader _moduleLoader;
+        private readonly Loading.ModuleLoader _moduleLoader;
 
         private struct PendingEvent
         {
@@ -54,7 +55,7 @@ namespace Andastra.Game.Games.Odyssey
         /// </summary>
         /// <param name="loadingScreen">Optional loading screen for area transitions. If provided, area transitions will display the transition bitmap.</param>
         /// <param name="moduleLoader">Optional module loader for area streaming. If provided, areas will be loaded on-demand during transitions.</param>
-        protected OdysseyEventDispatcher(ILoadingScreen loadingScreen = null, Andastra.Runtime.Engines.Odyssey.Loading.ModuleLoader moduleLoader = null)
+        protected OdysseyEventDispatcher(ILoadingScreen loadingScreen = null, Loading.ModuleLoader moduleLoader = null)
         {
             _loadingScreen = loadingScreen;
             _moduleLoader = moduleLoader;
@@ -556,14 +557,14 @@ namespace Andastra.Game.Games.Odyssey
                 // Create Module instance for resource access
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module objects are created per module for resource lookups
                 // Module instance provides access to ARE, GIT, LYT, VIS files for areas
-                BioWare.NET.Extract.Installation.Installation installation = _moduleLoader.GetInstallation();
+                BioWare.NET.Extract.Installation installation = _moduleLoader.GetInstallation();
                 if (installation == null)
                 {
                     Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: Cannot load area {targetAreaResRef} - ModuleLoader has no Installation");
                     return null;
                 }
 
-                var module = new BioWare.NET.Extract.Installation.Module(moduleName, installation);
+                var module = new BioWare.NET.Common.Module(moduleName, installation);
 
                 // Load area using ModuleLoader
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): LoadAreaProperties @ 0x004e26d0 loads ARE + GIT + LYT + VIS
@@ -682,7 +683,7 @@ namespace Andastra.Game.Games.Odyssey
             // Find waypoint with LinkedTo tag in target area
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetWaypointByTag searches for waypoint by tag in area
             // Located via string references: "GetWaypointByTag" function searches waypoints by tag
-            IEntity waypoint = targetArea.GetObjectByTag(linkedToTag, 0);
+            IEntity waypoint = targetArea.GetObjectByTag(linkedToTag);
             if (waypoint == null)
             {
                 Console.WriteLine($"[OdysseyEventDispatcher] ResolveAndSetTransitionPosition: Waypoint with tag '{linkedToTag}' not found in target area {targetArea.ResRef}, preserving current position for entity {entity.Tag ?? "null"} ({entity.ObjectId})");
@@ -690,7 +691,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Verify it's actually a waypoint
-            if (waypoint.ObjectType != Core.Enums.ObjectType.Waypoint)
+            if (waypoint.ObjectType != Runtime.Core.Enums.ObjectType.Waypoint)
             {
                 Console.WriteLine($"[OdysseyEventDispatcher] ResolveAndSetTransitionPosition: Entity with tag '{linkedToTag}' in target area {targetArea.ResRef} is not a waypoint (type: {waypoint.ObjectType}), preserving current position for entity {entity.Tag ?? "null"} ({entity.ObjectId})");
                 return;
@@ -893,9 +894,9 @@ namespace Andastra.Game.Games.Odyssey
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area enter script execution
             // Located via string references: "OnEnter" @ 0x007bee60 (area enter script)
             // Original implementation: Fires when entity enters an area
-            if (targetArea is Core.Module.RuntimeArea targetRuntimeArea)
+            if (targetArea is RuntimeArea targetRuntimeArea)
             {
-                string enterScript = targetRuntimeArea.GetScript(Core.Enums.ScriptEvent.OnEnter);
+                string enterScript = targetRuntimeArea.GetScript(ScriptEvent.OnEnter);
                 if (!string.IsNullOrEmpty(enterScript))
                 {
                     Console.WriteLine($"[OdysseyEventDispatcher] FireAreaTransitionEvents: Area {targetArea.ResRef} has OnEnter script: {enterScript}");
@@ -907,7 +908,7 @@ namespace Andastra.Game.Games.Odyssey
                     if (areaEntity != null)
                     {
                         Console.WriteLine($"[OdysseyEventDispatcher] FireAreaTransitionEvents: Firing OnEnter script {enterScript} on area entity {areaEntity.Tag ?? "null"} ({areaEntity.ObjectId})");
-                        world.EventBus.FireScriptEvent(areaEntity, Core.Enums.ScriptEvent.OnEnter, entity);
+                        world.EventBus.FireScriptEvent(areaEntity, ScriptEvent.OnEnter, entity);
                     }
                     else
                     {
@@ -1065,7 +1066,7 @@ namespace Andastra.Game.Games.Odyssey
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844 (0x16), "OnOpen" @ 0x007be1b0, "ScriptOnOpen" @ 0x007beeb8
                 // Original implementation: OnOpen script fires on door entity after door is opened
                 // Script fires regardless of whether door was already open (allows scripts to react to open attempts)
-                world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnOpen, null);
+                world.EventBus.FireScriptEvent(entity, ScriptEvent.OnOpen, null);
                 Console.WriteLine($"[OdysseyEventDispatcher] HandleOpenObjectEvent: Fired OnOpen script event on door {entity.Tag ?? "null"} ({entity.ObjectId})");
                 return;
             }
@@ -1093,7 +1094,7 @@ namespace Andastra.Game.Games.Odyssey
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844 (0x16)
                 // Original implementation: OnOpen script fires on placeable entity after placeable is opened
                 // Script fires regardless of whether placeable was already open (allows scripts to react to open attempts)
-                world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnOpen, null);
+                world.EventBus.FireScriptEvent(entity, ScriptEvent.OnOpen, null);
                 Console.WriteLine($"[OdysseyEventDispatcher] HandleOpenObjectEvent: Fired OnOpen script event on placeable {entity.Tag ?? "null"} ({entity.ObjectId})");
                 return;
             }
@@ -1138,7 +1139,7 @@ namespace Andastra.Game.Games.Odyssey
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE" @ 0x007bc820 (0x17), "OnClosed" @ 0x007be1c8, "ScriptOnClose" @ 0x007beeb8
                 // Original implementation: OnClose script fires on door entity after door is closed
                 // Script fires regardless of whether door was already closed (allows scripts to react to close attempts)
-                world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnClose, null);
+                world.EventBus.FireScriptEvent(entity, ScriptEvent.OnClose, null);
                 Console.WriteLine($"[OdysseyEventDispatcher] HandleCloseObjectEvent: Fired OnClose script event on door {entity.Tag ?? "null"} ({entity.ObjectId})");
                 return;
             }
@@ -1166,7 +1167,7 @@ namespace Andastra.Game.Games.Odyssey
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE" @ 0x007bc820 (0x17)
                 // Original implementation: OnClose script fires on placeable entity after placeable is closed
                 // Script fires regardless of whether placeable was already closed (allows scripts to react to close attempts)
-                world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnClose, null);
+                world.EventBus.FireScriptEvent(entity, ScriptEvent.OnClose, null);
                 Console.WriteLine($"[OdysseyEventDispatcher] HandleCloseObjectEvent: Fired OnClose script event on placeable {entity.Tag ?? "null"} ({entity.ObjectId})");
                 return;
             }
@@ -1224,7 +1225,7 @@ namespace Andastra.Game.Games.Odyssey
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754 (0x1c), "OnLock" @ 0x007c1a28, "ScriptOnLock" @ 0x007c1a0c
                 // Original implementation: OnLock script fires on door entity after door is locked
                 // Script fires regardless of whether door was already locked (allows scripts to react to lock attempts)
-                world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnLock, null);
+                world.EventBus.FireScriptEvent(entity, ScriptEvent.OnLock, null);
                 Console.WriteLine($"[OdysseyEventDispatcher] HandleLockObjectEvent: Fired OnLock script event on door {entity.Tag ?? "null"} ({entity.ObjectId})");
                 return;
             }
@@ -1253,7 +1254,7 @@ namespace Andastra.Game.Games.Odyssey
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754 (0x1c)
                 // Original implementation: OnLock script fires on placeable entity after placeable is locked
                 // Script fires regardless of whether placeable was already locked (allows scripts to react to lock attempts)
-                world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnLock, null);
+                world.EventBus.FireScriptEvent(entity, ScriptEvent.OnLock, null);
                 Console.WriteLine($"[OdysseyEventDispatcher] HandleLockObjectEvent: Fired OnLock script event on placeable {entity.Tag ?? "null"} ({entity.ObjectId})");
                 return;
             }
@@ -1298,7 +1299,7 @@ namespace Andastra.Game.Games.Odyssey
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ 0x007bc72c (0x1d), "OnUnlock" @ 0x007c1a00, "ScriptOnUnlock" @ 0x007c1a00
                 // Original implementation: OnUnlock script fires on door entity after door is unlocked
                 // Script fires regardless of whether door was already unlocked (allows scripts to react to unlock attempts)
-                world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnUnlock, null);
+                world.EventBus.FireScriptEvent(entity, ScriptEvent.OnUnlock, null);
                 Console.WriteLine($"[OdysseyEventDispatcher] HandleUnlockObjectEvent: Fired OnUnlock script event on door {entity.Tag ?? "null"} ({entity.ObjectId})");
                 return;
             }
@@ -1326,7 +1327,7 @@ namespace Andastra.Game.Games.Odyssey
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ 0x007bc72c (0x1d)
                 // Original implementation: OnUnlock script fires on placeable entity after placeable is unlocked
                 // Script fires regardless of whether placeable was already unlocked (allows scripts to react to unlock attempts)
-                world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnUnlock, null);
+                world.EventBus.FireScriptEvent(entity, ScriptEvent.OnUnlock, null);
                 Console.WriteLine($"[OdysseyEventDispatcher] HandleUnlockObjectEvent: Fired OnUnlock script event on placeable {entity.Tag ?? "null"} ({entity.ObjectId})");
                 return;
             }
@@ -1453,7 +1454,7 @@ namespace Andastra.Game.Games.Odyssey
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_ON_MELEE_ATTACKED fires OnMeleeAttacked script
             // Script fires regardless of hit/miss - this allows scripts to react to being targeted
             // Source entity (attacker) is passed as triggerer to script execution context
-            world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnPhysicalAttacked, attacker);
+            world.EventBus.FireScriptEvent(entity, ScriptEvent.OnPhysicalAttacked, attacker);
             Console.WriteLine($"[OdysseyEventDispatcher] HandleMeleeAttackedEvent: Fired OnPhysicalAttacked script event on entity {entity.Tag ?? "null"} ({entity.ObjectId})");
         }
 
@@ -1479,7 +1480,7 @@ namespace Andastra.Game.Games.Odyssey
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH fires when entity dies
                 // Located via string references: "OnDeath" script field, death event handling
                 // Original implementation: OnDeath script fires on victim entity with killer as triggerer
-                world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnDeath, killer);
+                world.EventBus.FireScriptEvent(entity, ScriptEvent.OnDeath, killer);
                 Console.WriteLine($"[OdysseyEventDispatcher] HandleDestroyObjectEvent: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) is dead, fired OnDeath script event");
             }
             else
@@ -1536,7 +1537,7 @@ namespace Andastra.Game.Games.Odyssey
             // Original implementation: OnDamaged script fires on target entity when damage is dealt (after damage is applied)
             // Source entity (damager) is passed as triggerer to script execution context
             // Scripts can use GetLastDamager() to retrieve the damager if sourceEntity is null
-            world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnDamaged, damager);
+            world.EventBus.FireScriptEvent(entity, ScriptEvent.OnDamaged, damager);
             Console.WriteLine($"[OdysseyEventDispatcher] HandleDamagedEvent: Fired OnDamaged script event on entity {entity.Tag ?? "null"} ({entity.ObjectId})");
         }
 
@@ -1585,7 +1586,7 @@ namespace Andastra.Game.Games.Odyssey
             // Map eventSubtype to ScriptEvent enum
             // Maps CSWSSCRIPTEVENT_EVENTTYPE_ON_* constants to ScriptEvent enum values
             // Implementation is game-specific (see MapEventSubtypeToScriptEvent in subclasses)
-            Core.Enums.ScriptEvent scriptEvent = MapEventSubtypeToScriptEvent(eventSubtype);
+            ScriptEvent scriptEvent = MapEventSubtypeToScriptEvent(eventSubtype);
             string subtypeName = GetEventSubtypeName(eventSubtype);
             string entityInfo = $"{entity.Tag ?? "null"} ({entity.ObjectId})";
             string sourceInfo = sourceEntity != null ? $"{sourceEntity.Tag ?? "null"} ({sourceEntity.ObjectId})" : "null";
@@ -1649,7 +1650,7 @@ namespace Andastra.Game.Games.Odyssey
         ///
         /// Game-specific implementations should document the executable-specific addresses.
         /// </remarks>
-        protected abstract Core.Enums.ScriptEvent MapEventSubtypeToScriptEvent(int eventSubtype);
+        protected abstract ScriptEvent MapEventSubtypeToScriptEvent(int eventSubtype);
 
         /// <summary>
         /// Queues an event for later processing.
@@ -1724,7 +1725,7 @@ namespace Andastra.Game.Games.Odyssey
         /// </summary>
         /// <param name="loadingScreen">Optional loading screen for area transitions.</param>
         /// <param name="moduleLoader">Optional module loader for area streaming. If provided, areas will be loaded on-demand during transitions.</param>
-        public Kotor1EventDispatcher(ILoadingScreen loadingScreen = null, Andastra.Runtime.Engines.Odyssey.Loading.ModuleLoader moduleLoader = null)
+        public Kotor1EventDispatcher(ILoadingScreen loadingScreen = null, Andastra.Game.Games.Odyssey.Loading.ModuleLoader moduleLoader = null)
             : base(loadingScreen, moduleLoader)
         {
         }
@@ -1778,52 +1779,52 @@ namespace Andastra.Game.Games.Odyssey
         /// - 0x25: ON_PLAYER_LEVEL_UP (CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP @ 0x00744384)
         /// - 0x26: ON_EQUIP_ITEM (CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM @ 0x0074435c)
         /// </remarks>
-        protected override Core.Enums.ScriptEvent MapEventSubtypeToScriptEvent(int eventSubtype)
+        protected override ScriptEvent MapEventSubtypeToScriptEvent(int eventSubtype)
         {
             switch (eventSubtype)
             {
-                case 0x0: return Core.Enums.ScriptEvent.OnHeartbeat; // CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT
-                case 0x1: return Core.Enums.ScriptEvent.OnPerception; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION
-                case 0x2: return Core.Enums.ScriptEvent.OnSpellCastAt; // CSWSSCRIPTEVENT_EVENTTYPE_ON_SPELLCASTAT
+                case 0x0: return ScriptEvent.OnHeartbeat; // CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT
+                case 0x1: return ScriptEvent.OnPerception; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION
+                case 0x2: return ScriptEvent.OnSpellCastAt; // CSWSSCRIPTEVENT_EVENTTYPE_ON_SPELLCASTAT
                                                                        // case 0x3?? (not used)
-                case 0x4: return Core.Enums.ScriptEvent.OnDamaged; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED
-                case 0x5: return Core.Enums.ScriptEvent.OnDisturbed; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DISTURBED
+                case 0x4: return ScriptEvent.OnDamaged; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED
+                case 0x5: return ScriptEvent.OnDisturbed; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DISTURBED
                                                                      // case 0x6?? (not used)
-                case 0x7: return Core.Enums.ScriptEvent.OnConversation; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE
-                case 0x8: return Core.Enums.ScriptEvent.OnSpawn; // CSWSSCRIPTEVENT_EVENTTYPE_ON_SPAWN_IN
-                case 0x9: return Core.Enums.ScriptEvent.OnRested; // CSWSSCRIPTEVENT_EVENTTYPE_ON_RESTED
-                case 0xa: return Core.Enums.ScriptEvent.OnDeath; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH
-                case 0xb: return Core.Enums.ScriptEvent.OnUserDefined; // CSWSSCRIPTEVENT_EVENTTYPE_ON_USER_DEFINED_EVENT
-                case 0xc: return Core.Enums.ScriptEvent.OnEnter; // CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_ENTER
-                case 0xd: return Core.Enums.ScriptEvent.OnExit; // CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_EXIT
-                case 0xe: return Core.Enums.ScriptEvent.OnClientEnter; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_ENTER
-                case 0xf: return Core.Enums.ScriptEvent.OnClientLeave; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_EXIT
-                case 0x10: return Core.Enums.ScriptEvent.OnModuleStart; // CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START
-                case 0x11: return Core.Enums.ScriptEvent.OnModuleLoad; // CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD
-                case 0x12: return Core.Enums.ScriptEvent.OnActivateItem; // CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM
-                case 0x13: return Core.Enums.ScriptEvent.OnAcquireItem; // CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM
-                case 0x14: return Core.Enums.ScriptEvent.OnUnacquireItem; // CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM
-                case 0x15: return Core.Enums.ScriptEvent.OnExhausted; // CSWSSCRIPTEVENT_EVENTTYPE_ON_ENCOUNTER_EXHAUSTED
-                case 0x16: return Core.Enums.ScriptEvent.OnOpen; // CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN
-                case 0x17: return Core.Enums.ScriptEvent.OnClose; // CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE
-                case 0x18: return Core.Enums.ScriptEvent.OnDisarm; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DISARM
-                case 0x19: return Core.Enums.ScriptEvent.OnUsed; // CSWSSCRIPTEVENT_EVENTTYPE_ON_USED
-                case 0x1a: return Core.Enums.ScriptEvent.OnTrapTriggered; // CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED
-                case 0x1b: return Core.Enums.ScriptEvent.OnDisturbed; // CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED (same enum value as 5, but different context)
-                case 0x1c: return Core.Enums.ScriptEvent.OnLock; // CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED
-                case 0x1d: return Core.Enums.ScriptEvent.OnUnlock; // CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED
-                case 0x1e: return Core.Enums.ScriptEvent.OnClick; // CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED
-                case 0x1f: return Core.Enums.ScriptEvent.OnBlocked; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PATH_BLOCKED
-                case 0x20: return Core.Enums.ScriptEvent.OnPlayerDying; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_DYING
-                case 0x21: return Core.Enums.ScriptEvent.OnSpawnButtonDown; // CSWSSCRIPTEVENT_EVENTTYPE_ON_RESPAWN_BUTTON_PRESSED
-                case 0x22: return Core.Enums.ScriptEvent.OnFailToOpen; // CSWSSCRIPTEVENT_EVENTTYPE_ON_FAIL_TO_OPEN
-                case 0x23: return Core.Enums.ScriptEvent.OnPlayerRest; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_REST
-                case 0x24: return Core.Enums.ScriptEvent.OnPlayerDeath; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DESTROYPLAYERCREATURE
-                case 0x25: return Core.Enums.ScriptEvent.OnPlayerLevelUp; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP
-                case 0x26: return Core.Enums.ScriptEvent.OnAcquireItem; // CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM (Note: OnEquipItem not in enum, using OnAcquireItem)
+                case 0x7: return ScriptEvent.OnConversation; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE
+                case 0x8: return ScriptEvent.OnSpawn; // CSWSSCRIPTEVENT_EVENTTYPE_ON_SPAWN_IN
+                case 0x9: return ScriptEvent.OnRested; // CSWSSCRIPTEVENT_EVENTTYPE_ON_RESTED
+                case 0xa: return ScriptEvent.OnDeath; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH
+                case 0xb: return ScriptEvent.OnUserDefined; // CSWSSCRIPTEVENT_EVENTTYPE_ON_USER_DEFINED_EVENT
+                case 0xc: return ScriptEvent.OnEnter; // CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_ENTER
+                case 0xd: return ScriptEvent.OnExit; // CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_EXIT
+                case 0xe: return ScriptEvent.OnClientEnter; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_ENTER
+                case 0xf: return ScriptEvent.OnClientLeave; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_EXIT
+                case 0x10: return ScriptEvent.OnModuleStart; // CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START
+                case 0x11: return ScriptEvent.OnModuleLoad; // CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD
+                case 0x12: return ScriptEvent.OnActivateItem; // CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM
+                case 0x13: return ScriptEvent.OnAcquireItem; // CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM
+                case 0x14: return ScriptEvent.OnUnacquireItem; // CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM
+                case 0x15: return ScriptEvent.OnExhausted; // CSWSSCRIPTEVENT_EVENTTYPE_ON_ENCOUNTER_EXHAUSTED
+                case 0x16: return ScriptEvent.OnOpen; // CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN
+                case 0x17: return ScriptEvent.OnClose; // CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE
+                case 0x18: return ScriptEvent.OnDisarm; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DISARM
+                case 0x19: return ScriptEvent.OnUsed; // CSWSSCRIPTEVENT_EVENTTYPE_ON_USED
+                case 0x1a: return ScriptEvent.OnTrapTriggered; // CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED
+                case 0x1b: return ScriptEvent.OnDisturbed; // CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED (same enum value as 5, but different context)
+                case 0x1c: return ScriptEvent.OnLock; // CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED
+                case 0x1d: return ScriptEvent.OnUnlock; // CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED
+                case 0x1e: return ScriptEvent.OnClick; // CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED
+                case 0x1f: return ScriptEvent.OnBlocked; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PATH_BLOCKED
+                case 0x20: return ScriptEvent.OnPlayerDying; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_DYING
+                case 0x21: return ScriptEvent.OnSpawnButtonDown; // CSWSSCRIPTEVENT_EVENTTYPE_ON_RESPAWN_BUTTON_PRESSED
+                case 0x22: return ScriptEvent.OnFailToOpen; // CSWSSCRIPTEVENT_EVENTTYPE_ON_FAIL_TO_OPEN
+                case 0x23: return ScriptEvent.OnPlayerRest; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_REST
+                case 0x24: return ScriptEvent.OnPlayerDeath; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DESTROYPLAYERCREATURE
+                case 0x25: return ScriptEvent.OnPlayerLevelUp; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP
+                case 0x26: return ScriptEvent.OnAcquireItem; // CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM (Note: OnEquipItem not in enum, using OnAcquireItem)
                 default:
                     // Unknown event subtype - use OnUserDefined as fallback
-                    return Core.Enums.ScriptEvent.OnUserDefined;
+                    return ScriptEvent.OnUserDefined;
             }
         }
     }
@@ -1848,7 +1849,7 @@ namespace Andastra.Game.Games.Odyssey
         /// </summary>
         /// <param name="loadingScreen">Optional loading screen for area transitions.</param>
         /// <param name="moduleLoader">Optional module loader for area streaming. If provided, areas will be loaded on-demand during transitions.</param>
-        public Kotor2EventDispatcher(ILoadingScreen loadingScreen = null, Andastra.Runtime.Engines.Odyssey.Loading.ModuleLoader moduleLoader = null)
+        public Kotor2EventDispatcher(ILoadingScreen loadingScreen = null, Andastra.Game.Games.Odyssey.Loading.ModuleLoader moduleLoader = null)
             : base(loadingScreen, moduleLoader)
         {
         }
@@ -1902,52 +1903,52 @@ namespace Andastra.Game.Games.Odyssey
         /// - 0x25: ON_PLAYER_LEVEL_UP (CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP @ 0x007bc5bc)
         /// - 0x26: ON_EQUIP_ITEM (CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM @ 0x007bc594)
         /// </remarks>
-        protected override Core.Enums.ScriptEvent MapEventSubtypeToScriptEvent(int eventSubtype)
+        protected override ScriptEvent MapEventSubtypeToScriptEvent(int eventSubtype)
         {
             switch (eventSubtype)
             {
-                case 0x0: return Core.Enums.ScriptEvent.OnHeartbeat; // CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT
-                case 0x1: return Core.Enums.ScriptEvent.OnPerception; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION
-                case 0x2: return Core.Enums.ScriptEvent.OnSpellCastAt; // CSWSSCRIPTEVENT_EVENTTYPE_ON_SPELLCASTAT
+                case 0x0: return ScriptEvent.OnHeartbeat; // CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT
+                case 0x1: return ScriptEvent.OnPerception; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION
+                case 0x2: return ScriptEvent.OnSpellCastAt; // CSWSSCRIPTEVENT_EVENTTYPE_ON_SPELLCASTAT
                                                                        // case 0x3?? (not used)
-                case 0x4: return Core.Enums.ScriptEvent.OnDamaged; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED
-                case 0x5: return Core.Enums.ScriptEvent.OnDisturbed; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DISTURBED
+                case 0x4: return ScriptEvent.OnDamaged; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED
+                case 0x5: return ScriptEvent.OnDisturbed; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DISTURBED
                                                                      // case 0x6?? (not used)
-                case 0x7: return Core.Enums.ScriptEvent.OnConversation; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE
-                case 0x8: return Core.Enums.ScriptEvent.OnSpawn; // CSWSSCRIPTEVENT_EVENTTYPE_ON_SPAWN_IN
-                case 0x9: return Core.Enums.ScriptEvent.OnRested; // CSWSSCRIPTEVENT_EVENTTYPE_ON_RESTED
-                case 0xa: return Core.Enums.ScriptEvent.OnDeath; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH
-                case 0xb: return Core.Enums.ScriptEvent.OnUserDefined; // CSWSSCRIPTEVENT_EVENTTYPE_ON_USER_DEFINED_EVENT
-                case 0xc: return Core.Enums.ScriptEvent.OnEnter; // CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_ENTER
-                case 0xd: return Core.Enums.ScriptEvent.OnExit; // CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_EXIT
-                case 0xe: return Core.Enums.ScriptEvent.OnClientEnter; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_ENTER
-                case 0xf: return Core.Enums.ScriptEvent.OnClientLeave; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_EXIT
-                case 0x10: return Core.Enums.ScriptEvent.OnModuleStart; // CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START
-                case 0x11: return Core.Enums.ScriptEvent.OnModuleLoad; // CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD
-                case 0x12: return Core.Enums.ScriptEvent.OnActivateItem; // CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM
-                case 0x13: return Core.Enums.ScriptEvent.OnAcquireItem; // CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM
-                case 0x14: return Core.Enums.ScriptEvent.OnUnacquireItem; // CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM
-                case 0x15: return Core.Enums.ScriptEvent.OnExhausted; // CSWSSCRIPTEVENT_EVENTTYPE_ON_ENCOUNTER_EXHAUSTED
-                case 0x16: return Core.Enums.ScriptEvent.OnOpen; // CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN
-                case 0x17: return Core.Enums.ScriptEvent.OnClose; // CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE
-                case 0x18: return Core.Enums.ScriptEvent.OnDisarm; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DISARM
-                case 0x19: return Core.Enums.ScriptEvent.OnUsed; // CSWSSCRIPTEVENT_EVENTTYPE_ON_USED
-                case 0x1a: return Core.Enums.ScriptEvent.OnTrapTriggered; // CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED
-                case 0x1b: return Core.Enums.ScriptEvent.OnDisturbed; // CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED (same enum value as 5, but different context)
-                case 0x1c: return Core.Enums.ScriptEvent.OnLock; // CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED
-                case 0x1d: return Core.Enums.ScriptEvent.OnUnlock; // CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED
-                case 0x1e: return Core.Enums.ScriptEvent.OnClick; // CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED
-                case 0x1f: return Core.Enums.ScriptEvent.OnBlocked; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PATH_BLOCKED
-                case 0x20: return Core.Enums.ScriptEvent.OnPlayerDying; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_DYING
-                case 0x21: return Core.Enums.ScriptEvent.OnSpawnButtonDown; // CSWSSCRIPTEVENT_EVENTTYPE_ON_RESPAWN_BUTTON_PRESSED
-                case 0x22: return Core.Enums.ScriptEvent.OnFailToOpen; // CSWSSCRIPTEVENT_EVENTTYPE_ON_FAIL_TO_OPEN
-                case 0x23: return Core.Enums.ScriptEvent.OnPlayerRest; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_REST
-                case 0x24: return Core.Enums.ScriptEvent.OnPlayerDeath; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DESTROYPLAYERCREATURE
-                case 0x25: return Core.Enums.ScriptEvent.OnPlayerLevelUp; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP
-                case 0x26: return Core.Enums.ScriptEvent.OnAcquireItem; // CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM (Note: OnEquipItem not in enum, using OnAcquireItem)
+                case 0x7: return ScriptEvent.OnConversation; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE
+                case 0x8: return ScriptEvent.OnSpawn; // CSWSSCRIPTEVENT_EVENTTYPE_ON_SPAWN_IN
+                case 0x9: return ScriptEvent.OnRested; // CSWSSCRIPTEVENT_EVENTTYPE_ON_RESTED
+                case 0xa: return ScriptEvent.OnDeath; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH
+                case 0xb: return ScriptEvent.OnUserDefined; // CSWSSCRIPTEVENT_EVENTTYPE_ON_USER_DEFINED_EVENT
+                case 0xc: return ScriptEvent.OnEnter; // CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_ENTER
+                case 0xd: return ScriptEvent.OnExit; // CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_EXIT
+                case 0xe: return ScriptEvent.OnClientEnter; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_ENTER
+                case 0xf: return ScriptEvent.OnClientLeave; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_EXIT
+                case 0x10: return ScriptEvent.OnModuleStart; // CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START
+                case 0x11: return ScriptEvent.OnModuleLoad; // CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD
+                case 0x12: return ScriptEvent.OnActivateItem; // CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM
+                case 0x13: return ScriptEvent.OnAcquireItem; // CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM
+                case 0x14: return ScriptEvent.OnUnacquireItem; // CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM
+                case 0x15: return ScriptEvent.OnExhausted; // CSWSSCRIPTEVENT_EVENTTYPE_ON_ENCOUNTER_EXHAUSTED
+                case 0x16: return ScriptEvent.OnOpen; // CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN
+                case 0x17: return ScriptEvent.OnClose; // CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE
+                case 0x18: return ScriptEvent.OnDisarm; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DISARM
+                case 0x19: return ScriptEvent.OnUsed; // CSWSSCRIPTEVENT_EVENTTYPE_ON_USED
+                case 0x1a: return ScriptEvent.OnTrapTriggered; // CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED
+                case 0x1b: return ScriptEvent.OnDisturbed; // CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED (same enum value as 5, but different context)
+                case 0x1c: return ScriptEvent.OnLock; // CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED
+                case 0x1d: return ScriptEvent.OnUnlock; // CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED
+                case 0x1e: return ScriptEvent.OnClick; // CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED
+                case 0x1f: return ScriptEvent.OnBlocked; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PATH_BLOCKED
+                case 0x20: return ScriptEvent.OnPlayerDying; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_DYING
+                case 0x21: return ScriptEvent.OnSpawnButtonDown; // CSWSSCRIPTEVENT_EVENTTYPE_ON_RESPAWN_BUTTON_PRESSED
+                case 0x22: return ScriptEvent.OnFailToOpen; // CSWSSCRIPTEVENT_EVENTTYPE_ON_FAIL_TO_OPEN
+                case 0x23: return ScriptEvent.OnPlayerRest; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_REST
+                case 0x24: return ScriptEvent.OnPlayerDeath; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DESTROYPLAYERCREATURE
+                case 0x25: return ScriptEvent.OnPlayerLevelUp; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP
+                case 0x26: return ScriptEvent.OnAcquireItem; // CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM (Note: OnEquipItem not in enum, using OnAcquireItem)
                 default:
                     // Unknown event subtype - use OnUserDefined as fallback
-                    return Core.Enums.ScriptEvent.OnUserDefined;
+                    return ScriptEvent.OnUserDefined;
             }
         }
     }

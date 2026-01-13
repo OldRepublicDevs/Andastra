@@ -10,13 +10,13 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Journal;
 using Andastra.Runtime.Core.Party;
 using Andastra.Runtime.Core.Plot;
-using Andastra.Runtime.Engines.Odyssey.Data;
+using Andastra.Game.Games.Odyssey.Data;
 using Andastra.Game.Games.Common.Dialogue;
 using Andastra.Runtime.Scripting.Interfaces;
 using JetBrains.Annotations;
 using ResRef = BioWare.NET.Common.ResRef;
 
-namespace Andastra.Game.Engines.Odyssey.Dialogue
+namespace Andastra.Game.Games.Odyssey.Dialogue
 {
     /// <summary>
     /// Event arguments for dialogue events (Odyssey-specific: DLG-based).

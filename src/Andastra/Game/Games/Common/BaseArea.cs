@@ -458,7 +458,7 @@ namespace Andastra.Game.Games.Common
 
             // Fire OnEnter script for target area
             // Common across all engines: Fires when entity enters an area
-            if (targetArea is Core.Module.RuntimeArea targetRuntimeArea)
+            if (targetArea is Runtime.Runtime.Core.Module.RuntimeArea targetRuntimeArea)
             {
                 string enterScript = targetRuntimeArea.GetScript(Core.Enums.ScriptEvent.OnEnter);
                 if (!string.IsNullOrEmpty(enterScript))
@@ -495,7 +495,7 @@ namespace Andastra.Game.Games.Common
                 baseArea.AddEntityToArea(entity);
             }
             // Otherwise, try RuntimeArea's AddEntity method
-            else if (targetArea is Core.Module.RuntimeArea runtimeArea)
+            else if (targetArea is Runtime.Core.Module.RuntimeArea runtimeArea)
             {
                 runtimeArea.AddEntity(entity);
             }

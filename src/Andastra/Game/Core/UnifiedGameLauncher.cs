@@ -1,12 +1,12 @@
 using System;
 using BioWare.NET.Common;
 using Andastra.Runtime.Core;
-using Andastra.Runtime.Engines.Common;
+using Andastra.Game.Games.Common;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Enums;
 using JetBrains.Annotations;
 
-namespace Andastra.Game.Game.Core
+namespace Andastra.Game.Core
 {
     /// <summary>
     /// Unified game launcher that supports all BioWare engine families.

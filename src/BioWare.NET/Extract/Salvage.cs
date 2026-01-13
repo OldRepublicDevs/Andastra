@@ -19,6 +19,7 @@ using BioWare.NET.Resource.Formats.TLK;
 using BioWare.NET.Resource.Formats.TPC;
 using BioWare.NET.Resource.Formats.TwoDA;
 using BioWare.NET.Resource.Formats.VIS;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.LYT;
 using BioWare.NET.Resource.Formats.GFF.Generics;
@@ -691,8 +692,8 @@ namespace BioWare.NET.Extract
                         byte[] data = fileRes.GetData();
                         if (data == null) return null;
                         // Using extern alias to resolve ambiguity between Resource.NCS and Resource projects
-                        NCSResourceNCS ncs = NCSAutoResourceNCS.ReadNcs(data);
-                        return NCSAutoResourceNCS.BytesNcs(ncs);
+                        BioWare.NET.Resource.Formats.NCS.NCS ncs = BioWare.NET.Resource.Formats.NCS.NCSAuto.ReadNcs(data);
+                        return BioWare.NET.Resource.Formats.NCS.NCSAuto.BytesNcs(ncs);
                     } catch { return null; }
                 }},
                 { ResourceType.SSF, (fileRes) => {

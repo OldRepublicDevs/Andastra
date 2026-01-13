@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using JetBrains.Annotations;
 

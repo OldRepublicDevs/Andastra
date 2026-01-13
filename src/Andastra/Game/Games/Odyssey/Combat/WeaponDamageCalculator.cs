@@ -2,12 +2,12 @@ using System;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Engines.Odyssey.Components;
-using Andastra.Runtime.Engines.Odyssey.Data;
+using Andastra.Game.Games.Odyssey.Components;
+using Andastra.Game.Games.Odyssey.Data;
 using Andastra.Game.Games.Common.Combat;
 using BaseItemData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.BaseItemData;
 
-namespace Andastra.Game.Engines.Odyssey.Combat
+namespace Andastra.Game.Games.Odyssey.Combat
 {
     /// <summary>
     /// Calculates weapon damage from equipped items using baseitems.2da (Odyssey engine).

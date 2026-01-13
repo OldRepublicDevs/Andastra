@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
 
-namespace Andastra.Game.Engines.Odyssey.Combat
+namespace Andastra.Game.Games.Odyssey.Combat
 {
     /// <summary>
     /// Combat round phases.

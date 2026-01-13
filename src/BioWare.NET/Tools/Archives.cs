@@ -7,6 +7,7 @@ using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.ERF;
 using BioWare.NET.Resource.Formats.KEY;
 using BioWare.NET.Resource.Formats.RIM;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.BIF;
 using JetBrains.Annotations;

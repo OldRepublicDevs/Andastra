@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.PCC;
 using BioWare.NET.Resource.Formats.RIM;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 

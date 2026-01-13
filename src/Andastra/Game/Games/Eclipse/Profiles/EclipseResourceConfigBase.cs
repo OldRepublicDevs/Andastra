@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Andastra.Runtime.Engines.Common;
+using Andastra.Game.Games.Common;
 
 namespace Andastra.Game.Engines.Eclipse.Profiles
 {

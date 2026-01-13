@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Module;
 
-namespace Andastra.Game.Engines.Odyssey.Loading
+namespace Andastra.Game.Games.Odyssey.Loading
 {
     /// <summary>
     /// KOTOR implementation of IModuleLoader.

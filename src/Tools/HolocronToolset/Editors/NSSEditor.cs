@@ -10,6 +10,7 @@ using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Tools;
 using BioWare.NET.Common.Script;

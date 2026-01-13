@@ -4,8 +4,8 @@ using System.Numerics;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Engines.Odyssey.Combat;
-using Andastra.Runtime.Engines.Odyssey.Components;
+using Andastra.Game.Games.Odyssey.Combat;
+using Andastra.Game.Games.Odyssey.Components;
 
 namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
 {
@@ -48,7 +48,7 @@ namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
         private readonly Loading.EntityFactory _entityFactory;
         private readonly Loading.ModuleLoader _moduleLoader;
         private readonly Func<IEntity, bool> _isPlayerCheck;
-        private readonly Func<BioWare.NET.Extract.Installation.Module> _getCurrentModule;
+        private readonly Func<BioWare.NET.Common.Module> _getCurrentModule;
 
         public EncounterSystem(IWorld world, FactionManager factionManager)
         {
@@ -59,7 +59,7 @@ namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
             _entityFactory = new Loading.EntityFactory();
         }
 
-        public EncounterSystem(IWorld world, FactionManager factionManager, Action<IEntity, ScriptEvent, IEntity> scriptExecutor, Loading.ModuleLoader moduleLoader, Func<IEntity, bool> isPlayerCheck = null, Func<BioWare.NET.Extract.Installation.Module> getCurrentModule = null)
+        public EncounterSystem(IWorld world, FactionManager factionManager, Action<IEntity, ScriptEvent, IEntity> scriptExecutor, Loading.ModuleLoader moduleLoader, Func<IEntity, bool> isPlayerCheck = null, Func<BioWare.NET.Common.Module> getCurrentModule = null)
             : this(world, factionManager)
         {
             _scriptExecutor = scriptExecutor;

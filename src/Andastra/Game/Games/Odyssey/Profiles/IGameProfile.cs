@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Scripting.Interfaces;
 
-namespace Andastra.Game.Engines.Odyssey.Profiles
+namespace Andastra.Game.Games.Odyssey.Profiles
 {
     /// <summary>
     /// Defines game-specific behavior for different Aurora/Odyssey engine games.

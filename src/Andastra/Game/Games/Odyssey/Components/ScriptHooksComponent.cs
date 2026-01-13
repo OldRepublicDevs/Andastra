@@ -1,6 +1,6 @@
 using Andastra.Game.Games.Common.Components;
 
-namespace Andastra.Game.Engines.Odyssey.Components
+namespace Andastra.Game.Games.Odyssey.Components
 {
     /// <summary>
     /// Odyssey Engine (KotOR/KotOR2) specific script hooks component.

@@ -5,6 +5,7 @@ using System.Numerics;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using HolocronToolset.Data;
 

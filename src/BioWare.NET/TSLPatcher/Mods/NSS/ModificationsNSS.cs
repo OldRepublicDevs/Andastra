@@ -86,14 +86,13 @@ namespace BioWare.NET.TSLPatcher.Mods.NSS
 
                 try
                 {
-                    Resource.Formats.NCS.NCS ncs = NCSAuto.CompileNss(
+                    BioWare.NET.Resource.Formats.NCS.NCS ncs = BioWare.NET.Resource.Formats.NCS.NCSAuto.CompileNss(
                         mutableSource.Value,
                         game,
-                        null,
-                        new List<NCSOptimizer> { new Resource.Formats.NCS.Optimizers.RemoveNopOptimizer() },
+                        new List<BioWare.NET.Resource.Formats.NCS.NCSOptimizer> { new BioWare.NET.Resource.Formats.NCS.Optimizers.RemoveNopOptimizer() },
                         new List<string> { tempFolder },
                         false);
-                    compiledBytes = NCSAuto.BytesNcs(ncs);
+                    compiledBytes = BioWare.NET.Resource.Formats.NCS.NCSAuto.BytesNcs(ncs);
                     return compiledBytes;
                 }
                 catch (EntryPointError e)

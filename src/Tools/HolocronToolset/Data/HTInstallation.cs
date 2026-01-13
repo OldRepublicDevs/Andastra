@@ -9,11 +9,13 @@ using BioWare.NET.Extract.Capsule;
 using BioWare.NET.Resource.Formats.TwoDA;
 using BioWare.NET.Resource.Formats.TPC;
 using BioWare.NET.Installation;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Avalonia;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using JetBrains.Annotations;
+using Extract_ResourceResult = BioWare.NET.Extract.ResourceResult;
 using ResourceResult = BioWare.NET.Installation.ResourceResult;
 using LocationResult = BioWare.NET.Extract.LocationResult;
 
@@ -91,7 +93,7 @@ namespace HolocronToolset.Data
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
         // Original: def resource(self, resname: str, restype: ResourceType, ...) -> ResourceResult | None:
         [CanBeNull]
-        public ResourceResult Resource(string resname, ResourceType restype, SearchLocation[] searchOrder = null, List<LazyCapsule> capsules = null)
+        public Extract_ResourceResult Resource(string resname, ResourceType restype, SearchLocation[] searchOrder = null, List<LazyCapsule> capsules = null)
         {
             if (capsules != null && capsules.Count > 0)
             {

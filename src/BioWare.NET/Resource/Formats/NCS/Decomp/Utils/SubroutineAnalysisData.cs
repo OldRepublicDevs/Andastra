@@ -118,7 +118,7 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
             IEnumerator<object> subnodes = new DictionaryKeyEnumeratorAdapter(this.substates);
             while (subnodes.HasNext())
             {
-                Node.Node node = (Node)subnodes.Next();
+                Node.Node node = (Node.Node)subnodes.Next();
                 SubroutineState state = (SubroutineState)this.substates[node];
                 Console.WriteLine("Printing state for subroutine at " + this.nodedata.GetPos(node).ToString());
                 state.PrintState();
@@ -207,7 +207,7 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
                 }
                 throw new Exception("Checking prototype on a subroutine not in the hash");
             }
-            Node.Node sub = (Node)subObj;
+            Node.Node sub = (Node.Node)subObj;
             if (sub != null)
             {
                 SubroutineState state = (SubroutineState)this.substates[sub];
@@ -227,7 +227,7 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
             {
                 throw new Exception("Checking prototype on a subroutine not in the hash");
             }
-            Node.Node sub = (Node)subObj;
+            Node.Node sub = (Node.Node)subObj;
             if (sub == null)
             {
                 throw new Exception("Checking prototype on a subroutine not in the hash");
@@ -243,7 +243,7 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
             {
                 throw new Exception("Checking prototype on a subroutine not in the hash");
             }
-            Node.Node sub = (Node)subObj;
+            Node.Node sub = (Node.Node)subObj;
             if (sub == null)
             {
                 throw new Exception("Checking prototype on a subroutine not in the hash");

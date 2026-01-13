@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
 
 namespace Andastra.Game.Games.Eclipse.Data
 {

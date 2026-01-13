@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
 using JetBrains.Annotations;
 using JRL = BioWare.NET.Resource.Formats.GFF.Generics.JRL;
 

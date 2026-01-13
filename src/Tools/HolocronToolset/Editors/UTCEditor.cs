@@ -15,6 +15,7 @@ using BioWare.NET.Resource.Formats.LTR;
 using BioWare.NET.Resource.Formats.TPC;
 using BioWare.NET.Resource.Formats.TwoDA;
 using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using UTCHelpers = BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTCHelpers;
 using UTCClass = BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTCClass;

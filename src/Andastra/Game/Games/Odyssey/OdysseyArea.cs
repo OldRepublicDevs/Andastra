@@ -7,20 +7,17 @@ using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.MDL;
 using BioWare.NET.Resource.Formats.MDLData;
 using BioWare.NET.Resource.Formats.VIS;
-using BioWare.NET.Extract.Installation;
-using BioWare.NET.Resource;
+using BioWare.NET.Extract;
 using BioWare.NET.Resource.Formats.GFF.Generics;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Core.Navigation;
-using Andastra.Runtime.Engines.Odyssey.Loading;
 using Andastra.Game.Games.Common;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Graphics.Common;
-using Andastra.Runtime.Graphics.Common.Effects;
 using JetBrains.Annotations;
+using ObjectType = BioWare.NET.Common.ObjectType;
 // Removed: ParsingIModule - IModule does not exist in BioWare.NET.Common
 // Use RuntimeIModule (Andastra.Runtime.Core.Interfaces.IModule) instead if needed
 using RuntimeIModule = Andastra.Runtime.Core.Interfaces.IModule;
@@ -80,8 +77,6 @@ namespace Andastra.Game.Games.Odyssey
         private uint _ambientColor;
         private uint _dynamicAmbientColor;
         private uint _fogColor;
-        private bool _fogEnabled;
-        private float _fogNear;
         private float _fogFar;
         private uint _sunFogColor;
         private uint _sunDiffuseColor;
@@ -91,7 +86,7 @@ namespace Andastra.Game.Games.Odyssey
         private IAreaRenderContext _renderContext;
 
         // Module reference for loading WOK files (optional, set when available)
-        private BioWare.NET.Extract.Installation.Module _module;
+        private Module _module;
 
         // Area heartbeat and transition state
         private float _areaHeartbeatTimer;
@@ -102,7 +97,7 @@ namespace Andastra.Game.Games.Odyssey
         // Area local variables storage
         // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area local variable storage system
         // Area variables are stored separately from entity variables and persist across area loads
-        private Andastra.Runtime.Core.Save.LocalVariableSet _localVariables;
+        private Runtime.Core.Save.LocalVariableSet _localVariables;
 
         // Area entity for script execution context
         // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area entities are created dynamically for script execution
@@ -127,7 +122,7 @@ namespace Andastra.Game.Games.Odyssey
         /// - Required for full walkmesh functionality when rooms are available
         /// - Can be set later via SetModule() if not available at construction time
         /// </remarks>
-        public OdysseyArea(string resRef, byte[] areData, byte[] gitData, BioWare.NET.Extract.Installation.Module module = null)
+        public OdysseyArea(string resRef, byte[] areData, byte[] gitData, Module module = null)
         {
             _resRef = resRef ?? throw new ArgumentNullException(nameof(resRef));
             _tag = resRef; // Default tag to resref
@@ -142,8 +137,8 @@ namespace Andastra.Game.Games.Odyssey
             _ambientColor = 0xFF808080; // Gray ambient
             _dynamicAmbientColor = 0xFF808080;
             _fogColor = 0xFF808080;
-            _fogEnabled = false;
-            _fogNear = 0.0f;
+            FogEnabled = false;
+            FogNear = 0.0f;
             _fogFar = 1000.0f;
             _sunFogColor = 0xFF808080;
             _sunDiffuseColor = 0xFFFFFFFF;
@@ -174,7 +169,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Call this method if Module was not available at construction time.
         /// If rooms are already set, this will trigger walkmesh loading.
         /// </remarks>
-        public void SetModule(BioWare.NET.Extract.Installation.Module module)
+        public void SetModule(Module module)
         {
             _module = module;
             // If rooms are already set, try to load walkmesh now
@@ -447,12 +442,12 @@ namespace Andastra.Game.Games.Odyssey
 
                 if (root.Exists("SunFogOn"))
                 {
-                    _fogEnabled = root.GetUInt8("SunFogOn") != 0;
+                    FogEnabled = root.GetUInt8("SunFogOn") != 0;
                 }
 
                 if (root.Exists("SunFogNear"))
                 {
-                    _fogNear = root.GetSingle("SunFogNear");
+                    FogNear = root.GetSingle("SunFogNear");
                 }
 
                 if (root.Exists("SunFogFar"))
@@ -628,8 +623,8 @@ namespace Andastra.Game.Games.Odyssey
             // Write fog properties to root
             // Based on ARE format: Fog properties are at root level
             root.SetUInt32("FogColor", _fogColor);
-            root.SetUInt8("SunFogOn", _fogEnabled ? (byte)1 : (byte)0);
-            root.SetSingle("SunFogNear", _fogNear);
+            root.SetUInt8("SunFogOn", FogEnabled ? (byte)1 : (byte)0);
+            root.SetSingle("SunFogNear", FogNear);
             root.SetSingle("SunFogFar", _fogFar);
 
             // Create AreaProperties nested struct (based on Ghidra analysis: FUN_004136d0 creates/gets struct)
@@ -834,7 +829,7 @@ namespace Andastra.Game.Games.Odyssey
 
                 // Load creatures from GIT
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004dfbb0 @ 0x004dfbb0 loads creature instances from GIT "Creature List"
-                foreach (Parsing.Resource.Generics.GITCreature creature in git.Creatures)
+                foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITCreature creature in git.Creatures)
                 {
                     // Create entity with ObjectId, ObjectType, and Tag
                     // ObjectId: Use from GIT if available, otherwise generate
@@ -873,7 +868,7 @@ namespace Andastra.Game.Games.Odyssey
 
                 // Load doors from GIT
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e08e0 @ 0x004e08e0 loads door instances from GIT "Door List"
-                foreach (Parsing.Resource.Generics.GITDoor door in git.Doors)
+                foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITDoor door in git.Doors)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Door, door.Tag ?? string.Empty);
@@ -907,7 +902,7 @@ namespace Andastra.Game.Games.Odyssey
 
                 // Load placeables from GIT
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e08e0 @ 0x004e08e0 loads placeable instances from GIT "Placeable List"
-                foreach (Parsing.Resource.Generics.GITPlaceable placeable in git.Placeables)
+                foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITPlaceable placeable in git.Placeables)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Placeable, placeable.ResRef?.ToString() ?? string.Empty);
@@ -932,7 +927,7 @@ namespace Andastra.Game.Games.Odyssey
 
                 // Load triggers from GIT
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e5920 @ 0x004e5920 loads trigger instances from GIT "TriggerList"
-                foreach (Parsing.Resource.Generics.GITTrigger trigger in git.Triggers)
+                foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITTrigger trigger in git.Triggers)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Trigger, trigger.Tag ?? string.Empty);
@@ -972,7 +967,7 @@ namespace Andastra.Game.Games.Odyssey
 
                 // Load waypoints from GIT
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e04a0 @ 0x004e04a0 loads waypoint instances from GIT "WaypointList"
-                foreach (Parsing.Resource.Generics.GITWaypoint waypoint in git.Waypoints)
+                foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITWaypoint waypoint in git.Waypoints)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Waypoint, waypoint.Tag ?? string.Empty);
@@ -1021,7 +1016,7 @@ namespace Andastra.Game.Games.Odyssey
 
                 // Load sounds from GIT
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e06a0 @ 0x004e06a0 loads sound instances from GIT "SoundList"
-                foreach (Parsing.Resource.Generics.GITSound sound in git.Sounds)
+                foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITSound sound in git.Sounds)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Sound, sound.ResRef?.ToString() ?? string.Empty);
@@ -1277,7 +1272,7 @@ namespace Andastra.Game.Games.Odyssey
             {
                 // Use NavigationMeshFactory to create combined navigation mesh from all room walkmeshes
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ModuleLoader.LoadWalkmesh pattern
-                var navMeshFactory = new Andastra.Runtime.Engines.Odyssey.Loading.NavigationMeshFactory();
+                var navMeshFactory = new Andastra.Game.Games.Odyssey.Loading.NavigationMeshFactory();
                 INavigationMesh combinedNavMesh = navMeshFactory.CreateFromModule(_module, _rooms);
 
                 if (combinedNavMesh != null)
@@ -1382,16 +1377,16 @@ namespace Andastra.Game.Games.Odyssey
 
             // Initialize fog parameters
             // Based on ARE file format: SunFogOn, SunFogNear, SunFogFar, SunFogColor
-            if (_fogEnabled)
+            if (FogEnabled)
             {
                 // Validate fog near/far distances
                 // Ensure near < far, and both are within reasonable ranges
-                if (_fogNear < 0.0f)
+                if (FogNear < 0.0f)
                 {
-                    _fogNear = 0.0f; // Clamp to minimum
+                    FogNear = 0.0f; // Clamp to minimum
                 }
 
-                if (_fogFar <= _fogNear)
+                if (_fogFar <= FogNear)
                 {
                     // If far <= near, set reasonable defaults
                     // Original engine behavior: if invalid, disable fog or use defaults
@@ -1399,9 +1394,9 @@ namespace Andastra.Game.Games.Odyssey
                     {
                         _fogFar = 1000.0f; // Default far distance
                     }
-                    if (_fogNear >= _fogFar)
+                    if (FogNear >= _fogFar)
                     {
-                        _fogNear = 0.0f; // Reset near to start
+                        FogNear = 0.0f; // Reset near to start
                     }
                 }
 
@@ -1432,11 +1427,11 @@ namespace Andastra.Game.Games.Odyssey
             {
                 // Fog is disabled - ensure distances are reset to defaults
                 // This allows fog to be enabled later with proper defaults
-                if (_fogNear < 0.0f)
+                if (FogNear < 0.0f)
                 {
-                    _fogNear = 0.0f;
+                    FogNear = 0.0f;
                 }
-                if (_fogFar <= _fogNear)
+                if (_fogFar <= FogNear)
                 {
                     _fogFar = 1000.0f;
                 }
@@ -1853,7 +1848,7 @@ namespace Andastra.Game.Games.Odyssey
                 }
 
                 // If we can access parsing Module directly, read Mod_Area_list
-                var parsingModule = module as BioWare.NET.Extract.Installation.Module;
+                var parsingModule = module as Module;
                 if (parsingModule != null)
                 {
                     return ReadAreaListFromIFO(parsingModule);
@@ -1877,7 +1872,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Each entry contains Area_Name field with the area ResRef.
         /// This matches the IFO format specification in vendor/PyKotor/wiki/GFF-IFO.md.
         /// </remarks>
-        private List<string> ReadAreaListFromIFO(BioWare.NET.Extract.Installation.Module module)
+        private List<string> ReadAreaListFromIFO(Module module)
         {
             if (module == null)
             {
@@ -1888,13 +1883,9 @@ namespace Andastra.Game.Games.Odyssey
             {
                 // Get IFO resource
                 ModuleResource ifoResource = module.Info();
-                if (ifoResource == null)
-                {
-                    return null;
-                }
 
                 // Load IFO data
-                object ifoData = ifoResource.Resource();
+                object ifoData = ifoResource?.Resource();
                 if (ifoData == null)
                 {
                     return null;
@@ -1923,31 +1914,18 @@ namespace Andastra.Game.Games.Odyssey
                     return null;
                 }
 
-                List<string> areaResRefs = new List<string>();
+                List<string> areaResRefs = (from areaEntry in areaList where areaEntry.Exists("Area_Name") select areaEntry.GetResRef("Area_Name") into areaName where areaName != null && !string.IsNullOrEmpty(areaName.ToString()) select areaName.ToString()).ToList();
 
                 // Each entry in Mod_Area_list has an Area_Name field (ResRef)
-                foreach (GFFStruct areaEntry in areaList)
-                {
-                    if (areaEntry.Exists("Area_Name"))
-                    {
-                        ResRef areaName = areaEntry.GetResRef("Area_Name");
-                        if (areaName != null && !string.IsNullOrEmpty(areaName.ToString()))
-                        {
-                            areaResRefs.Add(areaName.ToString());
-                        }
-                    }
-                }
 
                 if (areaResRefs.Count > 0)
                 {
                     Console.WriteLine($"[OdysseyArea] ReadAreaListFromIFO: Found {areaResRefs.Count} areas in Mod_Area_list for module {module.GetRoot()}: {string.Join(", ", areaResRefs)}");
                     return areaResRefs;
                 }
-                else
-                {
-                    Console.WriteLine($"[OdysseyArea] ReadAreaListFromIFO: No valid area entries found in Mod_Area_list for module {module.GetRoot()}");
-                    return null;
-                }
+
+                Console.WriteLine($"[OdysseyArea] ReadAreaListFromIFO: No valid area entries found in Mod_Area_list for module {module.GetRoot()}");
+                return null;
             }
             catch (Exception ex)
             {
@@ -2037,41 +2015,40 @@ namespace Andastra.Game.Games.Odyssey
             // Full transition flow: Remove from current area -> Project position -> Add to target area -> Update AreaId
             foreach (IEntity entity in entitiesToTransition)
             {
-                if (entity != null && entity.IsValid)
+                if (entity == null || !entity.IsValid)
+                    continue;
+                // Step 1: Remove entity from current area (this area)
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): RemoveEntityFromArea removes entity from type-specific lists
+                RemoveEntityFromArea(entity);
+                Console.WriteLine($"[OdysseyArea] HandleDirectAreaTransition: Removed entity {entity.Tag ?? "null"} ({entity.ObjectId}) from current area {this.ResRef}");
+
+                // Step 2: Engine-specific pre-transition hook (save state if needed)
+                // Odyssey: No-op by default (no physics state to save)
+                OnBeforeTransition(entity, this);
+
+                // Step 3: Project entity position to target area walkmesh
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Walkmesh projection system (FUN_004f5070 @ 0x004f5070)
+                // Projects position to walkable surface for accurate positioning
+                ProjectEntityToTargetArea(entity, targetArea);
+
+                // Step 4: Engine-specific post-transition hook (restore state if needed)
+                // Odyssey: No-op by default (no physics state to restore)
+                OnAfterTransition(entity, targetArea, this);
+
+                // Step 5: Add entity to target area
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): AddEntityToArea adds entity to type-specific lists
+                AddEntityToTargetArea(entity, targetArea);
+                Console.WriteLine($"[OdysseyArea] HandleDirectAreaTransition: Added entity {entity.Tag ?? "null"} ({entity.ObjectId}) to target area {targetAreaResRef}");
+
+                // Step 6: Update entity's AreaId
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity AreaId is updated after successful area transition
+                uint targetAreaId = world.GetAreaId(targetArea);
+                if (targetAreaId != 0)
                 {
-                    // Step 1: Remove entity from current area (this area)
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): RemoveEntityFromArea removes entity from type-specific lists
-                    RemoveEntityFromArea(entity);
-                    Console.WriteLine($"[OdysseyArea] HandleDirectAreaTransition: Removed entity {entity.Tag ?? "null"} ({entity.ObjectId}) from current area {this.ResRef}");
-
-                    // Step 2: Engine-specific pre-transition hook (save state if needed)
-                    // Odyssey: No-op by default (no physics state to save)
-                    OnBeforeTransition(entity, this);
-
-                    // Step 3: Project entity position to target area walkmesh
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Walkmesh projection system (FUN_004f5070 @ 0x004f5070)
-                    // Projects position to walkable surface for accurate positioning
-                    ProjectEntityToTargetArea(entity, targetArea);
-
-                    // Step 4: Engine-specific post-transition hook (restore state if needed)
-                    // Odyssey: No-op by default (no physics state to restore)
-                    OnAfterTransition(entity, targetArea, this);
-
-                    // Step 5: Add entity to target area
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): AddEntityToArea adds entity to type-specific lists
-                    AddEntityToTargetArea(entity, targetArea);
-                    Console.WriteLine($"[OdysseyArea] HandleDirectAreaTransition: Added entity {entity.Tag ?? "null"} ({entity.ObjectId}) to target area {targetAreaResRef}");
-
-                    // Step 6: Update entity's AreaId
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity AreaId is updated after successful area transition
-                    uint targetAreaId = world.GetAreaId(targetArea);
-                    if (targetAreaId != 0)
-                    {
-                        entity.AreaId = targetAreaId;
-                    }
-
-                    Console.WriteLine($"[OdysseyArea] HandleDirectAreaTransition: Successfully transitioned entity {entity.Tag ?? "null"} ({entity.ObjectId}) from area {this.ResRef} to area {targetAreaResRef}");
+                    entity.AreaId = targetAreaId;
                 }
+
+                Console.WriteLine($"[OdysseyArea] HandleDirectAreaTransition: Successfully transitioned entity {entity.Tag ?? "null"} ({entity.ObjectId}) from area {this.ResRef} to area {targetAreaResRef}");
             }
         }
 
@@ -2211,22 +2188,22 @@ namespace Andastra.Game.Games.Odyssey
         {
             // Update fog parameters if fog is enabled
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Fog updates during environmental effect processing
-            if (_fogEnabled)
+            if (FogEnabled)
             {
                 // Validate fog distances
-                if (_fogNear < 0.0f)
+                if (FogNear < 0.0f)
                 {
-                    _fogNear = 0.0f;
+                    FogNear = 0.0f;
                 }
-                if (_fogFar <= _fogNear)
+                if (_fogFar <= FogNear)
                 {
                     if (_fogFar <= 0.0f)
                     {
                         _fogFar = 1000.0f; // Default far distance
                     }
-                    if (_fogNear >= _fogFar)
+                    if (FogNear >= _fogFar)
                     {
-                        _fogNear = 0.0f; // Reset near to start
+                        FogNear = 0.0f; // Reset near to start
                     }
                 }
 
@@ -2372,9 +2349,11 @@ namespace Andastra.Game.Games.Odyssey
 
                 // Create area entity with ResRef as tag
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area entities use ObjectType.Area (if it exists) or ObjectType.Invalid
-                var areaEntityObj = new OdysseyEntity(areaObjectId, ObjectType.Invalid, _resRef);
-                areaEntityObj.DisplayName = _displayName ?? _resRef;
-                areaEntityObj.SetData("IsAreaEntity", true); // Mark as area entity for script context
+                var areaEntityObj = new OdysseyEntity(areaObjectId, RuntimeObjectType.Invalid, _resRef)
+                {
+                    DisplayName = _displayName ?? _resRef
+                };
+                areaEntityObj.SetData("IsAreaEntity", true);  // Mark as area entity for script context
 
                 // Register area entity with world for proper lookup and lifecycle management
                 // Special handling: Area entities are registered but marked as script-only entities
@@ -2396,7 +2375,7 @@ namespace Andastra.Game.Games.Odyssey
             {
                 // If entity creation fails, log and return null
                 // Script execution will be skipped this frame
-                System.Console.WriteLine($"[OdysseyArea] Failed to create area entity for scripts: {ex.Message}");
+                Console.WriteLine($"[OdysseyArea] Failed to create area entity for scripts: {ex.Message}");
                 return null;
             }
         }
@@ -2427,21 +2406,13 @@ namespace Andastra.Game.Games.Odyssey
         /// </remarks>
         public void SetRooms(List<RoomInfo> rooms)
         {
-            if (rooms == null)
-            {
-                _rooms = new List<RoomInfo>();
-            }
-            else
-            {
-                _rooms = new List<RoomInfo>(rooms);
-            }
+            _rooms = rooms == null
+                     ? new List<RoomInfo>()
+                     : new List<RoomInfo>(rooms);
 
             // Clear bounding box cache when rooms are updated (rooms may have changed)
             // Bounding boxes will be recalculated on demand when needed
-            if (_roomBoundingBoxes != null)
-            {
-                _roomBoundingBoxes.Clear();
-            }
+            _roomBoundingBoxes?.Clear();
 
             // If Module is available, load walkmeshes from rooms
             if (_module != null && _rooms.Count > 0)
@@ -2470,11 +2441,7 @@ namespace Andastra.Game.Games.Odyssey
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Ambient color from ARE file AreaProperties.
         /// Controls base lighting level for the area.
         /// </remarks>
-        public uint AmbientColor
-        {
-            get => _ambientColor;
-            set => _ambientColor = value;
-        }
+        public uint AmbientColor { get; set; }
 
         /// <summary>
         /// Gets or sets the fog color (RGBA).
@@ -2482,11 +2449,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Fog color from ARE file AreaProperties.
         /// </remarks>
-        public uint FogColor
-        {
-            get => _fogColor;
-            set => _fogColor = value;
-        }
+        public uint FogColor { get; set; }
 
         /// <summary>
         /// Gets or sets whether fog is enabled.
@@ -2494,11 +2457,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Fog enabled flag from ARE file AreaProperties.
         /// </remarks>
-        public bool FogEnabled
-        {
-            get => _fogEnabled;
-            set => _fogEnabled = value;
-        }
+        public bool FogEnabled { get; set; }
 
         /// <summary>
         /// Gets or sets the fog near distance.
@@ -2506,11 +2465,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Fog near distance from ARE file AreaProperties.
         /// </remarks>
-        public float FogNear
-        {
-            get => _fogNear;
-            set => _fogNear = value;
-        }
+        public float FogNear { get; set; }
 
         /// <summary>
         /// Gets or sets the fog far distance.
@@ -2518,11 +2473,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Fog far distance from ARE file AreaProperties.
         /// </remarks>
-        public float FogFar
-        {
-            get => _fogFar;
-            set => _fogFar = value;
-        }
+        public float FogFar { get; set; }
 
         /// <summary>
         /// Renders the area.
@@ -2532,7 +2483,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Renders static geometry, area effects, and environmental elements.
         ///
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area rendering functions
-        /// - Room mesh rendering with VIS culling (swkotor2.exe: FUN_0041b6b0 @ 0x0041b6b0)
+        /// - Room mesh rendering with VIS culling [TODO: Name this function] @ (K1: TODO: Find address, TSL: 0x0041b6b0)
         /// - VIS culling: Uses VIS file to determine which rooms are visible from current room
         /// - Lighting: Applies ambient, diffuse, and fog effects from ARE file
         /// - Room meshes: Loaded from MDL models referenced in LYT file
@@ -2562,7 +2513,7 @@ namespace Andastra.Game.Games.Odyssey
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Fog parameters are applied to graphics device/effect during rendering
             // Original engine behavior: DirectX fixed-function fog states (D3DRS_FOGENABLE, D3DRS_FOGCOLOR, etc.)
             // Modern implementation: Shader-based fog via BasicEffect parameters
-            if (_fogEnabled)
+            if (FogEnabled)
             {
                 // Select effective fog color (prefer SunFogColor, fallback to FogColor, default to gray)
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): SunFogColor takes precedence over FogColor when available
@@ -2590,7 +2541,7 @@ namespace Andastra.Game.Games.Odyssey
                 // Modern implementation: BasicEffect fog parameters for shader-based fog
                 basicEffect.FogEnabled = true;
                 basicEffect.FogColor = fogColorVec;
-                basicEffect.FogStart = _fogNear;  // Fog begins at this distance
+                basicEffect.FogStart = FogNear;  // Fog begins at this distance
                 basicEffect.FogEnd = _fogFar;     // Fog fully obscures objects at this distance
             }
             else
@@ -2669,12 +2620,12 @@ namespace Andastra.Game.Games.Odyssey
 
                     // Set up room transform
                     Vector3 roomPos = room.Position;
-                    Matrix4x4 roomWorld = MatrixHelper.CreateTranslation(roomPos);
+                    Matrix4x4 roomWorld = Matrix4x4.CreateTranslation(roomPos);
 
                     // Apply room rotation if specified
                     if (Math.Abs(room.Rotation) > 0.001f)
                     {
-                        Matrix4x4 rotation = MatrixHelper.CreateRotationY((float)(room.Rotation * Math.PI / 180.0));
+                        Matrix4x4 rotation = Matrix4x4.CreateRotationY((float)(room.Rotation * Math.PI / 180.0));
                         roomWorld = Matrix4x4.Multiply(rotation, roomWorld);
                     }
 
@@ -3308,7 +3259,7 @@ namespace Andastra.Game.Games.Odyssey
             // Based on swkotor.exe/swkotor2.exe: Navigation mesh resources are freed
             if (_navigationMesh != null)
             {
-                if (_navigationMesh is System.IDisposable disposableMesh)
+                if (_navigationMesh is IDisposable disposableMesh)
                 {
                     disposableMesh.Dispose();
                 }
@@ -3321,7 +3272,7 @@ namespace Andastra.Game.Games.Odyssey
             {
                 foreach (var roomMesh in _roomMeshes.Values)
                 {
-                    if (roomMesh is System.IDisposable disposableRoom)
+                    if (roomMesh is IDisposable disposableRoom)
                     {
                         disposableRoom.Dispose();
                     }
@@ -3345,7 +3296,7 @@ namespace Andastra.Game.Games.Odyssey
             // Clear rendering context
             if (_renderContext != null)
             {
-                if (_renderContext is System.IDisposable disposableContext)
+                if (_renderContext is IDisposable disposableContext)
                 {
                     disposableContext.Dispose();
                 }
@@ -3371,7 +3322,7 @@ namespace Andastra.Game.Games.Odyssey
                 else
                 {
                     // Entity not registered with world - destroy directly
-                    if (_areaEntityForScripts is Core.Entities.Entity concreteEntity)
+                    if (_areaEntityForScripts is Runtime.Core.Entities.Entity concreteEntity)
                     {
                         concreteEntity.Destroy();
                     }

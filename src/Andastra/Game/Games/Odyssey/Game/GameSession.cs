@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using BioWare.NET;
 using BioWare.NET.Common;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Core.Actions;
@@ -21,21 +22,21 @@ using Andastra.Runtime.Core.Movement;
 using Andastra.Runtime.Core.Navigation;
 using Andastra.Runtime.Core.Party;
 using Andastra.Runtime.Core.Plot;
-using Andastra.Runtime.Engines.Odyssey.Combat;
-using Andastra.Runtime.Engines.Odyssey.Components;
-using Andastra.Runtime.Engines.Odyssey.Dialogue;
-using Andastra.Runtime.Engines.Odyssey.EngineApi;
-using Andastra.Runtime.Engines.Odyssey.Loading;
-using Andastra.Runtime.Engines.Odyssey.Systems;
+using Andastra.Game.Games.Odyssey.Combat;
+using Andastra.Game.Games.Odyssey.Components;
+using Andastra.Game.Games.Odyssey.Dialogue;
+using Andastra.Game.Games.Odyssey.EngineApi;
+using Andastra.Game.Games.Odyssey.Loading;
+using Andastra.Game.Games.Odyssey.Systems;
 using Andastra.Game.Games.Odyssey;
 using Andastra.Game.Games.Odyssey.Input;
-using Andastra.Runtime.Scripting.Interfaces;
-using Andastra.Runtime.Scripting.VM;
+using Andastra.Game.Scripting.Interfaces;
+using Andastra.Game.Scripting.VM;
 using JetBrains.Annotations;
 using GameDataManager = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager;
 using Systems = Andastra.Runtime.Games.Odyssey.Systems;
 
-namespace Andastra.Game.Engines.Odyssey.Game
+namespace Andastra.Game.Games.Odyssey.Game
 {
     /// <summary>
     /// Main game session manager that coordinates all game systems.
@@ -165,7 +166,7 @@ namespace Andastra.Game.Engines.Odyssey.Game
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module objects are cached and reused for resource lookups.
         /// </summary>
         [CanBeNull]
-        public BioWare.NET.Extract.Installation.Module GetCurrentParsingModule()
+        public BioWare.NET.Common.Module GetCurrentParsingModule()
         {
             return _moduleLoader?.GetCurrentModule();
         }
@@ -1328,7 +1329,7 @@ namespace Andastra.Game.Engines.Odyssey.Game
 
             try
             {
-                BioWare.NET.Extract.Installation.ResourceResult resource = _installation.Resources.LookupResource(resRef, ResourceType.DLG);
+                BioWare.NET.Extract.ResourceResult resource = _installation.Resources.LookupResource(resRef, ResourceType.DLG);
                 if (resource == null || resource.Data == null)
                 {
                     return null;
@@ -1355,7 +1356,7 @@ namespace Andastra.Game.Engines.Odyssey.Game
 
             try
             {
-                BioWare.NET.Extract.Installation.ResourceResult resource = _installation.Resources.LookupResource(resRef, ResourceType.NCS);
+                BioWare.NET.Extract.ResourceResult resource = _installation.Resources.LookupResource(resRef, ResourceType.NCS);
                 if (resource == null || resource.Data == null)
                 {
                     return null;
@@ -1613,7 +1614,7 @@ namespace Andastra.Game.Engines.Odyssey.Game
             try
             {
                 // Look up the attack bonus table
-                Parsing.Formats.TwoDA.TwoDA table = gameDataManager.GetTable(tableName);
+                BioWare.NET.Resource.Formats.TwoDA.TwoDA table = gameDataManager.GetTable(tableName);
                 if (table == null)
                 {
                     Console.WriteLine($"[GameSession] GetAttackBonusFromTable: Table '{tableName}' not found");
@@ -1629,7 +1630,7 @@ namespace Andastra.Game.Engines.Odyssey.Game
                 }
 
                 // Get row for this level
-                Parsing.Formats.TwoDA.TwoDARow row = table.GetRow(rowIndex);
+                BioWare.NET.Resource.Formats.TwoDA.TwoDARow row = table.GetRow(rowIndex);
                 if (row == null)
                 {
                     return 0;
@@ -1699,7 +1700,7 @@ namespace Andastra.Game.Engines.Odyssey.Game
             try
             {
                 // Look up the saving throw table
-                Parsing.Formats.TwoDA.TwoDA table = gameDataManager.GetTable(tableName);
+                BioWare.NET.Resource.Formats.TwoDA.TwoDA table = gameDataManager.GetTable(tableName);
                 if (table == null)
                 {
                     Console.WriteLine($"[GameSession] GetSavingThrowsFromTable: Table '{tableName}' not found");
@@ -1715,7 +1716,7 @@ namespace Andastra.Game.Engines.Odyssey.Game
                 }
 
                 // Get row for this level
-                Parsing.Formats.TwoDA.TwoDARow row = table.GetRow(rowIndex);
+                BioWare.NET.Resource.Formats.TwoDA.TwoDARow row = table.GetRow(rowIndex);
                 if (row == null)
                 {
                     return;

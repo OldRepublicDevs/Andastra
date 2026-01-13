@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.ERF;
 using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.GFF.Generics.UTC;
 using Andastra.Runtime.Content.Interfaces;
@@ -16,8 +17,8 @@ using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Navigation;
-using Andastra.Runtime.Engines.Common;
-using Andastra.Runtime.Engines.Odyssey.Components;
+using Andastra.Game.Games.Common;
+using Andastra.Game.Games.Odyssey.Components;
 using Andastra.Game.Games.Aurora.Components;
 using Andastra.Game.Games.Common.Components;
 using Andastra.Game.Games.Odyssey.Components;
@@ -2025,7 +2026,7 @@ namespace Andastra.Game.Games.Aurora
                 // Parse UTM GFF
                 // Based on nwmain.exe: CResGFF::LoadFromBuffer loads GFF data
                 var gff = GFF.FromBytes(utmData);
-                var utm = Parsing.Resource.Generics.UTM.UTMHelpers.ConstructUtm(gff);
+                var utm = BioWare.NET.Resource.Formats.GFF.Generics.UTM.UTMHelpers.ConstructUtm(gff);
 
                 // Set template ResRef
                 storeComponent.TemplateResRef = utmResRef;

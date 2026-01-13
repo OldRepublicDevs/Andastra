@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.MonoGame.Audio;
+using Andastra.Game.Graphics.MonoGame.Audio;
 using Microsoft.Xna.Framework;
 
 namespace Andastra.Game.Graphics.MonoGame.Graphics

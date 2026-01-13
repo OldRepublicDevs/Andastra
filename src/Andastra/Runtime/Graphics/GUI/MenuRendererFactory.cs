@@ -85,7 +85,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
                 Type graphicsDeviceType = graphicsDevice.GetType();
 
                 // Check if it's a MonoGameGraphicsDevice (using string comparison to avoid compile-time dependency)
-                if (graphicsDeviceType.FullName != "Andastra.Runtime.MonoGame.Graphics.MonoGameGraphicsDevice")
+                if (graphicsDeviceType.FullName != "Andastra.Game.Graphics.MonoGame.Graphics.MonoGameGraphicsDevice")
                 {
                     Console.WriteLine($"[MenuRendererFactory] ERROR: GraphicsDevice is not a MonoGameGraphicsDevice (type: {graphicsDeviceType.FullName})");
                     return null;
@@ -102,7 +102,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
 
                 // Load the MyraMenuRenderer type using reflection
                 Assembly monoGameAssembly = graphicsDeviceType.Assembly;
-                Type myraMenuRendererType = monoGameAssembly.GetType("Andastra.Runtime.MonoGame.GUI.MyraMenuRenderer");
+                Type myraMenuRendererType = monoGameAssembly.GetType("Andastra.Game.Graphics.MonoGame.GUI.MyraMenuRenderer");
 
                 if (myraMenuRendererType == null)
                 {

@@ -4,9 +4,9 @@ using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Engines.Odyssey.Components;
+using Andastra.Game.Games.Odyssey.Components;
 
-namespace Andastra.Game.Engines.Odyssey.Combat
+namespace Andastra.Game.Games.Odyssey.Combat
 {
     /// <summary>
     /// Attack result types.

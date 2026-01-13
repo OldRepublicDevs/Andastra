@@ -14,6 +14,7 @@ using BioWare.NET.Resource.Formats.ERF;
 using BioWare.NET.Resource.Formats.RIM;
 using BioWare.NET.Resource.Formats.TPC;
 using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.LYT;
 using BioWare.NET.Resource.Formats.GFF.Generics;
@@ -53,7 +54,7 @@ namespace BioWare.NET.Tools
             {
                 return 3;
             }
-            // Files directly in BioWare.NET.Extract.Installation root treated as Override priority
+            // Files directly in BioWare.NET.Extract root treated as Override priority
             if (Path.GetDirectoryName(filepath) == installation.Path)
             {
                 return 0;
@@ -1472,7 +1473,7 @@ namespace BioWare.NET.Tools
                         continue;
                     }
 
-                    // Try module first (fastest), then fall back to batched BioWare.NET.Extract.Installation locations
+                    // Try module first (fastest), then fall back to batched BioWare.NET.Extract locations
                     foreach (string suffix in new[] { "0", "1", "2" })
                     {
                         string dwkKey = $"dwk{suffix}";
@@ -1495,7 +1496,7 @@ namespace BioWare.NET.Tools
                             }
                         }
 
-                        // Try batched BioWare.NET.Extract.Installation locations if not found in module
+                        // Try batched BioWare.NET.Extract locations if not found in module
                         if (!dwkFound)
                         {
                             ResourceIdentifier dwkIdent = new ResourceIdentifier(dwkResname, ResourceType.DWK);
@@ -1606,7 +1607,7 @@ namespace BioWare.NET.Tools
                         }
                     }
 
-                    // Try batched BioWare.NET.Extract.Installation locations
+                    // Try batched BioWare.NET.Extract locations
                     ResourceIdentifier pwkIdent = new ResourceIdentifier(placeableModelName, ResourceType.PWK);
                     if (pwkLocations.ContainsKey(pwkIdent) && pwkLocations[pwkIdent].Count > 0)
                     {
@@ -1831,7 +1832,7 @@ namespace BioWare.NET.Tools
                                      materialValue == 6 || materialValue == 9 || materialValue == 10 || materialValue == 11 ||
                                      materialValue == 12 || materialValue == 13 || materialValue == 14 || materialValue == 16 ||
                                      materialValue == 18 || materialValue == 20 || materialValue == 21 || materialValue == 22;
-                    Color Color = isWalkable ? Color.WHITE : new Color(0.5f, 0.5f, 0.5f);
+                    BioWare.NET.Common.Color Color = isWalkable ? BioWare.NET.Common.Color.WHITE : new BioWare.NET.Common.Color(0.5f, 0.5f, 0.5f);
                     System.Drawing.Color color = isWalkable ? System.Drawing.Color.White : System.Drawing.Color.Gray;
 
                     // Get face vertices

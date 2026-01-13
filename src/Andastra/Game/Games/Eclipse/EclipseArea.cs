@@ -7,37 +7,40 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using BioWare.NET;
 using BioWare.NET.Common;
+using BioWare.NET.Extract;
+using BioWare.NET.Common;
+using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.BWM;
 using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.NET.Resource.Formats.LYT;
 using BioWare.NET.Resource.Formats.MDL;
 using BioWare.NET.Resource.Formats.MDLData;
 using BioWare.NET.Resource.Formats.TPC;
-using BioWare.NET.Extract.Installation;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.GFF.Generics;
 using BioWare.NET.Tools;
-using Andastra.Runtime.Content.Converters;
-using Andastra.Runtime.Content.Interfaces;
-using Andastra.Runtime.Core.Collision;
-using Andastra.Runtime.Core.Enums;
-using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Core.Module;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Eclipse;
 using Andastra.Game.Games.Eclipse.Environmental;
 using Andastra.Game.Games.Eclipse.Lighting;
 using Andastra.Game.Games.Eclipse.Loading;
 using Andastra.Game.Games.Eclipse.Physics;
+using Andastra.Game.Graphics.MonoGame.Converters;
+using Andastra.Game.Graphics.MonoGame.Culling;
+using Andastra.Game.Graphics.MonoGame.Enums;
+using Andastra.Game.Graphics.MonoGame.Graphics;
+using Andastra.Game.Graphics.MonoGame.Interfaces;
+using Andastra.Game.Graphics.MonoGame.Lighting;
+using Andastra.Game.Graphics.MonoGame.Rendering;
+using Andastra.Game.Graphics.MonoGame.Textures;
+using Andastra.Runtime.Content.Converters;
+using Andastra.Runtime.Content.Interfaces;
+using Andastra.Runtime.Core.Collision;
+using Andastra.Runtime.Core.Enums;
+using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Runtime.Core.Module;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common;
-using Andastra.Runtime.MonoGame.Converters;
-using Andastra.Runtime.MonoGame.Culling;
-using Andastra.Runtime.MonoGame.Enums;
-using Andastra.Runtime.MonoGame.Graphics;
-using Andastra.Runtime.MonoGame.Interfaces;
-using Andastra.Runtime.MonoGame.Lighting;
-using Andastra.Runtime.MonoGame.Rendering;
 using JetBrains.Annotations;
 // Type aliases to resolve ambiguity between XNA/MonoGame and Andastra types
 using Microsoft.Xna.Framework.Graphics;
@@ -54,18 +57,18 @@ using GraphicsSpriteSortMode = Andastra.Runtime.Graphics.SpriteSortMode;
 using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
 using GraphicsViewport = Andastra.Runtime.Graphics.Viewport;
 // Type alias for IDynamicLight to use MonoGame.Interfaces version
-using IDynamicLight = Andastra.Runtime.MonoGame.Interfaces.IDynamicLight;
-using IUpdatable = Andastra.Runtime.Games.Eclipse.IUpdatable;
-using MonoGameBlendState = Andastra.Runtime.MonoGame.Interfaces.BlendState;
-using MonoGameGraphicsDevice = Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameGraphicsDevice;
-using MonoGameRectangle = Andastra.Runtime.MonoGame.Interfaces.Rectangle;
+using IDynamicLight = Andastra.Game.Graphics.MonoGame.Interfaces.IDynamicLight;
+using IUpdatable = Andastra.Game.Games.Eclipse.IUpdatable;
+using MonoGameBlendState = Andastra.Game.Graphics.MonoGame.Interfaces.BlendState;
+using MonoGameGraphicsDevice = Andastra.Game.Graphics.MonoGame.Graphics.MonoGameGraphicsDevice;
+using MonoGameRectangle = Andastra.Game.Graphics.MonoGame.Interfaces.Rectangle;
 // Type aliases for MonoGame graphics types in different namespace
-using MonoGameTexture2D = Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameTexture2D;
-using MonoGameViewport = Andastra.Runtime.MonoGame.Interfaces.Viewport;
+using MonoGameTexture2D = Andastra.Game.Graphics.MonoGame.Graphics.MonoGameTexture2D;
+using MonoGameViewport = Andastra.Game.Graphics.MonoGame.Interfaces.Viewport;
 using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using ParsingColor = BioWare.NET.Common.Color;
 using ParsingResourceType = BioWare.NET.Common.ResourceType;
-using ParsingSearchLocation = BioWare.NET.Extract.Installation.SearchLocation;
+using ParsingSearchLocation = BioWare.NET.Extract.SearchLocation;
 using XnaBlendState = Microsoft.Xna.Framework.Graphics.BlendState;
 using XnaColor = Microsoft.Xna.Framework.Color;
 // Type aliases to resolve ambiguity between XNA and System.Numerics types
@@ -154,13 +157,13 @@ namespace Andastra.Game.Games.Eclipse
 
         // Dialogue history (Eclipse-specific)
         // Based on daorigins.exe: Dialogue history is stored in area state for persistence
-        private readonly List<Andastra.Runtime.Core.Interfaces.DialogueHistoryEntry> _dialogueHistory = new List<Andastra.Runtime.Core.Interfaces.DialogueHistoryEntry>();
+        private readonly List<DialogueHistoryEntry> _dialogueHistory = new List<DialogueHistoryEntry>();
 
         // Shader cache for post-processing effects (lazy-initialized)
         private ShaderCache _shaderCache;
 
         // Module reference for loading WOK walkmesh files (optional)
-        private BioWare.NET.Extract.Installation.Module _module;
+        private BioWare.NET.Common.Module _module;
 
         // Resource provider for loading MDL/MDX and other resources (optional)
         // Based on daorigins.exe/DragonAge2.exe: Eclipse uses IGameResourceProvider for resource loading
@@ -231,7 +234,7 @@ namespace Andastra.Game.Games.Eclipse
         private struct ParticleVertexData
         {
             public Vector3 Position;
-            public Graphics.Color Color;
+            public Andastra.Runtime.Graphics.Color Color;
             public GraphicsVector2 TextureCoordinate;
         }
 
@@ -397,7 +400,7 @@ namespace Andastra.Game.Games.Eclipse
         /// - Required for full walkmesh functionality when rooms are available
         /// - Can be set later via SetModule() if not available at construction time
         /// </remarks>
-        public EclipseArea(string resRef, byte[] areaData, BioWare.NET.Extract.Installation.Module module = null)
+        public EclipseArea(string resRef, byte[] areaData, BioWare.NET.Common.Module module = null)
         {
             _resRef = resRef ?? throw new ArgumentNullException(nameof(resRef));
             _tag = resRef; // Default tag to resref
@@ -446,7 +449,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Call this method if Module was not available at construction time.
         /// If rooms are already set, this will trigger walkmesh loading.
         /// </remarks>
-        public void SetModule(BioWare.NET.Extract.Installation.Module module)
+        public void SetModule(BioWare.NET.Common.Module module)
         {
             _module = module;
             // If rooms are already set, try to load walkmesh now
@@ -1345,7 +1348,7 @@ namespace Andastra.Game.Games.Eclipse
 
                 // Load creatures from GIT
                 // Based on daorigins.exe/DragonAge2.exe: Load creature instances from GIT "Creature List"
-                foreach (Parsing.Resource.Generics.GITCreature creature in git.Creatures)
+                foreach (GITCreature creature in git.Creatures)
                 {
                     // Create entity with ObjectId, ObjectType, and Tag
                     // ObjectId: Use from GIT if available, otherwise generate
@@ -1390,7 +1393,7 @@ namespace Andastra.Game.Games.Eclipse
 
                 // Load doors from GIT
                 // Based on daorigins.exe/DragonAge2.exe: Load door instances from GIT "Door List"
-                foreach (Parsing.Resource.Generics.GITDoor door in git.Doors)
+                foreach (GITDoor door in git.Doors)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new EclipseEntity(objectId, ObjectType.Door, door.Tag ?? string.Empty);
@@ -1424,7 +1427,7 @@ namespace Andastra.Game.Games.Eclipse
 
                 // Load placeables from GIT
                 // Based on daorigins.exe/DragonAge2.exe: Load placeable instances from GIT "Placeable List"
-                foreach (Parsing.Resource.Generics.GITPlaceable placeable in git.Placeables)
+                foreach (GITPlaceable placeable in git.Placeables)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new EclipseEntity(objectId, ObjectType.Placeable, placeable.ResRef?.ToString() ?? string.Empty);
@@ -1449,7 +1452,7 @@ namespace Andastra.Game.Games.Eclipse
 
                 // Load triggers from GIT
                 // Based on daorigins.exe/DragonAge2.exe: Load trigger instances from GIT "TriggerList"
-                foreach (Parsing.Resource.Generics.GITTrigger trigger in git.Triggers)
+                foreach (GITTrigger trigger in git.Triggers)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new EclipseEntity(objectId, ObjectType.Trigger, trigger.Tag ?? string.Empty);
@@ -1489,7 +1492,7 @@ namespace Andastra.Game.Games.Eclipse
 
                 // Load waypoints from GIT
                 // Based on daorigins.exe/DragonAge2.exe: Load waypoint instances from GIT "WaypointList"
-                foreach (Parsing.Resource.Generics.GITWaypoint waypoint in git.Waypoints)
+                foreach (GITWaypoint waypoint in git.Waypoints)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new EclipseEntity(objectId, ObjectType.Waypoint, waypoint.Tag ?? string.Empty);
@@ -1538,7 +1541,7 @@ namespace Andastra.Game.Games.Eclipse
 
                 // Load sounds from GIT
                 // Based on daorigins.exe/DragonAge2.exe: Load sound instances from GIT "SoundList"
-                foreach (Parsing.Resource.Generics.GITSound sound in git.Sounds)
+                foreach (GITSound sound in git.Sounds)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new EclipseEntity(objectId, ObjectType.Sound, sound.ResRef?.ToString() ?? string.Empty);
@@ -2123,8 +2126,8 @@ namespace Andastra.Game.Games.Eclipse
             {
                 // Try to load LYT file using area ResRef
                 // Based on daorigins.exe/DragonAge2.exe: LYT files use same ResRef as ARE files
-                Parsing.Resource.ResourceType lytResourceType = Parsing.Resource.ResourceType.LYT;
-                Parsing.Resource.ResourceIdentifier lytResourceId = new Parsing.Resource.ResourceIdentifier(_resRef, lytResourceType);
+                BioWare.NET.Common.ResourceType lytResourceType = BioWare.NET.Common.ResourceType.LYT;
+                BioWare.NET.Resource.ResourceIdentifier lytResourceId = new BioWare.NET.Resource.ResourceIdentifier(_resRef, lytResourceType);
 
                 // Load LYT file data
                 byte[] lytData = _resourceProvider.GetResourceBytes(lytResourceId);
@@ -2136,11 +2139,11 @@ namespace Andastra.Game.Games.Eclipse
 
                 // Parse LYT file
                 // Based on LYT format: Try ASCII format first, then binary if needed
-                Parsing.Resource.Formats.LYT.LYT lyt = null;
+                BioWare.NET.Resource.Formats.LYT.LYT lyt = null;
                 try
                 {
                     // Try ASCII format first using LYTAuto helper
-                    lyt = Parsing.Resource.Formats.LYT.LYTAuto.ReadLyt(lytData);
+                    lyt = BioWare.NET.Resource.Formats.LYT.LYTAuto.ReadLyt(lytData);
                 }
                 catch
                 {
@@ -2168,7 +2171,7 @@ namespace Andastra.Game.Games.Eclipse
                 // Based on LYT format: Tracks are swoop track booster positions
                 if (lyt.Tracks != null)
                 {
-                    foreach (Parsing.Resource.Formats.LYT.LYTTrack track in lyt.Tracks)
+                    foreach (BioWare.NET.Resource.Formats.LYT.LYTTrack track in lyt.Tracks)
                     {
                         if (track != null && track.Model != null && !string.IsNullOrEmpty(track.Model.ToString()))
                         {
@@ -2187,7 +2190,7 @@ namespace Andastra.Game.Games.Eclipse
                 // Based on LYT format: Obstacles are swoop track obstacle positions
                 if (lyt.Obstacles != null)
                 {
-                    foreach (Parsing.Resource.Formats.LYT.LYTObstacle obstacle in lyt.Obstacles)
+                    foreach (BioWare.NET.Resource.Formats.LYT.LYTObstacle obstacle in lyt.Obstacles)
                     {
                         if (obstacle != null && obstacle.Model != null && !string.IsNullOrEmpty(obstacle.Model.ToString()))
                         {
@@ -5717,12 +5720,12 @@ namespace Andastra.Game.Games.Eclipse
                             // Try to access MonoGame BasicEffect's DirectionalLight properties
                             // This requires casting to the concrete implementation
                             // Based on MonoGame BasicEffect API: DirectionalLight0/1/2 properties
-                            var monoGameEffect = basicEffect as Andastra.Runtime.MonoGame.Graphics.MonoGameBasicEffect;
+                            var monoGameEffect = basicEffect as Andastra.Game.Graphics.MonoGame.Graphics.MonoGameBasicEffect;
                             if (monoGameEffect != null)
                             {
                                 // Use reflection to access the underlying BasicEffect's DirectionalLight properties
                                 // MonoGameBasicEffect wraps Microsoft.Xna.Framework.Graphics.BasicEffect
-                                var effectField = typeof(Andastra.Runtime.MonoGame.Graphics.MonoGameBasicEffect)
+                                var effectField = typeof(Andastra.Game.Graphics.MonoGame.Graphics.MonoGameBasicEffect)
                                     .GetField("_effect", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
                                 if (effectField != null)
@@ -5874,13 +5877,11 @@ namespace Andastra.Game.Games.Eclipse
 
                                             // For BasicEffect, we need to approximate as a directional light
                                             // Calculate the effective direction and color from the area light
-                                            Vector3 effectiveDirection;
-                                            Vector3 effectiveColor;
                                             AreaLightCalculator.CalculateBasicEffectApproximation(
                                                 light,
                                                 roomCenter,
-                                                out effectiveDirection,
-                                                out effectiveColor);
+                                                out Microsoft.Xna.Framework.Vector3 effectiveDirection,
+                                                out Microsoft.Xna.Framework.Vector3 effectiveColor);
 
                                             // Apply the calculated direction and color to BasicEffect
                                             directionalLight.Direction = new Microsoft.Xna.Framework.Vector3(
@@ -5892,7 +5893,7 @@ namespace Andastra.Game.Games.Eclipse
                                             // Blend the comprehensive area light contribution with the BasicEffect approximation
                                             // The comprehensive calculation provides better quality but BasicEffect has limitations
                                             // We use a weighted blend: 70% comprehensive, 30% approximation
-                                            Vector3 blendedColor = areaLightContribution * 0.7f + effectiveColor * 0.3f;
+                                            Microsoft.Xna.Framework.Vector3 blendedColor = areaLightContribution * 0.7f + effectiveColor * 0.3f;
 
                                             directionalLight.DiffuseColor = new Microsoft.Xna.Framework.Vector3(
                                                 Math.Min(1.0f, blendedColor.X),
@@ -6394,7 +6395,7 @@ namespace Andastra.Game.Games.Eclipse
             Vector3 targetPosition = frustumCenter;
 
             // Create light view matrix
-            lightViewMatrix = MatrixHelper.CreateLookAt(lightPosition, targetPosition, upVector);
+            lightViewMatrix = Matrix4x4.CreateLookAt(lightPosition, targetPosition, upVector);
 
             // Transform frustum corners to light space
             Vector3[] lightSpaceCorners = new Vector3[8];
@@ -6478,7 +6479,7 @@ namespace Andastra.Game.Games.Eclipse
 
             // Create view matrix looking from light position towards target
             // Based on Eclipse engine: View matrix transforms world space to light space
-            lightViewMatrix = MatrixHelper.CreateLookAt(lightPosition, targetPosition, upVector);
+            lightViewMatrix = Matrix4x4.CreateLookAt(lightPosition, targetPosition, upVector);
 
             // Create orthographic projection matrix
             // System.Numerics.Matrix4x4 doesn't have CreateOrthographic, so we use CreateOrthographicOffCenter
@@ -6647,7 +6648,7 @@ namespace Andastra.Game.Games.Eclipse
                 Vector3 faceUp = faceUps[faceIndex];
                 Vector3 targetPosition = lightPosition + faceDirection;
 
-                Matrix4x4 lightViewMatrix = MatrixHelper.CreateLookAt(lightPosition, targetPosition, faceUp);
+                Matrix4x4 lightViewMatrix = Matrix4x4.CreateLookAt(lightPosition, targetPosition, faceUp);
 
                 // Create perspective projection matrix for point light
                 // Point lights use perspective projection (90-degree FOV for cube maps)
@@ -6777,7 +6778,7 @@ namespace Andastra.Game.Games.Eclipse
 
             // Create view matrix looking from light position along light direction
             // Based on Eclipse engine: View matrix transforms world space to light space
-            Matrix4x4 lightViewMatrix = MatrixHelper.CreateLookAt(lightPosition, targetPosition, upVector);
+            Matrix4x4 lightViewMatrix = Matrix4x4.CreateLookAt(lightPosition, targetPosition, upVector);
 
             // Create perspective projection matrix matching spot light cone
             // Field of view matches the outer cone angle (full cone, not half-angle)
@@ -7336,12 +7337,12 @@ namespace Andastra.Game.Games.Eclipse
                             // Try to access MonoGame BasicEffect's DirectionalLight properties
                             // This requires casting to the concrete implementation
                             // Based on MonoGame BasicEffect API: DirectionalLight0/1/2 properties
-                            var monoGameEffect = basicEffect as Andastra.Runtime.MonoGame.Graphics.MonoGameBasicEffect;
+                            var monoGameEffect = basicEffect as Andastra.Game.Graphics.MonoGame.Graphics.MonoGameBasicEffect;
                             if (monoGameEffect != null)
                             {
                                 // Use reflection to access the underlying BasicEffect's DirectionalLight properties
                                 // MonoGameBasicEffect wraps Microsoft.Xna.Framework.Graphics.BasicEffect
-                                var effectField = typeof(Andastra.Runtime.MonoGame.Graphics.MonoGameBasicEffect)
+                                var effectField = typeof(Andastra.Game.Graphics.MonoGame.Graphics.MonoGameBasicEffect)
                                     .GetField("_effect", BindingFlags.NonPublic | BindingFlags.Instance);
 
                                 if (effectField != null)
@@ -7500,13 +7501,11 @@ namespace Andastra.Game.Games.Eclipse
 
                                             // For BasicEffect, we need to approximate as a directional light
                                             // Calculate the effective direction and color from the area light
-                                            Vector3 effectiveDirection;
-                                            Vector3 effectiveColor;
                                             AreaLightCalculator.CalculateBasicEffectApproximation(
                                                 light,
                                                 objectPosition,
-                                                out effectiveDirection,
-                                                out effectiveColor);
+                                                out Microsoft.Xna.Framework.Vector3 effectiveDirection,
+                                                out Microsoft.Xna.Framework.Vector3 effectiveColor);
 
                                             // Apply the calculated direction and color to BasicEffect
                                             directionalLight.Direction = new Microsoft.Xna.Framework.Vector3(
@@ -7518,7 +7517,7 @@ namespace Andastra.Game.Games.Eclipse
                                             // Blend the comprehensive area light contribution with the BasicEffect approximation
                                             // The comprehensive calculation provides better quality but BasicEffect has limitations
                                             // We use a weighted blend: 70% comprehensive, 30% approximation
-                                            Vector3 blendedColor = areaLightContribution * 0.7f + effectiveColor * 0.3f;
+                                            Microsoft.Xna.Framework.Vector3 blendedColor = areaLightContribution * 0.7f + effectiveColor * 0.3f;
 
                                             directionalLight.DiffuseColor = new Microsoft.Xna.Framework.Vector3(
                                                 Math.Min(1.0f, blendedColor.X),
@@ -8641,10 +8640,10 @@ namespace Andastra.Game.Games.Eclipse
             float facing = transform.Facing;
 
             // Create world matrix from position and facing
-            Matrix4x4 worldMatrix = MatrixHelper.CreateTranslation(position);
+            Matrix4x4 worldMatrix = Matrix4x4.CreateTranslation(position);
             if (Math.Abs(facing) > 0.001f)
             {
-                Matrix4x4 rotation = MatrixHelper.CreateRotationY(facing);
+                Matrix4x4 rotation = Matrix4x4.CreateRotationY(facing);
                 worldMatrix = Matrix4x4.Multiply(rotation, worldMatrix);
             }
 
@@ -8715,12 +8714,12 @@ namespace Andastra.Game.Games.Eclipse
                             // Try to access MonoGame BasicEffect's DirectionalLight properties
                             // This requires casting to the concrete implementation
                             // Based on MonoGame BasicEffect API: DirectionalLight0/1/2 properties
-                            var monoGameEffect = basicEffect as Andastra.Runtime.MonoGame.Graphics.MonoGameBasicEffect;
+                            var monoGameEffect = basicEffect as Andastra.Game.Graphics.MonoGame.Graphics.MonoGameBasicEffect;
                             if (monoGameEffect != null)
                             {
                                 // Use reflection to access the underlying BasicEffect's DirectionalLight properties
                                 // MonoGameBasicEffect wraps Microsoft.Xna.Framework.Graphics.BasicEffect
-                                var effectField = typeof(Andastra.Runtime.MonoGame.Graphics.MonoGameBasicEffect)
+                                var effectField = typeof(Andastra.Game.Graphics.MonoGame.Graphics.MonoGameBasicEffect)
                                     .GetField("_effect", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
                                 if (effectField != null)
@@ -8871,13 +8870,11 @@ namespace Andastra.Game.Games.Eclipse
 
                                             // For BasicEffect, we need to approximate as a directional light
                                             // Calculate the effective direction and color from the area light
-                                            Vector3 effectiveDirection;
-                                            Vector3 effectiveColor;
                                             AreaLightCalculator.CalculateBasicEffectApproximation(
                                                 light,
                                                 entityPosition,
-                                                out effectiveDirection,
-                                                out effectiveColor);
+                                                out Microsoft.Xna.Framework.Vector3 effectiveDirection,
+                                                out Microsoft.Xna.Framework.Vector3 effectiveColor);
 
                                             // Apply the calculated direction and color to BasicEffect
                                             directionalLight.Direction = new Microsoft.Xna.Framework.Vector3(
@@ -8889,7 +8886,7 @@ namespace Andastra.Game.Games.Eclipse
                                             // Blend the comprehensive area light contribution with the BasicEffect approximation
                                             // The comprehensive calculation provides better quality but BasicEffect has limitations
                                             // We use a weighted blend: 70% comprehensive, 30% approximation
-                                            Vector3 blendedColor = areaLightContribution * 0.7f + effectiveColor * 0.3f;
+                                            Microsoft.Xna.Framework.Vector3 blendedColor = areaLightContribution * 0.7f + effectiveColor * 0.3f;
 
                                             directionalLight.DiffuseColor = new Microsoft.Xna.Framework.Vector3(
                                                 Math.Min(1.0f, blendedColor.X),
@@ -9243,7 +9240,7 @@ namespace Andastra.Game.Games.Eclipse
 
                 // Calculate particle color based on emitter type
                 // Based on daorigins.exe: Different emitter types have different particle colors
-                Graphics.Color baseParticleColor = GetParticleColorForEmitterType(emitter.EmitterType);
+                Microsoft.Xna.Framework.Color baseParticleColor = GetParticleColorForEmitterType(emitter.EmitterType);
 
                 // Build vertices and indices for each particle
                 int vertexIndex = 0;
@@ -9256,7 +9253,7 @@ namespace Andastra.Game.Games.Eclipse
                     float particleAlpha = particle.Alpha;
 
                     // Calculate particle color with alpha
-                    Graphics.Color particleColor = new Graphics.Color(
+                    Microsoft.Xna.Framework.Color particleColor = new Microsoft.Xna.Framework.Color(
                         baseParticleColor.R,
                         baseParticleColor.G,
                         baseParticleColor.B,
@@ -9279,25 +9276,25 @@ namespace Andastra.Game.Games.Eclipse
                     vertices[vertexIndex + 0] = new ParticleVertexData
                     {
                         Position = corner0,
-                        Color = particleColor,
+                        Color = new Andastra.Runtime.Graphics.Color(particleColor.R, particleColor.G, particleColor.B, particleColor.A),
                         TextureCoordinate = new GraphicsVector2(0.0f, 1.0f) // Bottom-left
                     };
                     vertices[vertexIndex + 1] = new ParticleVertexData
                     {
                         Position = corner1,
-                        Color = particleColor,
+                        Color = new Andastra.Runtime.Graphics.Color(particleColor.R, particleColor.G, particleColor.B, particleColor.A),
                         TextureCoordinate = new GraphicsVector2(1.0f, 1.0f) // Bottom-right
                     };
                     vertices[vertexIndex + 2] = new ParticleVertexData
                     {
                         Position = corner2,
-                        Color = particleColor,
+                        Color = new Andastra.Runtime.Graphics.Color(particleColor.R, particleColor.G, particleColor.B, particleColor.A),
                         TextureCoordinate = new GraphicsVector2(1.0f, 0.0f) // Top-right
                     };
                     vertices[vertexIndex + 3] = new ParticleVertexData
                     {
                         Position = corner3,
-                        Color = particleColor,
+                        Color = new Andastra.Runtime.Graphics.Color(particleColor.R, particleColor.G, particleColor.B, particleColor.A),
                         TextureCoordinate = new GraphicsVector2(0.0f, 0.0f) // Top-left
                     };
 
@@ -10132,25 +10129,25 @@ namespace Andastra.Game.Games.Eclipse
         /// Based on daorigins.exe: Different emitter types have different particle colors.
         /// Particle colors are used as base tint, with alpha controlled by particle lifetime.
         /// </remarks>
-        private Graphics.Color GetParticleColorForEmitterType(ParticleEmitterType emitterType)
+        private Microsoft.Xna.Framework.Color GetParticleColorForEmitterType(ParticleEmitterType emitterType)
         {
             // Particle colors based on emitter type
             // Based on daorigins.exe: Particle color mapping
             switch (emitterType)
             {
                 case ParticleEmitterType.Fire:
-                    return new Graphics.Color(255, 200, 100, 255); // Orange-yellow fire color
+                    return new Microsoft.Xna.Framework.Color(255, 200, 100, 255); // Orange-yellow fire color
                 case ParticleEmitterType.Smoke:
-                    return new Graphics.Color(128, 128, 128, 255); // Gray smoke color
+                    return new Microsoft.Xna.Framework.Color(128, 128, 128, 255); // Gray smoke color
                 case ParticleEmitterType.Magic:
-                    return new Graphics.Color(200, 150, 255, 255); // Purple-blue magic color
+                    return new Microsoft.Xna.Framework.Color(200, 150, 255, 255); // Purple-blue magic color
                 case ParticleEmitterType.Environmental:
-                    return new Graphics.Color(200, 180, 150, 255); // Brown-tan dust color
+                    return new Microsoft.Xna.Framework.Color(200, 180, 150, 255); // Brown-tan dust color
                 case ParticleEmitterType.Explosion:
-                    return new Graphics.Color(255, 150, 50, 255); // Orange-red explosion color
+                    return new Microsoft.Xna.Framework.Color(255, 150, 50, 255); // Orange-red explosion color
                 case ParticleEmitterType.Custom:
                 default:
-                    return new Graphics.Color(255, 255, 255, 255); // White default color
+                    return new Microsoft.Xna.Framework.Color(255, 255, 255, 255); // White default color
             }
         }
 
@@ -10339,9 +10336,9 @@ namespace Andastra.Game.Games.Eclipse
                             // Draw final texture fullscreen to back buffer
                             // daorigins.exe: Final texture matches viewport dimensions, blitted 1:1 to back buffer
                             // Destination rectangle covers entire viewport for fullscreen output
-                            GraphicsRectangle destinationRect = new GraphicsRectangle(0, 0, viewportWidth, viewportHeight);
-                            GraphicsColor whiteColor = GraphicsColor.White;
-                            spriteBatch.Draw(finalTarget.ColorTexture, destinationRect, whiteColor);
+                            Andastra.Runtime.Graphics.Rectangle destinationRect = new Andastra.Runtime.Graphics.Rectangle(0, 0, viewportWidth, viewportHeight);
+                            Microsoft.Xna.Framework.Color whiteColor = Microsoft.Xna.Framework.Color.White;
+                            spriteBatch.Draw(finalTarget.ColorTexture, new Andastra.Runtime.Graphics.Vector2(destinationRect.X, destinationRect.Y), new Andastra.Runtime.Graphics.Color(whiteColor.R, whiteColor.G, whiteColor.B, whiteColor.A));
 
                             spriteBatch.End();
                         }
@@ -10523,7 +10520,7 @@ namespace Andastra.Game.Games.Eclipse
                     {
                         // Use shader-based bright pass extraction with threshold parameter
                         // Access MonoGame SpriteBatch directly to use Effect parameter
-                        if (spriteBatch is Andastra.Runtime.MonoGame.Graphics.MonoGameSpriteBatch mgSpriteBatch)
+                        if (spriteBatch is Andastra.Game.Graphics.MonoGame.Graphics.MonoGameSpriteBatch mgSpriteBatch)
                         {
                             // Get MonoGame texture
                             if (hdrInput.ColorTexture is MonoGameTexture2D mgInputTexture)
@@ -10681,7 +10678,7 @@ namespace Andastra.Game.Games.Eclipse
                         IRenderTarget currentDestination = (pass == passes - 1) ? output : intermediateTarget;
 
                         // Access MonoGame SpriteBatch directly to use Effect parameter
-                        if (spriteBatch is Andastra.Runtime.MonoGame.Graphics.MonoGameSpriteBatch mgSpriteBatch)
+                        if (spriteBatch is Andastra.Game.Graphics.MonoGame.Graphics.MonoGameSpriteBatch mgSpriteBatch)
                         {
                             // Get MonoGame texture from current source
                             if (currentSource.ColorTexture is MonoGameTexture2D mgSourceTexture)
@@ -10834,7 +10831,7 @@ namespace Andastra.Game.Games.Eclipse
                     {
                         // Use shader-based compositing with intensity parameter
                         // Access MonoGame SpriteBatch directly to use Effect parameter
-                        if (spriteBatch is Andastra.Runtime.MonoGame.Graphics.MonoGameSpriteBatch mgSpriteBatch)
+                        if (spriteBatch is Andastra.Game.Graphics.MonoGame.Graphics.MonoGameSpriteBatch mgSpriteBatch)
                         {
                             // Get MonoGame textures
                             if (hdrScene.ColorTexture is MonoGameTexture2D mgSceneTexture &&
@@ -11588,7 +11585,7 @@ technique ColorGrading
                     {
                         // Use shader-based tone mapping with exposure, gamma, and white point parameters
                         // Access MonoGame SpriteBatch directly to use Effect parameter
-                        if (spriteBatch is Andastra.Runtime.MonoGame.Graphics.MonoGameSpriteBatch mgSpriteBatch)
+                        if (spriteBatch is Andastra.Game.Graphics.MonoGame.Graphics.MonoGameSpriteBatch mgSpriteBatch)
                         {
                             // Get MonoGame texture
                             if (hdrInput.ColorTexture is MonoGameTexture2D mgInputTexture)
@@ -11714,7 +11711,7 @@ technique ColorGrading
                     {
                         // Use shader-based color grading with contrast and saturation parameters
                         // Access MonoGame SpriteBatch directly to use Effect parameter
-                        if (spriteBatch is Andastra.Runtime.MonoGame.Graphics.MonoGameSpriteBatch mgSpriteBatch)
+                        if (spriteBatch is Andastra.Game.Graphics.MonoGame.Graphics.MonoGameSpriteBatch mgSpriteBatch)
                         {
                             // Get MonoGame texture
                             if (input.ColorTexture is MonoGameTexture2D mgInputTexture)
@@ -11826,7 +11823,7 @@ technique ColorGrading
                     {
                         // Entity not registered with world - destroy directly
                         // Based on Entity.Destroy() implementation
-                        if (entity is Core.Entities.Entity concreteEntity)
+                        if (entity is Andastra.Runtime.Core.Entities.Entity concreteEntity)
                         {
                             concreteEntity.Destroy();
                         }

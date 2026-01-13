@@ -1,5 +1,5 @@
 using System;
-using Andastra.Runtime.MonoGame.Interfaces;
+using Andastra.Game.Graphics.MonoGame.Interfaces;
 
 namespace Andastra.Game.Graphics.MonoGame.Rendering
 {

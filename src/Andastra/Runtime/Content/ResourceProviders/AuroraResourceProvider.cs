@@ -8,6 +8,7 @@ using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.ERF;
 using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.KEY;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.BIF;
 using Andastra.Runtime.Content.Interfaces;

@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using BioWare.NET.Resource.Formats.MDL;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;

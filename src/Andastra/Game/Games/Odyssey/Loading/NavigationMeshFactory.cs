@@ -4,7 +4,8 @@ using System.Numerics;
 using BioWare.NET;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.BWM;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Module;
@@ -13,7 +14,7 @@ using JetBrains.Annotations;
 using Logger = BioWare.NET.Logger;
 using Vector3 = System.Numerics.Vector3;
 
-namespace Andastra.Game.Engines.Odyssey.Loading
+namespace Andastra.Game.Games.Odyssey.Loading
 {
     /// <summary>
     /// Factory for creating NavigationMesh from BWM walkmesh data.
@@ -238,7 +239,7 @@ namespace Andastra.Game.Engines.Odyssey.Loading
 
                 // Search installation for WOK resource
                 // SearchLocation.CHITIN = base game resources, SearchLocation.CUSTOM_MODULES = module-specific resources
-                BioWare.NET.Extract.Installation.ResourceResult wokResource = installation.Resource(resRef, ResourceType.WOK,
+                BioWare.NET.Extract.ResourceResult wokResource = installation.Resource(resRef, ResourceType.WOK,
                     new[] { SearchLocation.CHITIN, SearchLocation.CUSTOM_MODULES });
 
                 if (wokResource == null || wokResource.Data == null)

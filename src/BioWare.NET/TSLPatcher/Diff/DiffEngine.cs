@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using BioWare.NET.Common;
 using BioWare.NET.Extract;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using JetBrains.Annotations;
 
