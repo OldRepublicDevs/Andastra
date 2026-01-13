@@ -151,10 +151,14 @@ namespace Andastra.Game.Games.Odyssey.UI
 
         /// <summary>
         /// Updates the loading screen progress bar.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Progress bar updates during resource loading
+        /// swkotor.exe: 0x005edd40 (CClientExoApp::SetLoadBarProgress) - Progress bar updates during resource loading
+        /// swkotor2.exe: 0x00646f40 (SetLoadBarProgress) - Progress bar updates during resource loading
         /// - "PB_PROGRESS" control shows loading progress
-        /// - "Load Bar = %d" @ 0x007c760c (progress debug output)
+        /// - "Load Bar = %d" @ 0x0074ec0c (K1), @ 0x007c760c (TSL) (progress debug output)
         /// - Original implementation: Progress bar updates as resources are loaded
+        /// - K1: Calls CSWGuiProgressBar::SetCurValue to update progress bar value
+        /// - TSL: Calls FUN_00417800 (SetCurValue equivalent) to update progress bar value
+        /// - Both functions output debug message "Load Bar = %d" with progress value
         /// </summary>
         /// <param name="progress">Progress value (0-100).</param>
         public void SetProgress(int progress)
@@ -167,12 +171,13 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Update progress bar if GUI is loaded
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "PB_PROGRESS" control is updated with progress value
-            // - 0x006cff90 @ 0x006cff90: Loading screen initialization gets PB_PROGRESS control via 0x0040bb40 @ 0x0040bb40
-            // - Line 41-43: 0x00630a90(&local_30,"PB_PROGRESS") followed by 0x0040bb40(this,piVar1,&local_30,1,1) retrieves the progress bar control
-            // - Progress bar value is set by updating the control's current value property
+            // swkotor.exe: 0x005edd40 (CClientExoApp::SetLoadBarProgress) - Updates PB_PROGRESS control with progress value
+            // swkotor2.exe: 0x00646f40 (SetLoadBarProgress) - Updates PB_PROGRESS control with progress value
+            // - K1: Calls CSWGuiProgressBar::SetCurValue(&this_00->load_screen->progress_bar, param_1) to set progress value
+            // - TSL: Calls FUN_00417800((void *)(*(int *)((int)this + 0x278) + 0x68), param_1) to set progress value
+            // - Progress bar value is set by updating the control's current value property (0-100 range)
             // - Original implementation: Progress bar shows loading progress (0-100) during resource loading
-            // - "Load Bar = %d" @ 0x007c760c: Debug output shows progress bar value updates
+            // - "Load Bar = %d" debug output shows progress bar value updates (K1: 0x0074ec0c, TSL: 0x007c760c)
             // - This implementation: Gets PB_PROGRESS control using GetControl and calls SetValue to update progress
             if (_guiManager is KotorGuiManager kotorGuiManager)
             {
