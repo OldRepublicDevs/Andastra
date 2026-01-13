@@ -5142,13 +5142,19 @@ namespace Andastra.Game.Games.Odyssey
                 string tag = entityStruct.Exists("Tag") ? (entityStruct.GetString("Tag") ?? "") : null;
 
                 // Create entity with ObjectId, ObjectType, and Tag
-                // swkotor2.exe: 0x005fb0f0 @ 0x005fb0f0 creates entities from save data
-                // swkotor.exe: TODO: Find equivalent function address for entity creation from save data
+                // swkotor2.exe: DeserializeCreatureFromGFF_K2 @ 0x005fb0f0 creates entities from save data
+                // swkotor.exe: LoadCreatures_K1 @ 0x00504a70 loads creatures from save data (reads ObjectId at line 40-41)
                 // Entity creation: ObjectId, ObjectType, Tag are required for entity creation
                 // Located via string references:
                 // - "ObjectId"   @ (K1: 0x00744c24, TSL: 0x007bce5c)
-                //   - K1 usage: SaveNode @ 0x004afea0 (line 12), LoadNode @ 0x004b0290 (line 35)
-                //   - TSL usage: FUN_004e28c0 @ 0x004e2962 (serialization), FUN_005fb0f0 (deserialization)
+                //   - K1 usage: 
+                //     * SaveNode @ 0x004afea0 (line 12) - writes ObjectId to GFF
+                //     * LoadNode @ 0x004b0290 (line 35) - reads ObjectId from GFF
+                //     * LoadCreatures_K1 @ 0x00504a70 (line 40-41) - reads ObjectId with default 0x7f000000
+                //     * SaveCreature_K1 @ 0x00500610 - ObjectId written before this function is called
+                //   - TSL usage: 
+                //     * SerializeCreatureList_K2 @ 0x004e28c0 (line 24 @ 0x004e2962) - writes ObjectId to GFF
+                //     * DeserializeCreatureFromGFF_K2 @ 0x005fb0f0 - reads ObjectId from GFF (called before entity creation)
                 // - "ObjectType" @ (K1: TODO: Find this address, TSL: 0x007bd00c)
                 // - "Tag"        @ (K1: TODO: Find this address, TSL: 0x007bd00c)
                 OdysseyEntity entity = new OdysseyEntity(objectId, objectType, tag);
