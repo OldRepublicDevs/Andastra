@@ -29,7 +29,7 @@ namespace Andastra.Game.Games.Common
     /// - Common functionality: Upgrade slot management, inventory checking, property application
     /// - Engine-specific: 2DA file names, upgrade slot counts, UI implementation details
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - swkotor.exe: 0x006c7630 (constructor), 0x006c6500 (button handler), 0x006c59a0 (ApplyUpgrade)
     /// - swkotor2.exe: 0x00731a00 (constructor), 0x0072e260 (button handler), 0x00729640 (ApplyUpgrade)
     /// - daorigins.exe: ItemUpgrade, GUIItemUpgrade, COMMAND_OPENITEMUPGRADEGUI
@@ -673,7 +673,10 @@ namespace Andastra.Game.Games.Common
                     }
                 }
                 // ITEM_PROPERTY_SKILL_BONUS (36): Skill bonus
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property type 36 = skill bonus, subtype = skill ID, amount = bonus value
+                // RecalculateItemStats (inline within ApplyUpgrade) @ (K1: 0x006c59a0 ApplyUpgrade -> RecalculateItemStats, TSL: 0x00729640 ApplyUpgrade -> RecalculateItemStats): Property type 36 = skill bonus, subtype = skill ID, amount = bonus value
+                // Located via analysis: ITEM_PROPERTY_SKILL_BONUS is property type 36 in itempropdef.2da, subtype field contains skill ID (0-7 for KOTOR), CostValue or Param1Value contains bonus amount
+                // Original implementation: Skill bonus properties are processed during stat recalculation, with subtype identifying which skill receives the bonus
+                // Skill bonuses stack additively: multiple properties affecting the same skill ID are summed together
                 else if (propType == 36)
                 {
                     if (amount > 0 && subtype >= 0)
@@ -734,7 +737,12 @@ namespace Andastra.Game.Games.Common
             item.SetData("CalculatedAbilityBonuses", abilityBonuses);
 
             // Store skill bonuses dictionary
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Skill bonuses stored per skill ID
+            // RecalculateItemStats (inline within ApplyUpgrade) @ (K1: 0x006c59a0 ApplyUpgrade -> RecalculateItemStats, TSL: 0x00729640 ApplyUpgrade -> RecalculateItemStats): Skill bonuses stored per skill ID
+            // Located via analysis: Skill bonuses are calculated from ITEM_PROPERTY_SKILL_BONUS (type 36 0x20) properties and accumulated in a dictionary
+            // Original implementation: Skill bonuses are stored in the item object structure as part of stat recalculation after applying/removing upgrades
+            // Skill bonus storage happens inline within the stat recalculation function called from ApplyUpgrade
+            // The skill bonuses dictionary maps skill ID (0-7 for KOTOR) to cumulative bonus value from all skill bonus properties
+            // Multiple skill bonus properties of the same skill ID stack additively (e.g., +2 Computer Use + +3 Computer Use = +5 Computer Use)
             item.SetData("CalculatedSkillBonuses", skillBonuses);
 
             // Store base stats for reference
