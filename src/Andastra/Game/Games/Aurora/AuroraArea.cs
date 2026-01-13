@@ -5,22 +5,18 @@ using System.Linq;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using BioWare.NET;
+using Andastra.Game.Games.Aurora.Scene;
+using Andastra.Game.Games.Common;
+using Andastra.Runtime.Content.Interfaces;
+using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Graphics;
 using BioWare.NET.Common;
+using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.MDL;
 using BioWare.NET.Resource.Formats.MDLData;
 using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using Andastra.Runtime.Content.Interfaces;
-using Andastra.Runtime.Core.Enums;
-using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Game.Games.Aurora.Scene;
-using Andastra.Game.Games.Common;
-using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Graphics.Common;
 using JetBrains.Annotations;
 
 namespace Andastra.Game.Games.Aurora
@@ -1202,7 +1198,7 @@ namespace Andastra.Game.Games.Aurora
                     // Tag: Use ResRef as default tag (creatures don't have explicit Tag in GIT, use TemplateResRef)
                     uint objectId = nextObjectId++;
                     string tag = creature.ResRef != null && !creature.ResRef.IsBlank() ? creature.ResRef.ToString() : string.Empty;
-                    var entity = new AuroraEntity(objectId, Andastra.Runtime.Core.Enums.ObjectType.Creature, tag);
+                    var entity = new AuroraEntity(objectId, Runtime.Core.Enums.ObjectType.Creature, tag);
 
                     // Set position from GIT
                     // Based on nwmain.exe: LoadCreatures reads XPosition, YPosition, ZPosition
@@ -1245,7 +1241,7 @@ namespace Andastra.Game.Games.Aurora
                 foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITDoor door in git.Doors)
                 {
                     uint objectId = nextObjectId++;
-                    var entity = new AuroraEntity(objectId, Andastra.Runtime.Core.Enums.ObjectType.Door, door.Tag ?? string.Empty);
+                    var entity = new AuroraEntity(objectId, Runtime.Core.Enums.ObjectType.Door, door.Tag ?? string.Empty);
 
                     // Set position and orientation from GIT
                     // Based on nwmain.exe: LoadDoors reads X, Y, Z, Bearing
@@ -1281,7 +1277,7 @@ namespace Andastra.Game.Games.Aurora
                     uint objectId = nextObjectId++;
                     // Placeables don't have explicit Tag in GIT, use TemplateResRef as tag
                     string tag = placeable.ResRef != null && !placeable.ResRef.IsBlank() ? placeable.ResRef.ToString() : string.Empty;
-                    var entity = new AuroraEntity(objectId, Andastra.Runtime.Core.Enums.ObjectType.Placeable, tag);
+                    var entity = new AuroraEntity(objectId, Runtime.Core.Enums.ObjectType.Placeable, tag);
 
                     // Set position and orientation from GIT
                     // Based on nwmain.exe: LoadPlaceables reads X, Y, Z, Bearing
@@ -1306,7 +1302,7 @@ namespace Andastra.Game.Games.Aurora
                 foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITTrigger trigger in git.Triggers)
                 {
                     uint objectId = nextObjectId++;
-                    var entity = new AuroraEntity(objectId, Andastra.Runtime.Core.Enums.ObjectType.Trigger, trigger.Tag ?? string.Empty);
+                    var entity = new AuroraEntity(objectId, Runtime.Core.Enums.ObjectType.Trigger, trigger.Tag ?? string.Empty);
 
                     // Set position from GIT
                     // Based on nwmain.exe: LoadTriggers reads XPosition, YPosition, ZPosition
@@ -1346,7 +1342,7 @@ namespace Andastra.Game.Games.Aurora
                 foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITWaypoint waypoint in git.Waypoints)
                 {
                     uint objectId = nextObjectId++;
-                    var entity = new AuroraEntity(objectId, Andastra.Runtime.Core.Enums.ObjectType.Waypoint, waypoint.Tag ?? string.Empty);
+                    var entity = new AuroraEntity(objectId, Runtime.Core.Enums.ObjectType.Waypoint, waypoint.Tag ?? string.Empty);
 
                     // Set position and orientation from GIT
                     // Based on nwmain.exe: LoadWaypoints reads XPosition, YPosition, ZPosition, XOrientation, YOrientation
@@ -1397,7 +1393,7 @@ namespace Andastra.Game.Games.Aurora
                     uint objectId = nextObjectId++;
                     // Sounds don't have explicit Tag in GIT, use TemplateResRef as tag
                     string tag = sound.ResRef != null && !sound.ResRef.IsBlank() ? sound.ResRef.ToString() : string.Empty;
-                    var entity = new AuroraEntity(objectId, Andastra.Runtime.Core.Enums.ObjectType.Sound, tag);
+                    var entity = new AuroraEntity(objectId, Runtime.Core.Enums.ObjectType.Sound, tag);
 
                     // Set position from GIT
                     // Based on nwmain.exe: LoadSounds reads XPosition, YPosition, ZPosition
@@ -1424,7 +1420,7 @@ namespace Andastra.Game.Games.Aurora
                     // Stores don't have explicit Tag in GIT, use ResRef as tag
                     string tag = store.ResRef != null && !store.ResRef.IsBlank() ? store.ResRef.ToString() : string.Empty;
                     // Stores are represented as Placeable entities in Aurora engine
-                    var entity = new AuroraEntity(objectId, Andastra.Runtime.Core.Enums.ObjectType.Placeable, tag);
+                    var entity = new AuroraEntity(objectId, Runtime.Core.Enums.ObjectType.Placeable, tag);
 
                     // Set position and orientation from GIT
                     // Based on nwmain.exe: LoadStores reads XPosition, YPosition, ZPosition, XOrientation, YOrientation
@@ -1456,7 +1452,7 @@ namespace Andastra.Game.Games.Aurora
                     // Encounters don't have explicit Tag in GIT, use TemplateResRef as tag
                     string tag = encounter.ResRef != null && !encounter.ResRef.IsBlank() ? encounter.ResRef.ToString() : string.Empty;
                     // Encounters are represented as Trigger entities in Aurora engine
-                    var entity = new AuroraEntity(objectId, Andastra.Runtime.Core.Enums.ObjectType.Trigger, tag);
+                    var entity = new AuroraEntity(objectId, Runtime.Core.Enums.ObjectType.Trigger, tag);
 
                     // Set position from GIT
                     // Based on nwmain.exe: LoadEncounters reads XPosition, YPosition, ZPosition
@@ -2315,22 +2311,22 @@ namespace Andastra.Game.Games.Aurora
             // Remove from type-specific lists
             switch (entity.ObjectType)
             {
-                case Andastra.Runtime.Core.Enums.ObjectType.Creature:
+                case Runtime.Core.Enums.ObjectType.Creature:
                     _creatures.Remove(entity);
                     break;
-                case Andastra.Runtime.Core.Enums.ObjectType.Placeable:
+                case Runtime.Core.Enums.ObjectType.Placeable:
                     _placeables.Remove(entity);
                     break;
-                case Andastra.Runtime.Core.Enums.ObjectType.Door:
+                case Runtime.Core.Enums.ObjectType.Door:
                     _doors.Remove(entity);
                     break;
-                case Andastra.Runtime.Core.Enums.ObjectType.Trigger:
+                case Runtime.Core.Enums.ObjectType.Trigger:
                     _triggers.Remove(entity);
                     break;
-                case Andastra.Runtime.Core.Enums.ObjectType.Waypoint:
+                case Runtime.Core.Enums.ObjectType.Waypoint:
                     _waypoints.Remove(entity);
                     break;
-                case Andastra.Runtime.Core.Enums.ObjectType.Sound:
+                case Runtime.Core.Enums.ObjectType.Sound:
                     _sounds.Remove(entity);
                     break;
             }
