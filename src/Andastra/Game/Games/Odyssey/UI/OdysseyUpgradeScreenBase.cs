@@ -816,12 +816,12 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Clear existing list box items (children represent list items)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 - clears list box before populating
+            // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - clears list box before populating
             // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - clears list box before populating
             listBox.Children.Clear();
 
             // Add each upgrade as a list box item
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 - adds items to list box
+            // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - adds items to list box
             // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - adds items to list box
             foreach (string upgradeResRef in _currentUpgradeList)
             {
@@ -868,7 +868,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// </summary>
         /// <param name="buttonTag">Tag of the button that was clicked.</param>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 - button click handler
+        /// CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - button click handler
         /// Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - button click handler
         /// Original implementation:
         /// - BTN_UPGRADEITEM: Applies selected upgrade to item
