@@ -22,6 +22,7 @@ using BioWare.NET.TSLPatcher.Mods.NCS;
 using BioWare.NET.TSLPatcher.Mods.SSF;
 using BioWare.NET.TSLPatcher.Mods.TwoDA;
 using BioWare.NET.TSLPatcher.Memory;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Tools;
 using JetBrains.Annotations;

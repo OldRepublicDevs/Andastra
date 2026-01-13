@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Engines.Common;
+using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Aurora;
 using JetBrains.Annotations;
 

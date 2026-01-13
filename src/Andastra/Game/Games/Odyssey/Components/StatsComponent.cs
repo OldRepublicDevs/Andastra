@@ -5,7 +5,7 @@ using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 
-namespace Andastra.Game.Engines.Odyssey.Components
+namespace Andastra.Game.Games.Odyssey.Components
 {
     /// <summary>
     /// Concrete implementation of creature stats for KOTOR.

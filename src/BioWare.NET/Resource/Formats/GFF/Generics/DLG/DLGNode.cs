@@ -535,8 +535,8 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics.DLG
                         if (actualValue != null && int.TryParse(actualValue.ToString(), out int bgrInt))
                         {
                             // Convert from BioWare.NET.Common.Color to System.Drawing.Color
-                            BioWare.NET.Common.Color Color = BioWare.NET.Common.Color.FromBgrInteger(bgrInt);
-                            Color drawingColor = System.Drawing.Color.FromArgb(
+                            Color Color = Color.FromBgrInteger(bgrInt);
+                            System.Drawing.Color drawingColor = System.Drawing.Color.FromArgb(
                                 (int)(Color.A * 255),
                                 (int)(Color.R * 255),
                                 (int)(Color.G * 255),

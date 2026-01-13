@@ -5,6 +5,7 @@ using BioWare.NET.Resource.Formats.MDL;
 using BioWare.NET.Resource.Formats.MDLData;
 using BioWare.NET.Resource.Formats.TPC;
 using BioWare.NET.Resource.Formats.WAV;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 
 namespace BioWare.NET.Tools

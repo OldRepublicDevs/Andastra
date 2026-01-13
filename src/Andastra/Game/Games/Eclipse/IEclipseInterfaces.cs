@@ -36,12 +36,12 @@ namespace Andastra.Game.Games.Eclipse
         /// <summary>
         /// Adds a dynamic light to the scene.
         /// </summary>
-        void AddLight(Andastra.Runtime.MonoGame.Interfaces.IDynamicLight light);
+        void AddLight(Andastra.Game.Graphics.MonoGame.Interfaces.IDynamicLight light);
 
         /// <summary>
         /// Removes a dynamic light from the scene.
         /// </summary>
-        void RemoveLight(Andastra.Runtime.MonoGame.Interfaces.IDynamicLight light);
+        void RemoveLight(Andastra.Game.Graphics.MonoGame.Interfaces.IDynamicLight light);
 
         /// <summary>
         /// Gets lights affecting a specific point.
@@ -49,13 +49,13 @@ namespace Andastra.Game.Games.Eclipse
         /// <param name="position">World space position.</param>
         /// <param name="radius">Query radius.</param>
         /// <returns>Array of lights affecting the point.</returns>
-        Andastra.Runtime.MonoGame.Interfaces.IDynamicLight[] GetLightsAffectingPoint(Vector3 position, float radius);
+        Andastra.Game.Graphics.MonoGame.Interfaces.IDynamicLight[] GetLightsAffectingPoint(Vector3 position, float radius);
 
         /// <summary>
         /// Gets all active lights.
         /// </summary>
         /// <returns>Array of all active lights.</returns>
-        Andastra.Runtime.MonoGame.Interfaces.IDynamicLight[] GetActiveLights();
+        Andastra.Game.Graphics.MonoGame.Interfaces.IDynamicLight[] GetActiveLights();
 
         /// <summary>
         /// Updates the lighting clustering system.

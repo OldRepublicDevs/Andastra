@@ -1,5 +1,5 @@
 using BioWare.NET;
-using Andastra.Runtime.Engines.Common;
+using Andastra.Game.Games.Common;
 
 namespace Andastra.Game.Engines.Aurora.Profiles
 {

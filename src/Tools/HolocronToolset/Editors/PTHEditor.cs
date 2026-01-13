@@ -1,21 +1,22 @@
 using System;
 using System.Numerics;
 using System.Collections.Generic;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.GFF.Generics;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
-using HolocronToolset.Data;
-using KotorColor = BioWare.NET.Common.ParsingColor;
-using Window = Avalonia.Controls.Window;
-using PTH = BioWare.NET.Resource.Formats.GFF.Generics.PTH;
-using PathSelection = HolocronToolset.Editors.PathSelection;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
-using BioWare.NET.Resource.Formats.LYT;
+using BioWare.NET.Common;
+using BioWare.NET.Extract;
 using BioWare.NET.Resource.Formats.BWM;
+using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.NET.Resource.Formats.LYT;
+using HolocronToolset.Data;
+using KotorColor = BioWare.NET.Common.Color;
+using PTH = BioWare.NET.Resource.Formats.GFF.Generics.PTH;
+using Window = Avalonia.Controls.Window;
 
 namespace HolocronToolset.Editors
 {
@@ -23,6 +24,7 @@ namespace HolocronToolset.Editors
     public class PTHRenderArea : Control
     {
         private PTH _pth;
+        private List<BWM> _walkmeshes;
         private Vector2 _mousePosition;
         private bool _isMouseDown;
         private Vector2 _lastMousePosition;
@@ -31,15 +33,16 @@ namespace HolocronToolset.Editors
         public PathSelection PathSelection { get; private set; }
 
         // Signal events for proper Avalonia event handling
-        public event EventHandler<MouseEventArgs> SigMousePressed;
-        public event EventHandler<MouseEventArgs> SigMouseMoved;
-        public event EventHandler<MouseWheelEventArgs> SigMouseScrolled;
-        public event EventHandler<MouseEventArgs> SigMouseReleased;
+        public event EventHandler<PointerPressedEventArgs> SigMousePressed;
+        public event EventHandler<PointerEventArgs> SigMouseMoved;
+        public event EventHandler<PointerWheelEventArgs> SigMouseScrolled;
+        public event EventHandler<PointerReleasedEventArgs> SigMouseReleased;
         public event EventHandler<KeyEventArgs> SigKeyPressed;
 
         public PTHRenderArea()
         {
             _pth = new PTH();
+            _walkmeshes = new List<BWM>();
             _mousePosition = Vector2.Zero;
             _isMouseDown = false;
             _lastMousePosition = Vector2.Zero;
@@ -47,7 +50,7 @@ namespace HolocronToolset.Editors
             PathSelection = new PathSelection();
 
             // Set up Avalonia control properties
-            Background = Brushes.Black;
+            Background = new SolidColorBrush(Avalonia.Media.Color.FromArgb(255, 0, 0, 0));
             Focusable = true;
 
             // Set up event handlers
@@ -109,7 +112,7 @@ namespace HolocronToolset.Editors
             InvalidateVisual();
 
             // Raise signal event
-            SigMousePressed?.Invoke(this, new MouseEventArgs(point.Properties, point.Timestamp));
+            SigMousePressed?.Invoke(this, e);
         }
 
         private void OnPointerMoved(object sender, PointerEventArgs e)
@@ -140,7 +143,7 @@ namespace HolocronToolset.Editors
             }
 
             // Raise signal event
-            SigMouseMoved?.Invoke(this, new MouseEventArgs(point.Properties, point.Timestamp));
+            SigMouseMoved?.Invoke(this, e);
         }
 
         private void OnPointerWheelChanged(object sender, PointerWheelEventArgs e)
@@ -158,8 +161,7 @@ namespace HolocronToolset.Editors
             _isMouseDown = false;
 
             // Raise signal event
-            var point = e.GetCurrentPoint(this);
-            SigMouseReleased?.Invoke(this, new MouseEventArgs(point.Properties, point.Timestamp));
+            SigMouseReleased?.Invoke(this, e);
         }
 
         private void OnKeyDown(object sender, KeyEventArgs e)
@@ -319,6 +321,14 @@ namespace HolocronToolset.Editors
             }
 
             return hits;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/renderer/walkmesh.py:245-258
+        // Original: def set_walkmeshes(self, walkmeshes: list[BWM]):
+        public void SetWalkmeshes(List<BWM> walkmeshes)
+        {
+            _walkmeshes = walkmeshes ?? new List<BWM>();
+            InvalidateVisual();
         }
     }
 
@@ -723,12 +733,12 @@ namespace HolocronToolset.Editors
                     // Load the LYT layout
                     try
                     {
-                        LYT layout = LYTAuto.ReadLyt(lytResult.Data);
+                        BioWare.NET.Resource.Formats.LYT.LYT layout = LYTAuto.ReadLyt(lytResult.Data);
                         LoadLayout(layout);
                     }
                     catch (Exception ex)
                     {
-                        System.Console.WriteLine($"Failed to load LYT layout: {ex}");
+                        Console.WriteLine($"Failed to load LYT layout: {ex}");
                         // Continue with PTH loading even if LYT fails
                     }
                 }
@@ -741,7 +751,7 @@ namespace HolocronToolset.Editors
                         "Layout not found",
                         message,
                         ButtonEnum.Ok,
-                        Icon.Error);
+                        MsBox.Avalonia.Enums.Icon.Error);
                     errorBox.ShowAsync();
                     // Continue with PTH loading anyway (user may still want to edit the path)
                 }
@@ -755,7 +765,7 @@ namespace HolocronToolset.Editors
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"Failed to load PTH: {ex}");
+                Console.WriteLine($"Failed to load PTH: {ex}");
                 New();
             }
         }
@@ -799,7 +809,7 @@ namespace HolocronToolset.Editors
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:288-304
         // Original: @status_bar_decorator def loadLayout(self, layout: LYT):
         // swkotor2.exe: LoadLayout loads walkmeshes for each room in the layout to provide visual context
-        private void LoadLayout(LYT layout)
+        private void LoadLayout(BioWare.NET.Resource.Formats.LYT.LYT layout)
         {
             if (_installation == null || layout == null)
             {
@@ -835,16 +845,15 @@ namespace HolocronToolset.Editors
                     }
                     catch (Exception ex)
                     {
-                        System.Console.WriteLine($"Failed to load walkmesh for room {modelResRef}: {ex}");
+                        Console.WriteLine($"Failed to load walkmesh for room {modelResRef}: {ex}");
                         // Continue with other rooms even if one fails
                     }
                 }
             }
 
-            // Set walkmeshes on render area (if supported)
-            // TODO: STUB - PTHRenderArea.SetWalkmeshes() method needs to be implemented for full walkmesh rendering
-            // For now, the walkmeshes are loaded but not displayed in the render area
-            // This matches the Python implementation where set_walkmeshes is called on the render area
+            // Set walkmeshes on render area
+            // Matching PyKotor: self.ui.renderArea.set_walkmeshes(walkmeshes)
+            RenderArea.SetWalkmeshes(walkmeshes);
         }
 
         public override void SaveAs()

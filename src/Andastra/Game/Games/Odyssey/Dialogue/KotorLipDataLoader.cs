@@ -1,12 +1,13 @@
 using System;
 using System.IO;
 using BioWare.NET.Resource.Formats.LIP;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Dialogue;
 
-namespace Andastra.Game.Engines.Odyssey.Dialogue
+namespace Andastra.Game.Games.Odyssey.Dialogue
 {
     /// <summary>
     /// Loads LIP (lip sync) files using BioWare.NET.

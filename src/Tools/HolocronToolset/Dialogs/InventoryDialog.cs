@@ -14,6 +14,7 @@ using BioWare.NET.Resource.Formats.Capsule;
 using BioWare.NET.Resource.Formats.GFF.Generics.UTI;
 using HolocronToolset.Data;
 using System.ComponentModel;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 
 namespace HolocronToolset.Dialogs

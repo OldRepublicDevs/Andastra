@@ -5,6 +5,7 @@ using System.Linq;
 using BioWare.NET.Common;
 using BioWare.NET.Extract;
 using BioWare.NET.Extract.Capsule;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using JetBrains.Annotations;
 

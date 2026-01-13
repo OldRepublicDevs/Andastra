@@ -52,6 +52,7 @@
     <NoWin32Manifest>true</NoWin32Manifest>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="BioWare.NET" Version="1.0.0" />
     <PackageReference Include="Avalonia" Version="11.3.10" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.10" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.10" />
@@ -73,6 +74,7 @@
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Andastra\Andastra.csproj" />
     <ProjectReference Include="..\..\BioWare.NET\BioWare.NET.csproj" />
   </ItemGroup>
   <!-- Resources -->

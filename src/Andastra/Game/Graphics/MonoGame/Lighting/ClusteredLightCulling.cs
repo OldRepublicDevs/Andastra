@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Runtime.MonoGame.Graphics;
+using Andastra.Game.Graphics.MonoGame.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 

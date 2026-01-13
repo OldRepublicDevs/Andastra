@@ -1,5 +1,6 @@
 using System;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;

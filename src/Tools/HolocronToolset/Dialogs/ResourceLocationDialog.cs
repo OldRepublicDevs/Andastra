@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
+using BioWare.NET.Common;
 using BioWare.NET.Extract;
-using BioWare.NET.Resource;
 using HolocronToolset.Data;
-using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia;
 
 namespace HolocronToolset.Dialogs
 {
@@ -30,7 +30,7 @@ namespace HolocronToolset.Dialogs
         public bool DialogResult { get; private set; }
 
         // Public parameterless constructor for XAML
-        public ResourceLocationDialog() : this(null, null, null, null, null)
+        public ResourceLocationDialog() : this(null, null, null, null)
         {
         }
 
@@ -226,8 +226,8 @@ namespace HolocronToolset.Dialogs
                 var locationItems = _locations.Select(loc => new
                 {
                     FilePath = loc.FilePath ?? "",
-                    Offset = loc.Offset,
-                    Size = loc.Size,
+                    loc.Offset,
+                    loc.Size,
                     LocationResult = loc // Store reference for opening
                 }).ToList();
 
@@ -253,8 +253,7 @@ namespace HolocronToolset.Dialogs
                     return;
                 }
 
-                var locationResult = locationResultProperty.GetValue(selectedItem) as LocationResult;
-                if (locationResult == null)
+                if (!(locationResultProperty.GetValue(selectedItem) is LocationResult locationResult))
                 {
                     return;
                 }
@@ -287,7 +286,7 @@ namespace HolocronToolset.Dialogs
 
                 // Open in editor using WindowUtils
                 var parentWindow = this.Parent as Window ?? this;
-                HolocronToolset.Editors.WindowUtils.OpenResourceEditor(fileResource, _installation, parentWindow);
+                Editors.WindowUtils.OpenResourceEditor(fileResource, _installation, parentWindow);
 
                 // Close the dialog after opening
                 Close();
@@ -328,7 +327,7 @@ namespace HolocronToolset.Dialogs
             if (dialogParent == null)
             {
                 // Find the main window if no parent is specified
-                if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
                     dialogParent = desktop.MainWindow;
                 }

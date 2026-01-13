@@ -57,7 +57,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
     /// <code>
     /// // New optimized approach (recommended):
     /// using Andastra.Runtime.Content.MDL;
-    /// using Andastra.Runtime.MonoGame.Models;
+    /// using Andastra.Game.Graphics.MonoGame.Models;
     /// 
     /// var mdlData = resourceProvider.GetResource(resRef, "mdl");
     /// var mdxData = resourceProvider.GetResource(resRef, "mdx");

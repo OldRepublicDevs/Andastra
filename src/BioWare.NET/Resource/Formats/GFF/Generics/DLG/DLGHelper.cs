@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.GFF.Generics.CNV;
 using JetBrains.Annotations;
@@ -244,12 +245,12 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics.DLG
             if (gffStruct.Exists("FadeColor"))
             {
                 var fadeColorVec = gffStruct.Acquire("FadeColor", new Vector3(0, 0, 0));
-                Color fadeColor = Color.FromBgrVector3(fadeColorVec);
-                node.FadeColor = System.Drawing.Color.FromArgb(
+                BioWare.NET.Common.Color fadeColor = BioWare.NET.Common.Color.FromBgrVector3(fadeColorVec);
+                node.FadeColor = ConvertColor(System.Drawing.Color.FromArgb(
                     (int)(fadeColor.A * 255),
                     (int)(fadeColor.R * 255),
                     (int)(fadeColor.G * 255),
-                    (int)(fadeColor.B * 255));
+                    (int)(fadeColor.B * 255)));
             }
         }
 
@@ -476,7 +477,7 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics.DLG
             }
             if (node.FadeColor != null)
             {
-                BioWare.NET.Common.Color Color = ConvertColorToParsing(node.FadeColor);
+                BioWare.NET.Common.Color Color = node.FadeColor;
                 gffStruct.SetVector3("FadeColor", Color.ToBgrVector3());
             }
 
@@ -757,7 +758,7 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics.DLG
                 CameraEffect = dlgEntry.CameraEffect,
                 Delay = dlgEntry.Delay,
                 FadeType = dlgEntry.FadeType,
-                FadeColor = new BioWare.NET.Common.Color(ConvertColor(dlgEntry.FadeColor)),
+                FadeColor = dlgEntry.FadeColor,
                 FadeDelay = dlgEntry.FadeDelay,
                 FadeLength = dlgEntry.FadeLength,
                 Text = ConvertLocalizedStringToParsing(dlgEntry.Text),
@@ -820,7 +821,7 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics.DLG
                 CameraEffect = dlgReply.CameraEffect,
                 Delay = dlgReply.Delay,
                 FadeType = dlgReply.FadeType,
-                FadeColor = new BioWare.NET.Common.Color(ConvertColor(dlgReply.FadeColor)),
+                FadeColor = dlgReply.FadeColor,
                 FadeDelay = dlgReply.FadeDelay,
                 FadeLength = dlgReply.FadeLength,
                 Text = ConvertLocalizedStringToParsing(dlgReply.Text),
@@ -896,7 +897,7 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics.DLG
             };
         }
 
-        // Conversion methods for converting from Core.Common types to Parsing.Common types
+        // Conversion methods for converting from Core.Common types to BioWare.NET.Resource.Common types
         private static BioWare.NET.Common.ResRef ConvertResRef(BioWare.NET.Common.ResRef coreResRef)
         {
             if (coreResRef == null)
@@ -906,7 +907,7 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics.DLG
             return new BioWare.NET.Common.ResRef(coreResRef.ToString());
         }
 
-        // Conversion methods for converting from Parsing.Common types to Core.Common types
+        // Conversion methods for converting from BioWare.NET.Resource.Common types to Core.Common types
         private static BioWare.NET.Common.ResRef ConvertResRefFromParsing(BioWare.NET.Common.ResRef parsingResRef)
         {
             if (parsingResRef == null)
@@ -949,7 +950,7 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics.DLG
             );
         }
 
-        // Conversion methods for converting from Core.Common types to Parsing.Common types (for CNVEntry)
+        // Conversion methods for converting from Core.Common types to BioWare.NET.Resource.Common types (for CNVEntry)
         private static BioWare.NET.Common.Color ConvertColor(System.Drawing.Color drawingColor)
         {
             return new BioWare.NET.Common.Color(

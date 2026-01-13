@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using BioWare.NET.Resource.Formats.TPC;
-using Andastra.Runtime.MonoGame.Converters;
-using Andastra.Runtime.MonoGame.Enums;
+using Andastra.Game.Graphics.MonoGame.Converters;
+using Andastra.Game.Graphics.MonoGame.Enums;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

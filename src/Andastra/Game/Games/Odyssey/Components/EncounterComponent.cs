@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Core.Interfaces;
 
-namespace Andastra.Game.Engines.Odyssey.Components
+namespace Andastra.Game.Games.Odyssey.Components
 {
     /// <summary>
     /// Component for encounter spawner entities.

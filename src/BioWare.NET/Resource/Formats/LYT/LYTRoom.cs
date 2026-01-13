@@ -105,7 +105,7 @@ namespace BioWare.NET.Resource.Formats.LYT
         {
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lyt/lyt_data.py:254-270
             // Original: def __init__(self, model: str, position: Vector3)
-            Model = model;
+            Model = new ResRef(model);
             Position = position;
             Connections = new HashSet<LYTRoom>();
         }
@@ -115,7 +115,7 @@ namespace BioWare.NET.Resource.Formats.LYT
         public static LYTRoom operator +(LYTRoom left, LYTRoom right)
         {
             Vector3 newPosition = (left.Position + right.Position) * 0.5f;
-            LYTRoom newRoom = new LYTRoom($"{left.Model}_{right.Model}", newPosition);
+            LYTRoom newRoom = new LYTRoom($"{left.Model.ToString()}_{right.Model.ToString()}", newPosition);
             // Copy connections if left and right are the same type (reference equality or value equality)
             if (left != null && left is LYTRoom && left.Connections != null)
             {
@@ -166,12 +166,12 @@ namespace BioWare.NET.Resource.Formats.LYT
             {
                 return false;
             }
-            return Model.ToLowerInvariant() == other.Model.ToLowerInvariant() && Position.Equals(other.Position);
+            return Model.ToString().ToLowerInvariant() == other.Model.ToString().ToLowerInvariant() && Position.Equals(other.Position);
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Model.ToLowerInvariant(), Position);
+            return HashCode.Combine(Model.ToString().ToLowerInvariant(), Position);
         }
     }
 }

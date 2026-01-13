@@ -11,6 +11,7 @@ using BioWare.NET.Extract;
 using BioWare.NET.Installation;
 using BioWare.NET.TSLPatcher;
 using BioWare.NET.Resource.Formats.Capsule;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using KotorDiff.Cache;
 using CachedFileComparison = KotorDiff.Cache.CachedFileComparison;

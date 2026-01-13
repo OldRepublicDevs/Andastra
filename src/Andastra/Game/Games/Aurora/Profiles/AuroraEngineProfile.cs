@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using Andastra.Runtime.Engines.Aurora.EngineApi;
-using Andastra.Runtime.Engines.Common;
+using Andastra.Game.Games.Aurora.EngineApi;
+using Andastra.Game.Games.Common;
 using Andastra.Runtime.Scripting.Interfaces;
 
 namespace Andastra.Game.Engines.Aurora.Profiles

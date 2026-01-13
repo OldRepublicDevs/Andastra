@@ -685,7 +685,7 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp
             {
                 bool shouldProcess = this.nodedata.TryProcessCode(node);
                 this.skipdeadcode = !shouldProcess;
-                if (!shouldProcess && node is AST.PCmd cmd)
+                if (!shouldProcess && node is Node.PCmd cmd)
                 {
                     // Log first few skipped commands for debugging
                     int pos = this.nodedata.TryGetPos(node);

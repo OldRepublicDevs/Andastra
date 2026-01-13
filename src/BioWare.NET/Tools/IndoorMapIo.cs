@@ -5,6 +5,7 @@ using System.Linq;
 
 using BioWare.NET.Resource.Formats.ERF;
 using BioWare.NET.Resource.Formats.RIM;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using ResourceType = BioWare.NET.Common.ResourceType;
 

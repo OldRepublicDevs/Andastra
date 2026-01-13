@@ -9,6 +9,7 @@ using BioWare.NET;
 using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.TwoDA;
 using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Tools;
 using DLGType = BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLG;

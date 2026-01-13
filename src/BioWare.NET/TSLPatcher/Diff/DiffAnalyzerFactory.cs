@@ -214,7 +214,7 @@ namespace BioWare.NET.TSLPatcher.Diff
                     var modifications = new ModificationsSSF(filename, replace: false, modifiers: new List<ModifySSF>());
 
                     // Check all SSF sounds
-                    foreach (Formats.SSF.SSFSound sound in Enum.GetValues(typeof(Formats.SSF.SSFSound)))
+                    foreach (Resource.Formats.SSF.SSFSound sound in Enum.GetValues(typeof(Resource.Formats.SSF.SSFSound)))
                     {
                         int? leftValue = leftSsf.Get(sound);
                         int? rightValue = rightSsf.Get(sound);

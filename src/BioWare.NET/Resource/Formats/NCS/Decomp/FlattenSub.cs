@@ -59,7 +59,7 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
             this.i = 0;
             while (this.i < this.commands.Count)
             {
-                ((Node)this.commands[this.i]).Apply(this);
+                ((Node.Node)this.commands[this.i]).Apply(this);
                 if (this.actionjumpfound)
                 {
                     this.actionjumpfound = false;

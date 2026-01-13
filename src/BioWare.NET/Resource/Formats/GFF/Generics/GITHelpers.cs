@@ -5,6 +5,7 @@ using System.Numerics;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Common.Logger;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 
 namespace BioWare.NET.Resource.Formats.GFF.Generics
@@ -133,7 +134,7 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics
                 {
                     // Engine default: 0 (not explicitly verified, but consistent with color defaults)
                     int tweakColorInt = doorStruct.Acquire("TweakColor", 0);
-                    door.TweakColor = new Color(Color.FromBgrInteger(tweakColorInt));
+                    door.TweakColor = Color.FromBgrInteger(tweakColorInt);
                 }
                 git.Doors.Add(door);
             }
@@ -204,7 +205,7 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics
             }
 
             // Extract placeable list - all fields optional
-            // swkotor.exe: 0x0050a7b0, swkotor2.exe: 0x004e5d80
+            // [LoadPlaceable] @ (K1: 0x0050a7b0, TSL: 0x004e5d80)
             var placeableList = root.Acquire("Placeable List", new GFFList());
             foreach (var placeableStruct in placeableList)
             {
@@ -217,13 +218,13 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics
                         z: placeableStruct.Acquire("Z", 0.0f)
                     ),
                     Bearing = placeableStruct.Acquire("Bearing", 0.0f),
-                    TweakColor = placeableStruct.Acquire("UseTweakColor", 0) != 0 ? new Color(Color.FromBgrInteger(placeableStruct.Acquire("TweakColor", 0))) : null,
+                    TweakColor = placeableStruct.Acquire("UseTweakColor", 0) != 0 ? BioWare.NET.Common.Color.FromBgrInteger(placeableStruct.Acquire("TweakColor", 0)) : null,
                 };
                 git.Placeables.Add(placeable);
             }
 
             // Extract sound list - all fields optional
-            // swkotor.exe: 0x00507b10, swkotor2.exe: 0x004e06a0
+            // [LoadSound] @ (K1: 0x00507b10, TSL: 0x004e06a0)
             var soundList = root.Acquire("SoundList", new GFFList());
             foreach (var soundStruct in soundList)
             {
@@ -240,7 +241,7 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics
             }
 
             // Extract store list - all fields optional
-            // swkotor.exe: 0x00507ca0, swkotor2.exe: 0x004e08e0
+            // [LoadStore] @ (K1: 0x00507ca0, TSL: 0x004e08e0)
             var storeList = root.Acquire("StoreList", new GFFList());
             foreach (var storeStruct in storeList)
             {
@@ -258,7 +259,7 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics
             }
 
             // Extract trigger list - all fields optional
-            // swkotor.exe: 0x0050a350, swkotor2.exe: 0x004e5920
+            // [LoadTrigger] @ (K1: 0x0050a350, TSL: 0x004e5920)
             var triggerList = root.Acquire("TriggerList", new GFFList());
             foreach (var triggerStruct in triggerList)
             {
@@ -309,14 +310,14 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics
             }
 
             // Extract waypoint list - all fields optional
-            // [LoadWaypoint] @ (K1: 0x00505360, TSL: 0x004e04a0) @ FUN_0056f5a0 (K1: TODO: Find this address, TSL: 0x0056f5a0)
+            // [LoadWaypoint] @ (K1: 0x00505360, TSL: 0x004e04a0) @ [LoadWaypoint2] @ (K1: TODO: Find this address, TSL: 0x0056f5a0)
             var waypointList = root.Acquire("WaypointList", new GFFList());
             foreach (var waypointStruct in waypointList)
             {
                 var waypoint = new GITWaypoint
                 {
-                    // Engine default: Invalid LocalizedString (swkotor2.exe: 0x0056f5a0 line 52-54)
-                    Name = waypointStruct.Acquire("LocalizedName", LocalizedString.FromInvalid()), // Engine default: "" (swkotor2.exe: 0x0056f5a0 line 43)
+                    // Engine default: Invalid LocalizedString ([LoadWaypoint2] @ (K1: TODO: Find this address, TSL: 0x0056f5a0) line 52-54)
+                    Name = waypointStruct.Acquire("LocalizedName", LocalizedString.FromInvalid()), // Engine default: "" ([LoadWaypoint2] @ (K1: TODO: Find this address, TSL: 0x0056f5a0) line 43)
                     Tag = waypointStruct.Acquire("Tag", ""),
                     // Engine default: "" (not explicitly loaded, but ResRef defaults to blank)
                     ResRef = waypointStruct.Acquire("TemplateResRef", ResRef.FromBlank()),
@@ -329,7 +330,7 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics
                 };
                 if (waypoint.HasMapNote)
                 {
-                    // Engine default: Invalid LocalizedString (swkotor2.exe: 0x0056f5a0 line 84)
+                    // Engine default: Invalid LocalizedString ([LoadWaypoint2] @ (K1: TODO: Find this address, TSL: 0x0056f5a0) line 84)
                     waypoint.MapNote = waypointStruct.Acquire("MapNote", LocalizedString.FromInvalid());
                     // Engine default: 0 (false) [LoadWaypoint] @ (K1: TODO: Find this address, TSL: 0x0056f5a0) line 80
                     waypoint.MapNoteEnabled = waypointStruct.Acquire("MapNoteEnabled", 0) != 0;
@@ -338,9 +339,9 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics
                 {
                     waypoint.MapNote = null; // Explicitly set to null when HasMapNote is false, matching Python behavior
                 }
-                // Engine default: 0.0 [LoadWaypoint] @ (K1: TODO: Find this address, TSL: 0x0056f5a0) line 65
+                // Engine default: 0.0 ([LoadWaypoint2] @ (K1: TODO: Find this address, TSL: 0x0056f5a0) line 65)
                 float rotX = waypointStruct.Acquire("XOrientation", 0.0f);
-                // Engine default: 0.0 [LoadWaypoint] @ (K1: TODO: Find this address, TSL: 0x0056f5a0) line 67
+                // Engine default: 0.0 ([LoadWaypoint2] @ (K1: TODO: Find this address, TSL: 0x0056f5a0) line 67)
                 float rotY = waypointStruct.Acquire("YOrientation", 0.0f);
                 if (Math.Abs(rotX) < 1e-6f && Math.Abs(rotY) < 1e-6f)
                 {

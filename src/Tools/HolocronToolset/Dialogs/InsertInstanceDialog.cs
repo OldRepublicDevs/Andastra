@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using BioWare.NET.Common;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.GFF.Generics;
 using BioWare.NET.Resource.Formats.GFF;

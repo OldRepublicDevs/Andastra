@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using BioWare.NET.Installation;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.TPC;
 using HolocronToolset.Data;

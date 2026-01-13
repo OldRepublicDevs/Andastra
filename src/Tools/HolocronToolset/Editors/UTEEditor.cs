@@ -12,6 +12,7 @@ using BioWare.NET.Extract;
 using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.TwoDA;
 using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
@@ -25,7 +26,7 @@ using UTE = BioWare.NET.Resource.Formats.GFF.Generics.UTE;
 using Avalonia;
 using TextBlock = Avalonia.Controls.TextBlock;
 using LocalizedString = BioWare.NET.Common.LocalizedString;
-using ResourceType = BioWare.NET.Resource.ResourceType;
+using ResourceType = BioWare.NET.Common.ResourceType;
 using Button = Avalonia.Controls.Button;
 using ComboBox = Avalonia.Controls.ComboBox;
 using NumericUpDown = Avalonia.Controls.NumericUpDown;
@@ -453,7 +454,7 @@ namespace HolocronToolset.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:133-143
         // Original: def load(self, filepath, resref, restype, data):
-        public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
+        public override void Load(string filepath, string resref, Common.ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
             // Matching PyKotor implementation: ute: UTE = read_ute(data); self._loadUTE(ute)

@@ -1,7 +1,7 @@
 using System;
 using Andastra.Runtime.Core;
 
-namespace Andastra.Game.Game.Core
+namespace Andastra.Game.Core
 {
     /// <summary>
     /// Game settings and configuration with command-line parsing.

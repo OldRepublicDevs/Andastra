@@ -5,14 +5,14 @@ using BioWare.NET.Common.Script;
 using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Engines.Odyssey.Game;
-using Andastra.Runtime.Engines.Odyssey.Loading;
-using Andastra.Runtime.Engines.Odyssey.Systems;
+using Andastra.Game.Games.Odyssey.Game;
+using Andastra.Game.Games.Odyssey.Loading;
+using Andastra.Game.Games.Odyssey.Systems;
 using Andastra.Runtime.Scripting.EngineApi;
 using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.VM;
 
-namespace Andastra.Game.Engines.Odyssey.EngineApi
+namespace Andastra.Game.Games.Odyssey.EngineApi
 {
     /// <summary>
     /// KOTOR 2 (TSL) engine API implementation.
@@ -303,7 +303,7 @@ namespace Andastra.Game.Engines.Odyssey.EngineApi
                 // Ghidra analysis: FUN_0057bd70 @ 0x0057bd70 saves party data, FUN_0057dcd0 @ 0x0057dcd0 loads party data
                 // EntityFactory accessed via ModuleLoader.EntityFactory property
                 // Get current module from ModuleLoader
-                BioWare.NET.Extract.Installation.Module module = moduleLoader.GetCurrentModule();
+                BioWare.NET.Common.Module module = moduleLoader.GetCurrentModule();
                 if (module != null)
                 {
                     // Get spawn position (use player position or default)

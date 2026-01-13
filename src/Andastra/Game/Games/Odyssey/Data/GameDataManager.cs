@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
 using JetBrains.Annotations;
 
-namespace Andastra.Game.Engines.Odyssey.Data
+namespace Andastra.Game.Games.Odyssey.Data
 {
     /// <summary>
     /// Manages game data tables (2DA files) for KOTOR.

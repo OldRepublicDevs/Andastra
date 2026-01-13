@@ -66,7 +66,7 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
                 try
                 {
                     // Token is in AST namespace
-                    if (tokenObj is AST.Token token)
+                    if (tokenObj is Token token)
                     {
                         string text = token.GetText();
                         if (text == null || text.Length == 0) return -1;
@@ -178,94 +178,94 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
             }
 
             // Check AST namespace types (from NcsToAstConverter)
-            if (typeof(AST.AConditionalJumpCommand).IsInstanceOfType(node))
+            if (typeof(AConditionalJumpCommand).IsInstanceOfType(node))
             {
-                return SafeGetPosFromToken(((AST.AConditionalJumpCommand)node).GetPos());
+                return SafeGetPosFromToken(((AConditionalJumpCommand)node).GetPos());
             }
 
-            if (typeof(AST.AJumpCommand).IsInstanceOfType(node))
+            if (typeof(AJumpCommand).IsInstanceOfType(node))
             {
-                return SafeGetPosFromToken(((AST.AJumpCommand)node).GetPos());
+                return SafeGetPosFromToken(((AJumpCommand)node).GetPos());
             }
 
-            if (typeof(AST.AJumpToSubroutine).IsInstanceOfType(node))
+            if (typeof(AJumpToSubroutine).IsInstanceOfType(node))
             {
-                return SafeGetPosFromToken(((AST.AJumpToSubroutine)node).GetPos());
+                return SafeGetPosFromToken(((AJumpToSubroutine)node).GetPos());
             }
 
-            if (typeof(AST.AReturn).IsInstanceOfType(node))
+            if (typeof(AReturn).IsInstanceOfType(node))
             {
-                return SafeGetPosFromToken(((AST.AReturn)node).GetPos());
+                return SafeGetPosFromToken(((AReturn)node).GetPos());
             }
 
-            if (typeof(AST.ACopyDownSpCommand).IsInstanceOfType(node))
+            if (typeof(ACopyDownSpCommand).IsInstanceOfType(node))
             {
-                return SafeGetPosFromToken(((AST.ACopyDownSpCommand)node).GetPos());
+                return SafeGetPosFromToken(((ACopyDownSpCommand)node).GetPos());
             }
 
-            if (typeof(AST.ACopyTopSpCommand).IsInstanceOfType(node))
+            if (typeof(ACopyTopSpCommand).IsInstanceOfType(node))
             {
-                return SafeGetPosFromToken(((AST.ACopyTopSpCommand)node).GetPos());
+                return SafeGetPosFromToken(((ACopyTopSpCommand)node).GetPos());
             }
 
-            if (typeof(AST.ACopyDownBpCommand).IsInstanceOfType(node))
+            if (typeof(ACopyDownBpCommand).IsInstanceOfType(node))
             {
-                return SafeGetPosFromToken(((AST.ACopyDownBpCommand)node).GetPos());
+                return SafeGetPosFromToken(((ACopyDownBpCommand)node).GetPos());
             }
 
-            if (typeof(AST.ACopyTopBpCommand).IsInstanceOfType(node))
+            if (typeof(ACopyTopBpCommand).IsInstanceOfType(node))
             {
-                return SafeGetPosFromToken(((AST.ACopyTopBpCommand)node).GetPos());
+                return SafeGetPosFromToken(((ACopyTopBpCommand)node).GetPos());
             }
 
-            if (typeof(AST.AMoveSpCommand).IsInstanceOfType(node))
+            if (typeof(AMoveSpCommand).IsInstanceOfType(node))
             {
-                return SafeGetPosFromToken(((AST.AMoveSpCommand)node).GetPos());
+                return SafeGetPosFromToken(((AMoveSpCommand)node).GetPos());
             }
 
-            if (typeof(AST.ARsaddCommand).IsInstanceOfType(node))
+            if (typeof(ARsaddCommand).IsInstanceOfType(node))
             {
-                return SafeGetPosFromToken(((AST.ARsaddCommand)node).GetPos());
+                return SafeGetPosFromToken(((ARsaddCommand)node).GetPos());
             }
 
-            if (typeof(AST.AConstCommand).IsInstanceOfType(node))
+            if (typeof(AConstCommand).IsInstanceOfType(node))
             {
-                return SafeGetPosFromToken(((AST.AConstCommand)node).GetPos());
+                return SafeGetPosFromToken(((AConstCommand)node).GetPos());
             }
 
-            if (typeof(AST.AActionCommand).IsInstanceOfType(node))
+            if (typeof(AActionCommand).IsInstanceOfType(node))
             {
-                return SafeGetPosFromToken(((AST.AActionCommand)node).GetPos());
+                return SafeGetPosFromToken(((AActionCommand)node).GetPos());
             }
 
-            if (typeof(AST.ALogiiCommand).IsInstanceOfType(node))
+            if (typeof(ALogiiCommand).IsInstanceOfType(node))
             {
-                return SafeGetPosFromToken(((AST.ALogiiCommand)node).GetPos());
+                return SafeGetPosFromToken(((ALogiiCommand)node).GetPos());
             }
 
-            if (typeof(AST.ABinaryCommand).IsInstanceOfType(node))
+            if (typeof(ABinaryCommand).IsInstanceOfType(node))
             {
-                return SafeGetPosFromToken(((AST.ABinaryCommand)node).GetPos());
+                return SafeGetPosFromToken(((ABinaryCommand)node).GetPos());
             }
 
-            if (typeof(AST.AUnaryCommand).IsInstanceOfType(node))
+            if (typeof(AUnaryCommand).IsInstanceOfType(node))
             {
-                return SafeGetPosFromToken(((AST.AUnaryCommand)node).GetPos());
+                return SafeGetPosFromToken(((AUnaryCommand)node).GetPos());
             }
 
-            if (typeof(AST.ADestructCommand).IsInstanceOfType(node))
+            if (typeof(ADestructCommand).IsInstanceOfType(node))
             {
-                return SafeGetPosFromToken(((AST.ADestructCommand)node).GetPos());
+                return SafeGetPosFromToken(((ADestructCommand)node).GetPos());
             }
 
-            if (typeof(AST.ABpCommand).IsInstanceOfType(node))
+            if (typeof(ABpCommand).IsInstanceOfType(node))
             {
-                return SafeGetPosFromToken(((AST.ABpCommand)node).GetPos());
+                return SafeGetPosFromToken(((ABpCommand)node).GetPos());
             }
 
-            if (typeof(AST.AStoreStateCommand).IsInstanceOfType(node))
+            if (typeof(AStoreStateCommand).IsInstanceOfType(node))
             {
-                return SafeGetPosFromToken(((AST.AStoreStateCommand)node).GetPos());
+                return SafeGetPosFromToken(((AStoreStateCommand)node).GetPos());
             }
 
             return -1;
@@ -663,7 +663,7 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
 
             if (typeof(ACommandBlock).IsInstanceOfType(node))
             {
-                return GetCommandChild((Node)((ACommandBlock)node).GetCmd()[0]);
+                return GetCommandChild((Node.Node)((ACommandBlock)node).GetCmd()[0]);
             }
 
             if (typeof(AAddVarCmd).IsInstanceOfType(node))
@@ -781,7 +781,7 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
                 Debug("class " + node.Parent()?.GetType()?.ToString() ?? "null");
                 ACommandBlock ablock = (ACommandBlock)((ASubroutine)node.Parent()).GetCommandBlock();
                 var cmdList = ablock.GetCmd();
-                return GetCommandChild((Node)cmdList[cmdList.Count - 1]);
+                return GetCommandChild((Node.Node)cmdList[cmdList.Count - 1]);
             }
 
             Node.Node up;
@@ -798,10 +798,10 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
             ListIterator it = LinkedListExtensions.ListIterator(((ACommandBlock)up).GetCmd());
             while (it.HasNext())
             {
-                if (nodedata.GetPos((Node)it.Next()) == searchPos)
+                if (nodedata.GetPos((Node.Node)it.Next()) == searchPos)
                 {
                     it.Previous();
-                    return GetCommandChild((Node)it.Previous());
+                    return GetCommandChild((Node.Node)it.Previous());
                 }
             }
 
@@ -819,13 +819,13 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
             var cmdList = ((ACommandBlock)up).GetCmd();
             foreach (PCmd cmd in cmdList)
             {
-                Node.Node next = (Node)cmd;
+                Node.Node next = (Node.Node)cmd;
                 if (nodedata.GetPos(next) == searchPos)
                 {
                     int nextIndex = cmdList.IndexOf(cmd) + 1;
                     if (nextIndex < cmdList.Count)
                     {
-                        return GetCommandChild((Node)cmdList[nextIndex]);
+                        return GetCommandChild((Node.Node)cmdList[nextIndex]);
                     }
 
                     return null;

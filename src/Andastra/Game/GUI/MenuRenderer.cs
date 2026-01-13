@@ -8,7 +8,7 @@ using XnaColor = Microsoft.Xna.Framework.Color;
 using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
 using XnaVector2 = Microsoft.Xna.Framework.Vector2;
 
-namespace Andastra.Game.Game.GUI
+namespace Andastra.Game
 {
     /// <summary>
     /// Menu renderer with text labels and click handling using graphics abstraction layer.

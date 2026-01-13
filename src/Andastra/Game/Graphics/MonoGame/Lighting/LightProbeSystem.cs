@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Graphics.Common.Lighting;
-using Andastra.Runtime.MonoGame.Spatial;
+using Andastra.Game.Graphics.MonoGame.Spatial;
 using Microsoft.Xna.Framework;
 using XnaVector3 = Microsoft.Xna.Framework.Vector3;
 

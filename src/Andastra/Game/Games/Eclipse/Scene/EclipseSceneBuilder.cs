@@ -8,6 +8,7 @@ using BioWare.NET;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.VIS;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.GFF.Generics;
 using BioWare.NET.Resource.Formats.GFF.Generics.ARE;

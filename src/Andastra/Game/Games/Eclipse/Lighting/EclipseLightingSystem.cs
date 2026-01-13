@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.MonoGame.Enums;
-using Andastra.Runtime.MonoGame.Graphics;
-using Andastra.Runtime.MonoGame.Interfaces;
+using Andastra.Game.Graphics.MonoGame.Enums;
+using Andastra.Game.Graphics.MonoGame.Graphics;
+using Andastra.Game.Graphics.MonoGame.Interfaces;
 using Microsoft.Xna.Framework.Graphics;
-using DynamicLight = Andastra.Runtime.MonoGame.Lighting.DynamicLight;
-using IDynamicLight = Andastra.Runtime.MonoGame.Interfaces.IDynamicLight;
+using DynamicLight = Andastra.Game.Graphics.MonoGame.Lighting.DynamicLight;
+using IDynamicLight = Andastra.Game.Graphics.MonoGame.Interfaces.IDynamicLight;
 
 namespace Andastra.Game.Games.Eclipse.Lighting
 {

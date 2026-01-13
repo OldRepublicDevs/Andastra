@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Numerics;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.TPC;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
-using Andastra.Runtime.MonoGame.Converters;
-using Andastra.Runtime.MonoGame.Enums;
-using Andastra.Runtime.MonoGame.Interfaces;
+using Andastra.Game.Graphics.MonoGame.Converters;
+using Andastra.Game.Graphics.MonoGame.Enums;
+using Andastra.Game.Graphics.MonoGame.Interfaces;
 using JetBrains.Annotations;
 
 namespace Andastra.Game.Graphics.MonoGame.Materials

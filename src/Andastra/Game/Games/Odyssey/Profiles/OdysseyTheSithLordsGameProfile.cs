@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Runtime.Engines.Common;
-using Andastra.Runtime.Engines.Odyssey.EngineApi;
+using Andastra.Game.Games.Common;
+using Andastra.Game.Games.Odyssey.EngineApi;
 using Andastra.Runtime.Scripting.Interfaces;
 
-namespace Andastra.Game.Engines.Odyssey.Profiles
+namespace Andastra.Game.Games.Odyssey.Profiles
 {
     /// <summary>
     /// Game profile for KOTOR 2: The Sith Lords (TSL).

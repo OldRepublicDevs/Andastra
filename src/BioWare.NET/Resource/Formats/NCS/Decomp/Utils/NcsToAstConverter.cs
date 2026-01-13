@@ -5,7 +5,6 @@ using System.Linq;
 using BioWare.NET.Resource.Formats.NCS.Decomp.Analysis;
 using BioWare.NET.Resource.Formats.NCS.Decomp.Node;
 using static BioWare.NET.Resource.Formats.NCS.Decomp.DecompilerLogger;
-using AST = BioWare.NET.Resource.Formats.NCS.Compiler.NSS.AST;
 
 namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
 {
@@ -1822,7 +1821,7 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
                     // Check if main subroutine has commands
                     var cmdBlock = mainSub.GetCommandBlock();
                     int cmdCount = 0;
-                    if (cmdBlock is AST.ACommandBlock aCmdBlock)
+                    if (cmdBlock is ACommandBlock aCmdBlock)
                     {
                         cmdCount = aCmdBlock.GetCmd().Count;
                     }
@@ -2120,9 +2119,9 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
                         if (instructions.Count > 0)
                         {
                             Debug("DEBUG NcsToAstConverter: Attempting to create minimal subroutine as last resort");
-                            AST.ASubroutine minimalSub = new AST.ASubroutine();
+                            ASubroutine minimalSub = new ASubroutine();
                             minimalSub.SetId(0);
-                            AST.ACommandBlock minimalCmdBlock = new AST.ACommandBlock();
+                            ACommandBlock minimalCmdBlock = new ACommandBlock();
 
                             // Try to convert instructions from the calculated start position
                             // If that fails, try the last few instructions
@@ -2135,7 +2134,7 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
                                     PCmd cmd = ConvertInstructionToCmd(ncs, instructions[i], i, instructions);
                                     if (cmd != null)
                                     {
-                                        minimalCmdBlock.AddCmd((AST.PCmd)(object)cmd);
+                                        minimalCmdBlock.AddCmd((PCmd)(object)cmd);
                                         convertedCount++;
                                     }
                                 }
@@ -2151,7 +2150,7 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
                                     AReturn ret = ConvertRetn(instructions[i], i);
                                     if (ret != null)
                                     {
-                                        minimalSub.SetReturn((AST.PReturn)(object)ret);
+                                        minimalSub.SetReturn((PReturn)(object)ret);
                                     }
                                     break;
                                 }
@@ -2169,9 +2168,9 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
                     if (instructions.Count > 0)
                     {
                         Debug("DEBUG NcsToAstConverter: Creating empty subroutine as absolute last resort");
-                        AST.ASubroutine emptySub = new AST.ASubroutine();
+                        ASubroutine emptySub = new ASubroutine();
                         emptySub.SetId(0);
-                        emptySub.SetCommandBlock(new AST.ACommandBlock());
+                        emptySub.SetCommandBlock(new ACommandBlock());
 
                         // Try to find and add at least one RETN if possible
                         for (int i = 0; i < instructions.Count && i < 50; i++)
@@ -2181,7 +2180,7 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
                                 AReturn ret = ConvertRetn(instructions[i], i);
                                 if (ret != null)
                                 {
-                                    emptySub.SetReturn((AST.PReturn)(object)ret);
+                                    emptySub.SetReturn((PReturn)(object)ret);
                                     break;
                                 }
                             }
@@ -2210,10 +2209,10 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
                 return null;
             }
 
-            AST.ASubroutine sub = new AST.ASubroutine();
+            ASubroutine sub = new ASubroutine();
             sub.SetId(subId);
             sub.SetReturnType(returnType); // Store return type for main function identification
-            AST.ACommandBlock cmdBlock = new AST.ACommandBlock();
+            ACommandBlock cmdBlock = new ACommandBlock();
 
             int limit = Math.Min(endIdx, instructions.Count);
             int convertedCount = 0;
@@ -2272,7 +2271,7 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
                 PCmd cmd = ConvertInstructionToCmd(ncs, instructions[i], i, instructions);
                 if (cmd != null)
                 {
-                    cmdBlock.AddCmd((AST.PCmd)(object)cmd);
+                    cmdBlock.AddCmd((PCmd)(object)cmd);
                     convertedCount++;
                     // DEBUG: Log ACTION conversions, especially near the end
                     if (instructions[i].InsType == NCSInstructionType.ACTION && (i >= limit - 5 || i == limit - 1))
@@ -2315,7 +2314,7 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
                     AReturn ret = ConvertRetn(instructions[i], i);
                     if (ret != null)
                     {
-                        sub.SetReturn((AST.PReturn)(object)ret);
+                        sub.SetReturn((PReturn)(object)ret);
                     }
 
                     break;
@@ -2761,12 +2760,12 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
         {
             int typeVal = GetQualifier(inst.InsType);
 
-            AST.ARsaddCmd cmd = new AST.ARsaddCmd();
-            AST.ARsaddCommand command = new AST.ARsaddCommand();
-            command.SetRsadd(new AST.TRsadd(pos, 0));
-            command.SetPos(new AST.TIntegerConstant(Convert.ToString(pos, CultureInfo.InvariantCulture), pos, 0));
-            command.SetType(new AST.TIntegerConstant(Convert.ToString(typeVal, CultureInfo.InvariantCulture), pos, 0));
-            command.SetSemi(new AST.TSemi(pos, 0));
+            ARsaddCmd cmd = new ARsaddCmd();
+            ARsaddCommand command = new ARsaddCommand();
+            command.SetRsadd(new TRsadd(pos, 0));
+            command.SetPos(new TIntegerConstant(Convert.ToString(pos, CultureInfo.InvariantCulture), pos, 0));
+            command.SetType(new TIntegerConstant(Convert.ToString(typeVal, CultureInfo.InvariantCulture), pos, 0));
+            command.SetSemi(new TSemi(pos, 0));
             cmd.SetRsaddCommand(command);
 
             return cmd;
@@ -2846,25 +2845,25 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp.Utils
         {
             int typeVal = GetQualifier(inst.InsType);
 
-            AST.ABpCmd cmd = new AST.ABpCmd();
-            AST.ABpCommand command = new AST.ABpCommand();
+            ABpCmd cmd = new ABpCmd();
+            ABpCommand command = new ABpCommand();
 
             if (inst.InsType == NCSInstructionType.SAVEBP)
             {
-                AST.ASavebpBpOp bpOp = new AST.ASavebpBpOp();
-                bpOp.SetSavebp(new AST.TSavebp(pos, 0));
+                ASavebpBpOp bpOp = new ASavebpBpOp();
+                bpOp.SetSavebp(new TSavebp(pos, 0));
                 command.SetBpOp(bpOp);
             }
             else
             {
-                AST.ARestorebpBpOp bpOp = new AST.ARestorebpBpOp();
-                bpOp.SetRestorebp(new AST.TRestorebp(pos, 0));
+                ARestorebpBpOp bpOp = new ARestorebpBpOp();
+                bpOp.SetRestorebp(new TRestorebp(pos, 0));
                 command.SetBpOp(bpOp);
             }
 
-            command.SetPos(new AST.TIntegerConstant(Convert.ToString(pos, CultureInfo.InvariantCulture), pos, 0));
-            command.SetType(new AST.TIntegerConstant(Convert.ToString(typeVal, CultureInfo.InvariantCulture), pos, 0));
-            command.SetSemi(new AST.TSemi(pos, 0));
+            command.SetPos(new TIntegerConstant(Convert.ToString(pos, CultureInfo.InvariantCulture), pos, 0));
+            command.SetType(new TIntegerConstant(Convert.ToString(typeVal, CultureInfo.InvariantCulture), pos, 0));
+            command.SetSemi(new TSemi(pos, 0));
             cmd.SetBpCommand(command);
 
             return cmd;

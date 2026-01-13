@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using BioWare.NET.Common;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 
 namespace Andastra.Runtime.Content.Interfaces

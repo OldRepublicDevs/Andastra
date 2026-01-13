@@ -4,7 +4,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Game.Games.Common.Components;
 
-namespace Andastra.Game.Engines.Odyssey.Components
+namespace Andastra.Game.Games.Odyssey.Components
 {
     /// <summary>
     /// Odyssey engine-specific implementation of animation component.

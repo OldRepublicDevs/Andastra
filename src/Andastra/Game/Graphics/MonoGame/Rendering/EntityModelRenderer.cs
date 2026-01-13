@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using BioWare.NET.Resource.Formats.MDLData;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.MonoGame.Converters;
+using Andastra.Game.Graphics.MonoGame.Converters;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -264,7 +265,7 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
 
             try
             {
-                BioWare.NET.Extract.Installation.ResourceResult result = _installation.Resources.LookupResource(modelResRef, BioWare.NET.Common.ResourceType.MDL);
+                BioWare.NET.Extract.ResourceResult result = _installation.Resources.LookupResource(modelResRef, BioWare.NET.Common.ResourceType.MDL);
                 if (result == null || result.Data == null)
                 {
                     return null;

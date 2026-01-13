@@ -1,6 +1,6 @@
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Engines.Eclipse.DragonAge;
+using Andastra.Game.Games.Eclipse.DragonAge;
 
 namespace Andastra.Game.Engines.Eclipse.DragonAge2
 {

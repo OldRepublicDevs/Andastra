@@ -3,7 +3,8 @@ using System.IO;
 using System.Linq;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.TwoDA;
-// using BioWare.NET.Extract.Installation; // Removed to break circular dependency
+// using BioWare.NET.Extract; // Removed to break circular dependency
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 
 namespace BioWare.NET.Extract

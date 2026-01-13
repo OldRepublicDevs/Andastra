@@ -19,6 +19,7 @@ using BioWare.NET.TSLPatcher.Mods;
 using BioWare.NET.TSLPatcher.Mods.GFF;
 using BioWare.NET.TSLPatcher.Mods.TLK;
 using BioWare.NET.TSLPatcher.Mods.NCS;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.TLK;

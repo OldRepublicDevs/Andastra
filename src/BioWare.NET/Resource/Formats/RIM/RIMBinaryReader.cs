@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using JetBrains.Annotations;
 

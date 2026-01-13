@@ -18,6 +18,7 @@ using BioWare.NET.TSLPatcher.Mods.SSF;
 using BioWare.NET.TSLPatcher.Mods.TLK;
 using BioWare.NET.TSLPatcher.Mods.TwoDA;
 using BioWare.NET.TSLPatcher.Memory;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 
 namespace BioWare.NET.TSLPatcher

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 using BioWare.NET.Common;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Utility.LZMA;
 

@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using BioWare.NET.Resource.Formats.WAV;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Audio;

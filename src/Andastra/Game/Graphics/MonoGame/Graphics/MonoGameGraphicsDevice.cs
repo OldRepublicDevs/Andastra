@@ -1,6 +1,6 @@
 using System;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.MonoGame.Graphics;
+using Andastra.Game.Graphics.MonoGame.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Andastra.Game.Graphics.MonoGame.Graphics

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using KotorCLI.Configuration;
 using KotorCLI.Logging;

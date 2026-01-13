@@ -8,7 +8,7 @@ using Andastra.Runtime.Core;
 using Microsoft.Win32;
 using GameType = BioWare.NET.Common.BioWareGame;
 
-namespace Andastra.Game.Game.Core
+namespace Andastra.Game.Core
 {
     /// <summary>
     /// Detects KOTOR installation paths from common locations.

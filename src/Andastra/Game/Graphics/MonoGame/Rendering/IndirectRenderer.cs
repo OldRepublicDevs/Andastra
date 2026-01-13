@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using Andastra.Runtime.MonoGame.Enums;
-using Andastra.Runtime.MonoGame.Interfaces;
+using Andastra.Game.Graphics.MonoGame.Enums;
+using Andastra.Game.Graphics.MonoGame.Interfaces;
 using Microsoft.Xna.Framework;
 using XnaVector3 = Microsoft.Xna.Framework.Vector3;
 using XnaVector4 = Microsoft.Xna.Framework.Vector4;
@@ -379,7 +379,7 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
                 Viewport = new ViewportState
                 {
                     Viewports = new Viewport[] { viewport },
-                    Scissors = new Andastra.Runtime.MonoGame.Interfaces.Rectangle[] { new Andastra.Runtime.MonoGame.Interfaces.Rectangle { X = (int)viewport.X, Y = (int)viewport.Y, Width = (int)viewport.Width, Height = (int)viewport.Height } }
+                    Scissors = new Andastra.Game.Graphics.MonoGame.Interfaces.Rectangle[] { new Andastra.Game.Graphics.MonoGame.Interfaces.Rectangle { X = (int)viewport.X, Y = (int)viewport.Y, Width = (int)viewport.Width, Height = (int)viewport.Height } }
                 },
                 IndexBuffer = indexBuffer
             };
@@ -504,7 +504,7 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
             try
             {
                 var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-                string resourceName = $"Andastra.Runtime.MonoGame.Shaders.{shaderName}.cso";
+                string resourceName = $"Andastra.Game.Graphics.MonoGame.Shaders.{shaderName}.cso";
                 using (var stream = assembly.GetManifestResourceStream(resourceName))
                 {
                     if (stream != null)

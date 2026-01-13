@@ -21,12 +21,13 @@ using BioWare.NET.TSLPatcher.Mods.NCS;
 using BioWare.NET.TSLPatcher.Mods.SSF;
 using BioWare.NET.TSLPatcher.Mods.TLK;
 using BioWare.NET.TSLPatcher.Mods.TwoDA;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 // Removed: using Tools; // Removed to break circular dependency
 // Using fully qualified names directly in code instead
 using BioWare.NET.Utility;
 using JetBrains.Annotations;
-using InstallationClass = BioWare.NET.Extract.Installation;
+using InstallationClass = BioWare.NET.Extract;
 using SystemTextEncoding = System.Text.Encoding;
 
 namespace BioWare.NET.TSLPatcher
@@ -318,7 +319,7 @@ namespace BioWare.NET.TSLPatcher
         /// </summary>
         public void RegisterTlkModificationWithSource(ModificationsTLK tlkMod, object sourcePath, int sourceIndex)
         {
-            bool isInstallation = sourcePath is InstallationClass;
+            bool isInstallation = sourcePath is Installation;
 
             var wrapped = new TLKModificationWithSource
             {
@@ -630,7 +631,7 @@ namespace BioWare.NET.TSLPatcher
                 }
 
                 // Check if paths match exactly
-                if (pendingRef.SourcePath is InstallationClass pendingInstall && sourcePath is InstallationClass sourceInstall)
+                if (pendingRef.SourcePath is Installation pendingInstall && sourcePath is Installation sourceInstall)
                 {
                     shouldApply = pendingInstall.Path == sourceInstall.Path;
                 }
@@ -724,7 +725,7 @@ namespace BioWare.NET.TSLPatcher
                 }
 
                 // Check if paths match exactly
-                if (pendingRef.SourcePath is InstallationClass pendingInstall && sourcePath is InstallationClass sourceInstall)
+                if (pendingRef.SourcePath is Installation pendingInstall && sourcePath is Installation sourceInstall)
                 {
                     shouldApply = pendingInstall.Path == sourceInstall.Path;
                 }
@@ -1255,7 +1256,7 @@ namespace BioWare.NET.TSLPatcher
                 }
 
                 // If it's a loose file, just read it
-                if (!FileHelpers.IsCapsuleFile(Path.GetFileName(sourcePath)))
+                if (!BioWare.NET.Tools.FileHelpers.IsCapsuleFile(Path.GetFileName(sourcePath)))
                 {
                     return File.ReadAllBytes(sourcePath);
                 }
@@ -1891,7 +1892,7 @@ namespace BioWare.NET.TSLPatcher
                 {
                     sourcePath = strSource;
                 }
-                else if (source is InstallationClass installation)
+                else if (source is Installation installation)
                 {
                     sourcePath = installation.Path;
                 }

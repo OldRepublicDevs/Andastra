@@ -29,7 +29,7 @@ namespace BioWare.NET.Resource.Formats.NCS.Decomp
         // Original: @Override public Node cast(Object o) { if (!(o instanceof Node)) { throw new ClassCastException(...); } return (Node)o; }
         public virtual object Cast(object o)
         {
-            if (!(o is Node))
+            if (!(o is Node.Node))
             {
                 throw new InvalidCastException("Expected Node but got: " + (o != null ? o.GetType().Name : "null"));
             }

@@ -2,16 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Core.Navigation;
-using Andastra.Runtime.Engines.Common;
+using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Game.Engines.Odyssey
+namespace Andastra.Game.Games.Odyssey
 {
     /// <summary>
     /// Odyssey Engine module loader implementation for KOTOR 1/2.
@@ -32,7 +32,7 @@ namespace Andastra.Game.Engines.Odyssey
     public class OdysseyModuleLoader : BaseEngineModule
     {
         private readonly Installation _installation;
-        private readonly Andastra.Runtime.Engines.Odyssey.Loading.ModuleLoader _internalLoader;
+        private readonly Andastra.Game.Games.Odyssey.Loading.ModuleLoader _internalLoader;
         private RuntimeModule _currentRuntimeModule;
 
         public OdysseyModuleLoader(IWorld world, IGameResourceProvider resourceProvider)
@@ -49,7 +49,7 @@ namespace Andastra.Game.Engines.Odyssey
             }
 
             // Create internal loader (will be replaced with direct implementation later)
-            _internalLoader = new Andastra.Runtime.Engines.Odyssey.Loading.ModuleLoader(_installation);
+            _internalLoader = new Andastra.Game.Games.Odyssey.Loading.ModuleLoader(_installation);
         }
 
         public override async Task LoadModuleAsync(string moduleName, [CanBeNull] Action<float> progressCallback = null)
@@ -80,7 +80,7 @@ namespace Andastra.Game.Engines.Odyssey
             {
                 // Load entry area if not already loaded
                 RuntimeArea entryArea = _internalLoader.LoadArea(
-                    new BioWare.NET.Extract.Installation.Module(moduleName, _installation),
+                    new BioWare.NET.Common.Module(moduleName, _installation),
                     _currentRuntimeModule.EntryArea);
                 if (entryArea != null)
                 {
@@ -107,7 +107,7 @@ namespace Andastra.Game.Engines.Odyssey
 
             try
             {
-                var module = new BioWare.NET.Extract.Installation.Module(moduleName, _installation);
+                var module = new BioWare.NET.Common.Module(moduleName, _installation);
                 return module.Info() != null;
             }
             catch

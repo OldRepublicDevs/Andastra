@@ -1,11 +1,11 @@
 using System;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
 using Andastra.Runtime.Core.Audio;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Engines.Odyssey.UI;
+using Andastra.Game.Games.Odyssey.UI;
 using Andastra.Game.Games.Common;
 
-namespace Andastra.Game.Engines.Odyssey.Game
+namespace Andastra.Game.Games.Odyssey.Game
 {
     /// <summary>
     /// Game services context implementation for Odyssey engine.

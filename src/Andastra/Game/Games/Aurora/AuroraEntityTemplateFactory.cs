@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.TLK;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Enums;

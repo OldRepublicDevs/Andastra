@@ -1,14 +1,14 @@
 using System;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Core.Entities;
-using Andastra.Runtime.Engines.Odyssey.Game;
+using Andastra.Game.Games.Odyssey.Game;
 using Andastra.Game.Games.Odyssey;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.VM;
 using JetBrains.Annotations;
 
-namespace Andastra.Game.Game.Core
+namespace Andastra.Game.Core
 {
     /// <summary>
     /// Main game wrapper for Odyssey Engine games (KOTOR 1/2).

@@ -6,6 +6,7 @@ using System.IO;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.BWM;
 using BioWare.NET.Resource.Formats.LYT;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.GFF.Generics;
 using BioWare.NET.Common.Logger;

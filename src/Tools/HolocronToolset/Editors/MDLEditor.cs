@@ -8,6 +8,7 @@ using BioWare.NET.Resource.Formats.MDL;
 using BioWare.NET.Resource.Formats.MDLData;
 using BioWare.NET.Resource.Formats.RIM;
 using BioWare.NET.Installation;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Widgets;

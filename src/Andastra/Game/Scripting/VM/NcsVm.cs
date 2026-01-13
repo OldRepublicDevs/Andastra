@@ -4,7 +4,8 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using BioWare.NET.Common.Script;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Scripting.Interfaces;
@@ -214,7 +215,7 @@ namespace Andastra.Game.Scripting.VM
             // Fallback to BioWare.NET Installation provider
             else if (provider is Installation installation)
             {
-                BioWare.NET.Extract.Installation.ResourceResult result = installation.Resource(resRef, ResourceType.NCS, null, null);
+                BioWare.NET.Extract.ResourceResult result = installation.Resource(resRef, ResourceType.NCS, null, null);
                 if (result != null && result.Data != null)
                 {
                     ncsBytes = result.Data;

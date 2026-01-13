@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using BioWare.NET.Common;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 
 namespace BioWare.NET.Extract

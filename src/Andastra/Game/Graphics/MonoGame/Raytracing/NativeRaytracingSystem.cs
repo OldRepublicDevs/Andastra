@@ -5,8 +5,8 @@ using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
-using Andastra.Runtime.MonoGame.Enums;
-using Andastra.Runtime.MonoGame.Interfaces;
+using Andastra.Game.Graphics.MonoGame.Enums;
+using Andastra.Game.Graphics.MonoGame.Interfaces;
 
 namespace Andastra.Game.Graphics.MonoGame.Raytracing
 {

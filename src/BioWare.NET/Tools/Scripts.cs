@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using BioWare.NET.Common;
 using BioWare.NET.Common.Script;
+using BioWare.NET.Resource.Formats.NCS;
+using BioWare.NET.Resource.Formats.NCS.Decomp;
+using BioWare.NET.Resource.Formats.NCS.Decomp.Utils;
 
 namespace BioWare.NET.Tools
 {

@@ -15,6 +15,7 @@ using BioWare.NET.TSLPatcher.Mods;
 using BioWare.NET.TSLPatcher.Mods.GFF;
 using BioWare.NET.TSLPatcher.Mods.SSF;
 using BioWare.NET.TSLPatcher.Mods.TwoDA;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Common;
 using KotorDiff.Diff;

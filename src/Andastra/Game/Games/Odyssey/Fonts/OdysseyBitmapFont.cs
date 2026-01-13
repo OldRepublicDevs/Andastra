@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using BioWare.NET;
 using BioWare.NET.Resource.Formats.TPC;
 using BioWare.NET.Resource.Formats.TXI;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Game.Games.Common;
 using Andastra.Runtime.Graphics;
@@ -153,7 +154,7 @@ namespace Andastra.Game.Games.Odyssey.Fonts
 
                 // Convert TPC to MonoGame Texture2D
                 // Fonts always use 2D textures, not cube maps
-                Texture convertedTexture = Andastra.Runtime.MonoGame.Converters.TpcToMonoGameTextureConverter.Convert(fontTexture, graphicsDevice, false);
+                Texture convertedTexture = Andastra.Game.Graphics.MonoGame.Converters.TpcToMonoGameTextureConverter.Convert(fontTexture, graphicsDevice, false);
                 if (convertedTexture is TextureCube)
                 {
                     Console.WriteLine($"[OdysseyBitmapFont] ERROR: Font texture cannot be a cube map: {fontResRef}");

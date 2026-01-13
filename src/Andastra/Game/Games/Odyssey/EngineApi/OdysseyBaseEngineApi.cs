@@ -12,7 +12,7 @@ using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.Types;
 using Andastra.Runtime.Scripting.VM;
 
-namespace Andastra.Game.Engines.Odyssey.EngineApi
+namespace Andastra.Game.Games.Odyssey.EngineApi
 {
     /// <summary>
     /// Base engine API implementation for Odyssey engine family (KOTOR, TSL, Jade Empire).

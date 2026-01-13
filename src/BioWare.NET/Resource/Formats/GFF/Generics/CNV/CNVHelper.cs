@@ -5,6 +5,7 @@ using System.Numerics;
 using BioWare.NET.Common;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.GFF.Generics.DLG;
 using JetBrains.Annotations;
@@ -241,7 +242,7 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics.CNV
             {
                 var fadeColorVec = gffStruct.Acquire("FadeColor", new Vector3(0, 0, 0));
                 Color fadeColor = Color.FromBgrVector3(fadeColorVec);
-                node.FadeColor = new Color(fadeColor);
+                node.FadeColor = fadeColor;
             }
         }
 
@@ -721,7 +722,7 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics.CNV
                 CameraEffect = cnvEntry.CameraEffect,
                 Delay = cnvEntry.Delay,
                 FadeType = cnvEntry.FadeType,
-                FadeColor = ConvertColor(cnvEntry.FadeColor),
+                FadeColor = cnvEntry.FadeColor,
                 FadeDelay = cnvEntry.FadeDelay,
                 FadeLength = cnvEntry.FadeLength,
                 Text = ConvertLocalizedString(cnvEntry.Text),
@@ -784,10 +785,7 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics.CNV
                 CameraEffect = cnvReply.CameraEffect,
                 Delay = cnvReply.Delay,
                 FadeType = cnvReply.FadeType,
-                FadeColor = System.Drawing.Color.FromArgb(
-                    (int)(cnvReply.FadeColor.R * 255),
-                    (int)(cnvReply.FadeColor.G * 255),
-                    (int)(cnvReply.FadeColor.B * 255)),
+                FadeColor = cnvReply.FadeColor,
                 FadeDelay = cnvReply.FadeDelay,
                 FadeLength = cnvReply.FadeLength,
                 Text = ConvertLocalizedString(cnvReply.Text),

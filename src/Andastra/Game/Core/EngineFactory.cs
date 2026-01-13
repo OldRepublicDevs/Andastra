@@ -1,16 +1,16 @@
 using System;
 using BioWare.NET.Common;
 using Andastra.Runtime.Content.Interfaces;
-using Andastra.Runtime.Engines.Aurora;
-using Andastra.Runtime.Engines.Aurora.Profiles;
-using Andastra.Runtime.Engines.Common;
-using Andastra.Runtime.Engines.Eclipse.DragonAge2;
-using Andastra.Runtime.Engines.Eclipse.DragonAgeOrigins;
-using Andastra.Runtime.Engines.Eclipse.Profiles;
-using Andastra.Runtime.Engines.Odyssey;
-using Andastra.Runtime.Engines.Odyssey.Profiles;
+using Andastra.Game.Games.Aurora;
+using Andastra.Game.Games.Aurora.Profiles;
+using Andastra.Game.Games.Common;
+using Andastra.Game.Games.Eclipse.DragonAge2;
+using Andastra.Game.Games.Eclipse.DragonAgeOrigins;
+using Andastra.Game.Games.Eclipse.Profiles;
+using Andastra.Game.Games.Odyssey;
+using Andastra.Game.Games.Odyssey.Profiles;
 
-namespace Andastra.Game.Game.Core
+namespace Andastra.Game.Core
 {
     /// <summary>
     /// Factory for creating engine instances based on BioWareGame enum.

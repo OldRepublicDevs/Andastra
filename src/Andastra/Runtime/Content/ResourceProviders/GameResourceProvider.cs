@@ -8,14 +8,15 @@ using BioWare.NET;
 using BioWare.NET.Common;
 using BioWare.NET.Extract;
 using BioWare.NET.Extract.Capsule;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 
 namespace Andastra.Runtime.Content.ResourceProviders
 {
     /// <summary>
-    /// Resource provider that wraps BioWare.NET.Extract.Installation for unified resource access.
+    /// Resource provider that wraps BioWare.NET.Extract for unified resource access.
     /// </summary>
     /// <remarks>
     /// Game Resource Provider:
@@ -23,7 +24,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
     /// - Located via string references: "Resource" @ 0x007c14d4 (resource field)
     /// - Resource table errors: "CExoKeyTable::DestroyTable: Resource %s still in demand during table deletion" @ 0x007b6078
     /// - "CExoKeyTable::AddKey: Duplicate Resource " @ 0x007b6124 (duplicate resource key error)
-    /// - Original implementation: Wraps BioWare.NET.Extract.Installation for resource access
+    /// - Original implementation: Wraps BioWare.NET.Extract for resource access
     /// - Resource lookup: Uses installation resource system to locate files in archives (RIM, ERF, BIF, MOD)
     /// - Module context: Sets current module for module-specific resource lookups (module RIMs loaded first)
     /// - Search order: Module RIMs → Override directory → Main game archives (chitin.key/BIF files)
@@ -113,7 +114,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             {
                 ct.ThrowIfCancellationRequested();
 
-                BioWare.NET.Extract.Installation.SearchLocation[] kotorOrder = order != null
+                BioWare.NET.Extract.SearchLocation[] kotorOrder = order != null
                     ? order.Select(ConvertSearchLocation).Where(l => l.HasValue).Select(l => l.Value).ToArray()
                     : null;
 
@@ -167,7 +168,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             string installPath = _installation.Path;
 
             // 1. Enumerate from OVERRIDE directory (highest priority)
-            string overridePath = BioWare.NET.Extract.Installation.Installation.GetOverridePath(installPath);
+            string overridePath = BioWare.NET.Extract.Installation.GetOverridePath(installPath);
             if (Directory.Exists(overridePath))
             {
                 string extension = type.Extension ?? "";
@@ -197,7 +198,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             }
 
             // 2. Enumerate from MODULES directory (module RIM/ERF/MOD files)
-            string modulesPath = BioWare.NET.Extract.Installation.Installation.GetModulesPath(installPath);
+            string modulesPath = BioWare.NET.Extract.Installation.GetModulesPath(installPath);
             if (Directory.Exists(modulesPath))
             {
                 var moduleFiles = Directory.GetFiles(modulesPath)
@@ -211,10 +212,10 @@ namespace Andastra.Runtime.Content.ResourceProviders
                 // Filter by current module if specified
                 if (!string.IsNullOrWhiteSpace(_currentModule))
                 {
-                    string moduleRoot = BioWare.NET.Extract.Installation.Installation.GetModuleRoot(_currentModule);
+                    string moduleRoot = BioWare.NET.Extract.Installation.GetModuleRoot(_currentModule);
                     moduleFiles = moduleFiles.Where(f =>
                     {
-                        string fileRoot = BioWare.NET.Extract.Installation.Installation.GetModuleRoot(Path.GetFileName(f));
+                        string fileRoot = BioWare.NET.Extract.Installation.GetModuleRoot(Path.GetFileName(f));
                         return fileRoot.Equals(moduleRoot, StringComparison.OrdinalIgnoreCase);
                     }).ToList();
                 }
@@ -268,7 +269,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             }
 
             // 5. Enumerate from TEXTURE_PACKS (ERF files: swpc_tex_tpa.erf, swpc_tex_tpb.erf, swpc_tex_tpc.erf, swpc_tex_gui.erf)
-            string texturePacksPath = BioWare.NET.Extract.Installation.Installation.GetTexturePacksPath(installPath);
+            string texturePacksPath = BioWare.NET.Extract.Installation.GetTexturePacksPath(installPath);
             if (Directory.Exists(texturePacksPath))
             {
                 string[] texturePackFiles = new[]
@@ -311,11 +312,11 @@ namespace Andastra.Runtime.Content.ResourceProviders
             // 6. Enumerate from STREAM directories (Music, Sounds, Voice, Waves, Lips)
             string[] streamDirectories = new[]
             {
-                BioWare.NET.Extract.Installation.Installation.GetStreamMusicPath(installPath),
-                BioWare.NET.Extract.Installation.Installation.GetStreamSoundsPath(installPath),
-                BioWare.NET.Extract.Installation.Installation.GetStreamVoicePath(installPath),
-                BioWare.NET.Extract.Installation.Installation.GetStreamWavesPath(installPath),
-                BioWare.NET.Extract.Installation.Installation.GetLipsPath(installPath)
+                BioWare.NET.Extract.Installation.GetStreamMusicPath(installPath),
+                BioWare.NET.Extract.Installation.GetStreamSoundsPath(installPath),
+                BioWare.NET.Extract.Installation.GetStreamVoicePath(installPath),
+                BioWare.NET.Extract.Installation.GetStreamWavesPath(installPath),
+                BioWare.NET.Extract.Installation.GetLipsPath(installPath)
             };
 
             foreach (string streamDir in streamDirectories)
@@ -352,7 +353,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             }
 
             // 7. Enumerate from LIPS directory (ERF/RIM capsule files)
-            string lipsPath = BioWare.NET.Extract.Installation.Installation.GetLipsPath(installPath);
+            string lipsPath = BioWare.NET.Extract.Installation.GetLipsPath(installPath);
             if (Directory.Exists(lipsPath))
             {
                 var capsuleFiles = Directory.GetFiles(lipsPath)
@@ -389,7 +390,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             // 8. Enumerate from RIMS directory (RIM files, TSL only)
             if (_gameType == GameType.K2)
             {
-                string rimsPath = BioWare.NET.Extract.Installation.Installation.GetRimsPath(installPath);
+                string rimsPath = BioWare.NET.Extract.Installation.GetRimsPath(installPath);
                 if (Directory.Exists(rimsPath))
                 {
                     var rimFiles = Directory.GetFiles(rimsPath, "*.rim", SearchOption.TopDirectoryOnly);
@@ -475,14 +476,14 @@ namespace Andastra.Runtime.Content.ResourceProviders
 
         #region Type Conversion
 
-        private static BioWare.NET.Extract.Installation.SearchLocation? ConvertSearchLocation(Andastra.Runtime.Content.Interfaces.SearchLocation location)
+        private static BioWare.NET.Extract.SearchLocation? ConvertSearchLocation(Andastra.Runtime.Content.Interfaces.SearchLocation location)
         {
             switch (location)
             {
-                case Andastra.Runtime.Content.Interfaces.SearchLocation.Override: return BioWare.NET.Extract.Installation.SearchLocation.OVERRIDE;
-                case Andastra.Runtime.Content.Interfaces.SearchLocation.Module: return BioWare.NET.Extract.Installation.SearchLocation.MODULES;
-                case Andastra.Runtime.Content.Interfaces.SearchLocation.Chitin: return BioWare.NET.Extract.Installation.SearchLocation.CHITIN;
-                case Andastra.Runtime.Content.Interfaces.SearchLocation.TexturePacks: return BioWare.NET.Extract.Installation.SearchLocation.TEXTURES_TPA;
+                case Andastra.Runtime.Content.Interfaces.SearchLocation.Override: return BioWare.NET.Extract.SearchLocation.OVERRIDE;
+                case Andastra.Runtime.Content.Interfaces.SearchLocation.Module: return BioWare.NET.Extract.SearchLocation.MODULES;
+                case Andastra.Runtime.Content.Interfaces.SearchLocation.Chitin: return BioWare.NET.Extract.SearchLocation.CHITIN;
+                case Andastra.Runtime.Content.Interfaces.SearchLocation.TexturePacks: return BioWare.NET.Extract.SearchLocation.TEXTURES_TPA;
                 default: return null;
             }
         }

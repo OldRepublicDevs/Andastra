@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using Andastra.Runtime.MonoGame.Enums;
-using Andastra.Runtime.MonoGame.Interfaces;
-using Andastra.Runtime.MonoGame.Remix;
-using Andastra.Runtime.MonoGame.Rendering;
+using Andastra.Game.Graphics.MonoGame.Enums;
+using Andastra.Game.Graphics.MonoGame.Interfaces;
+using Andastra.Game.Graphics.MonoGame.Remix;
+using Andastra.Game.Graphics.MonoGame.Rendering;
 
 namespace Andastra.Game.Graphics.MonoGame.Backends
 {

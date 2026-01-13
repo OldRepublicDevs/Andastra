@@ -35,11 +35,11 @@ namespace BioWare.NET.Resource.Formats.BIF
                 throw new ArgumentException("Extension or filepath cannot be null or empty", nameof(extOrFilepath));
             }
 
-            if (FileHelpers.IsBifFile(extOrFilepath))
+            if (BioWare.NET.Tools.FileHelpers.IsBifFile(extOrFilepath))
             {
                 return BIFType.BIF;
             }
-            if (FileHelpers.IsBzfFile(extOrFilepath))
+            if (BioWare.NET.Tools.FileHelpers.IsBzfFile(extOrFilepath))
             {
                 return BIFType.BZF;
             }

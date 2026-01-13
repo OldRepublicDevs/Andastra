@@ -8,7 +8,8 @@ using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.MDL;
 using BioWare.NET.Resource.Formats.TPC;
 using BioWare.NET.Resource.Formats.VIS;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.LYT;
 using BioWare.NET.Resource.Formats.GFF.Generics;
@@ -23,15 +24,15 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Core.Navigation;
 using Andastra.Runtime.Core.Save;
-using Andastra.Runtime.Engines.Odyssey.Components;
-using Andastra.Runtime.Engines.Odyssey.Loading;
+using Andastra.Game.Games.Odyssey.Components;
+using Andastra.Game.Games.Odyssey.Loading;
 using JetBrains.Annotations;
-using InstResourceResult = BioWare.NET.Extract.Installation.ResourceResult;
+using InstResourceResult = BioWare.NET.Extract.ResourceResult;
 using KotorVector3 = System.Numerics.Vector3;
 using MDLData = BioWare.NET.Resource.Formats.MDLData;
 using OdyObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using OdysseyDoorComponent = Andastra.Runtime.Games.Odyssey.Components.OdysseyDoorComponent;
-using OdysseyNavigationMeshFactory = Andastra.Runtime.Engines.Odyssey.Loading.NavigationMeshFactory;
+using OdysseyNavigationMeshFactory = Andastra.Game.Games.Odyssey.Loading.NavigationMeshFactory;
 using OdysseyWaypointComponent = Andastra.Runtime.Games.Odyssey.Components.OdysseyWaypointComponent;
 using PlaceableComponent = Andastra.Runtime.Games.Odyssey.Components.PlaceableComponent;
 using ResRef = BioWare.NET.Common.ResRef;
@@ -41,7 +42,7 @@ using Systems = Andastra.Runtime.Games.Odyssey.Systems;
 // Explicit type aliases to resolve ambiguity
 using SysVector3 = System.Numerics.Vector3;
 
-namespace Andastra.Game.Engines.Odyssey.Game
+namespace Andastra.Game.Games.Odyssey.Game
 {
     /// <summary>
     /// Loads modules from KOTOR game files using BioWare.NET resource infrastructure.
@@ -177,7 +178,7 @@ namespace Andastra.Game.Engines.Odyssey.Game
         /// Gets the current BioWare.NET Module for resource loading.
         /// </summary>
         [CanBeNull]
-        public BioWare.NET.Extract.Installation.Module GetParsingModule()
+        public BioWare.NET.Common.Module GetParsingModule()
         {
             if (_installation == null || string.IsNullOrEmpty(_currentModuleRoot))
             {
@@ -187,7 +188,7 @@ namespace Andastra.Game.Engines.Odyssey.Game
             try
             {
                 // Create a Module instance from the current module root
-                return new BioWare.NET.Extract.Installation.Module(_currentModuleRoot, _installation);
+                return new BioWare.NET.Common.Module(_currentModuleRoot, _installation);
             }
             catch (Exception ex)
             {
@@ -200,7 +201,7 @@ namespace Andastra.Game.Engines.Odyssey.Game
         /// Gets the current module (alias for GetParsingModule for API compatibility).
         /// </summary>
         [CanBeNull]
-        public BioWare.NET.Extract.Installation.Module GetCurrentModule()
+        public BioWare.NET.Common.Module GetCurrentModule()
         {
             return GetParsingModule();
         }
@@ -659,7 +660,7 @@ namespace Andastra.Game.Engines.Odyssey.Game
             }
 
             // Get Parsing Module for NavigationMeshFactory
-            BioWare.NET.Extract.Installation.Module parsingModule = GetParsingModule();
+            BioWare.NET.Common.Module parsingModule = GetParsingModule();
             if (parsingModule == null)
             {
                 Console.WriteLine("[ModuleLoader] WARNING: Cannot get Parsing Module, creating placeholder navmesh");

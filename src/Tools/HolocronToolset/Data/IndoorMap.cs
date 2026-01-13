@@ -7,6 +7,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using BioWare.NET;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.ERF;
 using BioWare.NET.Resource.Formats.LYT;

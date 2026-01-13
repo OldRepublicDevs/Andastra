@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Interfaces;
 using JetBrains.Annotations;

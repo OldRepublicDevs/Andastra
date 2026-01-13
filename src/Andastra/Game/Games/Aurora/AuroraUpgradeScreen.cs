@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BioWare.NET;
 using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
 using BioWare.NET.Resource.Formats.GFF.Generics.UTI;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;

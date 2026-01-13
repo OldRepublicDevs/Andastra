@@ -2,7 +2,7 @@ using System;
 using System.Numerics;
 using Andastra.Game.Games.Common.Components;
 
-namespace Andastra.Game.Engines.Odyssey.Components
+namespace Andastra.Game.Games.Odyssey.Components
 {
     /// <summary>
     /// Odyssey Engine (KOTOR) specific transform component implementation.

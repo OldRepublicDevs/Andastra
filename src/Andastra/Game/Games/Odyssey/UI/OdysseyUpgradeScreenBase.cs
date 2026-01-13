@@ -6,20 +6,21 @@ using BioWare.NET;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.GFF.Generics;
 using BioWare.NET.Resource.Formats.GFF.Generics.GUI;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Engines.Odyssey.Components;
+using Andastra.Game.Games.Odyssey.Components;
 using Andastra.Game.Games.Common;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using UTI = BioWare.NET.Resource.Formats.GFF.Generics.UTI.UTI;
 
-namespace Andastra.Game.Engines.Odyssey.UI
+namespace Andastra.Game.Games.Odyssey.UI
 {
     /// <summary>
     /// Base class for upgrade screen implementation common to both K1 and K2.

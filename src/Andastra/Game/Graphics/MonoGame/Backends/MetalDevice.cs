@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using Andastra.Runtime.MonoGame.Enums;
-using Andastra.Runtime.MonoGame.Interfaces;
-using Andastra.Runtime.MonoGame.Rendering;
+using Andastra.Game.Graphics.MonoGame.Enums;
+using Andastra.Game.Graphics.MonoGame.Interfaces;
+using Andastra.Game.Graphics.MonoGame.Rendering;
 
 namespace Andastra.Game.Graphics.MonoGame.Backends
 {
@@ -732,7 +732,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         private TextureFormat ConvertTextureFormat(TextureFormat format)
         {
             // Pass-through conversion: IDevice TextureFormat to IGraphicsBackend TextureFormat
-            // Both use the same enum from Andastra.Runtime.MonoGame.Interfaces namespace
+            // Both use the same enum from Andastra.Game.Graphics.MonoGame.Interfaces namespace
             return format;
         }
 

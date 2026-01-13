@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
 
-namespace Andastra.Game.Engines.Odyssey.Components
+namespace Andastra.Game.Games.Odyssey.Components
 {
     /// <summary>
     /// Component for merchant store entities.

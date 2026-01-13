@@ -2,7 +2,7 @@ using System;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
 using Andastra.Runtime.Core.Entities;
-using Andastra.Runtime.Engines.Common;
+using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Aurora;
 
 namespace Andastra.Game.Engines.Aurora

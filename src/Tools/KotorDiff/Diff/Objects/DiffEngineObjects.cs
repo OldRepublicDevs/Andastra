@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.TLK;
 using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 
 namespace KotorDiff.Diff.Objects

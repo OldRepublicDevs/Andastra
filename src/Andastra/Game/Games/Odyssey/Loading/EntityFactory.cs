@@ -4,16 +4,17 @@ using System.Numerics;
 using BioWare.NET;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Engines.Odyssey.Components;
+using Andastra.Game.Games.Odyssey.Components;
 using JetBrains.Annotations;
 using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using ScriptEvent = Andastra.Runtime.Core.Enums.ScriptEvent;
 
-namespace Andastra.Game.Engines.Odyssey.Loading
+namespace Andastra.Game.Games.Odyssey.Loading
 {
     /// <summary>
     /// Factory for creating runtime entities from GFF templates.

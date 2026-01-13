@@ -10,6 +10,7 @@ using BioWare.NET.Resource.Formats.TLK;
 using BioWare.NET.Resource.Formats.NCS;
 using BioWare.NET.Resource.Formats.BIF;
 using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Common;
 using JetBrains.Annotations;

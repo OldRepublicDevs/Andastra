@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using BioWare.NET;
 using Andastra.Runtime.Content.Interfaces;
 
-namespace Andastra.Game.Engines.Odyssey.Profiles
+namespace Andastra.Game.Games.Odyssey.Profiles
 {
     /// <summary>
     /// Factory for creating game profiles based on game type.

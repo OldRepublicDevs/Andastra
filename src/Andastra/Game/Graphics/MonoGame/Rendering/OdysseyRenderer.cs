@@ -1,13 +1,13 @@
 using System;
 using System.Numerics;
-using BioWare.NET.Extract.Installation;
-using Andastra.Runtime.MonoGame.Backends;
-using Andastra.Runtime.MonoGame.Enums;
-using Andastra.Runtime.MonoGame.Interfaces;
-using Andastra.Runtime.MonoGame.Lighting;
-using Andastra.Runtime.MonoGame.Materials;
-using Andastra.Runtime.MonoGame.Raytracing;
-using Andastra.Runtime.MonoGame.Remix;
+using BioWare.NET.Extract;
+using Andastra.Game.Graphics.MonoGame.Backends;
+using Andastra.Game.Graphics.MonoGame.Enums;
+using Andastra.Game.Graphics.MonoGame.Interfaces;
+using Andastra.Game.Graphics.MonoGame.Lighting;
+using Andastra.Game.Graphics.MonoGame.Materials;
+using Andastra.Game.Graphics.MonoGame.Raytracing;
+using Andastra.Game.Graphics.MonoGame.Remix;
 using JetBrains.Annotations;
 
 namespace Andastra.Game.Graphics.MonoGame.Rendering

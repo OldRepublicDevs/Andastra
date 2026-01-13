@@ -7,6 +7,7 @@ using Avalonia.Markup.Xaml;
 using BioWare.NET;
 using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Avalonia.Controls.Primitives;
 using HolocronToolset.Data;

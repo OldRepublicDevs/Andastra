@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
-using Andastra.Runtime.MonoGame.Enums;
-using Andastra.Runtime.MonoGame.Rendering;
+using Andastra.Game.Graphics.MonoGame.Enums;
+using Andastra.Game.Graphics.MonoGame.Rendering;
 
 namespace Andastra.Game.Graphics.MonoGame.Interfaces
 {

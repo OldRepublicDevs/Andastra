@@ -11,6 +11,7 @@ using BioWare.NET.Resource.Formats.MDL;
 using BioWare.NET.Resource.Formats.MDLData;
 using BioWare.NET.Resource.Formats.TPC;
 using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.MDL;

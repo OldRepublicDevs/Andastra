@@ -2,7 +2,7 @@ using System;
 using BioWare.NET.Resource.Formats.GFF.Generics.GUI;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Game.Games.Common;
-using Andastra.Runtime.MonoGame.GUI;
+using Andastra.Game.Graphics.MonoGame.GUI;
 
 namespace Andastra.Game.Games.Odyssey.UI
 {

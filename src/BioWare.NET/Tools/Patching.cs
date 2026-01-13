@@ -13,7 +13,7 @@ using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.RIM;
 using BioWare.NET.Resource.Formats.TLK;
 using BioWare.NET.Resource.Formats.TPC;
-// Removed: using BioWare.NET.Extract.Installation; // Using fully qualified names to break circular dependency
+// Removed: using BioWare.NET.Extract; // Using fully qualified names to break circular dependency
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.GFF.Generics;
 using BioWare.NET.Resource.Formats.GFF.Generics.ARE;
@@ -894,17 +894,17 @@ namespace BioWare.NET.Tools
 
             LogMessage(config, $"Using install dir for operations:\t{installPath}");
 
-            var kInstall = new BioWare.NET.Extract.Installation(installPath);
+            var kInstall = new Installation(installPath);
             if (config.IsPatching())
             {
                 LogMessage(config, "Patching modules...");
                 if (config.K1ConvertGffs || config.TslConvertGffs)
                 {
-                    // Module validation would need BioWare.NET.Extract.Installation to expose _modules
+                    // Module validation would need Installation to expose _modules
                     LogMessage(config, "Module validation not yet fully implemented");
                 }
 
-                // Module patching would need BioWare.NET.Extract.Installation to expose _modules
+                // Module patching would need Installation to expose _modules
                 LogMessage(config, "Module patching not yet fully implemented");
             }
 
@@ -914,14 +914,14 @@ namespace BioWare.NET.Tools
             }
             string overridePath = kInstall.OverridePath();
             Directory.CreateDirectory(overridePath);
-            // Override patching would need BioWare.NET.Extract.Installation to expose override methods
+            // Override patching would need Installation to expose override methods
             LogMessage(config, "Override patching not yet fully implemented");
 
             if (config.IsPatching())
             {
                 LogMessage(config, "Extract and patch BIF data, saving to Override (will not overwrite)");
             }
-            // Core resource patching would need BioWare.NET.Extract.Installation to expose core_resources
+            // Core resource patching would need Installation to expose core_resources
             LogMessage(config, "Core resource patching not yet fully implemented");
 
             PatchFile(Path.Combine(kInstall.Path, "dialog.tlk"), config, processedFiles);

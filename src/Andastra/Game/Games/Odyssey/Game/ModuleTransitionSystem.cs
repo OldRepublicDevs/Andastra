@@ -5,7 +5,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using JetBrains.Annotations;
 
-namespace Andastra.Game.Engines.Odyssey.Game
+namespace Andastra.Game.Games.Odyssey.Game
 {
     /// <summary>
     /// Arguments for module transition events.

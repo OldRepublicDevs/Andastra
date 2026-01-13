@@ -2,15 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Numerics;
 using System.Reflection;
 using BioWare.NET.Resource.Formats.GFF;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Engines.Odyssey.Components;
-using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Odyssey.Components;
+using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
 
 namespace Andastra.Game.Games.Odyssey
@@ -25,22 +23,24 @@ namespace Andastra.Game.Games.Odyssey
     /// - Component-based architecture for modular functionality
     /// - Script hooks for events and behaviors
     ///
-    /// Based on reverse engineering of:
-    /// - swkotor.exe: Entity creation and management
-    ///   - ObjectId string reference: "ObjectId" @ 0x00744c24
-    ///   - ObjectIDList string reference: "ObjectIDList" @ 0x007465cc
-    ///   - Object events: "EVENT_DESTROY_OBJECT" @ 0x00744b10, "EVENT_OPEN_OBJECT" @ 0x00744b68, "EVENT_CLOSE_OBJECT" @ 0x00744b7c
-    ///   - "EVENT_LOCK_OBJECT" @ 0x00744ae8, "EVENT_UNLOCK_OBJECT" @ 0x00744afc
-    /// - swkotor2.exe: ObjectId at offset +4, FUN_004e28c0 (save), FUN_005fb0f0 (load)
-    ///   - ObjectId string reference: "ObjectId" @ 0x007bce5c
-    ///   - ObjectIDList string reference: "ObjectIDList" @ 0x007bfd7c
-    ///   - Object logging format: "OID: %08x, Tag: %s, %s" @ 0x007c76b8 used for debug/error logging
-    ///   - Object list handling: "ObjectList" @ 0x007bfdbc, "ObjectValue" @ 0x007bfd70
-    ///   - Entity serialization: FUN_004e28c0 @ 0x004e28c0 saves Creature List with ObjectId fields (offset +4 in object structure)
-    ///   - Entity deserialization: FUN_005fb0f0 @ 0x005fb0f0 loads creature data from GFF, reads ObjectId at offset +4
-    ///   - AreaId: FUN_005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90, "AreaId" @ 0x007bef48
-    /// - Entity structure: ObjectId (uint32) at offset +4, Tag (string), ObjectType (enum), AreaId (uint32)
-    /// - Component system: Transform, stats, inventory, script hooks, etc.
+    /// "ObjectId" @ (K1: 0x00744c24, TSL: 0x007bce5c)
+    /// "ObjectIDList" @ (K1: 0x007465cc, TSL: 0x007bfd7c)
+    /// "EVENT_DESTROY_OBJECT" @ (K1: 0x00744b10, TSL: TODO)
+    /// "EVENT_OPEN_OBJECT" @ (K1: 0x00744b68, TSL: TODO)
+    /// "EVENT_CLOSE_OBJECT" @ (K1: 0x00744b7c, TSL: TODO)
+    /// "EVENT_LOCK_OBJECT" @ (K1: 0x00744ae8, TSL: TODO)
+    /// "EVENT_UNLOCK_OBJECT" @ (K1: 0x00744afc, TSL: TODO)
+    /// ObjectId field at offset +4 in entity struct @ (K1: TODO, TSL: offset +4)
+    /// [FUN_004e28c0] @ (K1: TODO, TSL: 0x004e28c0) - entity serialization
+    /// [FUN_005fb0f0] @ (K1: TODO, TSL: 0x005fb0f0) - entity deserialization
+    /// "OID: %08x, Tag: %s, %s" (object logging format) @ (K1: TODO, TSL: 0x007c76b8)
+    /// "ObjectList" @ (K1: TODO, TSL: 0x007bfdbc)
+    /// "ObjectValue" @ (K1: TODO, TSL: 0x007bfd70)
+    /// AreaId field ("AreaId") @ (K1: TODO, TSL: 0x007bef48 and TSL: 0x005223a0)
+    /// Entity structure details: ObjectId (uint32) at offset +4
+    /// Tag (string), ObjectType (enum)
+    /// AreaId (uint32)
+    /// Odyssey component system (Transform, stats, inventory, script hooks, etc.)
     ///
     /// Entity lifecycle:
     /// - Created from GIT file templates or script instantiation
@@ -85,7 +85,7 @@ namespace Andastra.Game.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Based on ObjectId field at offset +4 in entity structure.
-        /// Located via string references: "ObjectId" @ 0x007bce5c (swkotor2.exe), "ObjectId" @ 0x00744c24 (swkotor.exe)
+        /// Located via string references: "ObjectId" @ (K1: 0x007bce5c, TSL: 0x00744c24)
         /// Assigned sequentially and must be unique across all entities.
         /// Used for script references and save game serialization.
         /// OBJECT_INVALID = 0x7F000000, OBJECT_SELF = 0x7F000001
@@ -98,7 +98,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// Script-accessible identifier for GetObjectByTag functions.
         /// Located via string references in swkotor.exe and swkotor2.exe (various locations).
-        /// Object logging format: "OID: %08x, Tag: %s, %s" @ 0x007c76b8 (swkotor2.exe) used for debug/error logging
+        /// Object logging format: "OID: %08x, Tag: %s, %s" @ (K1: TODO: Find this address, TSL: 0x007c76b8) used for debug/error logging
         /// Can be changed at runtime for dynamic lookups.
         /// </remarks>
         public override string Tag
@@ -158,7 +158,7 @@ namespace Andastra.Game.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Display name is used for UI display and can be set from template data or GIT instances.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity names are stored in templates and can be overridden by GIT instances.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - Entity names are stored in templates and can be overridden by GIT instances.
         /// </remarks>
         public string DisplayName
         {
@@ -211,7 +211,7 @@ namespace Andastra.Game.Games.Odyssey
         /// - TransformComponent: Position, orientation, scale for all entities
         /// - ScriptHooksComponent: Script event hooks and local variables for all entities
         ///
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): All entities have transform and script hooks capability.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - All entities have transform and script hooks capability.
         /// Script hooks are loaded from GFF templates (UTC, UTD, UTP, etc.) and can be
         /// set at runtime via SetScript functions.
         /// </remarks>
@@ -255,13 +255,13 @@ namespace Andastra.Game.Games.Odyssey
         /// - Component initialization: Properties loaded from entity template files (UTC) and can be modified at runtime
         ///
         /// Based on reverse engineering of:
-        /// - swkotor.exe: Creature initialization (FUN_004af630 @ 0x004af630 handles creature events)
-        /// - swkotor2.exe: FUN_005261b0 @ 0x005261b0 loads creature from UTC template
-        ///   - Calls FUN_005fb0f0 @ 0x005fb0f0 to load creature data from GFF
-        ///   - Calls FUN_0050c510 @ 0x0050c510 to load script hooks
-        ///   - Calls FUN_00521d40 @ 0x00521d40 to initialize equipment and items
-        /// - FUN_004dfbb0 @ 0x004dfbb0 loads creature instances from GIT "Creature List"
-        /// - Located via string references: "Creature List" @ 0x007bd01c (swkotor2.exe), "CreatureList" @ 0x007c0c80 (swkotor2.exe)
+        /// - swkotor.exe: Creature initialization ([FUN_004af630] @ (K1: 0x004af630, TSL: TODO: Find this address) handles creature events)
+        /// - swkotor2.exe: [FUN_005261b0] @ (K1: TODO: Find this address, TSL: 0x005261b0) loads creature from UTC template
+        ///   - Calls [FUN_005fb0f0] @ (K1: TODO: Find this address, TSL: 0x005fb0f0) to load creature data from GFF
+        ///   - Calls [FUN_0050c510] @ (K1: TODO: Find this address, TSL: 0x0050c510) to load script hooks
+        ///   - Calls [FUN_00521d40] @ (K1: TODO: Find this address, TSL: 0x00521d40) to initialize equipment and items
+        /// - [FUN_004dfbb0] @ 0x004dfbb0 - loads creature instances from GIT "Creature List"
+        /// - Located via string references: "Creature List" @ (K1: TODO: Find this address, TSL: 0x007bd01c), "CreatureList" @ (K1: TODO: Find this address, TSL: 0x007c0c80)
         /// - Component attachment: Components are attached during entity creation from GIT instances and UTC templates
         /// - ComponentInitializer @ Odyssey/Systems/ComponentInitializer.cs attaches these components
         ///
@@ -281,7 +281,7 @@ namespace Andastra.Game.Games.Odyssey
             {
                 var creatureComponent = new CreatureComponent();
                 creatureComponent.Owner = this;
-                AddComponent<CreatureComponent>(creatureComponent);
+                AddComponent(creatureComponent);
             }
 
             // Attach stats component if not already present
@@ -324,8 +324,8 @@ namespace Andastra.Game.Games.Odyssey
                 var factionComponent = new OdysseyFactionComponent();
                 factionComponent.Owner = this;
                 // Set FactionID from entity data if available (loaded from UTC template)
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 loads FactionID from GFF at offset in creature structure
-                // Located via string references: "FactionID" @ 0x007c40b4 (swkotor2.exe) / 0x0074ae48 (swkotor.exe)
+                // [FUN_005fb0f0] @ (K1: TODO: Find this address, TSL: 0x005fb0f0) - loads FactionID from GFF at offset in creature structure
+                // Located via string references: "FactionID" @ (K1: 0x0074ae48, TSL: 0x007c40b4)
                 if (GetData("FactionID") is int factionId)
                 {
                     factionComponent.FactionId = factionId;
@@ -340,8 +340,8 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// Doors have open/close state, lock state, transition logic.
         /// Based on door component structure in swkotor2.exe.
-        /// - FUN_005838d0 @ 0x005838d0: Door initialization from GIT/GFF
-        /// - FUN_00580ed0 @ 0x00580ed0: Door loading function that loads door properties
+        /// - [FUN_005838d0] @ (K1: TODO: Find this address, TSL: 0x005838d0): Door initialization from GIT/GFF
+        /// - [FUN_00580ed0] @ (K1: TODO: Find this address, TSL: 0x00580ed0): Door loading function that loads door properties
         /// - Door component attached during entity creation from UTD templates
         /// - Doors support: open/closed states, locks, traps, module/area transitions
         /// - Component provides: IsOpen, IsLocked, LockDC, KeyTag, LinkedTo, LinkedToModule
@@ -365,16 +365,16 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// Placeables have interaction state, inventory, use logic.
         /// Based on placeable component structure in swkotor2.exe.
-        /// - LoadPlaceableFromGFF @ 0x00588010 (swkotor2.exe) - Loads placeable data from GIT GFF into placeable object
-        ///   - Located via string reference: "Placeable List" @ 0x007bd260 (GFF list field in GIT)
+        /// - [LoadPlaceableFromGFF] @ (K1: TODO: Find this address, TSL: 0x00588010) - Loads placeable data from GIT GFF into placeable object
+        ///   - Located via string reference: "Placeable List" @ (K1: TODO: Find this address, TSL: 0x007bd260) (GFF list field in GIT)
         ///   - Reads Tag, TemplateResRef, LocName, AutoRemoveKey, Faction, Invulnerable, Plot, NotBlastable, Min1HP, PartyInteract, OpenLockDC, OpenLockDiff, OpenLockDiffMod, KeyName, TrapDisarmable, TrapDetectable, DisarmDC, TrapDetectDC, OwnerDemolitionsSkill, TrapFlag, TrapOneShot, TrapType, Useable, Static, Appearance, UseTweakColor, TweakColor, HP, CurrentHP, and other placeable properties from GFF
-        /// - SavePlaceableToGFF @ 0x00589520 (swkotor2.exe) - Saves placeable data to GFF save data
-        ///   - Located via string reference: "Placeable List" @ 0x007bd260
+        /// - [SavePlaceableToGFF] @ (K1: TODO: Find this address, TSL: 0x00589520) - Saves placeable data to GFF save data
+        ///   - Located via string reference: "Placeable List" @ (K1: TODO: Find this address, TSL: 0x007bd260)
         ///   - Writes Tag, LocName, AutoRemoveKey, Faction, Plot, NotBlastable, Min1HP, OpenLockDC, OpenLockDiff, OpenLockDiffMod, KeyName, TrapDisarmable, TrapDetectable, DisarmDC, TrapDetectDC, OwnerDemolitionsSkill, TrapFlag, TrapOneShot, TrapType, Useable, Static, GroundPile, Appearance, UseTweakColor, TweakColor, HP, CurrentHP, Hardness, Fort, Will, Ref, Lockable, Locked, HasInventory, KeyRequired, CloseLockDC, Open, PartyInteract, Portrait, Conversation, BodyBag, DieWhenEmpty, LightState, Description, OnClosed, OnDamaged, OnDeath, OnDisarm, OnHeartbeat, OnInvDisturbed, OnLock, OnMeleeAttacked, OnOpen, OnSpellCastAt, OnUnlock, OnUsed, OnUserDefined, OnDialog, OnEndDialogue, OnTrapTriggered, OnFailToOpen, Animation, ItemList (ObjectId) for each item in placeable inventory, Bearing, position (X, Y, Z), IsBodyBag, IsBodyBagVisible, IsCorpse, PCLevel
-        /// - Original implementation: FUN_004e08e0 @ 0x004e08e0 (load placeable instances from GIT)
+        /// - Original implementation: [FUN_004e08e0] @ (K1: TODO: Find this address, TSL: 0x004e08e0) - load placeable instances from GIT
         /// - Placeables have appearance, useability, locks, inventory, HP, traps
         /// - Based on UTP file format (GFF with "UTP " signature)
-        /// - Script events: OnUsed (CSWSSCRIPTEVENT_EVENTTYPE_ON_USED @ 0x007bc7d8, 0x19), OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath
+        /// - Script events: OnUsed ([CSWSSCRIPTEVENT_EVENTTYPE_ON_USED] @ (K1: TODO: Find this address, TSL: 0x007bc7d8), [0x19]), OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath
         /// - Containers (HasInventory=true) can store items, open/close states (AnimationState 0=closed, 1=open)
         /// - Lock system: KeyRequired flag, KeyName tag, LockDC difficulty class (checked via Security skill)
         /// - Use distance: ~2.0 units (InteractRange), checked before OnUsed script fires
@@ -405,7 +405,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// Triggers have enter/exit detection, script firing.
         /// Based on trigger component structure in swkotor.exe and swkotor2.exe.
-        /// - FUN_004e5920 @ 0x004e5920 (swkotor2.exe) loads trigger instances from GIT TriggerList, reads UTT templates
+        /// - [FUN_004e5920] @ (K1: TODO: Find this address, TSL: 0x004e5920) - loads trigger instances from GIT TriggerList, reads UTT templates
         ///   - Function signature: `undefined4 FUN_004e5920(void *param_1, uint *param_2, int param_3, int param_4)`
         ///   - Reads "TriggerList" list from GFF structure
         ///   - For each trigger entry in TriggerList:
@@ -415,11 +415,11 @@ namespace Andastra.Game.Games.Odyssey
         ///     - Reads Geometry vertices from GIT Geometry field
         ///     - Reads trap properties: TrapFlag, TrapType, TrapDetectable, TrapDetectDC, TrapDisarmable, TrapDisarmDC, TrapOneShot
         ///     - Reads script hooks: OnEnter, OnExit, OnHeartbeat, OnClick, OnDisarm, OnTrapTriggered
-        /// - Located via string references: "Trigger" @ 0x007bc51c, "TriggerList" @ 0x007bd254 (swkotor2.exe)
+        /// - Located via string references: "Trigger" @ (K1: TODO: Find this address, TSL: 0x007bc51c), "TriggerList" @ (K1: TODO: Find this address, TSL: 0x007bd254)
         /// - "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "EVENT_LEFT_TRIGGER" @ 0x007bcdf4 (swkotor2.exe)
-        /// - "OnTrapTriggered" @ 0x007c1a34, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED" @ 0x007bc7ac (swkotor2.exe)
-        /// - Transition fields: "LinkedTo" @ 0x007bd798, "LinkedToModule" @ 0x007bd7bc, "LinkedToFlags" @ 0x007bd788 (swkotor2.exe)
-        /// - "TransitionDestination" @ 0x007bd7a4 (waypoint tag for positioning after transition) (swkotor2.exe)
+        /// - "OnTrapTriggered" @ (K1: TODO: Find this address, TSL: 0x007c1a34), "[CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED] @ (K1: TODO: Find this address, TSL: 0x007bc7ac)"
+        /// - Transition fields: "LinkedTo" @ (K1: TODO: Find this address, TSL: 0x007bd798), "LinkedToModule" @ (K1: TODO: Find this address, TSL: 0x007bd7bc), "LinkedToFlags" @ (K1: TODO: Find this address, TSL: 0x007bd788)"
+        /// - "TransitionDestination" @ (K1: TODO: Find this address, TSL: 0x007bd7a4) (waypoint tag for positioning after transition)
         /// - Original implementation: UTT (Trigger) GFF templates define trigger properties and geometry
         /// - Triggers are invisible polygonal volumes that fire scripts on enter/exit
         /// - Trigger types: Generic (0), Transition (1), Trap (2)
@@ -448,7 +448,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// Waypoints have position data, pathfinding integration.
         /// Based on waypoint component structure in swkotor2.exe.
-        /// FUN_004e08e0 @ 0x004e08e0 loads waypoint instances from GIT
+        /// [FUN_004e08e0] @ (K1: TODO: Find this address, TSL: 0x004e08e0) - loads waypoint instances from GIT
         /// </remarks>
         private void AttachWaypointComponents()
         {
@@ -465,8 +465,8 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// Sounds have audio playback, spatial positioning.
         /// Based on sound component structure in swkotor.exe and swkotor2.exe.
-        /// - FUN_004e08e0 @ 0x004e08e0 (swkotor2.exe) loads sound instances from GIT SoundList
-        ///   - Located via string reference: "SoundList" @ 0x007bd080 (GIT sound list), "Sound" @ 0x007bc500 (sound entity type)
+        /// - [FUN_004e08e0] @ (K1: TODO: Find this address, TSL: 0x004e08e0) - loads sound instances from GIT SoundList
+        ///   - Located via string reference: "SoundList" @ (K1: TODO: Find this address, TSL: 0x007bd080) (GIT sound list), "Sound" @ (K1: TODO: Find this address, TSL: 0x007bc500) (sound entity type)
         ///   - Reads ObjectId, Tag, TemplateResRef, position (XPosition, YPosition, ZPosition)
         ///   - Reads sound properties: Active, Continuous, Looping, Positional, Random, RandomPosition
         ///   - Reads volume and distance: Volume, VolumeVrtn, MaxDistance, MinDistance
@@ -555,7 +555,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Processes any pending script events.
         /// Handles component interactions.
         ///
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity update loop processes components in dependency order.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - Entity update loop processes components in dependency order.
         /// Component update order:
         /// 1. TransformComponent (position, orientation updates)
         /// 2. ActionQueueComponent (action execution, may modify transform)
@@ -645,7 +645,7 @@ namespace Andastra.Game.Games.Odyssey
         /// 5. Clear all component references
         ///
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity destruction pattern
-        /// - Located via string references: "EVENT_DESTROY_OBJECT" @ 0x00744b10 (destroy object event)
+        /// - Located via string references: "EVENT_DESTROY_OBJECT" @ (K1: TODO: Find this address, TSL: 0x00744b10) (destroy object event)
         /// - Original implementation: Entities are removed from all lookup indices when destroyed
         /// - World maintains indices: ObjectId dictionary, Tag dictionary, ObjectType dictionary, AllEntities list
         /// - Areas maintain indices: Type-specific lists (Creatures, Placeables, Doors, etc.), Tag dictionary
@@ -666,7 +666,7 @@ namespace Andastra.Game.Games.Odyssey
             {
                 // Remove from area collections first (if entity belongs to an area)
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entities belong to areas and must be removed from area collections
-                // Located via string references: "AreaId" @ 0x007bef48, "EVENT_REMOVE_FROM_AREA" @ 0x007bcddc
+                // Located via string references: "AreaId" @ (K1: TODO: Find this address, TSL: 0x007bef48), "EVENT_REMOVE_FROM_AREA" @ (K1: TODO: Find this address, TSL: 0x007bcddc)
                 // Original implementation: Area.RemoveEntity removes entity from area's type-specific and tag collections
                 if (_areaId != 0)
                 {
@@ -677,7 +677,7 @@ namespace Andastra.Game.Games.Odyssey
                         // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area.RemoveEntity removes from type-specific lists and tag index
                         // RuntimeArea.RemoveEntity handles removal from Creatures, Placeables, Doors, Triggers, Waypoints, Sounds, Stores, Encounters lists
                         // and from tag index for GetEntityByTag lookups
-                        if (area is Core.Module.RuntimeArea runtimeArea)
+                        if (area is Runtime.Core.Module.RuntimeArea runtimeArea)
                         {
                             runtimeArea.RemoveEntity(this);
                         }
@@ -686,7 +686,9 @@ namespace Andastra.Game.Games.Odyssey
 
                 // Unregister from world collections
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): World.UnregisterEntity removes entity from all world lookup indices
-                // Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
+                // Located via string references:
+                // - "ObjectId" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007bce5c))
+                // - "ObjectIDList" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007bfd7c))
                 // Original implementation: UnregisterEntity removes from:
                 // - _entitiesById dictionary (ObjectId lookup)
                 // - _allEntities list (GetAllEntities enumeration)
@@ -709,7 +711,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Clear component references
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Component references are cleared after disposal
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - Component references are cleared after disposal
             // Component removal: All components are removed from entity to prevent access after destruction
             // Uses reflection to call RemoveComponent<T> for each component type
             var componentTypes = GetAllComponents().Select(c => c.GetType()).ToArray();
@@ -725,7 +727,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Serializes entity data for save games.
         /// </summary>
         /// <remarks>
-        /// Based on FUN_004e28c0 @ 0x004e28c0 in swkotor2.exe.
+        /// Based on [FUN_004e28c0] @ (K1: TODO: Find this address, TSL: 0x004e28c0) in swkotor2.exe.
         /// Serializes ObjectId, Tag, components, and custom data.
         /// Uses GFF format for structured data storage.
         ///
@@ -742,7 +744,7 @@ namespace Andastra.Game.Games.Odyssey
         public override byte[] Serialize()
         {
             // Create GFF structure for entity data
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 saves entity to GFF
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - [FUN_005226d0] @ (K1: TODO: Find this address, TSL: 0x005226d0) saves entity to GFF
             // Uses generic GFF format (GFFContent.GFF) for entity serialization
             var gff = new GFF(GFFContent.GFF);
             var root = gff.Root;
@@ -792,7 +794,7 @@ namespace Andastra.Game.Games.Odyssey
                 root.SetInt32("Level", statsComponent.Level);
 
                 // Serialize ability scores
-                var abilityStruct = root.Acquire<GFFStruct>("Abilities", new GFFStruct());
+                var abilityStruct = root.Acquire("Abilities", new GFFStruct());
                 abilityStruct.SetInt32("STR", statsComponent.GetAbility(Ability.Strength));
                 abilityStruct.SetInt32("DEX", statsComponent.GetAbility(Ability.Dexterity));
                 abilityStruct.SetInt32("CON", statsComponent.GetAbility(Ability.Constitution));
@@ -801,7 +803,7 @@ namespace Andastra.Game.Games.Odyssey
                 abilityStruct.SetInt32("CHA", statsComponent.GetAbility(Ability.Charisma));
 
                 // Serialize ability modifiers
-                var abilityModStruct = root.Acquire<GFFStruct>("AbilityModifiers", new GFFStruct());
+                var abilityModStruct = root.Acquire("AbilityModifiers", new GFFStruct());
                 abilityModStruct.SetInt32("STR", statsComponent.GetAbilityModifier(Ability.Strength));
                 abilityModStruct.SetInt32("DEX", statsComponent.GetAbilityModifier(Ability.Dexterity));
                 abilityModStruct.SetInt32("CON", statsComponent.GetAbilityModifier(Ability.Constitution));
@@ -812,7 +814,7 @@ namespace Andastra.Game.Games.Odyssey
                 // Serialize known spells (if any)
                 // Iterate through all known spells and serialize them as a list of structs
                 // Each spell is stored as a GFFStruct with a "SpellId" field containing the spell ID (row index in spells.2da)
-                var spellsList = root.Acquire<GFFList>("KnownSpells", new GFFList());
+                var spellsList = root.Acquire("KnownSpells", new GFFList());
                 foreach (int spellId in statsComponent.GetKnownSpells())
                 {
                     var spellStruct = spellsList.Add();
@@ -858,7 +860,7 @@ namespace Andastra.Game.Games.Odyssey
 
             // Serialize sound component
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Sound component data is serialized to GFF save data
-            // Located via string references: "SoundList" @ 0x007bd080 (GIT sound list), "Sound" @ 0x007bc500 (sound entity type)
+            // Located via string references: "SoundList" @ (K1: TODO: Find this address, TSL: 0x007bd080) (GIT sound list), "Sound" @ (K1: TODO: Find this address, TSL: 0x007bc500) (sound entity type)
             // Sound properties are saved: Active, Continuous, Looping, Positional, Random, RandomPosition, Volume, VolumeVrtn, MaxDistance, MinDistance, Interval, IntervalVrtn, PitchVariation, SoundFiles, Hours
             var soundComponent = GetComponent<ISoundComponent>();
             if (soundComponent != null)
@@ -884,7 +886,7 @@ namespace Andastra.Game.Games.Odyssey
                 // Serialize sound files list
                 if (soundComponent.SoundFiles != null && soundComponent.SoundFiles.Count > 0)
                 {
-                    var soundFilesList = root.Acquire<GFFList>("SoundFiles", new GFFList());
+                    var soundFilesList = root.Acquire("SoundFiles", new GFFList());
                     foreach (string soundFile in soundComponent.SoundFiles)
                     {
                         var soundFileStruct = soundFilesList.Add();
@@ -900,7 +902,7 @@ namespace Andastra.Game.Games.Odyssey
             var inventoryComponent = GetComponent<IInventoryComponent>();
             if (inventoryComponent != null)
             {
-                var inventoryList = root.Acquire<GFFList>("Inventory", new GFFList());
+                var inventoryList = root.Acquire("Inventory", new GFFList());
 
                 // Search through all possible inventory slots (0-255 is a reasonable upper bound)
                 // This ensures we capture all items including those in inventory bag slots
@@ -923,8 +925,8 @@ namespace Andastra.Game.Games.Odyssey
             if (scriptHooksComponent != null)
             {
                 // Serialize script ResRefs for all event types
-                var scriptsStruct = root.Acquire<GFFStruct>("Scripts", new GFFStruct());
-                foreach (ScriptEvent eventType in System.Enum.GetValues(typeof(ScriptEvent)))
+                var scriptsStruct = root.Acquire("Scripts", new GFFStruct());
+                foreach (ScriptEvent eventType in Enum.GetValues(typeof(ScriptEvent)))
                 {
                     string scriptResRef = scriptHooksComponent.GetScript(eventType);
                     if (!string.IsNullOrEmpty(scriptResRef))
@@ -936,7 +938,7 @@ namespace Andastra.Game.Games.Odyssey
                 // Serialize local variables using reflection to access private dictionaries
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Local variables are stored in ScriptHooksComponent
                 // and serialized to GFF LocalVars structure
-                var localVarsStruct = root.Acquire<GFFStruct>("LocalVariables", new GFFStruct());
+                var localVarsStruct = root.Acquire("LocalVariables", new GFFStruct());
 
                 // Access private _localInts, _localFloats, _localStrings dictionaries via reflection
                 Type componentType = scriptHooksComponent.GetType();
@@ -946,10 +948,9 @@ namespace Andastra.Game.Games.Odyssey
 
                 if (localIntsField != null)
                 {
-                    var localInts = localIntsField.GetValue(scriptHooksComponent) as Dictionary<string, int>;
-                    if (localInts != null && localInts.Count > 0)
+                    if (localIntsField.GetValue(scriptHooksComponent) is Dictionary<string, int> localInts && localInts.Count > 0)
                     {
-                        var intList = localVarsStruct.Acquire<GFFList>("IntList", new GFFList());
+                        var intList = localVarsStruct.Acquire("IntList", new GFFList());
                         foreach (var kvp in localInts)
                         {
                             var varStruct = intList.Add();
@@ -964,7 +965,7 @@ namespace Andastra.Game.Games.Odyssey
                     var localFloats = localFloatsField.GetValue(scriptHooksComponent) as Dictionary<string, float>;
                     if (localFloats != null && localFloats.Count > 0)
                     {
-                        var floatList = localVarsStruct.Acquire<GFFList>("FloatList", new GFFList());
+                        var floatList = localVarsStruct.Acquire("FloatList", new GFFList());
                         foreach (var kvp in localFloats)
                         {
                             var varStruct = floatList.Add();
@@ -979,7 +980,7 @@ namespace Andastra.Game.Games.Odyssey
                     var localStrings = localStringsField.GetValue(scriptHooksComponent) as Dictionary<string, string>;
                     if (localStrings != null && localStrings.Count > 0)
                     {
-                        var stringList = localVarsStruct.Acquire<GFFList>("StringList", new GFFList());
+                        var stringList = localVarsStruct.Acquire("StringList", new GFFList());
                         foreach (var kvp in localStrings)
                         {
                             var varStruct = stringList.Add();
@@ -992,16 +993,15 @@ namespace Andastra.Game.Games.Odyssey
 
             // Serialize custom data dictionary using reflection to access private _data field
             // BaseEntity stores custom data in _data dictionary for script variables and temporary state
-            var customDataStruct = root.Acquire<GFFStruct>("CustomData", new GFFStruct());
+            var customDataStruct = root.Acquire("CustomData", new GFFStruct());
             Type baseEntityType = typeof(BaseEntity);
             FieldInfo dataField = baseEntityType.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
 
             if (dataField != null)
             {
-                var data = dataField.GetValue(this) as Dictionary<string, object>;
-                if (data != null && data.Count > 0)
+                if (dataField.GetValue(this) is Dictionary<string, object> data && data.Count > 0)
                 {
-                    var dataList = customDataStruct.Acquire<GFFList>("DataList", new GFFList());
+                    var dataList = customDataStruct.Acquire("DataList", new GFFList());
                     foreach (var kvp in data)
                     {
                         var dataStruct = dataList.Add();
@@ -1056,7 +1056,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Deserializes entity data from save games.
         /// </summary>
         /// <remarks>
-        /// Based on FUN_005fb0f0 @ 0x005fb0f0 in swkotor2.exe.
+        /// Based on [FUN_005fb0f0] @ (K1: TODO: Find this address, TSL: 0x005fb0f0)
         /// Restores ObjectId, Tag, components, and custom data.
         /// Recreates component attachments and state.
         /// </remarks>
@@ -1106,7 +1106,7 @@ namespace Andastra.Game.Games.Odyssey
 
             // Deserialize Transform component
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Position stored as X, Y, Z in GFF
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 loads entity data from GFF
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): [FUN_005fb0f0] @ (K1: TODO: Find this address, TSL: 0x005fb0f0) loads entity data from GFF
             // Transform component is always present on all entities (created in Initialize() or AttachCommonComponents())
             // If missing (edge case during deserialization), create it to match original engine behavior
             if (root.Exists("X") && root.Exists("Y") && root.Exists("Z"))
@@ -1117,9 +1117,9 @@ namespace Andastra.Game.Games.Odyssey
                     // Transform component should already exist from Initialize(), but create it if missing
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): All entities have transform data, so component must exist
                     // Component creation pattern matches AttachCommonComponents() and ComponentInitializer.InitializeComponents()
-                    // Located via string references: "XPosition" @ 0x007bd000, "YPosition" @ 0x007bcff4, "ZPosition" @ 0x007bcfe8 (swkotor2.exe)
+                    // Located via string references: "XPosition" @ (K1: TODO: Find this address, TSL: 0x007bd000), "YPosition" @ (K1: TODO: Find this address, TSL: 0x007bcff4), "ZPosition" @ (K1: TODO: Find this address, TSL: 0x007bcfe8)
                     transformComponent = new TransformComponent();
-                    AddComponent<ITransformComponent>(transformComponent);
+                    AddComponent(transformComponent);
                 }
 
                 float x = root.GetSingle("X");
@@ -1223,9 +1223,9 @@ namespace Andastra.Game.Games.Odyssey
                 var doorComponent = GetComponent<IDoorComponent>();
                 if (doorComponent == null && _objectType == ObjectType.Door)
                 {
-                    doorComponent = new Andastra.Runtime.Games.Odyssey.Components.OdysseyDoorComponent();
+                    doorComponent = new OdysseyDoorComponent();
                     doorComponent.Owner = this;
-                    AddComponent<IDoorComponent>(doorComponent);
+                    AddComponent(doorComponent);
                 }
 
                 if (root.Exists("IsOpen"))
@@ -1288,9 +1288,9 @@ namespace Andastra.Game.Games.Odyssey
                 var placeableComponent = GetComponent<IPlaceableComponent>();
                 if (placeableComponent == null && _objectType == ObjectType.Placeable)
                 {
-                    placeableComponent = new Components.PlaceableComponent();
+                    placeableComponent = new PlaceableComponent();
                     placeableComponent.Owner = this;
-                    AddComponent<IPlaceableComponent>(placeableComponent);
+                    AddComponent(placeableComponent);
                 }
 
                 if (root.Exists("IsUseable"))
@@ -1340,17 +1340,17 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Deserialize sound component
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 loads sound component data from GFF save data
-            // Located via string references: "SoundList" @ 0x007bd080 (GIT sound list), "Sound" @ 0x007bc500 (sound entity type)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): [FUN_005fb0f0] @ (K1: TODO: Find this address, TSL: 0x005fb0f0) loads sound component data from GFF save data
+            // Located via string references: "SoundList" @ (K1: TODO: Find this address, TSL: 0x007bd080) (GIT sound list), "Sound" @ (K1: TODO: Find this address, TSL: 0x007bc500) (sound entity type)
             // Sound properties are loaded: Active, Continuous, Looping, Positional, Random, RandomPosition, Volume, VolumeVrtn, MaxDistance, MinDistance, Interval, IntervalVrtn, PitchVariation, SoundFiles, Hours
             if (root.Exists("Active") || root.Exists("TemplateResRef"))
             {
                 var soundComponent = GetComponent<ISoundComponent>();
                 if (soundComponent == null && _objectType == ObjectType.Sound)
                 {
-                    soundComponent = new Components.SoundComponent();
+                    soundComponent = new SoundComponent();
                     soundComponent.Owner = this;
-                    AddComponent<ISoundComponent>(soundComponent);
+                    AddComponent(soundComponent);
                 }
 
                 if (soundComponent != null)
@@ -1495,7 +1495,7 @@ namespace Andastra.Game.Games.Odyssey
                 if (scriptHooksComponent == null)
                 {
                     scriptHooksComponent = new Common.Components.BaseScriptHooksComponent();
-                    AddComponent<IScriptHooksComponent>(scriptHooksComponent);
+                    AddComponent(scriptHooksComponent);
                 }
 
                 var scriptsStruct = root.GetStruct("Scripts");
@@ -1612,73 +1612,83 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Deserialize custom data dictionary
-            if (root.Exists("CustomData"))
+            if (!root.Exists("CustomData"))
             {
-                var customDataStruct = root.GetStruct("CustomData");
-                if (customDataStruct != null && customDataStruct.Exists("DataList"))
+                return;
+            }
+
+            var customDataStruct = root.GetStruct("CustomData");
+            if (customDataStruct == null || !customDataStruct.Exists("DataList"))
+            {
+                return;
+            }
+
+            var dataList = customDataStruct.GetList("DataList");
+            if (dataList == null || dataList.Count <= 0)
+            {
+                return;
+            }
+
+            Type baseEntityType = typeof(BaseEntity);
+            FieldInfo dataField = baseEntityType.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            if (dataField == null)
+            {
+                return;
+            }
+
+            if (!(dataField.GetValue(this) is Dictionary<string, object> fieldData))
+            {
+                fieldData = new Dictionary<string, object>();
+                dataField.SetValue(this, fieldData);
+            }
+            fieldData.Clear();
+
+            for (int i = 0; i < dataList.Count; i++)
+            {
+                var dataStruct = dataList.At(i);
+                if (dataStruct == null || !dataStruct.Exists("Key") || !dataStruct.Exists("Type") ||
+                    !dataStruct.Exists("Value"))
                 {
-                    var dataList = customDataStruct.GetList("DataList");
-                    if (dataList != null && dataList.Count > 0)
-                    {
-                        Type baseEntityType = typeof(BaseEntity);
-                        FieldInfo dataField = baseEntityType.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
-
-                        if (dataField != null)
-                        {
-                            var fieldData = dataField.GetValue(this) as Dictionary<string, object>;
-                            if (fieldData == null)
-                            {
-                                fieldData = new Dictionary<string, object>();
-                                dataField.SetValue(this, fieldData);
-                            }
-                            fieldData.Clear();
-
-                            for (int i = 0; i < dataList.Count; i++)
-                            {
-                                var dataStruct = dataList.At(i);
-                                if (dataStruct != null && dataStruct.Exists("Key") && dataStruct.Exists("Type") && dataStruct.Exists("Value"))
-                                {
-                                    string key = dataStruct.GetString("Key");
-                                    string type = dataStruct.GetString("Type");
-                                    object value = null;
-
-                                    switch (type)
-                                    {
-                                        case "null":
-                                            value = null;
-                                            break;
-                                        case "Int32":
-                                        case "int":
-                                            value = dataStruct.GetInt32("Value");
-                                            break;
-                                        case "Single":
-                                        case "float":
-                                            value = dataStruct.GetSingle("Value");
-                                            break;
-                                        case "String":
-                                        case "string":
-                                            value = dataStruct.GetString("Value");
-                                            break;
-                                        case "Boolean":
-                                        case "bool":
-                                            value = dataStruct.GetUInt8("Value") != 0;
-                                            break;
-                                        case "UInt32":
-                                        case "uint":
-                                            value = dataStruct.GetUInt32("Value");
-                                            break;
-                                        default:
-                                            // For other types, try to deserialize as string
-                                            value = dataStruct.GetString("Value");
-                                            break;
-                                    }
-
-                                    fieldData[key] = value;
-                                }
-                            }
-                        }
-                    }
+                    continue;
                 }
+
+                string key = dataStruct.GetString("Key");
+                string type = dataStruct.GetString("Type");
+                object value;
+
+                switch (type)
+                {
+                    case "null":
+                        value = null;
+                        break;
+                    case "Int32":
+                    case "int":
+                        value = dataStruct.GetInt32("Value");
+                        break;
+                    case "Single":
+                    case "float":
+                        value = dataStruct.GetSingle("Value");
+                        break;
+                    case "String":
+                    case "string":
+                        value = dataStruct.GetString("Value");
+                        break;
+                    case "Boolean":
+                    case "bool":
+                        value = dataStruct.GetUInt8("Value") != 0;
+                        break;
+                    case "UInt32":
+                    case "uint":
+                        value = dataStruct.GetUInt32("Value");
+                        break;
+                    default:
+                        // For other types, try to deserialize as string
+                        value = dataStruct.GetString("Value");
+                        break;
+                }
+
+                fieldData[key] = value;
             }
         }
     }

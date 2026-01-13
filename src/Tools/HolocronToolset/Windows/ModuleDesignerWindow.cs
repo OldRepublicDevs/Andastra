@@ -10,6 +10,7 @@ using HolocronToolset.Windows;
 using BioWare.NET;
 using BioWare.NET.Common;
 using BioWare.NET.Installation;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Tools;
 using ModuleClass = BioWare.NET.Common.Module;

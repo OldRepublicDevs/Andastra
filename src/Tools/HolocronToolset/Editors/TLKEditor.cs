@@ -17,6 +17,7 @@ using BioWare.NET;
 using BioWare.NET.Common;
 using BioWare.NET.Common.Language;
 using BioWare.NET.Resource.Formats.TLK;
+using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using HolocronToolset.Common;
 using HolocronToolset.Data;

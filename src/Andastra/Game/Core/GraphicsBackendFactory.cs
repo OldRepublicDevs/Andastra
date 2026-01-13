@@ -1,10 +1,10 @@
 using System;
+using Andastra.Game.Graphics.Common.Backends.Odyssey;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Graphics.Common.Backends.Odyssey;
 using Andastra.Runtime.Graphics.Common.Enums;
 
-namespace Andastra.Game.Game.Core
+namespace Andastra.Game.Core
 {
     /// <summary>
     /// Factory for creating graphics backend instances.
@@ -69,7 +69,7 @@ namespace Andastra.Game.Game.Core
                 // Fallback to MonoGame
                 try
                 {
-                    return new Andastra.Runtime.MonoGame.Graphics.MonoGameGraphicsBackend();
+                    return new Graphics.MonoGame.Graphics.MonoGameGraphicsBackend();
                 }
                 catch (Exception fallbackEx)
                 {

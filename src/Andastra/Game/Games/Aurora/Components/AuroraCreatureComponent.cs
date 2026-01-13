@@ -164,7 +164,7 @@ namespace Andastra.Game.Games.Aurora.Components
             {
                 // Use table manager to get feat data directly
                 // Based on nwmain.exe: C2DA::Load2DArray loads feat.2da table
-                Parsing.Formats.TwoDA.TwoDA table = tableManager.GetTable("feat");
+                BioWare.NET.Resource.Formats.TwoDA.TwoDA table = tableManager.GetTable("feat");
                 if (table == null || featId < 0 || featId >= table.GetHeight())
                 {
                     return null;
@@ -172,7 +172,7 @@ namespace Andastra.Game.Games.Aurora.Components
 
                 // Get row by feat ID (row index)
                 // Based on nwmain.exe: C2DA row access via index
-                Parsing.Formats.TwoDA.TwoDARow row = table.GetRow(featId);
+                BioWare.NET.Resource.Formats.TwoDA.TwoDARow row = table.GetRow(featId);
                 if (row == null)
                 {
                     return null;
@@ -212,7 +212,7 @@ namespace Andastra.Game.Games.Aurora.Components
         /// <param name="columnName">The column name.</param>
         /// <returns>The string value, or null if the column doesn't exist.</returns>
         [CanBeNull]
-        private static string SafeGetString(Parsing.Formats.TwoDA.TwoDARow row, string columnName)
+        private static string SafeGetString(BioWare.NET.Resource.Formats.TwoDA.TwoDARow row, string columnName)
         {
             try
             {
@@ -231,7 +231,7 @@ namespace Andastra.Game.Games.Aurora.Components
         /// <param name="columnName">The column name.</param>
         /// <returns>The integer value, or null if the column doesn't exist or is invalid.</returns>
         [CanBeNull]
-        private static int? SafeGetInteger(Parsing.Formats.TwoDA.TwoDARow row, string columnName)
+        private static int? SafeGetInteger(BioWare.NET.Resource.Formats.TwoDA.TwoDARow row, string columnName)
         {
             try
             {

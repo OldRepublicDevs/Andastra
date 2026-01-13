@@ -1,10 +1,10 @@
 using System;
 using BioWare.NET.Common;
-using BioWare.NET.Extract.Installation;
+using BioWare.NET.Extract;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
 using Andastra.Runtime.Core.Entities;
-using Andastra.Runtime.Engines.Common;
+using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Eclipse;
 
 namespace Andastra.Game.Engines.Eclipse

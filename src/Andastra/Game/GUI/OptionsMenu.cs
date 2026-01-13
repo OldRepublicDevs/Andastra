@@ -5,7 +5,7 @@ using Andastra.Runtime.Core.Audio;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Graphics;
 
-namespace Andastra.Game.Game.GUI
+namespace Andastra.Game
 {
     /// <summary>
     /// Handles options menu rendering and input.
