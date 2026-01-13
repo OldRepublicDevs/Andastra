@@ -38,7 +38,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
     /// - "LASTMODULE" @ 0x007be1d0, "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58
     /// - "ModuleList" @ 0x007bdd3c, "GetModuleList" @ 0x007bdd48
     /// - "MODULES" @ 0x007c6bc4, ".\modules" @ 0x007c6bcc, "d:\modules" @ 0x007c6bd8
-    /// - "LIVE%d:MODULES\" @ 0x007be680 (live module directory format)
+    /// - "LIVE%d:MODULES\" @ (K1: 0x007458c4, TSL: 0x007be680) (live module directory format)
     /// - Module save: "modulesave" @ 0x007bde20, ":: Module savegame list: %s.\n" @ 0x007cbbb4
     /// - ":: Server module list: " @ 0x007cbc2c, ":: Server mode: Module Running.\n" @ 0x007cbc44
     /// - ":: Server mode: Module Loaded.\n" @ 0x007cbc68, "Module: %s" @ 0x007c79c8
