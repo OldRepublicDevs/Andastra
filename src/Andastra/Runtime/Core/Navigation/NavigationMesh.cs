@@ -1009,7 +1009,7 @@ namespace Andastra.Runtime.Core.Navigation
     /// - Direction zero threshold: 1e-6 (minimum direction length)
     /// - AABB division epsilon: 1e-8 (division by zero protection)
     /// - Vertical triangle threshold: 1e-6 (normal.Z threshold for vertical triangles)
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Various epsilon values used throughout code (_DAT_007bc338, etc.)
+    /// - Epsilon values: AABB division epsilon (TSL: NavMesh_Epsilon_AabbDivision @ 0x007bc338 = 1e-8)
     /// </para>
     /// </remarks>
     public class NavigationMesh : INavigationMesh
@@ -3372,7 +3372,7 @@ namespace Andastra.Runtime.Core.Navigation
             // Edge case: Degenerate triangle (zero area)
             // If the triangle has zero area (all three points are in a line), the normal length is 0.
             // We can't do intersection tests on such triangles, so we skip them.
-            // Original: Line 57-58 checks if normal length >= _DAT_007bc338 (epsilon)
+            // Original: Line 57-58 checks if normal length >= epsilon (1e-6 threshold for degenerate triangles)
             const float degenerateEpsilon = 1e-6f;
             if (normalLength < degenerateEpsilon)
             {
