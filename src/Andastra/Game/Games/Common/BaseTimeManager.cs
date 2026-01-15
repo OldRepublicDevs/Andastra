@@ -37,28 +37,28 @@ namespace Andastra.Game.Games.Common
     /// - Game time tracking: Hours, minutes, seconds, milliseconds (all engines track game time)
     /// - Fixed timestep accumulator: Accumulates real frame time to drive fixed timestep ticks
     /// - Max frame time clamping: Prevents spiral of death from large frame time spikes
-    /// 
+    ///
     /// Common Patterns (Reverse Engineered):
     /// - All engines use fixed timestep for game logic (physics, combat, scripts) and variable timestep for rendering
     /// - All engines track game time (hours, minutes, seconds, milliseconds) that advances with simulation time
     /// - All engines support time scaling (pause, slow-motion, fast-forward) via TimeScale multiplier
     /// - All engines use accumulator pattern: Accumulate real frame time, then tick fixed timesteps until accumulator is depleted
     /// - All engines clamp maximum frame time to prevent simulation instability from large frame time spikes
-    /// 
+    ///
     /// Engine-Specific (implemented in subclasses):
     /// - Fixed timestep value: May differ slightly between engines (typically 60 Hz, but needs verification)
     /// - Game time storage: Different save game formats store game time differently (NFO for Odyssey, GAM for Aurora, etc.)
     /// - Time constants: Engine-specific string references and memory addresses for time-related constants
     /// - Frame timing markers: Engine-specific frame start/end markers for profiling
     /// - Timer systems: Engine-specific timer implementations (combat timers, effect timers, etc.)
-    /// 
+    ///
     /// Inheritance Structure:
     /// - BaseTimeManager (this class) - Common functionality only
     ///   - OdysseyTimeManager : BaseTimeManager (swkotor.exe, swkotor2.exe)
     ///   - AuroraTimeManager : BaseTimeManager (nwmain.exe, nwn2main.exe)
     ///   - EclipseTimeManager : BaseTimeManager (daorigins.exe, DragonAge2.exe, , )
     ///   - InfinityTimeManager : BaseTimeManager (.exe, .exe, .exe)
-    /// 
+    ///
     /// NOTE: This base class contains ONLY functionality verified as identical across ALL engines.
     /// All engine-specific function addresses, memory offsets, and implementation details are in subclasses.
     /// Cross-engine verified components  is required to verify commonality before moving code to base class.
@@ -256,7 +256,7 @@ namespace Andastra.Game.Games.Common
         /// <summary>
         /// Initializes a new instance of the BaseTimeManager class.
         /// </summary>
-        protected BaseTimeManager()
+        public BaseTimeManager()
         {
             _timeScale = 1.0f;
             _isPaused = false;

@@ -14255,12 +14255,12 @@ technique ColorGrading
         /// 2. Extracts position data from vertex format (Position is at offset 0 in most formats)
         /// 3. Falls back to cached geometry data if buffer read fails or buffer is unavailable
         /// </remarks>
-        private List<Vector3> ExtractVertexPositions(IRoomMeshData meshData, string meshId)
+        private List<Vector3> ExtractVertexPositions(IRoomMeshData meshData, string meshId, EclipseArea area = null)
         {
             if (meshData == null || meshData.VertexBuffer == null)
             {
                 // Fallback to cached data if buffer is unavailable
-                return ExtractVertexPositionsFromCache(meshId);
+                return ExtractVertexPositionsFromCache(meshId, area);
             }
 
             try
@@ -14271,7 +14271,7 @@ technique ColorGrading
 
                 if (vertexCount == 0)
                 {
-                    return ExtractVertexPositionsFromCache(meshId);
+                    return ExtractVertexPositionsFromCache(meshId, area);
                 }
 
                 List<Vector3> positions = new List<Vector3>(vertexCount);
@@ -14290,7 +14290,9 @@ technique ColorGrading
 
                     for (int i = 0; i < vertexCount; i++)
                     {
-                        positions.Add(vertices[i].Position);
+                        // Convert Microsoft.Xna.Framework.Vector3 to System.Numerics.Vector3
+                        Microsoft.Xna.Framework.Vector3 xnaPos = vertices[i].Position;
+                        positions.Add(new Vector3(xnaPos.X, xnaPos.Y, xnaPos.Z));
                     }
                 }
                 else if (vertexStride == 16)
@@ -14355,22 +14357,18 @@ technique ColorGrading
         /// Extracts vertex positions from cached mesh geometry data (fallback method).
         /// </summary>
         /// <param name="meshId">Mesh identifier.</param>
+        /// <param name="area">EclipseArea instance to access cached mesh geometry (optional, for fallback).</param>
         /// <returns>List of vertex positions from cached geometry, or empty list if not cached.</returns>
-        private List<Vector3> ExtractVertexPositionsFromCache(string meshId)
+        private List<Vector3> ExtractVertexPositionsFromCache(string meshId, EclipseArea area = null)
         {
-            if (string.IsNullOrEmpty(meshId))
+            if (string.IsNullOrEmpty(meshId) || area == null)
             {
                 return new List<Vector3>();
             }
 
-            // Get cached geometry data
-            if (_cachedMeshGeometry.TryGetValue(meshId, out CachedMeshGeometry cachedGeometry))
+            if (area.TryGetCachedMeshGeometryVertices(meshId, out List<Vector3> vertices))
             {
-                if (cachedGeometry.Vertices != null)
-                {
-                    // Return a copy of the vertex list (so modifications don't affect cache)
-                    return new List<Vector3>(cachedGeometry.Vertices);
-                }
+                return vertices;
             }
 
             return new List<Vector3>();
@@ -14391,12 +14389,12 @@ technique ColorGrading
         /// 2. Handles both 16-bit and 32-bit index formats
         /// 3. Falls back to cached geometry data if buffer read fails or buffer is unavailable
         /// </remarks>
-        private List<int> ExtractIndices(IRoomMeshData meshData, string meshId)
+        private List<int> ExtractIndices(IRoomMeshData meshData, string meshId, EclipseArea area = null)
         {
             if (meshData == null || meshData.IndexBuffer == null)
             {
                 // Fallback to cached data if buffer is unavailable
-                return ExtractIndicesFromCache(meshId);
+                return ExtractIndicesFromCache(meshId, area);
             }
 
             try
@@ -14406,7 +14404,7 @@ technique ColorGrading
 
                 if (indexCount == 0)
                 {
-                    return ExtractIndicesFromCache(meshId);
+                    return ExtractIndicesFromCache(meshId, area);
                 }
 
                 // Read indices from buffer (handles both 16-bit and 32-bit formats internally)
@@ -14418,7 +14416,7 @@ technique ColorGrading
             catch (Exception)
             {
                 // If reading from buffer fails, fall back to cached data
-                return ExtractIndicesFromCache(meshId);
+                return ExtractIndicesFromCache(meshId, area);
             }
         }
 
@@ -14426,22 +14424,18 @@ technique ColorGrading
         /// Extracts indices from cached mesh geometry data (fallback method).
         /// </summary>
         /// <param name="meshId">Mesh identifier.</param>
+        /// <param name="area">EclipseArea instance to access cached mesh geometry (optional, for fallback).</param>
         /// <returns>List of indices from cached geometry, or empty list if not cached.</returns>
-        private List<int> ExtractIndicesFromCache(string meshId)
+        private List<int> ExtractIndicesFromCache(string meshId, EclipseArea area = null)
         {
-            if (string.IsNullOrEmpty(meshId))
+            if (string.IsNullOrEmpty(meshId) || area == null)
             {
                 return new List<int>();
             }
 
-            // Get cached geometry data
-            if (_cachedMeshGeometry.TryGetValue(meshId, out CachedMeshGeometry cachedGeometry))
+            if (area.TryGetCachedMeshGeometryIndices(meshId, out List<int> indices))
             {
-                if (cachedGeometry.Indices != null)
-                {
-                    // Return a copy of the index list (so modifications don't affect cache)
-                    return new List<int>(cachedGeometry.Indices);
-                }
+                return indices;
             }
 
             return new List<int>();

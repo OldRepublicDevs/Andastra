@@ -249,6 +249,91 @@ namespace Andastra.Runtime.Core.Combat
         }
 
         /// <summary>
+        /// Determines the attack type for an entity based on equipped weapons.
+        /// </summary>
+        /// <param name="entity">The entity to determine attack type for.</param>
+        /// <param name="useOffHand">Whether to check off-hand weapon instead of main hand.</param>
+        /// <returns>The determined attack type (Melee, Ranged, Force, or Touch).</returns>
+        /// <remarks>
+        /// Attack Type Classification:
+        /// - swkotor.exe: 0x004d3da0 - CSWSCombatRound::GetWeaponAttackType (returns internal attack type ID 0-8)
+        /// - swkotor2.exe: TODO: Find equivalent address - CSWSCombatRound::GetWeaponAttackType
+        /// - Located via string references: "RangedAttack" @ (K1: 0x00746144, TSL: 0x007bf8f8), "OnMeleeAttacked" @ (K1: 0x00749644, TSL: 0x007c1a5c)
+        /// - Original implementation: GetWeaponAttackType returns internal ID, then weapon's "rangedweapon" property from baseitems.2da determines Melee vs Ranged
+        /// - Internal attack type IDs from GetWeaponAttackType:
+        ///   * 0, 1: Unarmed/melee (no weapon in main hand)
+        ///   * 2: Off-hand attack
+        ///   * 3: Creature weapon (if HasCreatureWeapons returns non-zero)
+        ///   * 4, 5: Melee weapons (main hand, additional attacks)
+        ///   * 7, 8: Unarmed attacks (main hand, additional attacks)
+        /// - Melee vs Ranged determination: Check weapon's "rangedweapon" column in baseitems.2da
+        ///   * If rangedweapon != 0: Ranged attack (uses DEX modifier)
+        ///   * If rangedweapon == 0 or no weapon: Melee attack (uses STR modifier)
+        /// - Force attacks: Determined by action type (casting Force power/spell)
+        /// - Touch attacks: Special case for certain Force powers or effects (ignores armor, uses DEX for AC)
+        /// - Used by: GetCurrentAttackWeapon, EquipMostDamagingMeleeWeapon, GetDamageRoll
+        /// </remarks>
+        public AttackType DetermineAttackType(IEntity entity, bool useOffHand = false)
+        {
+            if (entity == null)
+            {
+                return AttackType.Melee; // Default to melee for null entities
+            }
+
+            // Check for Force power attack (determined by current action or effect)
+            // Force attacks are typically identified by the action being performed (ActionCastSpellAtLocation, etc.)
+            // This would be determined at a higher level when the attack is initiated, not here
+            // For now, we focus on weapon-based attack types
+
+            // Get inventory component
+            Interfaces.Components.IInventoryComponent inventory = entity.GetComponent<Interfaces.Components.IInventoryComponent>();
+            if (inventory == null)
+            {
+                return AttackType.Melee; // Default to melee if no inventory
+            }
+
+            // INVENTORY_SLOT_RIGHTWEAPON = 4, INVENTORY_SLOT_LEFTWEAPON = 5
+            int weaponSlot = useOffHand ? 5 : 4;
+            IEntity weapon = inventory.GetItemInSlot(weaponSlot);
+
+            // If no weapon equipped, default to melee (unarmed)
+            if (weapon == null)
+            {
+                return AttackType.Melee;
+            }
+
+            // Get weapon's base item ID to look up in baseitems.2da
+            Interfaces.Components.IItemComponent itemComponent = weapon.GetComponent<Interfaces.Components.IItemComponent>();
+            if (itemComponent == null)
+            {
+                return AttackType.Melee; // Default to melee if no item component
+            }
+
+            int baseItemId = itemComponent.BaseItem;
+            if (baseItemId < 0)
+            {
+                return AttackType.Melee; // Invalid base item ID, default to melee
+            }
+
+            // Check if weapon is ranged by looking up "rangedweapon" column in baseitems.2da
+            // swkotor.exe: Weapon type determination via baseitems.2da "rangedweapon" column
+            // Original implementation: Reads rangedweapon field from baseitems.2da row indexed by BaseItem ID
+            if (_world != null && _world.GameDataProvider != null)
+            {
+                // Read rangedweapon flag from baseitems.2da
+                // If rangedweapon != 0, weapon is ranged; otherwise it's melee
+                int rangedWeapon = (int)_world.GameDataProvider.GetTableFloat("baseitems", baseItemId, "rangedweapon", 0.0f);
+                if (rangedWeapon != 0)
+                {
+                    return AttackType.Ranged;
+                }
+            }
+
+            // Default to melee if rangedweapon check fails or GameDataProvider unavailable
+            return AttackType.Melee;
+        }
+
+        /// <summary>
         /// Performs a melee attack.
         /// </summary>
         public AttackResult PerformMeleeAttack(IEntity attacker, IEntity target, int attackBonus = 0)
