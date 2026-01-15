@@ -111,9 +111,8 @@ The Andastra runtime is organized into a layered architecture with strict depend
 
 ## Requirements
 
-- **.NET 8.0 SDK** or later
+- **.NET 9.0 SDK** or later
 - **MonoGame 3.8** or later (for runtime)
-- **Visual Studio 2022** or **JetBrains Rider** (recommended for development)
 
 ## Building
 
@@ -161,7 +160,7 @@ dotnet run --project src/Tools/NSSComp/NSSComp.NET.csproj
 ## Project Structure
 
 ```shell
-Andastra/
+Andastra.NET/
 ├── src/
 │   ├── Andastra/
 │   │   ├── Game/              # Main executable
@@ -170,14 +169,14 @@ Andastra/
 │   │   │   ├── Content/       # Asset pipeline
 │   │   │   ├── Scripting/     # NCS VM
 │   │   │   ├── Graphics/      # Rendering backends
-│   │   │   └── Games/          # Game implementations
-│   │   ├── Parsing/           # File format parsers
+│   │   │   └── Games/         # Game implementations
 │   │   ├── Tests/             # Unit tests
 │   │   └── Utility/           # Shared utilities
+│   ├── BioWare.NET/               # File format parsers
 │   └── Tools/                 # Development tools
 │       ├── HoloPatcher.UI/
 │       ├── NCSDecomp/
-│       ├── NSSComp/
+│       ├── HolocronToolset.NET/
 │       └── ...
 ├── docs/                      # Documentation
 ├── scripts/                   # Build and utility scripts
