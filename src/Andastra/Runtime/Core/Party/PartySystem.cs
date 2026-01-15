@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
@@ -722,28 +723,24 @@ namespace Andastra.Runtime.Core.Party
             var positions = new Vector3[_activeParty.Count];
 
             if (_activeParty.Count == 0)
-            {
                 return positions;
-            }
 
             Vector3 leaderPos = GetLeaderPosition();
             positions[_leaderIndex] = leaderPos;
 
             // Calculate follower positions
-            float spacing = 2.0f; // Base spacing
+            const float Spacing = 2.0f; // Base spacing
             int followerIndex = 0;
 
             for (int i = 0; i < _activeParty.Count; i++)
             {
                 if (i == _leaderIndex)
-                {
                     continue;
-                }
 
                 // Simple follow formation: behind and to the side
-                float angle = (float)Math.PI + (followerIndex - 0.5f) * 0.5f;
-                float offsetX = (float)Math.Cos(angle) * spacing;
-                float offsetY = (float)Math.Sin(angle) * spacing;
+                float angle   = (float)Math.PI + (followerIndex - 0.5f) * 0.5f;
+                float offsetX = (float)Math.Cos(angle) * Spacing;
+                float offsetY = (float)Math.Sin(angle) * Spacing;
 
                 positions[i] = new Vector3(
                     leaderPos.X + offsetX,
@@ -761,9 +758,7 @@ namespace Andastra.Runtime.Core.Party
         {
             PartyMember leader = Leader;
             if (leader?.Entity == null)
-            {
                 return Vector3.Zero;
-            }
 
             Interfaces.Components.ITransformComponent transform = leader.Entity.GetComponent<Interfaces.Components.ITransformComponent>();
             return transform?.Position ?? Vector3.Zero;
@@ -776,52 +771,31 @@ namespace Andastra.Runtime.Core.Party
         private PartyMember GetMemberByEntity(IEntity entity)
         {
             if (entity == null)
-            {
                 return null;
-            }
 
-            if (_playerCharacter != null && _playerCharacter.Entity.ObjectId == entity.ObjectId)
-            {
-                return _playerCharacter;
-            }
-
-            foreach (PartyMember member in _availableMembers)
-            {
-                if (member.Entity.ObjectId == entity.ObjectId)
-                {
-                    return member;
-                }
-            }
-
-            return null;
+            return _playerCharacter?.Entity.ObjectId == entity.ObjectId
+                ? _playerCharacter
+                : _availableMembers.FirstOrDefault(member => member.Entity.ObjectId == entity.ObjectId);
         }
 
         private void SpawnMemberInWorld(PartyMember member)
         {
-            if (member == null || member.Entity != null)
-            {
-                // Member already has an entity or is invalid
+            if (member?.Entity != null)
                 return;
-            }
 
             // Get leader position for formation
             PartyMember leader = Leader;
-            if (leader == null || leader.Entity == null)
-            {
-                // No leader, cannot spawn at formation position
+            if (leader?.Entity == null)
                 return;
-            }
 
             Interfaces.Components.ITransformComponent leaderTransform = leader.Entity.GetComponent<Interfaces.Components.ITransformComponent>();
             if (leaderTransform == null)
-            {
                 return;
-            }
 
             // Calculate formation position relative to leader
             // Formation: Leader at center, members offset by formation distance
             int memberIndex = _activeParty.IndexOf(member);
-            float formationDistance = 2.0f; // Default formation distance
+            const float formationDistance = 2.0f; // Default formation distance
             float angleOffset = (memberIndex - _leaderIndex) * 1.0f; // Angle offset in radians
 
             Vector3 formationOffset = new Vector3(
@@ -841,7 +815,7 @@ namespace Andastra.Runtime.Core.Party
             IEntity entity = null;
 
             // Try to create from template if available
-            if (!string.IsNullOrEmpty(member.TemplateResRef) && _templateFactory != null)
+            if (member != null && !string.IsNullOrEmpty(member.TemplateResRef) && _templateFactory != null)
             {
                 // Use template factory to create entity from UTC template
                 // EntityFactory.CreateCreatureFromTemplate loads UTC GFF and creates entity
