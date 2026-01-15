@@ -760,18 +760,13 @@ namespace Andastra.Runtime.Core.Party
         private Vector3 GetLeaderPosition()
         {
             PartyMember leader = Leader;
-            if (leader == null || leader.Entity == null)
+            if (leader?.Entity == null)
             {
                 return Vector3.Zero;
             }
 
             Interfaces.Components.ITransformComponent transform = leader.Entity.GetComponent<Interfaces.Components.ITransformComponent>();
-            if (transform != null)
-            {
-                return transform.Position;
-            }
-
-            return Vector3.Zero;
+            return transform?.Position ?? Vector3.Zero;
         }
 
         #endregion
@@ -817,7 +812,7 @@ namespace Andastra.Runtime.Core.Party
                 return;
             }
 
-            Core.Interfaces.Components.ITransformComponent leaderTransform = leader.Entity.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+            Interfaces.Components.ITransformComponent leaderTransform = leader.Entity.GetComponent<Interfaces.Components.ITransformComponent>();
             if (leaderTransform == null)
             {
                 return;
@@ -829,17 +824,17 @@ namespace Andastra.Runtime.Core.Party
             float formationDistance = 2.0f; // Default formation distance
             float angleOffset = (memberIndex - _leaderIndex) * 1.0f; // Angle offset in radians
 
-            System.Numerics.Vector3 formationOffset = new System.Numerics.Vector3(
+            Vector3 formationOffset = new Vector3(
                 (float)Math.Cos(angleOffset) * formationDistance,
                 0.0f,
                 (float)Math.Sin(angleOffset) * formationDistance
             );
 
-            System.Numerics.Vector3 spawnPosition = leaderTransform.Position + formationOffset;
+            Vector3 spawnPosition = leaderTransform.Position + formationOffset;
             float spawnFacing = leaderTransform.Facing;
 
             // Create entity from member's template/resource
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) party member spawning system
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - party member spawning system
             // Located via string references: Party member entity creation
             // Original implementation: Creates creature entity from UTC template stored in party member data
             // Party members use their TemplateResRef to spawn entities
@@ -912,4 +907,3 @@ namespace Andastra.Runtime.Core.Party
         #endregion
     }
 }
-      
