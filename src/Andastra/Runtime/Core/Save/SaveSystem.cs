@@ -1931,7 +1931,7 @@ namespace Andastra.Runtime.Core.Save
         /// Original implementation: Module states cached in memory during gameplay
         /// States are saved to save files when Save() is called
         /// </remarks>
-        public void StoreModuleState(string moduleResRef, Module.ModuleState moduleState)
+        public void StoreModuleState(string moduleResRef, Module.SavedModuleState moduleState)
         {
             if (string.IsNullOrEmpty(moduleResRef) || moduleState == null)
             {
@@ -1966,7 +1966,7 @@ namespace Andastra.Runtime.Core.Save
         /// ValidateModuleState @ (K1: TODO: Find via Ghidra reverse engineering, TSL: TODO: Find via Ghidra reverse engineering): Module state validation
         /// Original implementation: Verifies that area states belong to the specified module
         /// by checking if areas are present in the module's Mod_Area_list
-        /// 
+        ///
         /// Reverse engineering notes:
         /// - Located via string reference: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
         /// - Function validates module state during save/load operations
@@ -1974,20 +1974,20 @@ namespace Andastra.Runtime.Core.Save
         /// - Validates by iterating through saved area states and checking if they belong to the module
         /// - Uses Mod_Area_list from module IFO file to verify area-to-module relationships
         /// - Original game behavior: Returns true if any area state belongs to the specified module
-        /// 
+        ///
         /// Implementation details:
         /// - Module states are stored as area states in the save file
         /// - Each module contains a list of areas in its Mod_Area_list field (GFF List in IFO file)
         /// - Validation ensures area states are correctly associated with their parent modules
         /// - Case-insensitive ResRef comparison matches original game behavior
         /// - Handles both loaded modules (via IModule.GetArea()) and unloaded modules (via ModuleAreaMappings)
-        /// 
+        ///
         /// Cross-engine analysis:
         /// - Odyssey (swkotor.exe, swkotor2.exe): Mod_Area_list in IFO GFF file
         /// - Aurora (nwmain.exe): Similar area list in Module.ifo
         /// - Eclipse (daorigins.exe, DragonAge2.exe): Area list in module definition
         /// - Infinity: Level area associations
-        /// 
+        ///
         /// Common pattern: All engines maintain a list of areas that belong to each module.
         /// This validation ensures save game integrity by verifying area-to-module relationships.
         /// </remarks>
@@ -2128,7 +2128,7 @@ namespace Andastra.Runtime.Core.Save
         /// Original implementation: Retrieves module state by verifying that the current area
         /// belongs to the specified module before returning the state
         /// </remarks>
-        public Module.ModuleState GetModuleState(string moduleResRef)
+        public Module.SavedModuleState GetModuleState(string moduleResRef)
         {
             if (string.IsNullOrEmpty(moduleResRef))
             {
@@ -2172,7 +2172,7 @@ namespace Andastra.Runtime.Core.Save
         /// <summary>
         /// Converts ModuleState to AreaState for storage.
         /// </summary>
-        private AreaState CreateAreaStateFromModuleState(Module.ModuleState moduleState)
+        private AreaState CreateAreaStateFromModuleState(Module.SavedModuleState moduleState)
         {
             var areaState = new AreaState();
             if (_world.CurrentArea != null)
@@ -2226,9 +2226,9 @@ namespace Andastra.Runtime.Core.Save
         /// <summary>
         /// Converts AreaState back to ModuleState.
         /// </summary>
-        private Module.ModuleState CreateModuleStateFromAreaState(AreaState areaState)
+        private Module.SavedModuleState CreateModuleStateFromAreaState(AreaState areaState)
         {
-            var moduleState = new Module.ModuleState();
+            var moduleState = new Module.SavedModuleState();
 
             // Convert creature states
             foreach (EntityState entityState in areaState.CreatureStates)
@@ -2275,6 +2275,67 @@ namespace Andastra.Runtime.Core.Save
             }
 
             return moduleState;
+        }
+
+        /// <summary>
+        /// Stores saved module state for later retrieval.
+        /// </summary>
+        public void StoreSavedModuleState(string moduleResRef, Module.SavedModuleState state)
+        {
+            if (string.IsNullOrEmpty(moduleResRef) || state == null)
+            {
+                return;
+            }
+
+            if (CurrentSave == null)
+            {
+                CurrentSave = new SaveGameData();
+            }
+
+            // Convert SavedModuleState to AreaState and store it
+            // Since module state is stored per-area, we need to determine which area this belongs to
+            if (_world.CurrentArea != null)
+            {
+                string areaResRef = _world.CurrentArea.ResRef;
+                if (CurrentSave.AreaStates == null)
+                {
+                    CurrentSave.AreaStates = new Dictionary<string, AreaState>();
+                }
+
+                AreaState areaState = CreateAreaStateFromModuleState(state);
+                areaState.AreaResRef = areaResRef;
+                CurrentSave.AreaStates[areaResRef] = areaState;
+            }
+        }
+
+        /// <summary>
+        /// Checks if saved module state exists for the specified module.
+        /// </summary>
+        public bool HasSavedModuleState(string moduleResRef)
+        {
+            if (string.IsNullOrEmpty(moduleResRef) || CurrentSave == null || CurrentSave.AreaStates == null)
+            {
+                return false;
+            }
+
+            // Check if any area state belongs to this module
+            foreach (var kvp in CurrentSave.AreaStates)
+            {
+                if (DoesAreaBelongToModule(kvp.Key, moduleResRef))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Gets saved module state for the specified module.
+        /// </summary>
+        public Module.SavedModuleState GetSavedModuleState(string moduleResRef)
+        {
+            return GetModuleState(moduleResRef);
         }
 
         #endregion

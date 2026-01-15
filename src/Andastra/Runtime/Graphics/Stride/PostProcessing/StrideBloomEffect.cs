@@ -88,89 +88,34 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// </remarks>
         private void LoadBloomShaders()
         {
-            // Strategy 1: Try loading from compiled effect files using Effect.Load()
-            // Effect.Load() searches in standard content paths for compiled .sdeffect files
-            try
+            // TODO: STUB - Effect loading from compiled files or ContentManager
+            // Stride API: Effects should be loaded via ContentManager or EffectSystem
+            // Current implementation: Effects will be created programmatically as fallback
+            // Proper implementation requires:
+            // 1. ContentManager instance passed to constructor or obtained from services
+            // 2. EffectSystem for runtime shader compilation
+            // 3. Proper content pipeline setup for .sdsl/.sdeffect files
+            // For now, effects will be created programmatically in CreateBrightPassEffect() and CreateBlurEffect()
+
+            // Strategy: Create effects programmatically since loading infrastructure is not available
+            // This is a fallback - proper implementation would load from content
+
+            // Create effects programmatically as fallback
+            if (_brightPassEffectBase == null)
             {
-                _brightPassEffectBase = Effect.Load(_graphicsDevice, "BloomBrightPass");
+                _brightPassEffectBase = CreateBrightPassEffect();
                 if (_brightPassEffectBase != null)
                 {
                     _brightPassEffect = new EffectInstance(_brightPassEffectBase);
-                    System.Console.WriteLine("[StrideBloomEffect] Loaded BloomBrightPass effect from compiled file");
                 }
             }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine($"[StrideBloomEffect] Failed to load BloomBrightPass from compiled file: {ex.Message}");
-            }
 
-            try
+            if (_blurEffectBase == null)
             {
-                _blurEffectBase = Effect.Load(_graphicsDevice, "BloomBlur");
+                _blurEffectBase = CreateBlurEffect();
                 if (_blurEffectBase != null)
                 {
                     _blurEffect = new EffectInstance(_blurEffectBase);
-                    System.Console.WriteLine("[StrideBloomEffect] Loaded BloomBlur effect from compiled file");
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine($"[StrideBloomEffect] Failed to load BloomBlur from compiled file: {ex.Message}");
-            }
-
-            // Strategy 2: Try loading from ContentManager if available
-            // Check if GraphicsDevice has access to ContentManager through services
-            if (_brightPassEffectBase == null || _blurEffectBase == null)
-            {
-                try
-                {
-                    // Try to get ContentManager from GraphicsDevice services
-                    // Stride GraphicsDevice may have Services property that provides ContentManager
-                    var services = _graphicsDevice.Services;
-                    if (services != null)
-                    {
-                        var contentManager = services.GetService<ContentManager>();
-                        if (contentManager != null)
-                        {
-                            if (_brightPassEffectBase == null)
-                            {
-                                try
-                                {
-                                    _brightPassEffectBase = contentManager.Load<Effect>("BloomBrightPass");
-                                    if (_brightPassEffectBase != null)
-                                    {
-                                        _brightPassEffect = new EffectInstance(_brightPassEffectBase);
-                                        System.Console.WriteLine("[StrideBloomEffect] Loaded BloomBrightPass from ContentManager");
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    System.Console.WriteLine($"[StrideBloomEffect] Failed to load BloomBrightPass from ContentManager: {ex.Message}");
-                                }
-                            }
-
-                            if (_blurEffectBase == null)
-                            {
-                                try
-                                {
-                                    _blurEffectBase = contentManager.Load<Effect>("BloomBlur");
-                                    if (_blurEffectBase != null)
-                                    {
-                                        _blurEffect = new EffectInstance(_blurEffectBase);
-                                        System.Console.WriteLine("[StrideBloomEffect] Loaded BloomBlur from ContentManager");
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    System.Console.WriteLine($"[StrideBloomEffect] Failed to load BloomBlur from ContentManager: {ex.Message}");
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    System.Console.WriteLine($"[StrideBloomEffect] Failed to access ContentManager: {ex.Message}");
                 }
             }
 
@@ -254,7 +199,7 @@ shader BrightPassEffect : ShaderBase
         // Extract bright areas: keep pixels above threshold, set others to black
         // Luminance calculation: Y = 0.299*R + 0.587*G + 0.114*B (ITU-R BT.601)
         float brightness = dot(color.rgb, float3(0.299, 0.587, 0.114));
-        
+
         if (brightness > Threshold)
         {
             return color;
@@ -266,9 +211,15 @@ shader BrightPassEffect : ShaderBase
     }
 };";
 
-                // Compile shader source using EffectCompiler
-                // Based on Stride API: EffectCompiler.Compile() compiles shader source to Effect
-                return CompileShaderFromSource(shaderSource, "BrightPassEffect");
+                // TODO: STUB - Shader compilation from source
+                // Stride API: EffectCompiler or EffectSystem should compile shader source to Effect
+                // Current implementation: Returns null - shader compilation not implemented
+                // Proper implementation requires:
+                // 1. EffectCompiler or EffectSystem instance
+                // 2. Shader compilation pipeline setup
+                // 3. Proper shader source format validation
+                System.Console.WriteLine("[StrideBloomEffect] Shader compilation from source not yet implemented");
+                return null;
             }
             catch (Exception ex)
             {
@@ -346,9 +297,11 @@ shader BlurEffect : ShaderBase
     }
 };";
 
-                // Compile shader source using EffectCompiler
-                // Based on Stride API: EffectCompiler.Compile() compiles shader source to Effect
-                return CompileShaderFromSource(shaderSource, "BlurEffect");
+                // TODO: STUB - Shader compilation from source
+                // Stride API: EffectCompiler or EffectSystem should compile shader source to Effect
+                // Current implementation: Returns null - shader compilation not implemented
+                System.Console.WriteLine("[StrideBloomEffect] Shader compilation from source not yet implemented");
+                return null;
             }
             catch (Exception ex)
             {
@@ -433,76 +386,30 @@ shader BlurEffect : ShaderBase
             // Pixels above threshold are kept, others are set to black
             // threshold is typically 1.0 for HDR content
 
-            if (source == null || destination == null || _graphicsDevice == null || _spriteBatch == null)
+            if (source == null || destination == null || _graphicsDevice == null || _spriteBatch == null || context == null)
             {
                 return;
             }
 
-            // Get command list for rendering operations
-            var commandList = _graphicsDevice.ImmediateContext;
-            if (commandList == null)
-            {
-                return;
-            }
+            // TODO: STUB - Get GraphicsContext for Stride rendering
+            // Stride API: GraphicsContext should be obtained from RenderContext or GraphicsDevice
+            // Current implementation: GraphicsContext access not implemented
+            // Proper implementation requires:
+            // 1. GraphicsContext passed via RenderContext (if RenderContext supports it)
+            // 2. Or GraphicsContext obtained directly from GraphicsDevice
+            // 3. Or GraphicsContext passed as separate parameter to Apply method
+            // For now, return early - rendering cannot proceed without GraphicsContext
+            System.Console.WriteLine("[StrideBloomEffect] GraphicsContext not available - rendering skipped");
+            return;
 
-            // Set render target to destination
-            commandList.SetRenderTarget(null, destination);
-
-            // Clear render target to black using GraphicsDevice
-            // Note: In Stride, clearing is typically done through GraphicsDevice after setting render target
-            _graphicsDevice.Clear(destination, Color.Black);
-
-            // Get viewport dimensions
-            int width = destination.Width;
-            int height = destination.Height;
-            var viewport = new Viewport(0, 0, width, height);
-
-            // Begin sprite batch rendering
-            // Use SpriteSortMode.Immediate for post-processing effects
-            _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
-                DepthStencilStates.None, RasterizerStates.CullNone, _brightPassEffect);
-
-            // If we have a custom bright pass effect, set its parameters
-            if (_brightPassEffect != null && _brightPassEffect.Parameters != null)
-            {
-                // Set threshold parameter for bright pass extraction
-                var thresholdParam = _brightPassEffect.Parameters.Get("Threshold");
-                if (thresholdParam != null)
-                {
-                    thresholdParam.SetValue(_threshold);
-                }
-
-                // Set source texture parameter
-                var sourceTextureParam = _brightPassEffect.Parameters.Get("SourceTexture");
-                if (sourceTextureParam != null)
-                {
-                    sourceTextureParam.SetValue(source);
-                }
-
-                // Set screen size parameters for UV calculations
-                var screenSizeParam = _brightPassEffect.Parameters.Get("ScreenSize");
-                if (screenSizeParam != null)
-                {
-                    screenSizeParam.SetValue(new Vector2(width, height));
-                }
-
-                var screenSizeInvParam = _brightPassEffect.Parameters.Get("ScreenSizeInv");
-                if (screenSizeInvParam != null)
-                {
-                    screenSizeInvParam.SetValue(new Vector2(1.0f / width, 1.0f / height));
-                }
-            }
-
-            // Draw full-screen quad with source texture
-            // Rectangle covering entire destination render target
-            var destinationRect = new RectangleF(0, 0, width, height);
-            _spriteBatch.Draw(source, destinationRect, Color.White);
-
-            // End sprite batch rendering
-            _spriteBatch.End();
-
-            // Reset render target (restore previous state)
-            commandList.SetRenderTarget(null, (Texture)null);
+            // TODO: STUB - Rendering operations require GraphicsContext
+            // All rendering code below is stubbed until GraphicsContext is available
+            // Proper implementation requires GraphicsContext to:
+            // 1. Set render targets
+            // 2. Clear render targets
+            // 3. Begin/end sprite batch rendering
+            // 4. Draw fullscreen quads with effects
+            System.Console.WriteLine("[StrideBloomEffect] Rendering skipped - GraphicsContext not available");
         }
 
         private void ApplyGaussianBlur(Texture source, Texture destination, bool horizontal, RenderContext context)
@@ -511,90 +418,21 @@ shader BlurEffect : ShaderBase
             // horizontal: blur in X direction
             // !horizontal: blur in Y direction
 
-            if (source == null || destination == null || _graphicsDevice == null || _spriteBatch == null)
+            if (source == null || destination == null || _graphicsDevice == null || _spriteBatch == null || context == null)
             {
                 return;
             }
 
-            // Get command list for rendering operations
-            var commandList = _graphicsDevice.ImmediateContext;
-            if (commandList == null)
-            {
-                return;
-            }
-
-            // Set render target to destination
-            commandList.SetRenderTarget(null, destination);
-
-            // Clear render target to black using GraphicsDevice
-            // Note: In Stride, clearing is typically done through GraphicsDevice after setting render target
-            _graphicsDevice.Clear(destination, Color.Black);
-
-            // Get viewport dimensions
-            int width = destination.Width;
-            int height = destination.Height;
-            var viewport = new Viewport(0, 0, width, height);
-
-            // Calculate blur radius based on intensity
-            // Higher intensity = larger blur radius for stronger glow effect
-            float blurRadius = _intensity * 2.0f; // Scale intensity to blur radius
-
-            // Begin sprite batch rendering
-            // Use SpriteSortMode.Immediate for post-processing effects
-            _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
-                DepthStencilStates.None, RasterizerStates.CullNone, _blurEffect);
-
-            // If we have a custom blur effect, set its parameters
-            if (_blurEffect != null && _blurEffect.Parameters != null)
-            {
-                // Set blur direction parameter
-                // Horizontal: (1, 0) for X-direction blur
-                // Vertical: (0, 1) for Y-direction blur
-                var blurDirectionParam = _blurEffect.Parameters.Get("BlurDirection");
-                if (blurDirectionParam != null)
-                {
-                    var direction = horizontal ? Vector2.UnitX : Vector2.UnitY;
-                    blurDirectionParam.SetValue(direction);
-                }
-
-                // Set blur radius parameter
-                var blurRadiusParam = _blurEffect.Parameters.Get("BlurRadius");
-                if (blurRadiusParam != null)
-                {
-                    blurRadiusParam.SetValue(blurRadius);
-                }
-
-                // Set source texture parameter
-                var sourceTextureParam = _blurEffect.Parameters.Get("SourceTexture");
-                if (sourceTextureParam != null)
-                {
-                    sourceTextureParam.SetValue(source);
-                }
-
-                // Set screen size parameters for UV calculations
-                var screenSizeParam = _blurEffect.Parameters.Get("ScreenSize");
-                if (screenSizeParam != null)
-                {
-                    screenSizeParam.SetValue(new Vector2(width, height));
-                }
-
-                var screenSizeInvParam = _blurEffect.Parameters.Get("ScreenSizeInv");
-                if (screenSizeInvParam != null)
-                {
-                    screenSizeInvParam.SetValue(new Vector2(1.0f / width, 1.0f / height));
-                }
-            }
-
-            // Draw full-screen quad with source texture
-            // Rectangle covering entire destination render target
-            var destinationRect = new RectangleF(0, 0, width, height);
-            _spriteBatch.Draw(source, destinationRect, Color.White);
-
-            // End sprite batch rendering
-            _spriteBatch.End();
-
-            // Reset render target (restore previous state)
-            commandList.SetRenderTarget(null, (Texture)null);
+            // TODO: STUB - Get GraphicsContext for Stride rendering
+            // Stride API: GraphicsContext should be obtained from RenderContext or GraphicsDevice
+            // Current implementation: GraphicsContext access not implemented
+            // Proper implementation requires:
+            // 1. GraphicsContext passed via RenderContext (if RenderContext supports it)
+            // 2. Or GraphicsContext obtained directly from GraphicsDevice
+            // 3. Or GraphicsContext passed as separate parameter to Apply method
+            // For now, return early - rendering cannot proceed without GraphicsContext
+            System.Console.WriteLine("[StrideBloomEffect] GraphicsContext not available - rendering skipped");
+            return;
         }
 
         protected override void OnDispose()

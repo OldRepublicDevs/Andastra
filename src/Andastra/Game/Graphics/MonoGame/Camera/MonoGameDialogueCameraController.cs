@@ -194,7 +194,7 @@ namespace Andastra.Game.Graphics.MonoGame.Camera
         /// Reverse engineered functions:
         ///   - CGuiInGame::GetCameraAnimationName @ 0x006288f0 - Resolves animation name from dialoganimations.2da
         ///   - CGuiInGame::SetDialogAnimations @ 0x006313a0 - Sets camera animations for dialogue entries
-        ///   - 0x006c6020 @ 0x006c6020 - Searches MDL node tree for "camerahook" nodes
+        ///   - 0x006c6020 (SearchMDLNodeTreeForCameraHook) - Searches MDL node tree for "camerahook" nodes
         /// Original implementation: Camera animations are scripted camera movements using camera hooks or predefined angles
         /// Camera animation IDs map to predefined camera movements, hooks, or angles
         /// Full implementation supports camera hooks for precise positioning from MDL models:
@@ -231,7 +231,7 @@ namespace Andastra.Game.Graphics.MonoGame.Camera
                 // Original implementation: Queries MDL model for nodes named "camerahook{N}" and uses their world-space positions
                 // Camera hooks are MDL dummy nodes that define precise camera positions relative to character models
                 // The GetCameraHookPosition method searches MDL node tree recursively for "camerahook{N}" nodes
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006c6020 @ 0x006c6020 searches MDL node tree for "camerahook" nodes
+                // swkotor2.exe: 0x006c6020 (SearchMDLNodeTreeForCameraHook) - Searches MDL node tree for "camerahook" nodes
                 // Implementation:
                 //   1. Constructs camera hook node name (format: "camerahook{N}" where N is hookIndex)
                 //   2. Searches MDL model node tree recursively for matching node name

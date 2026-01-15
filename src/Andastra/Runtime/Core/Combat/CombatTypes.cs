@@ -7,12 +7,21 @@ namespace Andastra.Runtime.Core.Combat
     /// </summary>
     /// <remarks>
     /// Attack Type Enum:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) combat system
-    /// - Located via string references: Combat attack type classification
-    /// - Melee: Unarmed or melee weapon attacks (uses STR modifier)
-    /// - Ranged: Blaster or thrown weapon attacks (uses DEX modifier)
-    /// - Force: Force power attacks (uses WIS modifier for DC)
-    /// - Touch: Touch attacks (ignores armor, uses DEX for AC instead of full AC)
+    /// - CSWSCombatRound::GetWeaponAttackType @ (K1: 0x004d3da0, TSL: TODO: Find equivalent address) combat system
+    /// - Located via string references: "RangedAttack" @ (K1: 0x00746144, TSL: 0x007bf8f8), "OnMeleeAttacked" @ (K1: 0x00749644, TSL: 0x007c1a5c)
+    /// - Original implementation: GetWeaponAttackType returns internal attack type ID (0-8), then weapon's "rangedweapon" property from baseitems.2da determines Melee vs Ranged
+    /// - Internal attack type IDs from GetWeaponAttackType:
+    ///   * 0, 1: Unarmed/melee (no weapon in main hand)
+    ///   * 2: Off-hand attack
+    ///   * 3: Creature weapon (if HasCreatureWeapons returns non-zero)
+    ///   * 4, 5: Melee weapons (main hand, additional attacks)
+    ///   * 7, 8: Unarmed attacks (main hand, additional attacks)
+    /// - Melee vs Ranged determination: Check weapon's "rangedweapon" column in baseitems.2da
+    ///   * If rangedweapon != 0: Ranged attack (uses DEX modifier)
+    ///   * If rangedweapon == 0 or no weapon: Melee attack (uses STR modifier)
+    /// - Force: Force power attacks (uses WIS modifier for DC) - determined by action type, not weapon
+    /// - Touch: Touch attacks (ignores armor, uses DEX for AC instead of full AC) - special case for certain Force powers or effects
+    /// - See CombatSystem.DetermineAttackType() for C# implementation
     /// </remarks>
     public enum AttackType
     {

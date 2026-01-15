@@ -7,10 +7,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Common.Script;
-using Andastra.Parsing.Formats.NCS.Compiler;
-using Andastra.Parsing.Formats.NCS.Compiler.NSS;
+using BioWare.NET.Common;
+using BioWare.NET.Common.Script;
+using BioWare.NET.Resource.Formats.NCS.Compiler;
+using BioWare.NET.Resource.Formats.NCS.Compiler.NSS;
 
 namespace GenerateScriptDefs
 {

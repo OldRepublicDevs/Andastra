@@ -146,7 +146,7 @@ namespace Andastra.Runtime.Core.Party
     /// - Max 3 active party members in field (PT_NUM_MEMBERS)
     /// - Max 12 available NPCs (PT_AVAIL_NPCS list size)
     /// - NPCs persist state when not in active party
-    /// 
+    ///
     /// K2 additions:
     /// - Influence system (PT_INFLUENCE)
     /// - Remote party member control (PT_PUPPETS)
@@ -849,11 +849,18 @@ namespace Andastra.Runtime.Core.Party
             if (!string.IsNullOrEmpty(member.TemplateResRef) && _templateFactory != null)
             {
                 // Use template factory to create entity from UTC template
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EntityFactory.CreateCreatureFromTemplate loads UTC GFF and creates entity
-                // Located via string references: "TemplateResRef" @ 0x007bd00c
+                // EntityFactory.CreateCreatureFromTemplate loads UTC GFF and creates entity
+                // - K1 (swkotor.exe): CSWSCreature::LoadCreature @ 0x00500350 - Main UTC GFF parser entry point
+                //   - Function signature: LoadCreature(CSWSCreature* this, CResGFF* param_1, CResStruct* param_2, int param_3)
+                //   - Called from LoadCreatures @ 0x00504a70 and LoadLimboCreatures @ 0x004c8c70
+                //   - CSWSCreatureStats::ReadStatsFromGff @ 0x00560e60 - Reads creature stats from GFF
+                //   - CSWSCreature::ReadItemsFromGff @ 0x004ffda0 - Reads creature inventory items from GFF
+                // - TSL (swkotor2.exe): LoadCreatureFromTemplate @ 0x005261b0 - Loads creature template from UTC file
+                //   - Calls LoadCreatureTemplateData @ 0x005fb0f0 to load creature data from GFF structure
+                //   - Located via string references: "TemplateResRef" @ 0x007bd00c
                 // Original implementation: Loads UTC GFF, reads creature properties (Tag, FirstName, LastName, Appearance_Type,
                 // FactionID, CurrentHitPoints, MaxHitPoints, ForcePoints, MaxForcePoints, ClassList, Str/Dex/Con/Int/Wis/Cha,
-                // Scripts, Conversation), creates entity with all components properly initialized
+                // Scripts, Conversation, ItemList, Equip_ItemList, FeatList, SkillList, SpecAbilityList), creates entity with all components properly initialized
                 // Tag is set from entity template when entity is created via EntityFactory.CreateCreatureFromTemplate
                 // The template (UTC file) contains the Tag field which is applied during entity creation
                 entity = _templateFactory.CreateCreatureFromTemplate(member.TemplateResRef, spawnPosition, spawnFacing);
@@ -862,7 +869,7 @@ namespace Andastra.Runtime.Core.Party
             // Fallback: Create basic creature entity if template factory not available or template not found
             if (entity == null)
             {
-                entity = _world.CreateEntity(Enums.ObjectType.Creature, spawnPosition, spawnFacing);
+                entity = _world.CreateEntity(ObjectType.Creature, spawnPosition, spawnFacing);
 
                 // If we have a template ResRef but no factory, log a warning
                 if (!string.IsNullOrEmpty(member.TemplateResRef) && _templateFactory == null)
@@ -905,3 +912,4 @@ namespace Andastra.Runtime.Core.Party
         #endregion
     }
 }
+      

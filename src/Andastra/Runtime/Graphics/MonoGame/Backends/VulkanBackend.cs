@@ -278,7 +278,7 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
             uint graphicsQueueFamilyIndex;
             uint computeQueueFamilyIndex;
             uint transferQueueFamilyIndex;
-            RuntimeGraphicsCapabilities capabilities;
+            Andastra.Game.Graphics.MonoGame.Interfaces.GraphicsCapabilities gameCapabilities;
 
             if (!Andastra.Game.Graphics.MonoGame.Backends.VulkanDevice.CreateVulkanInstance(
                 out instance,
@@ -286,10 +286,18 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                 out graphicsQueueFamilyIndex,
                 out computeQueueFamilyIndex,
                 out transferQueueFamilyIndex,
-                out capabilities))
+                out gameCapabilities))
             {
                 return false;
             }
+
+            // Convert Game GraphicsCapabilities to Runtime GraphicsCapabilities
+            RuntimeGraphicsCapabilities capabilities = new RuntimeGraphicsCapabilities
+            {
+                SupportsRaytracing = gameCapabilities.SupportsRaytracing,
+                MaxTextureSize = gameCapabilities.MaxTextureSize,
+                MaxAnisotropy = gameCapabilities.MaxAnisotropy
+            };
 
             // Create logical device
             IntPtr device;
@@ -318,6 +326,14 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
             }
 
             // Create VulkanDevice wrapper
+            // Convert RuntimeGraphicsCapabilities back to Game GraphicsCapabilities for VulkanDevice constructor
+            Andastra.Game.Graphics.MonoGame.Interfaces.GraphicsCapabilities deviceCapabilities = new Andastra.Game.Graphics.MonoGame.Interfaces.GraphicsCapabilities
+            {
+                SupportsRaytracing = capabilities.SupportsRaytracing,
+                MaxTextureSize = capabilities.MaxTextureSize,
+                MaxAnisotropy = capabilities.MaxAnisotropy
+            };
+
             _device = new Andastra.Game.Graphics.MonoGame.Backends.VulkanDevice(
                 device,
                 instance,
@@ -325,9 +341,9 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                 graphicsQueue,
                 computeQueue,
                 transferQueue,
-                capabilities);
+                deviceCapabilities);
 
-            _capabilities = (GraphicsCapabilities)capabilities;
+            _capabilities = capabilities;
 
             // Initialize frame statistics tracking
             _lastFrameStats = new FrameStatistics();
@@ -589,8 +605,16 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                     return false;
                 }
 
+                // Convert RuntimeGraphicsCapabilities to Game GraphicsCapabilities for the method call
+                Andastra.Game.Graphics.MonoGame.Interfaces.GraphicsCapabilities gameCapabilitiesForDevice = new Andastra.Game.Graphics.MonoGame.Interfaces.GraphicsCapabilities
+                {
+                    SupportsRaytracing = capabilities.SupportsRaytracing,
+                    MaxTextureSize = capabilities.MaxTextureSize,
+                    MaxAnisotropy = capabilities.MaxAnisotropy
+                };
+
                 // Call public static method in VulkanDevice
-                return Andastra.Game.Graphics.MonoGame.Backends.VulkanDevice.CreateVulkanDeviceInternal(
+                bool result = Andastra.Game.Graphics.MonoGame.Backends.VulkanDevice.CreateVulkanDeviceInternal(
                     instance,
                     physicalDevice,
                     graphicsQueueFamilyIndex,
@@ -600,7 +624,14 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                     out graphicsQueue,
                     out computeQueue,
                     out transferQueue,
-                    ref capabilities);
+                    ref gameCapabilitiesForDevice);
+
+                // Update capabilities from the method call
+                capabilities.SupportsRaytracing = gameCapabilitiesForDevice.SupportsRaytracing;
+                capabilities.MaxTextureSize = gameCapabilitiesForDevice.MaxTextureSize;
+                capabilities.MaxAnisotropy = gameCapabilitiesForDevice.MaxAnisotropy;
+
+                return result;
             }
             catch (Exception)
             {
