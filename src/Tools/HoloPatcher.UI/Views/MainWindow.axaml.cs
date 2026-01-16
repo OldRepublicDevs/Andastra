@@ -153,10 +153,8 @@ namespace HoloPatcher.UI.Views
                     Console.WriteLine("[RTF] This might mean the XAML control name doesn't match or the control isn't loaded yet.");
                     return;
                 }
-                else
-                {
-                    Console.WriteLine("[RTF] Found RichTextBox by name");
-                }
+
+                Console.WriteLine("[RTF] Found RichTextBox by name");
             }
 
             if (_rtfRichTextBox is null)
@@ -497,13 +495,13 @@ namespace HoloPatcher.UI.Views
                     // Set as plain text content - not as a log entry
                     // This matches Python's set_stripped_rtf_text behavior
                     viewModel.ClearLogText();
-                    viewModel.AddLogEntry(stripped, BioWare.NET.Logger.LogType.Note);
+                    viewModel.AddLogEntry(stripped, BioWare.NET.TSLPatcher.Logger.LogType.Note);
                 }
                 catch (Exception stripEx)
                 {
                     Console.WriteLine($"[RTF] ERROR: Failed to strip RTF: {stripEx.Message}");
                     viewModel.IsRtfContent = false;
-                    viewModel.AddLogEntry("Failed to load RTF content. Please check the console for details.", BioWare.NET.Logger.LogType.Error);
+                    viewModel.AddLogEntry("Failed to load RTF content. Please check the console for details.", BioWare.NET.TSLPatcher.Logger.LogType.Error);
                 }
             }
         }

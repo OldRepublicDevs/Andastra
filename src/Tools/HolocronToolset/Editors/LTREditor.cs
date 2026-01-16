@@ -632,7 +632,7 @@ namespace HolocronToolset.Editors
                 {
                     Setters =
                     {
-                        new Setter(DataGridRow.BackgroundProperty, new SolidColorBrush(Color.FromRgb(240, 240, 240)))
+                        new Setter(DataGridRow.BackgroundProperty, new SolidColorBrush(Avalonia.Media.Color.FromRgb(240, 240, 240)))
                     }
                 };
             }

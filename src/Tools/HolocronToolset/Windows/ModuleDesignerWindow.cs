@@ -9,7 +9,7 @@ using HolocronToolset.Dialogs;
 using HolocronToolset.Windows;
 using BioWare.NET;
 using BioWare.NET.Common;
-using BioWare.NET.Installation;
+using BioWare.NET.Extract;
 using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Tools;

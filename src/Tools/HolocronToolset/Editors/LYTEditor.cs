@@ -10,12 +10,12 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using HolocronToolset.Data;
 using BioWare.NET.Resource.Formats.LYT;
+using HolocronToolset.Data;
 using MDLAuto = BioWare.NET.Resource.Formats.MDL.MDLAuto;
 using ResRef = BioWare.NET.Common.ResRef;
-using Quaternion = Andastra.Utility.Geometry.Quaternion;
+using LYTRoom = BioWare.NET.Resource.Formats.LYT.LYTRoom;
+using Quaternion = System.Numerics.Quaternion;
 using TPCAuto = BioWare.NET.Resource.Formats.TPC.TPCAuto;
 using TPC = BioWare.NET.Resource.Formats.TPC.TPC;
 using TPCTextureFormat = BioWare.NET.Resource.Formats.TPC.TPCTextureFormat;
@@ -28,7 +28,7 @@ namespace HolocronToolset.Editors
     // Original: class LYTEditor(Editor):
     public partial class LYTEditor : Editor
     {
-        private LYT _lyt;
+        private BioWare.NET.Resource.Formats.LYT.LYT _lyt;
         private LYTEditorSettings _settings;
         private Dictionary<string, string> _importedTextures = new Dictionary<string, string>(); // Maps texture name to file path
         private Dictionary<string, string> _importedModels = new Dictionary<string, string>(); // Maps model name (ResRef) to MDL file path
@@ -44,7 +44,7 @@ namespace HolocronToolset.Editors
                 new[] { ResourceType.LYT },
                 installation)
         {
-            _lyt = new LYT();
+            _lyt = new BioWare.NET.Resource.Formats.LYT.LYT();
             _settings = new LYTEditorSettings();
 
             InitializeComponent();
@@ -1779,7 +1779,7 @@ namespace HolocronToolset.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:220-229
         // Original: def update_scene(self):
-        private void LoadLYT(LYT lyt)
+        private void LoadLYT(BioWare.NET.Resource.Formats.LYT.LYT lyt)
         {
             _lyt = lyt;
             UpdateScene();
@@ -1798,7 +1798,7 @@ namespace HolocronToolset.Editors
         public override void New()
         {
             base.New();
-            _lyt = new LYT();
+            _lyt = new BioWare.NET.Resource.Formats.LYT.LYT();
             UpdateScene();
         }
 

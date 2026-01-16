@@ -5,7 +5,7 @@ using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
-using BioWare.NET.Installation;
+using BioWare.NET.Extract;
 using BioWare.NET.Tools;
 
 namespace HolocronToolset.Dialogs
@@ -170,7 +170,7 @@ namespace HolocronToolset.Dialogs
 
             // Use try-catch to handle cases where XAML controls might not be available (e.g., in tests)
             Ui = new CloneModuleDialogUi();
-            
+
             try
             {
                 // Find controls from XAML
@@ -284,12 +284,11 @@ namespace HolocronToolset.Dialogs
             foreach (var installation in _installations.Values)
             {
                 var moduleNames = installation.ModuleNames();
-                foreach (var kvp in moduleNames)
+                foreach ((string filename, string value) in moduleNames)
                 {
-                    string filename = kvp.Key;
-                    string name = kvp.Value ?? "";
+                    string name = value ?? "";
                     // Matching PyKotor: Module.filepath_to_root(filename)
-                    string root = BioWare.NET.Installation.Installation.GetModuleRoot(filename);
+                    string root = Installation.GetModuleRoot(filename);
                     if (!options.ContainsKey(root))
                     {
                         options[root] = new ModuleOption(name, root, new List<string>(), installation);

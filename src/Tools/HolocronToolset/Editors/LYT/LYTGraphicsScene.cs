@@ -165,9 +165,9 @@ namespace HolocronToolset.Editors.LYT
         /// <summary>
         /// Renders the graphics item.
         /// </summary>
-        protected override void OnRender(DrawingContext context)
+        public override void Render(DrawingContext context)
         {
-            base.OnRender(context);
+            base.Render(context);
             RenderItem(context);
         }
 

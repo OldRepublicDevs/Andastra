@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Media;
-using BioWare.NET.Installation;
+using BioWare.NET.Extract;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;

@@ -8,6 +8,7 @@ using BioWare.NET.Resource.Formats.GFF.Generics;
 using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using HolocronToolset.Data;
+using Game = BioWare.NET.Common.BioWareGame;
 using GFFAuto = BioWare.NET.Resource.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.Editors

@@ -21,6 +21,7 @@ using HolocronToolset.Widgets;
 using HolocronToolset.Widgets.Edit;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using Game = BioWare.NET.Common.BioWareGame;
 using GFFAuto = BioWare.NET.Resource.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.Editors
@@ -426,10 +427,10 @@ namespace HolocronToolset.Editors
             // Load required 2da files if they have not been loaded already
             List<string> required = new List<string> { HTInstallation.TwoDADoors, HTInstallation.TwoDAFactions, "genericdoors" };
             installation.HtBatchCache2DA(required);
-            
+
             // Cache genericdoors.2da for preview
             _genericdoors2da = installation.HtGetCache2DA("genericdoors");
-            
+
             if (_previewRenderer != null)
             {
                 _previewRenderer.Installation = installation;
@@ -1071,12 +1072,12 @@ namespace HolocronToolset.Editors
         public void Update3dPreview()
         {
             bool showPreview = _globalSettings.ShowPreviewUTD;
-            
+
             if (_previewRenderer != null)
             {
                 _previewRenderer.IsVisible = showPreview;
             }
-            
+
             if (_modelInfoGroupBox != null)
             {
                 _modelInfoGroupBox.IsVisible = showPreview;
@@ -1148,7 +1149,7 @@ namespace HolocronToolset.Editors
             }
 
             // Check if appearance_id is within valid range
-            if (utd.AppearanceId < 0 || utd.AppearanceId >= _genericdoors2da.RowCount)
+            if (utd.AppearanceId < 0 || utd.AppearanceId >= _genericdoors2da.GetHeight())
             {
                 if (_previewRenderer != null)
                 {
@@ -1157,7 +1158,7 @@ namespace HolocronToolset.Editors
                 if (_modelInfoLabel != null)
                 {
                     infoLines.Add("❌ Invalid appearance ID");
-                    infoLines.Add($"Range: 0-{_genericdoors2da.RowCount - 1}");
+                    infoLines.Add($"Range: 0-{_genericdoors2da.GetHeight() - 1}");
                     _modelInfoLabel.Text = string.Join("\n", infoLines);
                 }
                 return;
@@ -1181,7 +1182,8 @@ namespace HolocronToolset.Editors
                     try
                     {
                         var row = _genericdoors2da.GetRow(utd.AppearanceId);
-                        if (row.HasString("modelname"))
+                        var rowData = row.GetData();
+                        if (rowData.ContainsKey("modelname"))
                         {
                             string modelnameCol = row.GetString("modelname");
                             if (string.IsNullOrEmpty(modelnameCol) || modelnameCol.Trim() == "****")
@@ -1192,7 +1194,7 @@ namespace HolocronToolset.Editors
                         }
                         else
                         {
-                            infoLines.Add("genericdoors.2da row {utd.AppearanceId}: 'modelname' = '[column missing]'");
+                            infoLines.Add($"genericdoors.2da row {utd.AppearanceId}: 'modelname' = '[column missing]'");
                         }
                     }
                     catch
@@ -1234,9 +1236,9 @@ namespace HolocronToolset.Editors
                     try
                     {
                         string mdlPath = mdl.FilePath;
-                        if (mdlPath.StartsWith(_installation.Path()))
+                        if (mdlPath.StartsWith(_installation.Path))
                         {
-                            mdlPath = mdlPath.Substring(_installation.Path().Length).TrimStart('\\', '/');
+                            mdlPath = mdlPath.Substring(_installation.Path.Length).TrimStart('\\', '/');
                         }
                         infoLines.Add($"MDL: {mdlPath}");
                     }
@@ -1248,9 +1250,9 @@ namespace HolocronToolset.Editors
                     try
                     {
                         string mdxPath = mdx.FilePath;
-                        if (mdxPath.StartsWith(_installation.Path()))
+                        if (mdxPath.StartsWith(_installation.Path))
                         {
-                            mdxPath = mdxPath.Substring(_installation.Path().Length).TrimStart('\\', '/');
+                            mdxPath = mdxPath.Substring(_installation.Path.Length).TrimStart('\\', '/');
                         }
                         infoLines.Add($"MDX: {mdxPath}");
                     }

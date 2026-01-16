@@ -14,7 +14,7 @@ using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Tools;
 using BioWare.NET.Common.Script;
-using BioWare.NET.Resource.Formats.Capsule;
+using BioWare.NET.Extract.Capsule;
 using HolocronToolset.Common;
 using HolocronToolset.Common.Widgets;
 using HolocronToolset.Data;
@@ -5033,7 +5033,7 @@ namespace HolocronToolset.Editors
             try
             {
                 // Find the TreeViewItem corresponding to the current file
-                var fileItem = FindTreeViewItemByPath(_fileExplorerView.ItemsSource, _filepath);
+                var fileItem = FindTreeViewItemByPath(_fileExplorerView.ItemsSource?.Cast<object>() ?? Enumerable.Empty<object>(), _filepath);
                 if (fileItem != null)
                 {
                     // Expand all parent directories to make the file visible
@@ -5082,7 +5082,7 @@ namespace HolocronToolset.Editors
                 // Recursively search in child items
                 if (treeItem.ItemsSource != null)
                 {
-                    var foundInChildren = FindTreeViewItemByPath(treeItem.ItemsSource, targetPath);
+                    var foundInChildren = FindTreeViewItemByPath(treeItem.ItemsSource.Cast<object>(), targetPath);
                     if (foundInChildren != null)
                     {
                         return foundInChildren;
@@ -5111,7 +5111,7 @@ namespace HolocronToolset.Editors
             }
 
             // Find the parent item and expand it recursively
-            var parent = FindParentTreeViewItem(_fileExplorerView.ItemsSource, item);
+            var parent = FindParentTreeViewItem(_fileExplorerView.ItemsSource?.Cast<object>() ?? Enumerable.Empty<object>(), item);
             if (parent != null)
             {
                 ExpandParentDirectories(parent);
@@ -5150,7 +5150,7 @@ namespace HolocronToolset.Editors
                     }
 
                     // Recursively search in grandchildren
-                    var foundParent = FindParentTreeViewItem(treeItem.ItemsSource, childItem);
+                    var foundParent = FindParentTreeViewItem(treeItem.ItemsSource?.Cast<object>() ?? Enumerable.Empty<object>(), childItem);
                     if (foundParent != null)
                     {
                         return foundParent;
@@ -5181,8 +5181,7 @@ namespace HolocronToolset.Editors
                     // Use BringIntoView to scroll the item into view
                     item.BringIntoView();
 
-                    // Also try to scroll the TreeView itself if it's in a ScrollViewer
-                    _fileExplorerView.BringIntoView(item);
+                    // Bring the item itself into view (handled by item.BringIntoView() above)
                 }
                 else
                 {
@@ -5532,7 +5531,13 @@ namespace HolocronToolset.Editors
             {
                 // For other file types, delegate to the main window to open appropriate editor
                 // Create a FileResource for the file
-                var fileResource = new FileResource(fullPath, Path.GetFileNameWithoutExtension(fullPath), resourceType);
+                var fileInfo = new FileInfo(fullPath);
+                var fileResource = new FileResource(
+                    Path.GetFileNameWithoutExtension(fullPath),
+                    resourceType,
+                    (int)fileInfo.Length,
+                    0,
+                    fullPath);
 
                 // Use WindowUtils to open the appropriate editor
                 // Pass this window as the parent

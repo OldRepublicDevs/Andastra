@@ -350,8 +350,10 @@ namespace HolocronToolset.Widgets
 
                 // Open texture preview dialog
                 string texturePath = GetTexturePath(textureName);
+                var topLevel = TopLevel.GetTopLevel(this);
+                var window = topLevel as Window;
                 var previewDialog = new TexturePreviewDialog(
-                    this.FindAncestorOfType<Window>(),
+                    window,
                     textureName,
                     texturePath);
                 previewDialog.Show();

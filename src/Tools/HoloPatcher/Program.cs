@@ -7,9 +7,11 @@ using BioWare.NET;
 using BioWare.NET.Common.Logger;
 using HoloPatcher.UI;
 using HoloPatcher.UI.ViewModels;
+using HoloPatcherCore = HoloPatcher.UI.Core;
+using BioWare.NET.TSLPatcher.Logger;
 using JetBrains.Annotations;
 
-namespace Andastra.Patcher
+namespace HoloPatcher
 {
 
     class Program
@@ -114,7 +116,7 @@ namespace Andastra.Patcher
             if (string.IsNullOrEmpty(args.TslPatchData))
             {
                 Console.Error.WriteLine("[Error] No mod path specified. Use --tslpatchdata <path>");
-                Environment.Exit((int)Core.ExitCode.NumberOfArgs);
+                Environment.Exit((int)HoloPatcher.UI.Core.ExitCode.NumberOfArgs);
                 return;
             }
 
@@ -151,19 +153,19 @@ namespace Andastra.Patcher
             if (string.IsNullOrEmpty(args.GameDir))
             {
                 Console.Error.WriteLine("[Error] No game directory specified. Use --game-dir <path>");
-                Environment.Exit((int)Core.ExitCode.NumberOfArgs);
+                Environment.Exit((int)HoloPatcher.UI.Core.ExitCode.NumberOfArgs);
                 return;
             }
 
             string gamePath;
             try
             {
-                gamePath = Core.ValidateGameDirectory(args.GameDir);
+                gamePath = HoloPatcher.UI.Core.ValidateGameDirectory(args.GameDir);
             }
             catch (ArgumentException ex)
             {
                 Console.Error.WriteLine($"[Error] Invalid game directory: {ex.GetType().Name}: {ex.Message}");
-                Environment.Exit((int)Core.ExitCode.NumberOfArgs);
+                Environment.Exit((int)HoloPatcher.UI.Core.ExitCode.NumberOfArgs);
                 return;
             }
 
@@ -171,7 +173,7 @@ namespace Andastra.Patcher
             if (!Core.ValidateInstallPaths(modInfo.ModPath, gamePath))
             {
                 Console.Error.WriteLine("[Error] Invalid mod or game paths");
-                Environment.Exit((int)Core.ExitCode.NumberOfArgs);
+                Environment.Exit((int)HoloPatcher.UI.Core.ExitCode.NumberOfArgs);
                 return;
             }
 
@@ -180,13 +182,13 @@ namespace Andastra.Patcher
             if (numActions > 1)
             {
                 Console.Error.WriteLine("[Error] Cannot run more than one of [--install, --uninstall, --validate]");
-                Environment.Exit((int)Core.ExitCode.NumberOfArgs);
+                Environment.Exit((int)HoloPatcher.UI.Core.ExitCode.NumberOfArgs);
                 return;
             }
             if (numActions == 0)
             {
                 Console.Error.WriteLine("[Error] Must specify one of [--install, --uninstall, --validate] for CLI mode");
-                Environment.Exit((int)Core.ExitCode.NumberOfArgs);
+                Environment.Exit((int)HoloPatcher.UI.Core.ExitCode.NumberOfArgs);
                 return;
             }
 
@@ -197,7 +199,7 @@ namespace Andastra.Patcher
                 {
                     Console.WriteLine($"[Info] Installing mod from {modInfo.ModPath} to {gamePath}");
                     var cancellationToken = new CancellationToken();
-                    Core.InstallResult result = Core.InstallMod(
+                    HoloPatcher.UI.Core.InstallResult result = HoloPatcher.UI.Core.InstallMod(
                         modInfo.ModPath,
                         gamePath,
                         modInfo.Namespaces,
@@ -206,18 +208,18 @@ namespace Andastra.Patcher
                         cancellationToken);
 
                     Console.WriteLine($"[Info] Install completed: {result.NumErrors} errors, {result.NumWarnings} warnings, {result.NumPatches} patches");
-                    Console.WriteLine($"[Info] Install time: {Core.FormatInstallTime(result.InstallTime)}");
+                    Console.WriteLine($"[Info] Install time: {HoloPatcher.UI.Core.FormatInstallTime(result.InstallTime)}");
 
                     if (result.NumErrors > 0)
                     {
-                        Environment.Exit((int)Core.ExitCode.InstallCompletedWithErrors);
+                        Environment.Exit((int)HoloPatcher.UI.Core.ExitCode.InstallCompletedWithErrors);
                     }
                     Environment.Exit((int)Core.ExitCode.Success);
                 }
                 else if (args.Uninstall)
                 {
                     Console.WriteLine($"[Info] Uninstalling mod from {gamePath}");
-                    bool fullyRan = Core.UninstallMod(modInfo.ModPath, gamePath, logger);
+                    bool fullyRan = HoloPatcher.UI.Core.UninstallMod(modInfo.ModPath, gamePath, logger);
                     if (fullyRan)
                     {
                         Console.WriteLine("[Info] Uninstall completed successfully");
@@ -243,7 +245,7 @@ namespace Andastra.Patcher
                 {
                     Console.Error.WriteLine($"Inner Exception: {ex.InnerException.Message}");
                 }
-                Environment.Exit((int)Core.ExitCode.ExceptionDuringInstall);
+                Environment.Exit((int)HoloPatcher.UI.Core.ExitCode.ExceptionDuringInstall);
             }
         }
 

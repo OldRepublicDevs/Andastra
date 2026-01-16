@@ -20,6 +20,7 @@ using HolocronToolset.Widgets;
 using HolocronToolset.Widgets.Edit;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using Game = BioWare.NET.Common.BioWareGame;
 using GFFAuto = BioWare.NET.Resource.Formats.GFF.GFFAuto;
 using Window = Avalonia.Controls.Window;
 using UTE = BioWare.NET.Resource.Formats.GFF.Generics.UTE;
@@ -454,7 +455,7 @@ namespace HolocronToolset.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:133-143
         // Original: def load(self, filepath, resref, restype, data):
-        public override void Load(string filepath, string resref, Common.ResourceType restype, byte[] data)
+        public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
             // Matching PyKotor implementation: ute: UTE = read_ute(data); self._loadUTE(ute)

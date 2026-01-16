@@ -15,7 +15,7 @@ using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using DLGType = BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLG;
 using DLGHelper = BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLGHelper;
-using BioWare.NET.Resource.Formats.Capsule;
+using BioWare.NET.Extract.Capsule;
 using Avalonia.Controls.Primitives;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;

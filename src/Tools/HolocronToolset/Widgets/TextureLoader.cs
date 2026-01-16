@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using BioWare.NET.Installation;
+using BioWare.NET.Extract;
 using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.TPC;
@@ -387,7 +387,7 @@ namespace HolocronToolset.Widgets
             // - data (variable length bytes)
 
             using (var ms = new MemoryStream())
-            using (var writer = new BinaryWriter(ms))
+            using (var writer = new System.IO.BinaryWriter(ms))
             {
                 // Matching PyKotor: struct.pack("<IIII", mipmap.width, mipmap.height, mipmap.tpc_format.value, len(mipmap.data))
                 writer.Write(mipmap.Width);
@@ -416,7 +416,7 @@ namespace HolocronToolset.Widgets
 
             // Matching PyKotor: width, height, format_value, data_length = struct.unpack("<IIII", data[:header_size])
             using (var ms = new MemoryStream(data))
-            using (var reader = new BinaryReader(ms))
+            using (var reader = new System.IO.BinaryReader(ms))
             {
                 int width = reader.ReadInt32();
                 int height = reader.ReadInt32();

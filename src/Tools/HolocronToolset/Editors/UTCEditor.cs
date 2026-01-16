@@ -2,7 +2,7 @@ using BioWare.NET.Common;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using BioWare.NET.Installation;
+using BioWare.NET.Extract;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
@@ -22,11 +22,12 @@ using UTCClass = BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTCClass;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using HolocronToolset.Widgets;
+using Game = BioWare.NET.Common.BioWareGame;
 using GFFAuto = BioWare.NET.Resource.Formats.GFF.GFFAuto;
 using UTC = BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTC;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
-using BioWare.NET.Resource.Formats.Capsule;
+using BioWare.NET.Extract.Capsule;
 
 namespace HolocronToolset.Editors
 {

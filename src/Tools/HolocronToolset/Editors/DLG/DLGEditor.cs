@@ -13,7 +13,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using BioWare.NET;
 using BioWare.NET.Common;
-using BioWare.NET.Installation;
+using BioWare.NET.Extract;
 using BioWare.NET.Common.Logger;
 using BioWare.NET.Common;
 using BioWare.NET.Resource;
@@ -3609,13 +3609,13 @@ namespace HolocronToolset.Editors.DLG
 
                     // Matching PyKotor implementation: if isinstance(item, DLGStandardItem): self.model.update_item_display_text(item)
                     // Matching PyKotor implementation: elif isinstance(source_widget, DLGListWidget): source_widget.update_item(item)
-                    if (item is DLGStandardItem)
+                    if (item is DLGStandardItem standardItem)
                     {
-                        _model.UpdateItemDisplayText(item);
+                        _model.UpdateItemDisplayText(standardItem);
                     }
-                    else if (sourceWidget is DLGListWidget listWidgetForUpdate)
+                    else if (sourceWidget is DLGListWidget listWidgetForUpdate && indexObj is DLGListWidgetItem listWidgetItem)
                     {
-                        listWidgetForUpdate.UpdateItem(item);
+                        listWidgetForUpdate.UpdateItem(listWidgetItem);
                     }
 
                     // Restore selection after tree view update (only for tree view)
@@ -4977,7 +4977,7 @@ namespace HolocronToolset.Editors.DLG
                         "Copy Failed",
                         "Clipboard is not available. Unable to copy path to clipboard.",
                         ButtonEnum.Ok,
-                        Icon.Error);
+                        MsBox.Avalonia.Enums.Icon.Error);
                     await msgBox.ShowAsync();
                 }
             }
@@ -4989,7 +4989,7 @@ namespace HolocronToolset.Editors.DLG
                     "Copy Failed",
                     $"Failed to copy path to clipboard:\n{ex.Message}",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 await msgBox.ShowAsync();
             }
         }

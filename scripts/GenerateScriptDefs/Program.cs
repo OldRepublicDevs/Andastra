@@ -1,4 +1,4 @@
-﻿// Matching PyKotor implementation at Libraries/PyKotor/scripts/generate_scriptdefs.py
+// Matching PyKotor implementation at Libraries/PyKotor/scripts/generate_scriptdefs.py
 // Original: """Generate scriptdefs.py from NSS files using the actual NCS lexer/parser."""
 using System;
 using System.Collections.Generic;
@@ -11,6 +11,7 @@ using BioWare.NET.Common;
 using BioWare.NET.Common.Script;
 using BioWare.NET.Resource.Formats.NCS.Compiler;
 using BioWare.NET.Resource.Formats.NCS.Compiler.NSS;
+using Game = BioWare.NET.Common.BioWareGame;
 
 namespace GenerateScriptDefs
 {
