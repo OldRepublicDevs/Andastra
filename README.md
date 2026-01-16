@@ -20,8 +20,8 @@ Currently, the Odyssey engine implementation is the most mature, with full suppo
 **Andastra** is named to reflect the project's foundational principles and its technical heritage:
 
 - **Logical AND**: Symbolizes the intersection and integration of diverse systems, technologies, and approaches unified within this project.
-- **Astraea**: In Greek mythology, Astraea is the daughter of Eos (goddess of the dawn). Similar to how Xoreos (which inspired our project's name) derives from XOR + EOS, the name "Andastra" draws inspiration from this mythological connection. This link emphasizes Andastra.NET's commitment to accuracy, justice, and the technical legacy of its predecessors.
-- **Andraste**: References the Celtic war goddess, a symbol of determination and strength, and connects to BioWare lore as "The Maker" in the Dragon Age series.
+- **Astraea**: In Greek mythology, Astraea is the daughter of Eos (goddess of the dawn). Similar to how Xoreos (which inspired our project's name) derives from XOR + EOS, the name "Andastra" (ASTRAea) draws inspiration from this mythological connection. This link emphasizes Andastra.NET's commitment to accuracy, justice, and the technical legacy of its predecessors.
+- **Andraste**: References the Celtic war goddess, a symbol of determination and strength, and connects to BioWare lore as a prophet of "The Maker" in the Dragon Age series.
 
 This name tributes Xoreos and reflects the project's goal of faithfully recreating BioWare's classic game engines across multiple engine families and bringing together modern .NET technologies with the precision.
 
@@ -61,14 +61,7 @@ The Andastra runtime is organized into a layered architecture with strict depend
 └─────────────────────────────────────────────────────────────┘
 ```
 
-<<<<<<< Updated upstream
 ### Project Organization
-=======
-**Object Layout** (inferred from assembly):
-
-- Offset 0x10: `FColumns` (TList of column names)
-- Offset 0x18: `FLoaded` (byte, 1 = loaded, 0 = not loaded)
->>>>>>> Stashed changes
 
 **Runtime Projects:**
 
@@ -76,7 +69,7 @@ The Andastra runtime is organized into a layered architecture with strict depend
 - `Andastra.Runtime.Content` - Asset conversion and caching pipeline
 - `Andastra.Runtime.Scripting` - NCS virtual machine and NWScript execution
 - `Andastra.Runtime.Graphics` - Rendering backends (MonoGame, Stride)
-- `Andastra.Runtime.Games.Common` - Common abstractions and base classes for all engine families
+- `Andastra.Game.Games.Common` - Common abstractions and base classes for all engine families
 - `Andastra.Runtime.Games.Odyssey` - Odyssey engine implementation (KOTOR, TSL, Jade Empire)
 - `Andastra.Runtime.Games.Aurora` - Aurora engine implementation (NWN, NWN2)
 - `Andastra.Runtime.Games.Eclipse` - Eclipse engine implementation (Dragon Age, Mass Effect)
@@ -85,7 +78,7 @@ The Andastra runtime is organized into a layered architecture with strict depend
 
 **Supporting Projects:**
 
-- `Andastra.Parsing` - File format parsers and resource management
+- `BioWare.NET` - File format parsers and resource management
 - `Andastra.Tests` - Unit and integration tests
 
 **Development Tools:**
@@ -100,7 +93,6 @@ The Andastra runtime is organized into a layered architecture with strict depend
 
 ### Engine Runtime
 
-<<<<<<< Updated upstream
 - **Area System**: Complete area loading with LYT layout, VIS visibility culling, and room mesh rendering
 - **Navigation**: Walkmesh-based pathfinding with A* algorithm, surface material support, and dynamic obstacle handling
 - **Entity System**: Component-based architecture supporting creatures, doors, placeables, triggers, waypoints, and more
@@ -109,19 +101,6 @@ The Andastra runtime is organized into a layered architecture with strict depend
 - **Combat**: Round-based combat system with d20 mechanics, damage calculation, and effect application
 - **Save/Load**: Complete save game serialization compatible with original game formats
 - **Mod Support**: Full resource precedence chain (override → module → save → chitin) matching original behavior
-=======
-```
-Delphi/
-├── TSLPatcher.pas              # Main application unit
-├── TSLPatcher.dpr              # Delphi project file
-├── FileFormats/
-│   ├── TwoDAPatcher.pas        # 2DA file patcher
-│   ├── TLKPatcher.pas          # TLK file patcher
-│   ├── GFFPatcher.pas          # GFF file patcher
-│   └── ...
-└── ...
-```
->>>>>>> Stashed changes
 
 ### Development Tools
 
@@ -132,9 +111,8 @@ Delphi/
 
 ## Requirements
 
-- **.NET 8.0 SDK** or later
+- **.NET 9.0 SDK** or later
 - **MonoGame 3.8** or later (for runtime)
-- **Visual Studio 2022** or **JetBrains Rider** (recommended for development)
 
 ## Building
 
@@ -143,29 +121,13 @@ Delphi/
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd HoloPatcher.NET
 
-# Restore dependencies
-dotnet restore
-
-# Build the solution
-dotnet build Andastra.sln
-
-# Run the game
-dotnet run --project src/Andastra/Game/Andastra.Game.csproj
-```
-
-### Building Specific Components
-
-```bash
 # Build only the runtime
 dotnet build src/Andastra/Runtime/
 
 # Build only the tools
 dotnet build src/Tools/
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 # Build with release configuration
 dotnet build Andastra.sln --configuration Release
 ```
@@ -197,8 +159,8 @@ dotnet run --project src/Tools/NSSComp/NSSComp.NET.csproj
 
 ## Project Structure
 
-```sh
-Andastra/
+```shell
+Andastra.NET/
 ├── src/
 │   ├── Andastra/
 │   │   ├── Game/              # Main executable
@@ -207,14 +169,14 @@ Andastra/
 │   │   │   ├── Content/       # Asset pipeline
 │   │   │   ├── Scripting/     # NCS VM
 │   │   │   ├── Graphics/      # Rendering backends
-│   │   │   └── Games/          # Game implementations
-│   │   ├── Parsing/           # File format parsers
+│   │   │   └── Games/         # Game implementations
 │   │   ├── Tests/             # Unit tests
 │   │   └── Utility/           # Shared utilities
+│   ├── BioWare.NET/               # File format parsers
 │   └── Tools/                 # Development tools
 │       ├── HoloPatcher.UI/
 │       ├── NCSDecomp/
-│       ├── NSSComp/
+│       ├── HolocronToolset.NET/
 │       └── ...
 ├── docs/                      # Documentation
 ├── scripts/                   # Build and utility scripts
@@ -271,11 +233,6 @@ dotnet test --collect:"XPlat Code Coverage"
 - **[Quick Start Guide](docs/QUICKSTART.md)** - Getting started with development
 - **[Engine Roadmap](docs/engine_roadmap.md)** - Implementation roadmap and status
 - **[Architecture Documentation](docs/)** - Detailed architecture and design documents
-=======
-=======
->>>>>>> Stashed changes
-**Total Estimated**: 105-155 hours of reverse engineering work
->>>>>>> Stashed changes
 
 ## Contributing
 
@@ -297,23 +254,8 @@ This project is licensed under the Business Source License 1.1 (BSL-1.1). See th
 
 **Production Use**: Use of this software in a production environment, to provide services to third parties, or to generate revenue requires explicit authorization from the Licensor.
 
-<<<<<<< Updated upstream
 ## Status
 
 Andastra is under active development. The Odyssey engine implementation is the most mature, with core systems functional for KOTOR and TSL. The Aurora, Eclipse, and Infinity engine families have foundational implementations with ongoing development. See the [engine roadmap](docs/engine_roadmap.md) for detailed implementation status across all engine families.
-=======
-## Notes
-
-- The original TSLPatcher.exe is a Delphi application, so all source code must be in Delphi/Object Pascal
-- Many functions are not automatically identified by Ghidra due to Delphi's compilation model
-- Manual function identification and decompilation is required
-- String analysis has provided significant insight into functionality
-- File format knowledge from existing implementations can accelerate parser development
-
----
 
 **Status**: Active reverse engineering project - Contributions welcome!
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
