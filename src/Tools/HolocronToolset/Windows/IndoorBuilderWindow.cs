@@ -667,7 +667,7 @@ namespace HolocronToolset.Windows
                 if (!moduleKit.EnsureLoaded())
                 {
                     // Matching Python lines 651-653: Warning logged if no components found
-                    new BioWare.NET.Logger.RobustLogger().Warning($"No components found for module '{moduleRoot}'");
+                    new BioWare.NET.Common.Logger.RobustLogger().Warning($"No components found for module '{moduleRoot}'");
                     return;
                 }
 
@@ -689,7 +689,7 @@ namespace HolocronToolset.Windows
                 // Matching Python lines 664-667: Exception handling
                 // Original: except Exception:
                 // Original:     RobustLogger().exception(f"Failed to load module '{module_root}'")
-                new BioWare.NET.Logger.RobustLogger().Exception($"Failed to load module '{moduleRoot}': {ex.Message}");
+                new BioWare.NET.Common.Logger.RobustLogger().Exception($"Failed to load module '{moduleRoot}': {ex.Message}");
             }
         }
 

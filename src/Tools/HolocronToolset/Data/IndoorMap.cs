@@ -2,34 +2,28 @@ using BioWare.NET.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using System.IO;
-using System.Text;
 using System.Text.Json;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.ERF;
-using BioWare.NET.Resource.Formats.LYT;
-using BioWare.NET.Resource.Formats.VIS;
-using BioWare.NET.Resource.Formats.GFF.Generics;
-using BioWare.NET.Resource.Formats.GFF.Generics.ARE;
-using BioWare.NET.Resource.Formats.BWM;
-using BioWare.NET.Resource.Formats.TPC;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Tools;
-using SystemTextEncoding = System.Text.Encoding;
-using BioWare.NET.Common.Logger;
-using BioWare.NET.Extract;
-using BioWare.NET.Installation;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using BioWare.NET.Common.Logger;
+using BioWare.NET.Extract;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.BWM;
+using BioWare.NET.Resource.Formats.ERF;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.NET.Resource.Formats.GFF.Generics.ARE;
+using BioWare.NET.Resource.Formats.LYT;
+using BioWare.NET.Resource.Formats.TPC;
+using BioWare.NET.Resource.Formats.VIS;
+using BioWare.NET.Tools;
+using SystemTextEncoding = System.Text.Encoding;
 using Vector4 = System.Numerics.Vector4;
 using Vector2 = System.Numerics.Vector2;
 using Vector3 = System.Numerics.Vector3;
-using Quaternion = System.Numerics.Quaternion;
 
 namespace HolocronToolset.Data
 {
@@ -79,7 +73,7 @@ namespace HolocronToolset.Data
             List<IndoorMapRoom> rooms = null,
             string moduleId = null,
             LocalizedString name = null,
-            ParsingColor lighting = null,
+            BioWare.NET.Common.Color lighting = null,
             string skybox = null,
             Vector3? warpPoint = null,
             bool? targetGameType = null)
@@ -87,7 +81,7 @@ namespace HolocronToolset.Data
             Rooms = rooms ?? new List<IndoorMapRoom>();
             ModuleId = moduleId ?? "test01";
             Name = name ?? LocalizedString.FromEnglish("New Module");
-            Lighting = lighting ?? new ParsingColor(0.5f, 0.5f, 0.5f);
+            Lighting = lighting ?? new BioWare.NET.Common.Color(0.5f, 0.5f, 0.5f);
             Skybox = skybox ?? "";
             WarpPoint = warpPoint ?? System.Numerics.Vector3.Zero;
             // targetGameType: null = use installation.Tsl, true = TSL/K2, false = K1
@@ -97,7 +91,7 @@ namespace HolocronToolset.Data
         public List<IndoorMapRoom> Rooms { get; set; }
         public string ModuleId { get; set; }
         public LocalizedString Name { get; set; }
-        public ParsingColor Lighting { get; set; }
+        public BioWare.NET.Common.Color Lighting { get; set; }
         public string Skybox { get; set; }
         public Vector3 WarpPoint { get; set; }
         // TargetGameType: null = use installation.Tsl, true = TSL/K2, false = K1
@@ -1218,100 +1212,96 @@ namespace HolocronToolset.Data
                                     _vis.AddRoom(paddingName);
                                 }
                                 else
-                                {
                                     new RobustLogger().Info($"No padding key found for door insertion {i} height.");
-                                }
                             }
                         }
                     }
 
                     // Width padding (matching Python lines 537-576)
-                    if (insert.Hook1.Door.Width != insert.Hook2.Door.Width)
+                    if (Math.Abs(insert.Hook1.Door.Width - insert.Hook2.Door.Width) < 0.001f)
                     {
-                        IndoorMapRoom cRoom = insert.Hook1.Door.Height < insert.Hook2.Door.Height ? insert.Room : insert.Room2;
-                        KitComponentHook cHook = insert.Hook1.Door.Height < insert.Hook2.Door.Height ? insert.Hook1 : insert.Hook2;
-                        KitComponentHook altHook = insert.Hook1.Door.Height < insert.Hook2.Door.Height ? insert.Hook2 : insert.Hook1;
+                        continue;
+                    }
 
-                        if (cRoom == null)
+                    IndoorMapRoom cRoom2 = insert.Hook1.Door.Height < insert.Hook2.Door.Height ? insert.Room : insert.Room2;
+                    KitComponentHook cHook2 = insert.Hook1.Door.Height < insert.Hook2.Door.Height ? insert.Hook1 : insert.Hook2;
+                    KitComponentHook altHook2 = insert.Hook1.Door.Height < insert.Hook2.Door.Height ? insert.Hook2 : insert.Hook1;
+
+                    if (cRoom2 == null)
+                    {
+                        new RobustLogger().Warning($"No room found for door insertion {i} width padding. Skipping.");
+                    }
+                    else
+                    {
+                        Kit kit = cRoom2.Component.Kit;
+                        int doorIndex = kit.Doors.IndexOf(cHook2.Door);
+                        if (doorIndex < 0 || !kit.SidePadding.ContainsKey(doorIndex))
                         {
-                            new RobustLogger().Warning($"No room found for door insertion {i} width padding. Skipping.");
+                            continue;
                         }
-                        else
+                        float width = altHook2.Door.Width * 100.0f;
+                        int? paddingKey = null;
+                        foreach (var key in kit.SidePadding[doorIndex].Keys.Where(key => key > width).Where(key => !paddingKey.HasValue || key < paddingKey.Value))
                         {
-                            Kit kit = cRoom.Component.Kit;
-                            int doorIndex = kit.Doors.IndexOf(cHook.Door);
-                            if (doorIndex >= 0 && kit.SidePadding.ContainsKey(doorIndex))
+                            paddingKey = key;
+                        }
+
+                        if (!paddingKey.HasValue)
+                        {
+                            continue;
+                        }
+                        string paddingName = $"{ModuleId}_tpad{paddingCount}";
+                        paddingCount++;
+
+                        // Transform padding model (matching Python lines 558-562)
+                        byte[] padMdl = kit.SidePadding[doorIndex][paddingKey.Value].Mdl;
+                        padMdl = ModelTools.Transform(padMdl, Vector3.Zero, insert.Rotation);
+
+                        // Convert model to target game format (matching Python line 563)
+                        // Use TargetGameType override if set, otherwise use installation.Tsl (uses outer targetTsl variable)
+                        // Python: pad_mdl = model.convert_to_k2(pad_mdl) if target_tsl else model.convert_to_k1(pad_mdl)
+                        padMdl = targetTsl
+                            ? ModelTools.ConvertToK2(padMdl)
+                            : ModelTools.ConvertToK1(padMdl);
+
+                        // Change textures (matching Python line 564)
+                        padMdl = ModelTools.ChangeTextures(padMdl, _texRenames);
+
+                        // Process lightmaps (matching Python lines 565-572)
+                        var lmRenames = new Dictionary<string, string>();
+                        foreach (var lightmap in ModelTools.IterateLightmaps(padMdl))
+                        {
+                            string renamed = $"{ModuleId}_lm{_totalLm}";
+                            _totalLm++;
+                            string lightmapLower = lightmap.ToLowerInvariant();
+                            lmRenames[lightmapLower] = renamed;
+
+                            if (kit.Lightmaps.TryGetValue(lightmapLower, out byte[] lightmapData) ||
+                                kit.Lightmaps.TryGetValue(lightmap, out lightmapData))
                             {
-                                float width = altHook.Door.Width * 100.0f;
-                                int? paddingKey = null;
-                                foreach (var key in kit.SidePadding[doorIndex].Keys)
+                                _mod.SetData(renamed, ResourceType.TGA, lightmapData);
+                                if (kit.Txis.TryGetValue(lightmapLower, out byte[] txiData) ||
+                                    kit.Txis.TryGetValue(lightmap, out txiData))
                                 {
-                                    if (key > width)
-                                    {
-                                        if (!paddingKey.HasValue || key < paddingKey.Value)
-                                        {
-                                            paddingKey = key;
-                                        }
-                                    }
+                                    _mod.SetData(renamed, ResourceType.TXI, txiData);
                                 }
-
-                                if (paddingKey.HasValue)
+                                else
                                 {
-                                    string paddingName = $"{ModuleId}_tpad{paddingCount}";
-                                    paddingCount++;
-
-                                    // Transform padding model (matching Python lines 558-562)
-                                    byte[] padMdl = kit.SidePadding[doorIndex][paddingKey.Value].Mdl;
-                                    padMdl = ModelTools.Transform(padMdl, System.Numerics.Vector3.Zero, insert.Rotation);
-
-                                    // Convert model to target game format (matching Python line 563)
-                                    // Use TargetGameType override if set, otherwise use installation.Tsl (uses outer targetTsl variable)
-                                    // Python: pad_mdl = model.convert_to_k2(pad_mdl) if target_tsl else model.convert_to_k1(pad_mdl)
-                                    padMdl = targetTsl
-                                        ? ModelTools.ConvertToK2(padMdl)
-                                        : ModelTools.ConvertToK1(padMdl);
-
-                                    // Change textures (matching Python line 564)
-                                    padMdl = ModelTools.ChangeTextures(padMdl, _texRenames);
-
-                                    // Process lightmaps (matching Python lines 565-572)
-                                    var lmRenames = new Dictionary<string, string>();
-                                    foreach (var lightmap in ModelTools.IterateLightmaps(padMdl))
-                                    {
-                                        string renamed = $"{ModuleId}_lm{_totalLm}";
-                                        _totalLm++;
-                                        string lightmapLower = lightmap.ToLowerInvariant();
-                                        lmRenames[lightmapLower] = renamed;
-
-                                        if (kit.Lightmaps.TryGetValue(lightmapLower, out byte[] lightmapData) ||
-                                            kit.Lightmaps.TryGetValue(lightmap, out lightmapData))
-                                        {
-                                            _mod.SetData(renamed, ResourceType.TGA, lightmapData);
-                                            if (kit.Txis.TryGetValue(lightmapLower, out byte[] txiData) ||
-                                                kit.Txis.TryGetValue(lightmap, out txiData))
-                                            {
-                                                _mod.SetData(renamed, ResourceType.TXI, txiData);
-                                            }
-                                            else
-                                            {
-                                                _mod.SetData(renamed, ResourceType.TXI, new byte[0]);
-                                            }
-                                        }
-                                    }
-
-                                    // Change lightmaps in model (matching Python line 572)
-                                    padMdl = ModelTools.ChangeLightmaps(padMdl, lmRenames);
-
-                                    // Add padding model resources (matching Python lines 573-574)
-                                    _mod.SetData(paddingName, ResourceType.MDL, padMdl);
-                                    _mod.SetData(paddingName, ResourceType.MDX, kit.SidePadding[doorIndex][paddingKey.Value].Mdx);
-
-                                    // Add padding room to layout and visibility (matching Python lines 575-576)
-                                    _lyt.Rooms.Add(new LYTRoom(new ResRef(paddingName), insert.Position));
-                                    _vis.AddRoom(paddingName);
+                                    _mod.SetData(renamed, ResourceType.TXI, new byte[0]);
                                 }
                             }
                         }
+
+                        // Change lightmaps in model (matching Python line 572)
+                        padMdl = ModelTools.ChangeLightmaps(padMdl, lmRenames);
+
+                        // Add padding model resources (matching Python lines 573-574)
+                        _mod.SetData(paddingName, ResourceType.MDL, padMdl);
+                        _mod.SetData(paddingName, ResourceType.MDX, kit.SidePadding[doorIndex][paddingKey.Value].Mdx);
+
+                        // Add padding room to layout and visibility (matching Python lines 575-576)
+                        _lyt.Rooms.Add(new LYTRoom(new ResRef(paddingName), insert.Position));
+                        _vis.AddRoom(paddingName);
                     }
                 }
             }
@@ -1722,7 +1712,7 @@ namespace HolocronToolset.Data
         private void SetAreaAttributes(MinimapData minimap)
         {
             _are.Tag = ModuleId;
-            _are.DynamicLight = Lighting;
+            _are.DynamicLight = new BioWare.NET.Common.Color(Lighting.R, Lighting.G, Lighting.B);
             _are.Name = Name;
             _are.MapPoint1 = minimap.ImagePointMin;
             _are.MapPoint2 = minimap.ImagePointMax;
@@ -2299,7 +2289,7 @@ namespace HolocronToolset.Data
             Rooms.Clear();
             ModuleId = "test01";
             Name = LocalizedString.FromEnglish("New Module");
-            Lighting = new ParsingColor(0.5f, 0.5f, 0.5f);
+            Lighting = new BioWare.NET.Common.Color(0.5f, 0.5f, 0.5f);
             TargetGameType = null;
         }
 

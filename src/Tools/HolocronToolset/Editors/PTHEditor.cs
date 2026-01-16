@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using BioWare.NET.Common;
@@ -50,7 +51,6 @@ namespace HolocronToolset.Editors
             PathSelection = new PathSelection();
 
             // Set up Avalonia control properties
-            Background = new SolidColorBrush(Avalonia.Media.Color.FromArgb(255, 0, 0, 0));
             Focusable = true;
 
             // Set up event handlers
@@ -174,6 +174,10 @@ namespace HolocronToolset.Editors
         public override void Render(DrawingContext context)
         {
             base.Render(context);
+
+            // Draw background
+            var backgroundBrush = new SolidColorBrush(Avalonia.Media.Color.FromArgb(255, 0, 0, 0));
+            context.FillRectangle(backgroundBrush, new Rect(0, 0, Bounds.Width, Bounds.Height));
 
             if (_pth == null || _pth.Count == 0)
             {

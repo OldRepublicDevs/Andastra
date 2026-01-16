@@ -363,15 +363,24 @@ namespace HoloPatcher.UI.Views
                 }
             }
 
+            // Calculate paragraph positions manually (Paragraph doesn't have StartInDoc property)
+            var paragraphPositions = CalculateParagraphPositions(_editor.FlowDocument);
+
             // Process each paragraph's inlines that overlap with the selection range
             foreach (Paragraph par in paragraphs)
             {
+                int paragraphStart = paragraphPositions.ContainsKey(par) ? paragraphPositions[par] : 0;
+
                 // Process only inlines that overlap with the selection range
                 foreach (IEditable inline in par.Inlines)
                 {
+                    // Calculate inline position within paragraph
+                    int inlineOffsetInParagraph = GetInlineOffsetInParagraph(par, inline);
+                    int inlineLength = GetInlineLength(inline);
+
                     // Calculate absolute position of inline in document
-                    int absInlineStart = par.StartInDoc + inline.TextPositionOfInlineInParagraph;
-                    int absInlineEnd = par.StartInDoc + inline.TextPositionOfInlineInParagraph + inline.InlineLength;
+                    int absInlineStart = paragraphStart + inlineOffsetInParagraph;
+                    int absInlineEnd = absInlineStart + inlineLength;
 
                     // Check if inline overlaps with selection range
                     // An inline overlaps if: absInlineEnd > selectionStart && absInlineStart < selectionEnd
@@ -526,6 +535,61 @@ namespace HoloPatcher.UI.Views
             {
                 MarkDirty();
             }
+        }
+
+        // Helper methods to calculate paragraph and inline positions (Paragraph doesn't have StartInDoc property)
+        private static Dictionary<Paragraph, int> CalculateParagraphPositions(FlowDocument document)
+        {
+            var positions = new Dictionary<Paragraph, int>();
+            int currentOffset = 0;
+
+            foreach (Block block in document.Blocks)
+            {
+                if (block is Paragraph paragraph)
+                {
+                    positions[paragraph] = currentOffset;
+                    currentOffset += GetParagraphTextLength(paragraph);
+                }
+            }
+
+            return positions;
+        }
+
+        private static int GetParagraphTextLength(Paragraph paragraph)
+        {
+            int length = 0;
+            foreach (IEditable inline in paragraph.Inlines)
+            {
+                length += GetInlineLength(inline);
+            }
+            return length;
+        }
+
+        private static int GetInlineOffsetInParagraph(Paragraph paragraph, IEditable targetInline)
+        {
+            int offset = 0;
+            foreach (IEditable inline in paragraph.Inlines)
+            {
+                if (inline == targetInline)
+                {
+                    break;
+                }
+                offset += GetInlineLength(inline);
+            }
+            return offset;
+        }
+
+        private static int GetInlineLength(IEditable inline)
+        {
+            if (inline is EditableRun run)
+            {
+                return run.InlineLength;
+            }
+            else if (inline is Avalonia.Controls.Documents.Run avRun)
+            {
+                return avRun.Text?.Length ?? 0;
+            }
+            return 0;
         }
     }
 }

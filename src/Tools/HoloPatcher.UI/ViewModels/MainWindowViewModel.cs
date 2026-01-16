@@ -14,12 +14,13 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 // BioWare.NET includes Utility files, causing SystemHelpers conflict - use global:: prefix
 using BioWare.NET.Common;
-using BioWare.NET.Config;
-using BioWare.NET.Installation;
-using BioWare.NET.Common.Logger;
-using BioWare.NET.Namespaces;
+using BioWare.NET.Extract;
 using BioWare.NET.TSLPatcher;
-using BioWare.NET.Reader;
+using BioWare.NET.TSLPatcher.Config;
+using BioWare.NET.TSLPatcher.Namespaces;
+using BioWare.NET.TSLPatcher.Reader;
+using BioWare.NET.TSLPatcher.Logger;
+using BioWare.NET.Common.Logger;
 using BioWare.NET.Uninstall;
 using HoloPatcher.UI;
 using HoloPatcher.UI.Update;
@@ -250,7 +251,7 @@ namespace HoloPatcher.UI.ViewModels
         {
             // Initialize RobustLogger for pykotor errors/exceptions/warnings/info
             // Will set log file path when mod is loaded
-            _pykotorLogger = new BioWare.NET.Logger.RobustLogger();
+            _pykotorLogger = new BioWare.NET.Common.Logger.RobustLogger();
 
             // Initialize commands
             BrowseModCommand = new AsyncRelayCommand(BrowseMod);
@@ -721,17 +722,21 @@ namespace HoloPatcher.UI.ViewModels
                             {
                                 MsBox.Avalonia.Base.IMsBox<ButtonResult> box = MessageBoxManager.GetMessageBoxStandard(title, msg, ButtonEnum.YesNoCancel, Icon.Question);
                                 ButtonResult res = await box.ShowAsync();
-                                if (res == ButtonResult.Yes)
+                                switch (res)
                                 {
-                                    result = true;
-                                }
-                                else if (res == ButtonResult.No)
-                                {
-                                    result = false;
-                                }
-                                else
-                                {
-                                    result = null;
+                                    case ButtonResult.Yes:
+                                        result = true;
+                                        break;
+                                    case ButtonResult.No:
+                                        result = false;
+                                        break;
+                                    case ButtonResult.Ok:
+                                    case ButtonResult.Abort:
+                                    case ButtonResult.Cancel:
+                                    case ButtonResult.None:
+                                    default:
+                                        result = null;
+                                        break;
                                 }
                             }).Wait();
                             return result;
@@ -792,7 +797,7 @@ namespace HoloPatcher.UI.ViewModels
             {
                 try
                 {
-                    global::Andastra.Utility.SystemHelpers.FixPermissions(directory, msg => AddLogEntry(msg));
+                    BioWare.NET.Utility.SystemHelpers.FixPermissions(directory, msg => AddLogEntry(msg));
 
                     int numFiles = 0;
                     int numFolders = 0;
@@ -867,7 +872,7 @@ namespace HoloPatcher.UI.ViewModels
                 try
                 {
                     bool madeChange = false;
-                    global::Andastra.Utility.SystemHelpers.FixCaseSensitivity(directory, msg =>
+                    BioWare.NET.Utility.SystemHelpers.FixCaseSensitivity(directory, msg =>
                     {
                         AddLogEntry(msg);
                         madeChange = true;
@@ -995,7 +1000,7 @@ namespace HoloPatcher.UI.ViewModels
             // This properly handles any number of options and provides Cancel functionality
             // ChoiceDialog.Close(option) passes the selected option string, or null for Cancel
             var dialog = new ChoiceDialog(title, message, options);
-            object result = await dialog.ShowDialogAsync(window);
+            object result = await dialog.ShowDialog<object>(window);
 
             // If result is null, user clicked Cancel - return null
             // Otherwise, return the selected option string
@@ -1370,7 +1375,6 @@ namespace HoloPatcher.UI.ViewModels
 
                         // Load the mod
                         await LoadModFromPath(modPath);
-                        return;
                     }
                 }
             }

@@ -115,17 +115,18 @@ namespace HolocronToolset.Utils
             // Remove existing global font style if it exists
             RemoveGlobalFontStyle();
 
-            // Create a style that applies to all controls
+            // Create a style that applies to all text-based controls
             // Matching PyKotor: QApplication.setFont() applies to all widgets
-            // In Avalonia, we use a style with Selector="Control" to match all controls
-            _globalFontStyle = new Style(x => x.OfType<Control>())
+            // In Avalonia, we use a style with Selector targeting TextBlock to match text-based controls
+            // Font properties are defined on TextBlock, not Control
+            _globalFontStyle = new Style(x => x.OfType<TextBlock>())
             {
                 Setters =
                 {
-                    new Setter(Control.FontFamilyProperty, fontFamily),
-                    new Setter(Control.FontSizeProperty, fontSize),
-                    new Setter(Control.FontWeightProperty, fontWeight),
-                    new Setter(Control.FontStyleProperty, fontStyle)
+                    new Setter(TextBlock.FontFamilyProperty, fontFamily),
+                    new Setter(TextBlock.FontSizeProperty, fontSize),
+                    new Setter(TextBlock.FontWeightProperty, fontWeight),
+                    new Setter(TextBlock.FontStyleProperty, fontStyle)
                 }
             };
 

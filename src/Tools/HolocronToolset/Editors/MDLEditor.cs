@@ -7,7 +7,7 @@ using BioWare.NET.Resource.Formats.ERF;
 using BioWare.NET.Resource.Formats.MDL;
 using BioWare.NET.Resource.Formats.MDLData;
 using BioWare.NET.Resource.Formats.RIM;
-using BioWare.NET.Installation;
+using BioWare.NET.Extract;
 using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using HolocronToolset.Data;
@@ -181,7 +181,7 @@ namespace HolocronToolset.Editors
                     $"Could not find the '{resref}' MDL/MDX",
                     "",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 errorBox.ShowAsync();
                 return;
             }

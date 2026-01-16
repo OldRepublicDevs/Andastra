@@ -4,6 +4,7 @@ using System.Numerics;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using BioWare.NET;
+using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.LYT;
 
 namespace HolocronToolset.Dialogs
@@ -122,7 +123,7 @@ namespace HolocronToolset.Dialogs
                 }
 
                 // Update room properties
-                _room.Model = model;
+                _room.Model = new ResRef(model);
                 var newPos = new Vector3(
                     (float)(_xSpin?.Value ?? 0),
                     (float)(_ySpin?.Value ?? 0),
@@ -222,7 +223,7 @@ namespace HolocronToolset.Dialogs
                     return;
                 }
 
-                _track.Model = model;
+                _track.Model = new ResRef(model);
                 var newTrackPos = new Vector3(
                     (float)(_xSpin?.Value ?? 0),
                     (float)(_ySpin?.Value ?? 0),

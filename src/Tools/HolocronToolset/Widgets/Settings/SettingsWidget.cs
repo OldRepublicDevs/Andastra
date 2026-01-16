@@ -8,7 +8,7 @@ using HolocronToolset.Data;
 using HolocronToolset.Widgets.Edit;
 using HolocronToolset.Common;
 using BioWare.NET.Common;
-using Andastra.Utility;
+using BioWare.NET.Utility;
 using SettingsBase = HolocronToolset.Data.Settings;
 
 namespace HolocronToolset.Widgets.Settings
@@ -29,7 +29,7 @@ namespace HolocronToolset.Widgets.Settings
         {
             _binds = new Dictionary<string, SetBindWidget>();
             _colours = new Dictionary<string, ColorEdit>();
-            
+
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:40-43
             // Original: self.noScrollEventFilter: NoScrollEventFilter = NoScrollEventFilter(self)
             // Original: self.hoverEventFilter: HoverEventFilter = HoverEventFilter(self)
@@ -45,7 +45,7 @@ namespace HolocronToolset.Widgets.Settings
         protected override void OnLoaded(RoutedEventArgs e)
         {
             base.OnLoaded(e);
-            
+
             // Install event filters automatically when widget is loaded
             // Matching PyKotor: self.installEventFilters(self, self.noScrollEventFilter)
             InstallEventFilters(this);
@@ -74,11 +74,11 @@ namespace HolocronToolset.Widgets.Settings
             // Set default include types if not provided (matching PyKotor default types)
             if (includeTypes == null)
             {
-                includeTypes = new[] 
-                { 
-                    typeof(ComboBox), 
-                    typeof(Slider), 
-                    typeof(NumericUpDown), 
+                includeTypes = new[]
+                {
+                    typeof(ComboBox),
+                    typeof(Slider),
+                    typeof(NumericUpDown),
                     typeof(CheckBox),
                     // Additional types from PyKotor: QGroupBox, QAbstractSpinBox, QDoubleSpinBox
                     // Note: Avalonia equivalents may differ, but these are the core types
@@ -155,7 +155,7 @@ namespace HolocronToolset.Widgets.Settings
             // Get raw value from settings (may be any type) and validate it
             object rawValue = _settings.GetValue<object>(colourName, 0);
             int colorValue = ValidateColour(colourName, rawValue);
-            widget.SetColor(BioWare.NET.Common.ParsingColor.FromRgbaInteger(colorValue));
+            widget.SetColor(BioWare.NET.Common.Color.FromRgbaInteger(colorValue));
             _colours[colourName] = widget;
         }
 
@@ -163,11 +163,11 @@ namespace HolocronToolset.Widgets.Settings
         // Original: def _reset_and_get_default(self, settingName: str) -> Any:
         /// <summary>
         /// Resets a bind setting to its default value and returns the default.
-        /// 
+        ///
         /// This method uses the SettingsProperty system to reset the setting and retrieve
         /// its default value. If the SettingsProperty system is not available for this setting,
         /// it falls back to returning an empty bind tuple.
-        /// 
+        ///
         /// Matching PyKotor: _reset_and_get_default() in base.py
         /// </summary>
         /// <param name="settingName">The name of the bind setting to reset.</param>
@@ -178,17 +178,17 @@ namespace HolocronToolset.Widgets.Settings
             {
                 // Reset the setting to its default value
                 _settings.ResetSetting(settingName);
-                
+
                 // Get the default value from the SettingsProperty system
                 object defaultValue = _settings.GetDefault(settingName);
                 System.Console.WriteLine($"Due to last error, will use default value '{defaultValue}'");
-                
+
                 // Convert default value to bind tuple
                 if (defaultValue is Tuple<HashSet<Key>, HashSet<PointerUpdateKind>> bindValue)
                 {
                     return bindValue;
                 }
-                
+
                 // Try to deserialize if it's stored as a different format
                 // This handles cases where the value might be stored as JSON or another format
                 if (defaultValue != null)
@@ -207,7 +207,7 @@ namespace HolocronToolset.Widgets.Settings
                         // Conversion failed, fall through to default
                     }
                 }
-                
+
                 // If default is not a bind tuple, return empty bind as fallback
                 System.Console.WriteLine($"Warning: Default value for '{settingName}' is not a bind tuple, using empty bind");
                 return Tuple.Create(new HashSet<Key>(), new HashSet<PointerUpdateKind>());
@@ -231,7 +231,7 @@ namespace HolocronToolset.Widgets.Settings
                 _settings.ResetSetting(settingName);
                 object defaultValue = _settings.GetDefault(settingName);
                 System.Console.WriteLine($"Due to last error, will use default value '{defaultValue}'");
-                
+
                 // Convert default value to int
                 if (defaultValue is int intValue)
                 {

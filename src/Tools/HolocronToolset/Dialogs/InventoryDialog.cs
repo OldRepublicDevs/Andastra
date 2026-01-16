@@ -10,7 +10,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.Capsule;
+using BioWare.NET.Extract.Capsule;
 using BioWare.NET.Resource.Formats.GFF.Generics.UTI;
 using HolocronToolset.Data;
 using System.ComponentModel;

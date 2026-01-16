@@ -183,7 +183,7 @@ namespace HolocronToolset.Dialogs
             foreach (var module in modulesList)
             {
                 // Matching Python: Module.filepath_to_root(module)
-                string moduleRoot = BioWare.NET.Installation.Installation.GetModuleRoot(module);
+                string moduleRoot = BioWare.NET.Extract.Installation.GetModuleRoot(module);
                 string casefoldModuleFileName = (moduleRoot + System.IO.Path.GetExtension(module)).ToLowerInvariant().Trim();
                 
                 if (listedModules.Contains(casefoldModuleFileName))

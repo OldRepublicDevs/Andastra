@@ -8,7 +8,6 @@ using BioWare.NET.Extract;
 using BioWare.NET.Extract.Capsule;
 using BioWare.NET.Resource.Formats.TwoDA;
 using BioWare.NET.Resource.Formats.TPC;
-using BioWare.NET.Installation;
 using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Avalonia;
@@ -16,7 +15,6 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using JetBrains.Annotations;
 using Extract_ResourceResult = BioWare.NET.Extract.ResourceResult;
-using ResourceResult = BioWare.NET.Installation.ResourceResult;
 using LocationResult = BioWare.NET.Extract.LocationResult;
 
 namespace HolocronToolset.Data
@@ -413,7 +411,7 @@ namespace HolocronToolset.Data
             // In Avalonia, we return Bitmap instead of QPixmap
             // Matching PyKotor implementation: converts TPC texture to QPixmap for display
             string iconPath = GetItemIconPath(baseItem, modelVariation, textureVariation);
-            System.Console.WriteLine($"Icon path: '{iconPath}'");
+            Console.WriteLine($"Icon path: '{iconPath}'");
             try
             {
                 // Extract just the filename (basename) and convert to lowercase
@@ -436,7 +434,7 @@ namespace HolocronToolset.Data
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"An error occurred loading the icon at '{iconPath}' model variation '{modelVariation}' and texture variation '{textureVariation}': {ex.Message}");
+                Console.WriteLine($"An error occurred loading the icon at '{iconPath}' model variation '{modelVariation}' and texture variation '{textureVariation}': {ex.Message}");
                 return null;
             }
         }
@@ -477,7 +475,7 @@ namespace HolocronToolset.Data
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"Failed to convert TPC mipmap to Avalonia Bitmap: {ex.Message}");
+                Console.WriteLine($"Failed to convert TPC mipmap to Avalonia Bitmap: {ex.Message}");
                 return null;
             }
         }
@@ -1216,7 +1214,7 @@ namespace HolocronToolset.Data
         public string ModuleId(string moduleFileName, bool useAlternate = false)
         {
             // Extract module root from filename
-            string root = BioWare.NET.Installation.Installation.GetModuleRoot(moduleFileName);
+            string root = BioWare.NET.Extract.Installation.GetModuleRoot(moduleFileName);
             if (useAlternate)
             {
                 // Try to get area name from module

@@ -10,6 +10,7 @@ using BioWare.NET.Resource.Formats.GFF.Generics.UTC;
 using BioWare.NET.Resource.Formats.MDL;
 using BioWare.NET.Resource.Formats.MDLData;
 using BioWare.NET.Resource.Formats.TPC;
+using ResourceType = BioWare.NET.Common.ResourceType;
 using HolocronToolset.Data;
 using JetBrains.Annotations;
 using StrideGraphics = Stride.Graphics;

@@ -16,6 +16,7 @@ using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using HolocronToolset.Widgets;
 using JetBrains.Annotations;
+using Game = BioWare.NET.Common.BioWareGame;
 using GFFAuto = BioWare.NET.Resource.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.Editors

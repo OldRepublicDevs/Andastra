@@ -8,12 +8,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using BioWare.NET;
 using BioWare.NET.Common;
-using BioWare.NET.Config;
-using BioWare.NET.Installation;
-using BioWare.NET.Common.Logger;
-using BioWare.NET.Namespaces;
+using BioWare.NET.Extract;
 using BioWare.NET.TSLPatcher;
-using BioWare.NET.Reader;
+using BioWare.NET.TSLPatcher.Config;
+using BioWare.NET.TSLPatcher.Namespaces;
+using BioWare.NET.TSLPatcher.Reader;
+using BioWare.NET.TSLPatcher.Logger;
 using BioWare.NET.Uninstall;
 using JetBrains.Annotations;
 using HoloPatcher.UI.Update;
@@ -208,20 +208,20 @@ namespace HoloPatcher.UI
 
             int? gameNumber = reader.Config.GameNumber;
             // Can be null if game number not set
-            Game? game = gameNumber.HasValue ? (Game?)gameNumber.Value : null;
+            BioWareGame? game = gameNumber.HasValue ? (BioWareGame?)gameNumber.Value : null;
 
             var gamePaths = new List<string>();
             if (game.HasValue)
             {
                 // Find KOTOR paths from registry and default locations
-                Dictionary<BiowareGame, List<string>> detectedPaths = FindKotorPathsFromDefault();
+                Dictionary<BioWareGame, List<string>> detectedPaths = FindKotorPathsFromDefault();
                 // Can be null if paths not found
                 if (detectedPaths.TryGetValue(game.Value, out List<string> paths))
                 {
                     gamePaths.AddRange(paths);
                 }
                 // If TSL, also include K1 paths
-                if (game.Value == Game.TSL && detectedPaths.TryGetValue(Game.K1, out List<string> k1Paths))
+                if (game.Value == BioWareGame.TSL && detectedPaths.TryGetValue(BioWareGame.K1, out List<string> k1Paths))
                 {
                     gamePaths.AddRange(k1Paths);
                 }
@@ -462,21 +462,21 @@ namespace HoloPatcher.UI
         /// - macOS: Steam, App Store locations
         /// - Linux: Steam, Flatpak, WSL paths
         /// </summary>
-        private static Dictionary<BiowareGame, List<string>> FindKotorPathsFromDefault()
+        private static Dictionary<BioWareGame, List<string>> FindKotorPathsFromDefault()
         {
-            var paths = new Dictionary<BiowareGame, List<string>>
+            var paths = new Dictionary<BioWareGame, List<string>>
             {
-                { Game.K1, new List<string>() },
-                { Game.TSL, new List<string>() }
+                { BioWareGame.K1, new List<string>() },
+                { BioWareGame.TSL, new List<string>() }
             };
 
             // Get platform-specific default paths
-            Dictionary<BiowareGame, List<string>> defaultPaths = GetDefaultPaths();
+            Dictionary<BioWareGame, List<string>> defaultPaths = GetDefaultPaths();
 
             // Check each default path for existence
-            foreach (KeyValuePair<BiowareGame, List<string>> kvp in defaultPaths)
+            foreach (KeyValuePair<BioWareGame, List<string>> kvp in defaultPaths)
             {
-                Game game = kvp.Key;
+                BioWareGame game = kvp.Key;
                 foreach (string path in kvp.Value)
                 {
                     string expandedPath = ExpandPath(path);
@@ -499,18 +499,18 @@ namespace HoloPatcher.UI
         /// <summary>
         /// Gets default KOTOR installation paths for the current platform.
         /// </summary>
-        private static Dictionary<BiowareGame, List<string>> GetDefaultPaths()
+        private static Dictionary<BioWareGame, List<string>> GetDefaultPaths()
         {
-            var paths = new Dictionary<BiowareGame, List<string>>
+            var paths = new Dictionary<BioWareGame, List<string>>
             {
-                { Game.K1, new List<string>() },
-                { Game.TSL, new List<string>() }
+                { BioWareGame.K1, new List<string>() },
+                { BioWareGame.TSL, new List<string>() }
             };
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 // Windows K1 paths
-                paths[Game.K1].AddRange(new[]
+                paths[BioWareGame.K1].AddRange(new[]
                 {
                     @"C:\Program Files\Steam\steamapps\common\swkotor",
                     @"C:\Program Files (x86)\Steam\steamapps\common\swkotor",
@@ -521,7 +521,7 @@ namespace HoloPatcher.UI
                 });
 
                 // Windows K2/TSL paths
-                paths[Game.TSL].AddRange(new[]
+                paths[BioWareGame.TSL].AddRange(new[]
                 {
                     @"C:\Program Files\Steam\steamapps\common\Knights of the Old Republic II",
                     @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II",
@@ -533,14 +533,14 @@ namespace HoloPatcher.UI
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 // macOS K1 paths
-                paths[Game.K1].AddRange(new[]
+                paths[BioWareGame.K1].AddRange(new[]
                 {
                     "~/Library/Application Support/Steam/steamapps/common/swkotor/Knights of the Old Republic.app/Contents/Assets",
                     "~/Library/Applications/Steam/steamapps/common/swkotor/Knights of the Old Republic.app/Contents/Assets/",
                 });
 
                 // macOS K2/TSL paths
-                paths[Game.TSL].AddRange(new[]
+                paths[BioWareGame.TSL].AddRange(new[]
                 {
                     "~/Library/Application Support/Steam/steamapps/common/Knights of the Old Republic II/Knights of the Old Republic II.app/Contents/Assets",
                     "~/Library/Applications/Steam/steamapps/common/Knights of the Old Republic II/Star Wars™: Knights of the Old Republic II.app/Contents/GameData",
@@ -552,7 +552,7 @@ namespace HoloPatcher.UI
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 // Linux K1 paths
-                paths[Game.K1].AddRange(new[]
+                paths[BioWareGame.K1].AddRange(new[]
                 {
                     "~/.local/share/steam/common/steamapps/swkotor",
                     "~/.local/share/steam/common/swkotor",
@@ -570,7 +570,7 @@ namespace HoloPatcher.UI
                 });
 
                 // Linux K2/TSL paths
-                paths[Game.TSL].AddRange(new[]
+                paths[BioWareGame.TSL].AddRange(new[]
                 {
                     "~/.local/share/Steam/common/steamapps/Knights of the Old Republic II",
                     "~/.local/share/Steam/common/steamapps/kotor2",
@@ -618,7 +618,7 @@ namespace HoloPatcher.UI
         /// Searches the Windows registry for KOTOR installation paths.
         /// Checks Steam, GOG, and retail CD/DVD installations.
         /// </summary>
-        private static void SearchWindowsRegistry(Dictionary<BiowareGame, List<string>> paths)
+        private static void SearchWindowsRegistry(Dictionary<BioWareGame, List<string>> paths)
         {
 #if WINDOWS
             // Registry paths for K1
@@ -659,9 +659,9 @@ namespace HoloPatcher.UI
             foreach (var (keyPath, valueName) in k1RegistryPaths)
             {
                 string path = GetRegistryValue(keyPath, valueName);
-                if (!string.IsNullOrEmpty(path) && Directory.Exists(path) && !paths[Game.K1].Contains(path))
+                if (!string.IsNullOrEmpty(path) && Directory.Exists(path) && !paths[BioWareGame.K1].Contains(path))
                 {
-                    paths[Game.K1].Add(path);
+                    paths[BioWareGame.K1].Add(path);
                 }
             }
 
@@ -677,9 +677,9 @@ namespace HoloPatcher.UI
 
             // Search Amazon Games for K1 (stored in HKEY_USERS)
             string amazonK1Path = FindAmazonGamesPath("Star Wars - Knights of the Old");
-            if (!string.IsNullOrEmpty(amazonK1Path) && Directory.Exists(amazonK1Path) && !paths[Game.K1].Contains(amazonK1Path))
+            if (!string.IsNullOrEmpty(amazonK1Path) && Directory.Exists(amazonK1Path) && !paths[BioWareGame.K1].Contains(amazonK1Path))
             {
-                paths[Game.K1].Add(amazonK1Path);
+                paths[BioWareGame.K1].Add(amazonK1Path);
             }
 #endif
         }

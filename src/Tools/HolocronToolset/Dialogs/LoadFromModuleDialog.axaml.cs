@@ -5,7 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using BioWare.NET.Common;
 using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.Capsule;
+using BioWare.NET.Extract.Capsule;
 using FileResource = BioWare.NET.Extract.FileResource;
 
 namespace HolocronToolset.Dialogs

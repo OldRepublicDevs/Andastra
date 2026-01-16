@@ -19,6 +19,7 @@ using HolocronToolset.Widgets;
 using HolocronToolset.Widgets.Edit;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using Game = BioWare.NET.Common.BioWareGame;
 using GFFAuto = BioWare.NET.Resource.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.Editors
@@ -1800,7 +1801,7 @@ namespace HolocronToolset.Editors
             // Matching Python: self.ui.mapAxisSelect.currentIndexChanged.connect(self.redoMinimap) (line 89)
             if (_mapAxisSelect != null)
             {
-                _mapAxisSelect.SelectedIndexChanged += (s, e) => RedoMinimap();
+                _mapAxisSelect.SelectionChanged += (s, e) => RedoMinimap();
             }
             // Matching Python: self.ui.mapWorldX1Spin.valueChanged.connect(self.redoMinimap) (line 90)
             if (_mapWorldX1Spin != null)

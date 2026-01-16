@@ -1531,7 +1531,7 @@ namespace HolocronToolset.Data
             var moduleNames = GetModuleNames();
             foreach (var moduleFilename in moduleNames.Keys)
             {
-                string root = BioWare.NET.Installation.Installation.GetModuleRoot(moduleFilename);
+                string root = BioWare.NET.Extract.Installation.GetModuleRoot(moduleFilename);
                 if (!seenRoots.Contains(root))
                 {
                     seenRoots.Add(root);

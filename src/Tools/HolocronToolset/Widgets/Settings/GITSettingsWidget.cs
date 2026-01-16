@@ -3,13 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
-using HolocronToolset.Widgets;
 using HolocronToolset.Widgets.Edit;
-using BioWare.NET.Common;
-using KotorColor = BioWare.NET.Common.ParsingColor;
 
 namespace HolocronToolset.Widgets.Settings
 {
@@ -82,7 +78,7 @@ namespace HolocronToolset.Widgets.Settings
                 var colorEdit = new ColorEdit(this);
                 colorEdit.AllowAlpha = true;
                 colorEdit.Name = colorName + "Edit";
-                
+
                 var colorRow = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5 };
                 colorRow.Children.Add(label);
                 colorRow.Children.Add(colorEdit);
@@ -122,7 +118,7 @@ namespace HolocronToolset.Widgets.Settings
             // Find all ColorEdit widgets in the UI and register them
             // PyKotor pattern: for colorEdit in [widget for widget in dir(self.ui) if "ColourEdit" in widget]:
             //                     self._registerColour(getattr(self.ui, colorEdit), colorEdit[:-4])
-            
+
             // List of all material color property names from GITSettings
             var colorPropertyNames = new[]
             {
@@ -154,7 +150,7 @@ namespace HolocronToolset.Widgets.Settings
                 // Try camelCase version first (PyKotor UI naming convention)
                 var camelCaseName = char.ToLowerInvariant(colorName[0]) + colorName.Substring(1) + "Edit";
                 var colorEdit = this.FindControl<ColorEdit>(camelCaseName);
-                
+
                 // If not found, try with exact case
                 if (colorEdit == null)
                 {
@@ -184,7 +180,7 @@ namespace HolocronToolset.Widgets.Settings
                         var baseName = widgetName.Substring(0, widgetName.Length - 4);
                         // Convert camelCase to PascalCase
                         var propertyName = char.ToUpperInvariant(baseName[0]) + baseName.Substring(1);
-                        
+
                         // Check if this property exists in GITSettings
                         var property = typeof(GITSettings).GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
                         if (property != null && property.PropertyType == typeof(int))
@@ -258,7 +254,7 @@ namespace HolocronToolset.Widgets.Settings
                 // Try camelCase version first (PyKotor UI naming convention)
                 var camelCaseName = char.ToLowerInvariant(bindName[0]) + bindName.Substring(1) + "Edit";
                 var bindWidget = this.FindControl<SetBindWidget>(camelCaseName);
-                
+
                 // If not found, try with exact case
                 if (bindWidget == null)
                 {
@@ -286,7 +282,7 @@ namespace HolocronToolset.Widgets.Settings
                         var baseName = widgetName.Substring(0, widgetName.Length - 4);
                         // Convert camelCase to property name format (already should be correct)
                         var propertyName = baseName;
-                        
+
                         // Check if this property exists in GITSettings
                         var property = typeof(GITSettings).GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
                         if (property != null && property.PropertyType.IsGenericType &&

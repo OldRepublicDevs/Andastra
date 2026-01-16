@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.NCS;
 using HolocronToolset.Data;
-using HolocronToolset.Utils;
+using Game = BioWare.NET.Common.BioWareGame;
 
 namespace HolocronToolset.Utils
 {
@@ -22,7 +19,6 @@ namespace HolocronToolset.Utils
                 return null;
             }
 
-            var settings = new GlobalSettings();
             string extractPath = ScriptUtils.SetupExtractPath();
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_compiler.py:62-64
@@ -39,7 +35,7 @@ namespace HolocronToolset.Utils
                     libraryLookup.Add(extractPath);
                 }
 
-                NCS ncs = NCSAuto.CompileNss(source, game, null, null, libraryLookup);
+                NCS ncs = NCSAuto.CompileNss(source, game, null, libraryLookup);
                 if (ncs == null)
                 {
                     return null;

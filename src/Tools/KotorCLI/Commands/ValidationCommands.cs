@@ -1,6 +1,6 @@
 using System;
 using System.CommandLine;
-using BioWare.NET.Installation;
+using BioWare.NET.Extract;
 using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using KotorCLI.Logging;

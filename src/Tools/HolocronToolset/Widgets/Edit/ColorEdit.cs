@@ -6,7 +6,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using BioWare.NET.Common;
 using HolocronToolset.Dialogs;
-using KotorColor = BioWare.NET.Common.ParsingColor;
+using KotorColor = BioWare.NET.Common.Color;
 
 namespace HolocronToolset.Widgets.Edit
 {
