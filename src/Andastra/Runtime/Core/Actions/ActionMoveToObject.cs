@@ -35,8 +35,9 @@ namespace Andastra.Runtime.Core.Actions
         private BaseCreatureCollisionDetector _collisionDetector;
 
         // Bump counter tracking (matches offset 0x268 in swkotor2.exe entity structure)
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 tracks bump count at param_1[0xe0] + 0x268
-        // Located via string reference: "aborted walking, Maximum number of bumps happened" @ 0x007c0458
+        // K1 (swkotor.exe): CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 - Tracks bump count in CAvoidCreature structure
+        // TSL (swkotor2.exe): UpdateCreatureMovement @ 0x0054be70 - Tracks bump count at offset 0x268 in entity structure (param_1[0xe0] + 0x268)
+        // Located via string references: "aborted walking, Maximum number of bumps happened" @ 0x00747d08 (K1), @ 0x007c0458 (TSL)
         // Maximum bumps: 5 (aborts movement if exceeded)
         private const string BumpCounterKey = "ActionMoveToObject_BumpCounter";
         private const string LastBlockingCreatureKey = "ActionMoveToObject_LastBlockingCreature";
@@ -213,9 +214,9 @@ namespace Andastra.Runtime.Core.Actions
             float distance = toTarget.Length();
 
             // If we're within range, we're done
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ActionMoveToObject implementation
-            // Located via string references: "MOVETO" @ 0x007b6b24, "ActionList" @ 0x007bebdc
-            // Walking collision checking: UpdateCreatureMovement @ 0x0054be70
+            // ActionMoveToObject implementation
+            // Located via string references: "MOVETO" @ 0x0073eb7c (K1), @ 0x007b6b24 (TSL), "ActionList" @ 0x007bebdc (TSL)
+            // Walking collision checking: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 (K1), UpdateCreatureMovement @ 0x0054be70 (TSL)
             // Located via string references:
             //   - "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0
             //   - "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
@@ -271,10 +272,11 @@ namespace Andastra.Runtime.Core.Actions
             Vector3 currentPosition = transform.Position;
             Vector3 newPosition = currentPosition + direction2 * moveDistance;
 
-            // Project position to walkmesh surface (matches 0x004f5070 in swkotor2.exe)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
+            // Project position to walkmesh surface
+            // K1 (swkotor.exe): CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 projects positions to walkmesh after movement
+            // TSL (swkotor2.exe): UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
             // Located via string references: Walkmesh projection in movement system
-            // Original implementation: 0x004f5070 projects 3D position to walkmesh surface height
+            // Original implementation: Projects 3D position to walkmesh surface height using walkmesh height lookup functions
             IArea area = actor.World.CurrentArea;
             if (area != null && area.NavigationMesh != null)
             {
@@ -318,7 +320,8 @@ namespace Andastra.Runtime.Core.Actions
             if (hasCollision)
             {
                 // Get bump counter (stored at offset 0x268 in swkotor2.exe entity structure)
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 tracks bump count at param_1[0xe0] + 0x268
+                // K1 (swkotor.exe): CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 tracks bump count in CAvoidCreature structure
+                // TSL (swkotor2.exe): UpdateCreatureMovement @ 0x0054be70 tracks bump count at offset 0x268 in entity structure (param_1[0xe0] + 0x268)
                 int bumpCount = GetBumpCounter(actor);
                 bumpCount++;
                 SetBumpCounter(actor, bumpCount);
@@ -335,7 +338,8 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Check if same creature blocks repeatedly (matches offset 0x254 in swkotor2.exe)
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement checks if local_c0 == entity ID at offset 0x254
+                // K1 (swkotor.exe): CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 checks if same creature blocks repeatedly in CAvoidCreature structure
+                // TSL (swkotor2.exe): UpdateCreatureMovement @ 0x0054be70 checks if blocking creature ID matches entity ID at offset 0x254
                 // Original implementation: If same creature blocks repeatedly, aborts movement
                 uint lastBlockingCreature = GetLastBlockingCreature(actor);
                 if (blockingCreatureId != 0x7F000000 && blockingCreatureId == lastBlockingCreature)
@@ -492,7 +496,9 @@ namespace Andastra.Runtime.Core.Actions
 
         /// <summary>
         /// Gets the bump counter for an entity.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Bump counter stored at offset 0x268 in entity structure.
+        /// Bump counter stored in CAvoidCreature structure (K1) or at offset 0x268 in entity structure (TSL).
+        /// K1 (swkotor.exe): CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 uses CAvoidCreature structure for bump tracking.
+        /// TSL (swkotor2.exe): UpdateCreatureMovement @ 0x0054be70 stores bump count at offset 0x268.
         /// </summary>
         private int GetBumpCounter(IEntity entity)
         {
