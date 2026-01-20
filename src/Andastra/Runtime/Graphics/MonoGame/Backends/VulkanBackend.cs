@@ -934,9 +934,9 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                     uint queryCount = TIMESTAMP_QUERY_COUNT * 2; // 4 queries total for double buffering
                     object result = createQueryPoolMethod.Invoke(_device, new object[] { queryCount });
 
-                    if (result != null && result is IntPtr)
+                    if (result != null && result is IntPtr v)
                     {
-                        _timestampQueryPool = (IntPtr)result;
+                        _timestampQueryPool = v;
                         _timestampQueriesInitialized = true;
                         return true;
                     }
@@ -1157,13 +1157,8 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
 
                 // Get current command buffer handle
                 // In a full implementation, this would come from the active command buffer
-                // For now, we'll attempt to get it via reflection from VulkanDevice or command list
-                IntPtr vkCommandBuffer = IntPtr.Zero;
-
-                // Try to get command buffer from device or current frame command list
-                // This would typically be obtained from the active command list/command buffer
-                // Since command buffer management is not fully implemented yet, we'll use a placeholder
-                // In the full implementation, this would be: IntPtr vkCommandBuffer = GetCurrentCommandBuffer();
+                // We'll attempt to get it via reflection from VulkanDevice or a current frame command list
+                IntPtr vkCommandBuffer = GetCurrentCommandBuffer();
 
                 // Calculate query index based on current frame and which timestamp (start=0, end=1)
                 // We use double buffering: alternate between query sets 0-1 and 2-3
@@ -1174,18 +1169,29 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                     queryIndex += 1; // End timestamp (odd index)
                 }
 
-                // Call vkCmdWriteTimestamp
+                // Call vkCmdWriteTimestamp if we have a valid command buffer
                 // Signature: void vkCmdWriteTimestamp(VkCommandBuffer commandBuffer, VkPipelineStageFlagBits pipelineStage, VkQueryPool queryPool, uint query);
                 if (vkCommandBuffer != IntPtr.Zero)
                 {
                     System.Reflection.MethodInfo invokeMethod = vkCmdWriteTimestampObj.GetType().GetMethod("Invoke");
                     if (invokeMethod != null)
                     {
-                        invokeMethod.Invoke(vkCmdWriteTimestampObj, new object[] { vkCommandBuffer, pipelineStage, _timestampQueryPool, queryIndex });
+                        try
+                        {
+                            invokeMethod.Invoke(vkCmdWriteTimestampObj, new object[] { vkCommandBuffer, pipelineStage, _timestampQueryPool, queryIndex });
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[VulkanBackend] WriteGpuTimestamp: Failed to invoke vkCmdWriteTimestamp: {ex.Message}");
+                        }
                     }
                 }
-                // Note: In the full implementation, vkCommandBuffer would be valid and timestamps would be written
-                // For now, this provides the framework for timestamp writing
+                else
+                {
+                    // Command buffer not available yet - this is expected if command buffer management isn't fully implemented
+                    // Once command buffer management is implemented, timestamps will be written automatically
+                    // For now, the framework is in place and will work once command buffers are available
+                }
             }
             catch (Exception ex)
             {
