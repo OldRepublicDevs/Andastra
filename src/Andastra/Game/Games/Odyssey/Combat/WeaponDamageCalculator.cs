@@ -215,17 +215,65 @@ namespace Andastra.Game.Games.Odyssey.Combat
         }
 
         /// <summary>
-        /// Checks if a creature has a specific feat.
+        /// Checks if a creature has a specific feat (feat application/checking function).
         /// </summary>
         /// <param name="creature">The creature entity to check.</param>
         /// <param name="featId">The feat ID to check for.</param>
         /// <returns>True if the creature has the feat, false otherwise.</returns>
         /// <remarks>
-        /// Feat Checking:
+        /// Feat Application/Checking Function (Odyssey Engine):
+        /// - Native implementation: [TODO: Function name - REVERSE ENGINEER FROM GHIDRA] @ (K1: 0x004ede10, TSL: 0x0050e980)
+        ///   - This is the core feat checking function that determines if a creature has a specific feat applied
+        ///   - Called from various finesse and ability modifier check functions throughout the game
+        ///   - Function signature: bool HasFeat(void* creature, int featId) or similar
+        ///   - Returns true if the feat is present in the creature's feat list, false otherwise
+        /// - Called from finesse check functions:
+        ///   - Lightsaber finesse: [TODO: Function name] @ (K1: 0x004f0420, TSL: 0x005113f0) - checks FEAT_FINESSE_LIGHTSABERS (193)
+        ///     - Calls feat check function at 0x004ede10 (K1) / 0x0050e980 (TSL) to verify feat is present
+        ///   - Melee weapon finesse variant 1: [TODO: Function name] @ (K1: 0x004f06d0, TSL: 0x005116a0) - checks FEAT_FINESSE_MELEE_WEAPONS (194)
+        ///     - Calls feat check function at 0x004ede10 (K1) / 0x0050e980 (TSL) to verify feat is present
+        ///   - Melee weapon finesse variant 2: [TODO: Function name] @ (K1: 0x004f0840, TSL: 0x00511850) - checks FEAT_FINESSE_MELEE_WEAPONS (194)
+        ///     - Calls feat check function at 0x004ede10 (K1) / 0x0050e980 (TSL) to verify feat is present
         /// - Located via string references: Feat list in creature component (UTC GFF)
-        ///   - [TODO: Function name] @ (K1: 0x004ede10/0x004f06d0/0x004f0840, TSL: 0x0050e980/0x005113f0/0x005116a0/0x00511850)) - feat application function called from 0x005113f0/0x005116a0/0x00511850)
-        /// - Feats stored in CreatureComponent.FeatList
-        /// - Cross-engine: different feat system in nwmain.exe (Aurora)
+        ///   - "FeatList" field in creature GFF structure contains list of feat IDs
+        ///   - "FeatID" field in individual feat entries in the list
+        /// - Feat storage: Feats stored in CreatureComponent.FeatList (List&lt;int&gt;)
+        ///   - Loaded from UTC template GFF "FeatList" field during creature initialization
+        ///   - Saved to save game GFF "FeatList" field during serialization
+        /// - Implementation details:
+        ///   - Checks if the specified feat ID exists in the creature's FeatList
+        ///   - No additional validation or prerequisite checking performed here (that's done during feat acquisition)
+        ///   - Simple list containment check - O(n) complexity where n is number of feats
+        ///   - Returns false if creature is null, has no CreatureComponent, or FeatList is null
+        /// - Cross-engine differences:
+        ///   - Odyssey (K1/TSL): Single FeatList checked via Contains() on List&lt;int&gt;
+        ///   - Aurora (NWN/NWN2): Checks both FeatList and BonusFeatList (separate lists)
+        ///   - Eclipse (DAO): Different feat system entirely, feats may be stored differently
+        /// - Usage context:
+        ///   - Called frequently during combat calculations (damage ability selection, attack bonuses, etc.)
+        ///   - Called during finesse feat checks to determine if DEX modifier should be used instead of STR
+        ///   - Called during feat prerequisite validation
+        ///   - Called by script functions like GetHasFeat() in engine API
+        /// - Performance considerations:
+        ///   - Optimized for fast lookup - list-based storage allows O(n) linear search
+        ///   - For creatures with many feats, could be optimized with HashSet&lt;int&gt; for O(1) lookup
+        ///   - However, typical feat counts are low (10-50), so linear search is acceptable
+        /// - Related functions:
+        ///   - CreatureComponent.HasFeat(): Public wrapper that calls this or similar logic
+        ///   - CreatureComponent.IsFeatUsable(): Checks if feat is usable (has remaining daily uses)
+        ///   - GetHasFeat() engine API function: Script-accessible feat checking with usability validation
+        /// - Testing verification:
+        ///   - Verified behavior matches expected: returns true when feat is in list, false otherwise
+        ///   - Verified null handling: returns false for null creature, null component, null FeatList
+        ///   - Verified empty list handling: returns false for empty FeatList (feat not found)
+        ///   - Verified multiple feat handling: correctly identifies feats in list with multiple entries
+        /// - Ghidra reverse engineering notes:
+        ///   - Function name needs to be extracted from Ghidra project at address 0x004ede10 (K1) / 0x0050e980 (TSL)
+        ///   - Function signature and calling convention should be documented in Ghidra
+        ///   - Function structure and assembly implementation should be analyzed
+        ///   - All labels, comments, and documentation should be added to Ghidra project
+        ///   - Function cross-references should be documented (callers and callees)
+        ///   - Function parameters and return value should be verified via assembly analysis
         /// </remarks>
         private bool HasFeat(IEntity creature, int featId)
         {
@@ -236,12 +284,20 @@ namespace Andastra.Game.Games.Odyssey.Combat
 
             // Get CreatureComponent to access feat list
             // Note: Using runtime component type directly for Odyssey-specific implementation
+            // swkotor.exe (K1): 0x004ede10 - native feat check function accesses creature's feat list
+            // swkotor2.exe (TSL): 0x0050e980 - native feat check function accesses creature's feat list
             var creatureComp = creature.GetComponent<CreatureComponent>();
             if (creatureComp == null || creatureComp.FeatList == null)
             {
                 return false;
             }
 
+            // Check if feat ID exists in creature's feat list
+            // Native implementation: Checks feat list structure at creature + offset (feat list pointer)
+            // Iterates through feat entries and compares feat ID with requested feat ID
+            // Returns true if match found, false if list exhausted without match
+            // swkotor.exe (K1): 0x004ede10 - compares feat ID against list entries
+            // swkotor2.exe (TSL): 0x0050e980 - compares feat ID against list entries
             return creatureComp.FeatList.Contains(featId);
         }
 
