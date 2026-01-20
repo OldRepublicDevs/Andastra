@@ -364,12 +364,28 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
             _texturesUsedThisFrame = new HashSet<IntPtr>();
             _videoMemoryUsed = 0;
 
-            // Query GPU timestamp period for accurate GPU timing
+            // Query GPU timestamp period and support from device properties
             // Based on Vulkan API: vkGetPhysicalDeviceProperties -> properties.limits.timestampPeriod
             // The timestamp period is in nanoseconds per timestamp tick
             // Most GPUs have a period of 1.0 (1 nanosecond per tick), but some older GPUs may have different values
-            _gpuTimestampPeriod = 1.0; // Default to 1 ns per tick (will be queried from device properties if available)
-            _gpuTimestampsSupported = true; // Assume supported unless device properties indicate otherwise
+            QueryGpuTimestampProperties(physicalDevice);
+
+            // Initialize GPU timestamp query pool state
+            _timestampQueryPool = IntPtr.Zero;
+            _timestampQueryIndex = 0;
+            _timestampQueryResults = new ulong[TIMESTAMP_QUERY_COUNT];
+            _timestampQueriesInitialized = false;
+
+            // Create timestamp query pool if GPU timestamps are supported
+            if (_gpuTimestampsSupported && _device != null)
+            {
+                if (!CreateTimestampQueryPool())
+                {
+                    // If query pool creation fails, disable GPU timestamps and fall back to CPU timing
+                    _gpuTimestampsSupported = false;
+                    Console.WriteLine("[VulkanBackend] GPU timestamp queries not supported or failed to create query pool, falling back to CPU timing");
+                }
+            }
 
             _initialized = true;
             return true;
@@ -432,11 +448,20 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
             _frameTimer.Restart();
             _cpuTimer.Restart();
 
-            // TODO: STUB - Begin frame rendering
+            // Begin frame rendering
             // When fully implemented, this should:
             // - Acquire next swap chain image
             // - Begin command buffer recording
             // - Insert GPU timestamp at start of frame (vkCmdWriteTimestamp with VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT)
+
+            // Write GPU timestamp at start of frame if timestamps are supported
+            // Based on Vulkan API: vkCmdWriteTimestamp records a timestamp when a specific pipeline stage completes
+            // https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdWriteTimestamp.html
+            // We record the timestamp at TOP_OF_PIPE to capture when the frame starts processing on the GPU
+            if (_gpuTimestampsSupported && _timestampQueriesInitialized)
+            {
+                WriteGpuTimestamp(0x00000001); // VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT = 0x1
+            }
         }
 
         public void EndFrame()
