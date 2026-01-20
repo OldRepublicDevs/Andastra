@@ -201,11 +201,14 @@ Follow this mandatory sequence:
 3. In C#: Add source comment.
 
    ```csharp
-   // TSL executable: 0x004eb750 – original engine behavior
-   // K1 executable: 0x004eb750 – original engine behavior (if applicable)
+   // /K1/k1_win_gog_swkotor.exe: 0x004eb750 – original engine behavior
+   // Note: Reference actual Ghidra program path from list-project-files, not generic "K1/TSL" labels
    ```
 
-4. Verify 1:1 parity with REVA MCP tools on project "C:\Users\boden\Andastra Ghidra Project.gpr".
+4. Verify 1:1 parity with REVA MCP tools on Ghidra project. Project location will be provided by user context.
+
+**Available executables in project:**
+- `/K1/k1_win_gog_swkotor.exe` - KotOR 1 executable (Windows GOG version)
 
 **Critical**: If REVA setup or tool fails (connection/error/unavailable), stop immediately and inform user.
 
@@ -243,3 +246,4 @@ Adhere exactly to ensure project integrity and cross-platform compatibility.
 - [Portkey Token Efficiency (2025)](https://portkey.ai/blog/optimize-token-efficiency-in-prompts)
 - [Agentic Coding GitHub Repo](https://github.com/sammcj/agentic-coding)
 - [OpenAI Prompt Engineering Guide (2026 Updates)](https://platform.openai.com/docs/guides/prompt-engineering)
+
