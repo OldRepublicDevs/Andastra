@@ -2054,7 +2054,6 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                 case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8G8_UNorm:
                 case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8G8_UInt:
                 case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8G8_SNorm:
-                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8G8_SInt:
                     bytesPerPixel = 2;
                     break;
                 case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8G8B8A8_UNorm:
