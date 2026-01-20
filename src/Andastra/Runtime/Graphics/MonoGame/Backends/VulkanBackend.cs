@@ -57,6 +57,10 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
         private Dictionary<IntPtr, object> _pipelines; // Map native handles to pipeline objects (to be defined)
         private Dictionary<IntPtr, object> _resources; // Generic resource tracking
 
+        // Buffer size tracking for memory estimation
+        // Tracks buffer sizes for accurate memory usage reporting
+        private Dictionary<IntPtr, long> _bufferSizes; // Map native handles to buffer sizes in bytes
+
         // VSync state tracking
         private bool _vSyncEnabled;
 
@@ -525,6 +529,7 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
             _buffers = new Dictionary<IntPtr, Andastra.Game.Graphics.MonoGame.Interfaces.IBuffer>();
             _pipelines = new Dictionary<IntPtr, object>();
             _resources = new Dictionary<IntPtr, object>();
+            _bufferSizes = new Dictionary<IntPtr, long>(); // Track buffer sizes for memory estimation
 
             // Initialize VSync state (default to enabled for better user experience)
             _vSyncEnabled = true;
@@ -995,6 +1000,9 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                 {
                     _buffers[nativeHandle] = buffer;
                     
+                    // Track buffer size for memory estimation
+                    _bufferSizes[nativeHandle] = desc.SizeInBytes;
+                    
                     // Track video memory usage
                     TrackVideoMemory(desc.SizeInBytes);
                     
@@ -1090,7 +1098,18 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                 // Try to destroy buffer
                 if (_buffers != null && _buffers.TryGetValue(handle, out var buffer))
                 {
-                    long size = EstimateBufferSize(handle);
+                    // Get buffer size from tracking before destroying for memory tracking
+                    long size = 0;
+                    if (_bufferSizes != null && _bufferSizes.TryGetValue(handle, out size))
+                    {
+                        _bufferSizes.Remove(handle);
+                    }
+                    else
+                    {
+                        // Fallback: try to estimate size
+                        size = EstimateBufferSize(handle);
+                    }
+                    
                     buffer?.Dispose();
                     _buffers.Remove(handle);
                     TrackVideoMemory(-size);
@@ -2095,16 +2114,32 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
         /// <summary>
         /// Estimates buffer size for tracking memory usage.
         /// </summary>
+        /// <param name="handle">Buffer handle.</param>
+        /// <returns>Buffer size in bytes, or 0 if not found.</returns>
         private long EstimateBufferSize(IntPtr handle)
         {
-            // Try to get buffer from tracked buffers
+            // Try to get buffer size from tracking dictionary first
+            if (_bufferSizes != null && _bufferSizes.TryGetValue(handle, out long size))
+            {
+                return size;
+            }
+
+            // Fallback: Try to get size from buffer description
             if (_buffers != null && _buffers.TryGetValue(handle, out var buffer))
             {
-                // For now, we can't easily get the size back from IBuffer
-                // In a full implementation, we'd track sizes separately
-                // For now, return 0 (memory tracking will be approximate)
-                return 0;
+                try
+                {
+                    // Get buffer description which contains size
+                    var desc = buffer.Desc;
+                    return desc.ByteSize;
+                }
+                catch
+                {
+                    // If we can't get the size, return 0
+                    return 0;
+                }
             }
+
             return 0;
         }
 
