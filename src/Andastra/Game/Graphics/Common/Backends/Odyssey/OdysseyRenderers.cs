@@ -43,6 +43,12 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             _meshCache = new Dictionary<string, OdysseyRoomMeshData>(StringComparer.OrdinalIgnoreCase);
         }
 
+        /// <summary>
+        /// Loads and converts MDL mesh data to OpenGL buffers for room rendering.
+        /// Based on swkotor.exe/swkotor2.exe: Room mesh loading and OpenGL buffer creation
+        /// /K1/k1_win_gog_swkotor.exe: PartTriMesh @ 0x00445840, findalltrimeshparts @ 0x004461d0, SpawnRoom @ 0x00456f30
+        /// Original engine recursively finds all trimesh parts and converts them to OpenGL VBO/IBO buffers.
+        /// </summary>
         public IRoomMeshData LoadRoomMesh(string modelResRef, MDL mdl)
         {
             if (string.IsNullOrEmpty(modelResRef) || mdl == null)
@@ -56,12 +62,195 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
                 return cached;
             }
 
-            // TODO: STUB - Load and convert MDL mesh data to OpenGL buffers
-            // For now, return a placeholder mesh data
-            var meshData = new OdysseyRoomMeshData();
+            // Extract geometry from MDL model
+            // Based on StrideRoomMeshRenderer.ExtractBasicGeometry pattern
+            // Original engine: findalltrimeshparts recursively finds all trimesh parts
+            var vertices = new List<VertexPositionNormalTexture>();
+            var indices = new List<int>();
+
+            // Extract geometry from all mesh nodes recursively
+            if (mdl.Root != null)
+            {
+                ExtractNodeGeometry(mdl.Root, Matrix4x4.Identity, vertices, indices);
+            }
+
+            // If no geometry found, return null (don't create empty mesh)
+            if (vertices.Count == 0 || indices.Count == 0)
+            {
+                Console.WriteLine($"[OdysseyRoomMeshRenderer] No geometry found in MDL: {modelResRef}");
+                return null;
+            }
+
+            // Create vertex buffer
+            var vertexArray = vertices.ToArray();
+            IVertexBuffer vertexBuffer = _device.CreateVertexBuffer(vertexArray);
+
+            // Create index buffer (use 16-bit indices for room meshes)
+            var indexArray = indices.ToArray();
+            IIndexBuffer indexBuffer = _device.CreateIndexBuffer(indexArray, true);
+
+            // Create mesh data
+            var meshData = new OdysseyRoomMeshData
+            {
+                _vertexBuffer = vertexBuffer,
+                _indexBuffer = indexBuffer,
+                _indexCount = indexArray.Length
+            };
+
             _meshCache[modelResRef] = meshData;
 
+            Console.WriteLine($"[OdysseyRoomMeshRenderer] Loaded room mesh: {modelResRef} ({vertices.Count} vertices, {indices.Count / 3} triangles)");
+
             return meshData;
+        }
+
+        // Vertex structure for room mesh rendering (matches entity model renderer)
+        private struct VertexPositionNormalTexture
+        {
+            public Vector3 Position;
+            public Vector3 Normal;
+            public System.Numerics.Vector2 TexCoord;
+        }
+
+        /// <summary>
+        /// Recursively extracts geometry from MDL node hierarchy.
+        /// Based on swkotor.exe/swkotor2.exe: findalltrimeshparts recursively processes all trimesh nodes
+        /// /K1/k1_win_gog_swkotor.exe: findalltrimeshparts @ 0x004461d0 (recursively finds all PartTriMesh instances)
+        /// </summary>
+        private void ExtractNodeGeometry([NotNull] MDLNode node, Matrix4x4 parentTransform, [NotNull] List<VertexPositionNormalTexture> vertices, [NotNull] List<int> indices)
+        {
+            if (node == null)
+            {
+                return;
+            }
+
+            // Calculate node transform
+            // Based on OdysseyEntityModelRenderer.CalculateNodeTransform
+            System.Numerics.Quaternion rotation;
+            if (node.Orientation != null &&
+                (node.Orientation.X != 0 || node.Orientation.Y != 0 || node.Orientation.Z != 0 || node.Orientation.W != 0))
+            {
+                rotation = new System.Numerics.Quaternion(
+                    node.Orientation.X,
+                    node.Orientation.Y,
+                    node.Orientation.Z,
+                    node.Orientation.W
+                );
+            }
+            else
+            {
+                rotation = System.Numerics.Quaternion.Identity;
+            }
+
+            // Create translation
+            Vector3 translation = Vector3.Zero;
+            if (node.Position != null)
+            {
+                translation = new Vector3(
+                    node.Position.X,
+                    node.Position.Y,
+                    node.Position.Z
+                );
+            }
+
+            // Create scale
+            Vector3 scale = new Vector3(
+                node.ScaleX,
+                node.ScaleY,
+                node.ScaleZ
+            );
+
+            // Build transform: Translation * Rotation * Scale
+            // Reference: StrideRoomMeshRenderer.ExtractNodeGeometry - same transform order
+            Matrix4x4 rotationMatrix = Matrix4x4.CreateFromQuaternion(rotation);
+            Matrix4x4 scaleMatrix = Matrix4x4.CreateScale(scale);
+            Matrix4x4 translationMatrix = Matrix4x4.CreateTranslation(translation);
+            Matrix4x4 nodeTransform = Matrix4x4.Multiply(Matrix4x4.Multiply(translationMatrix, rotationMatrix), scaleMatrix);
+            Matrix4x4 finalTransform = Matrix4x4.Multiply(nodeTransform, parentTransform);
+
+            // Extract mesh geometry if present
+            // Based on swkotor.exe: PartTriMesh processes trimesh nodes
+            if (node.Mesh != null)
+            {
+                ExtractMeshGeometry(node.Mesh, finalTransform, vertices, indices);
+            }
+
+            // Process children recursively
+            // Original engine: findalltrimeshparts recursively processes children
+            if (node.Children != null)
+            {
+                foreach (MDLNode child in node.Children)
+                {
+                    ExtractNodeGeometry(child, finalTransform, vertices, indices);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Extracts geometry from an MDL mesh and applies transform.
+        /// Based on swkotor.exe/swkotor2.exe: PartTriMesh processes vertex and face data
+        /// /K1/k1_win_gog_swkotor.exe: PartTriMesh @ 0x00445840 (processes trimesh vertex/face data)
+        /// </summary>
+        private void ExtractMeshGeometry([NotNull] MDLMesh mesh, Matrix4x4 transform, [NotNull] List<VertexPositionNormalTexture> vertices, [NotNull] List<int> indices)
+        {
+            if (mesh == null || mesh.Vertices == null || mesh.Vertices.Count == 0)
+            {
+                return;
+            }
+
+            if (mesh.Faces == null || mesh.Faces.Count == 0)
+            {
+                return;
+            }
+
+            // Store starting index for this mesh (for index offset)
+            int baseVertexIndex = vertices.Count;
+
+            // Extract vertices with transform applied
+            // Based on OdysseyEntityModelRenderer.ConvertMesh pattern
+            for (int i = 0; i < mesh.Vertices.Count; i++)
+            {
+                // Get vertex position
+                Vector3 pos = new Vector3(mesh.Vertices[i].X, mesh.Vertices[i].Y, mesh.Vertices[i].Z);
+
+                // Apply transform to position
+                Vector4 transformedPos = Vector4.Transform(new Vector4(pos.X, pos.Y, pos.Z, 1.0f), transform);
+                pos = new Vector3(transformedPos.X, transformedPos.Y, transformedPos.Z);
+
+                // Get normal (default to up if not available)
+                Vector3 normal = Vector3.UnitY;
+                if (mesh.Normals != null && i < mesh.Normals.Count)
+                {
+                    normal = new Vector3(mesh.Normals[i].X, mesh.Normals[i].Y, mesh.Normals[i].Z);
+                    // Transform normal (only rotation, not translation)
+                    Vector4 transformedNormal = Vector4.Transform(new Vector4(normal.X, normal.Y, normal.Z, 0.0f), transform);
+                    normal = Vector3.Normalize(new Vector3(transformedNormal.X, transformedNormal.Y, transformedNormal.Z));
+                }
+
+                // Get texture coordinates
+                System.Numerics.Vector2 texCoord = System.Numerics.Vector2.Zero;
+                if (mesh.UV1 != null && i < mesh.UV1.Count)
+                {
+                    texCoord = new System.Numerics.Vector2(mesh.UV1[i].X, mesh.UV1[i].Y);
+                }
+
+                vertices.Add(new VertexPositionNormalTexture
+                {
+                    Position = pos,
+                    Normal = normal,
+                    TexCoord = texCoord
+                });
+            }
+
+            // Extract indices (faces)
+            // Based on OdysseyEntityModelRenderer.ConvertMesh - same index extraction
+            for (int i = 0; i < mesh.Faces.Count; i++)
+            {
+                // Add base vertex index offset for this mesh
+                indices.Add(baseVertexIndex + mesh.Faces[i].V1);
+                indices.Add(baseVertexIndex + mesh.Faces[i].V2);
+                indices.Add(baseVertexIndex + mesh.Faces[i].V3);
+            }
         }
 
         public void Clear()
@@ -85,12 +274,14 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
     /// <summary>
     /// Odyssey room mesh data implementation.
+    /// Stores OpenGL VBO/IBO buffers for room mesh rendering.
+    /// Based on swkotor.exe/swkotor2.exe: Room mesh data structure with vertex/index buffers
     /// </summary>
     public class OdysseyRoomMeshData : IRoomMeshData, IDisposable
     {
-        private IVertexBuffer _vertexBuffer;
-        private IIndexBuffer _indexBuffer;
-        private int _indexCount;
+        internal IVertexBuffer _vertexBuffer;
+        internal IIndexBuffer _indexBuffer;
+        internal int _indexCount;
 
         public IVertexBuffer VertexBuffer => _vertexBuffer;
         public IIndexBuffer IndexBuffer => _indexBuffer;
@@ -1071,7 +1262,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Sets the master volume for all sounds.
-        /// swkotor2.exe: FUN_0066a4f0 @ 0x0066a4f0 (reads "Sound Effects Volume" from swkotor2.ini @ 0x007c83e0), FUN_0066d6d0 @ 0x0066d6d0 (reads volume settings from INI)
+        /// swkotor2.exe:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0066a4f0 @ 0x0066a4f0 (reads "Sound Effects Volume" from swkotor2.ini @ 0x007c83e0),  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0066d6d0 @ 0x0066d6d0 (reads volume settings from INI)
         /// swkotor.exe: TODO: Find equivalent function address
         /// Volume string references: "Sound Effects Volume" @ 0x007c83e0, "Voiceover Volume" @ 0x007c83cc, "Music Volume" @ 0x007c83bc
         /// Original engine uses Miles Sound System (MSS) or DirectSound for volume control; this implementation uses Windows waveOutSetVolume API.
