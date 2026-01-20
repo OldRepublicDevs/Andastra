@@ -434,13 +434,13 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// - ExoResMan (CExoResMan*): swkotor.exe @ 0x007a39e8 (used in CExoResMan::AddResourceDirectory @ 0x00408800, CExoResMan::Exists @ 0x00408bc0, CExoResMan::RemoveResourceDirectory @ 0x004088d0). swkotor2.exe: Equivalent global at DAT_008283c0 @ 0x008283c0. swkotor2_aspyr.exe: Equivalent global at DAT_00a1b490 @ 0x00a1b490
         /// - ExoSound (CExoSound*): swkotor.exe @ 0x007a39ec (used in CExoSoundInternal::SetSoundMode @ 0x005d5e80). swkotor2.exe: Equivalent global at DAT_008283c4 @ 0x008283c4. swkotor2_aspyr.exe: Equivalent global at DAT_00a1b494 @ 0x00a1b494
         /// - CAppManager* global: swkotor.exe: Not used in New Game handler context. swkotor2.exe @ DAT_008283d4 @ 0x008283d4 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401380 @ 0x00401380 for module loading system initialization, used in CServerExoApp::ResetServerStateField @ 0x006394b0 @ 0x006394b0 for server state reset). swkotor2_aspyr.exe @ DAT_00a1b4a4 @ 0x00a1b4a4 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401bc0 @ 0x00401bc0 for module loading system initialization, used in CServerExoApp::ResetServerStateField @ 0x00741360 @ 0x00741360 for server state reset)
-        /// - CExoResMan* global (swkotor2/swkotor2_aspyr): swkotor.exe: Uses ExoResMan @ 0x007a39e8 instead. swkotor2.exe @ DAT_008283c0 @ 0x008283c0 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408a30 @ 0x00408a30 for AddResourceDirectory equivalent, used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408df0 @ 0x00408df0 for Exists equivalent, used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408b00 @ 0x00408b00 for RemoveResourceDirectory equivalent). swkotor2_aspyr.exe @ DAT_00a1b490 @ 0x00a1b490 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711690 @ 0x00711690 for AddResourceDirectory equivalent, used in  CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe) for Exists equivalent, used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711710 @ 0x00711710 for RemoveResourceDirectory equivalent)
+        /// - CExoResMan* global (swkotor2/swkotor2_aspyr): swkotor.exe: Uses ExoResMan @ 0x007a39e8 instead. swkotor2.exe @ DAT_008283c0 @ 0x008283c0 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408a30 @ 0x00408a30 for AddResourceDirectory equivalent, used in CExoResMan::Exists() @ 0x00408df0 (swkotor2.exe) for Exists equivalent, used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408b00 @ 0x00408b00 for RemoveResourceDirectory equivalent). swkotor2_aspyr.exe @ DAT_00a1b490 @ 0x00a1b490 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711690 @ 0x00711690 for AddResourceDirectory equivalent, used in  CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe) for Exists equivalent, used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711710 @ 0x00711710 for RemoveResourceDirectory equivalent)
         /// - Sound system global (swkotor2/swkotor2_aspyr): swkotor.exe: Uses ExoSound @ 0x007a39ec instead. swkotor2.exe @ DAT_008283c4 @ 0x008283c4 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00621ab0 @ 0x00621ab0 for SetSoundMode equivalent). swkotor2_aspyr.exe @ DAT_00a1b494 @ 0x00a1b494 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0070bc60 @ 0x0070bc60 for SetSoundMode equivalent)
         /// - Sound mode constant: swkotor.exe @ DAT_0074c5ec @ 0x0074c5ec (used in CExoSoundInternal::SetSoundMode @ 0x005d5e80). swkotor2.exe @ DAT_007c5474 @ 0x007c5474 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00621ab0 @ 0x00621ab0). swkotor2_aspyr.exe @ DAT_0099c2a8 @ 0x0099c2a8 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0070bc60 @ 0x0070bc60)
         ///
         /// RESOURCE TYPE CONSTANTS:
         /// - MOD (Module): 0x7db (2011 decimal) - swkotor.exe: Uses MOD type constant via CExoResMan::Exists() @ 0x00408bc0 with MOD parameter (no explicit constant value, uses ResourceType enum, referenced at 0x0067b0a5 in first Exists call, referenced at 0x0067b0b3 in second Exists call with RIM fallback). swkotor2.exe @ 0x006d0c22 ( CExoResMan::Exists() @ 0x00408df0 (swkotor2.exe) call with 0x7db constant, checks if module resource exists as MOD type before fallback to RIM). swkotor2_aspyr.exe @ 0x008822d1 ( CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe) call with 0x7db constant, checks if module resource exists as MOD type before fallback to RIM)
-        /// - RIM (Resource Information Module): 0xbba (3002 decimal) - swkotor.exe: Uses RIM type constant via CExoResMan::Exists() @ 0x00408bc0 with RIM parameter (no explicit constant value, uses ResourceType enum, referenced at 0x0067b0b3 as fallback when MOD check fails). swkotor2.exe @ 0x006d0c4b ( CExoResMan::Exists() @ 0x00408df0 (swkotor2.exe) call with 0xbba constant, fallback check when MOD type (0x7db) resource not found). swkotor2_aspyr.exe @ 0x008822e4 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711ed0 call with 0xbba constant, fallback check when MOD type (0x7db) resource not found)
+        /// - RIM (Resource Information Module): 0xbba (3002 decimal) - swkotor.exe: Uses RIM type constant via CExoResMan::Exists() @ 0x00408bc0 with RIM parameter (no explicit constant value, uses ResourceType enum, referenced at 0x0067b0b3 as fallback when MOD check fails). swkotor2.exe @ 0x006d0c4b ( CExoResMan::Exists() @ 0x00408df0 (swkotor2.exe) call with 0xbba constant, fallback check when MOD type (0x7db) resource not found). swkotor2_aspyr.exe @ 0x008822e4 (CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe) call with 0xbba constant, fallback check when MOD type (0x7db) resource not found)
         /// - DIRECTORY: 2 (directory resource type constant) - swkotor.exe @ 0x00408800 (CExoResMan::AddResourceDirectory calls AddKeyTable with DIRECTORY parameter value 2, referenced at 0x0067b03a). swkotor.exe @ 0x004088d0 (CExoResMan::RemoveResourceDirectory calls RemoveKeyTable with DIRECTORY parameter value 2, referenced at 0x0067b0c7). swkotor2.exe @ 0x00408a30 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408a30 calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00406ef0 with DIRECTORY parameter 2, referenced at 0x006d0bfa). swkotor2.exe @ 0x00408b00 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408b00 calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00407900 with DIRECTORY parameter 2, referenced at 0x006d0c8a). swkotor2_aspyr.exe @ 0x00711690 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711690 calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711750 with DIRECTORY parameter 2, referenced at 0x0088230f). swkotor2_aspyr.exe @ 0x00711710 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711710 calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x007131d0 with DIRECTORY parameter 2, referenced at 0x008823a3)
         ///
         /// UTILITY FUNCTIONS:
@@ -452,7 +452,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// - CExoIni constructors/destructors: swkotor.exe @ 0x005e6750 (constructor), @ 0x005e67e0 (destructor)
         /// - Temporary object management: swkotor2.exe @ 0x00631f70 (TemporaryContext constructor), @ 0x00632000 (TemporaryContext destructor), swkotor2_aspyr.exe @ 0x00736240 (TemporaryContext constructor), @ 0x007362c0 (TemporaryContext destructor)
         /// - Resource directory operations: swkotor2.exe @ 0x004087d0 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x004087d0 copy assignment), swkotor2_aspyr.exe @ 0x00716da0 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00716da0 copy assignment)
-        /// - Module resource existence checks: swkotor2.exe @ 0x00408df0 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408df0), swkotor2_aspyr.exe @ 0x00711ed0 (CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe))
+        /// - Module resource existence checks: swkotor2.exe @ 0x00408df0 (CExoResMan::Exists() @ 0x00408df0 (swkotor2.exe)), swkotor2_aspyr.exe @ 0x00711ed0 (CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe))
         /// - Panel management: swkotor2.exe @ 0x0040bf90 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0040bf90 AddPanel equivalent), swkotor2_aspyr.exe @ 0x00410530 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00410530 AddPanel equivalent)
         /// - Sound mode setting: swkotor2.exe @ 0x00621ab0 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00621ab0), swkotor2_aspyr.exe @ 0x0070bc60 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0070bc60)
         /// - Game time/system initialization: swkotor2.exe @ 0x0057a400 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0057a400), swkotor2_aspyr.exe @ 0x005ff000 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff000)
@@ -699,7 +699,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         ///       - 0x7db = MOD resource type constant
         ///     - If MOD not found (iVar1 == 0):
         ///       -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00710810() reconstructs CResRef from local_18 in local_60
-        ///       -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711ed0() (DAT_00a1b490, local_60, 0xbba, null) checks for RIM type
+        ///       - CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe) (DAT_00a1b490, local_60, 0xbba, null) checks for RIM type
         ///         - 0xbba = RIM resource type constant
         ///       - If RIM also not found:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x007338d0() @ 0x007338d0 (local_18, "001ebo") reassigns default module
         /// 11. Resource directory cleanup:
@@ -764,10 +764,10 @@ namespace Andastra.Game.Games.Odyssey.Game
         ///   Equivalent to  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408a30(), adds MODULES directory to resource manager.
         /// - CExoResMan::Exists() @ 0x00408bc0 (swkotor.exe):
         ///   Checks if resource exists via GetKeyEntry(), returns non-zero if found.
-        /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408df0() @ 0x00408df0 (swkotor2.exe):
-        ///   Checks if resource exists via CExoResMan__GetKeyEntry(), takes resource type constant (0x7db for MOD, 0xbba for RIM).
-        /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711ed0() @ 0x00711ed0 (swkotor2_aspyr.exe):
-        ///   Equivalent to  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408df0(), checks resource existence with type constants.
+ /// - CExoResMan::Exists() @ 0x00408df0 (swkotor2.exe):
+ ///   Checks if resource exists via CExoResMan__GetKeyEntry(), takes resource type constant (0x7db for MOD, 0xbba for RIM).
+ /// - CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe):
+ ///   Equivalent to CExoResMan::Exists() @ 0x00408df0 (swkotor2.exe), checks resource existence with type constants.
         /// - CSWGuiClassSelection::CSWGuiClassSelection() @ 0x006dc3c0 (swkotor.exe):
         ///   Constructs class selection GUI panel with starting module name, allocates 0x1560 bytes.
         /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0074a700() @ 0x0074a700 (swkotor2.exe):
@@ -840,8 +840,8 @@ namespace Andastra.Game.Games.Odyssey.Game
         ///    - CExoString::~CExoString() @ 0x00630c20 (local_40)
         /// 9. Module resource existence check with alternative codes:
         ///    -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00406e70() @ 0x00406e70 (local_30, local_38 "001ebo")
-        ///    -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408df0() @ 0x00408df0 (DAT_008283c0, local_30, 0x7db (2011), null)
-        ///    - If 0x7db fails:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00406e70() @ 0x00406e70,  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408df0() @ 0x00408df0 (0xbba (3002))
+        ///    - CExoResMan::Exists() @ 0x00408df0 (swkotor2.exe) (DAT_008283c0, local_30, 0x7db (2011), null)
+        ///    - If 0x7db fails:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00406e70() @ 0x00406e70, CExoResMan::Exists() @ 0x00408df0 (swkotor2.exe) (0xbba (3002))
         ///    - If both fail: CExoString::operator= @ 0x00630d10 (swkotor2.exe) (local_38, "001ebo" @ 0x007cc028)
         /// 10. MODULES: resource directory cleanup:
         ///     - CExoString::CExoString() @ 0x00630a90 (local_30, "MODULES:" @ 0x007b58b4)
@@ -877,8 +877,8 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// 9. Module resource existence check with alternative codes:
         ///    -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005564b0() @ 0x005564b0
         ///    -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00710810() @ 0x00710810 (local_50, local_18 "001ebo")
-        ///    -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711ed0() @ 0x00711ed0 (DAT_00a1b490, local_50, 0x7db (2011), null)
-        ///    - If 0x7db fails:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00710810() @ 0x00710810 (local_60, local_18),  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711ed0() @ 0x00711ed0 (0xbba (3002))
+        ///    - CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe) (DAT_00a1b490, local_50, 0x7db (2011), null)
+        ///    - If 0x7db fails:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00710810() @ 0x00710810 (local_60, local_18), CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe) (0xbba (3002))
         ///    - If both fail:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x007338d0() @ 0x007338d0 (local_18, "001ebo" @ 0x009a5ab0)
         /// 10. MODULES: resource directory cleanup:
         ///     -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00733570() @ 0x00733570 (local_68, "MODULES:" @ 0x00993e50)
@@ -1039,13 +1039,13 @@ namespace Andastra.Game.Games.Odyssey.Game
 
         /// <summary>
         /// Checks if a module resource exists with the specified resource type.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x00408df0 @ 0x00408df0: Resource existence check
+        /// CExoResMan::Exists() @ (K1: 0x00408bc0 (swkotor.exe), TSL: 0x00408df0 (swkotor2.exe), TSL Aspyr: 0x00711ed0 (swkotor2_aspyr.exe)): Resource existence check
         /// </summary>
         /// <param name="moduleName">The module name to check.</param>
         /// <param name="resourceType">The resource type to check (MOD = 0x7db, RIM = 0xbba).</param>
         /// <returns>True if the module resource exists, false otherwise.</returns>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x00408df0 @ 0x00408df0:
+        /// CExoResMan::Exists() @ (K1: 0x00408bc0 (swkotor.exe), TSL: 0x00408df0 (swkotor2.exe), TSL Aspyr: 0x00711ed0 (swkotor2_aspyr.exe)):
         /// - Calls 0x00407300 to search for resources with the specified name and type
         /// - Returns non-zero if resource exists, zero if not found
         /// - Resource type 0x7db (MOD) checks for .mod files
