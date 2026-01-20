@@ -137,7 +137,7 @@ Always mark unfinished code with `// TODO:` + type + context.
 
 | Type         | Usage Pattern                                            | Example |
 |--------------|----------------------------------------------------------|---------|
-| STUB        | Missing implementation (e.g., engine function)           | `// TODO: STUB - Implement K2 event system (swkotor2.exe: 0x004eb750)` |
+| STUB        | Missing implementation (e.g., engine function)           | `// TODO: STUB - Implement K2 event system (TSL executable: 0x004eb750)` |
 | PLACEHOLDER | Temporary data/structure                                 | `// TODO: PLACEHOLDER - Replace with actual resource loading` |
 | FIXME       | Known issue (e.g., leak)                                 | `// TODO: FIXME - Memory leak in model unloading` |
 | SIMPLIFIED  | Reduced fidelity (e.g., no optimization)                 | `// TODO: SIMPLIFIED - Full animation blending not implemented` |
@@ -201,7 +201,8 @@ Follow this mandatory sequence:
 3. In C#: Add source comment.
 
    ```csharp
-   // swkotor2.exe: 0x004eb750 – original engine behavior
+   // TSL executable: 0x004eb750 – original engine behavior
+   // K1 executable: 0x004eb750 – original engine behavior (if applicable)
    ```
 
 4. Verify 1:1 parity with REVA MCP tools on project "C:\Users\boden\Andastra Ghidra Project.gpr".
