@@ -3500,14 +3500,14 @@ namespace Andastra.Game.Games.Odyssey
         /// K1: CSWSArea::LoadDoors @ 0x0050a0e0 - Reads ObjectId (line 38-39), then calls CSWSDoor::LoadDoorExternal which reads Tag
         /// K1: CSWSArea::LoadTriggers @ 0x0050a350 - Reads ObjectId, then calls CSWSTrigger::LoadTrigger which reads Tag
         /// TSL: TODO: Find equivalent addresses when TSL executable is available in Ghidra project
-        /// 
+        ///
         /// Pattern: The original engine inlines entity state loading in each entity type's load function:
         /// 1. Read ObjectId from GFF struct
         /// 2. Call entity-specific Load function (LoadPlaceable/LoadDoor/LoadTrigger) which reads Tag and other fields
         /// 3. Read Position (X, Y, Z) from GFF struct
         /// 4. Read Orientation (Bearing) from GFF struct
         /// 5. Call CSWSObject::LoadObjectState if needed for additional state
-        /// 
+        ///
         /// This function consolidates the common entity state fields into a single helper for save file deserialization.
         /// </remarks>
         private void DeserializeEntityStateFromGFF(GFFStruct structData, EntityState state)
