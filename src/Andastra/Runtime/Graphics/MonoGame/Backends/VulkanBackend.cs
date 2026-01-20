@@ -1097,8 +1097,9 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                         var desc = texture.Desc;
                         // Estimate texture memory based on description
                         // Convert Game format to Runtime format for estimation
-                        // Both format enums are compatible (same underlying values), so we can cast
-                        var runtimeFormat = (Andastra.Runtime.Graphics.Common.Enums.TextureFormat)(int)desc.Format;
+                        // Both format enums have compatible underlying values, so we can cast directly
+                        Andastra.Runtime.Graphics.Common.Enums.TextureFormat runtimeFormat = 
+                            (Andastra.Runtime.Graphics.Common.Enums.TextureFormat)(int)desc.Format;
                         textureMemory = EstimateTextureMemory(
                             desc.Width, 
                             desc.Height, 
