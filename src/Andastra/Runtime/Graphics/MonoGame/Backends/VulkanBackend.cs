@@ -57,6 +57,9 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
         private Dictionary<IntPtr, object> _pipelines; // Map native handles to pipeline objects (to be defined)
         private Dictionary<IntPtr, object> _resources; // Generic resource tracking
 
+        // VSync state tracking
+        private bool _vSyncEnabled;
+
         public GraphicsBackendType BackendType
         {
             get { return GraphicsBackendType.Vulkan; }
@@ -268,11 +271,32 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                 return;
             }
 
-            // TODO: STUB - Implement VSync setting
-            // When fully implemented, this should:
-            // - Set swap chain present mode to VK_PRESENT_MODE_FIFO_KHR (VSync on) or VK_PRESENT_MODE_IMMEDIATE_KHR (VSync off)
-            // - Recreate swap chain if needed
-            // - Apply changes immediately
+            try
+            {
+                // Set VSync state
+                // Based on Vulkan API: VSync is controlled via swap chain present mode
+                // https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkSwapchainPresentModeKHR.html
+                // - VK_PRESENT_MODE_FIFO_KHR: VSync enabled (matches display refresh rate)
+                // - VK_PRESENT_MODE_IMMEDIATE_KHR: VSync disabled (no frame rate limit)
+                
+                _vSyncEnabled = enabled;
+
+                // TODO: When swap chain management is implemented, this should:
+                // 1. Get current swap chain
+                // 2. Determine desired present mode based on enabled parameter:
+                //    - enabled: VK_PRESENT_MODE_FIFO_KHR (VSync on)
+                //    - disabled: VK_PRESENT_MODE_IMMEDIATE_KHR or VK_PRESENT_MODE_MAILBOX_KHR (VSync off)
+                // 3. Check if swap chain supports the desired present mode
+                // 4. If mode is different, recreate swap chain with new present mode
+                // 5. Apply changes immediately
+                
+                // For now, we store the VSync state which will be applied when swap chain is created
+                // This allows VSync to be set before window/swap chain creation
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[VulkanBackend] SetVSync failed: {ex.Message}");
+            }
         }
 
         // Internal Initialize method that takes RenderSettings
@@ -376,6 +400,9 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
             _buffers = new Dictionary<IntPtr, Andastra.Game.Graphics.MonoGame.Interfaces.IBuffer>();
             _pipelines = new Dictionary<IntPtr, object>();
             _resources = new Dictionary<IntPtr, object>();
+
+            // Initialize VSync state (default to enabled for better user experience)
+            _vSyncEnabled = true;
 
             // Query GPU timestamp period and support from device properties
             // Based on Vulkan API: vkGetPhysicalDeviceProperties -> properties.limits.timestampPeriod
@@ -595,9 +622,36 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                 return;
             }
 
-            _settings.Width = width;
-            _settings.Height = height;
-            // TODO: STUB - Resize swap chain
+            if (width <= 0 || height <= 0)
+            {
+                Console.WriteLine($"[VulkanBackend] Resize: Invalid dimensions {width}x{height}");
+                return;
+            }
+
+            try
+            {
+                // Update settings
+                _settings.Width = width;
+                _settings.Height = height;
+
+                // TODO: When swap chain management is implemented, this should:
+                // 1. Wait for all GPU operations to complete (vkQueueWaitIdle or vkDeviceWaitIdle)
+                // 2. Query new surface capabilities (vkGetPhysicalDeviceSurfaceCapabilitiesKHR)
+                // 3. Update swap chain extent to match new window size
+                // 4. Recreate swap chain with new dimensions (vkCreateSwapchainKHR)
+                // 5. Recreate swap chain images and image views
+                // 6. Recreate framebuffers with new dimensions
+                // 7. Recreate render passes if needed
+                // 8. Handle resize events properly (may need to handle VK_ERROR_OUT_OF_DATE_KHR)
+                // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateSwapchainKHR.html
+                
+                // For now, we update the settings which will be used when swap chain is created/resized
+                // This allows resize to be called before swap chain creation
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[VulkanBackend] Resize failed: {ex.Message}");
+            }
         }
 
         public IntPtr CreateTexture(RuntimeTextureDescription desc)
@@ -690,14 +744,17 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
 
                 // Get texture description
                 var textureDesc = texture.Desc;
-                if (textureDesc.Format != ConvertTextureFormat(data.Format))
+                // Note: data.Format is Andastra.Game.Graphics.MonoGame.Interfaces.TextureFormat
+                // textureDesc.Format is also Andastra.Game.Graphics.MonoGame.Interfaces.TextureFormat
+                // So we can compare directly
+                if (textureDesc.Format != data.Format)
                 {
                     Console.WriteLine($"[VulkanBackend] UploadTextureData: Texture format mismatch. Expected {textureDesc.Format}, got {data.Format}");
                     return false;
                 }
 
                 // Create a command list for copy operations
-                Andastra.Game.Graphics.MonoGame.Interfaces.ICommandList commandList = _device.CreateCommandList(Andastra.Game.Graphics.MonoGame.Enums.CommandListType.Copy);
+                Andastra.Game.Graphics.MonoGame.Interfaces.ICommandList commandList = _device.CreateCommandList(Andastra.Game.Graphics.MonoGame.Interfaces.CommandListType.Copy);
                 if (commandList == null)
                 {
                     Console.WriteLine("[VulkanBackend] UploadTextureData: Failed to create command list");
@@ -706,56 +763,62 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
 
                 try
                 {
-                    // For each mipmap level, upload the data
-                    // In Vulkan, this requires staging buffers and copy commands
-                    // For now, we'll use ICommandList.WriteTexture if available, otherwise fall back to staging buffer approach
-                    
-                    // Check if ICommandList has WriteTexture method
-                    System.Reflection.MethodInfo writeTextureMethod = commandList.GetType().GetMethod(
-                        "WriteTexture",
-                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                    // Open command list for recording
+                    commandList.Open();
 
-                    if (writeTextureMethod != null)
+                    // Transition texture to copy destination state for writing
+                    // Based on Vulkan API: Resource state transitions are required before writing to textures
+                    // https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkImageMemoryBarrier.html
+                    commandList.SetTextureState(texture, Andastra.Game.Graphics.MonoGame.Interfaces.ResourceState.CopyDest);
+                    commandList.CommitBarriers();
+
+                    // Use WriteTexture method for each mipmap
+                    // Signature: void WriteTexture(ITexture texture, int mipLevel, int arraySlice, byte[] data)
+                    foreach (var mipmap in data.Mipmaps)
                     {
-                        // Use WriteTexture method for each mipmap
-                        foreach (var mipmap in data.Mipmaps)
+                        if (mipmap.Data == null || mipmap.Data.Length == 0)
                         {
-                            if (mipmap.Data == null || mipmap.Data.Length == 0)
-                            {
-                                Console.WriteLine($"[VulkanBackend] UploadTextureData: Mipmap {mipmap.Level} has no data");
-                                continue;
-                            }
-
-                            try
-                            {
-                                // WriteTexture(texture, x, y, data)
-                                writeTextureMethod.Invoke(commandList, new object[] { texture, 0, 0, mipmap.Data });
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine($"[VulkanBackend] UploadTextureData: Failed to write mipmap {mipmap.Level}: {ex.Message}");
-                            }
+                            Console.WriteLine($"[VulkanBackend] UploadTextureData: Mipmap {mipmap.Level} has no data");
+                            continue;
                         }
 
-                        // Execute command list to upload texture data
-                        _device.ExecuteCommandList(commandList);
-                        return true;
+                        try
+                        {
+                            // WriteTexture(texture, mipLevel, arraySlice, data)
+                            // For 2D textures, arraySlice is typically 0
+                            commandList.WriteTexture(texture, mipmap.Level, 0, mipmap.Data);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[VulkanBackend] UploadTextureData: Failed to write mipmap {mipmap.Level}: {ex.Message}");
+                            commandList.Close();
+                            return false;
+                        }
                     }
-                    else
+
+                    // Transition texture back to shader resource state after writing
+                    // Based on Vulkan API: Textures should be in ShaderResource state when used in shaders
+                    commandList.SetTextureState(texture, Andastra.Game.Graphics.MonoGame.Interfaces.ResourceState.ShaderResource);
+                    commandList.CommitBarriers();
+
+                    // Close command list and execute
+                    commandList.Close();
+                    _device.ExecuteCommandList(commandList);
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[VulkanBackend] UploadTextureData: Exception during texture upload: {ex.Message}");
+                    try
                     {
-                        // Fallback: Direct staging buffer approach using VulkanDevice
-                        // For now, log that WriteTexture is not available
-                        Console.WriteLine("[VulkanBackend] UploadTextureData: WriteTexture method not available, texture upload requires staging buffer implementation");
-                        
-                        // TODO: Implement full staging buffer approach:
-                        // 1. Create staging buffer for each mipmap
-                        // 2. Map memory and copy data
-                        // 3. Record copy commands in command buffer
-                        // 4. Execute command buffer
-                        // 5. Destroy staging buffers
-                        
-                        return false;
+                        commandList?.Close();
                     }
+                    catch
+                    {
+                        // Ignore errors when closing
+                    }
+                    return false;
                 }
                 finally
                 {
@@ -786,11 +849,11 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                     ByteSize = desc.SizeInBytes,
                     StructStride = desc.StructureByteStride,
                     Usage = ConvertBufferUsage(desc.Usage),
-                    InitialState = Andastra.Game.Graphics.MonoGame.Enums.ResourceState.Common,
+                    InitialState = Andastra.Game.Graphics.MonoGame.Interfaces.ResourceState.Common,
                     KeepInitialState = false,
                     CanHaveRawViews = false,
                     IsAccelStructBuildInput = false,
-                    HeapType = Andastra.Game.Graphics.MonoGame.Enums.BufferHeapType.Default,
+                    HeapType = Andastra.Game.Graphics.MonoGame.Interfaces.BufferHeapType.Default,
                     DebugName = desc.DebugName ?? $"Buffer_{desc.SizeInBytes}bytes"
                 };
 
@@ -1432,6 +1495,104 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
         }
 
         /// <summary>
+        /// Gets the current VkCommandBuffer handle for timestamp writing.
+        /// Attempts to access command buffer from current frame command list or device.
+        /// Based on Vulkan API: Command buffers are obtained from command pools
+        /// https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkAllocateCommandBuffers.html
+        /// </summary>
+        /// <returns>VkCommandBuffer handle, or IntPtr.Zero if not available.</returns>
+        private IntPtr GetCurrentCommandBuffer()
+        {
+            if (_device == null)
+            {
+                return IntPtr.Zero;
+            }
+
+            try
+            {
+                // Try to get current frame command list from device via reflection
+                // In a full implementation, there would be a _currentFrameCommandList field
+                // For now, we'll check if VulkanDevice has a method to get the current command buffer
+                
+                // Try to get a method that returns the current command buffer
+                System.Reflection.MethodInfo getCurrentCommandBufferMethod = _device.GetType().GetMethod(
+                    "GetCurrentCommandBuffer",
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+                if (getCurrentCommandBufferMethod != null)
+                {
+                    object result = getCurrentCommandBufferMethod.Invoke(_device, null);
+                    if (result is IntPtr)
+                    {
+                        return (IntPtr)result;
+                    }
+                }
+
+                // Try to access current command list via property or field
+                System.Reflection.PropertyInfo commandListProperty = _device.GetType().GetProperty(
+                    "CurrentCommandList",
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+                if (commandListProperty == null)
+                {
+                    commandListProperty = _device.GetType().GetProperty(
+                        "CurrentFrameCommandList",
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                }
+
+                if (commandListProperty != null)
+                {
+                    object commandListObj = commandListProperty.GetValue(_device);
+                    if (commandListObj != null)
+                    {
+                        // Try to get VkCommandBuffer from command list
+                        System.Reflection.FieldInfo vkCommandBufferField = commandListObj.GetType().GetField(
+                            "_vkCommandBuffer",
+                            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+                        if (vkCommandBufferField == null)
+                        {
+                            vkCommandBufferField = commandListObj.GetType().GetField(
+                                "vkCommandBuffer",
+                                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                        }
+
+                        if (vkCommandBufferField != null)
+                        {
+                            object commandBufferValue = vkCommandBufferField.GetValue(commandListObj);
+                            if (commandBufferValue is IntPtr)
+                            {
+                                return (IntPtr)commandBufferValue;
+                            }
+                        }
+
+                        // Try to get VkCommandBuffer via property
+                        System.Reflection.PropertyInfo commandBufferProperty = commandListObj.GetType().GetProperty(
+                            "VkCommandBuffer",
+                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+                        if (commandBufferProperty != null)
+                        {
+                            object commandBufferValue = commandBufferProperty.GetValue(commandListObj);
+                            if (commandBufferValue is IntPtr)
+                            {
+                                return (IntPtr)commandBufferValue;
+                            }
+                        }
+                    }
+                }
+
+                // Command buffer management not fully implemented yet
+                // In the full implementation, this would return the active command buffer
+                return IntPtr.Zero;
+            }
+            catch (Exception)
+            {
+                return IntPtr.Zero;
+            }
+        }
+
+        /// <summary>
         /// Destroys the GPU timestamp query pool.
         /// Based on Vulkan API: vkDestroyQueryPool
         /// https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDestroyQueryPool.html
@@ -1518,10 +1679,8 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                 }
 
                 // Get current command buffer handle
-                // In a full implementation, this would come from the active command buffer
-                // We'll attempt to get it via reflection from VulkanDevice or a current frame command list
-                // TODO: Implement GetCurrentCommandBuffer() method
-                IntPtr vkCommandBuffer = IntPtr.Zero; // Stub: GetCurrentCommandBuffer();
+                // Attempt to get it via reflection from VulkanDevice or a current frame command list
+                IntPtr vkCommandBuffer = GetCurrentCommandBuffer();
 
                 // Calculate query index based on current frame and which timestamp (start=0, end=1)
                 // We use double buffering: alternate between query sets 0-1 and 2-3
@@ -1690,37 +1849,37 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
         /// <summary>
         /// Converts Runtime TextureFormat to Game TextureFormat.
         /// </summary>
-        private Andastra.Game.Graphics.MonoGame.Enums.TextureFormat ConvertTextureFormat(Andastra.Runtime.Graphics.Common.Enums.TextureFormat format)
+        private Andastra.Game.Graphics.MonoGame.Interfaces.TextureFormat ConvertTextureFormat(Andastra.Runtime.Graphics.Common.Enums.TextureFormat format)
         {
             // Map Runtime format to Game format
             // Most formats should match directly, but we provide explicit conversion
             try
             {
-                return (Andastra.Game.Graphics.MonoGame.Enums.TextureFormat)(int)format;
+                return (Andastra.Game.Graphics.MonoGame.Interfaces.TextureFormat)(int)format;
             }
             catch
             {
-                // Fallback to R8G8B8A8_UNORM if conversion fails
-                return Andastra.Game.Graphics.MonoGame.Enums.TextureFormat.R8G8B8A8_UNORM;
+                // Fallback to R8G8B8A8_UNorm if conversion fails
+                return Andastra.Game.Graphics.MonoGame.Interfaces.TextureFormat.R8G8B8A8_UNorm;
             }
         }
 
         /// <summary>
         /// Converts Runtime TextureUsage to Game TextureUsage.
         /// </summary>
-        private Andastra.Game.Graphics.MonoGame.Enums.TextureUsage ConvertTextureUsage(Andastra.Runtime.Graphics.Common.Enums.TextureUsage usage)
+        private Andastra.Game.Graphics.MonoGame.Interfaces.TextureUsage ConvertTextureUsage(Andastra.Runtime.Graphics.Common.Enums.TextureUsage usage)
         {
             // Map Runtime usage flags to Game usage flags
-            Andastra.Game.Graphics.MonoGame.Enums.TextureUsage result = 0;
+            Andastra.Game.Graphics.MonoGame.Interfaces.TextureUsage result = 0;
             
             if ((usage & Andastra.Runtime.Graphics.Common.Enums.TextureUsage.ShaderResource) != 0)
-                result |= Andastra.Game.Graphics.MonoGame.Enums.TextureUsage.ShaderResource;
+                result |= Andastra.Game.Graphics.MonoGame.Interfaces.TextureUsage.ShaderResource;
             if ((usage & Andastra.Runtime.Graphics.Common.Enums.TextureUsage.RenderTarget) != 0)
-                result |= Andastra.Game.Graphics.MonoGame.Enums.TextureUsage.RenderTarget;
+                result |= Andastra.Game.Graphics.MonoGame.Interfaces.TextureUsage.RenderTarget;
             if ((usage & Andastra.Runtime.Graphics.Common.Enums.TextureUsage.DepthStencil) != 0)
-                result |= Andastra.Game.Graphics.MonoGame.Enums.TextureUsage.DepthStencil;
+                result |= Andastra.Game.Graphics.MonoGame.Interfaces.TextureUsage.DepthStencil;
             if ((usage & Andastra.Runtime.Graphics.Common.Enums.TextureUsage.UnorderedAccess) != 0)
-                result |= Andastra.Game.Graphics.MonoGame.Enums.TextureUsage.UnorderedAccess;
+                result |= Andastra.Game.Graphics.MonoGame.Interfaces.TextureUsage.UnorderedAccess;
             
             return result;
         }
@@ -1728,21 +1887,25 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
         /// <summary>
         /// Converts Runtime BufferUsage to Game BufferUsageFlags.
         /// </summary>
-        private Andastra.Game.Graphics.MonoGame.Enums.BufferUsageFlags ConvertBufferUsage(Andastra.Runtime.Graphics.Common.Enums.BufferUsage usage)
+        private Andastra.Game.Graphics.MonoGame.Interfaces.BufferUsageFlags ConvertBufferUsage(Andastra.Runtime.Graphics.Common.Enums.BufferUsage usage)
         {
             // Map Runtime usage flags to Game usage flags
-            Andastra.Game.Graphics.MonoGame.Enums.BufferUsageFlags result = 0;
+            // Runtime: Vertex, Index, Constant, Structured, Indirect, AccelerationStructure
+            // Game: VertexBuffer, IndexBuffer, ConstantBuffer, ShaderResource, UnorderedAccess, IndirectArgument
+            Andastra.Game.Graphics.MonoGame.Interfaces.BufferUsageFlags result = 0;
             
-            if ((usage & Andastra.Runtime.Graphics.Common.Enums.BufferUsage.VertexBuffer) != 0)
-                result |= Andastra.Game.Graphics.MonoGame.Enums.BufferUsageFlags.VertexBuffer;
-            if ((usage & Andastra.Runtime.Graphics.Common.Enums.BufferUsage.IndexBuffer) != 0)
-                result |= Andastra.Game.Graphics.MonoGame.Enums.BufferUsageFlags.IndexBuffer;
-            if ((usage & Andastra.Runtime.Graphics.Common.Enums.BufferUsage.ConstantBuffer) != 0)
-                result |= Andastra.Game.Graphics.MonoGame.Enums.BufferUsageFlags.ConstantBuffer;
-            if ((usage & Andastra.Runtime.Graphics.Common.Enums.BufferUsage.ShaderResource) != 0)
-                result |= Andastra.Game.Graphics.MonoGame.Enums.BufferUsageFlags.ShaderResource;
-            if ((usage & Andastra.Runtime.Graphics.Common.Enums.BufferUsage.UnorderedAccess) != 0)
-                result |= Andastra.Game.Graphics.MonoGame.Enums.BufferUsageFlags.UnorderedAccess;
+            if ((usage & Andastra.Runtime.Graphics.Common.Enums.BufferUsage.Vertex) != 0)
+                result |= Andastra.Game.Graphics.MonoGame.Interfaces.BufferUsageFlags.VertexBuffer;
+            if ((usage & Andastra.Runtime.Graphics.Common.Enums.BufferUsage.Index) != 0)
+                result |= Andastra.Game.Graphics.MonoGame.Interfaces.BufferUsageFlags.IndexBuffer;
+            if ((usage & Andastra.Runtime.Graphics.Common.Enums.BufferUsage.Constant) != 0)
+                result |= Andastra.Game.Graphics.MonoGame.Interfaces.BufferUsageFlags.ConstantBuffer;
+            if ((usage & Andastra.Runtime.Graphics.Common.Enums.BufferUsage.Structured) != 0)
+                result |= Andastra.Game.Graphics.MonoGame.Interfaces.BufferUsageFlags.ShaderResource;
+            if ((usage & Andastra.Runtime.Graphics.Common.Enums.BufferUsage.Indirect) != 0)
+                result |= Andastra.Game.Graphics.MonoGame.Interfaces.BufferUsageFlags.IndirectArgument;
+            if ((usage & Andastra.Runtime.Graphics.Common.Enums.BufferUsage.AccelerationStructure) != 0)
+                result |= Andastra.Game.Graphics.MonoGame.Interfaces.BufferUsageFlags.AccelStructStorage;
             
             return result;
         }
@@ -1754,26 +1917,45 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
         {
             // Estimate bytes per pixel based on format
             int bytesPerPixel = 4; // Default to RGBA8
+            // Runtime format enum values match Game format enum values for direct comparison
             switch (format)
             {
-                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8_UNorm:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8_UInt:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8_SInt:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8_SNorm:
                     bytesPerPixel = 1;
                     break;
-                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8G8:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8G8_UNorm:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8G8_UInt:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8G8_SNorm:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8G8_SInt:
                     bytesPerPixel = 2;
                     break;
-                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8G8B8A8:
-                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.B8G8R8A8:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8G8B8A8_UNorm:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8G8B8A8_UNorm_SRGB:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8G8B8A8_UInt:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8G8B8A8_SInt:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R8G8B8A8_SNorm:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.B8G8R8A8_UNorm:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.B8G8R8A8_UNorm_SRGB:
                     bytesPerPixel = 4;
                     break;
-                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R16G16B16A16:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R16G16B16A16_Float:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R16G16B16A16_UNorm:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R16G16B16A16_UInt:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R16G16B16A16_SInt:
                     bytesPerPixel = 8;
                     break;
-                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R32G32B32A32:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R32G32B32A32_Float:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R32G32B32A32_UInt:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.R32G32B32A32_SInt:
                     bytesPerPixel = 16;
                     break;
-                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.D24S8:
-                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.D32:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.D16_UNorm:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.D24_UNorm_S8_UInt:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.D32_Float:
+                case Andastra.Runtime.Graphics.Common.Enums.TextureFormat.D32_Float_S8_UInt:
                     bytesPerPixel = 4;
                     break;
             }
