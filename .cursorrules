@@ -234,16 +234,3 @@ Verify all items before completion:
 - Unfinished parts marked with `TODO: <type> <context>`
 
 Adhere exactly to ensure project integrity and cross-platform compatibility.
-
-**Key Citations**
-- [PromptingGuide.ai (2026)](https://www.promptingguide.ai/)
-- [Lakera Ultimate Guide to Prompt Engineering (2025)](https://www.lakera.ai/blog/prompt-engineering-guide)
-- [IBM 2026 Guide to Prompt Engineering](https://www.ibm.com/think/prompt-engineering)
-- [Agents At Work: 2026 Playbook](https://promptengineering.org/agents-at-work-the-2026-playbook-for-building-reliable-agentic-workflows/)
-- [UiPath 10 Best Practices for AI Agents (2025)](https://www.uipath.com/blog/ai/agent-builder-best-practices)
-- [GitHub Lessons from 2500+ agents.md (2025)](https://github.blog/ai-and-ml/github-copilot/how-to-write-a-great-agents-md-lessons-from-over-2500-repositories/)
-- [Medium Ultimate Technical Guide (2026)](https://medium.com/@ganeshvenkatsubramaniyan/the-ultimate-technical-guide-to-prompt-engineering-in-2026-e4ef8cb61f10)
-- [Portkey Token Efficiency (2025)](https://portkey.ai/blog/optimize-token-efficiency-in-prompts)
-- [Agentic Coding GitHub Repo](https://github.com/sammcj/agentic-coding)
-- [OpenAI Prompt Engineering Guide (2026 Updates)](https://platform.openai.com/docs/guides/prompt-engineering)
-
