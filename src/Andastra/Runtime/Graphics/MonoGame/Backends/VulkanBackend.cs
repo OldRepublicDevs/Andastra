@@ -64,6 +64,10 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
         // VSync state tracking
         private bool _vSyncEnabled;
 
+        // Raytracing level tracking
+        // Tracks the current raytracing level for query and configuration purposes
+        private RaytracingLevel _raytracingLevel;
+
         public GraphicsBackendType BackendType
         {
             get { return GraphicsBackendType.Vulkan; }
@@ -534,6 +538,12 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
             // Initialize VSync state (default to enabled for better user experience)
             _vSyncEnabled = true;
 
+            // Initialize raytracing level (default to disabled)
+            _raytracingLevel = RaytracingLevel.Disabled;
+
+            // Initialize video memory tracking (tracks total memory used, not per-frame)
+            _videoMemoryUsed = 0;
+
             // Query GPU timestamp period and support from device properties
             // Based on Vulkan API: vkGetPhysicalDeviceProperties -> properties.limits.timestampPeriod
             // The timestamp period is in nanoseconds per timestamp tick
@@ -605,12 +615,32 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                 }
                 _buffers.Clear();
             }
+            if (_bufferSizes != null)
+            {
+                _bufferSizes.Clear();
+            }
             if (_pipelines != null)
             {
+                // Dispose pipelines if they implement IDisposable
+                foreach (var pipeline in _pipelines.Values)
+                {
+                    if (pipeline is IDisposable disposable)
+                    {
+                        disposable.Dispose();
+                    }
+                }
                 _pipelines.Clear();
             }
             if (_resources != null)
             {
+                // Dispose resources if they implement IDisposable
+                foreach (var resource in _resources.Values)
+                {
+                    if (resource is IDisposable disposable)
+                    {
+                        disposable.Dispose();
+                    }
+                }
                 _resources.Clear();
             }
 
@@ -632,9 +662,10 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
             }
 
             // Reset frame statistics for new frame
+            // Note: _videoMemoryUsed tracks total memory used across all frames, not per-frame
+            // It is accumulated via TrackVideoMemory() when resources are created/destroyed
             _lastFrameStats = new FrameStatistics();
             _texturesUsedThisFrame.Clear();
-            _videoMemoryUsed = 0;
             _lastFrameStats.RaytracingTimeMs = 0.0;
 
             // Start frame timing
@@ -1204,12 +1235,15 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                     return;
                 }
 
+                // Store raytracing level for query and configuration purposes
+                // The actual raytracing implementation is in NativeRaytracingSystem which manages
+                // raytracing pipelines and acceleration structures, but we track the level here
+                // for state management and reporting
+                _raytracingLevel = level;
+
                 // Raytracing level is typically managed by the raytracing system, not the backend directly
-                // This method provides an interface for setting the level, but the actual implementation
-                // is in NativeRaytracingSystem which manages raytracing pipelines and acceleration structures
-                
-                // TODO: If backend needs to track raytracing level, add a field to store it
-                // For now, this is a no-op as raytracing level is managed by NativeRaytracingSystem
+                // This method provides an interface for setting the level, which will be used by
+                // NativeRaytracingSystem when creating raytracing pipelines and acceleration structures
             }
             catch (Exception ex)
             {
