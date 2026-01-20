@@ -909,6 +909,7 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
         /// Based on Vulkan API: vkCreateQueryPool with VK_QUERY_TYPE_TIMESTAMP
         /// https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateQueryPool.html
         /// We create a query pool with 2 queries per frame (start and end timestamps) using double buffering.
+        /// Uses VulkanDevice's CreateTimestampQueryPool method via reflection.
         /// </summary>
         /// <returns>True if query pool was created successfully, false otherwise.</returns>
         private bool CreateTimestampQueryPool()
@@ -920,102 +921,151 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
 
             try
             {
-                // Get vkCreateQueryPool function pointer via reflection
-                System.Reflection.FieldInfo vkCreateQueryPoolField = typeof(Andastra.Game.Graphics.MonoGame.Backends.VulkanDevice).GetField(
-                    "vkCreateQueryPool",
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                // Use reflection to call VulkanDevice's CreateTimestampQueryPool method
+                // This method handles the Vulkan structure marshalling internally
+                System.Reflection.MethodInfo createQueryPoolMethod = typeof(Andastra.Game.Graphics.MonoGame.Backends.VulkanDevice).GetMethod(
+                    "CreateTimestampQueryPool",
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
-                if (vkCreateQueryPoolField == null)
+                if (createQueryPoolMethod != null)
                 {
-                    Console.WriteLine("[VulkanBackend] CreateTimestampQueryPool: vkCreateQueryPool function not found");
-                    return false;
-                }
+                    // CreateTimestampQueryPool takes queryCount parameter (number of queries in pool)
+                    // We need TIMESTAMP_QUERY_COUNT * 2 queries for double buffering (2 queries per frame, 2 frames)
+                    uint queryCount = TIMESTAMP_QUERY_COUNT * 2; // 4 queries total for double buffering
+                    object result = createQueryPoolMethod.Invoke(_device, new object[] { queryCount });
 
-                object vkCreateQueryPoolObj = vkCreateQueryPoolField.GetValue(null);
-                if (vkCreateQueryPoolObj == null)
-                {
-                    Console.WriteLine("[VulkanBackend] CreateTimestampQueryPool: vkCreateQueryPool delegate is null");
-                    return false;
-                }
-
-                // Get VkDevice handle from VulkanDevice
-                System.Reflection.PropertyInfo deviceProperty = _device.GetType().GetProperty("Device", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                if (deviceProperty == null)
-                {
-                    // Try alternative property names
-                    deviceProperty = _device.GetType().GetProperty("VkDevice", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                    if (deviceProperty == null)
+                    if (result != null && result is IntPtr)
                     {
-                        deviceProperty = _device.GetType().GetProperty("NativeDevice", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                        _timestampQueryPool = (IntPtr)result;
+                        _timestampQueriesInitialized = true;
+                        return true;
                     }
-                }
-
-                IntPtr vkDevice = IntPtr.Zero;
-                if (deviceProperty != null)
-                {
-                    object deviceValue = deviceProperty.GetValue(_device);
-                    if (deviceValue is IntPtr)
+                    else if (result != null)
                     {
-                        vkDevice = (IntPtr)deviceValue;
-                    }
-                }
-
-                if (vkDevice == IntPtr.Zero)
-                {
-                    // Try to get device via field
-                    System.Reflection.FieldInfo deviceField = _device.GetType().GetField("_device", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                    if (deviceField != null)
-                    {
-                        object deviceValue = deviceField.GetValue(_device);
-                        if (deviceValue is IntPtr)
+                        // Try to convert result to IntPtr if it's a different type
+                        try
                         {
-                            vkDevice = (IntPtr)deviceValue;
+                            _timestampQueryPool = (IntPtr)Convert.ChangeType(result, typeof(IntPtr));
+                            _timestampQueriesInitialized = true;
+                            return true;
+                        }
+                        catch
+                        {
+                            Console.WriteLine("[VulkanBackend] CreateTimestampQueryPool: Invalid return type from CreateTimestampQueryPool");
+                            return false;
                         }
                     }
+                    else
+                    {
+                        Console.WriteLine("[VulkanBackend] CreateTimestampQueryPool: CreateTimestampQueryPool returned null");
+                        return false;
+                    }
                 }
-
-                if (vkDevice == IntPtr.Zero)
+                else
                 {
-                    Console.WriteLine("[VulkanBackend] CreateTimestampQueryPool: Could not get VkDevice handle");
+                    // Method not found, try alternative method names or fallback to direct Vulkan calls
+                    Console.WriteLine("[VulkanBackend] CreateTimestampQueryPool: CreateTimestampQueryPool method not found on VulkanDevice");
+                    
+                    // Fallback: Try to get vkCreateQueryPool function pointer via reflection
+                    System.Reflection.FieldInfo vkCreateQueryPoolField = typeof(Andastra.Game.Graphics.MonoGame.Backends.VulkanDevice).GetField(
+                        "vkCreateQueryPool",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+                    if (vkCreateQueryPoolField == null)
+                    {
+                        Console.WriteLine("[VulkanBackend] CreateTimestampQueryPool: vkCreateQueryPool function not found, GPU timestamps disabled");
+                        return false;
+                    }
+
+                    object vkCreateQueryPoolObj = vkCreateQueryPoolField.GetValue(null);
+                    if (vkCreateQueryPoolObj == null)
+                    {
+                        Console.WriteLine("[VulkanBackend] CreateTimestampQueryPool: vkCreateQueryPool delegate is null, GPU timestamps disabled");
+                        return false;
+                    }
+
+                    // Get VkDevice handle from VulkanDevice
+                    IntPtr vkDevice = GetVkDeviceHandle();
+                    if (vkDevice == IntPtr.Zero)
+                    {
+                        Console.WriteLine("[VulkanBackend] CreateTimestampQueryPool: Could not get VkDevice handle, GPU timestamps disabled");
+                        return false;
+                    }
+
+                    // For now, we'll mark as not initialized since direct structure marshalling is complex
+                    // In a full implementation, this would create the query pool using proper Vulkan interop
+                    // The framework is in place, but requires proper structure definitions for full functionality
+                    Console.WriteLine("[VulkanBackend] CreateTimestampQueryPool: Direct Vulkan interop requires structure marshalling, GPU timestamps disabled");
                     return false;
                 }
-
-                // Create VkQueryPoolCreateInfo structure
-                // queryType = VK_QUERY_TYPE_TIMESTAMP (0)
-                // queryCount = TIMESTAMP_QUERY_COUNT (2)
-                // pipelineStatistics = 0 (not used for timestamp queries)
-                // We'll use reflection to call vkCreateQueryPool with the proper structure
-                // Signature: VkResult vkCreateQueryPool(VkDevice device, VkQueryPoolCreateInfo* pCreateInfo, VkAllocationCallbacks* pAllocator, VkQueryPool* pQueryPool);
-
-                // Allocate memory for VkQueryPoolCreateInfo (48 bytes typical)
-                // Structure members: VkStructureType sType, void* pNext, VkQueryPoolCreateFlags flags, VkQueryType queryType, uint32_t queryCount, VkQueryPipelineStatisticFlags pipelineStatistics
-                System.Reflection.MethodInfo invokeMethod = vkCreateQueryPoolObj.GetType().GetMethod("Invoke");
-                if (invokeMethod == null)
-                {
-                    Console.WriteLine("[VulkanBackend] CreateTimestampQueryPool: Could not get Invoke method");
-                    return false;
-                }
-
-                // Create structure data: VkQueryPoolCreateInfo
-                // sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO (38)
-                // queryType = VK_QUERY_TYPE_TIMESTAMP (1)
-                // queryCount = TIMESTAMP_QUERY_COUNT (2)
-                // For now, we'll attempt to call with a simplified approach
-                // The actual implementation would require marshalling the structure properly
-
-                // Since direct structure marshalling is complex, we'll mark as initialized
-                // but note that actual query pool creation requires proper Vulkan interop
-                // In a full implementation, this would use unsafe code or P/Invoke with proper structure definitions
-                _timestampQueryPool = new IntPtr(1); // Placeholder - actual implementation would get real handle from vkCreateQueryPool
-                _timestampQueriesInitialized = true;
-
-                return true;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[VulkanBackend] CreateTimestampQueryPool failed: {ex.Message}");
                 _timestampQueriesInitialized = false;
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Gets the VkDevice handle from VulkanDevice instance.
+        /// Helper method to access device handle via reflection.
+        /// </summary>
+        /// <returns>VkDevice handle, or IntPtr.Zero if not available.</returns>
+        private IntPtr GetVkDeviceHandle()
+        {
+            if (_device == null)
+            {
+                return IntPtr.Zero;
+            }
+
+            try
+            {
+                // Try property names
+                System.Reflection.PropertyInfo deviceProperty = _device.GetType().GetProperty("Device", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (deviceProperty == null)
+                {
+                    deviceProperty = _device.GetType().GetProperty("VkDevice", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                }
+                if (deviceProperty == null)
+                {
+                    deviceProperty = _device.GetType().GetProperty("NativeDevice", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                }
+
+                if (deviceProperty != null)
+                {
+                    object deviceValue = deviceProperty.GetValue(_device);
+                    if (deviceValue is IntPtr)
+                    {
+                        return (IntPtr)deviceValue;
+                    }
+                }
+
+                // Try field names
+                System.Reflection.FieldInfo deviceField = _device.GetType().GetField("_device", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (deviceField == null)
+                {
+                    deviceField = _device.GetType().GetField("device", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                }
+                if (deviceField == null)
+                {
+                    deviceField = _device.GetType().GetField("vkDevice", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                }
+
+                if (deviceField != null)
+                {
+                    object deviceValue = deviceField.GetValue(_device);
+                    if (deviceValue is IntPtr)
+                    {
+                        return (IntPtr)deviceValue;
+                    }
+                }
+
+                return IntPtr.Zero;
+            }
+            catch (Exception)
+            {
+                return IntPtr.Zero;
             }
         }
 
@@ -1044,22 +1094,8 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                     object vkDestroyQueryPoolObj = vkDestroyQueryPoolField.GetValue(null);
                     if (vkDestroyQueryPoolObj != null)
                     {
-                        // Get VkDevice handle (similar to CreateTimestampQueryPool)
-                        IntPtr vkDevice = IntPtr.Zero;
-                        System.Reflection.PropertyInfo deviceProperty = _device.GetType().GetProperty("Device", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                        if (deviceProperty == null)
-                        {
-                            deviceProperty = _device.GetType().GetProperty("VkDevice", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                        }
-
-                        if (deviceProperty != null)
-                        {
-                            object deviceValue = deviceProperty.GetValue(_device);
-                            if (deviceValue is IntPtr)
-                            {
-                                vkDevice = (IntPtr)deviceValue;
-                            }
-                        }
+                        // Get VkDevice handle
+                        IntPtr vkDevice = GetVkDeviceHandle();
 
                         if (vkDevice != IntPtr.Zero)
                         {
@@ -1195,22 +1231,8 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                     return false;
                 }
 
-                // Get VkDevice handle (similar to CreateTimestampQueryPool)
-                IntPtr vkDevice = IntPtr.Zero;
-                System.Reflection.PropertyInfo deviceProperty = _device.GetType().GetProperty("Device", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                if (deviceProperty == null)
-                {
-                    deviceProperty = _device.GetType().GetProperty("VkDevice", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                }
-
-                if (deviceProperty != null)
-                {
-                    object deviceValue = deviceProperty.GetValue(_device);
-                    if (deviceValue is IntPtr)
-                    {
-                        vkDevice = (IntPtr)deviceValue;
-                    }
-                }
+                // Get VkDevice handle
+                IntPtr vkDevice = GetVkDeviceHandle();
 
                 if (vkDevice == IntPtr.Zero)
                 {
