@@ -29,7 +29,7 @@ namespace Andastra.Game.Games.Odyssey.Game
     ///   * ["PlayerOnly"]       @ (K1: TODO: Find address, TSL: 0x007c0ca8) - player only flag
     ///   * ["HD0:players"]      @ (K1: TODO: Find address, TSL: 0x007be674) - player directory path
     ///   * ["player"]           @ (K1: TODO: Find address, TSL: 0x007c28d8) - player constant
-    ///   * ["PLAYER"]           @ (K1: TODO: Find address, TSL: 0x007c36f0) - player constant uppercase
+    ///   * ["PLAYER"]           @ (K1: 0x0074a610, TSL: 0x007c36f0) - player constant uppercase
     /// - Player data:
     ///   * ["PCNAME"]           @ (K1: TODO: Find address, TSL: 0x007be194) - PC name field
     ///   * ["PT_PCNAME"]        @ (K1: TODO: Find address, TSL: 0x007c1904) - party table PC name
