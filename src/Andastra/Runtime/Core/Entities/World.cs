@@ -8,8 +8,7 @@ using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Module;
-using Andastra.Runtime.Core.Perception;
-using Andastra.Runtime.Core.Save;
+using Andastra.Runtime.Core.Perception;c
 using Andastra.Runtime.Core.Templates;
 using Andastra.Runtime.Core.Triggers;
 
@@ -186,19 +185,21 @@ namespace Andastra.Runtime.Core.Entities
         /// - Function name: [TODO: Find function name in binaries via reverse engineering]
         ///   - Possible names: GetArea, GetAreaByObjectId, GetAreaById, or may use GetObject directly
         ///   - Areas are objects with ObjectIds (0x7F000010+), so GetArea may use GetObject mechanism
-        /// - K1 executable: [TODO: Find function address via reverse engineering]
+        /// - K1 executables (Odyssey Engine): [TODO: Find function address via reverse engineering]
+        ///   - Use list-project-files in ReVa MCP to identify available K1 program variants
         ///   - Search strategy: Cross-reference "AreaId" string, find functions that lookup by AreaId
-        ///   - Alternative: Check if GetObject (0x004dc030/0x004e9de0) handles area ObjectIds
-        /// - TSL executable: [TODO: Find function address via reverse engineering]
+        ///   - Alternative: Check if GetObject handles area ObjectIds directly
+        /// - TSL executables (Odyssey Engine): [TODO: Find function address via reverse engineering]
+        ///   - Use list-project-files in ReVa MCP to identify available TSL program variants
         ///   - Search strategy: Cross-reference "AreaId" @ 0x007bef48, find hash table lookup functions
-        ///   - Known: "AreaId" string reference @ 0x007bef48 (data address)
-        ///   - Known: GetObject uses FUN_004dc030 (wrapper) → FUN_004e9de0 (lookup)
+        ///   - Known: "AreaId" string reference @ 0x007bef48 (data address in one TSL variant)
+        ///   - Known: GetObject uses wrapper → lookup pattern (addresses vary by executable variant)
         ///   - Pattern: May follow similar wrapper→lookup pattern for areas
         ///
         /// Located via string references:
-        /// - "AreaId" @ 0x007bef48 (TSL executable) - Data address for AreaId field in entity/area structures
-        /// - "Area" @ 0x007be340 (TSL executable) - Area name string reference
-        /// - "AreaId" field used in entity serialization (0x005226d0) and deserialization (0x005223a0)
+        /// - "AreaId" @ 0x007bef48 (TSL executable variant) - Data address for AreaId field in entity/area structures
+        /// - "Area" @ 0x007be340 (TSL executable variant) - Area name string reference
+        /// - "AreaId" field used in entity serialization and deserialization (addresses vary by executable variant)
         ///
         /// Original Implementation Details:
         /// - Data structure: Areas stored in hash table/dictionary keyed by AreaId (uint32)
@@ -212,10 +213,11 @@ namespace Andastra.Runtime.Core.Entities
         /// - GetAreaId: Returns AreaId for a given area instance (reverse lookup)
         /// - GetArea NWScript function: Uses this to find area containing an entity
         ///   - NWScript GetArea(object oTarget) implementation:
-        ///     1. Gets entity by ObjectId (via GetObject/0x004dc030)
-        ///     2. Reads entity's AreaId field (offset in entity structure, referenced by "AreaId" @ 0x007bef48)
+        ///     1. Gets entity by ObjectId (via GetObject - addresses vary by executable variant)
+        ///     2. Reads entity's AreaId field (offset in entity structure, referenced by "AreaId" string)
         ///     3. Calls GetArea(AreaId) to lookup area by AreaId
         ///     4. Returns AreaId as object ID (or OBJECT_INVALID if not found)
+        ///   - Note: Function addresses and data offsets vary between executable variants
         ///
         /// Data Structure Analysis:
         /// - Areas are stored in a hash table/dictionary: Dictionary&lt;uint, Area*&gt; or similar structure
@@ -236,21 +238,27 @@ namespace Andastra.Runtime.Core.Entities
         /// - Thread safety: Not thread-safe (original engine is single-threaded)
         ///
         /// Reverse Engineering Guide (for finding function addresses):
-        /// 1. Open K1 and TSL executables in Ghidra (use list-project-files to identify available programs)
-        /// 2. Search for string "AreaId" and find data address (TSL: 0x007bef48)
-        /// 3. Find cross-references to "AreaId" string or data address
+        /// 1. Use ReVa MCP list-project-files to identify available K1 and TSL executable variants in Ghidra project
+        ///    - Different variants exist for different platforms (Windows, macOS, Linux) and builds
+        ///    - Document which variant(s) you're analyzing
+        /// 2. Open identified executable(s) in Ghidra and search for string "AreaId"
+        ///    - Find data address(es) for "AreaId" (addresses vary by executable variant)
+        ///    - Example: One TSL variant has "AreaId" @ 0x007bef48
+        /// 3. Find cross-references to "AreaId" string or data address(es)
         /// 4. Look for functions that:
         ///    a. Take uint32 parameter (AreaId/ObjectId)
         ///    b. Perform hash table/dictionary lookup
         ///    c. Return area pointer or null
-        /// 5. Check if GetObject (0x004dc030/0x004e9de0) handles area ObjectIds directly
+        /// 5. Check if GetObject handles area ObjectIds directly
         ///    - Areas have ObjectIds in 0x7F000010+ range
+        ///    - GetObject addresses vary by executable variant
         ///    - If GetObject handles all ObjectIds, GetArea may just be GetObject
         /// 6. Alternative: Search for functions called by GetArea NWScript implementation
         ///    - NWScript GetArea calls: GetObject → read AreaId → GetArea(AreaId)
         ///    - Find the function that does the final AreaId → Area lookup
-        /// 7. Document findings: Function name, addresses (K1/TSL), parameters, return type
+        /// 7. Document findings: Function name, addresses per executable variant, parameters, return type
         /// 8. Add labels, comments, function names, structures in Ghidra project using ReVa MCP
+        ///    - Ensure documentation reflects the specific executable variant(s) analyzed
         ///
         /// Cross-Engine Compatibility:
         /// - Common across all BioWare engines: Odyssey, Aurora, Eclipse, Infinity
