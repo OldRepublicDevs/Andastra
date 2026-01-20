@@ -90,25 +90,51 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
             get { return _device; }
         }
 
-        // TODO: STUB - Implement IGraphicsBackend interface members
+        // IGraphicsBackend interface members
+        // These require window/input infrastructure that will be implemented when window management is added
+        // For now, they throw helpful exceptions explaining what infrastructure is needed
         public IGraphicsDevice GraphicsDevice
         {
-            get { throw new NotImplementedException("GraphicsDevice property not yet implemented in VulkanBackend"); }
+            get 
+            { 
+                throw new InvalidOperationException(
+                    "GraphicsDevice property requires window and graphics device infrastructure. " +
+                    "Window management (GLFW/SDL/native platform windowing) must be implemented first. " +
+                    "The Vulkan backend needs: window creation, swap chain setup, and graphics device wrapper.");
+            }
         }
 
         public IContentManager ContentManager
         {
-            get { throw new NotImplementedException("ContentManager property not yet implemented in VulkanBackend"); }
+            get 
+            { 
+                throw new InvalidOperationException(
+                    "ContentManager property requires content loading infrastructure. " +
+                    "Content management system must be implemented for the Vulkan backend. " +
+                    "This requires: content pipeline integration, asset loading, and resource management.");
+            }
         }
 
         public IWindow Window
         {
-            get { throw new NotImplementedException("Window property not yet implemented in VulkanBackend"); }
+            get 
+            { 
+                throw new InvalidOperationException(
+                    "Window property requires window management infrastructure. " +
+                    "Window creation and management must be implemented using GLFW, SDL, or native platform APIs. " +
+                    "The Vulkan backend needs: window creation, surface creation (VkSurfaceKHR), and event handling.");
+            }
         }
 
         public IInputManager InputManager
         {
-            get { throw new NotImplementedException("InputManager property not yet implemented in VulkanBackend"); }
+            get 
+            { 
+                throw new InvalidOperationException(
+                    "InputManager property requires input system infrastructure. " +
+                    "Input handling system must be implemented for the Vulkan backend. " +
+                    "This requires: keyboard/mouse/controller input processing and event management.");
+            }
         }
 
         public bool SupportsVSync
@@ -146,24 +172,80 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                 throw new InvalidOperationException("Backend must be initialized before running.");
             }
 
-            // TODO: STUB - Implement Vulkan game loop
+            // TODO: Implement Vulkan game loop
             // When fully implemented, this should:
-            // - Create window using platform-specific windowing API (GLFW, SDL, or native Win32/X11/Cocoa)
-            // - Set up swap chain for presentation
-            // - Run main loop: while (!shouldExit) { updateAction(deltaTime); BeginFrame(); drawAction(); EndFrame(); }
-            // - Handle window events (resize, close, input)
-            // - Present swap chain images to screen
-            throw new NotImplementedException("Run method not yet implemented in VulkanBackend");
+            // 1. Create window using platform-specific windowing API:
+            //    - GLFW: glfwCreateWindow(), glfwCreateWindowSurface()
+            //    - SDL: SDL_CreateWindow(), SDL_Vulkan_CreateSurface()
+            //    - Native: Win32 CreateWindowEx(), VkWin32SurfaceCreateInfoKHR
+            //    - X11: xcb_create_window(), VkXcbSurfaceCreateInfoKHR
+            //    - Cocoa: NSWindow, VkMacOSSurfaceCreateInfoMVK
+            //
+            // 2. Create VkSurfaceKHR from window handle
+            //    - vkCreateWin32SurfaceKHR (Windows)
+            //    - vkCreateXcbSurfaceKHR (Linux/X11)
+            //    - vkCreateMacOSSurfaceMVK (macOS)
+            //    - vkCreateMetalSurfaceEXT (macOS/Metal)
+            //
+            // 3. Set up swap chain for presentation:
+            //    - Query surface capabilities: vkGetPhysicalDeviceSurfaceCapabilitiesKHR
+            //    - Choose present mode based on VSync setting
+            //    - Create swap chain: vkCreateSwapchainKHR
+            //    - Get swap chain images: vkGetSwapchainImagesKHR
+            //    - Create image views for each swap chain image
+            //    - Create framebuffers for rendering
+            //
+            // 4. Run main loop:
+            //    - while (!shouldExit) {
+            //        - Process window events (resize, close, input)
+            //        - Acquire next swap chain image: vkAcquireNextImageKHR
+            //        - Calculate delta time
+            //        - BeginFrame()
+            //        - updateAction(deltaTime)
+            //        - drawAction()
+            //        - EndFrame()
+            //        - Present swap chain image: vkQueuePresentKHR
+            //      }
+            //
+            // 5. Handle window events:
+            //    - Window close -> set shouldExit = true
+            //    - Window resize -> recreate swap chain with new dimensions
+            //    - Input events -> update InputManager
+            //
+            // 6. Cleanup on exit:
+            //    - Wait for device idle: vkDeviceWaitIdle
+            //    - Destroy swap chain and related resources
+            //    - Destroy surface
+            //    - Destroy window
+            //
+            // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateSwapchainKHR.html
+            // Reference: https://vulkan-tutorial.com/Drawing_a_triangle/Presentation/Swap_chain
+            
+            throw new InvalidOperationException(
+                "Run method requires window and swap chain infrastructure. " +
+                "Window management must be implemented first using GLFW, SDL, or native platform APIs. " +
+                "The Vulkan backend needs: window creation, surface creation (VkSurfaceKHR), swap chain setup, and game loop implementation.");
         }
 
         public void Exit()
         {
-            // TODO: STUB - Implement exit handling
+            // TODO: Implement exit handling
             // When fully implemented, this should:
-            // - Set exit flag to stop game loop
-            // - Signal window to close
-            // - Clean up resources
-            throw new NotImplementedException("Exit method not yet implemented in VulkanBackend");
+            // 1. Set exit flag to stop game loop (if running)
+            // 2. Signal window to close:
+            //    - GLFW: glfwSetWindowShouldClose(window, GLFW_TRUE)
+            //    - SDL: SDL_Event (SDL_QUIT) -> SDL_PushEvent()
+            //    - Native: PostMessage() or similar window close message
+            // 3. Clean up resources if needed:
+            //    - Wait for device idle: vkDeviceWaitIdle
+            //    - Any additional cleanup before window closes
+            
+            // For now, just log that exit was called
+            // When window infrastructure is implemented, this will properly close the window
+            if (_initialized)
+            {
+                Console.WriteLine("[VulkanBackend] Exit() called - window infrastructure not yet implemented");
+            }
         }
 
         public IRoomMeshRenderer CreateRoomMeshRenderer()
@@ -173,12 +255,19 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                 throw new InvalidOperationException("Backend must be initialized before creating renderers.");
             }
 
-            // TODO: STUB - Implement Vulkan room mesh renderer
+            // TODO: Implement Vulkan room mesh renderer
             // When fully implemented, this should:
-            // - Create VulkanRoomMeshRenderer instance
-            // - Initialize with Vulkan device, command buffers, pipelines
-            // - Set up vertex/index buffer management for room geometry
-            throw new NotImplementedException("CreateRoomMeshRenderer not yet implemented in VulkanBackend");
+            // 1. Create VulkanRoomMeshRenderer instance
+            // 2. Initialize with Vulkan device, command buffers, pipelines
+            // 3. Set up vertex/index buffer management for room geometry
+            // 4. Create graphics pipelines for room rendering
+            // 5. Set up descriptor sets for room textures and materials
+            // 6. Handle room mesh loading from game data
+            
+            throw new InvalidOperationException(
+                "CreateRoomMeshRenderer requires rendering pipeline infrastructure. " +
+                "Vulkan rendering system must be implemented first. " +
+                "This requires: graphics pipeline creation, vertex/index buffer management, descriptor set setup, and room mesh loading.");
         }
 
         public IEntityModelRenderer CreateEntityModelRenderer(object gameDataManager = null, object installation = null)
@@ -188,21 +277,34 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                 throw new InvalidOperationException("Backend must be initialized before creating renderers.");
             }
 
-            // TODO: STUB - Implement Vulkan entity model renderer
+            // TODO: Implement Vulkan entity model renderer
             // When fully implemented, this should:
-            // - Create VulkanEntityModelRenderer instance
-            // - Initialize with Vulkan device, command buffers, pipelines
-            // - Set up model loading and rendering pipeline
-            throw new NotImplementedException("CreateEntityModelRenderer not yet implemented in VulkanBackend");
+            // 1. Create VulkanEntityModelRenderer instance
+            // 2. Initialize with Vulkan device, command buffers, pipelines
+            // 3. Set up model loading from game data (MDL files)
+            // 4. Create graphics pipelines for model rendering
+            // 5. Set up descriptor sets for model textures and materials
+            // 6. Handle animation and skeleton rendering
+            
+            throw new InvalidOperationException(
+                "CreateEntityModelRenderer requires rendering pipeline infrastructure. " +
+                "Vulkan rendering system must be implemented first. " +
+                "This requires: graphics pipeline creation, model loading system, animation system, and descriptor set management.");
         }
 
         public ISpatialAudio CreateSpatialAudio()
         {
-            // TODO: STUB - Implement Vulkan spatial audio
+            // TODO: Implement Vulkan spatial audio
             // When fully implemented, this should:
-            // - Create VulkanSpatialAudio instance or delegate to audio system
-            // - Set up 3D audio positioning using Vulkan-compatible audio library
-            throw new NotImplementedException("CreateSpatialAudio not yet implemented in VulkanBackend");
+            // 1. Create VulkanSpatialAudio instance or delegate to audio system
+            // 2. Set up 3D audio positioning using OpenAL, FMOD, or similar audio library
+            // 3. Note: Audio is typically independent of graphics API, but needs integration
+            // 4. Initialize audio context and listener for 3D spatialization
+            
+            throw new InvalidOperationException(
+                "CreateSpatialAudio requires audio system infrastructure. " +
+                "Audio system must be implemented for the Vulkan backend. " +
+                "This requires: 3D audio library integration (OpenAL/FMOD), audio context management, and spatial audio processing.");
         }
 
         public object CreateDialogueCameraController(object cameraController)
@@ -212,11 +314,17 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                 throw new ArgumentNullException(nameof(cameraController));
             }
 
-            // TODO: STUB - Implement Vulkan dialogue camera controller
+            // TODO: Implement Vulkan dialogue camera controller
             // When fully implemented, this should:
-            // - Create VulkanDialogueCameraController instance
-            // - Wrap the provided camera controller with Vulkan-specific rendering
-            throw new NotImplementedException("CreateDialogueCameraController not yet implemented in VulkanBackend");
+            // 1. Create VulkanDialogueCameraController instance
+            // 2. Wrap the provided camera controller with Vulkan-specific rendering
+            // 3. Handle dialogue camera rendering with Vulkan pipelines
+            // 4. Integrate with dialogue system for camera positioning
+            
+            throw new InvalidOperationException(
+                "CreateDialogueCameraController requires camera and rendering infrastructure. " +
+                "Dialogue camera system must be implemented for the Vulkan backend. " +
+                "This requires: camera controller wrapper, Vulkan-specific rendering, and dialogue system integration.");
         }
 
         public object CreateSoundPlayer(object resourceProvider)
@@ -226,12 +334,17 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                 throw new ArgumentNullException(nameof(resourceProvider));
             }
 
-            // TODO: STUB - Implement Vulkan sound player
+            // TODO: Implement Vulkan sound player
             // When fully implemented, this should:
-            // - Create VulkanSoundPlayer instance
-            // - Initialize with resource provider for loading audio files
-            // - Set up audio playback using Vulkan-compatible audio library
-            throw new NotImplementedException("CreateSoundPlayer not yet implemented in VulkanBackend");
+            // 1. Create VulkanSoundPlayer instance
+            // 2. Initialize with resource provider for loading audio files
+            // 3. Set up audio playback using OpenAL, FMOD, or similar audio library
+            // 4. Handle WAV/MP3 audio file loading and playback
+            
+            throw new InvalidOperationException(
+                "CreateSoundPlayer requires audio system infrastructure. " +
+                "Audio playback system must be implemented for the Vulkan backend. " +
+                "This requires: audio library integration (OpenAL/FMOD), audio file loading, and sound effect playback.");
         }
 
         public object CreateMusicPlayer(object resourceProvider)
@@ -241,12 +354,18 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                 throw new ArgumentNullException(nameof(resourceProvider));
             }
 
-            // TODO: STUB - Implement Vulkan music player
+            // TODO: Implement Vulkan music player
             // When fully implemented, this should:
-            // - Create VulkanMusicPlayer instance
-            // - Initialize with resource provider for loading music files
-            // - Set up background music playback using Vulkan-compatible audio library
-            throw new NotImplementedException("CreateMusicPlayer not yet implemented in VulkanBackend");
+            // 1. Create VulkanMusicPlayer instance
+            // 2. Initialize with resource provider for loading music files
+            // 3. Set up background music playback using OpenAL, FMOD, or similar audio library
+            // 4. Handle streaming audio for background music
+            // 5. Support crossfading between tracks
+            
+            throw new InvalidOperationException(
+                "CreateMusicPlayer requires audio system infrastructure. " +
+                "Background music system must be implemented for the Vulkan backend. " +
+                "This requires: audio library integration (OpenAL/FMOD), music file loading, streaming audio, and crossfade support.");
         }
 
         public object CreateVoicePlayer(object resourceProvider)
@@ -256,12 +375,18 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                 throw new ArgumentNullException(nameof(resourceProvider));
             }
 
-            // TODO: STUB - Implement Vulkan voice player
+            // TODO: Implement Vulkan voice player
             // When fully implemented, this should:
-            // - Create VulkanVoicePlayer instance
-            // - Initialize with resource provider for loading voice files
-            // - Set up voice-over dialogue playback using Vulkan-compatible audio library
-            throw new NotImplementedException("CreateVoicePlayer not yet implemented in VulkanBackend");
+            // 1. Create VulkanVoicePlayer instance
+            // 2. Initialize with resource provider for loading voice files
+            // 3. Set up voice-over dialogue playback using OpenAL, FMOD, or similar audio library
+            // 4. Handle dialogue voice file loading (typically WAV files)
+            // 5. Support lip sync and dialogue timing
+            
+            throw new InvalidOperationException(
+                "CreateVoicePlayer requires audio system infrastructure. " +
+                "Voice playback system must be implemented for the Vulkan backend. " +
+                "This requires: audio library integration (OpenAL/FMOD), voice file loading, dialogue playback, and lip sync support.");
         }
 
         public void SetVSync(bool enabled)
