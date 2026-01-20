@@ -204,9 +204,9 @@ namespace Andastra.Runtime.Core.Actions
 
             // For consumable items, apply effects based on baseitems.2da item class if no properties found
             // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Item usage checks baseitems.2da for item class and chargesstarting
-            // swkotor2.exe: 0x005ff170 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff170) - Item usage checks baseitems.2da for item class and chargesstarting
+            // swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - Item usage checks baseitems.2da for item class and chargesstarting
             // Located via string references: "baseitems" @ 0x007c4594 (swkotor2.exe), "BASEITEMS" @ 0x0074b294 (swkotor.exe)
-            // swkotor2.exe: 0x005fb0f0 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005fb0f0) loads base item data from baseitems.2da
+            // Note: 0x005fb0f0 is a different function (save game loading, not baseitems.2da loading)
             // Items with chargesstarting > 0 in baseitems.2da are consumables that apply effects when used
             if (itemComponent.Properties.Count == 0 && itemComponent.Charges > 0)
             {
@@ -217,6 +217,7 @@ namespace Andastra.Runtime.Core.Actions
                     // Load baseitems.2da to get item class and consumable information
                     // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Base item stats loaded from baseitems.2da via GameDataProvider
                     // swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - Base item stats loaded from baseitems.2da via GameDataProvider
+                    // Both functions load the BASEITEMS 2DA table and populate CSWBaseItemArray with item class, chargesstarting, and other properties
                     TwoDA baseitemsTable = null;
                     if (caster.World.GameDataProvider != null)
                     {
@@ -240,7 +241,7 @@ namespace Andastra.Runtime.Core.Actions
                             {
                                 // Get item class from baseitems.2da
                                 // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - ItemClass read via C2DA::GetCExoStringEntry as string
-                                // swkotor2.exe: 0x005ff170 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff170) - ItemClass read via C2DA::GetCExoStringEntry as string
+                                // swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - ItemClass read via C2DA::GetCExoStringEntry as string
                                 // Item class determines item category and behavior (weapon, armor, consumable, etc.)
                                 string itemClass = baseItemRow.GetString("itemclass", "").ToLowerInvariant();
 
@@ -251,7 +252,7 @@ namespace Andastra.Runtime.Core.Actions
 
                                 // Apply effects based on item class for consumable items
                                 // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Different item classes have different effects when used
-                                // swkotor2.exe: 0x005ff170 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff170) - Different item classes have different effects when used
+                                // swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - Different item classes have different effects when used
                                 if (chargesStarting.HasValue && chargesStarting.Value > 0)
                                 {
                                     ApplyEffectsByItemClass(effectSystem, target, caster, baseItemRow, itemClass, itemComponent);
@@ -294,7 +295,7 @@ namespace Andastra.Runtime.Core.Actions
         /// <remarks>
         /// Item Class-Based Effect Application:
         /// - swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - ItemClass determines item category and behavior
-        /// - swkotor2.exe: 0x005ff170 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff170) - ItemClass determines item category and behavior
+        /// - swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - ItemClass determines item category and behavior
         /// - Located via string references: "baseitems" @ 0x007c4594 (swkotor2.exe), "BASEITEMS" @ 0x0074b294 (swkotor.exe)
         /// - Original implementation: Different item classes have different effects when used
         /// - Item class is a string column in baseitems.2da (read via C2DA::GetCExoStringEntry)
@@ -318,7 +319,7 @@ namespace Andastra.Runtime.Core.Actions
 
             // Determine effect based on item class string and label
             // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Item class determines what effects are applied when item is used
-            // swkotor2.exe: 0x005ff170 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff170) - Item class determines what effects are applied when item is used
+            // swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - Item class determines what effects are applied when item is used
             // Item class is a string that identifies the item category (weapon, armor, consumable, etc.)
             ItemCategory category = GetItemCategoryFromItemClass(itemClass);
 
@@ -505,7 +506,7 @@ namespace Andastra.Runtime.Core.Actions
         /// <remarks>
         /// Item Class Category Determination:
         /// - swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - ItemClass read as string via C2DA::GetCExoStringEntry
-        /// - swkotor2.exe: 0x005ff170 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff170) - ItemClass read as string via C2DA::GetCExoStringEntry
+        /// - swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - ItemClass read as string via C2DA::GetCExoStringEntry
         /// - Item class string determines item category and behavior:
         ///   - Medical consumables: "medical", "medpac", "heal" patterns, or numeric strings for BASE_ITEM_MEDICAL_EQUIPMENT (55)
         ///   - Stimulants: "stim", "adrenal", "combat" patterns, or numeric strings for BASE_ITEM_ADRENALINE (53), BASE_ITEM_COMBAT_SHOTS (54)
@@ -638,7 +639,7 @@ namespace Andastra.Runtime.Core.Actions
         /// </summary>
         /// <remarks>
         /// swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Stim bonus amounts scale with item quality (chargesstarting)
-        /// swkotor2.exe: 0x005ff170 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff170) - Stim bonus amounts scale with item quality (chargesstarting)
+        /// swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - Stim bonus amounts scale with item quality (chargesstarting)
         /// </remarks>
         private int CalculateStimBonusAmount(IItemComponent itemComponent, int? chargesStarting)
         {
