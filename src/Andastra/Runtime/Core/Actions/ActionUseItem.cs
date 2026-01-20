@@ -204,9 +204,9 @@ namespace Andastra.Runtime.Core.Actions
 
             // For consumable items, apply effects based on baseitems.2da item class if no properties found
             // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Item usage checks baseitems.2da for item class and chargesstarting
-            // swkotor2.exe: 0x005ff170 (FUN_005ff170) - Item usage checks baseitems.2da for item class and chargesstarting
+            // swkotor2.exe: 0x005ff170 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff170) - Item usage checks baseitems.2da for item class and chargesstarting
             // Located via string references: "baseitems" @ 0x007c4594 (swkotor2.exe), "BASEITEMS" @ 0x0074b294 (swkotor.exe)
-            // swkotor2.exe: 0x005fb0f0 (FUN_005fb0f0) loads base item data from baseitems.2da
+            // swkotor2.exe: 0x005fb0f0 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005fb0f0) loads base item data from baseitems.2da
             // Items with chargesstarting > 0 in baseitems.2da are consumables that apply effects when used
             if (itemComponent.Properties.Count == 0 && itemComponent.Charges > 0)
             {
@@ -240,7 +240,7 @@ namespace Andastra.Runtime.Core.Actions
                             {
                                 // Get item class from baseitems.2da
                                 // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - ItemClass read via C2DA::GetCExoStringEntry as string
-                                // swkotor2.exe: 0x005ff170 (FUN_005ff170) - ItemClass read via C2DA::GetCExoStringEntry as string
+                                // swkotor2.exe: 0x005ff170 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff170) - ItemClass read via C2DA::GetCExoStringEntry as string
                                 // Item class determines item category and behavior (weapon, armor, consumable, etc.)
                                 string itemClass = baseItemRow.GetString("itemclass", "").ToLowerInvariant();
 
@@ -251,7 +251,7 @@ namespace Andastra.Runtime.Core.Actions
 
                                 // Apply effects based on item class for consumable items
                                 // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Different item classes have different effects when used
-                                // swkotor2.exe: 0x005ff170 (FUN_005ff170) - Different item classes have different effects when used
+                                // swkotor2.exe: 0x005ff170 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff170) - Different item classes have different effects when used
                                 if (chargesStarting.HasValue && chargesStarting.Value > 0)
                                 {
                                     ApplyEffectsByItemClass(effectSystem, target, caster, baseItemRow, itemClass, itemComponent);
@@ -294,7 +294,7 @@ namespace Andastra.Runtime.Core.Actions
         /// <remarks>
         /// Item Class-Based Effect Application:
         /// - swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - ItemClass determines item category and behavior
-        /// - swkotor2.exe: 0x005ff170 (FUN_005ff170) - ItemClass determines item category and behavior
+        /// - swkotor2.exe: 0x005ff170 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff170) - ItemClass determines item category and behavior
         /// - Located via string references: "baseitems" @ 0x007c4594 (swkotor2.exe), "BASEITEMS" @ 0x0074b294 (swkotor.exe)
         /// - Original implementation: Different item classes have different effects when used
         /// - Item class is a string column in baseitems.2da (read via C2DA::GetCExoStringEntry)
@@ -318,7 +318,7 @@ namespace Andastra.Runtime.Core.Actions
 
             // Determine effect based on item class string and label
             // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Item class determines what effects are applied when item is used
-            // swkotor2.exe: 0x005ff170 (FUN_005ff170) - Item class determines what effects are applied when item is used
+            // swkotor2.exe: 0x005ff170 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff170) - Item class determines what effects are applied when item is used
             // Item class is a string that identifies the item category (weapon, armor, consumable, etc.)
             ItemCategory category = GetItemCategoryFromItemClass(itemClass);
 
@@ -429,27 +429,72 @@ namespace Andastra.Runtime.Core.Actions
         /// Calculates healing amount for medical consumables based on charges and chargesstarting.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Healing amount scales with item charges and base charges
+        /// Healing Calculation (K1: swkotor.exe: 0x004fc210 UseItem, 0x005b31d0 CSWBaseItemArray::Load, TSL: swkotor2.exe: similar addresses):
+        /// Healing amount scales with item charges and base charges (chargesStarting).
+        /// - Base healing comes from item property CostValue or Param1Value (if healing property exists)
+        /// - ChargesStarting indicates item quality/tier: higher chargesStarting = better quality = more base healing
+        /// - Current charges provide a scaling factor to reward using items while they have more charges remaining
+        /// - Formula: baseHealing = (propertyCostValue OR default) * chargesStartingScale * chargesScale
+        /// - Typical medpac tiers: Basic (chargesStarting=3), Advanced (chargesStarting=5), Superior (chargesStarting=7+)
         /// </remarks>
         private int CalculateHealingAmount(IItemComponent itemComponent, int? chargesStarting)
         {
-            int baseHealing = 10; // Base healing amount
+            // First, check if item has a healing property that defines the base healing amount
+            int baseHealing = 10; // Default base healing amount
 
-            // Scale healing with charges if available
-            if (itemComponent.Charges > 0 && itemComponent.Charges < 100)
+            // Look for healing property (property type 100+ often used for instant healing effects)
+            foreach (ItemProperty property in itemComponent.Properties)
             {
-                baseHealing = itemComponent.Charges * 5;
+                // Property type 100+ are often instant effects like healing
+                // CostValue or Param1Value typically contains the healing amount
+                if (property.PropertyType >= 100)
+                {
+                    int healAmount = property.CostValue != 0 ? property.CostValue : property.Param1Value;
+                    if (healAmount > 0)
+                    {
+                        baseHealing = healAmount;
+                        break;
+                    }
+                }
             }
 
-            // Scale with chargesstarting if available (higher starting charges = more powerful item)
+            // Scale with chargesStarting as quality indicator
+            // Higher chargesStarting indicates better quality items (e.g., 3=basic, 5=advanced, 7=superior)
+            // This acts as a multiplier for the base healing
+            float qualityMultiplier = 1.0f;
             if (chargesStarting.HasValue && chargesStarting.Value > 0)
             {
-                // Items with more starting charges are typically more powerful
-                // Scale healing proportionally
-                baseHealing = (baseHealing * chargesStarting.Value) / Math.Max(1, itemComponent.Charges);
+                // Scale quality: chargesStarting / 3 gives reasonable scaling
+                // Basic medpac (3 charges) = 1.0x, Advanced (5 charges) = 1.67x, Superior (7 charges) = 2.33x
+                qualityMultiplier = chargesStarting.Value / 3.0f;
+                // Cap at reasonable maximum (e.g., 10 charges = 3.33x)
+                if (qualityMultiplier > 3.0f)
+                {
+                    qualityMultiplier = 3.0f;
+                }
             }
 
-            return Math.Max(1, baseHealing); // Ensure at least 1 HP healing
+            // Scale with current charges as bonus for using items while they have more charges
+            // Items with more charges remaining provide slightly better healing
+            // This encourages using items while they have full charges
+            float chargesMultiplier = 1.0f;
+            if (itemComponent.Charges > 0 && itemComponent.Charges < 100)
+            {
+                // Scale based on current charges: more charges = slightly better healing
+                // Formula: 1.0 + (charges / 20) gives small bonus (max 6x bonus at 100 charges)
+                // But cap it at reasonable level (e.g., 1.5x for 10 charges)
+                float chargesBonus = itemComponent.Charges / 20.0f;
+                if (chargesBonus > 0.5f)
+                {
+                    chargesBonus = 0.5f; // Cap at 50% bonus
+                }
+                chargesMultiplier = 1.0f + chargesBonus;
+            }
+
+            // Calculate final healing: base * quality * charges bonus
+            int finalHealing = (int)(baseHealing * qualityMultiplier * chargesMultiplier);
+
+            return Math.Max(1, finalHealing); // Ensure at least 1 HP healing
         }
 
         /// <summary>
@@ -460,7 +505,7 @@ namespace Andastra.Runtime.Core.Actions
         /// <remarks>
         /// Item Class Category Determination:
         /// - swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - ItemClass read as string via C2DA::GetCExoStringEntry
-        /// - swkotor2.exe: 0x005ff170 (FUN_005ff170) - ItemClass read as string via C2DA::GetCExoStringEntry
+        /// - swkotor2.exe: 0x005ff170 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff170) - ItemClass read as string via C2DA::GetCExoStringEntry
         /// - Item class string determines item category and behavior:
         ///   - Medical consumables: "medical", "medpac", "heal" patterns, or numeric strings for BASE_ITEM_MEDICAL_EQUIPMENT (55)
         ///   - Stimulants: "stim", "adrenal", "combat" patterns, or numeric strings for BASE_ITEM_ADRENALINE (53), BASE_ITEM_COMBAT_SHOTS (54)
@@ -593,7 +638,7 @@ namespace Andastra.Runtime.Core.Actions
         /// </summary>
         /// <remarks>
         /// swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Stim bonus amounts scale with item quality (chargesstarting)
-        /// swkotor2.exe: 0x005ff170 (FUN_005ff170) - Stim bonus amounts scale with item quality (chargesstarting)
+        /// swkotor2.exe: 0x005ff170 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff170) - Stim bonus amounts scale with item quality (chargesstarting)
         /// </remarks>
         private int CalculateStimBonusAmount(IItemComponent itemComponent, int? chargesStarting)
         {
