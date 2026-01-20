@@ -173,7 +173,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // LASTMODULE: Last module ResRef
-            // swkotor2.exe: SerializeSaveNfo @ 0x004eb750 - Line 166: FUN_00413a90(puVar10,&uStack_8c,local_78,"LASTMODULE");
+            // swkotor2.exe: SerializeSaveNfo @ 0x004eb750 - Line 166:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00413a90(puVar10,&uStack_8c,local_78,"LASTMODULE");
             // K1: Manual verification needed - search for "NFO " string @ 0x0074542c in swkotor.exe
             // Original implementation: LASTMODULE is the ResRef of the currently loaded module
             // Extraction priority:
@@ -510,7 +510,7 @@ namespace Andastra.Game.Games.Odyssey
             byte[] nfoBytes = NFOAuto.BytesNfo(nfo);
 
             // SAVENUMBER: Save slot number (int32)
-            // swkotor2.exe: 0x004eb750 - Line 180: FUN_00413880(puVar10,&uStack_8c,*(undefined4 *)((int)param_1 + 0x1f2fc),"SAVENUMBER");
+            // swkotor2.exe: 0x004eb750 - Line 180:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00413880(puVar10,&uStack_8c,*(undefined4 *)((int)param_1 + 0x1f2fc),"SAVENUMBER");
             // Original implementation reads SAVENUMBER from offset 0x1f2fc in the save context structure
             // We need to add this field manually since NFOData doesn't include it
             int saveNumber = 0;
@@ -3495,8 +3495,20 @@ namespace Andastra.Game.Games.Odyssey
         /// Deserializes an entity state from a GFF struct.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity state deserialization
-        /// Located via string references: "ObjectId" @ 0x007bce5c, "Tag" @ 0x007bd00c
+        /// Entity state deserialization pattern from original engine:
+        /// K1: CSWSArea::LoadPlaceables @ 0x0050a7b0 - Reads ObjectId (line 40-41), then calls CSWSPlaceable::LoadPlaceable @ 0x00585670 which reads Tag (line 57-61)
+        /// K1: CSWSArea::LoadDoors @ 0x0050a0e0 - Reads ObjectId (line 38-39), then calls CSWSDoor::LoadDoorExternal which reads Tag
+        /// K1: CSWSArea::LoadTriggers @ 0x0050a350 - Reads ObjectId, then calls CSWSTrigger::LoadTrigger which reads Tag
+        /// TSL: TODO: Find equivalent addresses when TSL executable is available in Ghidra project
+        /// 
+        /// Pattern: The original engine inlines entity state loading in each entity type's load function:
+        /// 1. Read ObjectId from GFF struct
+        /// 2. Call entity-specific Load function (LoadPlaceable/LoadDoor/LoadTrigger) which reads Tag and other fields
+        /// 3. Read Position (X, Y, Z) from GFF struct
+        /// 4. Read Orientation (Bearing) from GFF struct
+        /// 5. Call CSWSObject::LoadObjectState if needed for additional state
+        /// 
+        /// This function consolidates the common entity state fields into a single helper for save file deserialization.
         /// </remarks>
         private void DeserializeEntityStateFromGFF(GFFStruct structData, EntityState state)
         {
@@ -5156,12 +5168,12 @@ namespace Andastra.Game.Games.Odyssey
                 // Entity creation: ObjectId, ObjectType, Tag are required for entity creation
                 // Located via string references:
                 // - "ObjectId"   @ (K1: 0x00744c24, TSL: 0x007bce5c)
-                //   - K1 usage: 
+                //   - K1 usage:
                 //     * SaveNode @ 0x004afea0 (line 12) - writes ObjectId to GFF
                 //     * LoadNode @ 0x004b0290 (line 35) - reads ObjectId from GFF
                 //     * LoadCreatures_K1 @ 0x00504a70 (line 40-41) - reads ObjectId with default 0x7f000000
                 //     * SaveCreature_K1 @ 0x00500610 - ObjectId written before this function is called
-                //   - TSL usage: 
+                //   - TSL usage:
                 //     * SerializeCreatureList_K2 @ 0x004e28c0 (line 24 @ 0x004e2962) - writes ObjectId to GFF
                 //     * DeserializeCreatureFromGFF_K2 @ 0x005fb0f0 - reads ObjectId from GFF (called before entity creation)
                 // - "ObjectType" @ (K1: TODO: Find this address, TSL: 0x007bd00c)
