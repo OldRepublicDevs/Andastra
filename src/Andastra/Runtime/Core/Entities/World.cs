@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Core.Actions;
-using Andastra.Runtime.Core.AI;
+using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Core.Animation;
 using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
@@ -97,7 +97,13 @@ namespace Andastra.Runtime.Core.Entities
             EffectSystem = new EffectSystem(this);
             PerceptionSystem = new PerceptionSystem(this);
             TriggerSystem = new TriggerSystem(this, (entity, scriptEvent, target) => EventBus.FireScriptEvent(entity, scriptEvent, target));
-            AIController = new AIController(this, CombatSystem);
+            AIController = new AIControllerSystem(
+                this,
+                EngineFamily.Unknown,
+                (entity, scriptEvent, target) =>
+                {
+                    EventBus?.FireScriptEvent(entity, scriptEvent, target);
+                });
             AnimationSystem = new AnimationSystem(this);
             AppearAnimationFadeSystem = new AppearAnimationFadeSystem(this);
             // ModuleTransitionSystem will be initialized when SaveSystem and ModuleLoader are available
@@ -174,11 +180,88 @@ namespace Andastra.Runtime.Core.Entities
         /// Gets an area by its AreaId.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetArea function
-        /// Located via string references: "AreaId" @ 0x007bef48
-        /// Original implementation: O(1) dictionary lookup by AreaId (uint32)
-        /// Returns null if AreaId not found
-        /// Used by GetArea NWScript function to find area containing an entity
+        /// GetArea function - Area lookup by AreaId (ObjectId)
+        ///
+        /// Reverse Engineering Analysis:
+        /// - Function name: [TODO: Find function name in binaries via reverse engineering]
+        ///   - Possible names: GetArea, GetAreaByObjectId, GetAreaById, or may use GetObject directly
+        ///   - Areas are objects with ObjectIds (0x7F000010+), so GetArea may use GetObject mechanism
+        /// - K1 executable: [TODO: Find function address via reverse engineering]
+        ///   - Search strategy: Cross-reference "AreaId" string, find functions that lookup by AreaId
+        ///   - Alternative: Check if GetObject (0x004dc030/0x004e9de0) handles area ObjectIds
+        /// - TSL executable: [TODO: Find function address via reverse engineering]
+        ///   - Search strategy: Cross-reference "AreaId" @ 0x007bef48, find hash table lookup functions
+        ///   - Known: "AreaId" string reference @ 0x007bef48 (data address)
+        ///   - Known: GetObject uses FUN_004dc030 (wrapper) → FUN_004e9de0 (lookup)
+        ///   - Pattern: May follow similar wrapper→lookup pattern for areas
+        ///
+        /// Located via string references:
+        /// - "AreaId" @ 0x007bef48 (TSL executable) - Data address for AreaId field in entity/area structures
+        /// - "Area" @ 0x007be340 (TSL executable) - Area name string reference
+        /// - "AreaId" field used in entity serialization (0x005226d0) and deserialization (0x005223a0)
+        ///
+        /// Original Implementation Details:
+        /// - Data structure: Areas stored in hash table/dictionary keyed by AreaId (uint32)
+        /// - Lookup algorithm: O(1) hash table lookup by AreaId (uint32)
+        /// - Return value: Area pointer if found, null/0 if AreaId not found
+        /// - AreaId range: 0x7F000010+ (special object ID range for areas, sequential assignment)
+        /// - Area ObjectId assignment: Sequential uint32 starting from 0x7F000010
+        ///
+        /// Related Functions:
+        /// - RegisterArea: Assigns AreaId to area when area is loaded/registered
+        /// - GetAreaId: Returns AreaId for a given area instance (reverse lookup)
+        /// - GetArea NWScript function: Uses this to find area containing an entity
+        ///   - NWScript GetArea(object oTarget) implementation:
+        ///     1. Gets entity by ObjectId (via GetObject/0x004dc030)
+        ///     2. Reads entity's AreaId field (offset in entity structure, referenced by "AreaId" @ 0x007bef48)
+        ///     3. Calls GetArea(AreaId) to lookup area by AreaId
+        ///     4. Returns AreaId as object ID (or OBJECT_INVALID if not found)
+        ///
+        /// Data Structure Analysis:
+        /// - Areas are stored in a hash table/dictionary: Dictionary&lt;uint, Area*&gt; or similar structure
+        /// - Key: AreaId (uint32) - unique identifier for each area
+        /// - Value: Area pointer/object
+        /// - Registration: Areas registered via RegisterArea when loaded or set as current area
+        /// - Unregistration: Areas removed from lookup table when unloaded via UnregisterArea
+        ///
+        /// Usage Patterns:
+        /// - Called by GetArea NWScript function to find area containing an entity
+        /// - Used internally when entity's AreaId is known and area reference is needed
+        /// - Used for area transitions and entity area association lookups
+        ///
+        /// Implementation Notes:
+        /// - This implementation uses Dictionary&lt;uint, IArea&gt; for O(1) lookup
+        /// - Matches original engine behavior: O(1) hash table lookup
+        /// - Returns null if AreaId not found (matches original: returns null/0)
+        /// - Thread safety: Not thread-safe (original engine is single-threaded)
+        ///
+        /// Reverse Engineering Guide (for finding function addresses):
+        /// 1. Open K1 and TSL executables in Ghidra (use list-project-files to identify available programs)
+        /// 2. Search for string "AreaId" and find data address (TSL: 0x007bef48)
+        /// 3. Find cross-references to "AreaId" string or data address
+        /// 4. Look for functions that:
+        ///    a. Take uint32 parameter (AreaId/ObjectId)
+        ///    b. Perform hash table/dictionary lookup
+        ///    c. Return area pointer or null
+        /// 5. Check if GetObject (0x004dc030/0x004e9de0) handles area ObjectIds directly
+        ///    - Areas have ObjectIds in 0x7F000010+ range
+        ///    - If GetObject handles all ObjectIds, GetArea may just be GetObject
+        /// 6. Alternative: Search for functions called by GetArea NWScript implementation
+        ///    - NWScript GetArea calls: GetObject → read AreaId → GetArea(AreaId)
+        ///    - Find the function that does the final AreaId → Area lookup
+        /// 7. Document findings: Function name, addresses (K1/TSL), parameters, return type
+        /// 8. Add labels, comments, function names, structures in Ghidra project using ReVa MCP
+        ///
+        /// Cross-Engine Compatibility:
+        /// - Common across all BioWare engines: Odyssey, Aurora, Eclipse, Infinity
+        /// - All engines use AreaId-based lookup for area retrieval
+        /// - AreaId assignment ranges may vary between engines but lookup mechanism is consistent
+        ///
+        /// See Also:
+        /// - RegisterArea: Area registration and AreaId assignment
+        /// - GetAreaId: Reverse lookup (area -&gt; AreaId)
+        /// - BaseEngineApi.Func_GetArea: NWScript GetArea function implementation
+        /// - Entity.AreaId: Entity's area association field
         /// </remarks>
         public IArea GetArea(uint areaId)
         {
@@ -271,7 +354,7 @@ namespace Andastra.Runtime.Core.Entities
         public EffectSystem EffectSystem { get; }
         public PerceptionSystem PerceptionSystem { get; }
         public TriggerSystem TriggerSystem { get; }
-        public AIController AIController { get; }
+        public AIControllerSystem AIController { get; }
         public AnimationSystem AnimationSystem { get; }
         public AppearAnimationFadeSystem AppearAnimationFadeSystem { get; }
         public ModuleTransitionSystem ModuleTransitionSystem { get; }
@@ -284,7 +367,7 @@ namespace Andastra.Runtime.Core.Entities
         /// Engine-specific implementations handle the actual table loading and lookup.
         /// This property should be set by engine-specific implementations.
         /// </remarks>
-        public IGameDataProvider GameDataProvider { get; set; }
+        public Interfaces.IGameDataProvider GameDataProvider { get; set; }
 
         public IEntity CreateEntity(IEntityTemplate template, Vector3 position, float facing)
         {
@@ -522,15 +605,15 @@ namespace Andastra.Runtime.Core.Entities
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00404cf0 @ 0x00404cf0 (area update function).
         /// Called from main game loop via 0x00638ca0 → 0x0063de50 → 0x0077f790 → 0x00404cf0.
-        /// 
-        /// Execution flow (swkotor2.exe: 0x00404250):
+        ///
+        /// Execution flow (TSL executable: 0x00404250):
         /// 1. Main loop: while (DAT_00828390 == 0)
         /// 2. PeekMessageA() - Windows message processing
         /// 3. 0x00638ca0() - Game update (calls area update)
         /// 4. glClear() - Clear screen
         /// 5. 0x00461c20()/0x00461c00() - Render
         /// 6. SwapBuffers() - Present frame
-        /// 
+        ///
         /// Area update is called every frame to update area state, effects, lighting, etc.
         /// </remarks>
         public void Update(float deltaTime)
