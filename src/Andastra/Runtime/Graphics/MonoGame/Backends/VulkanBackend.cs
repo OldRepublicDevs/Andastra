@@ -1090,8 +1090,32 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                 // Try to destroy texture
                 if (_textures != null && _textures.TryGetValue(handle, out var texture))
                 {
+                    // Get texture description for memory estimation
+                    long textureMemory = 0;
+                    try
+                    {
+                        var desc = texture.Desc;
+                        // Estimate texture memory based on description
+                        textureMemory = EstimateTextureMemory(
+                            desc.Width, 
+                            desc.Height, 
+                            desc.Depth > 0 ? desc.Depth : 1, 
+                            desc.ArraySize > 0 ? desc.ArraySize : 1, 
+                            desc.MipLevels > 0 ? desc.MipLevels : 1, 
+                            ConvertTextureFormat(desc.Format));
+                    }
+                    catch
+                    {
+                        // If we can't get description, memory tracking will be approximate
+                        textureMemory = 0;
+                    }
+                    
                     texture?.Dispose();
                     _textures.Remove(handle);
+                    
+                    // Update video memory usage
+                    TrackVideoMemory(-textureMemory);
+                    
                     return;
                 }
 
