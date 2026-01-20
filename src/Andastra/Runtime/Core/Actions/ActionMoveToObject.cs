@@ -17,7 +17,7 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Move To Object Action:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) movement action system
+    /// - Movement action system: NWScript ActionMoveToObject routine (routine ID varies by game version)
     /// - Original implementation: 0x00508260 @ 0x00508260 (load ActionList from GFF)
     /// - Located via string reference: "ActionList" @ 0x007bebdc, "MOVETO" @ 0x007b6b24
     /// - Moves actor towards target object within specified range
@@ -292,7 +292,8 @@ namespace Andastra.Runtime.Core.Actions
             BaseCreatureCollisionDetector collisionDetector = GetOrCreateCollisionDetector(actor.World);
 
             // Check for creature collisions along movement path
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005479f0 @ 0x005479f0 checks for creature collisions
+            // swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 checks for creature collisions via CAvoidCreature
+            // swkotor2.exe: 0x005479f0 checks for creature collisions during movement
             // Located via string references:
             //   - "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0
             //   - "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
@@ -327,7 +328,8 @@ namespace Andastra.Runtime.Core.Actions
                 SetBumpCounter(actor, bumpCount);
 
                 // Check if maximum bumps exceeded
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement aborts movement if bump count > 5
+                // swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 aborts movement if bump count > 5
+                // swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 aborts movement if bump count > 5
                 // Located via string reference: "aborted walking, Maximum number of bumps happened" @ 0x007c0458
                 // Original implementation: If bump count > 5, clears path array and sets path length to 0
                 if (bumpCount > MaxBumps)
@@ -352,7 +354,8 @@ namespace Andastra.Runtime.Core.Actions
                 SetLastBlockingCreature(actor, blockingCreatureId);
 
                 // Try to navigate around the blocking creature
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 calls FindPathAroundObstacle @ 0x0061c390 for pathfinding around obstacles
+                // swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 calls CAvoidCreature::PlotPathAroundCreature for pathfinding around obstacles
+                // swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 calls FindPathAroundObstacle @ 0x0061c390 for pathfinding around obstacles
                 // Located via string reference: "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
                 // Original implementation: FindPathAroundObstacle @ 0x0061c390 finds alternative path around blocking creature
                 // Function signature: `float* FindPathAroundObstacle(void* this, int* movingCreature, void* blockingCreature)`
@@ -432,7 +435,8 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Could not find path around obstacle - action fails
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): If 0x0054a1f0 returns null, movement is aborted
+                // swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 aborts movement if PlotPathAroundCreature fails
+                // swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 aborts movement if FindPathAroundObstacle @ 0x0061c390 returns null
                 return ActionStatus.Failed;
             }
 
@@ -475,7 +479,7 @@ namespace Andastra.Runtime.Core.Actions
 
             // Use collision detector to get bounding box (handles engine-specific logic)
             // Based on swkotor.exe: 0x004f1310 gets radius from bounding box at offset +8
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005479f0 uses width at +0x14 for collision
+            // swkotor2.exe: 0x005479f0 uses width at +0x14 for collision checking
             CreatureBoundingBox boundingBox = collisionDetector.GetCreatureBoundingBoxPublic(entity);
 
             // Derive radius from bounding box
@@ -511,7 +515,8 @@ namespace Andastra.Runtime.Core.Actions
 
         /// <summary>
         /// Sets the bump counter for an entity.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Bump counter stored at offset 0x268 in entity structure.
+        /// swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 stores bump counter in CAvoidCreature structure
+        /// swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 stores bump counter at offset 0x268 in entity structure
         /// </summary>
         private void SetBumpCounter(IEntity entity, int count)
         {
@@ -534,7 +539,8 @@ namespace Andastra.Runtime.Core.Actions
 
         /// <summary>
         /// Gets the last blocking creature ObjectId for an entity.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Stored at offset 0x254 in entity structure.
+        /// swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 stores last blocking creature in CAvoidCreature structure
+        /// swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 stores last blocking creature at offset 0x254 in entity structure
         /// </summary>
         private uint GetLastBlockingCreature(IEntity entity)
         {
@@ -547,7 +553,8 @@ namespace Andastra.Runtime.Core.Actions
 
         /// <summary>
         /// Sets the last blocking creature ObjectId for an entity.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Stored at offset 0x254 in entity structure.
+        /// swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 stores last blocking creature in CAvoidCreature structure
+        /// swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 stores last blocking creature at offset 0x254 in entity structure
         /// </summary>
         private void SetLastBlockingCreature(IEntity entity, uint creatureId)
         {
