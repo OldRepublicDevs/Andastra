@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Threading;
-using BioWare.NET;
-using BioWare.NET.Common.Script;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.GFF.Generics;
-using BioWare.NET.Resource.Formats.GFF.Generics.UTI;
+using BioWare;
+using BioWare.Common.Script;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.TwoDA;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Resource.Formats.GFF.Generics;
+using BioWare.Resource.Formats.GFF.Generics.UTI;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Actions;
 using Andastra.Runtime.Core.Audio;
@@ -2611,10 +2611,10 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                             }
                         }
                     }
-                    // Fallback to BioWare.NET Installation provider
-                    else if (ctx.ResourceProvider is BioWare.NET.Extract.Installation installation)
+                    // Fallback to BioWare Installation provider
+                    else if (ctx.ResourceProvider is BioWare.Extract.Installation installation)
                     {
-                        BioWare.NET.Extract.ResourceResult result = installation.Resource(itemTemplate, ResourceType.UTI, null, null);
+                        BioWare.Extract.ResourceResult result = installation.Resource(itemTemplate, ResourceType.UTI, null, null);
                         if (result != null && result.Data != null)
                         {
                             using (var stream = new MemoryStream(result.Data))
@@ -2997,7 +2997,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                     Runtime.Core.Interfaces.Components.ITransformComponent transform = ctx.Caller.GetComponent<Runtime.Core.Interfaces.Components.ITransformComponent>();
                     if (transform != null)
                     {
-                        // Convert BioWare.NET Vector3 to System.Numerics.Vector3
+                        // Convert BioWare Vector3 to System.Numerics.Vector3
                         position = new System.Numerics.Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
                     }
 
@@ -6498,7 +6498,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             // Fallback: Create basic entity if EntityFactory not available or template creation failed
             if (entity == null)
             {
-                // Convert System.Numerics.Vector3 to BioWare.NET Vector3 for World.CreateEntity
+                // Convert System.Numerics.Vector3 to BioWare Vector3 for World.CreateEntity
                 Vector3 worldPosition = new Vector3(position.X, position.Y, position.Z);
                 entity = ctx.World.CreateEntity(odyObjectType, worldPosition, facing);
                 if (entity == null)
@@ -7165,14 +7165,14 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                 // Original implementation: Looks up max stack size from baseitems.2da "stacking" column using BaseItem ID
                 int maxStackSize = 100; // Default max
 
-                // Try to look up max stack size from baseitems.2da using BioWare.NET
+                // Try to look up max stack size from baseitems.2da using BioWare
                 if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
                 {
                     if (services.GameSession is GameSession gameSession && gameSession.Installation != null)
                     {
                         try
                         {
-                            // Load baseitems.2da using BioWare.NET
+                            // Load baseitems.2da using BioWare
                             ResourceResult baseitemsResult = gameSession.Installation.Resource("baseitems", ResourceType.TwoDA, null, null);
                             if (baseitemsResult != null && baseitemsResult.Data != null)
                             {
@@ -7544,7 +7544,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                                 Runtime.Core.Interfaces.Components.ITransformComponent doorTransform = door.GetComponent<Runtime.Core.Interfaces.Components.ITransformComponent>();
                                 if (doorTransform != null)
                                 {
-                                    // Convert BioWare.NET Vector3 to System.Numerics.Vector3
+                                    // Convert BioWare Vector3 to System.Numerics.Vector3
                                     position = new System.Numerics.Vector3(doorTransform.Position.X, doorTransform.Position.Y, doorTransform.Position.Z);
                                 }
 
@@ -7761,7 +7761,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                 // Ghidra analysis: 0x0057bd70 @ 0x0057bd70 saves party data, 0x0057dcd0 @ 0x0057dcd0 loads party data
                 // EntityFactory accessed via ModuleLoader.EntityFactory property
                 // Get current module from ModuleLoader
-                BioWare.NET.Common.Module module = moduleLoader.GetCurrentModule();
+                BioWare.Common.Module module = moduleLoader.GetCurrentModule();
                 if (module != null)
                 {
                     // Get spawn position (use player position or default)

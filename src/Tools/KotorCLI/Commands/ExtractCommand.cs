@@ -4,13 +4,13 @@ using System.CommandLine;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.ERF;
-using BioWare.NET.Resource.Formats.RIM;
-using BioWare.NET.Resource.Formats.KEY;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.BIF;
+using BioWare.Common;
+using BioWare.Resource.Formats.ERF;
+using BioWare.Resource.Formats.RIM;
+using BioWare.Resource.Formats.KEY;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Resource.Formats.BIF;
 using KotorCLI.Logging;
 
 namespace KotorCLI.Commands

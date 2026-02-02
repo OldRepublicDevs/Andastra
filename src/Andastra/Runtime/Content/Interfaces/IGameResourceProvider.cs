@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using BioWare.NET.Common;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Common;
+using BioWare.Common;
+using BioWare.Resource;
 
 namespace Andastra.Runtime.Content.Interfaces
 {
@@ -73,7 +73,7 @@ namespace Andastra.Runtime.Content.Interfaces
         /// complementing the ResourceIdentifier-based methods for cases where separate
         /// ResRef and ResourceType parameters are more convenient.
         /// </remarks>
-        byte[] LoadResource(BioWare.NET.Common.ResRef resRef, ResourceType resourceType);
+        byte[] LoadResource(BioWare.Common.ResRef resRef, ResourceType resourceType);
 
         /// <summary>
         /// The game type (K1, K2, BaldursGate, , , etc.).

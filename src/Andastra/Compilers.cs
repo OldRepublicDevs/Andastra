@@ -5,10 +5,10 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using BioWare.NET.Common;
+using BioWare.Common;
 using JetBrains.Annotations;
-using NCS = BioWare.NET.Resource.Formats.NCS.NCS;
-using NCSOptimizer = BioWare.NET.Resource.Formats.NCS.NCSOptimizer;
+using NCS = BioWare.Resource.Formats.NCS.NCS;
+using NCSOptimizer = BioWare.Resource.Formats.NCS.NCSOptimizer;
 
 namespace Andastra
 {
@@ -234,7 +234,7 @@ namespace Andastra
     /// This compiler provides full NSS compilation without external dependencies,
     /// using the internal parser and code generator.
     /// </summary>
-    public class InbuiltNCSCompiler : BioWare.NET.Resource.Formats.NCS.NCSCompiler
+    public class InbuiltNCSCompiler : BioWare.Resource.Formats.NCS.NCSCompiler
     {
         public override void CompileScript(
             string sourcePath,
@@ -273,7 +273,7 @@ namespace Andastra
     /// <summary>
     /// External NSS compiler wrapper for nwnnsscomp.exe.
     /// </summary>
-    public class ExternalNCSCompiler : BioWare.NET.Resource.Formats.NCS.NCSCompiler
+    public class ExternalNCSCompiler : BioWare.Resource.Formats.NCS.NCSCompiler
     {
         private string _nwnnsscompPath;
         private string _fileHash;

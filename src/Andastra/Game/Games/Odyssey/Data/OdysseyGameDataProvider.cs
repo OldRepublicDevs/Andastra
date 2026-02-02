@@ -112,7 +112,7 @@ namespace Andastra.Game.Games.Odyssey.Data
             }
 
             // Get table from GameDataManager
-            BioWare.NET.Resource.Formats.TwoDA.TwoDA table = _gameDataManager.GetTable(tableName);
+            BioWare.Resource.Formats.TwoDA.TwoDA table = _gameDataManager.GetTable(tableName);
             if (table == null)
             {
                 return defaultValue;
@@ -124,7 +124,7 @@ namespace Andastra.Game.Games.Odyssey.Data
                 return defaultValue;
             }
 
-            BioWare.NET.Resource.Formats.TwoDA.TwoDARow row = table.GetRow(rowIndex);
+            BioWare.Resource.Formats.TwoDA.TwoDARow row = table.GetRow(rowIndex);
             if (row == null)
             {
                 return defaultValue;
@@ -146,7 +146,7 @@ namespace Andastra.Game.Games.Odyssey.Data
         /// - Cross-engine pattern: Same as Aurora and Eclipse
         /// </remarks>
         [CanBeNull]
-        public BioWare.NET.Resource.Formats.TwoDA.TwoDA GetTable(string tableName)
+        public BioWare.Resource.Formats.TwoDA.TwoDA GetTable(string tableName)
         {
             if (string.IsNullOrEmpty(tableName))
             {

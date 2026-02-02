@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using BioWare.NET.Common;
+using BioWare.Common;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Odyssey.EngineApi;
 using Andastra.Game.Scripting.Interfaces;

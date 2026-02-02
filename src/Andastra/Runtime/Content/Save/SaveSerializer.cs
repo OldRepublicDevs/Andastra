@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Text;
-using BioWare.NET.Common;
-using BioWare.NET.Extract.SaveData;
-using BioWare.NET.Resource.Formats.ERF;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Resource.Formats.RIM;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.GFF.Generics;
-using BioWare.NET.Resource.Formats.GFF.Generics.UTC;
+using BioWare.Common;
+using BioWare.Extract.SaveData;
+using BioWare.Resource.Formats.ERF;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.RIM;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Resource.Formats.GFF.Generics;
+using BioWare.Resource.Formats.GFF.Generics.UTC;
 using Andastra.Runtime.Core.Save;
-using GFFAuto = BioWare.NET.Resource.Formats.GFF.GFFAuto;
+using GFFAuto = BioWare.Resource.Formats.GFF.GFFAuto;
 
 namespace Andastra.Runtime.Content.Save
 {
@@ -292,7 +292,7 @@ namespace Andastra.Runtime.Content.Save
                 erf.SetData(kvp.Key.ResName, kvp.Key.ResType, kvp.Value);
             }
 
-            // Write ERF using BioWare.NET writer
+            // Write ERF using BioWare writer
             var writer = new ERFBinaryWriter(erf);
             return writer.Write();
         }
@@ -377,7 +377,7 @@ namespace Andastra.Runtime.Content.Save
         // reads module state files ([module]_s.rim) for each area and stores in AreaStates dictionary
         public void DeserializeSaveArchive(byte[] data, SaveGameData saveData)
         {
-            // Use BioWare.NET ERF reader
+            // Use BioWare ERF reader
             ERF erf;
             try
             {
@@ -446,7 +446,7 @@ namespace Andastra.Runtime.Content.Save
         private byte[] SerializeGlobalVariables(GlobalVariableState state)
         {
             // Create a temporary GlobalVars instance and populate it from state
-            var globalVars = new BioWare.NET.Extract.SaveData.GlobalVars(Path.GetTempPath());
+            var globalVars = new BioWare.Extract.SaveData.GlobalVars(Path.GetTempPath());
 
             // Populate from state
             foreach (var kvp in state.Booleans)
@@ -565,7 +565,7 @@ namespace Andastra.Runtime.Content.Save
                 return state;
             }
 
-            // Use BioWare.NET GFF reader
+            // Use BioWare GFF reader
             try
             {
                 GFF gff = GFF.FromBytes(data);
@@ -742,11 +742,11 @@ namespace Andastra.Runtime.Content.Save
                 state = new PartyState();
             }
 
-            // Use BioWare.NET GFF writer
+            // Use BioWare GFF writer
             // Original creates GFF with "PT  " signature and "V2.0" version
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057bd70 @ 0x0057bd70 creates GFF with "PT  " signature
             // Located via string reference: "PARTYTABLE" @ 0x007c1910
-            // Note: BioWare.NET GFFBinaryWriter always writes "V3.2" version, but signature is correct
+            // Note: BioWare GFFBinaryWriter always writes "V3.2" version, but signature is correct
             var gff = new GFF(GFFContent.PT);
             var root = gff.Root;
 
@@ -998,14 +998,14 @@ namespace Andastra.Runtime.Content.Save
             {
                 // Use dynamic to call GetTable without referencing Odyssey.Kotor
                 dynamic gameDataManager = _gameDataManager;
-                BioWare.NET.Resource.Formats.TwoDA.TwoDA partyTable = gameDataManager.GetTable("partytable");
+                BioWare.Resource.Formats.TwoDA.TwoDA partyTable = gameDataManager.GetTable("partytable");
                 if (partyTable != null)
                 {
                     // Search partytable.2da for matching ResRef
                     // Row index in partytable.2da corresponds to member ID
                     for (int i = 0; i < partyTable.GetHeight(); i++)
                     {
-                        BioWare.NET.Resource.Formats.TwoDA.TwoDARow row = partyTable.GetRow(i);
+                        BioWare.Resource.Formats.TwoDA.TwoDARow row = partyTable.GetRow(i);
                         string rowLabel = row.Label();
 
                         if (string.IsNullOrEmpty(rowLabel))
@@ -1139,13 +1139,13 @@ namespace Andastra.Runtime.Content.Save
             {
                 // Use dynamic to call GetTable without referencing Odyssey.Kotor
                 dynamic gameDataManager = _gameDataManager;
-                BioWare.NET.Resource.Formats.TwoDA.TwoDA partyTable = gameDataManager.GetTable("partytable");
+                BioWare.Resource.Formats.TwoDA.TwoDA partyTable = gameDataManager.GetTable("partytable");
                 if (partyTable != null)
                 {
                     // Check if member index is within valid range
                     if (memberIndex < partyTable.GetHeight())
                     {
-                        BioWare.NET.Resource.Formats.TwoDA.TwoDARow row = partyTable.GetRow(memberIndex);
+                        BioWare.Resource.Formats.TwoDA.TwoDARow row = partyTable.GetRow(memberIndex);
                         string rowLabel = row.Label();
 
                         if (!string.IsNullOrEmpty(rowLabel))
@@ -1215,7 +1215,7 @@ namespace Andastra.Runtime.Content.Save
                 return state;
             }
 
-            // Use BioWare.NET GFF reader
+            // Use BioWare GFF reader
             try
             {
                 GFF gff = GFF.FromBytes(data);
@@ -1635,7 +1635,7 @@ namespace Andastra.Runtime.Content.Save
                 return state;
             }
 
-            // Parse GFF using BioWare.NET
+            // Parse GFF using BioWare
             try
             {
                 GFF gff = GFF.FromBytes(data);
@@ -2412,7 +2412,7 @@ namespace Andastra.Runtime.Content.Save
                                     {
                                         // Use dynamic to call GetTable without referencing Odyssey.Kotor
                                         dynamic gameDataManager = _gameDataManager;
-                                        BioWare.NET.Resource.Formats.TwoDA.TwoDA spellsTable = gameDataManager.GetTable("spells");
+                                        BioWare.Resource.Formats.TwoDA.TwoDA spellsTable = gameDataManager.GetTable("spells");
                                         if (spellsTable != null)
                                         {
                                             // Get row index by label - in spells.2da, row index IS the spell/power ID
@@ -2473,7 +2473,7 @@ namespace Andastra.Runtime.Content.Save
                             {
                                 // Use dynamic to call GetTable without referencing Odyssey.Kotor
                                 dynamic gameDataManager = _gameDataManager;
-                                BioWare.NET.Resource.Formats.TwoDA.TwoDA featTable = gameDataManager.GetTable("feat");
+                                BioWare.Resource.Formats.TwoDA.TwoDA featTable = gameDataManager.GetTable("feat");
                                 if (featTable != null)
                                 {
                                     // Get row index by label - in feat.2da, row index IS the feat ID
@@ -2744,7 +2744,7 @@ namespace Andastra.Runtime.Content.Save
             }
 
             // Serialize RIM to bytes
-            // Based on BioWare.NET RIMBinaryWriter implementation
+            // Based on BioWare RIMBinaryWriter implementation
             var writer = new RIMBinaryWriter(rim);
             return writer.Write();
         }

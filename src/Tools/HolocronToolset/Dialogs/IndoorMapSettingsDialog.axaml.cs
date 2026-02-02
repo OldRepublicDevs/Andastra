@@ -1,11 +1,11 @@
-using BioWare.NET.Common;
+using BioWare.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using BioWare.NET;
+using BioWare;
 using HolocronToolset.Data;
 using HolocronToolset.Widgets;
 using HolocronToolset.Widgets.Edit;

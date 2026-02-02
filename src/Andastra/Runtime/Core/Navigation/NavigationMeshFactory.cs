@@ -5,7 +5,7 @@ using System.Numerics;
 namespace Andastra.Runtime.Core.Navigation
 {
     /// <summary>
-    /// Factory for creating NavigationMesh instances from BioWare.NET BWM data.
+    /// Factory for creating NavigationMesh instances from BioWare BWM data.
     /// </summary>
     /// <remarks>
     /// Navigation Mesh Factory:

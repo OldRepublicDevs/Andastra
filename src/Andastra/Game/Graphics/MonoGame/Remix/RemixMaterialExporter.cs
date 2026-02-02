@@ -172,7 +172,7 @@ namespace Andastra.Game.Graphics.MonoGame.Remix
             // Remix uses XXHash64 for material identification
             // Normalize the path to lowercase for consistent hashing
             string normalizedPath = texturePath.ToLowerInvariant();
-            // Use helper method to resolve XXHash64 conflict between BioWare.NET and Utility
+            // Use helper method to resolve XXHash64 conflict between BioWare and Utility
             return ComputeXXHash64String(normalizedPath);
         }
 

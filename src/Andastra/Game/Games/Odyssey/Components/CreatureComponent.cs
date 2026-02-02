@@ -287,7 +287,7 @@ namespace Andastra.Game.Games.Odyssey.Components
             int totalBab = 0;
 
             // Get classes.2da table
-            BioWare.NET.Resource.Formats.TwoDA.TwoDA classesTable = gameDataManager.GetTable("classes");
+            BioWare.Resource.Formats.TwoDA.TwoDA classesTable = gameDataManager.GetTable("classes");
             if (classesTable == null)
             {
                 // Fallback to simplified calculation if classes.2da is not available
@@ -308,7 +308,7 @@ namespace Andastra.Game.Games.Odyssey.Components
                     continue; // Skip invalid class IDs
                 }
 
-                BioWare.NET.Resource.Formats.TwoDA.TwoDARow classRow = classesTable.GetRow(cls.ClassId);
+                BioWare.Resource.Formats.TwoDA.TwoDARow classRow = classesTable.GetRow(cls.ClassId);
                 if (classRow == null)
                 {
                     continue; // Skip if class row not found
@@ -323,7 +323,7 @@ namespace Andastra.Game.Games.Odyssey.Components
                 }
 
                 // Load the attack bonus table
-                BioWare.NET.Resource.Formats.TwoDA.TwoDA attackBonusTable = gameDataManager.GetTable(attackBonusTableName);
+                BioWare.Resource.Formats.TwoDA.TwoDA attackBonusTable = gameDataManager.GetTable(attackBonusTableName);
                 if (attackBonusTable == null)
                 {
                     continue; // Skip if attack bonus table not found
@@ -340,7 +340,7 @@ namespace Andastra.Game.Games.Odyssey.Components
                         continue; // Skip if level out of range
                     }
 
-                    BioWare.NET.Resource.Formats.TwoDA.TwoDARow babRow = attackBonusTable.GetRow(rowIndex);
+                    BioWare.Resource.Formats.TwoDA.TwoDARow babRow = attackBonusTable.GetRow(rowIndex);
                     if (babRow == null)
                     {
                         continue; // Skip if row not found
@@ -560,14 +560,14 @@ namespace Andastra.Game.Games.Odyssey.Components
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005d63d0 @ 0x005d63d0 reads "classfeat" column from classes.2da
             // Each class may have a class-specific feat defined in the "classfeat" column
             // If the feat ID matches a class's classfeat value, that class is associated with the feat
-            BioWare.NET.Resource.Formats.TwoDA.TwoDA classesTable = gameDataManager.GetTable("classes");
+            BioWare.Resource.Formats.TwoDA.TwoDA classesTable = gameDataManager.GetTable("classes");
             if (classesTable != null)
             {
                 // Iterate through all classes to find if any class has this feat as its classfeat
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Classes.2da has rows for each class (0=Soldier, 1=Scout, 2=Scoundrel, 3=JediGuardian, etc.)
                 for (int classId = 0; classId < classesTable.GetHeight(); classId++)
                 {
-                    BioWare.NET.Resource.Formats.TwoDA.TwoDARow classRow = classesTable.GetRow(classId);
+                    BioWare.Resource.Formats.TwoDA.TwoDARow classRow = classesTable.GetRow(classId);
                     if (classRow == null)
                         continue;
                     // Check if this class has the feat as its class-specific feat
@@ -584,7 +584,7 @@ namespace Andastra.Game.Games.Odyssey.Components
             // Method 2: Check featgain.2da to see if feat is only available through one class
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0060d1d0 @ 0x0060d1d0 reads featgain.2da for class-specific feat availability
             // If a feat appears only in one class's feat gain table and not in others, it's class-specific
-            BioWare.NET.Resource.Formats.TwoDA.TwoDA featgainTable = gameDataManager.GetTable("featgain");
+            BioWare.Resource.Formats.TwoDA.TwoDA featgainTable = gameDataManager.GetTable("featgain");
             if (featgainTable != null && classesTable != null)
             {
                 int? foundClassId = null;
@@ -593,7 +593,7 @@ namespace Andastra.Game.Games.Odyssey.Components
                 // Check each class's feat gain table
                 for (int classId = 0; classId < classesTable.GetHeight(); classId++)
                 {
-                    BioWare.NET.Resource.Formats.TwoDA.TwoDARow classRow = classesTable.GetRow(classId);
+                    BioWare.Resource.Formats.TwoDA.TwoDARow classRow = classesTable.GetRow(classId);
                     if (classRow == null)
                     {
                         continue;
@@ -607,7 +607,7 @@ namespace Andastra.Game.Games.Odyssey.Components
                     }
 
                     // Find the row in featgain.2da by label
-                    BioWare.NET.Resource.Formats.TwoDA.TwoDARow featgainRow = featgainTable.FindRow(featGainLabel);
+                    BioWare.Resource.Formats.TwoDA.TwoDARow featgainRow = featgainTable.FindRow(featGainLabel);
                     if (featgainRow == null)
                     {
                         continue;

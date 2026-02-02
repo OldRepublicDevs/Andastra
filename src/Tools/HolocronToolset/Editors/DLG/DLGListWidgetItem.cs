@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using BioWare.NET.Resource.Formats.GFF.Generics.DLG;
+using BioWare.Resource.Formats.GFF.Generics.DLG;
 using Avalonia.Controls;
 
 namespace HolocronToolset.Editors

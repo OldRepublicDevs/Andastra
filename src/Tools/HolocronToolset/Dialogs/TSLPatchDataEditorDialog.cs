@@ -13,13 +13,13 @@ using HolocronToolset.Data;
 using HolocronToolset.Editors;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
-using BioWare.NET.TSLPatcher.Mods;
-using BioWare.NET.TSLPatcher.Mods.GFF;
-using BioWare.NET.TSLPatcher.Mods.TwoDA;
-using BioWare.NET.TSLPatcher.Mods.TLK;
-using BioWare.NET.TSLPatcher.Mods.NCS;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.TLK;
+using BioWare.TSLPatcher.Mods;
+using BioWare.TSLPatcher.Mods.GFF;
+using BioWare.TSLPatcher.Mods.TwoDA;
+using BioWare.TSLPatcher.Mods.TLK;
+using BioWare.TSLPatcher.Mods.NCS;
+using BioWare.Common;
+using BioWare.Resource.Formats.TLK;
 
 namespace HolocronToolset.Dialogs
 {
@@ -790,9 +790,9 @@ namespace HolocronToolset.Dialogs
                 // Load other settings from INI using ConfigReader
                 try
                 {
-                    var logger = new BioWare.NET.TSLPatcher.Logger.PatchLogger();
-                    var configReader = BioWare.NET.TSLPatcher.Reader.ConfigReader.FromFilePath(iniPath, logger, _tslpatchdataPath);
-                    var config = configReader.Config ?? new BioWare.NET.TSLPatcher.Config.PatcherConfig();
+                    var logger = new BioWare.TSLPatcher.Logger.PatchLogger();
+                    var configReader = BioWare.TSLPatcher.Reader.ConfigReader.FromFilePath(iniPath, logger, _tslpatchdataPath);
+                    var config = configReader.Config ?? new BioWare.TSLPatcher.Config.PatcherConfig();
                     config = configReader.Load(config);
 
                     // Load general settings

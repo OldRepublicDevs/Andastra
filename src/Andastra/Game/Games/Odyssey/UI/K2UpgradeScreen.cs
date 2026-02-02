@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using BioWare.NET;
-using BioWare.NET.Extract;
-using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare;
+using BioWare.Extract;
+using BioWare.Resource.Formats.GFF.Generics;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using UTI = BioWare.NET.Resource.Formats.GFF.Generics.UTI.UTI;
+using UTI = BioWare.Resource.Formats.GFF.Generics.UTI.UTI;
 
 namespace Andastra.Game.Games.Odyssey.UI
 {

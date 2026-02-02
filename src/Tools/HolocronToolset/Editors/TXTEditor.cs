@@ -5,8 +5,8 @@ using System.Text;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Common;
+using BioWare.Resource;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Editors

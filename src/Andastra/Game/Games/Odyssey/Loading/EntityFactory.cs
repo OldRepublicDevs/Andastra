@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.GFF;
+using BioWare.Common;
+using BioWare.Resource.Formats.GFF;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Game.Games.Common.Components;
@@ -1421,7 +1421,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
                     if (bwmResource != null)
                     {
                         object bwmData = bwmResource.Resource();
-                        if (bwmData != null && bwmData is BioWare.NET.Resource.Formats.BWM.BWM bwm)
+                        if (bwmData != null && bwmData is BioWare.Resource.Formats.BWM.BWM bwm)
                         {
                             // Extract hook vectors
                             // Prefer absolute hooks if available (world space), otherwise use relative hooks + entity position
@@ -1474,7 +1474,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
                     if (bwmResource != null)
                     {
                         object bwmData = bwmResource.Resource();
-                        if (bwmData != null && bwmData is BioWare.NET.Resource.Formats.BWM.BWM bwm)
+                        if (bwmData != null && bwmData is BioWare.Resource.Formats.BWM.BWM bwm)
                         {
                             // Extract hook vectors (same logic as doors)
                             System.Numerics.Vector3 hook1 = System.Numerics.Vector3.Zero;

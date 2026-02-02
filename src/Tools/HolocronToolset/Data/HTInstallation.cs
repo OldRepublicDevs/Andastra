@@ -1,21 +1,21 @@
-using BioWare.NET.Common;
+using BioWare.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BioWare.NET;
-using BioWare.NET.Extract;
-using BioWare.NET.Extract.Capsule;
-using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Resource.Formats.TPC;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare;
+using BioWare.Extract;
+using BioWare.Extract.Capsule;
+using BioWare.Resource.Formats.TwoDA;
+using BioWare.Resource.Formats.TPC;
+using BioWare.Common;
+using BioWare.Resource;
 using Avalonia;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using JetBrains.Annotations;
-using Extract_ResourceResult = BioWare.NET.Extract.ResourceResult;
-using LocationResult = BioWare.NET.Extract.LocationResult;
+using Extract_ResourceResult = BioWare.Extract.ResourceResult;
+using LocationResult = BioWare.Extract.LocationResult;
 
 namespace HolocronToolset.Data
 {
@@ -1214,7 +1214,7 @@ namespace HolocronToolset.Data
         public string ModuleId(string moduleFileName, bool useAlternate = false)
         {
             // Extract module root from filename
-            string root = BioWare.NET.Extract.Installation.GetModuleRoot(moduleFileName);
+            string root = BioWare.Extract.Installation.GetModuleRoot(moduleFileName);
             if (useAlternate)
             {
                 // Try to get area name from module
@@ -1632,7 +1632,7 @@ namespace HolocronToolset.Data
             try
             {
                 // Read the outer ERF (SAVEGAME.sav)
-                var outerErf = BioWare.NET.Resource.Formats.ERF.ERFAuto.ReadErf(savegameSav);
+                var outerErf = BioWare.Resource.Formats.ERF.ERFAuto.ReadErf(savegameSav);
 
                 // Check each .sav resource (cached modules) for EventQueue corruption
                 foreach (var resource in outerErf)
@@ -1645,7 +1645,7 @@ namespace HolocronToolset.Data
                     try
                     {
                         // Read the nested module ERF
-                        var innerErf = BioWare.NET.Resource.Formats.ERF.ERFAuto.ReadErf(resource.Data);
+                        var innerErf = BioWare.Resource.Formats.ERF.ERFAuto.ReadErf(resource.Data);
 
                         // Look for module.ifo in this cached module
                         foreach (var innerResource in innerErf)
@@ -1653,7 +1653,7 @@ namespace HolocronToolset.Data
                             if (innerResource.ResRef.ToString().ToLowerInvariant() == "module" && innerResource.ResType == ResourceType.IFO)
                             {
                                 // Check for EventQueue
-                                var ifoGff = BioWare.NET.Resource.Formats.GFF.GFF.FromBytes(innerResource.Data);
+                                var ifoGff = BioWare.Resource.Formats.GFF.GFF.FromBytes(innerResource.Data);
                                 if (ifoGff.Root.Exists("EventQueue"))
                                 {
                                     var eventQueue = ifoGff.Root.GetList("EventQueue");
@@ -1693,7 +1693,7 @@ namespace HolocronToolset.Data
             try
             {
                 // Read the outer ERF (SAVEGAME.sav)
-                var outerErf = BioWare.NET.Resource.Formats.ERF.ERFAuto.ReadErf(savegameSav);
+                var outerErf = BioWare.Resource.Formats.ERF.ERFAuto.ReadErf(savegameSav);
                 bool anyFixed = false;
 
                 // Process each .sav resource (cached modules)
@@ -1706,7 +1706,7 @@ namespace HolocronToolset.Data
 
                     try
                     {
-                        var innerErf = BioWare.NET.Resource.Formats.ERF.ERFAuto.ReadErf(resource.Data);
+                        var innerErf = BioWare.Resource.Formats.ERF.ERFAuto.ReadErf(resource.Data);
                         bool innerModified = false;
 
                         // Look for module.ifo in this cached module
@@ -1715,16 +1715,16 @@ namespace HolocronToolset.Data
                             if (innerResource.ResRef.ToString().ToLowerInvariant() == "module" && innerResource.ResType == ResourceType.IFO)
                             {
                                 // Check and clear EventQueue
-                                var ifoGff = BioWare.NET.Resource.Formats.GFF.GFF.FromBytes(innerResource.Data);
+                                var ifoGff = BioWare.Resource.Formats.GFF.GFF.FromBytes(innerResource.Data);
                                 if (ifoGff.Root.Exists("EventQueue"))
                                 {
                                     var eventQueue = ifoGff.Root.GetList("EventQueue");
                                     if (eventQueue != null && eventQueue.Count > 0)
                                     {
                                         // Clear the EventQueue
-                                        ifoGff.Root.SetList("EventQueue", new BioWare.NET.Resource.Formats.GFF.GFFList());
+                                        ifoGff.Root.SetList("EventQueue", new BioWare.Resource.Formats.GFF.GFFList());
                                         // Update the resource data
-                                        byte[] ifoData = BioWare.NET.Resource.Formats.GFF.GFFAuto.BytesGff(ifoGff, ResourceType.IFO);
+                                        byte[] ifoData = BioWare.Resource.Formats.GFF.GFFAuto.BytesGff(ifoGff, ResourceType.IFO);
                                         innerErf.SetData(innerResource.ResRef.ToString(), innerResource.ResType, ifoData);
                                         innerModified = true;
                                         anyFixed = true;
@@ -1737,7 +1737,7 @@ namespace HolocronToolset.Data
                         if (innerModified)
                         {
                             // Update the outer ERF with the modified inner ERF
-                            byte[] innerErfData = BioWare.NET.Resource.Formats.ERF.ERFAuto.BytesErf(innerErf, ResourceType.SAV);
+                            byte[] innerErfData = BioWare.Resource.Formats.ERF.ERFAuto.BytesErf(innerErf, ResourceType.SAV);
                             outerErf.SetData(resource.ResRef.ToString(), resource.ResType, innerErfData);
                         }
                     }
@@ -1751,7 +1751,7 @@ namespace HolocronToolset.Data
                 if (anyFixed)
                 {
                     // Write the fixed outer ERF back to disk
-                    BioWare.NET.Resource.Formats.ERF.ERFAuto.WriteErf(outerErf, savegameSav, ResourceType.SAV);
+                    BioWare.Resource.Formats.ERF.ERFAuto.WriteErf(outerErf, savegameSav, ResourceType.SAV);
                     System.Console.WriteLine($"Fixed EventQueue corruption in save: {System.IO.Path.GetFileName(savePath)}");
                     return true;
                 }

@@ -5,8 +5,8 @@ using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
-using BioWare.NET.Extract;
-using BioWare.NET.Tools;
+using BioWare.Extract;
+using BioWare.Tools;
 
 namespace HolocronToolset.Dialogs
 {
@@ -439,7 +439,7 @@ namespace HolocronToolset.Dialogs
             {
                 try
                 {
-                    BioWare.NET.Tools.ModuleTools.CloneModule(
+                    BioWare.Tools.ModuleTools.CloneModule(
                         root,
                         identifier,
                         prefix,

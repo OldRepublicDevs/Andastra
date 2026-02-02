@@ -9,15 +9,15 @@ using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using BioWare.NET;
-using BioWare.NET.Resource.Formats.ERF;
-using BioWare.NET.Resource.Formats.RIM;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare;
+using BioWare.Resource.Formats.ERF;
+using BioWare.Resource.Formats.RIM;
+using BioWare.Common;
+using BioWare.Resource;
 using HolocronToolset.Common;
 using HolocronToolset.Data;
-using ERFResource = BioWare.NET.Resource.Formats.ERF.ERFResource;
-using RIMResource = BioWare.NET.Resource.Formats.RIM.RIMResource;
+using ERFResource = BioWare.Resource.Formats.ERF.ERFResource;
+using RIMResource = BioWare.Resource.Formats.RIM.RIMResource;
 
 namespace HolocronToolset.Editors
 {

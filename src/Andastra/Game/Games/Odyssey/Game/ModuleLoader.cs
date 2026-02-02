@@ -1,20 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.BWM;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Resource.Formats.MDL;
-using BioWare.NET.Resource.Formats.TPC;
-using BioWare.NET.Resource.Formats.VIS;
-using BioWare.NET.Extract;
-using BioWare.NET.Resource.Formats.LYT;
-using BioWare.NET.Resource.Formats.GFF.Generics;
-using BioWare.NET.Resource.Formats.GFF.Generics.ARE;
-using BioWare.NET.Resource.Formats.GFF.Generics.DLG;
-using BioWare.NET.Resource.Formats.GFF.Generics.UTC;
-using BioWare.NET.Resource.Formats.GFF.Generics.UTM;
+using BioWare;
+using BioWare.Common;
+using BioWare.Resource.Formats.BWM;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.MDL;
+using BioWare.Resource.Formats.TPC;
+using BioWare.Resource.Formats.VIS;
+using BioWare.Extract;
+using BioWare.Resource.Formats.LYT;
+using BioWare.Resource.Formats.GFF.Generics;
+using BioWare.Resource.Formats.GFF.Generics.ARE;
+using BioWare.Resource.Formats.GFF.Generics.DLG;
+using BioWare.Resource.Formats.GFF.Generics.UTC;
+using BioWare.Resource.Formats.GFF.Generics.UTM;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
@@ -24,15 +24,15 @@ using Andastra.Runtime.Core.Navigation;
 using RuntimeCore = Andastra.Runtime.Core;
 using Andastra.Game.Games.Odyssey.Components;
 using JetBrains.Annotations;
-using InstResourceResult = BioWare.NET.Extract.ResourceResult;
+using InstResourceResult = BioWare.Extract.ResourceResult;
 using KotorVector3 = System.Numerics.Vector3;
-using MDLData = BioWare.NET.Resource.Formats.MDLData;
+using MDLData = BioWare.Resource.Formats.MDLData;
 using OdyObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using OdysseyDoorComponent = Andastra.Game.Games.Odyssey.Components.OdysseyDoorComponent;
 using OdysseyNavigationMeshFactory = Andastra.Game.Games.Odyssey.Loading.NavigationMeshFactory;
 using OdysseyWaypointComponent = Andastra.Game.Games.Odyssey.Components.OdysseyWaypointComponent;
 using PlaceableComponent = Andastra.Game.Games.Odyssey.Components.PlaceableComponent;
-using ResRef = BioWare.NET.Common.ResRef;
+using ResRef = BioWare.Common.ResRef;
 using RuntimeObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using SoundComponent = Andastra.Game.Games.Odyssey.Components.SoundComponent;
 // Explicit type aliases to resolve ambiguity
@@ -41,7 +41,7 @@ using SysVector3 = System.Numerics.Vector3;
 namespace Andastra.Game.Games.Odyssey.Game
 {
     /// <summary>
-    /// Loads modules from KOTOR game files using BioWare.NET resource infrastructure.
+    /// Loads modules from KOTOR game files using BioWare resource infrastructure.
     /// </summary>
     /// <remarks>
     /// Module Loading Process:
@@ -176,7 +176,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         }
 
         /// <summary>
-        /// Gets the current BioWare.NET Module for resource loading.
+        /// Gets the current BioWare Module for resource loading.
         /// </summary>
         [CanBeNull]
         public Module GetParsingModule()

@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using BioWare.NET.Common.Script;
+using BioWare.Common.Script;
 using Andastra.Game.Scripting.EngineApi;
 using Andastra.Game.Scripting.Interfaces;
 

@@ -95,9 +95,9 @@ namespace Andastra.Game.Games.Aurora.Collision
                     try
                     {
                         object appearanceTypeValue = appearanceTypeProp.GetValue(entity);
-                        if (appearanceTypeValue is int)
+                        if (appearanceTypeValue is int v)
                         {
-                            appearanceType = (int)appearanceTypeValue;
+                            appearanceType = v;
                         }
                     }
                     catch

@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using BioWare.NET;
+using BioWare;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Game.Games.Common;
 

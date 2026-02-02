@@ -3,12 +3,12 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Avalonia;
-using BioWare.NET;
-using BioWare.NET.Common.Logger;
+using BioWare;
+using BioWare.Common.Logger;
 using HoloPatcher.UI;
 using HoloPatcher.UI.ViewModels;
 using HoloPatcherCore = HoloPatcher.UI.Core;
-using BioWare.NET.TSLPatcher.Logger;
+using BioWare.TSLPatcher.Logger;
 using JetBrains.Annotations;
 
 namespace HoloPatcher

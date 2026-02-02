@@ -2,7 +2,7 @@ using System;
 using System.CommandLine;
 using System.IO;
 using KotorCLI.Logging;
-using BioWare.NET.Resource.Formats.WAV;
+using BioWare.Resource.Formats.WAV;
 
 namespace KotorCLI.Commands
 {

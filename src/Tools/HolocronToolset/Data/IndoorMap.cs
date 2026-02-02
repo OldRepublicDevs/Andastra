@@ -1,4 +1,4 @@
-using BioWare.NET.Common;
+using BioWare.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,18 +8,18 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
-using BioWare.NET.Common.Logger;
-using BioWare.NET.Extract;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.BWM;
-using BioWare.NET.Resource.Formats.ERF;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Resource.Formats.GFF.Generics;
-using BioWare.NET.Resource.Formats.GFF.Generics.ARE;
-using BioWare.NET.Resource.Formats.LYT;
-using BioWare.NET.Resource.Formats.TPC;
-using BioWare.NET.Resource.Formats.VIS;
-using BioWare.NET.Tools;
+using BioWare.Common.Logger;
+using BioWare.Extract;
+using BioWare.Resource;
+using BioWare.Resource.Formats.BWM;
+using BioWare.Resource.Formats.ERF;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.GFF.Generics;
+using BioWare.Resource.Formats.GFF.Generics.ARE;
+using BioWare.Resource.Formats.LYT;
+using BioWare.Resource.Formats.TPC;
+using BioWare.Resource.Formats.VIS;
+using BioWare.Tools;
 using SystemTextEncoding = System.Text.Encoding;
 using Vector4 = System.Numerics.Vector4;
 using Vector2 = System.Numerics.Vector2;
@@ -73,7 +73,7 @@ namespace HolocronToolset.Data
             List<IndoorMapRoom> rooms = null,
             string moduleId = null,
             LocalizedString name = null,
-            BioWare.NET.Common.Color lighting = null,
+            BioWare.Common.Color lighting = null,
             string skybox = null,
             Vector3? warpPoint = null,
             bool? targetGameType = null)
@@ -81,7 +81,7 @@ namespace HolocronToolset.Data
             Rooms = rooms ?? new List<IndoorMapRoom>();
             ModuleId = moduleId ?? "test01";
             Name = name ?? LocalizedString.FromEnglish("New Module");
-            Lighting = lighting ?? new BioWare.NET.Common.Color(0.5f, 0.5f, 0.5f);
+            Lighting = lighting ?? new BioWare.Common.Color(0.5f, 0.5f, 0.5f);
             Skybox = skybox ?? "";
             WarpPoint = warpPoint ?? System.Numerics.Vector3.Zero;
             // targetGameType: null = use installation.Tsl, true = TSL/K2, false = K1
@@ -91,7 +91,7 @@ namespace HolocronToolset.Data
         public List<IndoorMapRoom> Rooms { get; set; }
         public string ModuleId { get; set; }
         public LocalizedString Name { get; set; }
-        public BioWare.NET.Common.Color Lighting { get; set; }
+        public BioWare.Common.Color Lighting { get; set; }
         public string Skybox { get; set; }
         public Vector3 WarpPoint { get; set; }
         // TargetGameType: null = use installation.Tsl, true = TSL/K2, false = K1
@@ -1712,7 +1712,7 @@ namespace HolocronToolset.Data
         private void SetAreaAttributes(MinimapData minimap)
         {
             _are.Tag = ModuleId;
-            _are.DynamicLight = new BioWare.NET.Common.Color(Lighting.R, Lighting.G, Lighting.B);
+            _are.DynamicLight = new BioWare.Common.Color(Lighting.R, Lighting.G, Lighting.B);
             _are.Name = Name;
             _are.MapPoint1 = minimap.ImagePointMin;
             _are.MapPoint2 = minimap.ImagePointMax;
@@ -2289,7 +2289,7 @@ namespace HolocronToolset.Data
             Rooms.Clear();
             ModuleId = "test01";
             Name = LocalizedString.FromEnglish("New Module");
-            Lighting = new BioWare.NET.Common.Color(0.5f, 0.5f, 0.5f);
+            Lighting = new BioWare.Common.Color(0.5f, 0.5f, 0.5f);
             TargetGameType = null;
         }
 

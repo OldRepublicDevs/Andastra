@@ -2,8 +2,8 @@ using System;
 using System.CommandLine;
 using System.IO;
 using KotorCLI.Logging;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.NCS;
+using BioWare.Common;
+using BioWare.Resource.Formats.NCS;
 
 namespace KotorCLI.Commands
 {

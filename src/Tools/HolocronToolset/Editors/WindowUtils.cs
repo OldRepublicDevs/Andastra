@@ -6,9 +6,9 @@ using Avalonia.Controls;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
 using HolocronToolset.Editors.DLG;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using FileResource = BioWare.NET.Extract.FileResource;
+using BioWare.Common;
+using BioWare.Resource;
+using FileResource = BioWare.Extract.FileResource;
 using JetBrains.Annotations;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
@@ -139,23 +139,23 @@ namespace HolocronToolset.Editors
             var targetType = restype.TargetType();
 
             // Route to appropriate editor based on resource type
-            if (targetType == BioWare.NET.Common.ResourceType.TwoDA)
+            if (targetType == BioWare.Common.ResourceType.TwoDA)
             {
                 editor = new TwoDAEditor(parentWindow, installation);
             }
-            else if (targetType == BioWare.NET.Common.ResourceType.SSF)
+            else if (targetType == BioWare.Common.ResourceType.SSF)
             {
                 editor = new SSFEditor(parentWindow, installation);
             }
-            else if (targetType == BioWare.NET.Common.ResourceType.TLK)
+            else if (targetType == BioWare.Common.ResourceType.TLK)
             {
                 editor = new TLKEditor(parentWindow, installation);
             }
-            else if (targetType == BioWare.NET.Common.ResourceType.LTR)
+            else if (targetType == BioWare.Common.ResourceType.LTR)
             {
                 editor = new LTREditor(parentWindow, installation);
             }
-            else if (targetType == BioWare.NET.Common.ResourceType.LIP)
+            else if (targetType == BioWare.Common.ResourceType.LIP)
             {
                 editor = new LIPEditor(parentWindow, installation);
             }
@@ -163,13 +163,13 @@ namespace HolocronToolset.Editors
             {
                 editor = new BWMEditor(parentWindow, installation);
             }
-            else if ((restype.Category == "Images" || restype.Category == "Textures") && restype != BioWare.NET.Common.ResourceType.TXI)
+            else if ((restype.Category == "Images" || restype.Category == "Textures") && restype != BioWare.Common.ResourceType.TXI)
             {
                 editor = new TPCEditor(parentWindow, installation);
             }
-            else if (restype == BioWare.NET.Common.ResourceType.NSS || restype == BioWare.NET.Common.ResourceType.NCS)
+            else if (restype == BioWare.Common.ResourceType.NSS || restype == BioWare.Common.ResourceType.NCS)
             {
-                if (installation == null && restype == BioWare.NET.Common.ResourceType.NCS)
+                if (installation == null && restype == BioWare.Common.ResourceType.NCS)
                 {
                     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/window.py:215-219
                     // Original: QMessageBox.warning(parent_window_widget, tr("Cannot decompile NCS without an installation active"), tr("Please select an installation from the dropdown before loading an NCS."))
@@ -183,7 +183,7 @@ namespace HolocronToolset.Editors
                 }
                 editor = new NSSEditor(parentWindow, installation);
             }
-            else if (targetType == BioWare.NET.Common.ResourceType.DLG)
+            else if (targetType == BioWare.Common.ResourceType.DLG)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -194,7 +194,7 @@ namespace HolocronToolset.Editors
                     editor = new DLGEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == BioWare.NET.Common.ResourceType.UTC || targetType == BioWare.NET.Common.ResourceType.BTC || targetType == BioWare.NET.Common.ResourceType.BIC)
+            else if (targetType == BioWare.Common.ResourceType.UTC || targetType == BioWare.Common.ResourceType.BTC || targetType == BioWare.Common.ResourceType.BIC)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -205,7 +205,7 @@ namespace HolocronToolset.Editors
                     editor = new UTCEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == BioWare.NET.Common.ResourceType.UTP || targetType == BioWare.NET.Common.ResourceType.BTP)
+            else if (targetType == BioWare.Common.ResourceType.UTP || targetType == BioWare.Common.ResourceType.BTP)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -216,7 +216,7 @@ namespace HolocronToolset.Editors
                     editor = new UTPEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == BioWare.NET.Common.ResourceType.UTD || targetType == BioWare.NET.Common.ResourceType.BTD)
+            else if (targetType == BioWare.Common.ResourceType.UTD || targetType == BioWare.Common.ResourceType.BTD)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -227,11 +227,11 @@ namespace HolocronToolset.Editors
                     editor = new UTDEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == BioWare.NET.Common.ResourceType.IFO)
+            else if (targetType == BioWare.Common.ResourceType.IFO)
             {
                 editor = new IFOEditor(parentWindow, installation);
             }
-            else if (targetType == BioWare.NET.Common.ResourceType.UTS)
+            else if (targetType == BioWare.Common.ResourceType.UTS)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -242,7 +242,7 @@ namespace HolocronToolset.Editors
                     editor = new UTSEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == BioWare.NET.Common.ResourceType.UTT || targetType == BioWare.NET.Common.ResourceType.BTT)
+            else if (targetType == BioWare.Common.ResourceType.UTT || targetType == BioWare.Common.ResourceType.BTT)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -253,7 +253,7 @@ namespace HolocronToolset.Editors
                     editor = new UTTEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == BioWare.NET.Common.ResourceType.UTM || targetType == BioWare.NET.Common.ResourceType.BTM)
+            else if (targetType == BioWare.Common.ResourceType.UTM || targetType == BioWare.Common.ResourceType.BTM)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -264,7 +264,7 @@ namespace HolocronToolset.Editors
                     editor = new UTMEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == BioWare.NET.Common.ResourceType.UTW)
+            else if (targetType == BioWare.Common.ResourceType.UTW)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -275,7 +275,7 @@ namespace HolocronToolset.Editors
                     editor = new UTWEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == BioWare.NET.Common.ResourceType.UTE || targetType == BioWare.NET.Common.ResourceType.BTE)
+            else if (targetType == BioWare.Common.ResourceType.UTE || targetType == BioWare.Common.ResourceType.BTE)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -286,7 +286,7 @@ namespace HolocronToolset.Editors
                     editor = new UTEEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == BioWare.NET.Common.ResourceType.UTI || targetType == BioWare.NET.Common.ResourceType.BTI)
+            else if (targetType == BioWare.Common.ResourceType.UTI || targetType == BioWare.Common.ResourceType.BTI)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -297,7 +297,7 @@ namespace HolocronToolset.Editors
                     editor = new UTIEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == BioWare.NET.Common.ResourceType.JRL)
+            else if (targetType == BioWare.Common.ResourceType.JRL)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -308,7 +308,7 @@ namespace HolocronToolset.Editors
                     editor = new JRLEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == BioWare.NET.Common.ResourceType.ARE)
+            else if (targetType == BioWare.Common.ResourceType.ARE)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -319,7 +319,7 @@ namespace HolocronToolset.Editors
                     editor = new AREEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == BioWare.NET.Common.ResourceType.PTH)
+            else if (targetType == BioWare.Common.ResourceType.PTH)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -330,7 +330,7 @@ namespace HolocronToolset.Editors
                     editor = new PTHEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == BioWare.NET.Common.ResourceType.GIT)
+            else if (targetType == BioWare.Common.ResourceType.GIT)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -345,13 +345,13 @@ namespace HolocronToolset.Editors
             {
                 editor = new WAVEditor(parentWindow, installation);
             }
-            else if (restype == BioWare.NET.Common.ResourceType.ERF || restype == BioWare.NET.Common.ResourceType.SAV ||
-                     restype == BioWare.NET.Common.ResourceType.MOD || restype == BioWare.NET.Common.ResourceType.RIM ||
-                     restype == BioWare.NET.Common.ResourceType.BIF)
+            else if (restype == BioWare.Common.ResourceType.ERF || restype == BioWare.Common.ResourceType.SAV ||
+                     restype == BioWare.Common.ResourceType.MOD || restype == BioWare.Common.ResourceType.RIM ||
+                     restype == BioWare.Common.ResourceType.BIF)
             {
                 editor = new ERFEditor(parentWindow, installation);
             }
-            else if (restype == BioWare.NET.Common.ResourceType.MDL || restype == BioWare.NET.Common.ResourceType.MDX)
+            else if (restype == BioWare.Common.ResourceType.MDL || restype == BioWare.Common.ResourceType.MDX)
             {
                 editor = new MDLEditor(parentWindow, installation);
             }

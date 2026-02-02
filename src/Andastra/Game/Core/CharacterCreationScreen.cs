@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.TPC;
-using BioWare.NET.Extract;
+using BioWare.Common;
+using BioWare.Resource.Formats.TPC;
+using BioWare.Extract;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Interfaces.Components;
@@ -1906,9 +1906,9 @@ namespace Andastra.Game.Core
                     portraitResRef,
                     new[]
                     {
-                        BioWare.NET.Extract.SearchLocation.OVERRIDE,
-                        BioWare.NET.Extract.SearchLocation.CUSTOM_FOLDERS,
-                        BioWare.NET.Extract.SearchLocation.CHITIN
+                        BioWare.Extract.SearchLocation.OVERRIDE,
+                        BioWare.Extract.SearchLocation.CUSTOM_FOLDERS,
+                        BioWare.Extract.SearchLocation.CHITIN
                     }
                 );
 

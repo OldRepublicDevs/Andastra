@@ -1,25 +1,25 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.GFF.Generics;
-using BioWare.NET.Resource.Formats.GFF.Generics.GUI;
-using BioWare.NET.Resource.Formats.GFF.Generics.UTI;
+using BioWare;
+using BioWare.Common;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.TwoDA;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Resource.Formats.GFF.Generics;
+using BioWare.Resource.Formats.GFF.Generics.GUI;
+using BioWare.Resource.Formats.GFF.Generics.UTI;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Eclipse.GUI;
 using Andastra.Runtime.Graphics;
-using static BioWare.NET.Common.GameExtensions;
-using ParsingGUI = BioWare.NET.Resource.Formats.GFF.Generics.GUI.GUI;
-using UTI = BioWare.NET.Resource.Formats.GFF.Generics.UTI.UTI;
+using static BioWare.Common.GameExtensions;
+using ParsingGUI = BioWare.Resource.Formats.GFF.Generics.GUI.GUI;
+using UTI = BioWare.Resource.Formats.GFF.Generics.UTI.UTI;
 
 namespace Andastra.Game.Games.Eclipse
 {
@@ -973,7 +973,7 @@ namespace Andastra.Game.Games.Eclipse
                 {
                     // Cannot load baseitems.2da, fall back to known armor base items
                     // Based on UTI.ArmorBaseItems: Known armor base item IDs
-                    foreach (int armorBaseItem in BioWare.NET.Resource.Formats.GFF.Generics.UTI.UTI.ArmorBaseItems)
+                    foreach (int armorBaseItem in BioWare.Resource.Formats.GFF.Generics.UTI.UTI.ArmorBaseItems)
                     {
                         // For fallback, we can't determine itemclass without baseitems.2da
                         // So we'll use the fallback logic in IsArmorItemClass
@@ -993,7 +993,7 @@ namespace Andastra.Game.Games.Eclipse
 
                     // Known armor base item IDs from UTI.ArmorBaseItems
                     // Based on PyKotor: ARMOR_BASE_ITEMS = {35, 36, 37, 38, 39, 40, 41, 42, 43, 53, 58, 63, 64, 65, 69, 71, 85, 89, 98, 100, 102, 103}
-                    HashSet<int> knownArmorBaseItems = new HashSet<int>(BioWare.NET.Resource.Formats.GFF.Generics.UTI.UTI.ArmorBaseItems);
+                    HashSet<int> knownArmorBaseItems = new HashSet<int>(BioWare.Resource.Formats.GFF.Generics.UTI.UTI.ArmorBaseItems);
 
                     // Iterate through all rows in baseitems.2da
                     // Based on Dragon Age Origins: ItemUpgrade system checks all rows to determine armor items
@@ -1154,7 +1154,7 @@ namespace Andastra.Game.Games.Eclipse
             // Based on UTI.ArmorBaseItems: Known armor base item IDs
             // Note: This fallback checks if itemClass matches known armor base item IDs, which is not ideal
             // but provides backward compatibility if baseitems.2da is unavailable
-            return BioWare.NET.Resource.Formats.GFF.Generics.UTI.UTI.ArmorBaseItems.Contains(itemClass.Value) ||
+            return BioWare.Resource.Formats.GFF.Generics.UTI.UTI.ArmorBaseItems.Contains(itemClass.Value) ||
                    (itemClass.Value >= 30 && itemClass.Value < 110);
         }
 
@@ -2395,10 +2395,10 @@ namespace Andastra.Game.Games.Eclipse
                     ResourceResult propertyDefResult = _installation.Resource("itempropdef", ResourceType.TwoDA, null, null);
                     if (propertyDefResult != null && propertyDefResult.Data != null)
                     {
-                        BioWare.NET.Resource.Formats.TwoDA.TwoDA propertyDefTable = BioWare.NET.Resource.Formats.TwoDA.TwoDA.FromBytes(propertyDefResult.Data);
+                        BioWare.Resource.Formats.TwoDA.TwoDA propertyDefTable = BioWare.Resource.Formats.TwoDA.TwoDA.FromBytes(propertyDefResult.Data);
                         if (propertyDefTable != null && propertyType >= 0 && propertyType < propertyDefTable.GetHeight())
                         {
-                            BioWare.NET.Resource.Formats.TwoDA.TwoDARow propertyDefRow = propertyDefTable.GetRow(propertyType);
+                            BioWare.Resource.Formats.TwoDA.TwoDARow propertyDefRow = propertyDefTable.GetRow(propertyType);
                             if (propertyDefRow != null)
                             {
                                 // Check for ability-scaling indicators in property definition

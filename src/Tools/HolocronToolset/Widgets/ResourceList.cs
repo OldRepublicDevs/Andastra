@@ -6,9 +6,9 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Widgets

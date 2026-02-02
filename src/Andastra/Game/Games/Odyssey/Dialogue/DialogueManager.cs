@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.TLK;
-using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Resource.Formats.GFF.Generics.DLG;
+using BioWare;
+using BioWare.Common;
+using BioWare.Resource.Formats.TLK;
+using BioWare.Resource.Formats.TwoDA;
+using BioWare.Resource.Formats.GFF.Generics.DLG;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Journal;
@@ -14,7 +14,7 @@ using Andastra.Game.Games.Odyssey.Data;
 using Andastra.Game.Games.Common.Dialogue;
 using Andastra.Game.Scripting.Interfaces;
 using JetBrains.Annotations;
-using ResRef = BioWare.NET.Common.ResRef;
+using ResRef = BioWare.Common.ResRef;
 
 namespace Andastra.Game.Games.Odyssey.Dialogue
 {

@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using BioWare.NET.Resource.Formats.MDLData;
+using BioWare.Resource.Formats.MDLData;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 namespace Andastra.Game.Graphics.MonoGame.Converters
 {
     /// <summary>
-    /// Converts BioWare.NET MDL model data to MonoGame Model.
+    /// Converts BioWare MDL model data to MonoGame Model.
     /// Handles trimesh geometry, UV coordinates, and basic material references.
     /// </summary>
     /// <remarks>
@@ -166,7 +166,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
         }
 
         /// <summary>
-        /// Converts a legacy BioWare.NET MDL model to MonoGame rendering structures.
+        /// Converts a legacy BioWare MDL model to MonoGame rendering structures.
         /// 
         /// NOTE: For better performance, use MDLFastReader + MDLModelConverter instead.
         /// </summary>

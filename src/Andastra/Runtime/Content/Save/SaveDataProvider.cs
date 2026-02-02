@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using BioWare.NET.Extract.SaveData;
+using BioWare.Extract.SaveData;
 using Andastra.Runtime.Core.Save;
 
 namespace Andastra.Runtime.Content.Save

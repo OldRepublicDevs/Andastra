@@ -1,4 +1,4 @@
-using BioWare.NET.Common;
+using BioWare.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,11 +8,11 @@ using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using BioWare.NET;
+using BioWare;
 using System.Numerics;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Common;
+using BioWare.Resource;
 using HolocronToolset.Common;
 using HolocronToolset.Data;
 

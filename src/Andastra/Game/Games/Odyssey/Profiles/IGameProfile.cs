@@ -67,32 +67,6 @@ namespace Andastra.Game.Games.Odyssey.Profiles
     }
 
     /// <summary>
-    /// Engine family enumeration for grouping related engines.
-    /// </summary>
-    public enum EngineFamily
-    {
-        /// <summary>
-        /// Aurora Engine (NWN, NWN2)
-        /// </summary>
-        Aurora,
-
-        /// <summary>
-        /// Odyssey Engine (KOTOR, KOTOR2, Jade Empire)
-        /// </summary>
-        Odyssey,
-
-        /// <summary>
-        /// Eclipse/Unreal Engine ( series)
-        /// </summary>
-        Eclipse,
-
-        /// <summary>
-        /// Unknown or unsupported engine
-        /// </summary>
-        Unknown
-    }
-
-    /// <summary>
     /// Game-specific features that may or may not be supported.
     /// </summary>
     public enum GameFeature

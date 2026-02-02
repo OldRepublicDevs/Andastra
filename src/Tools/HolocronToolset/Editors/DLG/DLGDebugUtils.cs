@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
-using BioWare.NET.Resource.Formats.GFF.Generics.DLG;
+using BioWare.Resource.Formats.GFF.Generics.DLG;
 
 namespace HolocronToolset.Editors.DLG
 {

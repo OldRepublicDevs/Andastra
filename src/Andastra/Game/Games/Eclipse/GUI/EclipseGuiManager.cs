@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using BioWare.NET.Resource.Formats.DDS;
-using BioWare.NET.Resource.Formats.TPC;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.TEX;
-using BioWare.NET.Resource.Formats.GFF.Generics.GUI;
+using BioWare.Resource.Formats.DDS;
+using BioWare.Resource.Formats.TPC;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Resource.Formats.TEX;
+using BioWare.Resource.Formats.GFF.Generics.GUI;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Eclipse.Fonts;
 using Andastra.Runtime.Graphics;
@@ -15,8 +15,8 @@ using Andastra.Game.Graphics.MonoGame.Graphics;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework.Input;
 using NumericsVector2 = System.Numerics.Vector2;
-using ParsingColor = BioWare.NET.Common.Color;
-using ParsingGUI = BioWare.NET.Resource.Formats.GFF.Generics.GUI.GUI;
+using ParsingColor = BioWare.Common.Color;
+using ParsingGUI = BioWare.Resource.Formats.GFF.Generics.GUI.GUI;
 
 namespace Andastra.Game.Games.Eclipse.GUI
 {
@@ -771,7 +771,7 @@ namespace Andastra.Game.Games.Eclipse.GUI
                 Dimension = selected.Dimension,
                 InnerOffset = selected.InnerOffset,
                 InnerOffsetY = selected.InnerOffsetY,
-                Color = selected.Color != null ? new BioWare.NET.Common.Color(selected.Color.R, selected.Color.G, selected.Color.B, selected.Color.A) : null,
+                Color = selected.Color != null ? new BioWare.Common.Color(selected.Color.R, selected.Color.G, selected.Color.B, selected.Color.A) : null,
                 Pulsing = selected.Pulsing
             };
         }
@@ -787,7 +787,7 @@ namespace Andastra.Game.Games.Eclipse.GUI
                 Dimension = hilightSelected.Dimension,
                 InnerOffset = hilightSelected.InnerOffset,
                 InnerOffsetY = hilightSelected.InnerOffsetY,
-                Color = hilightSelected.Color != null ? new BioWare.NET.Common.Color(hilightSelected.Color.R, hilightSelected.Color.G, hilightSelected.Color.B, hilightSelected.Color.A) : null,
+                Color = hilightSelected.Color != null ? new BioWare.Common.Color(hilightSelected.Color.R, hilightSelected.Color.G, hilightSelected.Color.B, hilightSelected.Color.A) : null,
                 Pulsing = hilightSelected.Pulsing
             };
         }

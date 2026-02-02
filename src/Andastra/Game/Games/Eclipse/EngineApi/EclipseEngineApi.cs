@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using BioWare.NET.Common;
+using BioWare.Common;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;

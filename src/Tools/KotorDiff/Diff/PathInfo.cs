@@ -2,7 +2,7 @@
 // Original: @dataclass class PathInfo: ...
 using System;
 using System.IO;
-using BioWare.NET.Extract;
+using BioWare.Extract;
 
 namespace KotorDiff.Diff
 {

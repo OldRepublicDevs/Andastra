@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using BioWare.NET.Resource.Formats.WAV;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Resource.Formats.WAV;
+using BioWare.Common;
+using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Audio;
 using Microsoft.Xna.Framework.Audio;
@@ -348,7 +348,7 @@ namespace Andastra.Game.Graphics.MonoGame.Audio
                         return null;
                     }
 
-                    // Convert BioWare.NET WAV to MonoGame-compatible format
+                    // Convert BioWare WAV to MonoGame-compatible format
                     byte[] wavBytes = CreateMonoGameWavStream(wav);
                     if (wavBytes == null || wavBytes.Length == 0)
                     {
@@ -387,7 +387,7 @@ namespace Andastra.Game.Graphics.MonoGame.Audio
         }
 
         /// <summary>
-        /// Converts BioWare.NET WAV object to MonoGame-compatible RIFF/WAVE byte array.
+        /// Converts BioWare WAV object to MonoGame-compatible RIFF/WAVE byte array.
         /// 
         /// Handles all WAV formats comprehensively:
         /// - PCM (8-bit, 16-bit, 24-bit, 32-bit) - converts to 16-bit PCM

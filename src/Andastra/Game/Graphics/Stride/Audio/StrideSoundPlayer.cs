@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using BioWare.NET.Resource.Formats.WAV;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Resource.Formats.WAV;
+using BioWare.Common;
+using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Audio;
 using Andastra.Runtime.Graphics;
@@ -122,7 +122,7 @@ namespace Andastra.Game.Stride.Audio
                 }
 
                 // Parse WAV file to get audio format information
-                // Based on BioWare.NET.Resource.Formats.WAV for WAV file parsing
+                // Based on BioWare.Resource.Formats.WAV for WAV file parsing
                 WAV wavFile = WAVAuto.ReadWav(wavData);
                 if (wavFile == null)
                 {
@@ -370,7 +370,7 @@ namespace Andastra.Game.Stride.Audio
             {
                 // Extract PCM data from WAV file
                 // WAV format: Header + PCM data
-                // Based on BioWare.NET.Resource.Formats.WAV structure
+                // Based on BioWare.Resource.Formats.WAV structure
                 byte[] pcmData = wavFile.Data;
                 if (pcmData == null || pcmData.Length == 0)
                 {

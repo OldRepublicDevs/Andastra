@@ -9,10 +9,10 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
-using BioWare.NET.Extract;
-using BioWare.NET.Resource.Formats.SSF;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Extract;
+using BioWare.Resource.Formats.SSF;
+using BioWare.Common;
+using BioWare.Resource;
 using HolocronToolset.Common;
 using HolocronToolset.Data;
 

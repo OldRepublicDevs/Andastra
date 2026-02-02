@@ -553,14 +553,14 @@ namespace Andastra.Game.Games.Odyssey
                 // Create Module instance for resource access
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module objects are created per module for resource lookups
                 // Module instance provides access to ARE, GIT, LYT, VIS files for areas
-                BioWare.NET.Extract.Installation installation = _moduleLoader.GetInstallation();
+                BioWare.Extract.Installation installation = _moduleLoader.GetInstallation();
                 if (installation == null)
                 {
                     Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: Cannot load area {targetAreaResRef} - ModuleLoader has no Installation");
                     return null;
                 }
 
-                var module = new BioWare.NET.Common.Module(moduleName, installation);
+                var module = new BioWare.Common.Module(moduleName, installation);
 
                 // Load area using ModuleLoader
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): LoadAreaProperties @ 0x004e26d0 loads ARE + GIT + LYT + VIS

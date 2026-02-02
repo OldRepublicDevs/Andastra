@@ -4,17 +4,17 @@ using System.IO;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Resource.Formats.TLK;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Common;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.TLK;
+using BioWare.Common;
+using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using JetBrains.Annotations;
-using UTC = BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTC;
+using UTC = BioWare.Resource.Formats.GFF.Generics.UTC.UTC;
 
 namespace Andastra.Runtime.Content.Loaders
 {
@@ -98,7 +98,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new BioWare.NET.Resource.ResourceIdentifier(templateResRef, BioWare.NET.Common.ResourceType.UTC);
+            var id = new BioWare.Resource.ResourceIdentifier(templateResRef, BioWare.Common.ResourceType.UTC);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -107,7 +107,7 @@ namespace Andastra.Runtime.Content.Loaders
 
             // Use Parsing UTCHelpers to parse the GFF
             GFF gff = GFF.FromBytes(data);
-            var utc = BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTCHelpers.ConstructUtc(gff);
+            var utc = BioWare.Resource.Formats.GFF.Generics.UTC.UTCHelpers.ConstructUtc(gff);
             return ParseCreatureTemplate(utc);
         }
 
@@ -118,7 +118,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new BioWare.NET.Resource.ResourceIdentifier(templateResRef, BioWare.NET.Common.ResourceType.UTP);
+            var id = new BioWare.Resource.ResourceIdentifier(templateResRef, BioWare.Common.ResourceType.UTP);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -140,7 +140,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new BioWare.NET.Resource.ResourceIdentifier(templateResRef, BioWare.NET.Common.ResourceType.UTD);
+            var id = new BioWare.Resource.ResourceIdentifier(templateResRef, BioWare.Common.ResourceType.UTD);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -162,7 +162,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new BioWare.NET.Resource.ResourceIdentifier(templateResRef, BioWare.NET.Common.ResourceType.UTT);
+            var id = new BioWare.Resource.ResourceIdentifier(templateResRef, BioWare.Common.ResourceType.UTT);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -184,7 +184,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new BioWare.NET.Resource.ResourceIdentifier(templateResRef, BioWare.NET.Common.ResourceType.UTW);
+            var id = new BioWare.Resource.ResourceIdentifier(templateResRef, BioWare.Common.ResourceType.UTW);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -206,7 +206,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new BioWare.NET.Resource.ResourceIdentifier(templateResRef, BioWare.NET.Common.ResourceType.UTS);
+            var id = new BioWare.Resource.ResourceIdentifier(templateResRef, BioWare.Common.ResourceType.UTS);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -228,7 +228,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new BioWare.NET.Resource.ResourceIdentifier(templateResRef, BioWare.NET.Common.ResourceType.UTE);
+            var id = new BioWare.Resource.ResourceIdentifier(templateResRef, BioWare.Common.ResourceType.UTE);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -250,7 +250,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new BioWare.NET.Resource.ResourceIdentifier(templateResRef, BioWare.NET.Common.ResourceType.UTM);
+            var id = new BioWare.Resource.ResourceIdentifier(templateResRef, BioWare.Common.ResourceType.UTM);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -267,7 +267,7 @@ namespace Andastra.Runtime.Content.Loaders
 
         #region Template Parsing
 
-        private CreatureTemplate ParseCreatureTemplate(BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTC utc)
+        private CreatureTemplate ParseCreatureTemplate(BioWare.Resource.Formats.GFF.Generics.UTC.UTC utc)
         {
             var template = new CreatureTemplate();
 

@@ -25,8 +25,8 @@ using Andastra.Runtime.Core.Navigation;
 using Andastra.Runtime.Core.Party;
 using Andastra.Runtime.Core.Plot;
 using ModuleState = Andastra.Runtime.Core.Module.ModuleState;
-using BioWare.NET.Common;
-using BioWare.NET.Extract;
+using BioWare.Common;
+using BioWare.Extract;
 using JetBrains.Annotations;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Odyssey.Systems;
@@ -34,7 +34,6 @@ using Andastra.Game.Games.Odyssey.Internal;
 using GameDataManager = Andastra.Game.Games.Odyssey.Data.GameDataManager;
 using TriggerSystem = Andastra.Runtime.Core.Triggers.TriggerSystem;
 using AIControllerSystem = Andastra.Runtime.Games.Common.AIControllerSystem;
-using RuntimeEngineFamily = Andastra.Runtime.Games.Common.EngineFamily;
 
 namespace Andastra.Game.Games.Odyssey.Game
 {
@@ -173,13 +172,13 @@ namespace Andastra.Game.Games.Odyssey.Game
         }
 
         /// <summary>
-        /// Gets the cached BioWare.NET Module object for the currently loaded module.
+        /// Gets the cached BioWare Module object for the currently loaded module.
         /// Returns null if no module is loaded. This provides efficient access to module resources
         /// without creating a new Module object on every access.
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module objects are cached and reused for resource lookups.
         /// </summary>
         [CanBeNull]
-        public BioWare.NET.Common.Module GetCurrentParsingModule()
+        public BioWare.Common.Module GetCurrentParsingModule()
         {
             return _moduleLoader?.GetCurrentModule();
         }
@@ -278,7 +277,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             _triggerSystem = new TriggerSystem(_world, FireScriptEvent);
 
             // Initialize AI controller (unified system with Odyssey engine)
-            _aiController = new AIControllerSystem(_world, RuntimeEngineFamily.Odyssey, FireScriptEvent);
+            _aiController = new AIControllerSystem(_world, EngineFamily.Odyssey, FireScriptEvent);
 
             // Initialize JRL loader for quest entry text lookup
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): JRL files contain quest entry text
@@ -926,7 +925,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// 0x006d0b00 (New Game Handler) -> Module Initialization -> Module Load -> Player Entity Creation
         ///
         /// Module name casing: Ghidra shows "001ebo" (lowercase) and "END_M01AA" (uppercase)
-        /// Resource lookup is case-insensitive, we use lowercase to match BioWare.NET conventions
+        /// Resource lookup is case-insensitive, we use lowercase to match BioWare conventions
         /// </remarks>
         public void StartNewGame([CanBeNull] CharacterCreationData characterData = null)
         {
@@ -1873,7 +1872,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// <summary>
         /// Loads a dialogue file.
         /// </summary>
-        private BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLG LoadDialogue(string resRef)
+        private BioWare.Resource.Formats.GFF.Generics.DLG.DLG LoadDialogue(string resRef)
         {
             if (string.IsNullOrEmpty(resRef) || _installation == null)
             {
@@ -1882,13 +1881,13 @@ namespace Andastra.Game.Games.Odyssey.Game
 
             try
             {
-                BioWare.NET.Extract.ResourceResult resource = _installation.Resources.LookupResource(resRef, ResourceType.DLG);
+                BioWare.Extract.ResourceResult resource = _installation.Resources.LookupResource(resRef, ResourceType.DLG);
                 if (resource == null || resource.Data == null)
                 {
                     return null;
                 }
 
-                return BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLGHelper.ReadDlg(resource.Data);
+                return BioWare.Resource.Formats.GFF.Generics.DLG.DLGHelper.ReadDlg(resource.Data);
             }
             catch (Exception ex)
             {
@@ -1909,7 +1908,7 @@ namespace Andastra.Game.Games.Odyssey.Game
 
             try
             {
-                BioWare.NET.Extract.ResourceResult resource = _installation.Resources.LookupResource(resRef, ResourceType.NCS);
+                BioWare.Extract.ResourceResult resource = _installation.Resources.LookupResource(resRef, ResourceType.NCS);
                 if (resource == null || resource.Data == null)
                 {
                     return null;
@@ -2167,7 +2166,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             try
             {
                 // Look up the attack bonus table
-                BioWare.NET.Resource.Formats.TwoDA.TwoDA table = gameDataManager.GetTable(tableName);
+                BioWare.Resource.Formats.TwoDA.TwoDA table = gameDataManager.GetTable(tableName);
                 if (table == null)
                 {
                     Console.WriteLine($"[GameSession] GetAttackBonusFromTable: Table '{tableName}' not found");
@@ -2183,7 +2182,7 @@ namespace Andastra.Game.Games.Odyssey.Game
                 }
 
                 // Get row for this level
-                BioWare.NET.Resource.Formats.TwoDA.TwoDARow row = table.GetRow(rowIndex);
+                BioWare.Resource.Formats.TwoDA.TwoDARow row = table.GetRow(rowIndex);
                 if (row == null)
                 {
                     return 0;
@@ -2253,7 +2252,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             try
             {
                 // Look up the saving throw table
-                BioWare.NET.Resource.Formats.TwoDA.TwoDA table = gameDataManager.GetTable(tableName);
+                BioWare.Resource.Formats.TwoDA.TwoDA table = gameDataManager.GetTable(tableName);
                 if (table == null)
                 {
                     Console.WriteLine($"[GameSession] GetSavingThrowsFromTable: Table '{tableName}' not found");
@@ -2269,7 +2268,7 @@ namespace Andastra.Game.Games.Odyssey.Game
                 }
 
                 // Get row for this level
-                BioWare.NET.Resource.Formats.TwoDA.TwoDARow row = table.GetRow(rowIndex);
+                BioWare.Resource.Formats.TwoDA.TwoDARow row = table.GetRow(rowIndex);
                 if (row == null)
                 {
                     return;

@@ -4,13 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
-using BioWare.NET.Common;
-using BioWare.NET.Extract;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.ERF;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Resource.Formats.GFF.Generics.UTC;
-using BioWare.NET.Resource.Formats.RIM;
+using BioWare.Common;
+using BioWare.Extract;
+using BioWare.Resource;
+using BioWare.Resource.Formats.ERF;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.GFF.Generics.UTC;
+using BioWare.Resource.Formats.RIM;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.Loaders;
 using Andastra.Runtime.Content.ResourceProviders;
@@ -280,7 +280,7 @@ namespace Andastra.Game.Games.Engines.Common
                 {
                     // Load entry area if not already loaded
                     RuntimeArea entryArea = _odysseyInternalLoader.LoadArea(
-                        new BioWare.NET.Common.Module(moduleName, _installation),
+                        new BioWare.Common.Module(moduleName, _installation),
                         _currentRuntimeModule.EntryArea);
                     if (entryArea != null)
                     {
@@ -586,7 +586,7 @@ namespace Andastra.Game.Games.Engines.Common
             {
                 try
                 {
-                    var rim = BioWare.NET.Resource.Formats.RIM.RIMAuto.ReadRim(moduleRimPath);
+                    var rim = BioWare.Resource.Formats.RIM.RIMAuto.ReadRim(moduleRimPath);
                     _eclipseResourceProvider.AddRimFile(moduleRimPath);
                     _loadedModuleRimPath = moduleRimPath;
                 }
@@ -608,7 +608,7 @@ namespace Andastra.Game.Games.Engines.Common
                 {
                     try
                     {
-                        var extensionRim = BioWare.NET.Resource.Formats.RIM.RIMAuto.ReadRim(extensionRimPath);
+                        var extensionRim = BioWare.Resource.Formats.RIM.RIMAuto.ReadRim(extensionRimPath);
                         _eclipseResourceProvider.AddRimFile(extensionRimPath);
                         _loadedModuleExtensionRimPaths.Add(extensionRimPath);
                     }
@@ -636,7 +636,7 @@ namespace Andastra.Game.Games.Engines.Common
         {
             try
             {
-                var module = new BioWare.NET.Common.Module(moduleName, _installation);
+                var module = new BioWare.Common.Module(moduleName, _installation);
                 return module.Info() != null;
             }
             catch

@@ -10,6 +10,7 @@ end_of_line = crlf
 insert_final_newline = true
 trim_trailing_whitespace = true
 
+
 # Code files
 [*.{cs,csx,vb,vbx}]
 indent_size = 4
@@ -166,6 +167,11 @@ csharp_style_prefer_switch_expression = false:none
 # csharp_style_prefer_index_operator - disabled below (C# 8 feature, limited C# 7.3 support)
 # csharp_style_prefer_range_operator - disabled below (C# 8 feature)
 # csharp_style_implicit_object_creation_when_type_is_apparent - disabled below (C# 9 feature)
+
+# IDE0090: Use 'new(...)'
+csharp_style_implicit_object_creation_when_type_is_apparent = false
+dotnet_diagnostic.IDE0090.severity = none
+
 
 # Null-checking preferences (C# 7.3 compatible - no nullable reference types)
 # csharp_style_prefer_not_pattern - disabled below (C# 9 'not' pattern)

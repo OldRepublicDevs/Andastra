@@ -1,4 +1,4 @@
-using BioWare.NET.Common;
+using BioWare.Common;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Common;
 

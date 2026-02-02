@@ -7,12 +7,12 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
-using BioWare.NET.Common;
-using BioWare.NET.Tools;
+using BioWare.Common;
+using BioWare.Tools;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Game.Core;
 using Andastra.Runtime.Graphics.Common.Enums;
-using GameType = BioWare.NET.Common.BioWareGame;
+using GameType = BioWare.Common.BioWareGame;
 
 namespace Andastra.Game.GUI
 {

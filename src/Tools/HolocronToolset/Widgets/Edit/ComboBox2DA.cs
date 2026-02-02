@@ -4,9 +4,9 @@ using System.Linq;
 using System.Numerics;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Resource.Formats.TwoDA;
+using BioWare.Common;
+using BioWare.Resource;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Widgets.Edit

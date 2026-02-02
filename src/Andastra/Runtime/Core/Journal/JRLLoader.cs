@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.TLK;
-using BioWare.NET.Extract;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare;
+using BioWare.Common;
+using BioWare.Resource.Formats.TLK;
+using BioWare.Extract;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Resource.Formats.GFF.Generics;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Core.Journal

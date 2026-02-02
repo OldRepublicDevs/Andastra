@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using BioWare.NET.Common.Logger;
+using BioWare.Common.Logger;
 using HolocronToolset.Utils;
 
 namespace HolocronToolset.NET

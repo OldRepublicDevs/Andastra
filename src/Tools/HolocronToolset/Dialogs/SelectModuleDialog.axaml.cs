@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
-using BioWare.NET;
+using BioWare;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Dialogs
@@ -183,7 +183,7 @@ namespace HolocronToolset.Dialogs
             foreach (var module in modulesList)
             {
                 // Matching Python: Module.filepath_to_root(module)
-                string moduleRoot = BioWare.NET.Extract.Installation.GetModuleRoot(module);
+                string moduleRoot = BioWare.Extract.Installation.GetModuleRoot(module);
                 string casefoldModuleFileName = (moduleRoot + System.IO.Path.GetExtension(module)).ToLowerInvariant().Trim();
                 
                 if (listedModules.Contains(casefoldModuleFileName))

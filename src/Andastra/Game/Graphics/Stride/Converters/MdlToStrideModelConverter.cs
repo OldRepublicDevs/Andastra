@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using BioWare.NET.Resource.Formats.MDLData;
+using BioWare.Resource.Formats.MDLData;
 using Andastra.Runtime.Graphics;
 using Andastra.Game.Stride.Graphics;
 using JetBrains.Annotations;
@@ -11,7 +11,7 @@ using Stride.Graphics;
 namespace Andastra.Game.Stride.Converters
 {
     /// <summary>
-    /// Converts BioWare.NET MDL model data to Stride rendering structures.
+    /// Converts BioWare MDL model data to Stride rendering structures.
     /// Handles trimesh geometry, UV coordinates, and basic material references.
     /// </summary>
     /// <remarks>
@@ -159,7 +159,7 @@ namespace Andastra.Game.Stride.Converters
         }
 
         /// <summary>
-        /// Converts a legacy BioWare.NET MDL model to Stride rendering structures.
+        /// Converts a legacy BioWare MDL model to Stride rendering structures.
         /// </summary>
         public ConversionResult Convert([NotNull] MDL mdl)
         {

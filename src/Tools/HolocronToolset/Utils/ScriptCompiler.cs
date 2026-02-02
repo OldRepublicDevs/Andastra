@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using BioWare.NET.Resource.Formats.NCS;
+using BioWare.Resource.Formats.NCS;
 using HolocronToolset.Data;
-using Game = BioWare.NET.Common.BioWareGame;
+using Game = BioWare.Common.BioWareGame;
 
 namespace HolocronToolset.Utils
 {

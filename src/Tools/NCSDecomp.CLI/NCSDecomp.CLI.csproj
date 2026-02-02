@@ -36,9 +36,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\BioWare.NET\BioWare.NET.csproj">
-      <PrivateAssets>none</PrivateAssets>
-      <CopyLocal>true</CopyLocal>
-    </ProjectReference>
+    <ProjectReference Include="..\..\BioWare\BioWare.csproj"/>
   </ItemGroup>
 </Project>

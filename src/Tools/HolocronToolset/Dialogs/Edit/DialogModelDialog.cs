@@ -1,9 +1,9 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.GFF.Generics.DLG;
+using BioWare;
+using BioWare.Common;
+using BioWare.Resource.Formats.GFF.Generics.DLG;
 
 namespace HolocronToolset.Dialogs.Edit
 {

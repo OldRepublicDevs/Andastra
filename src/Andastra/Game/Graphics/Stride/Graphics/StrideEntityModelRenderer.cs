@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using BioWare.NET.Resource.Formats.MDLData;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Resource.Formats.MDLData;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Game.Games.Odyssey.Systems;
@@ -289,8 +289,8 @@ namespace Andastra.Game.Stride.Graphics
                     return null;
                 }
 
-                // Use BioWare.NET MDL parser
-                return BioWare.NET.Resource.Formats.MDL.MDLAuto.ReadMdl(result.Data);
+                // Use BioWare MDL parser
+                return BioWare.Resource.Formats.MDL.MDLAuto.ReadMdl(result.Data);
             }
             catch (Exception ex)
             {

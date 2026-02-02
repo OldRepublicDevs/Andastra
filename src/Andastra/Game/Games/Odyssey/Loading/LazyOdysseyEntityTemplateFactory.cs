@@ -1,5 +1,5 @@
 using System.Numerics;
-using BioWare.NET.Common;
+using BioWare.Common;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Game.Games.Common;
 
@@ -72,7 +72,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module must be loaded before entities can be created from templates
             // Located via string references: Module loading precedes entity template loading
             // Original implementation: Template creation requires module to be loaded for resource access
-            BioWare.NET.Common.Module module = _moduleLoader?.GetCurrentModule();
+            BioWare.Common.Module module = _moduleLoader?.GetCurrentModule();
             if (module == null)
             {
                 // Module not loaded yet - this is expected before LoadModuleAsync completes

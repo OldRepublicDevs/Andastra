@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using BioWare.NET.Common;
+using BioWare.Common;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
 using Andastra.Runtime.Core.Interfaces;

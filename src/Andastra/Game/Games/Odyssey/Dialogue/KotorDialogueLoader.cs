@@ -1,18 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.GFF.Generics.DLG;
+using BioWare;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Resource.Formats.GFF.Generics.DLG;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Dialogue;
 
 namespace Andastra.Game.Games.Odyssey.Dialogue
 {
     /// <summary>
-    /// Dialogue loader implementation using BioWare.NET DLG format.
-    /// Converts BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLG to Runtime.Core.Dialogue.RuntimeDialogue.
+    /// Dialogue loader implementation using BioWare DLG format.
+    /// Converts BioWare.Resource.Formats.GFF.Generics.DLG.DLG to Runtime.Core.Dialogue.RuntimeDialogue.
     /// </summary>
     /// <remarks>
     /// Dialogue Loader:
@@ -29,7 +29,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
     /// - DLG file format: GFF with "DLG " signature containing dialogue tree data
     /// - Dialogue entries (NPC lines) and replies (player options) linked by indices
     /// - Scripts, conditions, and voice-over data embedded in dialogue nodes
-    /// - Based on BioWare.NET DLG format at src/Andastra/Parsing/Resource/Generics/DLG/DLG.cs
+    /// - Based on BioWare DLG format at src/Andastra/Parsing/Resource/Generics/DLG/DLG.cs
     /// - Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/base.py
     /// </remarks>
     public class KotorDialogueLoader : IDialogueLoader
@@ -60,7 +60,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
             try
             {
                 byte[] data = _resourceProvider.GetResourceBytesAsync(
-                    new BioWare.NET.Resource.ResourceIdentifier(resRef, BioWare.NET.Common.ResourceType.DLG),
+                    new BioWare.Resource.ResourceIdentifier(resRef, BioWare.Common.ResourceType.DLG),
                     System.Threading.CancellationToken.None).Result;
 
                 if (data == null || data.Length == 0)
@@ -68,8 +68,8 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
                     return null;
                 }
 
-                // Parse DLG using BioWare.NET helper
-                DLG dlg = BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLGHelper.ReadDlg(data);
+                // Parse DLG using BioWare helper
+                DLG dlg = BioWare.Resource.Formats.GFF.Generics.DLG.DLGHelper.ReadDlg(data);
 
                 // Convert to RuntimeDialogue
                 RuntimeDialogue runtimeDialogue = ConvertToRuntimeDialogue(dlg, resRef);
@@ -87,7 +87,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
         }
 
         /// <summary>
-        /// Converts BioWare.NET DLG to RuntimeDialogue.
+        /// Converts BioWare DLG to RuntimeDialogue.
         /// </summary>
         private RuntimeDialogue ConvertToRuntimeDialogue(DLG dlg, string resRef)
         {

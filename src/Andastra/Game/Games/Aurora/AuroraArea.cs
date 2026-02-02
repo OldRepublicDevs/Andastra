@@ -11,12 +11,12 @@ using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Graphics;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Resource.Formats.MDL;
-using BioWare.NET.Resource.Formats.MDLData;
-using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.MDL;
+using BioWare.Resource.Formats.MDLData;
+using BioWare.Resource.Formats.TwoDA;
 using JetBrains.Annotations;
 
 namespace Andastra.Game.Games.Aurora
@@ -704,7 +704,7 @@ namespace Andastra.Game.Games.Aurora
                 }
                 else
                 {
-                    _onEnter = BioWare.NET.Common.ResRef.FromBlank();
+                    _onEnter = BioWare.Common.ResRef.FromBlank();
                 }
 
                 if (root.Exists("OnExit"))
@@ -713,7 +713,7 @@ namespace Andastra.Game.Games.Aurora
                 }
                 else
                 {
-                    _onExit = BioWare.NET.Common.ResRef.FromBlank();
+                    _onExit = BioWare.Common.ResRef.FromBlank();
                 }
 
                 if (root.Exists("OnHeartbeat"))
@@ -722,7 +722,7 @@ namespace Andastra.Game.Games.Aurora
                 }
                 else
                 {
-                    _onHeartbeat = BioWare.NET.Common.ResRef.FromBlank();
+                    _onHeartbeat = BioWare.Common.ResRef.FromBlank();
                 }
 
                 if (root.Exists("OnUserDefined"))
@@ -731,7 +731,7 @@ namespace Andastra.Game.Games.Aurora
                 }
                 else
                 {
-                    _onUserDefined = BioWare.NET.Common.ResRef.FromBlank();
+                    _onUserDefined = BioWare.Common.ResRef.FromBlank();
                 }
 
                 // Read tileset and tile layout
@@ -742,7 +742,7 @@ namespace Andastra.Game.Games.Aurora
                 }
                 else
                 {
-                    _tileset = BioWare.NET.Common.ResRef.FromBlank();
+                    _tileset = BioWare.Common.ResRef.FromBlank();
                 }
 
                 if (root.Exists("Width"))
@@ -876,11 +876,11 @@ namespace Andastra.Game.Games.Aurora
             _currentFogColor = _sunFogColor;
             _currentFogAmount = _sunFogAmount;
 
-            _onEnter = BioWare.NET.Common.ResRef.FromBlank();
-            _onExit = BioWare.NET.Common.ResRef.FromBlank();
-            _onHeartbeat = BioWare.NET.Common.ResRef.FromBlank();
-            _onUserDefined = BioWare.NET.Common.ResRef.FromBlank();
-            _tileset = BioWare.NET.Common.ResRef.FromBlank();
+            _onEnter = BioWare.Common.ResRef.FromBlank();
+            _onExit = BioWare.Common.ResRef.FromBlank();
+            _onHeartbeat = BioWare.Common.ResRef.FromBlank();
+            _onUserDefined = BioWare.Common.ResRef.FromBlank();
+            _tileset = BioWare.Common.ResRef.FromBlank();
             _width = 0;
             _height = 0;
             _flags = 0;
@@ -926,7 +926,7 @@ namespace Andastra.Game.Games.Aurora
             // ResRef field - based on line 59: WriteFieldCResRef("ResRef")
             if (!string.IsNullOrEmpty(_resRef))
             {
-                ResRef resRefObj = BioWare.NET.Common.ResRef.FromString(_resRef);
+                ResRef resRefObj = BioWare.Common.ResRef.FromString(_resRef);
                 root.SetResRef("ResRef", resRefObj);
             }
 
@@ -952,10 +952,10 @@ namespace Andastra.Game.Games.Aurora
 
             // Script hooks - set to empty ResRefs if not specified
             // Based on lines 51-57: WriteFieldCResRef("OnEnter", "OnExit", "OnHeartbeat", "OnUserDefined")
-            root.SetResRef("OnEnter", BioWare.NET.Common.ResRef.FromBlank());
-            root.SetResRef("OnExit", BioWare.NET.Common.ResRef.FromBlank());
-            root.SetResRef("OnHeartbeat", BioWare.NET.Common.ResRef.FromBlank());
-            root.SetResRef("OnUserDefined", BioWare.NET.Common.ResRef.FromBlank());
+            root.SetResRef("OnEnter", BioWare.Common.ResRef.FromBlank());
+            root.SetResRef("OnExit", BioWare.Common.ResRef.FromBlank());
+            root.SetResRef("OnHeartbeat", BioWare.Common.ResRef.FromBlank());
+            root.SetResRef("OnUserDefined", BioWare.Common.ResRef.FromBlank());
 
             // Lighting defaults - based on lines 61-65: WriteFieldDWORD/BYTE for lighting
             root.SetUInt32("SunAmbientColor", 0);
@@ -1004,7 +1004,7 @@ namespace Andastra.Game.Games.Aurora
             root.SetUInt8("PlayerVsPlayer", 0);
 
             // Tileset - based on line 97: WriteFieldCResRef("Tileset")
-            root.SetResRef("Tileset", BioWare.NET.Common.ResRef.FromBlank());
+            root.SetResRef("Tileset", BioWare.Common.ResRef.FromBlank());
 
             // Comments - based on line 30: WriteFieldCExoString("Comments")
             root.SetString("Comments", "");
@@ -1177,7 +1177,7 @@ namespace Andastra.Game.Games.Aurora
                 // Construct GIT object from GFF
                 // Based on GITHelpers.ConstructGit: Parses all instance lists from GFF root
                 // This handles parsing of all GIT instance types (Creatures, Doors, Placeables, Triggers, Waypoints, Sounds, Stores, Encounters)
-                BioWare.NET.Resource.Formats.GFF.Generics.GIT git = BioWare.NET.Resource.Formats.GFF.Generics.GITHelpers.ConstructGit(gff);
+                BioWare.Resource.Formats.GFF.Generics.GIT git = BioWare.Resource.Formats.GFF.Generics.GITHelpers.ConstructGit(gff);
                 if (git == null)
                 {
                     return;
@@ -1191,7 +1191,7 @@ namespace Andastra.Game.Games.Aurora
 
                 // Load creatures from GIT
                 // Based on nwmain.exe: CNWSArea::LoadCreatures @ 0x140360570 loads creature instances from GIT "Creature List"
-                foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITCreature creature in git.Creatures)
+                foreach (BioWare.Resource.Formats.GFF.Generics.GITCreature creature in git.Creatures)
                 {
                     // Create entity with ObjectId, ObjectType, and Tag
                     // ObjectId: Generate sequential ID
@@ -1238,7 +1238,7 @@ namespace Andastra.Game.Games.Aurora
 
                 // Load doors from GIT
                 // Based on nwmain.exe: CNWSArea::LoadDoors @ 0x1403608f0 loads door instances from GIT "Door List"
-                foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITDoor door in git.Doors)
+                foreach (BioWare.Resource.Formats.GFF.Generics.GITDoor door in git.Doors)
                 {
                     uint objectId = nextObjectId++;
                     var entity = new AuroraEntity(objectId, Runtime.Core.Enums.ObjectType.Door, door.Tag ?? string.Empty);
@@ -1272,7 +1272,7 @@ namespace Andastra.Game.Games.Aurora
 
                 // Load placeables from GIT
                 // Based on nwmain.exe: CNWSArea::LoadPlaceables @ 0x1403619e0 loads placeable instances from GIT "Placeable List"
-                foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITPlaceable placeable in git.Placeables)
+                foreach (BioWare.Resource.Formats.GFF.Generics.GITPlaceable placeable in git.Placeables)
                 {
                     uint objectId = nextObjectId++;
                     // Placeables don't have explicit Tag in GIT, use TemplateResRef as tag
@@ -1299,7 +1299,7 @@ namespace Andastra.Game.Games.Aurora
 
                 // Load triggers from GIT
                 // Based on nwmain.exe: CNWSArea::LoadTriggers @ 0x140362b20 loads trigger instances from GIT "TriggerList"
-                foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITTrigger trigger in git.Triggers)
+                foreach (BioWare.Resource.Formats.GFF.Generics.GITTrigger trigger in git.Triggers)
                 {
                     uint objectId = nextObjectId++;
                     var entity = new AuroraEntity(objectId, Runtime.Core.Enums.ObjectType.Trigger, trigger.Tag ?? string.Empty);
@@ -1339,7 +1339,7 @@ namespace Andastra.Game.Games.Aurora
 
                 // Load waypoints from GIT
                 // Based on nwmain.exe: CNWSArea::LoadWaypoints @ 0x140362fc0 loads waypoint instances from GIT "WaypointList"
-                foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITWaypoint waypoint in git.Waypoints)
+                foreach (BioWare.Resource.Formats.GFF.Generics.GITWaypoint waypoint in git.Waypoints)
                 {
                     uint objectId = nextObjectId++;
                     var entity = new AuroraEntity(objectId, Runtime.Core.Enums.ObjectType.Waypoint, waypoint.Tag ?? string.Empty);
@@ -1388,7 +1388,7 @@ namespace Andastra.Game.Games.Aurora
 
                 // Load sounds from GIT
                 // Based on nwmain.exe: CNWSArea::LoadSounds @ 0x1403631e0 loads sound instances from GIT "SoundList"
-                foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITSound sound in git.Sounds)
+                foreach (BioWare.Resource.Formats.GFF.Generics.GITSound sound in git.Sounds)
                 {
                     uint objectId = nextObjectId++;
                     // Sounds don't have explicit Tag in GIT, use TemplateResRef as tag
@@ -1414,7 +1414,7 @@ namespace Andastra.Game.Games.Aurora
 
                 // Load stores from GIT
                 // Based on nwmain.exe: CNWSArea::LoadStores @ 0x140363400 loads store instances from GIT "StoreList"
-                foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITStore store in git.Stores)
+                foreach (BioWare.Resource.Formats.GFF.Generics.GITStore store in git.Stores)
                 {
                     uint objectId = nextObjectId++;
                     // Stores don't have explicit Tag in GIT, use ResRef as tag
@@ -1446,7 +1446,7 @@ namespace Andastra.Game.Games.Aurora
 
                 // Load encounters from GIT
                 // Based on nwmain.exe: CNWSArea::LoadEncounters @ 0x140363620 loads encounter instances from GIT "Encounter List"
-                foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITEncounter encounter in git.Encounters)
+                foreach (BioWare.Resource.Formats.GFF.Generics.GITEncounter encounter in git.Encounters)
                 {
                     uint objectId = nextObjectId++;
                     // Encounters don't have explicit Tag in GIT, use TemplateResRef as tag
@@ -1567,7 +1567,7 @@ namespace Andastra.Game.Games.Aurora
                 // Read tileset resref from root struct (needed for surface material lookup)
                 // Based on ARE format: Tileset is CResRef
                 // We read this here so it's available for tile surface material lookup
-                BioWare.NET.Common.ResRef tilesetResRef = BioWare.NET.Common.ResRef.FromBlank();
+                BioWare.Common.ResRef tilesetResRef = BioWare.Common.ResRef.FromBlank();
                 if (root.Exists("Tileset"))
                 {
                     tilesetResRef = root.GetResRef("Tileset");

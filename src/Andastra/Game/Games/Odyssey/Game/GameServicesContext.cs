@@ -1,5 +1,5 @@
 using System;
-using BioWare.NET.Extract;
+using BioWare.Extract;
 using Andastra.Runtime.Core.Audio;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Game.Games.Odyssey.UI;

@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.Resource.Formats.TwoDA;
 using Andastra.Runtime.Core.Interfaces;
 
 namespace Andastra.Runtime.Games.Common.Components

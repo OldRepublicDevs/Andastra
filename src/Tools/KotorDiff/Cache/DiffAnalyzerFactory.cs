@@ -3,8 +3,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using BioWare.NET.TSLPatcher.Diff;
-using BioWare.NET.TSLPatcher.Mods;
+using BioWare.TSLPatcher.Diff;
+using BioWare.TSLPatcher.Mods;
 
 namespace KotorDiff.Diff
 {
@@ -63,7 +63,7 @@ namespace KotorDiff.Diff
         }
     }
 
-    // Wrapper for TwoDADiffAnalyzer from BioWare.NET
+    // Wrapper for TwoDADiffAnalyzer from BioWare
     internal class TwoDADiffAnalyzerWrapper : DiffAnalyzer
     {
         public override object Analyze(byte[] leftData, byte[] rightData, string identifier)
@@ -73,19 +73,19 @@ namespace KotorDiff.Diff
         }
     }
 
-    // Wrapper for GFF analyzer - uses BioWare.NET's GffDiffAnalyzer
+    // Wrapper for GFF analyzer - uses BioWare's GffDiffAnalyzer
     // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:296-688
     // Original: class GFFDiffAnalyzer(DiffAnalyzer): ...
     internal class GFFDiffAnalyzerWrapper : DiffAnalyzer
     {
         public override object Analyze(byte[] leftData, byte[] rightData, string identifier)
         {
-            var analyzer = new BioWare.NET.TSLPatcher.Diff.GffDiffAnalyzer();
+            var analyzer = new BioWare.TSLPatcher.Diff.GffDiffAnalyzer();
             return analyzer.Analyze(leftData, rightData, identifier);
         }
     }
 
-    // Wrapper for TLK analyzer - uses BioWare.NET's TlkDiff
+    // Wrapper for TLK analyzer - uses BioWare's TlkDiff
     internal class TLKDiffAnalyzerWrapper : DiffAnalyzer
     {
         public override object Analyze(byte[] leftData, byte[] rightData, string identifier)
@@ -93,17 +93,17 @@ namespace KotorDiff.Diff
             try
             {
                 // Read TLK files
-                var leftReader = new BioWare.NET.Resource.Formats.TLK.TLKBinaryReader(leftData);
-                var rightReader = new BioWare.NET.Resource.Formats.TLK.TLKBinaryReader(rightData);
+                var leftReader = new BioWare.Resource.Formats.TLK.TLKBinaryReader(leftData);
+                var rightReader = new BioWare.Resource.Formats.TLK.TLKBinaryReader(rightData);
                 var leftTlk = leftReader.Load();
                 var rightTlk = rightReader.Load();
 
                 // Use existing TlkDiff comparison
-                var compareResult = BioWare.NET.TSLPatcher.Diff.TlkDiff.Compare(leftTlk, rightTlk);
+                var compareResult = BioWare.TSLPatcher.Diff.TlkDiff.Compare(leftTlk, rightTlk);
 
                 // Generate ModificationsTLK from comparison result
                 string filename = System.IO.Path.GetFileName(identifier);
-                var modifications = new BioWare.NET.TSLPatcher.Mods.TLK.ModificationsTLK("append.tlk", false);
+                var modifications = new BioWare.TSLPatcher.Mods.TLK.ModificationsTLK("append.tlk", false);
                 modifications.SaveAs = filename;
 
                 int tokenId = 0;
@@ -114,7 +114,7 @@ namespace KotorDiff.Diff
                 {
                     int idx = kvp.Key;
                     var entry = kvp.Value;
-                    var modify = new BioWare.NET.TSLPatcher.Mods.TLK.ModifyTLK(tokenId, false);
+                    var modify = new BioWare.TSLPatcher.Mods.TLK.ModifyTLK(tokenId, false);
                     modify.ModIndex = idx;
                     modify.Text = entry.Text ?? "";
                     modify.Sound = entry.Sound ?? "";
@@ -128,7 +128,7 @@ namespace KotorDiff.Diff
                 {
                     int idx = kvp.Key;
                     var (text, sound) = kvp.Value;
-                    var modify = new BioWare.NET.TSLPatcher.Mods.TLK.ModifyTLK(tokenId, false);
+                    var modify = new BioWare.TSLPatcher.Mods.TLK.ModifyTLK(tokenId, false);
                     modify.ModIndex = idx;
                     modify.Text = text ?? "";
                     modify.Sound = sound ?? "";
@@ -152,7 +152,7 @@ namespace KotorDiff.Diff
         }
     }
 
-    // Wrapper for SSF analyzer - uses BioWare.NET's SsfDiff
+    // Wrapper for SSF analyzer - uses BioWare's SsfDiff
     internal class SSFDiffAnalyzerWrapper : DiffAnalyzer
     {
         public override object Analyze(byte[] leftData, byte[] rightData, string identifier)
@@ -160,24 +160,24 @@ namespace KotorDiff.Diff
             try
             {
                 // Read SSF files
-                var leftReader = new BioWare.NET.Resource.Formats.SSF.SSFBinaryReader(leftData);
-                var rightReader = new BioWare.NET.Resource.Formats.SSF.SSFBinaryReader(rightData);
+                var leftReader = new BioWare.Resource.Formats.SSF.SSFBinaryReader(leftData);
+                var rightReader = new BioWare.Resource.Formats.SSF.SSFBinaryReader(rightData);
                 var leftSsf = leftReader.Load();
                 var rightSsf = rightReader.Load();
 
                 // Use existing SsfDiff comparison
-                var compareResult = BioWare.NET.TSLPatcher.Diff.SsfDiff.Compare(leftSsf, rightSsf);
+                var compareResult = BioWare.TSLPatcher.Diff.SsfDiff.Compare(leftSsf, rightSsf);
 
                 // Generate ModificationsSSF from comparison result
                 string filename = System.IO.Path.GetFileName(identifier);
-                var modifications = new BioWare.NET.TSLPatcher.Mods.SSF.ModificationsSSF(filename, false);
+                var modifications = new BioWare.TSLPatcher.Mods.SSF.ModificationsSSF(filename, false);
 
                 // Process changed sounds
                 foreach (var kvp in compareResult.ChangedSounds)
                 {
                     var sound = kvp.Key;
                     int stringref = kvp.Value;
-                    var modify = new BioWare.NET.TSLPatcher.Mods.SSF.ModifySSF(sound, new BioWare.NET.TSLPatcher.Memory.NoTokenUsage(stringref.ToString()));
+                    var modify = new BioWare.TSLPatcher.Mods.SSF.ModifySSF(sound, new BioWare.TSLPatcher.Memory.NoTokenUsage(stringref.ToString()));
                     modifications.Modifiers.Add(modify);
                 }
 

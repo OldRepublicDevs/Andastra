@@ -5,25 +5,25 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.TSLPatcher.Diff;
-using Game = BioWare.NET.Common.BioWareGame;
-using BioWare.NET.Extract;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Resource.Formats.NCS;
-using BioWare.NET.Resource.Formats.SSF;
-using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.TSLPatcher.Mods;
-using BioWare.NET.TSLPatcher.Mods.GFF;
-using BioWare.NET.TSLPatcher.Mods.TLK;
-using BioWare.NET.TSLPatcher.Mods.NCS;
-using BioWare.NET.TSLPatcher.Mods.SSF;
-using BioWare.NET.TSLPatcher.Mods.TwoDA;
-using BioWare.NET.TSLPatcher.Memory;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Tools;
+using BioWare;
+using BioWare.Common;
+using BioWare.TSLPatcher.Diff;
+using Game = BioWare.Common.BioWareGame;
+using BioWare.Extract;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.NCS;
+using BioWare.Resource.Formats.SSF;
+using BioWare.Resource.Formats.TwoDA;
+using BioWare.TSLPatcher.Mods;
+using BioWare.TSLPatcher.Mods.GFF;
+using BioWare.TSLPatcher.Mods.TLK;
+using BioWare.TSLPatcher.Mods.NCS;
+using BioWare.TSLPatcher.Mods.SSF;
+using BioWare.TSLPatcher.Mods.TwoDA;
+using BioWare.TSLPatcher.Memory;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Tools;
 using JetBrains.Annotations;
 
 namespace KotorDiff.Diff
@@ -96,7 +96,7 @@ namespace KotorDiff.Diff
             var offsets = new List<int>();
             try
             {
-                using (var reader = BioWare.NET.Common.BinaryReader.FromBytes(ncsData))
+                using (var reader = BioWare.Common.BinaryReader.FromBytes(ncsData))
                 {
                     // Skip NCS header (13 bytes)
                     string signature = reader.ReadString(4);

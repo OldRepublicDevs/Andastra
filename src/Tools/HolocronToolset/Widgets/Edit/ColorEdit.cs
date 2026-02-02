@@ -4,9 +4,9 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
-using BioWare.NET.Common;
+using BioWare.Common;
 using HolocronToolset.Dialogs;
-using KotorColor = BioWare.NET.Common.Color;
+using KotorColor = BioWare.Common.Color;
 
 namespace HolocronToolset.Widgets.Edit
 {

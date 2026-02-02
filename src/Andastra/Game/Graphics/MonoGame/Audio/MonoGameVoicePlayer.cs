@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using BioWare.NET.Resource.Formats.WAV;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Resource.Formats.WAV;
+using BioWare.Common;
+using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;

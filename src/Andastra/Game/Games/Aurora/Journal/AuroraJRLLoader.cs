@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.TLK;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.Common;
+using BioWare.Resource.Formats.TLK;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Resource.Formats.GFF.Generics;
 using Andastra.Game.Games.Common.Journal;
 
 namespace Andastra.Game.Games.Aurora.Journal

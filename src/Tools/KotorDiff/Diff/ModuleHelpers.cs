@@ -4,8 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BioWare.NET.Extract;
-using BioWare.NET.Extract.Capsule;
+using BioWare.Extract;
+using BioWare.Extract.Capsule;
 
 namespace KotorDiff.Diff
 {
@@ -281,7 +281,7 @@ namespace KotorDiff.Diff
                 {
                     return new CompositeModuleCapsule(filePath);
                 }
-                return new BioWare.NET.Extract.Capsule.Capsule(filePath);
+                return new BioWare.Extract.Capsule.Capsule(filePath);
             }
             catch (Exception e)
             {

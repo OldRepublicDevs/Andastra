@@ -4,11 +4,11 @@ using System.IO;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare;
+using BioWare.Common;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Common;
+using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 
 namespace Andastra.Runtime.Content.Loaders
@@ -96,7 +96,7 @@ namespace Andastra.Runtime.Content.Loaders
         /// </summary>
         public async Task<GITData> LoadAsync(string areaResRef, CancellationToken ct = default(CancellationToken))
         {
-            var id = new BioWare.NET.Resource.ResourceIdentifier(areaResRef, BioWare.NET.Common.ResourceType.GIT);
+            var id = new BioWare.Resource.ResourceIdentifier(areaResRef, BioWare.Common.ResourceType.GIT);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -105,11 +105,11 @@ namespace Andastra.Runtime.Content.Loaders
 
             // Use Parsing GITHelpers to parse the GFF
             GFF gff = GFF.FromBytes(data);
-            var git = BioWare.NET.Resource.Formats.GFF.Generics.GITHelpers.ConstructGit(gff);
+            var git = BioWare.Resource.Formats.GFF.Generics.GITHelpers.ConstructGit(gff);
             return ParseGIT(git);
         }
 
-        private GITData ParseGIT(BioWare.NET.Resource.Formats.GFF.Generics.GIT git)
+        private GITData ParseGIT(BioWare.Resource.Formats.GFF.Generics.GIT git)
         {
             var gitData = new GITData();
 
@@ -202,7 +202,7 @@ namespace Andastra.Runtime.Content.Loaders
 
         #region Instance Parsers
 
-        private CreatureInstance ParseCreatureInstance(BioWare.NET.Resource.Formats.GFF.Generics.GITCreature creature)
+        private CreatureInstance ParseCreatureInstance(BioWare.Resource.Formats.GFF.Generics.GITCreature creature)
         {
             var instance = new CreatureInstance();
 
@@ -217,7 +217,7 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
-        private DoorInstance ParseDoorInstance(BioWare.NET.Resource.Formats.GFF.Generics.GITDoor door)
+        private DoorInstance ParseDoorInstance(BioWare.Resource.Formats.GFF.Generics.GITDoor door)
         {
             var instance = new DoorInstance();
 
@@ -235,7 +235,7 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
-        private PlaceableInstance ParsePlaceableInstance(BioWare.NET.Resource.Formats.GFF.Generics.GITPlaceable placeable)
+        private PlaceableInstance ParsePlaceableInstance(BioWare.Resource.Formats.GFF.Generics.GITPlaceable placeable)
         {
             var instance = new PlaceableInstance();
 
@@ -249,7 +249,7 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
-        private TriggerInstance ParseTriggerInstance(BioWare.NET.Resource.Formats.GFF.Generics.GITTrigger trigger)
+        private TriggerInstance ParseTriggerInstance(BioWare.Resource.Formats.GFF.Generics.GITTrigger trigger)
         {
             var instance = new TriggerInstance();
 
@@ -303,7 +303,7 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
-        private WaypointInstance ParseWaypointInstance(BioWare.NET.Resource.Formats.GFF.Generics.GITWaypoint waypoint)
+        private WaypointInstance ParseWaypointInstance(BioWare.Resource.Formats.GFF.Generics.GITWaypoint waypoint)
         {
             var instance = new WaypointInstance();
 
@@ -339,7 +339,7 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
-        private SoundInstance ParseSoundInstance(BioWare.NET.Resource.Formats.GFF.Generics.GITSound sound)
+        private SoundInstance ParseSoundInstance(BioWare.Resource.Formats.GFF.Generics.GITSound sound)
         {
             var instance = new SoundInstance();
 
@@ -368,7 +368,7 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
-        private EncounterInstance ParseEncounterInstance(BioWare.NET.Resource.Formats.GFF.Generics.GITEncounter encounter)
+        private EncounterInstance ParseEncounterInstance(BioWare.Resource.Formats.GFF.Generics.GITEncounter encounter)
         {
             var instance = new EncounterInstance();
 
@@ -446,7 +446,7 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
-        private StoreInstance ParseStoreInstance(BioWare.NET.Resource.Formats.GFF.Generics.GITStore store)
+        private StoreInstance ParseStoreInstance(BioWare.Resource.Formats.GFF.Generics.GITStore store)
         {
             var instance = new StoreInstance();
 
@@ -478,7 +478,7 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
-        private CameraInstance ParseCameraInstance(BioWare.NET.Resource.Formats.GFF.Generics.GITCamera camera)
+        private CameraInstance ParseCameraInstance(BioWare.Resource.Formats.GFF.Generics.GITCamera camera)
         {
             var instance = new CameraInstance();
 
@@ -509,7 +509,7 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
-        private AreaPropertiesData ParseAreaProperties(BioWare.NET.Resource.Formats.GFF.Generics.GIT git)
+        private AreaPropertiesData ParseAreaProperties(BioWare.Resource.Formats.GFF.Generics.GIT git)
         {
             var props = new AreaPropertiesData();
 

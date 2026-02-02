@@ -34,7 +34,7 @@ namespace Andastra.Game.Stride.Backends
         /// <summary>
         /// Creates the appropriate backend for the current platform and settings.
         /// </summary>
-        public static ILowLevelBackend Create(BioWare.NET.Common.BioWareGame game, RenderSettings settings)
+        public static ILowLevelBackend Create(BioWare.Common.BioWareGame game, RenderSettings settings)
         {
             if (game == null)
             {
@@ -98,7 +98,7 @@ namespace Andastra.Game.Stride.Backends
         /// <summary>
         /// Creates a specific backend type.
         /// </summary>
-        private static ILowLevelBackend CreateBackend(BioWare.NET.Common.BioWareGame game, GraphicsBackendType backendType, RenderSettings settings)
+        private static ILowLevelBackend CreateBackend(BioWare.Common.BioWareGame game, GraphicsBackendType backendType, RenderSettings settings)
         {
             Console.WriteLine($"[StrideBackendFactory] Creating {backendType} backend");
 

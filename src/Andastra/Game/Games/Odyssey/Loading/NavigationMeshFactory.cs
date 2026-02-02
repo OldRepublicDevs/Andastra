@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.BWM;
-using BioWare.NET.Extract;
+using BioWare.Common;
+using BioWare.Resource.Formats.BWM;
+using BioWare.Extract;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Core.Navigation;
@@ -219,7 +219,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
                         catch (Exception ex)
                         {
                             // Log parsing error but continue to fallback
-                            new BioWare.NET.Utility.Logger.RobustLogger().Warning($"Failed to parse WOK '{resRef}' from module: {ex.Message}");
+                            new BioWare.Utility.Logger.RobustLogger().Warning($"Failed to parse WOK '{resRef}' from module: {ex.Message}");
                         }
                     }
                 }
@@ -234,7 +234,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
 
                 // Search installation for WOK resource
                 // SearchLocation.CHITIN = base game resources, SearchLocation.CUSTOM_MODULES = module-specific resources
-                BioWare.NET.Extract.ResourceResult wokResource = installation.Resource(resRef, ResourceType.WOK,
+                BioWare.Extract.ResourceResult wokResource = installation.Resource(resRef, ResourceType.WOK,
                     new[] { SearchLocation.CHITIN, SearchLocation.CUSTOM_MODULES });
 
                 if (wokResource == null || wokResource.Data == null)
@@ -247,7 +247,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             catch (Exception ex)
             {
                 // Failed to load walkmesh - log and return null
-                new BioWare.NET.Utility.Logger.RobustLogger().Warning($"Failed to load walkmesh '{resRef}': {ex.Message}");
+                new BioWare.Utility.Logger.RobustLogger().Warning($"Failed to load walkmesh '{resRef}': {ex.Message}");
                 return null;
             }
         }

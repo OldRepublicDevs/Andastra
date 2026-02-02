@@ -1,5 +1,5 @@
 using System;
-using BioWare.NET.Resource.Formats.TPC;
+using BioWare.Resource.Formats.TPC;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 namespace Andastra.Game.Graphics.MonoGame.Converters
 {
     /// <summary>
-    /// Converts BioWare.NET TPC texture data to MonoGame Texture2D.
+    /// Converts BioWare TPC texture data to MonoGame Texture2D.
     /// Handles DXT1/DXT3/DXT5 compressed formats, RGB/RGBA uncompressed,
     /// and grayscale textures.
     /// </summary>

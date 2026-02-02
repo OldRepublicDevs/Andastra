@@ -1,5 +1,5 @@
 using System;
-using BioWare.NET.Resource.Formats.TPC;
+using BioWare.Resource.Formats.TPC;
 using Andastra.Game.Stride.Graphics;
 using JetBrains.Annotations;
 using Stride.Core.Mathematics;
@@ -8,7 +8,7 @@ using StrideGraphics = global::Stride.Graphics;
 namespace Andastra.Game.Stride.Converters
 {
     /// <summary>
-    /// Converts BioWare.NET TPC texture data to Stride Graphics.Texture.
+    /// Converts BioWare TPC texture data to Stride Graphics.Texture.
     /// Handles DXT1/DXT3/DXT5 compressed formats, RGB/RGBA uncompressed,
     /// and grayscale textures.
     /// </summary>

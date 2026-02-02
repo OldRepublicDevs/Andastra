@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Resource.Formats.MDL;
-using BioWare.NET.Resource.Formats.MDLData;
-using BioWare.NET.Resource.Formats.VIS;
-using BioWare.NET.Extract;
-using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.Common;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.MDL;
+using BioWare.Resource.Formats.MDLData;
+using BioWare.Resource.Formats.VIS;
+using BioWare.Extract;
+using BioWare.Resource.Formats.GFF.Generics;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
@@ -826,7 +826,7 @@ namespace Andastra.Game.Games.Odyssey
 
                 // Load creatures from GIT
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004dfbb0 @ 0x004dfbb0 loads creature instances from GIT "Creature List"
-                foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITCreature creature in git.Creatures)
+                foreach (BioWare.Resource.Formats.GFF.Generics.GITCreature creature in git.Creatures)
                 {
                     // Create entity with ObjectId, ObjectType, and Tag
                     // ObjectId: Use from GIT if available, otherwise generate
@@ -865,7 +865,7 @@ namespace Andastra.Game.Games.Odyssey
 
                 // Load doors from GIT
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e08e0 @ 0x004e08e0 loads door instances from GIT "Door List"
-                foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITDoor door in git.Doors)
+                foreach (BioWare.Resource.Formats.GFF.Generics.GITDoor door in git.Doors)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Door, door.Tag ?? string.Empty);
@@ -899,7 +899,7 @@ namespace Andastra.Game.Games.Odyssey
 
                 // Load placeables from GIT
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e08e0 @ 0x004e08e0 loads placeable instances from GIT "Placeable List"
-                foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITPlaceable placeable in git.Placeables)
+                foreach (BioWare.Resource.Formats.GFF.Generics.GITPlaceable placeable in git.Placeables)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Placeable, placeable.ResRef?.ToString() ?? string.Empty);
@@ -924,7 +924,7 @@ namespace Andastra.Game.Games.Odyssey
 
                 // Load triggers from GIT
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e5920 @ 0x004e5920 loads trigger instances from GIT "TriggerList"
-                foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITTrigger trigger in git.Triggers)
+                foreach (BioWare.Resource.Formats.GFF.Generics.GITTrigger trigger in git.Triggers)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Trigger, trigger.Tag ?? string.Empty);
@@ -964,7 +964,7 @@ namespace Andastra.Game.Games.Odyssey
 
                 // Load waypoints from GIT
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e04a0 @ 0x004e04a0 loads waypoint instances from GIT "WaypointList"
-                foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITWaypoint waypoint in git.Waypoints)
+                foreach (BioWare.Resource.Formats.GFF.Generics.GITWaypoint waypoint in git.Waypoints)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Waypoint, waypoint.Tag ?? string.Empty);
@@ -1013,7 +1013,7 @@ namespace Andastra.Game.Games.Odyssey
 
                 // Load sounds from GIT
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e06a0 @ 0x004e06a0 loads sound instances from GIT "SoundList"
-                foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITSound sound in git.Sounds)
+                foreach (BioWare.Resource.Formats.GFF.Generics.GITSound sound in git.Sounds)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Sound, sound.ResRef?.ToString() ?? string.Empty);
@@ -2770,7 +2770,7 @@ namespace Andastra.Game.Games.Odyssey
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): MDL files are binary format containing model structure
                 // Original implementation: Parses MDL binary format to extract mesh geometry
                 // MDLAuto.ReadMdl can parse both binary MDL (with MDX data) and ASCII MDL formats
-                BioWare.NET.Resource.Formats.MDLData.MDL mdl = MDLAuto.ReadMdl(mdlData, sourceExt: mdxData);
+                BioWare.Resource.Formats.MDLData.MDL mdl = MDLAuto.ReadMdl(mdlData, sourceExt: mdxData);
                 if (mdl == null)
                 {
                     // Failed to parse MDL
@@ -2821,7 +2821,7 @@ namespace Andastra.Game.Games.Odyssey
         /// </summary>
         /// <param name="mdl">The MDL model to calculate bounding box for.</param>
         /// <returns>A tuple containing (Min, Max) bounding box in local model space, or null if invalid.</returns>
-        private (Vector3 Min, Vector3 Max)? CalculateModelBoundingBox(BioWare.NET.Resource.Formats.MDLData.MDL mdl)
+        private (Vector3 Min, Vector3 Max)? CalculateModelBoundingBox(BioWare.Resource.Formats.MDLData.MDL mdl)
         {
             if (mdl == null || mdl.Root == null)
             {
@@ -3017,7 +3017,7 @@ namespace Andastra.Game.Games.Odyssey
                 }
 
                 // Parse MDL file
-                BioWare.NET.Resource.Formats.MDLData.MDL mdl = MDLAuto.ReadMdl(mdlData, sourceExt: mdxData);
+                BioWare.Resource.Formats.MDLData.MDL mdl = MDLAuto.ReadMdl(mdlData, sourceExt: mdxData);
                 if (mdl == null)
                 {
                     return null;

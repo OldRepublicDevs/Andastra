@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
-using BioWare.NET.Resource.Formats.VIS;
+using BioWare.Resource.Formats.VIS;
 using JetBrains.Annotations;
 
 namespace Andastra.Game.Graphics.MonoGame.Spatial

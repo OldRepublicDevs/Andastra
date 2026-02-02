@@ -1,16 +1,16 @@
 using System;
 using System.IO;
-using BioWare.NET.Resource.Formats.LIP;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Resource.Formats.LIP;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Dialogue;
 
 namespace Andastra.Game.Games.Odyssey.Dialogue
 {
     /// <summary>
-    /// Loads LIP (lip sync) files using BioWare.NET.
+    /// Loads LIP (lip sync) files using BioWare.
     /// </summary>
     /// <remarks>
     /// LIP Data Loader (Odyssey-specific):
@@ -118,7 +118,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
                     return null;
                 }
 
-                // Parse LIP file using BioWare.NET
+                // Parse LIP file using BioWare
                 LIP lipFile;
                 using (var stream = new MemoryStream(lipBytes))
                 using (var reader = new LIPBinaryReader(stream))
@@ -131,7 +131,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
                     return null;
                 }
 
-                // Convert BioWare.NET LIP to Runtime.Core LipSyncData
+                // Convert BioWare LIP to Runtime.Core LipSyncData
                 var lipSyncData = new LipSyncData();
                 lipSyncData.Duration = lipFile.Length;
 

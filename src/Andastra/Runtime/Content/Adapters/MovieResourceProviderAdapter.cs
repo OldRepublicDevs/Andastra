@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Common;
+using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Interfaces;
 

@@ -1,11 +1,11 @@
-using BioWare.NET.Common;
+using BioWare.Common;
 using System;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using BioWare.NET.Resource.Formats.GFF.Generics;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Resource.Formats.GFF.Generics;
+using BioWare.Common;
+using BioWare.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Widgets;
 

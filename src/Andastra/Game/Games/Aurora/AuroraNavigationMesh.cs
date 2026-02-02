@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.BWM;
+using BioWare.Common;
+using BioWare.Resource.Formats.BWM;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Game.Games.Common;
 using JetBrains.Annotations;

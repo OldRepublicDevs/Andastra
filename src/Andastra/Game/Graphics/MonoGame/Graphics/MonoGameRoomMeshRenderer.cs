@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using BioWare.NET.Resource.Formats.MDL;
-using BioWare.NET.Resource.Formats.MDLData;
+using BioWare.Resource.Formats.MDL;
+using BioWare.Resource.Formats.MDLData;
 using Andastra.Runtime.Graphics;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;

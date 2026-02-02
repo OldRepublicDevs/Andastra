@@ -5,16 +5,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Extract;
-using BioWare.NET.TSLPatcher.Mods;
-using BioWare.NET.Tools;
+using BioWare;
+using BioWare.Common;
+using BioWare.Extract;
+using BioWare.TSLPatcher.Mods;
+using BioWare.Tools;
 using KotorDiff.Diff;
-using BioWare.NET.TSLPatcher;
+using BioWare.TSLPatcher;
 using Tuple = System.Tuple;
 using SystemTextEncoding = System.Text.Encoding;
-using Game = BioWare.NET.Common.BioWareGame;
+using Game = BioWare.Common.BioWareGame;
 
 namespace KotorDiff.AppCore
 {
@@ -153,7 +153,7 @@ namespace KotorDiff.AppCore
             byte[] data1,
             byte[] data2,
             DiffContext context,
-            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             if (GlobalConfig.Instance.Config == null)
             {
@@ -180,7 +180,7 @@ namespace KotorDiff.AppCore
         public static (bool? comparison, int? exitCode) HandleDiffInternal(
             System.Collections.Generic.List<object> filesAndFoldersAndInstallations,
             System.Collections.Generic.List<string> filters = null,
-            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             if (filesAndFoldersAndInstallations.Count < 2)
             {
@@ -228,7 +228,7 @@ namespace KotorDiff.AppCore
         public static bool? RunDifferFromArgs(
             System.Collections.Generic.List<object> filesAndFoldersAndInstallations,
             System.Collections.Generic.List<string> filters = null,
-            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             if (GlobalConfig.Instance.Config == null)
             {
@@ -485,8 +485,8 @@ namespace KotorDiff.AppCore
 
             // Create incremental writer if requested
             // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:431-474
-            // Original: if config.tslpatchdata_path: ... incremental_writer = BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter(...)
-            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null;
+            // Original: if config.tslpatchdata_path: ... incremental_writer = BioWare.TSLPatcher.IncrementalTSLPatchDataWriter(...)
+            BioWare.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null;
             object basePath = null;
             if (config.TslPatchDataPath != null)
             {
@@ -573,7 +573,7 @@ namespace KotorDiff.AppCore
                         baseDataPathStr = installation.Path;
                     }
 
-                    incrementalWriter = new BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter(
+                    incrementalWriter = new BioWare.TSLPatcher.IncrementalTSLPatchDataWriter(
                         config.TslPatchDataPath.FullName,
                         config.IniFilename ?? "changes.ini",
                         baseDataPathStr,
@@ -623,7 +623,7 @@ namespace KotorDiff.AppCore
                         }
                     }
 
-                    incrementalWriter = new BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter(
+                    incrementalWriter = new BioWare.TSLPatcher.IncrementalTSLPatchDataWriter(
                         config.TslPatchDataPath.FullName,
                         config.IniFilename ?? "changes.ini",
                         baseDataPath,
@@ -775,7 +775,7 @@ namespace KotorDiff.AppCore
             }
 
             // Use TSLPatchDataGenerator for batch generation
-            var generator = new BioWare.NET.TSLPatcher.TSLPatchDataGenerator(tslpatchdataPath);
+            var generator = new BioWare.TSLPatcher.TSLPatchDataGenerator(tslpatchdataPath);
 
             var generatedFiles = generator.GenerateAllFiles(modifications, baseDataPath);
 
@@ -793,7 +793,7 @@ namespace KotorDiff.AppCore
             LogOutput($"\nGenerating {iniFilename} at: {iniPath}");
 
             // Use TSLPatcher INI serializer
-            var serializer = new BioWare.NET.TSLPatcher.Mods.TSLPatcherINISerializer();
+            var serializer = new BioWare.TSLPatcher.Mods.TSLPatcherINISerializer();
             string iniContent = serializer.Serialize(modifications, includeHeader: true, includeSettings: true);
                 File.WriteAllText(iniPath, iniContent, SystemTextEncoding.UTF8);
 

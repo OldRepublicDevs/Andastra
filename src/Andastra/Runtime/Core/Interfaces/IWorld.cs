@@ -140,7 +140,7 @@ namespace Andastra.Runtime.Core.Interfaces
         /// <summary>
         /// The AI controller for NPC behavior.
         /// </summary>
-        AI.AIController AIController { get; }
+        Andastra.Runtime.Core.AI.AIController AIController { get; }
 
         /// <summary>
         /// The animation system for updating entity animations.

@@ -1,25 +1,25 @@
-using BioWare.NET.Common;
+using BioWare.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using BioWare.NET;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Extract.Capsule;
-using BioWare.NET.Resource.Formats.GFF.Generics;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Extract.Capsule;
+using BioWare.Resource.Formats.GFF.Generics;
+using BioWare.Common;
+using BioWare.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using HolocronToolset.Widgets;
-using InventoryItem = BioWare.NET.Common.InventoryItem;
-using Game = BioWare.NET.Common.BioWareGame;
-using GFFAuto = BioWare.NET.Resource.Formats.GFF.GFFAuto;
-using UTM = BioWare.NET.Resource.Formats.GFF.Generics.UTM.UTM;
-using UTMHelpers = BioWare.NET.Resource.Formats.GFF.Generics.UTM.UTMHelpers;
-using UTMItem = BioWare.NET.Resource.Formats.GFF.Generics.UTM.UTMItem;
+using InventoryItem = BioWare.Common.InventoryItem;
+using Game = BioWare.Common.BioWareGame;
+using GFFAuto = BioWare.Resource.Formats.GFF.GFFAuto;
+using UTM = BioWare.Resource.Formats.GFF.Generics.UTM.UTM;
+using UTMHelpers = BioWare.Resource.Formats.GFF.Generics.UTM.UTMHelpers;
+using UTMItem = BioWare.Resource.Formats.GFF.Generics.UTM.UTMItem;
 
 namespace HolocronToolset.Editors
 {

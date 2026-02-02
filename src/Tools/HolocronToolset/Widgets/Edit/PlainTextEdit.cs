@@ -1,9 +1,9 @@
-using BioWare.NET.Common;
+using BioWare.Common;
 using System;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
-using BioWare.NET;
+using BioWare;
 
 namespace HolocronToolset.Widgets.Edit
 {

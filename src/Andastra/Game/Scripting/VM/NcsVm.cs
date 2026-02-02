@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
-using BioWare.NET.Common.Script;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Common.Script;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Game.Scripting.Interfaces;
 using Andastra.Game.Scripting.Types;
@@ -212,10 +212,10 @@ namespace Andastra.Game.Scripting.VM
                     throw new InvalidOperationException("Failed to load script: " + resRef, aex.InnerException ?? aex);
                 }
             }
-            // Fallback to BioWare.NET Installation provider
+            // Fallback to BioWare Installation provider
             else if (provider is Installation installation)
             {
-                BioWare.NET.Extract.ResourceResult result = installation.Resource(resRef, ResourceType.NCS, null, null);
+                BioWare.Extract.ResourceResult result = installation.Resource(resRef, ResourceType.NCS, null, null);
                 if (result != null && result.Data != null)
                 {
                     ncsBytes = result.Data;

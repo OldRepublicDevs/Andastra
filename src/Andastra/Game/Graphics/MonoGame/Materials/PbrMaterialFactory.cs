@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.TPC;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Common;
+using BioWare.Resource.Formats.TPC;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
 using Andastra.Game.Graphics.MonoGame.Converters;
 using Andastra.Game.Graphics.MonoGame.Enums;
 using Andastra.Game.Graphics.MonoGame.Interfaces;

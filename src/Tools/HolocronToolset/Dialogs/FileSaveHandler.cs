@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using FileResource = BioWare.NET.Extract.FileResource;
+using BioWare.Common;
+using BioWare.Resource;
+using FileResource = BioWare.Extract.FileResource;
 
 namespace HolocronToolset.Dialogs
 {
