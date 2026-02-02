@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using BioWare.NET.Resource.Formats.BWM;
+using BioWare.Resource.Formats.BWM;
 using Andastra.Runtime.Core.Navigation;
 
 namespace Andastra.Runtime.Content.Converters
 {
     /// <summary>
-    /// Converts BioWare.NET BWM walkmesh data to Odyssey NavigationMesh.
+    /// Converts BioWare BWM walkmesh data to Odyssey NavigationMesh.
     /// </summary>
     /// <remarks>
     /// BWM to NavigationMesh Converter:
@@ -28,9 +28,9 @@ namespace Andastra.Runtime.Content.Converters
     public static class BwmToNavigationMeshConverter
     {
         /// <summary>
-        /// Converts an BioWare.NET BWM to an Odyssey NavigationMesh.
+        /// Converts an BioWare BWM to an Odyssey NavigationMesh.
         /// </summary>
-        /// <param name="bwm">The source BWM data from BioWare.NET</param>
+        /// <param name="bwm">The source BWM data from BioWare</param>
         /// <returns>A NavigationMesh ready for pathfinding and collision</returns>
         public static NavigationMesh Convert(BWM bwm)
         {
@@ -98,7 +98,7 @@ namespace Andastra.Runtime.Content.Converters
         }
 
         /// <summary>
-        /// Converts an BioWare.NET BWM to NavigationMesh with a position offset.
+        /// Converts an BioWare BWM to NavigationMesh with a position offset.
         /// Used when placing room walkmeshes in the world.
         /// </summary>
         public static NavigationMesh ConvertWithOffset(BWM bwm, Vector3 offset)
@@ -764,7 +764,7 @@ namespace Andastra.Runtime.Content.Converters
 
         private static NavigationMesh.AabbNode BuildAabbTree(BWM bwm, Vector3[] vertices, int[] faces)
         {
-            // Use BioWare.NET's AABB generation
+            // Use BioWare's AABB generation
             List<BWMNodeAABB> aabbs = bwm.Aabbs();
             if (aabbs.Count == 0)
             {

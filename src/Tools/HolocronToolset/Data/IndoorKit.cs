@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.IO;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.BWM;
-using BioWare.NET.Resource.Formats.LYT;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.GFF.Generics;
-using BioWare.NET.Common.Logger;
+using BioWare.Common;
+using BioWare.Resource.Formats.BWM;
+using BioWare.Resource.Formats.LYT;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Resource.Formats.GFF.Generics;
+using BioWare.Common.Logger;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Avalonia;
@@ -645,7 +645,7 @@ namespace HolocronToolset.Data
         public string SourceModule { get; set; }
         private HTInstallation _installation;
         private bool _loaded;
-        private BioWare.NET.Common.Module _module;
+        private BioWare.Common.Module _module;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:59-74
         // Original: def ensure_loaded(self) -> bool:
@@ -676,7 +676,7 @@ namespace HolocronToolset.Data
             // Load the module
             try
             {
-                _module = new BioWare.NET.Common.Module(ModuleRoot, _installation.Installation, useDotMod: true);
+                _module = new BioWare.Common.Module(ModuleRoot, _installation.Installation, useDotMod: true);
             }
             catch (Exception ex)
             {
@@ -1531,7 +1531,7 @@ namespace HolocronToolset.Data
             var moduleNames = GetModuleNames();
             foreach (var moduleFilename in moduleNames.Keys)
             {
-                string root = BioWare.NET.Extract.Installation.GetModuleRoot(moduleFilename);
+                string root = BioWare.Extract.Installation.GetModuleRoot(moduleFilename);
                 if (!seenRoots.Contains(root))
                 {
                     seenRoots.Add(root);

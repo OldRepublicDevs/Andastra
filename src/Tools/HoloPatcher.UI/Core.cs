@@ -6,15 +6,15 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Extract;
-using BioWare.NET.TSLPatcher;
-using BioWare.NET.TSLPatcher.Config;
-using BioWare.NET.TSLPatcher.Namespaces;
-using BioWare.NET.TSLPatcher.Reader;
-using BioWare.NET.TSLPatcher.Logger;
-using BioWare.NET.Uninstall;
+using BioWare;
+using BioWare.Common;
+using BioWare.Extract;
+using BioWare.TSLPatcher;
+using BioWare.TSLPatcher.Config;
+using BioWare.TSLPatcher.Namespaces;
+using BioWare.TSLPatcher.Reader;
+using BioWare.TSLPatcher.Logger;
+using BioWare.Uninstall;
 using JetBrains.Annotations;
 using HoloPatcher.UI.Update;
 #if WINDOWS
@@ -26,7 +26,7 @@ namespace HoloPatcher.UI
 
     /// <summary>
     /// Core functionality for HoloPatcher.
-    /// Equivalent to holopatcher/BioWare.NET.py
+    /// Equivalent to holopatcher/BioWare.py
     /// </summary>
     public static class Core
     {

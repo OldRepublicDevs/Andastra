@@ -3,26 +3,26 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Resource.Formats.LYT;
-using BioWare.NET.Resource.Formats.VIS;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare;
+using BioWare.Common;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.LYT;
+using BioWare.Resource.Formats.VIS;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Module;
 using JetBrains.Annotations;
-using LYT = BioWare.NET.Resource.Formats.LYT.LYT;
+using LYT = BioWare.Resource.Formats.LYT.LYT;
 using Vector3 = System.Numerics.Vector3;
 
 namespace Andastra.Game.Games.Odyssey.Loading
 {
     /// <summary>
-    /// Loads KotOR modules from BioWare.NET data structures into Odyssey runtime format.
+    /// Loads KotOR modules from BioWare data structures into Odyssey runtime format.
     /// </summary>
     /// <remarks>
     /// Module Loading Sequence (from IFO spec):
@@ -128,7 +128,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
                 throw new ArgumentException("Module name cannot be null or empty", "moduleName");
             }
 
-            // Create BioWare.NET Module wrapper
+            // Create BioWare Module wrapper
             var module = new Module(moduleName, _installation);
 
             // Cache the Module object for efficient resource access
@@ -572,7 +572,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
 
             area.Rooms = new List<RoomInfo>();
 
-            foreach (BioWare.NET.Resource.Formats.LYT.LYTRoom room in lyt.Rooms)
+            foreach (BioWare.Resource.Formats.LYT.LYTRoom room in lyt.Rooms)
             {
                 var roomInfo = new RoomInfo
                 {
@@ -810,11 +810,11 @@ namespace Andastra.Game.Games.Odyssey.Loading
         private RuntimeModule _currentModule;
 
         /// <summary>
-        /// Cached BioWare.NET Module object for the currently loaded module.
+        /// Cached BioWare Module object for the currently loaded module.
         /// This avoids creating a new Module object every time resources are accessed.
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module objects are cached and reused for resource lookups.
         /// </summary>
-        private BioWare.NET.Common.Module _cachedParsingModule;
+        private BioWare.Common.Module _cachedParsingModule;
 
         /// <summary>
         /// Gets the currently loaded module.
@@ -827,11 +827,11 @@ namespace Andastra.Game.Games.Odyssey.Loading
         public EntityFactory EntityFactory => _entityFactory;
 
         /// <summary>
-        /// Gets the cached BioWare.NET Module for the currently loaded runtime module.
+        /// Gets the cached BioWare Module for the currently loaded runtime module.
         /// Returns the cached Module object to avoid recreating it on every access.
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module objects are cached and reused for resource lookups.
         /// </summary>
-        public BioWare.NET.Common.Module GetCurrentModule()
+        public BioWare.Common.Module GetCurrentModule()
         {
             return _cachedParsingModule;
         }
@@ -839,7 +839,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// <summary>
         /// Loads a dialogue by ResRef.
         /// </summary>
-        public BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLG LoadDialogue(string resRef)
+        public BioWare.Resource.Formats.GFF.Generics.DLG.DLG LoadDialogue(string resRef)
         {
             if (_cachedParsingModule == null)
             {
@@ -854,7 +854,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             }
 
             object dlgData = dlgResource.Resource();
-            return dlgData as BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLG;
+            return dlgData as BioWare.Resource.Formats.GFF.Generics.DLG.DLG;
         }
 
         /// <summary>
@@ -882,7 +882,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             }
 
             // Read NCS bytes using ResourceAuto
-            return BioWare.NET.Resource.ResourceAuto.ReadResource(activePath, ResourceType.NCS);
+            return BioWare.Resource.ResourceAuto.ReadResource(activePath, ResourceType.NCS);
         }
 
         /// <summary>

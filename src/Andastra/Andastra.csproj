@@ -10,8 +10,6 @@
     <GenerateGlobalUsings>false</GenerateGlobalUsings>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <!-- Exclude Game project from build due to incomplete dependencies -->
-    <ExcludeGameProject>true</ExcludeGameProject>
     <!-- MonoGame Content Pipeline -->
     <MonoGamePlatform>DesktopGL</MonoGamePlatform>
     <MonoGameProfile>HiDef</MonoGameProfile>
@@ -84,7 +82,7 @@
   <ItemGroup>
     <ProjectReference Include="Graphics\Andastra.Graphics.csproj" />
     <ProjectReference Include="UI\Andastra.UI.csproj" />
-    <ProjectReference Include="..\BioWare.NET\BioWare.NET.csproj" />
+    <ProjectReference Include="..\BioWare\BioWare.csproj" />
     <PackageReference Include="ini-parser-netstandard" Version="2.5.3" />
     <!-- Explicitly resolve transitive dependencies from Microsoft.Extensions.* 10.0.1 -->
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />

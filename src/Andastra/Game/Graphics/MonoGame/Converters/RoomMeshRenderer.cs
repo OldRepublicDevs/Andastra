@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using BioWare.NET.Resource.Formats.MDL;
-using BioWare.NET.Resource.Formats.MDLData;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
+using BioWare.Resource.Formats.MDL;
+using BioWare.Resource.Formats.MDLData;
+using BioWare.Extract;
+using BioWare.Common;
 using XnaColor = Microsoft.Xna.Framework.Color;
-using BioWare.NET.Resource;
+using BioWare.Resource;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -330,7 +330,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
             // Add faces as indices
             foreach (MDLFace face in mesh.Faces)
             {
-                // MDL faces are 0-indexed in BioWare.NET
+                // MDL faces are 0-indexed in BioWare
                 // Ensure indices are within valid range
                 int v1 = face.V1;
                 int v2 = face.V2;
@@ -552,9 +552,9 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
                     return null;
                 }
 
-                // Parse MDL using BioWare.NET MDL parser
+                // Parse MDL using BioWare MDL parser
                 // Reference: EntityModelRenderer.LoadMDLModel for consistent implementation
-                return BioWare.NET.Resource.Formats.MDL.MDLAuto.ReadMdl(result.Data);
+                return BioWare.Resource.Formats.MDL.MDLAuto.ReadMdl(result.Data);
             }
             catch (Exception ex)
             {

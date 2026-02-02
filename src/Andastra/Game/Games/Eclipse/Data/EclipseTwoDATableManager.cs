@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Extract;
+using BioWare.Resource.Formats.TwoDA;
+using BioWare.Extract;
 
 namespace Andastra.Game.Games.Eclipse.Data
 {
@@ -16,7 +16,7 @@ namespace Andastra.Game.Games.Eclipse.Data
     /// - Resource precedence: override → module → base game archives
     /// - Table lookup: Uses row label (string) or row index (int) to access data
     /// - Column access: Column names are case-insensitive (e.g., "ModelA", "modela" both work)
-    /// - Based on BioWare.NET.Resource.Formats.TwoDA.TwoDA for parsing
+    /// - Based on BioWare.Resource.Formats.TwoDA.TwoDA for parsing
     /// - Key 2DA tables (Eclipse-specific): appearance.2da, baseitems.2da, classes.2da, spells.2da, skills.2da, portraits.2da
     /// - Cross-engine analysis:
     ///   - Odyssey (swkotor.exe, swkotor2.exe): Similar 2DA loading via resource system
@@ -64,7 +64,7 @@ namespace Andastra.Game.Games.Eclipse.Data
             // Load from installation
             try
             {
-                ResourceResult resource = _installation.Resources.LookupResource(tableName, BioWare.NET.Common.ResourceType.TwoDA);
+                ResourceResult resource = _installation.Resources.LookupResource(tableName, BioWare.Common.ResourceType.TwoDA);
                 if (resource == null || resource.Data == null)
                 {
                     return null;

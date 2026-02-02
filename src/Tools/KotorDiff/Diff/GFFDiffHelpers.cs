@@ -4,8 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using BioWare.NET.TSLPatcher.Diff;
-using GffCompareResult = BioWare.NET.TSLPatcher.Diff.GffCompareResult;
+using BioWare.TSLPatcher.Diff;
+using GffCompareResult = BioWare.TSLPatcher.Diff.GffCompareResult;
 
 namespace KotorDiff.Diff
 {

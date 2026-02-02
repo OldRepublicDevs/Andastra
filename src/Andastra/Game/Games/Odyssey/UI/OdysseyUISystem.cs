@@ -1,7 +1,7 @@
 using System;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Extract;
+using BioWare;
+using BioWare.Common;
+using BioWare.Extract;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Game.Games.Common;
 
@@ -44,11 +44,11 @@ namespace Andastra.Game.Games.Odyssey.UI
 
             // Create appropriate upgrade screen based on game type
             // K1 uses K1UpgradeScreen (swkotor.exe), K2 uses K2UpgradeScreen (swkotor2.exe)
-            if (installation.Game == BioWare.NET.Common.BioWareGame.K1)
+            if (installation.Game == BioWare.Common.BioWareGame.K1)
             {
                 _upgradeScreen = new K1UpgradeScreen(installation, world);
             }
-            else if (installation.Game == BioWare.NET.Common.BioWareGame.TSL)
+            else if (installation.Game == BioWare.Common.BioWareGame.TSL)
             {
                 _upgradeScreen = new K2UpgradeScreen(installation, world);
             }

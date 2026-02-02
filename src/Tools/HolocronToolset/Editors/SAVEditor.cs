@@ -4,9 +4,9 @@ using System.IO;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using BioWare.NET.Extract.SaveData;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Extract.SaveData;
+using BioWare.Common;
+using BioWare.Resource;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Editors

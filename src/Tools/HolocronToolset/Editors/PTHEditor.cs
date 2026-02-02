@@ -9,14 +9,14 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
-using BioWare.NET.Common;
-using BioWare.NET.Extract;
-using BioWare.NET.Resource.Formats.BWM;
-using BioWare.NET.Resource.Formats.GFF.Generics;
-using BioWare.NET.Resource.Formats.LYT;
+using BioWare.Common;
+using BioWare.Extract;
+using BioWare.Resource.Formats.BWM;
+using BioWare.Resource.Formats.GFF.Generics;
+using BioWare.Resource.Formats.LYT;
 using HolocronToolset.Data;
-using KotorColor = BioWare.NET.Common.Color;
-using PTH = BioWare.NET.Resource.Formats.GFF.Generics.PTH;
+using KotorColor = BioWare.Common.Color;
+using PTH = BioWare.Resource.Formats.GFF.Generics.PTH;
 using Window = Avalonia.Controls.Window;
 
 namespace HolocronToolset.Editors
@@ -737,7 +737,7 @@ namespace HolocronToolset.Editors
                     // Load the LYT layout
                     try
                     {
-                        BioWare.NET.Resource.Formats.LYT.LYT layout = LYTAuto.ReadLyt(lytResult.Data);
+                        BioWare.Resource.Formats.LYT.LYT layout = LYTAuto.ReadLyt(lytResult.Data);
                         LoadLayout(layout);
                     }
                     catch (Exception ex)
@@ -813,7 +813,7 @@ namespace HolocronToolset.Editors
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:288-304
         // Original: @status_bar_decorator def loadLayout(self, layout: LYT):
         // swkotor2.exe: LoadLayout loads walkmeshes for each room in the layout to provide visual context
-        private void LoadLayout(BioWare.NET.Resource.Formats.LYT.LYT layout)
+        private void LoadLayout(BioWare.Resource.Formats.LYT.LYT layout)
         {
             if (_installation == null || layout == null)
             {

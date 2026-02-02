@@ -1554,7 +1554,7 @@ namespace Andastra.Runtime.Core.Save
             }
 
             // Convert IModule to parsing Module type if needed
-            // EntityFactory.CreateItemFromTemplate expects BioWare.NET.Common.Module
+            // EntityFactory.CreateItemFromTemplate expects BioWare.Common.Module
             object parsingModule = GetParsingModule(currentModule);
             if (parsingModule == null)
             {
@@ -1727,7 +1727,7 @@ namespace Andastra.Runtime.Core.Save
             }
 
             // If module is already the parsing Module type, return it
-            var parsingModuleTypeName = "BioWare.NET.Common.Module";
+            var parsingModuleTypeName = "BioWare.Common.Module";
             var parsingModuleType = System.Type.GetType(parsingModuleTypeName);
             if (parsingModuleType != null && parsingModuleType.IsAssignableFrom(module.GetType()))
             {

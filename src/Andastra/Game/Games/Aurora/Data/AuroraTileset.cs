@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.SET;
+using BioWare;
+using BioWare.Common;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Resource.Formats.SET;
 using Andastra.Runtime.Content.Interfaces;
 using JetBrains.Annotations;
 

@@ -3,9 +3,9 @@ using System.Linq;
 using System.Numerics;
 using Avalonia.Controls;
 using Avalonia.Layout;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.LYT;
+using BioWare;
+using BioWare.Common;
+using BioWare.Resource.Formats.LYT;
 
 namespace HolocronToolset.Dialogs
 {

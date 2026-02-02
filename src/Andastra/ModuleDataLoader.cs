@@ -1,11 +1,11 @@
 using System.Collections.Generic;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.GFF.Generics;
-using BioWare.NET.Tools;
+using BioWare.Common;
+using BioWare.Resource.Formats.TwoDA;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Resource.Formats.GFF.Generics;
+using BioWare.Tools;
 
 namespace Andastra
 {
@@ -44,7 +44,7 @@ namespace Andastra
     /// </summary>
     public class ModuleDataLoader
     {
-        private readonly BioWare.NET.Extract.Installation _installation;
+        private readonly BioWare.Extract.Installation _installation;
 
         public TwoDA TableDoors { get; private set; }
         public TwoDA TablePlaceables { get; private set; }
@@ -52,7 +52,7 @@ namespace Andastra
         public TwoDA TableHeads { get; private set; }
         public TwoDA TableBaseItems { get; private set; }
 
-        public ModuleDataLoader(BioWare.NET.Extract.Installation installation)
+        public ModuleDataLoader(BioWare.Extract.Installation installation)
         {
             _installation = installation;
             Load2daTables();
@@ -69,7 +69,7 @@ namespace Andastra
 
         private TwoDA Load2da(string name)
         {
-            BioWare.NET.Extract.ResourceResult res = _installation.Resources.LookupResource(name, ResourceType.TwoDA, new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN });
+            BioWare.Extract.ResourceResult res = _installation.Resources.LookupResource(name, ResourceType.TwoDA, new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN });
             if (res == null)
             {
                 return new TwoDA();
@@ -121,7 +121,7 @@ namespace Andastra
                 };
             }
 
-            var utc = creatureResource.Resource() as BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTC;
+            var utc = creatureResource.Resource() as BioWare.Resource.Formats.GFF.Generics.UTC.UTC;
             if (utc == null)
             {
                 return new Dictionary<string, object>

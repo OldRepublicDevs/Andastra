@@ -4,15 +4,15 @@ using KotorCLI.Logging;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Resource.Formats.ERF;
-using BioWare.NET.Resource.Formats.TLK;
-using BioWare.NET.Resource.Formats.NCS;
-using BioWare.NET.Resource.Formats.BIF;
-using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Common;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.ERF;
+using BioWare.Resource.Formats.TLK;
+using BioWare.Resource.Formats.NCS;
+using BioWare.Resource.Formats.BIF;
+using BioWare.Resource.Formats.TwoDA;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Common;
 using JetBrains.Annotations;
 
 namespace KotorCLI.Commands

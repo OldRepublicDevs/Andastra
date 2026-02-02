@@ -1,10 +1,10 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using BioWare.NET.Common;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.BWM;
+using BioWare.Common;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Resource.Formats.BWM;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Editors

@@ -99,6 +99,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\BioWare.NET\BioWare.NET.csproj" />
+    <ProjectReference Include="..\..\BioWare\BioWare.csproj" />
   </ItemGroup>
 </Project>

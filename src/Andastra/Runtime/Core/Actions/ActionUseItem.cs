@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.Resource.Formats.TwoDA;
 using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;

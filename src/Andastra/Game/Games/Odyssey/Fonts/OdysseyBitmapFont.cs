@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using BioWare.NET;
-using BioWare.NET.Resource.Formats.TPC;
-using BioWare.NET.Resource.Formats.TXI;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare;
+using BioWare.Resource.Formats.TPC;
+using BioWare.Resource.Formats.TXI;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
 using Andastra.Game.Games.Common;
 using Andastra.Runtime.Graphics;
 using Andastra.Game.Graphics.MonoGame.Graphics;

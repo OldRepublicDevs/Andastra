@@ -1,12 +1,12 @@
 using System;
 using System.IO;
 using System.Text;
-using BioWare.NET;
-using BioWare.NET.Resource.Formats.NCS;
-using BioWare.NET.Resource.Formats.NCS.Decomp;
+using BioWare;
+using BioWare.Resource.Formats.NCS;
+using BioWare.Resource.Formats.NCS.Decomp;
 using HolocronToolset.Data;
 using HolocronToolset.Utils;
-using NcsFile = BioWare.NET.Resource.Formats.NCS.Decomp.NcsFile;
+using NcsFile = BioWare.Resource.Formats.NCS.Decomp.NcsFile;
 
 namespace HolocronToolset.Utils
 {

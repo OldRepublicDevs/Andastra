@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using BioWare.NET.Common;
+using BioWare.Common;
 using Andastra.Runtime.Core;
 using Microsoft.Win32;
-using GameType = BioWare.NET.Common.BioWareGame;
+using GameType = BioWare.Common.BioWareGame;
 
 namespace Andastra.Game.Core
 {

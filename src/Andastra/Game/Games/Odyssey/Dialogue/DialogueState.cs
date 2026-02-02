@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using BioWare.NET.Resource.Formats.GFF.Generics.DLG;
+using BioWare.Resource.Formats.GFF.Generics.DLG;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Game.Games.Common.Dialogue;
 using JetBrains.Annotations;

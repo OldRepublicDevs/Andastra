@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Common;
+using BioWare.Resource;
 using HolocronToolset.Data;
-using FileResource = BioWare.NET.Extract.FileResource;
+using FileResource = BioWare.Extract.FileResource;
 
 namespace HolocronToolset.Dialogs
 {

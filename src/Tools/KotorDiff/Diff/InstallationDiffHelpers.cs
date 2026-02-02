@@ -6,20 +6,20 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BioWare.NET.Extract.Capsule;
-using BioWare.NET.Resource.Formats.ERF;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Resource.Formats.SSF;
-using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.TSLPatcher.Mods;
-using BioWare.NET.TSLPatcher.Mods.GFF;
-using BioWare.NET.TSLPatcher.Mods.SSF;
-using BioWare.NET.TSLPatcher.Mods.TwoDA;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Common;
+using BioWare.Extract.Capsule;
+using BioWare.Resource.Formats.ERF;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.SSF;
+using BioWare.Resource.Formats.TwoDA;
+using BioWare.TSLPatcher.Mods;
+using BioWare.TSLPatcher.Mods.GFF;
+using BioWare.TSLPatcher.Mods.SSF;
+using BioWare.TSLPatcher.Mods.TwoDA;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Common;
 using KotorDiff.Diff;
-using BioWare.NET.TSLPatcher;
+using BioWare.TSLPatcher;
 using JetBrains.Annotations;
 
 namespace KotorDiff.Diff
@@ -43,7 +43,7 @@ namespace KotorDiff.Diff
             byte[] moddedData = null,
             string moddedPath = null,
             DiffContext context = null,
-            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null,
+            BioWare.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null,
             bool createPatch = true)
         {
             if (logFunc == null)
@@ -118,7 +118,7 @@ namespace KotorDiff.Diff
             string capsuleDestination,
             string capsulePath = null,
             Action<string> logFunc = null,
-            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             if (logFunc == null)
             {
@@ -195,7 +195,7 @@ namespace KotorDiff.Diff
             string moddedPath = null,
             DiffContext context = null,
             Action<string> logFunc = null,
-            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             if (logFunc == null)
             {
@@ -263,7 +263,7 @@ namespace KotorDiff.Diff
                     {
                         // Only store strref_mappings for TLK modifications
                         // Other modification types (2DA, GFF, SSF) don't use strref_mappings
-                        if (modifications is BioWare.NET.TSLPatcher.Mods.TLK.ModificationsTLK modTlk)
+                        if (modifications is BioWare.TSLPatcher.Mods.TLK.ModificationsTLK modTlk)
                         {
                             incrementalWriter.SetTlkMetadata(modTlk, "strref_mappings", strrefMappings);
                             logFunc($"  |-- StrRef mappings: {strrefMappings.Count} mappings stored for linking patches");
@@ -291,18 +291,18 @@ namespace KotorDiff.Diff
                 modifications.Destination = folder;
                 modifications.SourceFile = resourceName;
 
-                if (modifications is BioWare.NET.TSLPatcher.Mods.TwoDA.Modifications2DA mod2da)
+                if (modifications is BioWare.TSLPatcher.Mods.TwoDA.Modifications2DA mod2da)
                 {
                     modificationsByType.Twoda.Add(mod2da);
                     logFunc("  |-- Type: [2DAList]");
                 }
-                else if (modifications is BioWare.NET.TSLPatcher.Mods.GFF.ModificationsGFF modGff)
+                else if (modifications is BioWare.TSLPatcher.Mods.GFF.ModificationsGFF modGff)
                 {
                     modGff.SaveAs = resourceName;
                     modificationsByType.Gff.Add(modGff);
                     logFunc("  |-- Type: [GFFList]");
                 }
-                else if (modifications is BioWare.NET.TSLPatcher.Mods.SSF.ModificationsSSF modSsf)
+                else if (modifications is BioWare.TSLPatcher.Mods.SSF.ModificationsSSF modSsf)
                 {
                     modificationsByType.Ssf.Add(modSsf);
                     logFunc("  |-- Type: [SSFList]");
@@ -315,15 +315,15 @@ namespace KotorDiff.Diff
 
                 // Get modifier count based on type
                 int modifiersCount = 0;
-                if (modifications is BioWare.NET.TSLPatcher.Mods.TwoDA.Modifications2DA mod2daCount)
+                if (modifications is BioWare.TSLPatcher.Mods.TwoDA.Modifications2DA mod2daCount)
                 {
                     modifiersCount = mod2daCount.Modifiers != null ? mod2daCount.Modifiers.Count : 0;
                 }
-                else if (modifications is BioWare.NET.TSLPatcher.Mods.GFF.ModificationsGFF modGff2)
+                else if (modifications is BioWare.TSLPatcher.Mods.GFF.ModificationsGFF modGff2)
                 {
                     modifiersCount = modGff2.Modifiers != null ? modGff2.Modifiers.Count : 0;
                 }
-                else if (modifications is BioWare.NET.TSLPatcher.Mods.SSF.ModificationsSSF modSsf2)
+                else if (modifications is BioWare.TSLPatcher.Mods.SSF.ModificationsSSF modSsf2)
                 {
                     modifiersCount = modSsf2.Modifiers != null ? modSsf2.Modifiers.Count : 0;
                 }
@@ -367,15 +367,15 @@ namespace KotorDiff.Diff
                 // For 2DA files, create empty 2DA
                 if (extLower == "2da")
                 {
-                    var empty2da = new BioWare.NET.Resource.Formats.TwoDA.TwoDA();
-                    return BioWare.NET.Resource.Formats.TwoDA.TwoDAAuto.Bytes2DA(empty2da, ResourceType.TwoDA);
+                    var empty2da = new BioWare.Resource.Formats.TwoDA.TwoDA();
+                    return BioWare.Resource.Formats.TwoDA.TwoDAAuto.Bytes2DA(empty2da, ResourceType.TwoDA);
                 }
 
                 // For SSF files, create empty SSF
                 if (extLower == "ssf")
                 {
-                    var emptySsf = new BioWare.NET.Resource.Formats.SSF.SSF();
-                    return BioWare.NET.Resource.Formats.SSF.SSFAuto.BytesSsf(emptySsf, ResourceType.SSF);
+                    var emptySsf = new BioWare.Resource.Formats.SSF.SSF();
+                    return BioWare.Resource.Formats.SSF.SSFAuto.BytesSsf(emptySsf, ResourceType.SSF);
                 }
 
                 // For GFF files, create empty GFF with appropriate content type based on extension
@@ -387,22 +387,22 @@ namespace KotorDiff.Diff
                 if (gffTypes.Contains(extLower))
                 {
                     // Try to determine GFFContent from extension
-                    BioWare.NET.Resource.Formats.GFF.GFFContent gffContent;
+                    BioWare.Resource.Formats.GFF.GFFContent gffContent;
                     try
                     {
                         // Map extension to GFFContent enum using FromResName (pass filename with extension)
                         string filename = $"dummy.{ext}";
-                        gffContent = BioWare.NET.Resource.Formats.GFF.GFFContentExtensions.FromResName(filename);
+                        gffContent = BioWare.Resource.Formats.GFF.GFFContentExtensions.FromResName(filename);
                     }
                     catch
                     {
                         // Fallback to generic GFF content type
-                        gffContent = BioWare.NET.Resource.Formats.GFF.GFFContent.GFF;
+                        gffContent = BioWare.Resource.Formats.GFF.GFFContent.GFF;
                     }
 
                     // Create empty GFF with determined content type
-                    var emptyGff = new BioWare.NET.Resource.Formats.GFF.GFF(gffContent);
-                    return BioWare.NET.Resource.Formats.GFF.GFFAuto.BytesGff(emptyGff, ResourceType.GFF);
+                    var emptyGff = new BioWare.Resource.Formats.GFF.GFF(gffContent);
+                    return BioWare.Resource.Formats.GFF.GFFAuto.BytesGff(emptyGff, ResourceType.GFF);
                 }
             }
             catch (Exception e)
@@ -422,12 +422,12 @@ namespace KotorDiff.Diff
         public static void ExtractAndAddCapsuleResources(
             string capsulePath,
             ModificationsByType modificationsByType,
-            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter,
+            BioWare.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter,
             Action<string> logFunc)
         {
             try
             {
-                var capsule = new BioWare.NET.Extract.Capsule.Capsule(capsulePath);
+                var capsule = new BioWare.Extract.Capsule.Capsule(capsulePath);
                 string capsuleName = Path.GetFileName(capsulePath);
 
                 // Determine destination based on capsule location and type

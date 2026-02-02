@@ -1,7 +1,7 @@
 using System.ComponentModel;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.TLK;
+using BioWare;
+using BioWare.Common;
+using BioWare.Resource.Formats.TLK;
 
 namespace HolocronToolset.Editors
 {

@@ -2,10 +2,10 @@
 // Original: @dataclass class ResolvedResource: ...
 using System.Collections.Generic;
 using System.IO;
-using BioWare.NET;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
 using JetBrains.Annotations;
 
 namespace KotorDiff.Resolution

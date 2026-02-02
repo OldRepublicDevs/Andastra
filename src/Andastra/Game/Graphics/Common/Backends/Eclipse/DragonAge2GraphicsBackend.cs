@@ -3,14 +3,14 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Common;
+using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
-using ResourceType = BioWare.NET.Common.ResourceType;
+using ResourceType = BioWare.Common.ResourceType;
 
 namespace Andastra.Game.Graphics.Common.Backends.Eclipse
 {
@@ -505,7 +505,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
 
                 // Try loading DDS texture from resource provider
                 // Based on DragonAge2.exe: DDS textures are stored with ResourceType.DDS in game archives
-                ResourceIdentifier ddsId = new ResourceIdentifier(resourceName, BioWare.NET.Common.ResourceType.DDS);
+                ResourceIdentifier ddsId = new ResourceIdentifier(resourceName, BioWare.Common.ResourceType.DDS);
                 try
                 {
                     Task<bool> existsTask = _resourceProvider.ExistsAsync(ddsId, CancellationToken.None);

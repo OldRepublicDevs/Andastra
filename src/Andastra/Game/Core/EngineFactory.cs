@@ -1,5 +1,5 @@
 using System;
-using BioWare.NET.Common;
+using BioWare.Common;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Aurora;

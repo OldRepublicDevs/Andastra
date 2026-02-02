@@ -12,16 +12,16 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-// BioWare.NET includes Utility files, causing SystemHelpers conflict - use global:: prefix
-using BioWare.NET.Common;
-using BioWare.NET.Extract;
-using BioWare.NET.TSLPatcher;
-using BioWare.NET.TSLPatcher.Config;
-using BioWare.NET.TSLPatcher.Namespaces;
-using BioWare.NET.TSLPatcher.Reader;
-using BioWare.NET.TSLPatcher.Logger;
-using BioWare.NET.Common.Logger;
-using BioWare.NET.Uninstall;
+// BioWare includes Utility files, causing SystemHelpers conflict - use global:: prefix
+using BioWare.Common;
+using BioWare.Extract;
+using BioWare.TSLPatcher;
+using BioWare.TSLPatcher.Config;
+using BioWare.TSLPatcher.Namespaces;
+using BioWare.TSLPatcher.Reader;
+using BioWare.TSLPatcher.Logger;
+using BioWare.Common.Logger;
+using BioWare.Uninstall;
 using HoloPatcher.UI;
 using HoloPatcher.UI.Update;
 using RteDocument = global::HoloPatcher.UI.Rte.RteDocument;
@@ -251,7 +251,7 @@ namespace HoloPatcher.UI.ViewModels
         {
             // Initialize RobustLogger for pykotor errors/exceptions/warnings/info
             // Will set log file path when mod is loaded
-            _pykotorLogger = new BioWare.NET.Common.Logger.RobustLogger();
+            _pykotorLogger = new BioWare.Common.Logger.RobustLogger();
 
             // Initialize commands
             BrowseModCommand = new AsyncRelayCommand(BrowseMod);
@@ -797,7 +797,7 @@ namespace HoloPatcher.UI.ViewModels
             {
                 try
                 {
-                    BioWare.NET.Utility.SystemHelpers.FixPermissions(directory, msg => AddLogEntry(msg));
+                    BioWare.Utility.SystemHelpers.FixPermissions(directory, msg => AddLogEntry(msg));
 
                     int numFiles = 0;
                     int numFolders = 0;
@@ -872,7 +872,7 @@ namespace HoloPatcher.UI.ViewModels
                 try
                 {
                     bool madeChange = false;
-                    BioWare.NET.Utility.SystemHelpers.FixCaseSensitivity(directory, msg =>
+                    BioWare.Utility.SystemHelpers.FixCaseSensitivity(directory, msg =>
                     {
                         AddLogEntry(msg);
                         madeChange = true;

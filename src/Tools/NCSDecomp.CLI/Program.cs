@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using NcsDecompiler = BioWare.NET.NCS.Core.Decompiler.NcsDecompiler;
+using FileDecompiler = BioWare.Resource.Formats.NCS.Decomp.FileDecompiler;
 
 namespace NCSDecomp.CLI
 {
@@ -51,7 +51,7 @@ namespace NCSDecomp.CLI
             }
 
             // Create decompiler
-            var decompiler = new NcsDecompiler();
+            var decompiler = new FileDecompiler();
 
             int successCount = 0;
             int errorCount = 0;
@@ -60,7 +60,7 @@ namespace NCSDecomp.CLI
             {
                 try
                 {
-                    if (!System.IO.File.Exists(filePath))
+                    if (!File.Exists(filePath))
                     {
                         Console.Error.WriteLine($"[Error] File not found: {filePath}");
                         errorCount++;
@@ -69,7 +69,9 @@ namespace NCSDecomp.CLI
 
                     Console.WriteLine($"[Info] Decompiling: {filePath}");
 
-                    string generatedCode = decompiler.DecompileFromFile(filePath);
+                    BioWare.Resource.Formats.NCS.Decomp.NcsFile ncsFile = new BioWare.Resource.Formats.NCS.Decomp.NcsFile(filePath);
+                    BioWare.Resource.Formats.NCS.Decomp.Utils.FileScriptData generatedFileScriptData = decompiler.DecompileNcsObjectFromFile(ncsFile);
+                    string generatedCode = generatedFileScriptData?.ToString();
                     if (!string.IsNullOrEmpty(generatedCode))
                     {
                         // Output to file or console
@@ -80,7 +82,7 @@ namespace NCSDecomp.CLI
                             outputPath = Path.Combine(cmdlineArgs.OutputDir, fileName);
                         }
 
-                        System.IO.File.WriteAllText(outputPath, generatedCode);
+                        File.WriteAllText(outputPath, generatedCode);
                         Console.WriteLine($"[Info] Decompiled code written to: {outputPath}");
                         successCount++;
                     }

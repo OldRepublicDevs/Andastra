@@ -1,6 +1,6 @@
 <!--
 ============================================================================================================================================
-G:\GitHub\Andastra\src\Andastra\Andastra.csproj
+C:\GitHub\Andastra\src\Andastra\Andastra.csproj
 ============================================================================================================================================
 -->
 <Project DefaultTargets="Build" InitialTargets="_StrideCheckVisualCRuntime2019;_Silk_NET_SDL_ConfigureSilkTouchRuntime">
@@ -167,7 +167,7 @@ C:\Program Files\dotnet\sdk\9.0.307\Current\Microsoft.Common.props
 ============================================================================================================================================
   <Import Project="$(MSBuildProjectExtensionsPath)$(MSBuildProjectFile).*.props" Condition="'$(ImportProjectExtensionProps)' == 'true' and exists('$(MSBuildProjectExtensionsPath)')">
 
-G:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.props
+C:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.props
 ============================================================================================================================================
 -->
   <PropertyGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' " xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
@@ -194,7 +194,7 @@ C:\Users\boden\.nuget\packages\stride.core\4.2.1.2487\buildTransitive\Stride.Cor
 ============================================================================================================================================
   </Import>
 
-G:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.props
+C:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.props
 ============================================================================================================================================
 -->
   <!--
@@ -219,7 +219,7 @@ C:\Users\boden\.nuget\packages\skiasharp.nativeassets.webassembly\2.88.9\buildTr
 ============================================================================================================================================
   </Import>
 
-G:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.props
+C:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.props
 ============================================================================================================================================
 -->
   <!--
@@ -242,7 +242,7 @@ C:\Users\boden\.nuget\packages\monogame.content.builder.task\3.8.4.1\build\MonoG
 ============================================================================================================================================
   </Import>
 
-G:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.props
+C:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.props
 ============================================================================================================================================
 -->
   <!--
@@ -267,7 +267,7 @@ C:\Users\boden\.nuget\packages\harfbuzzsharp.nativeassets.webassembly\7.3.0.3\bu
 ============================================================================================================================================
   </Import>
 
-G:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.props
+C:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.props
 ============================================================================================================================================
 -->
   <!--
@@ -373,7 +373,7 @@ C:\Users\boden\.nuget\packages\avalonia\11.2.2\buildTransitive\Avalonia.props
 ============================================================================================================================================
   </Import>
 
-G:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.props
+C:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.props
 ============================================================================================================================================
 -->
   <!--</ImportGroup>-->
@@ -1618,7 +1618,7 @@ C:\Program Files\dotnet\sdk\9.0.307\Sdks\Microsoft.NET.Sdk\Sdk\Sdk.props
 ============================================================================================================================================
   </Import>
 
-G:\GitHub\Andastra\src\Andastra\Andastra.csproj
+C:\GitHub\Andastra\src\Andastra\Andastra.csproj
 ============================================================================================================================================
 -->
   <PropertyGroup>
@@ -10293,7 +10293,7 @@ C:\Program Files\dotnet\sdk\9.0.307\Microsoft.Common.targets
 ============================================================================================================================================
   <Import Project="$(MSBuildProjectExtensionsPath)$(MSBuildProjectFile).*.targets" Condition="'$(ImportProjectExtensionTargets)' == 'true' and exists('$(MSBuildProjectExtensionsPath)')">
 
-G:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
+C:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
 ============================================================================================================================================
 -->
   <!--<ImportGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">-->
@@ -10324,7 +10324,7 @@ C:\Users\boden\.nuget\packages\ultz.native.sdl\2.30.8\buildTransitive\netstandar
 ============================================================================================================================================
   </Import>
 
-G:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
+C:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
 ============================================================================================================================================
 -->
   <!--
@@ -10355,7 +10355,7 @@ C:\Users\boden\.nuget\packages\system.text.json\10.0.1\buildTransitive\net8.0\Sy
 ============================================================================================================================================
   </Import>
 
-G:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
+C:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
 ============================================================================================================================================
 -->
   <!--
@@ -10564,7 +10564,7 @@ C:\Users\boden\.nuget\packages\stride.core\4.2.1.2487\buildTransitive\Stride.Cor
 ============================================================================================================================================
   </Import>
 
-G:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
+C:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
 ============================================================================================================================================
 -->
   <!--
@@ -10591,7 +10591,7 @@ C:\Users\boden\.nuget\packages\silk.net.sdl\2.22.0\buildTransitive\net6.0\Silk.N
 ============================================================================================================================================
   </Import>
 
-G:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
+C:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
 ============================================================================================================================================
 -->
   <!--
@@ -10667,7 +10667,7 @@ C:\Users\boden\.nuget\packages\stride.graphics\4.2.1.2487\buildTransitive\Stride
 ============================================================================================================================================
   </Import>
 
-G:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
+C:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
 ============================================================================================================================================
 -->
   <!--
@@ -10694,7 +10694,7 @@ C:\Users\boden\.nuget\packages\skiasharp.nativeassets.webassembly\2.88.9\buildTr
 ============================================================================================================================================
   </Import>
 
-G:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
+C:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
 ============================================================================================================================================
 -->
   <!--
@@ -10711,7 +10711,7 @@ C:\Users\boden\.nuget\packages\monogame.framework.desktopgl\3.8.4.1\build\MonoGa
 ============================================================================================================================================
   </Import>
 
-G:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
+C:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
 ============================================================================================================================================
 -->
   <!--
@@ -10885,7 +10885,7 @@ C:\Users\boden\.nuget\packages\monogame.content.builder.task\3.8.4.1\build\MonoG
 ============================================================================================================================================
   </Import>
 
-G:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
+C:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
 ============================================================================================================================================
 -->
   <!--
@@ -10916,7 +10916,7 @@ C:\Users\boden\.nuget\packages\microsoft.extensions.logging.abstractions\10.0.1\
 ============================================================================================================================================
   </Import>
 
-G:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
+C:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
 ============================================================================================================================================
 -->
   <!--
@@ -10933,7 +10933,7 @@ C:\Users\boden\.nuget\packages\harfbuzzsharp.nativeassets.webassembly\7.3.0.3\bu
 ============================================================================================================================================
   </Import>
 
-G:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
+C:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
 ============================================================================================================================================
 -->
   <!--
@@ -10951,7 +10951,7 @@ C:\Users\boden\.nuget\packages\avalonia.buildservices\0.0.29\buildTransitive\Ava
 ============================================================================================================================================
   </Import>
 
-G:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
+C:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
 ============================================================================================================================================
 -->
   <!--
@@ -11185,7 +11185,7 @@ C:\Users\boden\.nuget\packages\avalonia\11.2.2\buildTransitive\Avalonia.targets
 ============================================================================================================================================
   </Import>
 
-G:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
+C:\GitHub\Andastra\src\Andastra\obj\Andastra.csproj.nuget.g.targets
 ============================================================================================================================================
 -->
   <!--</ImportGroup>-->
@@ -17592,7 +17592,7 @@ C:\Program Files\dotnet\sdk\9.0.307\Sdks\Microsoft.NET.Sdk\Sdk\Sdk.targets
 ============================================================================================================================================
   </Import>
 
-G:\GitHub\Andastra\src\Andastra\Andastra.csproj
+C:\GitHub\Andastra\src\Andastra\Andastra.csproj
 ============================================================================================================================================
 -->
 </Project>

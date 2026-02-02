@@ -1,6 +1,6 @@
 using System;
-using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Extract;
+using BioWare.Resource.Formats.TwoDA;
+using BioWare.Extract;
 using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
 
@@ -82,13 +82,13 @@ namespace Andastra.Game.Games.Aurora.Data
             }
 
             // Get appearance data from table manager
-            BioWare.NET.Resource.Formats.TwoDA.TwoDA appearanceTable = _tableManager.GetTable("appearance");
+            BioWare.Resource.Formats.TwoDA.TwoDA appearanceTable = _tableManager.GetTable("appearance");
             if (appearanceTable == null || appearanceType >= appearanceTable.GetHeight())
             {
                 return defaultRadius;
             }
 
-            BioWare.NET.Resource.Formats.TwoDA.TwoDARow row = appearanceTable.GetRow(appearanceType);
+            BioWare.Resource.Formats.TwoDA.TwoDARow row = appearanceTable.GetRow(appearanceType);
             if (row == null)
             {
                 return defaultRadius;
@@ -151,7 +151,7 @@ namespace Andastra.Game.Games.Aurora.Data
             }
 
             // Get table from table manager
-            BioWare.NET.Resource.Formats.TwoDA.TwoDA table = _tableManager.GetTable(tableName);
+            BioWare.Resource.Formats.TwoDA.TwoDA table = _tableManager.GetTable(tableName);
             if (table == null)
             {
                 return defaultValue;
@@ -163,7 +163,7 @@ namespace Andastra.Game.Games.Aurora.Data
                 return defaultValue;
             }
 
-            BioWare.NET.Resource.Formats.TwoDA.TwoDARow row = table.GetRow(rowIndex);
+            BioWare.Resource.Formats.TwoDA.TwoDARow row = table.GetRow(rowIndex);
             if (row == null)
             {
                 return defaultValue;

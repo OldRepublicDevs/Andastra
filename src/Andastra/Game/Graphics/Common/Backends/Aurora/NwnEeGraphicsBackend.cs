@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using BioWare.NET;
-using BioWare.NET.Resource.Formats.TPC;
-using BioWare.NET.Resource.Formats.TXI;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare;
+using BioWare.Resource.Formats.TPC;
+using BioWare.Resource.Formats.TXI;
+using BioWare.Common;
+using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
-using ParsingResourceType = BioWare.NET.Common.ResourceType;
+using ParsingResourceType = BioWare.Common.ResourceType;
 
 namespace Andastra.Game.Graphics.Common.Backends.Aurora
 {
@@ -389,7 +389,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Aurora
                             tpc.Txi = txiText;
                             try
                             {
-                                tpc.TxiObject = new BioWare.NET.Resource.Formats.TXI.TXI(txiText);
+                                tpc.TxiObject = new BioWare.Resource.Formats.TXI.TXI(txiText);
                             }
                             catch
                             {
@@ -711,7 +711,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Aurora
         /// - vendor/reone/src/libs/graphics/textureutil.cpp:123-143 (TXI to OpenGL parameter mapping)
         /// - vendor/xoreos/src/graphics/images/txi.cpp:105-106,143-144,172-173 (TXI clamp, filter, mipmap parsing)
         /// </remarks>
-        private void ApplyTxiParameters(BioWare.NET.Resource.Formats.TXI.TXI txi, uint textureTarget)
+        private void ApplyTxiParameters(BioWare.Resource.Formats.TXI.TXI txi, uint textureTarget)
         {
             if (txi == null || txi.Features == null)
             {
@@ -1518,7 +1518,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Aurora
         /// - vendor/xoreos/src/graphics/images/txi.cpp:105-106,143-144,172-173 (TXI clamp, filter, mipmap parsing)
         /// - nwmain.exe: DirectX 9 texture parameter storage and application (SetTextureParameters during texture creation)
         /// </remarks>
-        private void StoreDirectX9TxiParameters(IntPtr texture, BioWare.NET.Resource.Formats.TXI.TXI txi)
+        private void StoreDirectX9TxiParameters(IntPtr texture, BioWare.Resource.Formats.TXI.TXI txi)
         {
             if (txi == null || txi.Features == null || texture == IntPtr.Zero)
             {

@@ -1,8 +1,8 @@
-using BioWare.NET.Common;
+using BioWare.Common;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using BioWare.NET;
+using BioWare;
 
 namespace HolocronToolset.Common
 {

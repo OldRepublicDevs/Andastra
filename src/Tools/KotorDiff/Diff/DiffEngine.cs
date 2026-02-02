@@ -4,14 +4,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BioWare.NET.TSLPatcher.Mods;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Extract;
-using BioWare.NET.TSLPatcher;
-using BioWare.NET.Extract.Capsule;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.TSLPatcher.Mods;
+using BioWare;
+using BioWare.Common;
+using BioWare.Extract;
+using BioWare.TSLPatcher;
+using BioWare.Extract.Capsule;
+using BioWare.Common;
+using BioWare.Resource;
 using KotorDiff.Cache;
 using CachedFileComparison = KotorDiff.Cache.CachedFileComparison;
 using KotorDiff.Resolution;
@@ -30,7 +30,7 @@ namespace KotorDiff.Diff
             Action<string> logFunc = null,
             bool compareHashes = true,
             ModificationsByType modificationsByType = null,
-            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             try
             {
@@ -296,7 +296,7 @@ namespace KotorDiff.Diff
             Action<string> logFunc = null,
             bool compareHashes = true,
             ModificationsByType modificationsByType = null,
-            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             bool? isSameResult = true;
             int processedCount = 0;
@@ -441,7 +441,7 @@ namespace KotorDiff.Diff
             bool compareHashes = true,
             ModificationsByType modificationsByType = null,
             Action<string> logFunc = null,
-            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             if (logFunc == null)
             {
@@ -523,7 +523,7 @@ namespace KotorDiff.Diff
             DiffContext context,
             ModificationsByType modificationsByType,
             Action<string> logFunc,
-            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             try
             {
@@ -535,7 +535,7 @@ namespace KotorDiff.Diff
                     if (result != null && modificationsByType != null)
                     {
                         // Add modifications
-                        if (result is BioWare.NET.TSLPatcher.Mods.GFF.ModificationsGFF modGff)
+                        if (result is BioWare.TSLPatcher.Mods.GFF.ModificationsGFF modGff)
                         {
                             string resourceName = Path.GetFileName(context.Where);
                             modGff.Destination = DiffEngineUtils.DetermineDestinationForSource(context.File2Rel);
@@ -578,7 +578,7 @@ namespace KotorDiff.Diff
             ModificationsByType modificationsByType,
             Action<string> logFunc,
             bool compareHashes,
-            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             try
             {
@@ -588,7 +588,7 @@ namespace KotorDiff.Diff
                     var result = analyzer.Analyze(data1, data2, context.Where);
                     if (result != null)
                     {
-                        if (result is BioWare.NET.TSLPatcher.Mods.TwoDA.Modifications2DA mod2da)
+                        if (result is BioWare.TSLPatcher.Mods.TwoDA.Modifications2DA mod2da)
                         {
                             string resourceName = Path.GetFileName(context.Where);
                             mod2da.Destination = DiffEngineUtils.DetermineDestinationForSource(context.File2Rel);
@@ -634,7 +634,7 @@ namespace KotorDiff.Diff
             DiffContext context,
             ModificationsByType modificationsByType,
             Action<string> logFunc,
-            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             try
             {
@@ -645,7 +645,7 @@ namespace KotorDiff.Diff
                     if (result != null)
                     {
                         // TLK analyzer returns tuple: (ModificationsTLK, strref_mappings)
-                        if (result is ValueTuple<BioWare.NET.TSLPatcher.Mods.TLK.ModificationsTLK, Dictionary<int, int>> tuple)
+                        if (result is ValueTuple<BioWare.TSLPatcher.Mods.TLK.ModificationsTLK, Dictionary<int, int>> tuple)
                         {
                             var modTlk = tuple.Item1;
 
@@ -685,7 +685,7 @@ namespace KotorDiff.Diff
             ModificationsByType modificationsByType,
             Action<string> logFunc,
             bool compareHashes,
-            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             try
             {
@@ -695,7 +695,7 @@ namespace KotorDiff.Diff
                     var result = analyzer.Analyze(data1, data2, context.Where);
                     if (result != null)
                     {
-                        if (result is BioWare.NET.TSLPatcher.Mods.SSF.ModificationsSSF modSsf)
+                        if (result is BioWare.TSLPatcher.Mods.SSF.ModificationsSSF modSsf)
                         {
                             string resourceName = Path.GetFileName(context.Where);
                             modSsf.Destination = DiffEngineUtils.DetermineDestinationForSource(context.File2Rel);
@@ -811,12 +811,12 @@ namespace KotorDiff.Diff
             }
 
             // Load capsules (composite module loading is handled by CompositeModuleCapsule if needed)
-            BioWare.NET.Extract.Capsule.Capsule file1Capsule = null;
-            BioWare.NET.Extract.Capsule.Capsule file2Capsule = null;
+            BioWare.Extract.Capsule.Capsule file1Capsule = null;
+            BioWare.Extract.Capsule.Capsule file2Capsule = null;
 
             try
             {
-                file1Capsule = new BioWare.NET.Extract.Capsule.Capsule(cFile1);
+                file1Capsule = new BioWare.Extract.Capsule.Capsule(cFile1);
             }
             catch (Exception e)
             {
@@ -826,7 +826,7 @@ namespace KotorDiff.Diff
 
             try
             {
-                file2Capsule = new BioWare.NET.Extract.Capsule.Capsule(cFile2);
+                file2Capsule = new BioWare.Extract.Capsule.Capsule(cFile2);
             }
             catch (Exception e)
             {
@@ -835,8 +835,8 @@ namespace KotorDiff.Diff
             }
 
             // Build dict of resources
-            var capsule1Resources = new Dictionary<string, BioWare.NET.Extract.Capsule.CapsuleResource>();
-            var capsule2Resources = new Dictionary<string, BioWare.NET.Extract.Capsule.CapsuleResource>();
+            var capsule1Resources = new Dictionary<string, BioWare.Extract.Capsule.CapsuleResource>();
+            var capsule2Resources = new Dictionary<string, BioWare.Extract.Capsule.CapsuleResource>();
 
             foreach (var res in file1Capsule)
             {
@@ -920,7 +920,7 @@ namespace KotorDiff.Diff
             Func<string, string, bool?> diffFilesFunc = null,
             DiffCache diffCache = null,
             ModificationsByType modificationsByType = null,
-            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             if (logFunc == null)
             {
@@ -1354,7 +1354,7 @@ namespace KotorDiff.Diff
             string relPath,
             Action<string> logFunc,
             string file2Path,
-            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter)
+            BioWare.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter)
         {
             if (logFunc == null)
             {

@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using BioWare.NET.Extract;
+using BioWare.Extract;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Interfaces;
 using JetBrains.Annotations;
@@ -113,7 +113,7 @@ namespace Andastra.Game.Games.Engines.Eclipse.DragonAge
                 {
                     // Parse the RIM file to validate it's a valid RIM archive
                     // This ensures the file is properly formatted before adding to resource provider
-                    var rim = BioWare.NET.Resource.Formats.RIM.RIMAuto.ReadRim(moduleRimPath);
+                    var rim = BioWare.Resource.Formats.RIM.RIMAuto.ReadRim(moduleRimPath);
 
                     // Add the module RIM file to the resource provider
                     // This makes all resources in the RIM file available for lookup
@@ -152,7 +152,7 @@ namespace Andastra.Game.Games.Engines.Eclipse.DragonAge
                     try
                     {
                         // Parse the extension RIM file to validate it's a valid RIM archive
-                        var extensionRim = BioWare.NET.Resource.Formats.RIM.RIMAuto.ReadRim(extensionRimPath);
+                        var extensionRim = BioWare.Resource.Formats.RIM.RIMAuto.ReadRim(extensionRimPath);
 
                         // Add the extension RIM file to the resource provider
                         // Extension RIMs are added after base RIM, so they override base RIM resources

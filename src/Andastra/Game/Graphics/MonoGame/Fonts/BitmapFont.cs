@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using BioWare.NET;
-using BioWare.NET.Extract;
+using BioWare;
+using BioWare.Extract;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Graphics.MonoGame.Graphics;
 using JetBrains.Annotations;

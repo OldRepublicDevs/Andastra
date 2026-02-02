@@ -6,12 +6,12 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using BioWare.NET.Extract.Capsule;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Resource.Formats.LIP;
-using BioWare.NET.Resource.Formats.SSF;
-using BioWare.NET.Resource.Formats.TLK;
-using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.Extract.Capsule;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.LIP;
+using BioWare.Resource.Formats.SSF;
+using BioWare.Resource.Formats.TLK;
+using BioWare.Resource.Formats.TwoDA;
 using KotorDiff.Diff;
 using JetBrains.Annotations;
 

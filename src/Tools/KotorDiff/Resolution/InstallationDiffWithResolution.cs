@@ -6,12 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.TSLPatcher.Mods;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.TSLPatcher.Mods;
 using KotorDiff.Diff;
-using BioWare.NET.TSLPatcher;
+using BioWare.TSLPatcher;
 using JetBrains.Annotations;
 
 namespace KotorDiff.Resolution
@@ -137,9 +137,9 @@ namespace KotorDiff.Resolution
             Action<string> logFunc = null,
             bool compareHashes = true,
             ModificationsByType modificationsByType = null,
-            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null,
+            BioWare.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null,
             List<Installation> additionalInstalls = null,
-            Func<byte[], byte[], DiffContext, bool, ModificationsByType, Action<string>, BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter, bool?> diffDataFunc = null)
+            Func<byte[], byte[], DiffContext, bool, ModificationsByType, Action<string>, BioWare.TSLPatcher.IncrementalTSLPatchDataWriter, bool?> diffDataFunc = null)
         {
             if (logFunc == null)
             {
@@ -186,7 +186,7 @@ namespace KotorDiff.Resolution
             logFunc("Building resource indices for fast lookups...");
 
             // Build indices for all installations
-            var installIndices = new Dictionary<int, Dictionary<ResourceIdentifier, List<BioWare.NET.Extract.FileResource>>>();
+            var installIndices = new Dictionary<int, Dictionary<ResourceIdentifier, List<BioWare.Extract.FileResource>>>();
             var allIdentifiersSet = new HashSet<ResourceIdentifier>();
 
             for (int idx = 0; idx < allInstallations.Count; idx++)
@@ -806,8 +806,8 @@ namespace KotorDiff.Resolution
             Action<string> logFunc = null,
             bool compareHashes = true,
             ModificationsByType modificationsByType = null,
-            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null,
-            Func<byte[], byte[], DiffContext, bool, ModificationsByType, Action<string>, BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter, bool?> diffDataFunc = null)
+            BioWare.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null,
+            Func<byte[], byte[], DiffContext, bool, ModificationsByType, Action<string>, BioWare.TSLPatcher.IncrementalTSLPatchDataWriter, bool?> diffDataFunc = null)
         {
             if (logFunc == null)
             {
@@ -900,7 +900,7 @@ namespace KotorDiff.Resolution
             logFunc("Building resource indices for fast lookups...");
 
             // Build indices for all installations
-            var installIndices = new Dictionary<int, Dictionary<ResourceIdentifier, List<BioWare.NET.Extract.FileResource>>>();
+            var installIndices = new Dictionary<int, Dictionary<ResourceIdentifier, List<BioWare.Extract.FileResource>>>();
             var allIdentifiersSet = new HashSet<ResourceIdentifier>();
 
             for (int idx = 0; idx < allInstallations.Count; idx++)

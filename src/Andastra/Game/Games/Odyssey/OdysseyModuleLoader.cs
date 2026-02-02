@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BioWare.NET.Extract;
+using BioWare.Extract;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
 using Andastra.Runtime.Core.Interfaces;
@@ -81,7 +81,7 @@ namespace Andastra.Game.Games.Odyssey
             {
                 // Load entry area if not already loaded
                 RuntimeArea entryArea = _internalLoader.LoadArea(
-                    new BioWare.NET.Common.Module(moduleName, _installation),
+                    new BioWare.Common.Module(moduleName, _installation),
                     _currentRuntimeModule.EntryArea);
                 if (entryArea != null)
                 {
@@ -108,7 +108,7 @@ namespace Andastra.Game.Games.Odyssey
 
             try
             {
-                var module = new BioWare.NET.Common.Module(moduleName, _installation);
+                var module = new BioWare.Common.Module(moduleName, _installation);
                 return module.Info() != null;
             }
             catch

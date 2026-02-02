@@ -1,4 +1,4 @@
-using BioWare.NET;
+using BioWare;
 using Andastra.Game.Games.Common;
 
 namespace Andastra.Game.Games.Aurora.Profiles

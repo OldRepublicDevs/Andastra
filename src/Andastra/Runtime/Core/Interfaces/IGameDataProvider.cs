@@ -1,4 +1,4 @@
-using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.Resource.Formats.TwoDA;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Core.Interfaces

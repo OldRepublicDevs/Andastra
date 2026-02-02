@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.ERF;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.Common;
+using BioWare.Resource.Formats.ERF;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.GFF.Generics;
 using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
@@ -627,8 +627,8 @@ namespace Andastra.Game.Games.Odyssey
             // Read GFF version (bytes 4-7)
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Version validation @ 0x00707290
             // Original implementation: K1 uses "V1.0", K2 uses "V2.0"
-            // V3.2 is the modern GFF format used by BioWare.NET, but we accept it for compatibility
-            // Note: BioWare.NET GFFBinaryWriter writes V3.2, but we can still read it
+            // V3.2 is the modern GFF format used by BioWare, but we accept it for compatibility
+            // Note: BioWare GFFBinaryWriter writes V3.2, but we can still read it
             string version = Encoding.ASCII.GetString(nfoData, 4, 4);
             if (version != "V1.0" && version != "V2.0" && version != "V3.2")
             {
@@ -1236,11 +1236,11 @@ namespace Andastra.Game.Games.Odyssey
             // Use common helper to convert IPartyState to PartyState
             PartyState state = ConvertToPartyState(partyState);
 
-            // Use BioWare.NET GFF writer
+            // Use BioWare GFF writer
             // Original creates GFF with "PT  " signature and "V2.0" version
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057bd70 @ 0x0057bd70 creates GFF with "PT  " signature
             // Located via string reference: "PARTYTABLE" @ 0x007c1910
-            // Note: BioWare.NET GFFBinaryWriter always writes "V3.2" version, but signature is correct
+            // Note: BioWare GFFBinaryWriter always writes "V3.2" version, but signature is correct
             var gff = new GFF(GFFContent.PT);
             var root = gff.Root;
 
@@ -1508,14 +1508,14 @@ namespace Andastra.Game.Games.Odyssey
             // partytable.2da structure: Row label is ResRef, row index is member ID (0-11 for K2, 0-8 for K1)
             if (_gameDataManager != null)
             {
-                BioWare.NET.Resource.Formats.TwoDA.TwoDA partyTable = _gameDataManager.GetTable("partytable");
+                BioWare.Resource.Formats.TwoDA.TwoDA partyTable = _gameDataManager.GetTable("partytable");
                 if (partyTable != null)
                 {
                     // Search partytable.2da for matching ResRef
                     // Row index in partytable.2da corresponds to member ID
                     for (int i = 0; i < partyTable.GetHeight(); i++)
                     {
-                        BioWare.NET.Resource.Formats.TwoDA.TwoDARow row = partyTable.GetRow(i);
+                        BioWare.Resource.Formats.TwoDA.TwoDARow row = partyTable.GetRow(i);
                         string rowLabel = row.Label();
 
                         if (string.IsNullOrEmpty(rowLabel))
@@ -1651,10 +1651,10 @@ namespace Andastra.Game.Games.Odyssey
             // CRITICAL: K1 and K2 have different NPCs for the same member IDs, so partytable.2da is REQUIRED
             if (_gameDataManager != null)
             {
-                BioWare.NET.Resource.Formats.TwoDA.TwoDA partyTable = _gameDataManager.GetTable("partytable");
+                BioWare.Resource.Formats.TwoDA.TwoDA partyTable = _gameDataManager.GetTable("partytable");
                 if (partyTable != null && memberIdInt >= 0 && memberIdInt < partyTable.GetHeight())
                 {
-                    BioWare.NET.Resource.Formats.TwoDA.TwoDARow row = partyTable.GetRow(memberIdInt);
+                    BioWare.Resource.Formats.TwoDA.TwoDARow row = partyTable.GetRow(memberIdInt);
                     string rowLabel = row.Label();
                     if (!string.IsNullOrEmpty(rowLabel))
                     {
@@ -4447,7 +4447,7 @@ namespace Andastra.Game.Games.Odyssey
 
             // Get parsing Module for resource loading
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module resources (UTC, UTP, etc.) are loaded from module archives
-            BioWare.NET.Common.Module parsingModule = GetParsingModuleFromRuntimeModule(runtimeModule);
+            BioWare.Common.Module parsingModule = GetParsingModuleFromRuntimeModule(runtimeModule);
             if (parsingModule == null)
             {
                 System.Diagnostics.Debug.WriteLine("[OdysseySaveSerializer] SpawnDynamicEntities: Cannot spawn entities - parsing module not available");
@@ -4620,7 +4620,7 @@ namespace Andastra.Game.Games.Odyssey
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module resources are accessed via parsing Module
         /// Runtime Module may contain reference to parsing Module for resource loading
         /// </remarks>
-        private BioWare.NET.Common.Module GetParsingModuleFromRuntimeModule(RuntimeIModule runtimeModule)
+        private BioWare.Common.Module GetParsingModuleFromRuntimeModule(RuntimeIModule runtimeModule)
         {
             if (runtimeModule == null)
             {
@@ -4633,14 +4633,14 @@ namespace Andastra.Game.Games.Odyssey
             var parsingModuleProperty = runtimeModule.GetType().GetProperty("ParsingModule");
             if (parsingModuleProperty != null)
             {
-                return parsingModuleProperty.GetValue(runtimeModule) as BioWare.NET.Common.Module;
+                return parsingModuleProperty.GetValue(runtimeModule) as BioWare.Common.Module;
             }
 
             // Try to get via GetParsingModule method if available
             var getParsingModuleMethod = runtimeModule.GetType().GetMethod("GetParsingModule");
             if (getParsingModuleMethod != null)
             {
-                return getParsingModuleMethod.Invoke(runtimeModule, null) as BioWare.NET.Common.Module;
+                return getParsingModuleMethod.Invoke(runtimeModule, null) as BioWare.Common.Module;
             }
 
             // Try to access ModuleLoader if available
@@ -4654,7 +4654,7 @@ namespace Andastra.Game.Games.Odyssey
                     var getParsingModuleMethod2 = moduleLoader.GetType().GetMethod("GetParsingModule");
                     if (getParsingModuleMethod2 != null)
                     {
-                        return getParsingModuleMethod2.Invoke(moduleLoader, null) as BioWare.NET.Common.Module;
+                        return getParsingModuleMethod2.Invoke(moduleLoader, null) as BioWare.Common.Module;
                     }
                 }
             }
@@ -4669,7 +4669,7 @@ namespace Andastra.Game.Games.Odyssey
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Template resource types determine ObjectType
         /// UTC = Creature, UTP = Placeable, UTD = Door, UTT = Trigger, UTW = Waypoint, UTS = Sound
         /// </remarks>
-        private Runtime.Core.Enums.ObjectType InferObjectTypeFromBlueprint(string blueprintResRef, BioWare.NET.Common.Module module)
+        private Runtime.Core.Enums.ObjectType InferObjectTypeFromBlueprint(string blueprintResRef, BioWare.Common.Module module)
         {
             if (string.IsNullOrEmpty(blueprintResRef) || module == null)
             {
@@ -4743,7 +4743,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EntityFactory creates entities from templates
         /// </remarks>
-        private IEntity CreateEntityFromTemplate(Loading.EntityFactory entityFactory, BioWare.NET.Common.Module module, string templateResRef, Runtime.Core.Enums.ObjectType objectType, System.Numerics.Vector3 position, float facing)
+        private IEntity CreateEntityFromTemplate(Loading.EntityFactory entityFactory, BioWare.Common.Module module, string templateResRef, Runtime.Core.Enums.ObjectType objectType, System.Numerics.Vector3 position, float facing)
         {
             if (entityFactory == null || module == null || string.IsNullOrEmpty(templateResRef))
             {
@@ -4779,7 +4779,7 @@ namespace Andastra.Game.Games.Odyssey
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Template data is loaded into entity after creation
         /// Used when entity is created with specific ObjectId (not via EntityFactory)
         /// </remarks>
-        private void LoadTemplateIntoEntity(IEntity entity, BioWare.NET.Common.Module module, string templateResRef, Runtime.Core.Enums.ObjectType objectType)
+        private void LoadTemplateIntoEntity(IEntity entity, BioWare.Common.Module module, string templateResRef, Runtime.Core.Enums.ObjectType objectType)
         {
             if (entity == null || module == null || string.IsNullOrEmpty(templateResRef))
             {

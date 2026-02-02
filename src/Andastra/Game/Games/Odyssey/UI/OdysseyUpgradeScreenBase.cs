@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Extract;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.GFF.Generics;
-using BioWare.NET.Resource.Formats.GFF.Generics.GUI;
+using BioWare;
+using BioWare.Common;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.TwoDA;
+using BioWare.Extract;
+using BioWare.Resource;
+using BioWare.Resource.Formats.GFF.Generics;
+using BioWare.Resource.Formats.GFF.Generics.GUI;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
@@ -18,7 +18,7 @@ using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Common.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using UTI = BioWare.NET.Resource.Formats.GFF.Generics.UTI.UTI;
+using UTI = BioWare.Resource.Formats.GFF.Generics.UTI.UTI;
 
 namespace Andastra.Game.Games.Odyssey.UI
 {
@@ -39,7 +39,7 @@ namespace Andastra.Game.Games.Odyssey.UI
     public abstract class OdysseyUpgradeScreenBase : BaseUpgradeScreen
     {
         // GUI management
-        private BioWare.NET.Resource.Formats.GFF.Generics.GUI.GUI _loadedGui;
+        private BioWare.Resource.Formats.GFF.Generics.GUI.GUI _loadedGui;
         private string _guiName;
         private Dictionary<string, GUIControl> _controlMap;
         private Dictionary<string, GUIButton> _buttonMap;
@@ -994,7 +994,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// Gets the loaded GUI for external rendering.
         /// </summary>
         /// <returns>The loaded GUI, or null if not loaded.</returns>
-        public BioWare.NET.Resource.Formats.GFF.Generics.GUI.GUI GetLoadedGui()
+        public BioWare.Resource.Formats.GFF.Generics.GUI.GUI GetLoadedGui()
         {
             return _loadedGui;
         }

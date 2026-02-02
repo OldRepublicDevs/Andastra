@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-using BioWare.NET.Extract;
+using BioWare.Extract;
 using Andastra.Runtime.Graphics;
 using JetBrains.Annotations;
 

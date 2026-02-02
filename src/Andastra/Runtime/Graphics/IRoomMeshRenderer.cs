@@ -1,6 +1,6 @@
 using System;
-using BioWare.NET;
-using BioWare.NET.Resource.Formats.MDLData;
+using BioWare;
+using BioWare.Resource.Formats.MDLData;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Graphics

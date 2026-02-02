@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using BioWare.NET.Resource.Formats.WAV;
+using BioWare.Resource.Formats.WAV;
 
 namespace Andastra.Game.Graphics.MonoGame.Audio
 {

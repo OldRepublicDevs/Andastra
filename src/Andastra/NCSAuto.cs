@@ -4,17 +4,17 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.NCS;
-using BioWare.NET.Resource.Formats.NCS.Compiler;
-using BioWare.NET.Resource.Formats.NCS.Decomp;
-using BioWare.NET.Resource.Formats.NCS.Decomp.Utils;
-using BioWare.NET.Resource.Formats.NCS.Optimizers;
-using BioWare.NET.Common.Script;
+using BioWare.Common;
+using BioWare.Resource.Formats.NCS;
+using BioWare.Resource.Formats.NCS.Compiler;
+using BioWare.Resource.Formats.NCS.Decomp;
+using BioWare.Resource.Formats.NCS.Decomp.Utils;
+using BioWare.Resource.Formats.NCS.Optimizers;
+using BioWare.Common.Script;
 using Andastra.Script;
 using JetBrains.Annotations;
-using NcsFile = BioWare.NET.Resource.Formats.NCS.Decomp.NcsFile;
-using FileDecompiler = BioWare.NET.Resource.Formats.NCS.Decomp.FileDecompiler;
+using NcsFile = BioWare.Resource.Formats.NCS.Decomp.NcsFile;
+using FileDecompiler = BioWare.Resource.Formats.NCS.Decomp.FileDecompiler;
 
 namespace Andastra
 {

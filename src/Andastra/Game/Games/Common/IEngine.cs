@@ -8,31 +8,6 @@ using Andastra.Game.Games.Common;
 
 namespace Andastra.Game.Games.Engines.Common
 {
-    /// <summary>
-    /// Engine family enumeration for grouping related engines.
-    /// </summary>
-    public enum EngineFamily
-    {
-        /// <summary>
-        /// Aurora Engine (NWN, NWN2)
-        /// </summary>
-        Aurora,
-
-        /// <summary>
-        /// Odyssey Engine (KOTOR, KOTOR2, Jade Empire)
-        /// </summary>
-        Odyssey,
-
-        /// <summary>
-        /// Eclipse Engine (Dragon Age Origins, Dragon Age 2)
-        /// </summary>
-        Eclipse,
-
-        /// <summary>
-        /// Unknown or unsupported engine
-        /// </summary>
-        Unknown
-    }
 
     /// <summary>
     /// Base interface for all BioWare engine implementations.

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Extract;
+using BioWare.Resource.Formats.TwoDA;
+using BioWare.Extract;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Engines.Odyssey.Data
@@ -61,7 +61,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             // Load from installation
             try
             {
-                ResourceResult resource = _installation.Resources.LookupResource(tableName, BioWare.NET.Common.ResourceType.TwoDA);
+                ResourceResult resource = _installation.Resources.LookupResource(tableName, BioWare.Common.ResourceType.TwoDA);
                 if (resource == null || resource.Data == null)
                 {
                     return null;

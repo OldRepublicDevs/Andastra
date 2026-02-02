@@ -1,9 +1,9 @@
-using BioWare.NET.Common;
+using BioWare.Common;
 using System;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using BioWare.NET;
+using BioWare;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 

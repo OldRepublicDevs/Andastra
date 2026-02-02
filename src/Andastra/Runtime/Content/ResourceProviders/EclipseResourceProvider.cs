@@ -4,11 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.PCC;
-using BioWare.NET.Resource.Formats.RIM;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Common;
+using BioWare.Resource.Formats.PCC;
+using BioWare.Resource.Formats.RIM;
+using BioWare.Common;
+using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 
 namespace Andastra.Runtime.Content.ResourceProviders
@@ -405,7 +405,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                     var resources = new List<ResourceIdentifier>();
                     try
                     {
-                        var rim = BioWare.NET.Resource.Formats.RIM.RIMAuto.ReadRim(rimPath);
+                        var rim = BioWare.Resource.Formats.RIM.RIMAuto.ReadRim(rimPath);
                         foreach (var resource in rim)
                         {
                             if (resource.ResType == type)
@@ -541,7 +541,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                     {
                         try
                         {
-                            var pcc = BioWare.NET.Resource.Formats.PCC.PCCAuto.ReadPcc(packageFile);
+                            var pcc = BioWare.Resource.Formats.PCC.PCCAuto.ReadPcc(packageFile);
                             byte[] resourceData = pcc.Get(id.ResName, id.ResType);
                             if (resourceData != null)
                             {
@@ -592,7 +592,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                 {
                     try
                     {
-                        var rim = BioWare.NET.Resource.Formats.RIM.RIMAuto.ReadRim(rimPath);
+                        var rim = BioWare.Resource.Formats.RIM.RIMAuto.ReadRim(rimPath);
                         byte[] resourceData = rim.Get(id.ResName, id.ResType);
                         if (resourceData != null)
                         {
@@ -661,7 +661,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                         {
                             try
                             {
-                                var pcc = BioWare.NET.Resource.Formats.PCC.PCCAuto.ReadPcc(packageFile);
+                                var pcc = BioWare.Resource.Formats.PCC.PCCAuto.ReadPcc(packageFile);
                                 byte[] resourceData = pcc.Get(id.ResName, id.ResType);
                                 if (resourceData != null)
                                 {
@@ -681,7 +681,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                     {
                         try
                         {
-                            var pcc = BioWare.NET.Resource.Formats.PCC.PCCAuto.ReadPcc(packageFile2);
+                            var pcc = BioWare.Resource.Formats.PCC.PCCAuto.ReadPcc(packageFile2);
                             byte[] resourceData = pcc.Get(id.ResName, id.ResType);
                             if (resourceData != null)
                             {
@@ -710,7 +710,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                     {
                         try
                         {
-                            var pcc = BioWare.NET.Resource.Formats.PCC.PCCAuto.ReadPcc(packageFile);
+                            var pcc = BioWare.Resource.Formats.PCC.PCCAuto.ReadPcc(packageFile);
                             byte[] resourceData = pcc.Get(id.ResName, id.ResType);
                             if (resourceData != null)
                             {
@@ -765,7 +765,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                     {
                         try
                         {
-                            var pcc = BioWare.NET.Resource.Formats.PCC.PCCAuto.ReadPcc(packageFile);
+                            var pcc = BioWare.Resource.Formats.PCC.PCCAuto.ReadPcc(packageFile);
                             byte[] resourceData = pcc.Get(id.ResName, id.ResType);
                             if (resourceData != null)
                             {
@@ -1069,7 +1069,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                 {
                     try
                     {
-                        var rim = BioWare.NET.Resource.Formats.RIM.RIMAuto.ReadRim(rimPath);
+                        var rim = BioWare.Resource.Formats.RIM.RIMAuto.ReadRim(rimPath);
                         // Check if resource exists in RIM file before returning path
                         // This matches the behavior of LookupInRim and ensures we only
                         // return paths for RIM files that actually contain the resource
@@ -1137,7 +1137,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
         /// Creates a ResourceIdentifier internally and delegates to GetResourceBytes(ResourceIdentifier).
         /// Based on Eclipse Engine resource loading system (Dragon Age: Origins/2).
         /// </remarks>
-        public byte[] LoadResource(BioWare.NET.Common.ResRef resRef, ResourceType resourceType)
+        public byte[] LoadResource(BioWare.Common.ResRef resRef, ResourceType resourceType)
         {
             if (resRef == null || resRef.IsBlank() || resourceType == null || resourceType.IsInvalid)
             {

@@ -1,26 +1,26 @@
-using BioWare.NET.Common;
+using BioWare.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using BioWare.NET;
-using BioWare.NET.Extract;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Resource.Formats.GFF.Generics;
-using BioWare.NET.Resource.Formats.GFF.Generics.ARE;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare;
+using BioWare.Extract;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.TwoDA;
+using BioWare.Resource.Formats.GFF.Generics;
+using BioWare.Resource.Formats.GFF.Generics.ARE;
+using BioWare.Common;
+using BioWare.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using HolocronToolset.Widgets;
 using HolocronToolset.Widgets.Edit;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
-using Game = BioWare.NET.Common.BioWareGame;
-using GFFAuto = BioWare.NET.Resource.Formats.GFF.GFFAuto;
+using Game = BioWare.Common.BioWareGame;
+using GFFAuto = BioWare.Resource.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.Editors
 {

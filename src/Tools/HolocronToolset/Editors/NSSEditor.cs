@@ -10,11 +10,11 @@ using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Tools;
-using BioWare.NET.Common.Script;
-using BioWare.NET.Extract.Capsule;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Tools;
+using BioWare.Common.Script;
+using BioWare.Extract.Capsule;
 using HolocronToolset.Common;
 using HolocronToolset.Common.Widgets;
 using HolocronToolset.Data;
@@ -24,7 +24,7 @@ using HolocronToolset.Utils;
 using System.Text.Json;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
-using BioWare.NET.Extract;
+using BioWare.Extract;
 
 namespace HolocronToolset.Editors
 {

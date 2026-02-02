@@ -6,11 +6,11 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using BioWare.NET.Resource.Formats.MDLData;
-using BioWare.NET.Resource.Formats.WAV;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Resource.Formats.MDLData;
+using BioWare.Resource.Formats.WAV;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Audio;
 using Andastra.Runtime.Core.Interfaces;
@@ -557,8 +557,8 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
                     return null;
                 }
 
-                // Use BioWare.NET MDL parser
-                return BioWare.NET.Resource.Formats.MDL.MDLAuto.ReadMdl(result.Data);
+                // Use BioWare MDL parser
+                return BioWare.Resource.Formats.MDL.MDLAuto.ReadMdl(result.Data);
             }
             catch (Exception ex)
             {

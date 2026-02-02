@@ -1,6 +1,6 @@
 using System;
 using System.Numerics;
-using BioWare.NET.Extract;
+using BioWare.Extract;
 using Andastra.Game.Graphics.MonoGame.Backends;
 using Andastra.Game.Graphics.MonoGame.Enums;
 using Andastra.Game.Graphics.MonoGame.Interfaces;

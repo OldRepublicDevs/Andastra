@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Avalonia.Input;
-using BioWare.NET.Common;
-using KotorColor = BioWare.NET.Common.Color;
+using BioWare.Common;
+using KotorColor = BioWare.Common.Color;
 
 namespace HolocronToolset.Data
 {

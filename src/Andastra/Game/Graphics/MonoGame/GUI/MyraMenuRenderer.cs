@@ -1,5 +1,5 @@
 using System;
-using BioWare.NET.Common;
+using BioWare.Common;
 using Andastra.Runtime.Graphics.Common.GUI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

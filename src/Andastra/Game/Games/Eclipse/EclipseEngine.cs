@@ -1,6 +1,6 @@
 using System;
-using BioWare.NET.Common;
-using BioWare.NET.Extract;
+using BioWare.Common;
+using BioWare.Extract;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
 using Andastra.Runtime.Core.Entities;

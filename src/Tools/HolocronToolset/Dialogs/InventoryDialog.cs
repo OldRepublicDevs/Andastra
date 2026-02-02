@@ -9,13 +9,13 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using BioWare.NET.Common;
-using BioWare.NET.Extract.Capsule;
-using BioWare.NET.Resource.Formats.GFF.Generics.UTI;
+using BioWare.Common;
+using BioWare.Extract.Capsule;
+using BioWare.Resource.Formats.GFF.Generics.UTI;
 using HolocronToolset.Data;
 using System.ComponentModel;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Common;
+using BioWare.Resource;
 
 namespace HolocronToolset.Dialogs
 {

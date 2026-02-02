@@ -7,7 +7,7 @@ namespace Andastra.Runtime.Core.Navigation
 {
     /// <summary>
     /// Navigation mesh for pathfinding and collision detection.
-    /// Wraps BWM data from BioWare.NET with A* pathfinding on walkmesh adjacency.
+    /// Wraps BWM data from BioWare with A* pathfinding on walkmesh adjacency.
     /// </summary>
     /// <remarks>
     /// <para>

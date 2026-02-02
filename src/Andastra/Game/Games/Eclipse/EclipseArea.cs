@@ -5,19 +5,19 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.BWM;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Resource.Formats.GFF.Generics;
-using BioWare.NET.Resource.Formats.LYT;
-using BioWare.NET.Resource.Formats.MDL;
-using BioWare.NET.Resource.Formats.MDLData;
-using BioWare.NET.Resource.Formats.TPC;
-using BioWare.NET.Tools;
+using BioWare;
+using BioWare.Common;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Resource.Formats.BWM;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.GFF.Generics;
+using BioWare.Resource.Formats.LYT;
+using BioWare.Resource.Formats.MDL;
+using BioWare.Resource.Formats.MDLData;
+using BioWare.Resource.Formats.TPC;
+using BioWare.Tools;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Eclipse;
 using Andastra.Game.Games.Eclipse.Environmental;
@@ -66,9 +66,9 @@ using MonoGameRectangle = Andastra.Game.Graphics.MonoGame.Interfaces.Rectangle;
 using MonoGameTexture2D = Andastra.Game.Graphics.MonoGame.Graphics.MonoGameTexture2D;
 using MonoGameViewport = Andastra.Game.Graphics.MonoGame.Interfaces.Viewport;
 using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
-using ParsingColor = BioWare.NET.Common.Color;
-using ParsingResourceType = BioWare.NET.Common.ResourceType;
-using ParsingSearchLocation = BioWare.NET.Extract.SearchLocation;
+using ParsingColor = BioWare.Common.Color;
+using ParsingResourceType = BioWare.Common.ResourceType;
+using ParsingSearchLocation = BioWare.Extract.SearchLocation;
 using XnaBlendState = Microsoft.Xna.Framework.Graphics.BlendState;
 using XnaColor = Microsoft.Xna.Framework.Color;
 // Type aliases to resolve ambiguity between XNA and System.Numerics types
@@ -163,7 +163,7 @@ namespace Andastra.Game.Games.Eclipse
         private ShaderCache _shaderCache;
 
         // Module reference for loading WOK walkmesh files (optional)
-        private BioWare.NET.Common.Module _module;
+        private BioWare.Common.Module _module;
 
         // Resource provider for loading MDL/MDX and other resources (optional)
         // Based on daorigins.exe/DragonAge2.exe: Eclipse uses IGameResourceProvider for resource loading
@@ -400,7 +400,7 @@ namespace Andastra.Game.Games.Eclipse
         /// - Required for full walkmesh functionality when rooms are available
         /// - Can be set later via SetModule() if not available at construction time
         /// </remarks>
-        public EclipseArea(string resRef, byte[] areaData, BioWare.NET.Common.Module module = null)
+        public EclipseArea(string resRef, byte[] areaData, BioWare.Common.Module module = null)
         {
             _resRef = resRef ?? throw new ArgumentNullException(nameof(resRef));
             _tag = resRef; // Default tag to resref
@@ -449,7 +449,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Call this method if Module was not available at construction time.
         /// If rooms are already set, this will trigger walkmesh loading.
         /// </remarks>
-        public void SetModule(BioWare.NET.Common.Module module)
+        public void SetModule(BioWare.Common.Module module)
         {
             _module = module;
             // If rooms are already set, try to load walkmesh now
@@ -1111,7 +1111,7 @@ namespace Andastra.Game.Games.Eclipse
             // ResRef field - based on ARE format specification
             if (!string.IsNullOrEmpty(_resRef))
             {
-                BioWare.NET.Common.ResRef resRefObj = BioWare.NET.Common.ResRef.FromString(_resRef);
+                BioWare.Common.ResRef resRefObj = BioWare.Common.ResRef.FromString(_resRef);
                 root.SetResRef("ResRef", resRefObj);
             }
 
@@ -1139,10 +1139,10 @@ namespace Andastra.Game.Games.Eclipse
 
             // Script hooks - set to empty ResRefs if not specified
             // Based on ARE format specification
-            root.SetResRef("OnEnter", BioWare.NET.Common.ResRef.FromBlank());
-            root.SetResRef("OnExit", BioWare.NET.Common.ResRef.FromBlank());
-            root.SetResRef("OnHeartbeat", BioWare.NET.Common.ResRef.FromBlank());
-            root.SetResRef("OnUserDefined", BioWare.NET.Common.ResRef.FromBlank());
+            root.SetResRef("OnEnter", BioWare.Common.ResRef.FromBlank());
+            root.SetResRef("OnExit", BioWare.Common.ResRef.FromBlank());
+            root.SetResRef("OnHeartbeat", BioWare.Common.ResRef.FromBlank());
+            root.SetResRef("OnUserDefined", BioWare.Common.ResRef.FromBlank());
 
             // Lighting defaults - based on ARE format specification
             // Eclipse has advanced lighting system, but we save defaults for compatibility
@@ -1202,7 +1202,7 @@ namespace Andastra.Game.Games.Eclipse
 
             // Grass properties - based on ARE format specification
             // Eclipse may use these for environmental effects
-            root.SetResRef("Grass_TexName", BioWare.NET.Common.ResRef.FromBlank());
+            root.SetResRef("Grass_TexName", BioWare.Common.ResRef.FromBlank());
             root.SetSingle("Grass_Density", 0.0f);
             root.SetSingle("Grass_QuadSize", 0.0f);
             root.SetSingle("Grass_Prob_LL", 0.0f);
@@ -1217,7 +1217,7 @@ namespace Andastra.Game.Games.Eclipse
             // Default value: 0.2, but using 0.0 for Eclipse compatibility
             root.SetSingle("AlphaTest", 0.0f);
             root.SetInt32("CameraStyle", 0);
-            root.SetResRef("DefaultEnvMap", BioWare.NET.Common.ResRef.FromBlank());
+            root.SetResRef("DefaultEnvMap", BioWare.Common.ResRef.FromBlank());
             root.SetUInt8("DisableTransit", 0);
             root.SetUInt8("StealthXPEnabled", 0);
             root.SetUInt32("StealthXPLoss", 0);
@@ -2126,8 +2126,8 @@ namespace Andastra.Game.Games.Eclipse
             {
                 // Try to load LYT file using area ResRef
                 // Based on daorigins.exe/DragonAge2.exe: LYT files use same ResRef as ARE files
-                BioWare.NET.Common.ResourceType lytResourceType = BioWare.NET.Common.ResourceType.LYT;
-                BioWare.NET.Resource.ResourceIdentifier lytResourceId = new BioWare.NET.Resource.ResourceIdentifier(_resRef, lytResourceType);
+                BioWare.Common.ResourceType lytResourceType = BioWare.Common.ResourceType.LYT;
+                BioWare.Resource.ResourceIdentifier lytResourceId = new BioWare.Resource.ResourceIdentifier(_resRef, lytResourceType);
 
                 // Load LYT file data
                 byte[] lytData = _resourceProvider.GetResourceBytes(lytResourceId);
@@ -2139,11 +2139,11 @@ namespace Andastra.Game.Games.Eclipse
 
                 // Parse LYT file
                 // Based on LYT format: Try ASCII format first, then binary if needed
-                BioWare.NET.Resource.Formats.LYT.LYT lyt = null;
+                BioWare.Resource.Formats.LYT.LYT lyt = null;
                 try
                 {
                     // Try ASCII format first using LYTAuto helper
-                    lyt = BioWare.NET.Resource.Formats.LYT.LYTAuto.ReadLyt(lytData);
+                    lyt = BioWare.Resource.Formats.LYT.LYTAuto.ReadLyt(lytData);
                 }
                 catch
                 {
@@ -2171,7 +2171,7 @@ namespace Andastra.Game.Games.Eclipse
                 // Based on LYT format: Tracks are swoop track booster positions
                 if (lyt.Tracks != null)
                 {
-                    foreach (BioWare.NET.Resource.Formats.LYT.LYTTrack track in lyt.Tracks)
+                    foreach (BioWare.Resource.Formats.LYT.LYTTrack track in lyt.Tracks)
                     {
                         if (track != null && track.Model != null && !string.IsNullOrEmpty(track.Model.ToString()))
                         {
@@ -2190,7 +2190,7 @@ namespace Andastra.Game.Games.Eclipse
                 // Based on LYT format: Obstacles are swoop track obstacle positions
                 if (lyt.Obstacles != null)
                 {
-                    foreach (BioWare.NET.Resource.Formats.LYT.LYTObstacle obstacle in lyt.Obstacles)
+                    foreach (BioWare.Resource.Formats.LYT.LYTObstacle obstacle in lyt.Obstacles)
                     {
                         if (obstacle != null && obstacle.Model != null && !string.IsNullOrEmpty(obstacle.Model.ToString()))
                         {
@@ -8465,7 +8465,7 @@ namespace Andastra.Game.Games.Eclipse
                     // Based on daorigins.exe/DragonAge2.exe: MDL files use binary format (similar to Odyssey)
                     // MDLAuto.ReadMdl can parse both binary MDL (with MDX data) and ASCII MDL formats
                     // If MDX is null, MDLAuto.ReadMdl will attempt to parse as ASCII MDL
-                    BioWare.NET.Resource.Formats.MDLData.MDL mdl = null;
+                    BioWare.Resource.Formats.MDLData.MDL mdl = null;
                     try
                     {
                         mdl = MDLAuto.ReadMdl(mdlData, sourceExt: mdxData);
@@ -13753,7 +13753,7 @@ technique ColorGrading
         /// <remarks>
         /// Based on daorigins.exe/DragonAge2.exe: MDL geometry extraction from all mesh nodes.
         /// </remarks>
-        private void ExtractGeometryFromMDL(BioWare.NET.Resource.Formats.MDLData.MDL mdl, List<Vector3> vertices, List<int> indices)
+        private void ExtractGeometryFromMDL(BioWare.Resource.Formats.MDLData.MDL mdl, List<Vector3> vertices, List<int> indices)
         {
             if (mdl == null || mdl.Root == null)
             {
@@ -13773,7 +13773,7 @@ technique ColorGrading
         /// <remarks>
         /// Based on daorigins.exe/DragonAge2.exe: Recursive geometry extraction from MDL node hierarchy.
         /// </remarks>
-        private void ExtractGeometryFromNode(BioWare.NET.Resource.Formats.MDLData.MDLNode node, List<Vector3> vertices, List<int> indices)
+        private void ExtractGeometryFromNode(BioWare.Resource.Formats.MDLData.MDLNode node, List<Vector3> vertices, List<int> indices)
         {
             if (node == null)
             {

@@ -48,7 +48,7 @@ namespace Andastra.Game.Games.Odyssey.Systems
         private readonly Loading.EntityFactory _entityFactory;
         private readonly Loading.ModuleLoader _moduleLoader;
         private readonly Func<IEntity, bool> _isPlayerCheck;
-        private readonly Func<BioWare.NET.Common.Module> _getCurrentModule;
+        private readonly Func<BioWare.Common.Module> _getCurrentModule;
 
         public EncounterSystem(IWorld world, FactionManager factionManager)
         {
@@ -59,7 +59,7 @@ namespace Andastra.Game.Games.Odyssey.Systems
             _entityFactory = new Loading.EntityFactory();
         }
 
-        public EncounterSystem(IWorld world, FactionManager factionManager, Action<IEntity, ScriptEvent, IEntity> scriptExecutor, Loading.ModuleLoader moduleLoader, Func<IEntity, bool> isPlayerCheck = null, Func<BioWare.NET.Common.Module> getCurrentModule = null)
+        public EncounterSystem(IWorld world, FactionManager factionManager, Action<IEntity, ScriptEvent, IEntity> scriptExecutor, Loading.ModuleLoader moduleLoader, Func<IEntity, bool> isPlayerCheck = null, Func<BioWare.Common.Module> getCurrentModule = null)
             : this(world, factionManager)
         {
             _scriptExecutor = scriptExecutor;
@@ -320,7 +320,7 @@ namespace Andastra.Game.Games.Odyssey.Systems
                 IEntity creature = null;
                 if (_moduleLoader != null && _getCurrentModule != null)
                 {
-                    BioWare.NET.Common.Module module = _getCurrentModule();
+                    BioWare.Common.Module module = _getCurrentModule();
                     if (module != null)
                     {
                         creature = _entityFactory.CreateCreatureFromTemplate(

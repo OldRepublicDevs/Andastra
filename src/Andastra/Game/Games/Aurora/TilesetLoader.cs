@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.BWM;
-using BioWare.NET.Resource.Formats.SET;
+using BioWare;
+using BioWare.Common;
+using BioWare.Resource.Formats.BWM;
+using BioWare.Resource.Formats.SET;
 using JetBrains.Annotations;
 
 namespace Andastra.Game.Games.Aurora

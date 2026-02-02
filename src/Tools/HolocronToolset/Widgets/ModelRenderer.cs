@@ -6,11 +6,11 @@ using Andastra.Game.Stride.Graphics;
 using Andastra.Runtime.Graphics;
 using Avalonia.Controls;
 using Avalonia.Media;
-using BioWare.NET.Resource.Formats.GFF.Generics.UTC;
-using BioWare.NET.Resource.Formats.MDL;
-using BioWare.NET.Resource.Formats.MDLData;
-using BioWare.NET.Resource.Formats.TPC;
-using ResourceType = BioWare.NET.Common.ResourceType;
+using BioWare.Resource.Formats.GFF.Generics.UTC;
+using BioWare.Resource.Formats.MDL;
+using BioWare.Resource.Formats.MDLData;
+using BioWare.Resource.Formats.TPC;
+using ResourceType = BioWare.Common.ResourceType;
 using HolocronToolset.Data;
 using JetBrains.Annotations;
 using StrideGraphics = Stride.Graphics;
@@ -352,7 +352,7 @@ namespace HolocronToolset.Widgets
 
                     // Get body model name from UTC using appearance.2da
                     // Matching PyKotor: Uses get_body_model() function to resolve model from UTC
-                    var (bodyModel, bodyTexture) = BioWare.NET.Tools.Creature.GetBodyModel(
+                    var (bodyModel, bodyTexture) = BioWare.Tools.Creature.GetBodyModel(
                         _creatureToLoad,
                         _installation.Installation);
 

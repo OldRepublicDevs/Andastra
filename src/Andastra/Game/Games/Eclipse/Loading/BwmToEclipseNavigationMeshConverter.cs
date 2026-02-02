@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using BioWare.NET.Resource.Formats.BWM;
+using BioWare.Resource.Formats.BWM;
 using Andastra.Game.Games.Eclipse;
 
 namespace Andastra.Game.Games.Eclipse.Loading
 {
     /// <summary>
-    /// Converts BioWare.NET BWM walkmesh data to EclipseNavigationMesh.
+    /// Converts BioWare BWM walkmesh data to EclipseNavigationMesh.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -172,9 +172,9 @@ namespace Andastra.Game.Games.Eclipse.Loading
     public static class BwmToEclipseNavigationMeshConverter
     {
         /// <summary>
-        /// Converts an BioWare.NET BWM to an EclipseNavigationMesh.
+        /// Converts an BioWare BWM to an EclipseNavigationMesh.
         /// </summary>
-        /// <param name="bwm">The source BWM data from BioWare.NET</param>
+        /// <param name="bwm">The source BWM data from BioWare</param>
         /// <returns>An EclipseNavigationMesh ready for pathfinding and collision</returns>
         public static EclipseNavigationMesh Convert(BWM bwm)
         {
@@ -228,7 +228,7 @@ namespace Andastra.Game.Games.Eclipse.Loading
         }
 
         /// <summary>
-        /// Converts an BioWare.NET BWM to EclipseNavigationMesh with a position offset.
+        /// Converts an BioWare BWM to EclipseNavigationMesh with a position offset.
         /// Used when placing room walkmeshes in the world.
         /// </summary>
         public static EclipseNavigationMesh ConvertWithOffset(BWM bwm, Vector3 offset)
@@ -486,7 +486,7 @@ namespace Andastra.Game.Games.Eclipse.Loading
 
         private static EclipseNavigationMesh.AabbNode BuildAabbTree(BWM bwm, Vector3[] vertices, int[] faces)
         {
-            // Use BioWare.NET's AABB generation
+            // Use BioWare's AABB generation
             List<BWMNodeAABB> aabbs = bwm.Aabbs();
             if (aabbs.Count == 0)
             {

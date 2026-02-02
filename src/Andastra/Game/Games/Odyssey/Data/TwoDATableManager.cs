@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Resource.Formats.TwoDA;
+using BioWare.Common;
+using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Game.Games.Odyssey.Profiles;
 using AppearanceData = Andastra.Game.Games.Odyssey.Data.GameDataManager.AppearanceData;
@@ -31,7 +31,7 @@ namespace Andastra.Game.Games.Odyssey.Data
     /// - Resource precedence: override → module → chitin (via IGameResourceProvider)
     /// - Table lookup: Uses row label (string) or row index (int) to access data
     /// - Column access: Column names are case-insensitive (e.g., "ModelA", "modela" both work)
-    /// - Based on BioWare.NET.Resource.Formats.TwoDA.TwoDA for parsing
+    /// - Based on BioWare.Resource.Formats.TwoDA.TwoDA for parsing
     /// </remarks>
     public class TwoDATableManager
     {
@@ -95,7 +95,7 @@ namespace Andastra.Game.Games.Odyssey.Data
                         data = memoryStream.ToArray();
                     }
 
-                    // Parse 2DA file using BioWare.NET
+                    // Parse 2DA file using BioWare
                     TwoDABinaryReader reader = new TwoDABinaryReader(data);
                     TwoDA table = reader.Load();
 

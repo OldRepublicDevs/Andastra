@@ -8,7 +8,7 @@ using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Module;
-using Andastra.Runtime.Core.Perception;c
+using Andastra.Runtime.Core.Perception;
 using Andastra.Runtime.Core.Templates;
 using Andastra.Runtime.Core.Triggers;
 
@@ -74,7 +74,7 @@ namespace Andastra.Runtime.Core.Entities
         // Module ObjectId: 0x7F000002 (special object ID for module, between OBJECT_SELF 0x7F000001 and area IDs 0x7F000010+)
         // Common across all engines: Odyssey, Aurora, Eclipse, Infinity all use fixed module object ID
         public const uint ModuleObjectId = 0x7F000002;
-        private Runtime.Core.Interfaces.IModule _registeredModule;
+        private Interfaces.IModule _registeredModule;
 
         public World(ITimeManager timeManager)
         {
@@ -96,21 +96,20 @@ namespace Andastra.Runtime.Core.Entities
             EffectSystem = new EffectSystem(this);
             PerceptionSystem = new PerceptionSystem(this);
             TriggerSystem = new TriggerSystem(this, (entity, scriptEvent, target) => EventBus.FireScriptEvent(entity, scriptEvent, target));
-            AIController = new AIControllerSystem(
+            AIController = new AI.AIController(
                 this,
-                EngineFamily.Unknown,
-                (entity, scriptEvent, target) =>
-                {
-                    EventBus?.FireScriptEvent(entity, scriptEvent, target);
-                });
+                CombatSystem
+            );
             AnimationSystem = new AnimationSystem(this);
             AppearAnimationFadeSystem = new AppearAnimationFadeSystem(this);
             // ModuleTransitionSystem will be initialized when SaveSystem and ModuleLoader are available
             ModuleTransitionSystem = null;
         }
 
+
+
         public IArea CurrentArea { get; set; }
-        public Runtime.Core.Interfaces.IModule CurrentModule { get; set; }
+        public Interfaces.IModule CurrentModule { get; set; }
 
         /// <summary>
         /// Sets the current area.
@@ -362,7 +361,7 @@ namespace Andastra.Runtime.Core.Entities
         public EffectSystem EffectSystem { get; }
         public PerceptionSystem PerceptionSystem { get; }
         public TriggerSystem TriggerSystem { get; }
-        public AIControllerSystem AIController { get; }
+        public AI.AIController AIController { get; }
         public AnimationSystem AnimationSystem { get; }
         public AppearAnimationFadeSystem AppearAnimationFadeSystem { get; }
         public ModuleTransitionSystem ModuleTransitionSystem { get; }

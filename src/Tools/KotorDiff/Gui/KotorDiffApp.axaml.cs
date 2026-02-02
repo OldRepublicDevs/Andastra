@@ -11,8 +11,8 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
+using BioWare.Extract;
+using BioWare.Common;
 using KotorDiff.AppCore;
 using KotorDiff.Cli;
 

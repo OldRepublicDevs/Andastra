@@ -1,5 +1,5 @@
 using System;
-using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.Resource.Formats.TwoDA;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;

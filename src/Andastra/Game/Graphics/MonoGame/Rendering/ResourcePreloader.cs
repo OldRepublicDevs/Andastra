@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.Common;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Resource.Formats.GFF.Generics;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
@@ -592,7 +592,7 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
             try
             {
                 // Load UTS template bytes
-                var utsResourceId = new ResourceIdentifier(utsResRef, BioWare.NET.Common.ResourceType.UTS);
+                var utsResourceId = new ResourceIdentifier(utsResRef, BioWare.Common.ResourceType.UTS);
                 byte[] utsData = await _resourceProvider.GetResourceBytesAsync(utsResourceId, System.Threading.CancellationToken.None);
 
                 if (utsData == null || utsData.Length == 0)
@@ -678,24 +678,24 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
             }
         }
 
-        private BioWare.NET.Common.ResourceType ConvertResourceType(ResourceType type)
+        private BioWare.Common.ResourceType ConvertResourceType(ResourceType type)
         {
             switch (type)
             {
                 case ResourceType.Texture:
-                    return BioWare.NET.Common.ResourceType.TPC;
+                    return BioWare.Common.ResourceType.TPC;
                 case ResourceType.Model:
-                    return BioWare.NET.Common.ResourceType.MDL;
+                    return BioWare.Common.ResourceType.MDL;
                 case ResourceType.Animation:
-                    return BioWare.NET.Common.ResourceType.MDL;
+                    return BioWare.Common.ResourceType.MDL;
                 case ResourceType.Sound:
-                    return BioWare.NET.Common.ResourceType.WAV;
+                    return BioWare.Common.ResourceType.WAV;
                 case ResourceType.Script:
-                    return BioWare.NET.Common.ResourceType.NCS;
+                    return BioWare.Common.ResourceType.NCS;
                 case ResourceType.UTSTemplate:
-                    return BioWare.NET.Common.ResourceType.UTS;
+                    return BioWare.Common.ResourceType.UTS;
                 default:
-                    return BioWare.NET.Common.ResourceType.INVALID;
+                    return BioWare.Common.ResourceType.INVALID;
             }
         }
     }

@@ -7,14 +7,14 @@ using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using HolocronToolset.Windows;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Tools;
-using ModuleClass = BioWare.NET.Common.Module;
-using GameModule = BioWare.NET.Common.Module;
+using BioWare;
+using BioWare.Common;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Tools;
+using ModuleClass = BioWare.Common.Module;
+using GameModule = BioWare.Common.Module;
 
 namespace HolocronToolset.Windows
 {

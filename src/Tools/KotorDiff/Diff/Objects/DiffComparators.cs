@@ -2,11 +2,11 @@
 // Original: class DiffComparator(ABC, Generic[T]): ... class BytesDiffComparator, GFFDiffComparator, TwoDADiffComparator, TLKDiffComparator, LIPDiffComparator
 using System;
 using System.Collections.Generic;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Resource.Formats.LIP;
-using BioWare.NET.Resource.Formats.TLK;
-using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Common;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.LIP;
+using BioWare.Resource.Formats.TLK;
+using BioWare.Resource.Formats.TwoDA;
+using BioWare.Common;
 using JetBrains.Annotations;
 
 namespace KotorDiff.Diff.Objects
@@ -115,7 +115,7 @@ namespace KotorDiff.Diff.Objects
                 }
 
                 // Use the existing GffDiff.Compare method
-                var compareResult = BioWare.NET.TSLPatcher.Diff.GffDiff.Compare(leftGff.Root, rightGff.Root);
+                var compareResult = BioWare.TSLPatcher.Diff.GffDiff.Compare(leftGff.Root, rightGff.Root);
 
                 DiffType diffType = compareResult.Differences.Count == 0 ? DiffType.Identical : DiffType.Modified;
 
@@ -176,8 +176,8 @@ namespace KotorDiff.Diff.Objects
                 // Use StructuredDiffEngine for 2DA comparison
                 var structuredEngine = new StructuredDiffEngine();
                 var result = structuredEngine.Compare2DA(
-                    BioWare.NET.Resource.Formats.TwoDA.TwoDAAuto.Bytes2DA(left2da, BioWare.NET.Common.ResourceType.TwoDA),
-                    BioWare.NET.Resource.Formats.TwoDA.TwoDAAuto.Bytes2DA(right2da, BioWare.NET.Common.ResourceType.TwoDA),
+                    BioWare.Resource.Formats.TwoDA.TwoDAAuto.Bytes2DA(left2da, BioWare.Common.ResourceType.TwoDA),
+                    BioWare.Resource.Formats.TwoDA.TwoDAAuto.Bytes2DA(right2da, BioWare.Common.ResourceType.TwoDA),
                     leftId,
                     rightId);
 
@@ -222,7 +222,7 @@ namespace KotorDiff.Diff.Objects
                 }
 
                 // Use the existing TlkDiff.Compare method
-                var compareResult = BioWare.NET.TSLPatcher.Diff.TlkDiff.Compare(leftTlk, rightTlk);
+                var compareResult = BioWare.TSLPatcher.Diff.TlkDiff.Compare(leftTlk, rightTlk);
 
                 var entryDiffs = new List<TLKEntryDiff>();
 

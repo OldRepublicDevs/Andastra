@@ -7,12 +7,12 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using BioWare.NET.Resource.Formats.MDL;
-using BioWare.NET.Resource.Formats.MDLData;
-using BioWare.NET.Resource.Formats.TPC;
-using BioWare.NET.Resource.Formats.TwoDA;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Resource.Formats.MDL;
+using BioWare.Resource.Formats.MDLData;
+using BioWare.Resource.Formats.TPC;
+using BioWare.Resource.Formats.TwoDA;
+using BioWare.Common;
+using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.MDL;
 using Andastra.Runtime.Core;
@@ -25,8 +25,8 @@ using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
-using ParsingResourceType = BioWare.NET.Common.ResourceType;
-using ResourceType = BioWare.NET.Common.ResourceType;
+using ParsingResourceType = BioWare.Common.ResourceType;
+using ResourceType = BioWare.Common.ResourceType;
 
 namespace Andastra.Game.Graphics.Common.Backends.Eclipse
 {

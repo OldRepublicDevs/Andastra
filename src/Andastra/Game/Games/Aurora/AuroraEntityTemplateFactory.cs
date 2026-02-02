@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Resource.Formats.TLK;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Common;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.TLK;
+using BioWare.Common;
+using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
@@ -15,7 +15,7 @@ using Andastra.Game.Games.Aurora.Components;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Common.Components;
 using JetBrains.Annotations;
-using ResRef = BioWare.NET.Common.ResRef;
+using ResRef = BioWare.Common.ResRef;
 using ScriptEvent = Andastra.Runtime.Core.Enums.ScriptEvent;
 
 namespace Andastra.Game.Games.Aurora

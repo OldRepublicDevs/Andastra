@@ -8,8 +8,8 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using BioWare.NET.Common;
-using BioWare.NET.Extract;
+using BioWare.Common;
+using BioWare.Extract;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Dialogs

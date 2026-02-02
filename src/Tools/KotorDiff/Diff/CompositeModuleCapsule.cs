@@ -4,9 +4,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using BioWare.NET;
-using BioWare.NET.Extract.Capsule;
-using BioWare.NET.Extract;
+using BioWare;
+using BioWare.Extract.Capsule;
+using BioWare.Extract;
 
 namespace KotorDiff.Diff
 {

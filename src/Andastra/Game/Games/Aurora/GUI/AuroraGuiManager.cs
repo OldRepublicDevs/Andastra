@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.TPC;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
-using BioWare.NET.Resource.Formats.GFF.Generics.GUI;
+using BioWare.Common;
+using BioWare.Resource.Formats.TPC;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Resource.Formats.GFF.Generics.GUI;
 using Andastra.Game.Games.Aurora.Fonts;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Graphics.MonoGame.Converters;
@@ -156,7 +156,7 @@ namespace Andastra.Game.Games.Aurora.GUI
                 // CAuroraStringWrapper::LoadGffTextData @ 0x1401fe680 loads text data from GFF GUI files
                 // GUIReader handles GFF-based format parsing (same parser used by Odyssey/Eclipse engines)
                 GUIReader guiReader = new GUIReader(resourceResult.Data);
-                BioWare.NET.Resource.Formats.GFF.Generics.GUI.GUI gui = guiReader.Load();
+                BioWare.Resource.Formats.GFF.Generics.GUI.GUI gui = guiReader.Load();
 
                 if (gui == null || gui.Controls == null || gui.Controls.Count == 0)
                 {
@@ -766,7 +766,7 @@ namespace Andastra.Game.Games.Aurora.GUI
                 Dimension = selected.Dimension,
                 InnerOffset = selected.InnerOffset,
                 InnerOffsetY = selected.InnerOffsetY,
-                Color = selected.Color != null ? new BioWare.NET.Common.Color(selected.Color.R, selected.Color.G, selected.Color.B, selected.Color.A) : null,
+                Color = selected.Color != null ? new BioWare.Common.Color(selected.Color.R, selected.Color.G, selected.Color.B, selected.Color.A) : null,
                 Pulsing = selected.Pulsing
             };
         }
@@ -785,7 +785,7 @@ namespace Andastra.Game.Games.Aurora.GUI
                 Dimension = hilightSelected.Dimension,
                 InnerOffset = hilightSelected.InnerOffset,
                 InnerOffsetY = hilightSelected.InnerOffsetY,
-                Color = hilightSelected.Color != null ? new BioWare.NET.Common.Color(hilightSelected.Color.R, hilightSelected.Color.G, hilightSelected.Color.B, hilightSelected.Color.A) : null,
+                Color = hilightSelected.Color != null ? new BioWare.Common.Color(hilightSelected.Color.R, hilightSelected.Color.G, hilightSelected.Color.B, hilightSelected.Color.A) : null,
                 Pulsing = hilightSelected.Pulsing
             };
         }
@@ -795,7 +795,7 @@ namespace Andastra.Game.Games.Aurora.GUI
         /// </summary>
         private class LoadedGui
         {
-            public BioWare.NET.Resource.Formats.GFF.Generics.GUI.GUI Gui { get; set; }
+            public BioWare.Resource.Formats.GFF.Generics.GUI.GUI Gui { get; set; }
             public string Name { get; set; }
             public int Width { get; set; }
             public int Height { get; set; }

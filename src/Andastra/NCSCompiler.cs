@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.NCS;
+using BioWare.Common;
+using BioWare.Resource.Formats.NCS;
 using JetBrains.Annotations;
-using NCS = BioWare.NET.Resource.Formats.NCS.NCS;
+using NCS = BioWare.Resource.Formats.NCS.NCS;
 
 namespace Andastra
 {

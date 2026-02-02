@@ -2,14 +2,14 @@ using System;
 using System.IO;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using BioWare.NET.Extract;
-using BioWare.NET.Resource.Formats.ERF;
-using BioWare.NET.Resource.Formats.MDL;
-using BioWare.NET.Resource.Formats.MDLData;
-using BioWare.NET.Resource.Formats.RIM;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Extract;
+using BioWare.Resource.Formats.ERF;
+using BioWare.Resource.Formats.MDL;
+using BioWare.Resource.Formats.MDLData;
+using BioWare.Resource.Formats.RIM;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Widgets;
 using MsBox.Avalonia;
@@ -116,17 +116,17 @@ namespace HolocronToolset.Editors
                         mdxData = File.ReadAllBytes(mdxPath);
                     }
                 }
-                else if (BioWare.NET.Tools.FileHelpers.IsAnyErfTypeFile(filepath))
+                else if (BioWare.Tools.FileHelpers.IsAnyErfTypeFile(filepath))
                 {
                     ERF erf = ERFAuto.ReadErf(filepath);
                     mdxData = erf.Get(resref, ResourceType.MDX);
                 }
-                else if (BioWare.NET.Tools.FileHelpers.IsRimFile(filepath))
+                else if (BioWare.Tools.FileHelpers.IsRimFile(filepath))
                 {
                     RIM rim = RIMAuto.ReadRim(filepath);
                     mdxData = rim.Get(resref, ResourceType.MDX);
                 }
-                else if (BioWare.NET.Tools.FileHelpers.IsBifFile(filepath))
+                else if (BioWare.Tools.FileHelpers.IsBifFile(filepath))
                 {
                     if (_installation != null)
                     {
@@ -150,17 +150,17 @@ namespace HolocronToolset.Editors
                         mdlData = File.ReadAllBytes(mdlPath);
                     }
                 }
-                else if (BioWare.NET.Tools.FileHelpers.IsAnyErfTypeFile(filepath))
+                else if (BioWare.Tools.FileHelpers.IsAnyErfTypeFile(filepath))
                 {
                     ERF erf = ERFAuto.ReadErf(filepath);
                     mdlData = erf.Get(resref, ResourceType.MDL);
                 }
-                else if (BioWare.NET.Tools.FileHelpers.IsRimFile(filepath))
+                else if (BioWare.Tools.FileHelpers.IsRimFile(filepath))
                 {
                     RIM rim = RIMAuto.ReadRim(filepath);
                     mdlData = rim.Get(resref, ResourceType.MDL);
                 }
-                else if (BioWare.NET.Tools.FileHelpers.IsBifFile(filepath))
+                else if (BioWare.Tools.FileHelpers.IsBifFile(filepath))
                 {
                     if (_installation != null)
                     {

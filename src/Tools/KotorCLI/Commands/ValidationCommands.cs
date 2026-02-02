@@ -1,8 +1,8 @@
 using System;
 using System.CommandLine;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using BioWare.Extract;
+using BioWare.Common;
+using BioWare.Resource;
 using KotorCLI.Logging;
 
 namespace KotorCLI.Commands
@@ -81,7 +81,7 @@ namespace KotorCLI.Commands
                     // Try to load and validate the 2DA structure
                     try
                     {
-                        var twoDA = BioWare.NET.Resource.Formats.TwoDA.TwoDA.FromBytes(result.Data);
+                        var twoDA = BioWare.Resource.Formats.TwoDA.TwoDA.FromBytes(result.Data);
                         logger.Info($"  Valid 2DA structure: {twoDA.GetWidth()} columns x {twoDA.GetHeight()} rows");
 
                         // Show first few headers if available
