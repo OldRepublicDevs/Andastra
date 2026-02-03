@@ -2128,7 +2128,6 @@ namespace Andastra.Game.Core
                             System.Console.WriteLine($"[CharacterCreationScreen] Error decompressing DXT5: {ex.Message}");
                             return null;
                         }
-                        break;
 
                     default:
                         System.Console.WriteLine($"[CharacterCreationScreen] Unsupported TPC format: {format}");
@@ -2268,7 +2267,6 @@ namespace Andastra.Game.Core
             int buttonY = _graphicsDevice.Viewport.Height - 60;
             int buttonWidth = 100;
             int buttonHeight = 40;
-            int buttonSpacing = 20;
 
             // Render Back button (if not on first step)
             if (_currentStep != CreationStep.ClassSelection)

@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using BioWare.Common;
 using Andastra.Runtime.Core;
 using Andastra.Game.Core;
@@ -82,6 +83,7 @@ namespace Andastra.Game
                             Game = kotorGame,
                             GamePath = gamePath
                         };
+                        GameSettingsExtensions.LoadFromConfigFile(settings);
                     }
                     else
                     {
@@ -107,6 +109,7 @@ namespace Andastra.Game
                             return 1;
                         }
                     }
+                    GameSettingsExtensions.LoadFromConfigFile(settings);
 
                     // Set selectedGame based on KotorGame for command-line mode
                     selectedGame = settings.Game == KotorGame.K2 ? BioWareGame.K2 : BioWareGame.K1;
@@ -178,6 +181,10 @@ namespace Andastra.Game
                     // For launcher UI mode, check if it's an Odyssey game
                     if ((selectedGame.IsOdyssey() || settings != null) && settings != null)
                     {
+                        // Reset sync context before MonoGame - Avalonia's UI context can conflict with
+                        // MonoGame/OpenGL. Reva WinMain: game loop runs directly after InitGameApp.
+                        SynchronizationContext.SetSynchronizationContext(null);
+
                         // Use OdysseyGame for KOTOR games
                         using (var game = new OdysseyGame(settings, graphicsBackend))
                         {

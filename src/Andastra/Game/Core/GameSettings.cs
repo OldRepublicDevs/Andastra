@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Andastra.Runtime.Core;
 
 namespace Andastra.Game.Core
@@ -109,6 +110,66 @@ namespace Andastra.Game.Core
             }
 
             return settings;
+        }
+
+        /// <summary>
+        /// Loads settings from andastra.ini in the game path. Reva: swkotor.ini/swkotor2.ini config loading.
+        /// Call after GamePath is set. OptionsScreen saves here; this applies on next launch.
+        /// </summary>
+        public static void LoadFromConfigFile(GameSettings settings)
+        {
+            if (settings == null || string.IsNullOrEmpty(settings.GamePath)) return;
+            string path = Path.Combine(settings.GamePath, "andastra.ini");
+            if (!File.Exists(path)) return;
+            try
+            {
+                foreach (string line in File.ReadAllLines(path))
+                {
+                    string trimmed = line.Trim();
+                    if (trimmed.StartsWith(";") || !trimmed.Contains("=")) continue;
+                    int eq = trimmed.IndexOf('=');
+                    string key = trimmed.Substring(0, eq).Trim().ToLowerInvariant();
+                    string val = trimmed.Substring(eq + 1).Trim();
+                    switch (key)
+                    {
+                        case "width":
+                            if (int.TryParse(val, out int w) && w >= 320)
+                            {
+                                settings.Width = w;
+                                if (settings.Graphics != null) settings.Graphics.ResolutionWidth = w;
+                            }
+                            break;
+                        case "height":
+                            if (int.TryParse(val, out int h) && h >= 240)
+                            {
+                                settings.Height = h;
+                                if (settings.Graphics != null) settings.Graphics.ResolutionHeight = h;
+                            }
+                            break;
+                        case "fullscreen":
+                            settings.Fullscreen = val == "1" || val.Equals("true", StringComparison.OrdinalIgnoreCase);
+                            if (settings.Graphics != null) settings.Graphics.Fullscreen = settings.Fullscreen;
+                            break;
+                        case "vsync":
+                            bool vsync = val == "1" || val.Equals("true", StringComparison.OrdinalIgnoreCase);
+                            if (settings.Graphics != null) settings.Graphics.VSync = vsync;
+                            break;
+                        case "musicvolume":
+                            if (float.TryParse(val, out float mv) && settings.Audio != null)
+                                settings.Audio.MusicVolume = Math.Max(0, Math.Min(1, mv));
+                            break;
+                        case "soundvolume":
+                            if (float.TryParse(val, out float sv) && settings.Audio != null)
+                                settings.Audio.SfxVolume = Math.Max(0, Math.Min(1, sv));
+                            break;
+                        case "disablesound":
+                            bool disable = val == "1" || val.Equals("true", StringComparison.OrdinalIgnoreCase);
+                            if (settings.Audio != null) settings.Audio.MusicEnabled = !disable;
+                            break;
+                    }
+                }
+            }
+            catch { /* ignore parse errors */ }
         }
 
         private static void PrintHelp()

@@ -93,6 +93,11 @@ namespace Andastra.Runtime.Core.Save
         public List<JournalEntry> JournalEntries { get; set; }
 
         /// <summary>
+        /// Quest states (quest tag -> state value).
+        /// </summary>
+        public Dictionary<string, int> QuestStates { get; set; }
+
+        /// <summary>
         /// Plot states (keyed by plot index).
         /// </summary>
         /// <remarks>
@@ -184,6 +189,7 @@ namespace Andastra.Runtime.Core.Save
         {
             AreaStates = new Dictionary<string, AreaState>();
             JournalEntries = new List<JournalEntry>();
+            QuestStates = new Dictionary<string, int>();
             GameTime = new GameTime();
             GlobalVariables = new GlobalVariableState();
             PartyState = new PartyState();
@@ -747,6 +753,16 @@ namespace Andastra.Runtime.Core.Save
         /// When entry was added.
         /// </summary>
         public DateTime DateAdded { get; set; }
+
+        /// <summary>
+        /// Entry text (for full serialization).
+        /// </summary>
+        public string Text { get; set; }
+
+        /// <summary>
+        /// XP reward for this entry.
+        /// </summary>
+        public int XPReward { get; set; }
     }
 
     /// <summary>

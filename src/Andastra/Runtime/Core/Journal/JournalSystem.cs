@@ -122,6 +122,14 @@ namespace Andastra.Runtime.Core.Journal
         #region Quest State
 
         /// <summary>
+        /// Gets a copy of all quest states (for save serialization).
+        /// </summary>
+        public Dictionary<string, int> GetQuestStatesCopy()
+        {
+            return new Dictionary<string, int>(_questStates, StringComparer.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
         /// Gets the current state of a quest.
         /// </summary>
         public int GetQuestState(string questTag)
@@ -268,6 +276,34 @@ namespace Andastra.Runtime.Core.Journal
             if (OnEntryAdded != null)
             {
                 OnEntryAdded(entry);
+            }
+        }
+
+        /// <summary>
+        /// Restores journal from save data (quest states and entries).
+        /// </summary>
+        public void RestoreFromSave(IReadOnlyDictionary<string, int> questStates, IReadOnlyList<Andastra.Runtime.Core.Save.JournalEntry> entries)
+        {
+            _questStates.Clear();
+            if (questStates != null)
+            {
+                foreach (var kvp in questStates)
+                    _questStates[kvp.Key] = kvp.Value;
+            }
+            _entries.Clear();
+            if (entries != null)
+            {
+                foreach (var e in entries)
+                {
+                    _entries.Add(new JournalEntry
+                    {
+                        QuestTag = e.QuestTag,
+                        State = e.State,
+                        Text = e.Text ?? string.Empty,
+                        XPReward = e.XPReward,
+                        DateAdded = e.DateAdded != default ? e.DateAdded : DateTime.Now
+                    });
+                }
             }
         }
 

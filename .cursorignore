@@ -14,10 +14,11 @@ vendor/NCSDecomp/tools/nwnnsscomp_ktool.exe
 **/~dotnetcleanup*/
 src/Tools/NCSDecomp/~dotnetcleanup*/
 
-!.cursor
+!.cursor/
 !.cursorignore
 !.cursorrules
 !.editorconfig
+!.github/
 !.gitignore
 !.vscode
 !.pre-commit-config.yaml
