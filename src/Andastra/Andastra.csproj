@@ -107,7 +107,7 @@
     <Message Condition="'$(_MgcbToolCheckExitCode)' != '0' OR '$(SkipMonoGameContentPipeline)' == 'true'" Importance="high" Text="MonoGame Content Builder tool (dotnet-mgcb) not available or disabled. Setting SkipMonoGameContentPipeline=true. Install with: dotnet tool install -g dotnet-mgcb" />
   </Target>
 
-  <ItemGroup Condition="'$(SkipMonoGameContentPipeline)' != 'true'">
+  <ItemGroup>
     <MonoGameContentReference Include="Game\Content.mgcb" />
   </ItemGroup>
 

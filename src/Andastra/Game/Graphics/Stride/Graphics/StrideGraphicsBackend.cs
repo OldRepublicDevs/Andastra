@@ -126,6 +126,10 @@ namespace Andastra.Game.Stride.Graphics
                     _window = new StrideWindow(_game.Window);
                     _inputManager = new StrideInputManager(_game.Input);
 
+                    // Register the Game instance to enable GraphicsContext() extension method
+                    // This is required for StrideSpriteBatch.Begin() which needs GraphicsContext
+                    GraphicsDeviceExtensions.RegisterGame(_game.GraphicsDevice, _game);
+
                     // CommandList registration is now handled per-frame in BeginFrame()
                     // This ensures thread safety and proper resource management in Stride 4.x
 

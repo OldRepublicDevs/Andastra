@@ -2,16 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      // Use IntelliSense to find out which attributes exist for C# debugging
-      // Use hover for the description of the existing attributes
-      // For further information visit https://github.com/dotnet/vscode-csharp/blob/main/debugger-launchjson.md
-      "name": ".NET 8.0 Launch HoloPatcher",
+      "name": ".NET 9.0 Launch NCSDecomp",
       "type": "coreclr",
       "request": "launch",
-      "preLaunchTask": "build-gui",
+      "preLaunchTask": "build-ncsdecomp",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/src/HoloPatcher/bin/Debug/net9.0.0/HoloPatcher.dll",
-      "cwd": "${workspaceFolder}/src/HoloPatcher",
+      "program": "${workspaceFolder}/src/Tools/NCSDecomp/bin/Debug/net9.0.0/NCSDecomp.dll",
+      "cwd": "${workspaceFolder}/src/Tools/NCSDecomp",
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
       "env": {
@@ -22,24 +19,7 @@
       }
     },
     {
-      "name": ".NET 8.0 Launch KNCSDecomp",
-      "type": "coreclr",
-      "request": "launch",
-      "preLaunchTask": "build-kncsdecomp",
-      // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/src/KNCSDecomp/bin/Debug/net9.0.0/KNCSDecomp.dll",
-      "cwd": "${workspaceFolder}/src/KNCSDecomp",
-      // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
-      "console": "integratedTerminal",
-      "env": {
-        "AVALONIA_LOGGING_LEVEL": "Verbose",
-        "Logging__LogLevel__Default": "Debug",
-        "Logging__LogLevel__Microsoft": "Information",
-        "Logging__LogLevel__Avalonia": "Verbose"
-      }
-    },
-    {
-      "name": ".NET 8.0 Run Tests",
+      "name": ".NET 9.0 Run Tests",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build-tests",
@@ -54,12 +34,7 @@
       "justMyCode": false
     },
     {
-      "name": ".NET Core Attach",
-      "type": "coreclr",
-      "request": "attach"
-    },
-    {
-      "name": "Launch Andastra Game Launcher (Debug) - Watch Mode",
+      "name": "Launch Andastra Game Launcher - Watch Mode",
       "type": "coreclr",
       "request": "launch",
       "program": "dotnet",
@@ -97,58 +72,6 @@
         "Logging__LogLevel__Microsoft.Extensions.Hosting": "Trace",
         "Logging__LogLevel__Microsoft.Extensions.Logging": "Trace"
       }
-    },
-    {
-      "name": "Launch Andastra Game Launcher (Release) - Watch Mode",
-      "type": "coreclr",
-      "request": "launch",
-      "program": "dotnet",
-      "args": [
-        "watch",
-        "run",
-        "--project",
-        "${workspaceFolder}/src/Andastra/Andastra.csproj",
-        "--configuration",
-        "Release",
-        "--verbosity",
-        "diagnostic"
-      ],
-      "cwd": "${workspaceFolder}",
-      "stopAtEntry": false,
-      "console": "integratedTerminal",
-      "justMyCode": false,
-      "enableStepFiltering": false,
-      "symbolOptions": {
-        "searchPaths": [
-          "${workspaceFolder}/src/Andastra/bin/Release/net9.0"
-        ],
-        "searchMicrosoftSymbolServer": true,
-        "searchNuGetOrgSymbolServer": true
-      },
-      "env": {
-        "DOTNET_ENVIRONMENT": "Production",
-        "DOTNET_LOGGING_DEBUG": "Microsoft.Extensions.Hosting,Microsoft.AspNetCore.Hosting,Microsoft.AspNetCore.Server.Kestrel,Microsoft.Extensions.Logging",
-        "DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER": "true",
-        "DOTNET_CLI_TELEMETRY_OPTOUT": "false",
-        "Logging__LogLevel__Default": "Trace",
-        "Logging__LogLevel__Microsoft": "Trace",
-        "Logging__LogLevel__Microsoft.Hosting.Lifetime": "Trace",
-        "Logging__LogLevel__System": "Trace",
-        "Logging__LogLevel__Microsoft.Extensions.Hosting": "Trace",
-        "Logging__LogLevel__Microsoft.Extensions.Logging": "Trace"
-      }
-    },
-    {
-      "name": "Attach to Odyssey Game",
-      "type": "coreclr",
-      "request": "attach",
-      "processName": "Odyssey.Game.exe"
-    },
-    {
-      "name": "Attach to Stride Process",
-      "type": "coreclr",
-      "request": "attach",
-      "processName": ""
     }
   ]
 }

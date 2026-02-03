@@ -28,11 +28,11 @@ namespace Andastra.Game.Games.Odyssey.Fonts
     /// - Text alignment: Supports all KOTOR alignment modes (9 positions)
     /// - Font loading: Loads font texture and TXI metrics from game installation
     /// - Character mapping: Maps ASCII characters to texture coordinates using TXI upperleftcoords/lowerrightcoords
-    /// 
+    ///
     /// Ghidra verified components Analysis:
     /// - swkotor.exe: Font loading functions (needs Ghidra address verification)
     /// - swkotor2.exe: Font rendering functions (needs Ghidra address verification)
-    /// 
+    ///
     /// Original implementation: Uses DirectX sprite rendering for text, this uses MonoGame SpriteBatch
     /// </remarks>
     public class OdysseyBitmapFont : BaseBitmapFont
@@ -154,7 +154,7 @@ namespace Andastra.Game.Games.Odyssey.Fonts
 
                 // Convert TPC to MonoGame Texture2D
                 // Fonts always use 2D textures, not cube maps
-                Texture convertedTexture = Andastra.Game.Graphics.MonoGame.Converters.TpcToMonoGameTextureConverter.Convert(fontTexture, graphicsDevice, false);
+                Texture convertedTexture = Graphics.MonoGame.Converters.TpcToMonoGameTextureConverter.Convert(fontTexture, graphicsDevice, false, flipVertical: true, flipHorizontal: true);
                 if (convertedTexture is TextureCube)
                 {
                     Console.WriteLine($"[OdysseyBitmapFont] ERROR: Font texture cannot be a cube map: {fontResRef}");

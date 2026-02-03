@@ -69,6 +69,8 @@ pykotor_files.txt
 pykotor_modules_to_port.txt
 pykotor_resource_formats.txt
 ScaffoldingReadMe.txt
+src/StrideOpenWorldFps
+src/MonoGameFPS
 temp_*
 temp-*
 test_*
@@ -105,3 +107,4 @@ swkotor2_addresses.txt
 !vendor/PyKotor/
 !vendor/swkotor.c
 !vendor/swkotor.h
+vendor/

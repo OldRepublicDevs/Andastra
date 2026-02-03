@@ -11,8 +11,27 @@
     <AssemblyName>Andastra.Game</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Core\Andastra.Core.csproj" />
+    <ProjectReference Include="..\Runtime\Andastra.Runtime.csproj" />
+    <ProjectReference Include="..\Graphics\Andastra.Graphics.csproj" />
+    <ProjectReference Include="..\UI\Andastra.UI.csproj" />
     <ProjectReference Include="..\..\BioWare\BioWare.csproj" />
-    <!-- Explicitly resolve transitive dependencies from Microsoft.Extensions.* 10.0.1 -->
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.11" />
+    <PackageReference Include="Avalonia" Version="11.3.11" />
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+    <PackageReference Include="Myra" Version="1.5.10" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="Stride.Audio" Version="4.2.1.2487" />
+    <PackageReference Include="Stride.Engine" Version="4.2.1.2487" />
+    <PackageReference Include="Stride.Graphics" Version="4.2.1.2487" />
+    <PackageReference Include="Stride.Input" Version="4.2.1.2487" />
+    <PackageReference Include="System.Collections.Immutable" Version="10.0.1" />
+    <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.1" />
+    <PackageReference Include="System.Drawing.Common" Version="10.0.1" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.1" />
+    <PackageReference Include="System.Text.Json" Version="10.0.1" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
   </ItemGroup>
