@@ -407,6 +407,7 @@ namespace BioWare.Common
             {
                 using (var tempWriter = new RawBinaryWriterFile(ms))
                 {
+                    tempWriter.AutoClose = false; // Don't dispose the MemoryStream, we need to read from it
                     uint stringref = value.StringRef == -1 ? 0xFFFFFFFF : (uint)value.StringRef;
                     tempWriter.WriteUInt32(stringref, bigEndian);
                     tempWriter.WriteUInt32((uint)value.Count, bigEndian);

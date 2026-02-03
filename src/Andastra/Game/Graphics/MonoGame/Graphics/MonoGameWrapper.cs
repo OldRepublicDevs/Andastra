@@ -62,12 +62,17 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
 
         protected override void Draw(GameTime gameTime)
         {
-            base.Draw(gameTime);
+            // Raise DrawFrame event BEFORE calling base.Draw()
+            // This allows external code to issue rendering commands before MonoGame presents the frame
+            // In MonoGame, base.Draw() is where the backbuffer is presented to the screen
             DrawFrame?.Invoke(this, new FrameEventArgs 
             { 
                 Elapsed = gameTime.ElapsedGameTime,
                 TotalTime = gameTime.TotalGameTime
             });
+            
+            // Now present the frame - this must come AFTER all rendering is complete
+            base.Draw(gameTime);
         }
     }
 }

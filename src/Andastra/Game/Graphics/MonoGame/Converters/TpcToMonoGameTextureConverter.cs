@@ -55,7 +55,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
         // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.GraphicsDevice.html
         // GraphicsDevice parameter provides access to graphics hardware for texture creation
         // Source: https://docs.monogame.net/articles/getting_to_know/howto/graphics/HowTo_Load_Texture.html
-        public static Texture Convert([NotNull] TPC tpc, [NotNull] GraphicsDevice device, bool generateMipmaps = true)
+        public static Texture Convert([NotNull] TPC tpc, [NotNull] GraphicsDevice device, bool generateMipmaps = true, bool flipVertical = false, bool flipHorizontal = false)
         {
             if (tpc == null)
             {
@@ -80,7 +80,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
             // Handle cube maps - Convert to MonoGame TextureCube
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) cube map texture loading (swkotor2.exe: texture cube map handling)
             // TPC cube maps have 6 layers, one for each face in DirectX/OpenGL order:
-            // 0: PositiveX (right), 1: NegativeX (left), 2: PositiveY (top), 
+            // 0: PositiveX (right), 1: NegativeX (left), 2: PositiveY (top),
             // 3: NegativeY (bottom), 4: PositiveZ (front), 5: NegativeZ (back)
             // Reference: vendor/xoreos/src/graphics/images/tpc.cpp:420-482 (cube map fixup)
             // Reference: vendor/reone/include/reone/graphics/types.h:88-95 (CubeMapFace enum)
@@ -90,7 +90,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
             }
 
             // Convert standard 2D texture
-            return Convert2DTexture(tpc.Layers[0], device, generateMipmaps);
+            return Convert2DTexture(tpc.Layers[0], device, generateMipmaps, flipVertical, flipHorizontal);
         }
 
         /// <summary>
@@ -347,7 +347,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
             return target;
         }
 
-        private static Texture2D Convert2DTexture(TPCLayer layer, GraphicsDevice device, bool generateMipmaps)
+        private static Texture2D Convert2DTexture(TPCLayer layer, GraphicsDevice device, bool generateMipmaps, bool flipVertical, bool flipHorizontal)
         {
             TPCMipmap baseMipmap = layer.Mipmaps[0];
             int width = baseMipmap.Width;
@@ -378,6 +378,21 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
                 {
                     colorData[i] = new Color(rgbaData[offset], rgbaData[offset + 1], rgbaData[offset + 2], rgbaData[offset + 3]);
                 }
+            }
+
+            if (flipVertical || flipHorizontal)
+            {
+                Color[] flipped = new Color[colorData.Length];
+                for (int y = 0; y < height; y++)
+                {
+                    int srcY = flipVertical ? (height - 1 - y) : y;
+                    for (int x = 0; x < width; x++)
+                    {
+                        int srcX = flipHorizontal ? (width - 1 - x) : x;
+                        flipped[y * width + x] = colorData[srcY * width + srcX];
+                    }
+                }
+                colorData = flipped;
             }
 
             texture.SetData(colorData);

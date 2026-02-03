@@ -22,6 +22,7 @@ using Microsoft.Xna.Framework.Input;
 using XnaVector2 = Microsoft.Xna.Framework.Vector2;
 using XnaColor = Microsoft.Xna.Framework.Color;
 using XnaSpriteEffects = Microsoft.Xna.Framework.Graphics.SpriteEffects;
+using Andastra.Runtime.Core.Module;
 
 namespace Andastra.Game.Graphics.MonoGame.GUI
 {
@@ -82,6 +83,9 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         private int _selectedButtonIndex = -1; // For keyboard navigation
         private List<GUIButton> _buttonList; // Ordered list of buttons for keyboard navigation
         private readonly Runtime.Core.Audio.ISoundPlayer _soundPlayer; // For button click/hover sounds
+        private float _guiScale = 1.0f;
+        private XnaVector2 _guiOffset = XnaVector2.Zero;
+        private const string ColorFromAlphaOnlyKey = "__color_from_alpha_only__";
 
         /// <summary>
         /// Event fired when a GUI checkbox is clicked.
@@ -236,6 +240,63 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             }
         }
 
+        private void UpdateGuiTransform()
+        {
+            if (_currentGui == null || _graphicsDevice == null)
+            {
+                _guiScale = 1.0f;
+                _guiOffset = XnaVector2.Zero;
+                return;
+            }
+
+            int guiWidth = _currentGui.Width > 0 ? _currentGui.Width : _graphicsDevice.Viewport.Width;
+            int guiHeight = _currentGui.Height > 0 ? _currentGui.Height : _graphicsDevice.Viewport.Height;
+            if (guiWidth <= 0 || guiHeight <= 0)
+            {
+                _guiScale = 1.0f;
+                _guiOffset = XnaVector2.Zero;
+                return;
+            }
+
+            float scaleX = _graphicsDevice.Viewport.Width / (float)guiWidth;
+            float scaleY = _graphicsDevice.Viewport.Height / (float)guiHeight;
+            _guiScale = Math.Min(scaleX, scaleY);
+
+            float scaledWidth = guiWidth * _guiScale;
+            float scaledHeight = guiHeight * _guiScale;
+            float offsetX = (_graphicsDevice.Viewport.Width - scaledWidth) / 2.0f;
+            float offsetY = (_graphicsDevice.Viewport.Height - scaledHeight) / 2.0f;
+            _guiOffset = new XnaVector2(offsetX, offsetY);
+        }
+
+        private XnaVector2 ToGuiSpace(int mouseX, int mouseY)
+        {
+            UpdateGuiTransform();
+            if (_guiScale <= 0.0f)
+            {
+                return new XnaVector2(mouseX, mouseY);
+            }
+
+            float guiX = (mouseX - _guiOffset.X) / _guiScale;
+            float guiY = (mouseY - _guiOffset.Y) / _guiScale;
+            return new XnaVector2(guiX, guiY);
+        }
+
+        private bool ShouldRenderSolidColor(GUIControl control, BioWare.Common.Color color)
+        {
+            if (color == null || color.A <= 0)
+            {
+                return false;
+            }
+
+            if (control?.Properties != null && control.Properties.TryGetValue(ColorFromAlphaOnlyKey, out var flag)
+                && flag is bool isAlphaOnly && isAlphaOnly)
+            {
+                return false;
+            }
+
+            return true;
+        }
         /// <summary>
         /// Unloads a GUI from memory.
         /// </summary>
@@ -550,7 +611,9 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 return;
             }
 
-            _spriteBatch.Begin(Microsoft.Xna.Framework.Graphics.SpriteSortMode.Deferred, Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
+            UpdateGuiTransform();
+            Matrix transform = Matrix.CreateScale(_guiScale, _guiScale, 1.0f) * Matrix.CreateTranslation(_guiOffset.X, _guiOffset.Y, 0.0f);
+            _spriteBatch.Begin(Microsoft.Xna.Framework.Graphics.SpriteSortMode.Deferred, Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone, null, transform);
 
             // Render all controls recursively
             foreach (var control in _currentGui.Gui.Controls)
@@ -621,6 +684,10 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 return;
             }
 
+            XnaVector2 guiMouse = ToGuiSpace(mouseX, mouseY);
+            float guiMouseX = guiMouse.X;
+            float guiMouseY = guiMouse.Y;
+
             string newHighlightedTag = null;
 
             // Check all buttons to find which one the mouse is over
@@ -641,7 +708,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 int right = left + (int)button.Size.X;
                 int bottom = top + (int)button.Size.Y;
 
-                if (mouseX >= left && mouseX <= right && mouseY >= top && mouseY <= bottom)
+                if (guiMouseX >= left && guiMouseX <= right && guiMouseY >= top && guiMouseY <= bottom)
                 {
                     // Found the topmost button under the mouse
                     newHighlightedTag = button.Tag;
@@ -696,6 +763,10 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 return;
             }
 
+            XnaVector2 guiMouse = ToGuiSpace(mouseX, mouseY);
+            float guiMouseX = guiMouse.X;
+            float guiMouseY = guiMouse.Y;
+
             // Check all checkboxes for hit first (checkboxes are typically on top of buttons)
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Checkbox click handling takes priority
             foreach (var kvp in _currentGui.CheckBoxMap)
@@ -712,7 +783,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 int right = left + (int)checkBox.Size.X;
                 int bottom = top + (int)checkBox.Size.Y;
 
-                if (mouseX >= left && mouseX <= right && mouseY >= top && mouseY <= bottom)
+                if (guiMouseX >= left && guiMouseX <= right && guiMouseY >= top && guiMouseY <= bottom)
                 {
                     // Checkbox clicked - toggle state
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Checkbox state toggled on click (OptionsGraphicsAdvancedMenu::callbackActive)
@@ -746,7 +817,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 int right = left + (int)button.Size.X;
                 int bottom = top + (int)button.Size.Y;
 
-                if (mouseX >= left && mouseX <= right && mouseY >= top && mouseY <= bottom)
+                if (guiMouseX >= left && guiMouseX <= right && guiMouseY >= top && guiMouseY <= bottom)
                 {
                     // Button clicked - fire event
                     FireButtonClicked(button.Tag, button.Id ?? -1);
@@ -841,7 +912,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         private void RenderPanel(GUIPanel panel, XnaVector2 position, XnaVector2 size)
         {
             // Render panel background using border fill texture if available
-            if (panel.Border != null && !panel.Border.Fill.IsBlank())
+            if (panel.Border?.Fill != null && !panel.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(panel.Border.Fill.ToString());
                 if (fillTexture != null)
@@ -855,7 +926,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             {
                 // Render solid color background if no texture
                 BioWare.Common.Color bgColor = panel.Color;
-                if (bgColor.A > 0)
+                if (ShouldRenderSolidColor(panel, bgColor))
                 {
                     Texture2D pixel = GetPixelTexture();
                     float alpha = panel.Alpha;
@@ -894,7 +965,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             }
 
             // Render button background
-            if (borderToUse != null && !borderToUse.Fill.IsBlank())
+            if (borderToUse?.Fill != null && !borderToUse.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(borderToUse.Fill.ToString());
                 if (fillTexture != null)
@@ -903,7 +974,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                     _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
-            else if (button.Border != null && !button.Border.Fill.IsBlank())
+            else if (button.Border?.Fill != null && !button.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(button.Border.Fill.ToString());
                 if (fillTexture != null)
@@ -916,7 +987,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             {
                 // Render solid color background
                 BioWare.Common.Color bgColor = button.Color;
-                if (bgColor.A > 0)
+                if (ShouldRenderSolidColor(button, bgColor))
                 {
                     Texture2D pixel = GetPixelTexture();
                     XnaColor tint = new Microsoft.Xna.Framework.Color(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
@@ -928,14 +999,13 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             if (button.GuiText != null && !string.IsNullOrEmpty(button.GuiText.Text))
             {
                 string text = button.GuiText.Text;
-                XnaColor textColor = new Microsoft.Xna.Framework.Color(
-                    button.GuiText.Color.R,
-                    button.GuiText.Color.G,
-                    button.GuiText.Color.B,
-                    button.GuiText.Color.A);
+                BioWare.Common.Color guiTextColor = button.GuiText.Color;
+                XnaColor textColor = guiTextColor != null
+                    ? new Microsoft.Xna.Framework.Color(guiTextColor.R, guiTextColor.G, guiTextColor.B, guiTextColor.A)
+                    : Microsoft.Xna.Framework.Color.White;
 
                 // Load font from button.GuiText.Font ResRef
-                BaseBitmapFont font = LoadFont(button.GuiText.Font.ToString());
+                BaseBitmapFont font = button.GuiText.Font != null ? LoadFont(button.GuiText.Font.ToString()) : null;
                 if (font != null)
                 {
                     // Measure text size
@@ -956,7 +1026,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         private void RenderLabel(GUILabel label, XnaVector2 position, XnaVector2 size)
         {
             // Render label background if it has a border
-            if (label.Border != null && !label.Border.Fill.IsBlank())
+            if (label.Border?.Fill != null && !label.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(label.Border.Fill.ToString());
                 if (fillTexture != null)
@@ -970,14 +1040,13 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             if (label.GuiText != null && !string.IsNullOrEmpty(label.GuiText.Text))
             {
                 string text = label.GuiText.Text;
-                XnaColor textColor = new Microsoft.Xna.Framework.Color(
-                    label.GuiText.Color.R,
-                    label.GuiText.Color.G,
-                    label.GuiText.Color.B,
-                    label.GuiText.Color.A);
+                BioWare.Common.Color guiTextColor = label.GuiText.Color;
+                XnaColor textColor = guiTextColor != null
+                    ? new Microsoft.Xna.Framework.Color(guiTextColor.R, guiTextColor.G, guiTextColor.B, guiTextColor.A)
+                    : Microsoft.Xna.Framework.Color.White;
 
                 // Load font from label.GuiText.Font ResRef
-                BaseBitmapFont font = LoadFont(label.GuiText.Font.ToString());
+                BaseBitmapFont font = label.GuiText.Font != null ? LoadFont(label.GuiText.Font.ToString()) : null;
                 if (font != null)
                 {
                     // Measure text size
@@ -1000,7 +1069,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         private void RenderListBox(GUIListBox listBox, XnaVector2 position, XnaVector2 size)
         {
             // Render list box background
-            if (listBox.Border != null && !listBox.Border.Fill.IsBlank())
+            if (listBox.Border?.Fill != null && !listBox.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(listBox.Border.Fill.ToString());
                 if (fillTexture != null)
@@ -1207,8 +1276,9 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         private bool IsListBoxItemHighlighted(GUIListBox listBox, XnaVector2 listBoxPosition, XnaVector2 listBoxSize, int itemIndex, float itemHeight, int padding)
         {
             MouseState currentMouseState = Mouse.GetState();
-            int mouseX = currentMouseState.X;
-            int mouseY = currentMouseState.Y;
+            XnaVector2 guiMouse = ToGuiSpace(currentMouseState.X, currentMouseState.Y);
+            float mouseX = guiMouse.X;
+            float mouseY = guiMouse.Y;
 
             // Calculate item bounds
             float itemY = listBoxPosition.Y + (itemIndex * (itemHeight + padding));
@@ -1259,7 +1329,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             }
 
             // Render proto item background
-            if (borderToUse != null && !borderToUse.Fill.IsBlank())
+            if (borderToUse?.Fill != null && !borderToUse.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(borderToUse.Fill.ToString());
                 if (fillTexture != null)
@@ -1268,7 +1338,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                     _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
-            else if (protoItem.Border != null && !protoItem.Border.Fill.IsBlank())
+            else if (protoItem.Border?.Fill != null && !protoItem.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(protoItem.Border.Fill.ToString());
                 if (fillTexture != null)
@@ -1281,7 +1351,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             {
                 // Render solid color background if available
                 BioWare.Common.Color bgColor = protoItem.Color;
-                if (bgColor.A > 0)
+                if (ShouldRenderSolidColor(protoItem, bgColor))
                 {
                     Texture2D pixel = GetPixelTexture();
                     XnaColor tint = new XnaColor(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
@@ -1299,11 +1369,10 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
                 if (protoItem.GuiText != null)
                 {
-                    textColor = new XnaColor(
-                        protoItem.GuiText.Color.R,
-                        protoItem.GuiText.Color.G,
-                        protoItem.GuiText.Color.B,
-                        protoItem.GuiText.Color.A);
+                    BioWare.Common.Color guiTextColor = protoItem.GuiText.Color;
+                    textColor = guiTextColor != null
+                        ? new XnaColor(guiTextColor.R, guiTextColor.G, guiTextColor.B, guiTextColor.A)
+                        : XnaColor.White;
                     alignment = protoItem.GuiText.Alignment;
                     fontResRef = protoItem.GuiText.Font;
                 }
@@ -1355,7 +1424,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             XnaVector2 scrollbarSize = new XnaVector2(scrollbarWidth, scrollbarHeight);
 
             // Render scrollbar background if available
-            if (scrollBar.Border != null && !scrollBar.Border.Fill.IsBlank())
+            if (scrollBar.Border?.Fill != null && !scrollBar.Border.Fill.IsBlank())
             {
                 Texture2D scrollbarBgTexture = LoadTexture(scrollBar.Border.Fill.ToString());
                 if (scrollbarBgTexture != null)
@@ -1366,7 +1435,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             }
 
             // Render scrollbar thumb
-            if (scrollBar.GuiThumb != null && !scrollBar.GuiThumb.Image.IsBlank())
+            if (scrollBar.GuiThumb?.Image != null && !scrollBar.GuiThumb.Image.IsBlank())
             {
                 Texture2D thumbTexture = LoadTexture(scrollBar.GuiThumb.Image.ToString());
                 if (thumbTexture != null)
@@ -1390,7 +1459,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             }
 
             // Render scrollbar direction arrows if available
-            if (scrollBar.GuiDirection != null && !scrollBar.GuiDirection.Image.IsBlank())
+            if (scrollBar.GuiDirection?.Image != null && !scrollBar.GuiDirection.Image.IsBlank())
             {
                 Texture2D arrowTexture = LoadTexture(scrollBar.GuiDirection.Image.ToString());
                 if (arrowTexture != null)
@@ -1414,7 +1483,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         private void RenderProgressBar(GUIProgressBar progressBar, XnaVector2 position, XnaVector2 size)
         {
             // Render progress bar background
-            if (progressBar.Border != null && !progressBar.Border.Fill.IsBlank())
+            if (progressBar.Border?.Fill != null && !progressBar.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(progressBar.Border.Fill.ToString());
                 if (fillTexture != null)
@@ -1473,7 +1542,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             }
 
             // Render checkbox background
-            if (borderToUse != null && !borderToUse.Fill.IsBlank())
+            if (borderToUse?.Fill != null && !borderToUse.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(borderToUse.Fill.ToString());
                 if (fillTexture != null)
@@ -1482,7 +1551,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                     _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
-            else if (checkBox.Border != null && !checkBox.Border.Fill.IsBlank())
+            else if (checkBox.Border?.Fill != null && !checkBox.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(checkBox.Border.Fill.ToString());
                 if (fillTexture != null)
@@ -1495,7 +1564,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             {
                 // Render solid color background
                 BioWare.Common.Color bgColor = checkBox.Color;
-                if (bgColor.A > 0)
+                if (ShouldRenderSolidColor(checkBox, bgColor))
                 {
                     Texture2D pixel = GetPixelTexture();
                     XnaColor tint = new XnaColor(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
@@ -1522,8 +1591,9 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
             // Check if mouse is over this checkbox
             MouseState currentMouseState = Mouse.GetState();
-            int mouseX = currentMouseState.X;
-            int mouseY = currentMouseState.Y;
+            XnaVector2 guiMouse = ToGuiSpace(currentMouseState.X, currentMouseState.Y);
+            float mouseX = guiMouse.X;
+            float mouseY = guiMouse.Y;
 
             int left = (int)checkBox.Position.X;
             int top = (int)checkBox.Position.Y;
@@ -1541,13 +1611,13 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             // Try to load checkmark texture from Selected or HilightSelected if available
             Texture2D checkmarkTexture = null;
 
-            if (checkBox.Selected != null && !checkBox.Selected.Fill.IsBlank())
+            if (checkBox.Selected?.Fill != null && !checkBox.Selected.Fill.IsBlank())
             {
                 // Try Selected.Fill as checkmark texture
                 checkmarkTexture = LoadTexture(checkBox.Selected.Fill.ToString());
             }
 
-            if (checkmarkTexture == null && checkBox.HilightSelected != null && !checkBox.HilightSelected.Fill.IsBlank())
+            if (checkmarkTexture == null && checkBox.HilightSelected?.Fill != null && !checkBox.HilightSelected.Fill.IsBlank())
             {
                 // Try HilightSelected.Fill as checkmark texture
                 checkmarkTexture = LoadTexture(checkBox.HilightSelected.Fill.ToString());
@@ -1703,7 +1773,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         private void RenderSlider(GUISlider slider, XnaVector2 position, XnaVector2 size)
         {
             // Render slider track
-            if (slider.Border != null && !slider.Border.Fill.IsBlank())
+            if (slider.Border?.Fill != null && !slider.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(slider.Border.Fill.ToString());
                 if (fillTexture != null)
@@ -1729,7 +1799,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 thumb = slider.Thumb;
             }
 
-            if (thumb == null || thumb.Image.IsBlank())
+            if (thumb == null || thumb.Image == null || thumb.Image.IsBlank())
             {
                 // No thumb texture defined - skip thumb rendering
                 return;
@@ -1916,7 +1986,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         private void RenderGenericControl(GUIControl control, XnaVector2 position, XnaVector2 size)
         {
             // Render background if border is available
-            if (control.Border != null && !control.Border.Fill.IsBlank())
+            if (control.Border?.Fill != null && !control.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(control.Border.Fill.ToString());
                 if (fillTexture != null)
@@ -1925,7 +1995,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                     _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
-            else if (control.Color.A > 0)
+            else if (control.Color != null && control.Color.A > 0)
             {
                 // Render solid color background
                 Texture2D pixel = GetPixelTexture();
@@ -1978,7 +2048,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 // GUI textures are always 2D (not cube maps), so set generateMipmaps to false for better performance
                 // Based on swkotor.exe and swkotor2.exe: GUI textures loaded without mipmaps for immediate rendering
                 // Original engine: DirectX GUI textures created with D3DX_DEFAULT (no mipmap generation for GUI)
-                Texture convertedTexture = TpcToMonoGameTextureConverter.Convert(tpc, _graphicsDevice, false);
+                Texture convertedTexture = TpcToMonoGameTextureConverter.Convert(tpc, _graphicsDevice, false, flipVertical: true, flipHorizontal: true);
                 if (convertedTexture is TextureCube)
                 {
                     Console.WriteLine($"[KotorGuiManager] ERROR: GUI texture cannot be a cube map: {textureName}");

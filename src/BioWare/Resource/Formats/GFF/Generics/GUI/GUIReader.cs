@@ -98,7 +98,8 @@ namespace BioWare.Resource.Formats.GFF.Generics.GUI
             // Load color
             // Based on PyKotor: Color is Vector3 (RGB), ALPHA is separate float field
             // Original implementation: swkotor.exe/swkotor2.exe stores COLOR as RGB and ALPHA separately
-            if (gffStruct.Exists("COLOR"))
+            bool hasColor = gffStruct.Exists("COLOR");
+            if (hasColor)
             {
                 var vec = gffStruct.GetVector3("COLOR");
                 // Initialize Color with RGB from COLOR field, default alpha 1.0f
@@ -114,6 +115,11 @@ namespace BioWare.Resource.Formats.GFF.Generics.GUI
                 // Update Color's alpha channel using the Alpha property
                 // This handles both cases: Color exists (updates alpha) or Color is null (creates default white with alpha)
                 control.Alpha = alpha;
+
+                if (!hasColor)
+                {
+                    control.Properties["__color_from_alpha_only__"] = true;
+                }
             }
 
             // Load border
@@ -365,7 +371,10 @@ namespace BioWare.Resource.Formats.GFF.Generics.GUI
             // Load PROTOITEM template
             if (gffStruct.TryGetStruct("PROTOITEM", out var protoItemStruct))
             {
-                listBox.ProtoItem = (GUIProtoItem)LoadControl(protoItemStruct, listBox);
+                // KOTOR GUI files sometimes store PROTOITEM as a different CONTROLTYPE (often Button)
+                // even though the semantic role is a ProtoItem template. Be tolerant and coerce.
+                GUIControl loadedProto = LoadControl(protoItemStruct, listBox);
+                listBox.ProtoItem = CoerceToProtoItem(loadedProto);
             }
 
             // Load scrollbar
@@ -378,6 +387,70 @@ namespace BioWare.Resource.Formats.GFF.Generics.GUI
             listBox.Looping = gffStruct.Exists("LOOPING") ? gffStruct.GetUInt8("LOOPING") != 0 : true;
             listBox.MaxValue = gffStruct.Exists("MAXVALUE") ? (int?)gffStruct.GetInt32("MAXVALUE") : null;
             listBox.LeftScrollbar = gffStruct.Exists("LEFTSCROLLBAR") ? (int?)gffStruct.GetInt32("LEFTSCROLLBAR") : null;
+        }
+
+        private static GUIProtoItem CoerceToProtoItem(GUIControl control)
+        {
+            if (control is null)
+            {
+                return null;
+            }
+
+            if (control is GUIProtoItem alreadyProto)
+            {
+                return alreadyProto;
+            }
+
+            // Copy common GUIControl properties into a ProtoItem wrapper.
+            // This preserves parsed BORDER/HILIGHT/SELECTED/TEXT/EXTENT, etc.
+            var proto = new GUIProtoItem
+            {
+                GuiType = GUIControlType.ProtoItem,
+                Id = control.Id,
+                Tag = control.Tag,
+                ParentTag = control.ParentTag,
+                ParentId = control.ParentId,
+                Locked = control.Locked,
+                Extent = control.Extent,
+                Border = control.Border,
+                Color = control.Color,
+                Hilight = control.Hilight,
+                GuiText = control.GuiText,
+                Font = control.Font,
+                Moveto = control.Moveto,
+                Scrollbar = control.Scrollbar,
+                MaxValue = control.MaxValue,
+                Padding = control.Padding,
+                Looping = control.Looping,
+                LeftScrollbar = control.LeftScrollbar,
+                DrawMode = control.DrawMode,
+                Selected = control.Selected,
+                HilightSelected = control.HilightSelected,
+                IsSelected = control.IsSelected,
+                CurrentValue = control.CurrentValue,
+                Progress = control.Progress,
+                StartFromLeft = control.StartFromLeft,
+                Thumb = control.Thumb,
+                Properties = control.Properties ?? new Dictionary<string, object>()
+            };
+
+            // Ensure Position/Size are consistent with Extent.
+            proto.Position = control.Position;
+            proto.Size = control.Size;
+
+            // Copy children (proto items may include child controls).
+            if (control.Children != null && control.Children.Count > 0)
+            {
+                proto.Children = new List<GUIControl>(control.Children);
+            }
+
+            // ProtoItem supports Pulsing; if the source control has it (Button/ProtoItem), preserve.
+            if (control is GUIButton button && button.Pulsing.HasValue)
+            {
+                proto.Pulsing = button.Pulsing;
+            }
+
+            return proto;
         }
 
         private void LoadScrollBarProperties(GUIControl control, GFFStruct gffStruct)

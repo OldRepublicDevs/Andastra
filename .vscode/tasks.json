@@ -124,7 +124,7 @@
       "dependsOn": "restore"
     },
     {
-      "label": "build-kncsdecomp",
+      "label": "build-ncsdecomp",
       "type": "shell",
       "command": "dotnet",
       "args": [
