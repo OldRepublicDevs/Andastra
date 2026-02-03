@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Threading.Tasks;
 using Andastra.Game.Games.Odyssey.Combat;
 using Andastra.Game.Games.Odyssey.Components;
@@ -31,6 +32,9 @@ using JetBrains.Annotations;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Odyssey.Systems;
 using Andastra.Game.Games.Odyssey.Internal;
+using Andastra.Game.Games.Odyssey.Save;
+using Andastra.Runtime.Content.ResourceProviders;
+using Andastra.Runtime.Core.Save;
 using GameDataManager = Andastra.Game.Games.Odyssey.Data.GameDataManager;
 using TriggerSystem = Andastra.Runtime.Core.Triggers.TriggerSystem;
 using AIControllerSystem = Andastra.Runtime.Games.Common.AIControllerSystem;
@@ -92,6 +96,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         private readonly FixedTimestepGameLoop _gameLoop;
         private readonly PlayerInputHandler _inputHandler;
         private readonly ModuleStateManager _moduleStateManager;
+        private readonly Runtime.Core.Save.SaveSystem _saveSystem;
 
         // Current game state
         private RuntimeModule _currentModule;
@@ -99,6 +104,8 @@ namespace Andastra.Game.Games.Odyssey.Game
         private string _currentModuleName;
         private float _moduleHeartbeatTimer;
         private CharacterCreationData _pendingCharacterData;
+        private System.Numerics.Vector3? _loadGameEntryPosition;
+        private float? _loadGameEntryFacing;
 
         /// <summary>
         /// Gets the current player entity.
@@ -352,6 +359,19 @@ namespace Andastra.Game.Games.Odyssey.Game
             _moduleStateManager = new ModuleStateManager();
             _moduleStateManager.SetModuleState(ModuleState.Idle);
 
+            // Initialize save system for full serialization (Reva: 0x004eb750, 0x00708990)
+            string savesDir = System.IO.Path.Combine(_settings.GamePath, "saves");
+            if (!System.IO.Directory.Exists(savesDir))
+                savesDir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), _settings.Game == KotorGame.K1 ? "SWKotOR" : "SWKotOR2", "saves");
+            var provider = new GameResourceProvider(_installation);
+            var saveDataProvider = new OdysseySaveDataProvider(provider, savesDir);
+            _saveSystem = new Runtime.Core.Save.SaveSystem(_world, saveDataProvider);
+            _saveSystem.SetScriptGlobals(_globals);
+            _saveSystem.SetPartySystem(_partySystem);
+            _saveSystem.SetPlotSystem(_plotSystem);
+            _saveSystem.SetFactionManager(_factionManager);
+            _saveSystem.SetJournalSystem(_journalSystem);
+
             Console.WriteLine("[GameSession] Game session initialized");
         }
 
@@ -388,6 +408,12 @@ namespace Andastra.Game.Games.Odyssey.Game
                 _encounterSystem.Update(deltaTime);
             }
 
+            // Update perception (sight/hearing, OnPerception events) - Reva: 0x005fb0f0, PERCEPTIONDIST
+            if (_perceptionManager != null)
+            {
+                _perceptionManager.Update(deltaTime);
+            }
+
             // Update module heartbeat (fires every 6 seconds)
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00501fa0 @ 0x00501fa0 (module loading), 0x00501fa0 reads "Mod_OnHeartbeat" script from module GFF
             // Located via string references: "Mod_OnHeartbeat" @ 0x007be840
@@ -403,6 +429,99 @@ namespace Andastra.Game.Games.Odyssey.Game
                     FireModuleHeartbeat();
                 }
             }
+        }
+
+        /// <summary>
+        /// Processes player input for InGame. Reva: CExoInputInternal, click-to-move, object selection.
+        /// Call each frame before Update when InGame and not in pause/save/load overlay.
+        /// </summary>
+        /// <param name="mouseX">Mouse X in pixels.</param>
+        /// <param name="mouseY">Mouse Y in pixels.</param>
+        /// <param name="viewportWidth">Viewport width for screen-to-world.</param>
+        /// <param name="viewportHeight">Viewport height for screen-to-world.</param>
+        /// <param name="viewMatrix">Camera view matrix.</param>
+        /// <param name="projectionMatrix">Camera projection matrix.</param>
+        /// <param name="leftClick">True if left mouse button just pressed.</param>
+        /// <param name="rightClick">True if right mouse button just pressed.</param>
+        /// <param name="tabPressed">True if Tab just pressed.</param>
+        /// <param name="spacePressed">True if Space just pressed.</param>
+        /// <param name="quickSlot">Quick slot 0-8 (keys 1-9) if just pressed, else -1.</param>
+        public void ProcessPlayerInput(int mouseX, int mouseY, int viewportWidth, int viewportHeight,
+            Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix,
+            bool leftClick, bool rightClick, bool tabPressed, bool spacePressed, int quickSlot)
+        {
+            if (_inputHandler == null || _world?.CurrentArea == null) return;
+
+            Vector3 worldPos = Vector3.Zero;
+            IEntity hoveredEntity = null;
+
+            Vector3 rayOrigin = Vector3.Zero;
+            Vector3 rayDir = Vector3.UnitZ;
+
+            var navMesh = _world.CurrentArea.NavigationMesh;
+            if (navMesh != null && viewportWidth > 0 && viewportHeight > 0)
+            {
+                float sx = (float)mouseX / viewportWidth;
+                float sy = (float)mouseY / viewportHeight;
+                float ndcX = sx * 2f - 1f;
+                float ndcY = 1f - sy * 2f;
+
+                if (Matrix4x4.Invert(viewMatrix, out Matrix4x4 invView) &&
+                    Matrix4x4.Invert(projectionMatrix, out Matrix4x4 invProj))
+                {
+                    Vector4 nearPt = Vector4.Transform(new Vector4(ndcX, ndcY, 0, 1), invProj);
+                    Vector4 farPt = Vector4.Transform(new Vector4(ndcX, ndcY, 1, 1), invProj);
+                    nearPt /= nearPt.W;
+                    farPt /= farPt.W;
+                    rayOrigin = Vector3.Transform(new Vector3(nearPt.X, nearPt.Y, nearPt.Z), invView);
+                    Vector3 rayEnd = Vector3.Transform(new Vector3(farPt.X, farPt.Y, farPt.Z), invView);
+                    rayDir = Vector3.Normalize(rayEnd - rayOrigin);
+                    if (navMesh.Raycast(rayOrigin, rayDir, 1000f, out worldPos, out _))
+                    { /* valid */ }
+                }
+            }
+
+            hoveredEntity = FindEntityUnderCursor(rayOrigin, rayDir);
+
+            _inputHandler.UpdateCursorHover(worldPos, hoveredEntity);
+
+            if (leftClick) _inputHandler.OnLeftClick();
+            if (rightClick) _inputHandler.OnRightClick();
+            if (tabPressed) _inputHandler.OnCycleParty();
+            if (spacePressed) _inputHandler.OnPauseToggle();
+            if (quickSlot >= 0 && quickSlot <= 8) _inputHandler.OnQuickSlot(quickSlot);
+        }
+
+        /// <summary>
+        /// Finds the entity under the cursor ray. Reva: object selection via raycast.
+        /// </summary>
+        private IEntity FindEntityUnderCursor(Vector3 rayOrigin, Vector3 rayDir)
+        {
+            if (_world == null) return null;
+            IEntity best = null;
+            float bestDist = float.MaxValue;
+            const float pickRadius = 2.5f;
+            foreach (IEntity e in _world.GetAllEntities())
+            {
+                if (e.ObjectType != Runtime.Core.Enums.ObjectType.Creature &&
+                    e.ObjectType != Runtime.Core.Enums.ObjectType.Door &&
+                    e.ObjectType != Runtime.Core.Enums.ObjectType.Placeable)
+                    continue;
+                var t = e.GetComponent<Runtime.Core.Interfaces.Components.ITransformComponent>();
+                if (t == null) continue;
+                Vector3 pos = t.Position;
+                Vector3 toEntity = pos - rayOrigin;
+                float proj = Vector3.Dot(toEntity, rayDir);
+                if (proj < 0) continue;
+                Vector3 closest = rayOrigin + rayDir * proj;
+                float dist = Vector3.Distance(closest, pos);
+                if (dist < pickRadius && proj < bestDist)
+                {
+                    bestDist = proj;
+                    best = e;
+                }
+            }
+            return best;
         }
 
         /// <summary>
@@ -980,6 +1099,142 @@ namespace Andastra.Game.Games.Odyssey.Game
         }
 
         /// <summary>
+        /// Builds SaveGameData from current game state for saving. Reva: 0x004eb750 save game creation.
+        /// </summary>
+        /// <param name="saveName">Display name for the save.</param>
+        /// <returns>SaveGameData populated from current state, or null if not in a saveable state.</returns>
+        [CanBeNull]
+        public Runtime.Core.Save.SaveGameData BuildSaveGameData(string saveName)
+        {
+            if (string.IsNullOrEmpty(saveName) || _world?.CurrentArea == null || _currentModuleName == null)
+                return null;
+
+            var player = _playerEntity;
+            if (player == null)
+                return null;
+
+            var transform = player.GetComponent<Runtime.Core.Interfaces.Components.ITransformComponent>();
+            var pos = transform != null ? transform.Position : System.Numerics.Vector3.Zero;
+            var facing = transform != null ? transform.Facing : 0f;
+
+            var saveData = new Runtime.Core.Save.SaveGameData
+            {
+                Name = saveName,
+                SaveTime = DateTime.Now,
+                CurrentModule = _currentModuleName,
+                CurrentAreaName = _world.CurrentArea.ResRef ?? "",
+                EntryPosition = pos,
+                EntryFacing = facing,
+                PlayTime = TimeSpan.Zero,
+                GlobalVariables = new Runtime.Core.Save.GlobalVariableState(),
+                PartyState = new Runtime.Core.Save.PartyState
+                {
+                    PlayerCharacter = new Runtime.Core.Save.CreatureState
+                    {
+                        Tag = player.Tag ?? "Player",
+                        Position = pos,
+                        Facing = facing
+                    }
+                },
+                AreaStates = new Dictionary<string, Runtime.Core.Save.AreaState>(),
+                ModuleAreaMappings = new Dictionary<string, List<string>>()
+            };
+
+            return saveData;
+        }
+
+        /// <summary>
+        /// Saves the current game. Reva: BTN_SAVEGAME @ 0x007d0dbc, Savegame @ 0x004eb750.
+        /// Uses SaveSystem for full serialization (globals, party, area states, plot, faction).
+        /// </summary>
+        /// <param name="saveName">Display name for the save.</param>
+        /// <returns>True if save succeeded.</returns>
+        public bool SaveGame(string saveName)
+        {
+            if (string.IsNullOrEmpty(saveName))
+                return false;
+            if (_saveSystem == null)
+            {
+                Console.WriteLine("[GameSession] SaveSystem not initialized");
+                return false;
+            }
+            try
+            {
+                bool ok = _saveSystem.Save(saveName, Runtime.Core.Save.SaveType.Manual);
+                if (ok)
+                    Console.WriteLine("[GameSession] Game saved: " + saveName);
+                return ok;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[GameSession] SaveGame error: " + ex.Message);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Loads a saved game. Reva: CSWGuiSaveLoad load flow, LoadSavegame @ 0x00708990.
+        /// </summary>
+        /// <param name="saveName">Save folder name (e.g. "000001 - MySave").</param>
+        /// <returns>True if load succeeded, false otherwise.</returns>
+        public bool LoadGame(string saveName)
+        {
+            if (string.IsNullOrEmpty(saveName))
+            {
+                Console.WriteLine("[GameSession] LoadGame: saveName is null or empty");
+                return false;
+            }
+            if (_saveSystem == null)
+            {
+                Console.WriteLine("[GameSession] SaveSystem not initialized");
+                return false;
+            }
+
+            Console.WriteLine("[GameSession] Loading game: " + saveName);
+
+            Runtime.Core.Save.SaveGameData saveData;
+            try
+            {
+                saveData = _saveSystem.ReadSaveData(saveName);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[GameSession] LoadGame error: " + ex.Message);
+                return false;
+            }
+
+            if (saveData == null || string.IsNullOrEmpty(saveData.CurrentModule))
+            {
+                Console.WriteLine("[GameSession] LoadGame: invalid save data or no module");
+                return false;
+            }
+
+            var entities = new List<IEntity>(_world.GetAllEntities());
+            foreach (IEntity entity in entities)
+                _world.DestroyEntity(entity.ObjectId);
+
+            _pendingCharacterData = null;
+            _loadGameEntryPosition = saveData.EntryPosition;
+            _loadGameEntryFacing = saveData.EntryFacing;
+
+            _saveSystem.RestoreGlobalsFromSave(saveData);
+
+            InitializeModuleLoading();
+
+            using (new TemporaryContext(out IntPtr ctx))
+            {
+                if (!LoadModule(saveData.CurrentModule))
+                {
+                    Console.WriteLine("[GameSession] LoadGame: failed to load module " + saveData.CurrentModule);
+                    return false;
+                }
+                _saveSystem.ApplySaveDataToGame(saveData);
+                Console.WriteLine("[GameSession] Loaded game from save: " + saveName);
+                return true;
+            }
+        }
+
+        /// <summary>
         /// Determines the starting module name using the exact logic from 0x006d0b00 (swkotor2.exe: 0x006d0b00).
         /// </summary>
         /// <returns>The starting module name to load.</returns>
@@ -1302,8 +1557,10 @@ namespace Andastra.Game.Games.Odyssey.Game
                 return;
             }
 
-            System.Numerics.Vector3 entryPos = _currentModule.EntryPosition;
-            float entryFacing = (float)Math.Atan2(_currentModule.EntryDirectionY, _currentModule.EntryDirectionX);
+            System.Numerics.Vector3 entryPos = _loadGameEntryPosition ?? _currentModule.EntryPosition;
+            float entryFacing = _loadGameEntryFacing ?? (float)Math.Atan2(_currentModule.EntryDirectionY, _currentModule.EntryDirectionX);
+            _loadGameEntryPosition = null;
+            _loadGameEntryFacing = null;
 
             // Create player entity from character data if available, otherwise create default
             if (_pendingCharacterData != null)

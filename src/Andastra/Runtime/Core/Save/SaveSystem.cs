@@ -60,6 +60,7 @@ namespace Andastra.Runtime.Core.Save
         private Party.PartySystem _partySystem; // PartySystem - stored as concrete type since both are in Runtime.Core
         private PlotSystem _plotSystem; // PlotSystem - stored as concrete type since both are in Runtime.Core
         private object _factionManager; // FactionManager - stored as object to avoid dependency on engine-specific implementation
+        private object _journalSystem; // JournalSystem - stored as object to avoid dependency
 
         /// <summary>
         /// Currently loaded save data.
@@ -114,6 +115,22 @@ namespace Andastra.Runtime.Core.Save
         public void SetFactionManager(object factionManager)
         {
             _factionManager = factionManager;
+        }
+
+        /// <summary>
+        /// Sets the plot system instance for saving/loading plot state.
+        /// </summary>
+        public void SetPlotSystem(PlotSystem plotSystem)
+        {
+            _plotSystem = plotSystem;
+        }
+
+        /// <summary>
+        /// Sets the journal system instance for saving/loading journal state.
+        /// </summary>
+        public void SetJournalSystem(object journalSystem)
+        {
+            _journalSystem = journalSystem;
         }
 
         #region Save Operations
@@ -236,6 +253,20 @@ namespace Andastra.Runtime.Core.Save
 
             // Save faction reputation state
             SaveFactionReputation(saveData);
+
+            // Save journal state
+            SaveJournalState(saveData);
+
+            // Override entry position/facing with player's current position (for correct spawn on load)
+            if (_partySystem?.PlayerCharacter?.Entity != null)
+            {
+                var transform = _partySystem.PlayerCharacter.Entity.GetComponent<Interfaces.Components.ITransformComponent>();
+                if (transform != null)
+                {
+                    saveData.EntryPosition = transform.Position;
+                    saveData.EntryFacing = transform.Facing;
+                }
+            }
 
             return saveData;
         }
@@ -537,6 +568,58 @@ namespace Andastra.Runtime.Core.Save
             // Note: Faction names and global flags are not stored in FactionManager
             // They are typically loaded from repute.2da or module data
             // We leave FactionNames and FactionGlobal empty, as they can be reconstructed from repute.2da on load
+        }
+
+        private void SaveJournalState(SaveGameData saveData)
+        {
+            saveData.JournalEntries = new List<JournalEntry>();
+            saveData.QuestStates = new Dictionary<string, int>();
+
+            if (_journalSystem == null)
+                return;
+
+            var journalType = _journalSystem.GetType();
+            var getQuestStatesMethod = journalType.GetMethod("GetQuestStatesCopy", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            var getAllEntriesMethod = journalType.GetMethod("GetAllEntries", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+
+            if (getQuestStatesMethod != null)
+            {
+                var states = getQuestStatesMethod.Invoke(_journalSystem, null) as Dictionary<string, int>;
+                if (states != null)
+                {
+                    foreach (var kvp in states)
+                        saveData.QuestStates[kvp.Key] = kvp.Value;
+                }
+            }
+
+            if (getAllEntriesMethod != null)
+            {
+                var entries = getAllEntriesMethod.Invoke(_journalSystem, null) as System.Collections.IEnumerable;
+                if (entries != null)
+                {
+                    foreach (object e in entries)
+                    {
+                        if (e == null) continue;
+                        var et = e.GetType();
+                        var questTagProp = et.GetProperty("QuestTag");
+                        var stateProp = et.GetProperty("State");
+                        var dateProp = et.GetProperty("DateAdded");
+                        var textProp = et.GetProperty("Text");
+                        var xpProp = et.GetProperty("XPReward");
+                        if (questTagProp != null && stateProp != null)
+                        {
+                            saveData.JournalEntries.Add(new JournalEntry
+                            {
+                                QuestTag = questTagProp.GetValue(e) as string ?? "",
+                                State = stateProp.GetValue(e) is int s ? s : 0,
+                                DateAdded = dateProp != null && dateProp.GetValue(e) is DateTime d ? d : default,
+                                Text = textProp?.GetValue(e) as string,
+                                XPReward = xpProp != null && xpProp.GetValue(e) is int x ? x : 0
+                            });
+                        }
+                    }
+                }
+            }
         }
 
         private void SaveAreaStates(SaveGameData saveData)
@@ -1054,23 +1137,31 @@ namespace Andastra.Runtime.Core.Save
         /// </summary>
         private bool ApplySaveData(SaveGameData saveData)
         {
-            // Restore global variables
-            RestoreGlobalVariables(saveData);
-
-            // Restore party state
-            RestorePartyState(saveData);
-
-            // Restore plot state
-            RestorePlotState(saveData);
-
-            // Restore faction reputation state
-            RestoreFactionReputation(saveData);
-
-            // Load module (area states are restored when areas are loaded)
-            // This would trigger the module loader
-            // The area states become a resource overlay
-
+            ApplySaveDataToGame(saveData);
             return true;
+        }
+
+        /// <summary>
+        /// Restores global variables from save data. Call before loading module.
+        /// </summary>
+        public void RestoreGlobalsFromSave(SaveGameData saveData)
+        {
+            if (saveData != null)
+                RestoreGlobalVariables(saveData);
+        }
+
+        /// <summary>
+        /// Applies party, plot, and faction from save data. Call after module is loaded.
+        /// Sets CurrentSave.
+        /// </summary>
+        public void ApplySaveDataToGame(SaveGameData saveData)
+        {
+            if (saveData == null) return;
+            RestorePartyState(saveData);
+            RestorePlotState(saveData);
+            RestoreFactionReputation(saveData);
+            RestoreJournalState(saveData);
+            CurrentSave = saveData;
         }
 
         // Restore global variables from save data
@@ -1871,6 +1962,18 @@ namespace Andastra.Runtime.Core.Save
             }
         }
 
+        private void RestoreJournalState(SaveGameData saveData)
+        {
+            if (saveData.JournalEntries == null || saveData.QuestStates == null || _journalSystem == null)
+                return;
+
+            var restoreMethod = _journalSystem.GetType().GetMethod("RestoreFromSave", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            if (restoreMethod != null)
+            {
+                restoreMethod.Invoke(_journalSystem, new object[] { saveData.QuestStates, saveData.JournalEntries });
+            }
+        }
+
         /// <summary>
         /// Gets the area state for a specific area from the current save.
         /// </summary>
@@ -1916,6 +2019,14 @@ namespace Andastra.Runtime.Core.Save
         public bool SaveExists(string saveName)
         {
             return _dataProvider.SaveExists(saveName);
+        }
+
+        /// <summary>
+        /// Reads save data without applying it. For custom load flows.
+        /// </summary>
+        public SaveGameData ReadSaveData(string saveName)
+        {
+            return string.IsNullOrEmpty(saveName) ? null : _dataProvider.ReadSave(saveName);
         }
 
         #endregion

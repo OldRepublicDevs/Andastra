@@ -36,7 +36,7 @@ namespace Andastra.Game.Graphics.MonoGame.UI
         private SpriteFont _font;
         private bool _isVisible = false;
         private int _selectedIndex = 0;
-        private readonly string[] _menuItems = { "Resume", "Options", "Exit" };
+        private readonly string[] _menuItems = { "Resume", "Save Game", "Load Game", "Options", "Exit" };
 
         public bool IsVisible
         {
@@ -114,10 +114,16 @@ namespace Andastra.Game.Graphics.MonoGame.UI
                     _isVisible = false;
                     OnResume?.Invoke();
                     break;
-                case 1: // Options
+                case 1: // Save Game
+                    OnSaveGame?.Invoke();
+                    break;
+                case 2: // Load Game
+                    OnLoadGame?.Invoke();
+                    break;
+                case 3: // Options
                     OnOptions?.Invoke();
                     break;
-                case 2: // Exit
+                case 4: // Exit
                     OnExit?.Invoke();
                     break;
             }
@@ -127,6 +133,16 @@ namespace Andastra.Game.Graphics.MonoGame.UI
         /// Event fired when resume is selected.
         /// </summary>
         public event Action OnResume;
+
+        /// <summary>
+        /// Event fired when Save Game is selected (Reva: BTN_SAVEGAME).
+        /// </summary>
+        public event Action OnSaveGame;
+
+        /// <summary>
+        /// Event fired when Load Game is selected.
+        /// </summary>
+        public event Action OnLoadGame;
 
         /// <summary>
         /// Event fired when options is selected.

@@ -615,10 +615,17 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             Matrix transform = Matrix.CreateScale(_guiScale, _guiScale, 1.0f) * Matrix.CreateTranslation(_guiOffset.X, _guiOffset.Y, 0.0f);
             _spriteBatch.Begin(Microsoft.Xna.Framework.Graphics.SpriteSortMode.Deferred, Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone, null, transform);
 
-            // Render all controls recursively
-            foreach (var control in _currentGui.Gui.Controls)
+            // Render from Controls list (KOTOR GUIs) or from Root when Controls is empty (some GFF layouts)
+            if (_currentGui.Gui.Controls != null && _currentGui.Gui.Controls.Count > 0)
             {
-                RenderControl(control, XnaVector2.Zero);
+                foreach (var control in _currentGui.Gui.Controls)
+                {
+                    RenderControl(control, XnaVector2.Zero);
+                }
+            }
+            else if (_currentGui.Gui.Root != null)
+            {
+                RenderControl(_currentGui.Gui.Root, XnaVector2.Zero);
             }
 
             _spriteBatch.End();

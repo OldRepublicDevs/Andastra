@@ -133,7 +133,23 @@ namespace Andastra.Game.Games.Odyssey.Save
                 byte[] partyData = SerializeGFF(partyGff);
                 erf.SetData("PARTYTABLE", ResourceType.GFF, partyData);
 
-                // 4. Save per-module state ([module]_s.rim)
+                // 4. Save journal (JOURNAL.res)
+                if (saveData.JournalEntries != null || saveData.QuestStates != null)
+                {
+                    GFF journalGff = CreateJournalGFF(saveData);
+                    byte[] journalData = SerializeGFF(journalGff);
+                    erf.SetData("JOURNAL", ResourceType.GFF, journalData);
+                }
+
+                // 5. Save faction reputation (REPUTE.res)
+                if (saveData.FactionReputation != null && saveData.FactionReputation.Reputations != null && saveData.FactionReputation.Reputations.Count > 0)
+                {
+                    GFF reputeGff = CreateReputeGFF(saveData.FactionReputation);
+                    byte[] reputeData = SerializeGFF(reputeGff);
+                    erf.SetData("REPUTE", ResourceType.GFF, reputeData);
+                }
+
+                // 6. Save per-module state ([module]_s.rim)
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module state saved as ERF archive containing area state GFF files
                 // Original implementation: Each visited area has its state saved (entity positions, door/placeable states, etc.)
                 // CreateModuleStateERF saves all area states to GFF format and packages them in ERF archive
@@ -240,7 +256,23 @@ namespace Andastra.Game.Games.Odyssey.Save
                     saveData.PartyState = LoadPartyTableGFF(partyGff);
                 }
 
-                // 4. Load per-module state ([module]_s.rim)
+                // 4. Load journal (JOURNAL.res)
+                byte[] journalData = erf.Get("JOURNAL", ResourceType.GFF);
+                if (journalData != null)
+                {
+                    GFF journalGff = DeserializeGFF(journalData);
+                    LoadJournalGFF(journalGff, saveData);
+                }
+
+                // 5. Load faction reputation (REPUTE.res)
+                byte[] reputeData = erf.Get("REPUTE", ResourceType.GFF);
+                if (reputeData != null)
+                {
+                    GFF reputeGff = DeserializeGFF(reputeData);
+                    saveData.FactionReputation = LoadReputeGFF(reputeGff);
+                }
+
+                // 6. Load per-module state ([module]_s.rim)
                 string moduleRimName = saveData.CurrentModule + "_s";
                 byte[] moduleRimData = erf.Get(moduleRimName, ResourceType.ERF);
                 if (moduleRimData != null)
@@ -499,31 +531,232 @@ namespace Andastra.Game.Games.Odyssey.Save
             return gff;
         }
 
+        /// <summary>
+        /// Creates PARTYTABLE GFF matching Reva 0x0057bd70 structure (full PT format).
+        /// Writes PT_PCNAME, PT_GOLD, PT_XP_POOL, PT_PLAYEDSECONDS, PT_SOLOMODE, PT_CHEAT_USED,
+        /// PT_MEMBERS, PT_AVAIL_NPCS, PT_INFLUENCE, PT_AISTATE, PT_FOLLOWSTATE, PT_DISABLEMAP,
+        /// PT_DISABLEREGEN, plus PartyList (TemplateResRef/IsInParty) for our loader.
+        /// </summary>
         private GFF CreatePartyTableGFF(PartyState partyState)
         {
-            var gff = new GFF();
+            var gff = new GFF(GFFContent.PT);
             var root = gff.Root;
+            if (partyState == null) return gff;
 
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057bd70 @ 0x0057bd70
-            // PT GFF structure: PartyList array with party member data
+            // PT_PCNAME
+            string pcName = partyState.PlayerCharacter?.Tag ?? "";
+            SetStringField(root, "PT_PCNAME", pcName);
+
+            // PT_GOLD, PT_ITEM_COMPONENT, PT_ITEM_CHEMICAL, PT_SWOOP1-3
+            SetIntField(root, "PT_GOLD", partyState.Gold);
+            SetIntField(root, "PT_ITEM_COMPONENT", partyState.ItemComponent);
+            SetIntField(root, "PT_ITEM_CHEMICAL", partyState.ItemChemical);
+            SetIntField(root, "PT_SWOOP1", partyState.Swoop1);
+            SetIntField(root, "PT_SWOOP2", partyState.Swoop2);
+            SetIntField(root, "PT_SWOOP3", partyState.Swoop3);
+
+            // PT_XP_POOL (float), PT_PLAYEDSECONDS
+            SetFloatField(root, "PT_XP_POOL", partyState.ExperiencePoints);
+            SetIntField(root, "PT_PLAYEDSECONDS", (int)partyState.PlayTime.TotalSeconds);
+
+            // PT_CONTROLLED_NPC (float), PT_SOLOMODE, PT_CHEAT_USED
+            SetFloatField(root, "PT_CONTROLLED_NPC", partyState.ControlledNPC >= 0 ? partyState.ControlledNPC : -1f);
+            SetIntField(root, "PT_SOLOMODE", partyState.SoloMode ? 1 : 0);
+            SetIntField(root, "PT_CHEAT_USED", partyState.CheatUsed ? 1 : 0);
+
+            // PT_MEMBERS (list: PT_MEMBER_ID float = index, PT_IS_LEADER byte)
+            // We use ResRef directly; original uses partytable.2da index. Write both PartyList and PT_MEMBERS.
+            int numMembers = partyState.SelectedParty?.Count ?? 0;
+            SetIntField(root, "PT_NUM_MEMBERS", numMembers);
+            var ptMembers = new GFFList();
+            root.SetList("PT_MEMBERS", ptMembers);
+            if (partyState.SelectedParty != null)
+            {
+                for (int i = 0; i < partyState.SelectedParty.Count; i++)
+                {
+                    string resRef = partyState.SelectedParty[i];
+                    var entry = ptMembers.Add();
+                    SetFloatField(entry, "PT_MEMBER_ID", i); // Index; original uses partytable.2da
+                    SetIntField(entry, "PT_IS_LEADER", string.Equals(partyState.LeaderResRef, resRef, StringComparison.OrdinalIgnoreCase) ? 1 : 0);
+                }
+            }
+
+            // PT_NUM_PUPPETS, PT_PUPPETS
+            int numPuppets = partyState.Puppets?.Count ?? 0;
+            SetIntField(root, "PT_NUM_PUPPETS", numPuppets);
+            var ptPuppets = new GFFList();
+            root.SetList("PT_PUPPETS", ptPuppets);
+            if (partyState.Puppets != null)
+            {
+                foreach (uint pid in partyState.Puppets)
+                {
+                    var e = ptPuppets.Add();
+                    SetFloatField(e, "PT_PUPPET_ID", pid);
+                }
+            }
+
+            // PT_AVAIL_PUPS (3 entries)
+            var availPups = new GFFList();
+            root.SetList("PT_AVAIL_PUPS", availPups);
+            for (int i = 0; i < 3; i++)
+            {
+                var e = availPups.Add();
+                SetIntField(e, "PT_PUP_AVAIL", (partyState.AvailablePuppets != null && i < partyState.AvailablePuppets.Count && partyState.AvailablePuppets[i]) ? 1 : 0);
+                SetIntField(e, "PT_PUP_SELECT", (partyState.SelectablePuppets != null && i < partyState.SelectablePuppets.Count && partyState.SelectablePuppets[i]) ? 1 : 0);
+            }
+
+            // PT_AVAIL_NPCS (12 entries)
+            var availNpcs = new GFFList();
+            root.SetList("PT_AVAIL_NPCS", availNpcs);
+            var memberValues = partyState.AvailableMembers != null ? new List<PartyMemberState>(partyState.AvailableMembers.Values) : new List<PartyMemberState>();
+            for (int i = 0; i < 12; i++)
+            {
+                var e = availNpcs.Add();
+                bool available = i < memberValues.Count;
+                SetIntField(e, "PT_NPC_AVAIL", available ? 1 : 0);
+                SetIntField(e, "PT_NPC_SELECT", (available && memberValues[i].IsSelectable) ? 1 : 0);
+            }
+
+            // PT_INFLUENCE (12 entries)
+            var influenceList = new GFFList();
+            root.SetList("PT_INFLUENCE", influenceList);
+            for (int i = 0; i < 12; i++)
+            {
+                var e = influenceList.Add();
+                float inf = (partyState.Influence != null && i < partyState.Influence.Count) ? partyState.Influence[i] : 50f;
+                SetFloatField(e, "PT_NPC_INFLUENCE", inf);
+            }
+
+            // PT_AISTATE, PT_FOLLOWSTATE
+            SetFloatField(root, "PT_AISTATE", partyState.AIState);
+            SetFloatField(root, "PT_FOLLOWSTATE", partyState.FollowState);
+
+            // PT_PAZAAKCARDS (23), PT_PAZSIDELIST (10)
+            var pazaakCards = new GFFList();
+            root.SetList("PT_PAZAAKCARDS", pazaakCards);
+            for (int i = 0; i < 23; i++)
+            {
+                var e = pazaakCards.Add();
+                int c = (partyState.PazaakCards != null && i < partyState.PazaakCards.Count) ? partyState.PazaakCards[i] : 0;
+                SetFloatField(e, "PT_PAZAAKCOUNT", c);
+            }
+            var pazaakSide = new GFFList();
+            root.SetList("PT_PAZSIDELIST", pazaakSide);
+            for (int i = 0; i < 10; i++)
+            {
+                var e = pazaakSide.Add();
+                int c = (partyState.PazaakSideList != null && i < partyState.PazaakSideList.Count) ? partyState.PazaakSideList[i] : 0;
+                SetFloatField(e, "PT_PAZSIDECARD", c);
+            }
+
+            // PT_TUT_WND_SHOWN (33 bytes)
+            if (partyState.TutorialWindowsShown != null && partyState.TutorialWindowsShown.Count >= 33)
+            {
+                byte[] tutBytes = new byte[33];
+                for (int i = 0; i < 33; i++)
+                    tutBytes[i] = partyState.TutorialWindowsShown[i] ? (byte)1 : (byte)0;
+                root.SetBinary("PT_TUT_WND_SHOWN", tutBytes);
+            }
+
+            SetFloatField(root, "PT_LAST_GUI_PNL", partyState.LastGUIPanel);
+
+            // PT_FB_MSG_LIST, PT_DLG_MSG_LIST, PT_COM_MSG_LIST
+            WriteMessageList(root, "PT_FB_MSG_LIST", partyState.FeedbackMessages, (e, m) => { SetStringField(e, "PT_FB_MSG_MSG", m.Message ?? ""); SetIntField(e, "PT_FB_MSG_TYPE", m.Type); SetIntField(e, "PT_FB_MSG_COLOR", m.Color); });
+            WriteMessageList(root, "PT_DLG_MSG_LIST", partyState.DialogueMessages, (e, m) => { SetStringField(e, "PT_DLG_MSG_SPKR", m.Speaker ?? ""); SetStringField(e, "PT_DLG_MSG_MSG", m.Message ?? ""); });
+            WriteMessageList(root, "PT_COM_MSG_LIST", partyState.CombatMessages, (e, m) => { SetStringField(e, "PT_COM_MSG_MSG", m.Message ?? ""); SetIntField(e, "PT_COM_MSG_TYPE", m.Type); SetIntField(e, "PT_COM_MSG_COOR", m.Color); });
+
+            var costMult = new GFFList();
+            root.SetList("PT_COST_MULT_LIST", costMult);
+            if (partyState.CostMultipliers != null)
+            {
+                foreach (float v in partyState.CostMultipliers)
+                {
+                    var e = costMult.Add();
+                    SetFloatField(e, "PT_COST_MULT_VALUE", v);
+                }
+            }
+
+            SetFloatField(root, "PT_DISABLEMAP", partyState.DisableMap ? 1f : 0f);
+            SetFloatField(root, "PT_DISABLEREGEN", partyState.DisableRegen ? 1f : 0f);
+
+            // PartyList (TemplateResRef/IsInParty) for our loader
             var partyList = new GFFList();
             root.SetList("PartyList", partyList);
-
-            if (partyState != null && partyState.AvailableMembers != null)
+            if (partyState.AvailableMembers != null)
             {
                 foreach (KeyValuePair<string, PartyMemberState> kvp in partyState.AvailableMembers)
                 {
                     var memberStruct = partyList.Add();
                     SetStringField(memberStruct, "TemplateResRef", kvp.Key ?? "");
-                    // Save party member state data
-                    PartyMemberState member = kvp.Value;
-                    if (member != null)
-                    {
-                        SetIntField(memberStruct, "IsInParty", partyState.SelectedParty != null && partyState.SelectedParty.Contains(kvp.Key) ? 1 : 0);
-                    }
+                    SetIntField(memberStruct, "IsInParty", partyState.SelectedParty != null && partyState.SelectedParty.Contains(kvp.Key) ? 1 : 0);
                 }
             }
 
+            return gff;
+        }
+
+        private void WriteMessageList<T>(GFFStruct root, string listName, List<T> items, Action<GFFStruct, T> write) where T : class
+        {
+            var list = new GFFList();
+            root.SetList(listName, list);
+            if (items == null) return;
+            foreach (T m in items)
+            {
+                if (m == null) continue;
+                var e = list.Add();
+                write(e, m);
+            }
+        }
+
+        private GFF CreateJournalGFF(SaveGameData saveData)
+        {
+            var gff = new GFF();
+            var root = gff.Root;
+            if (saveData.QuestStates != null)
+            {
+                var qsList = new GFFList();
+                root.SetList("QuestStates", qsList);
+                foreach (var kvp in saveData.QuestStates)
+                {
+                    var s = qsList.Add();
+                    SetStringField(s, "QuestTag", kvp.Key ?? "");
+                    SetIntField(s, "State", kvp.Value);
+                }
+            }
+            if (saveData.JournalEntries != null)
+            {
+                var entryList = new GFFList();
+                root.SetList("EntryList", entryList);
+                foreach (var e in saveData.JournalEntries)
+                {
+                    var s = entryList.Add();
+                    SetStringField(s, "QuestTag", e.QuestTag ?? "");
+                    SetIntField(s, "State", e.State);
+                    SetInt64Field(s, "DateAdded", e.DateAdded.ToFileTime());
+                    SetStringField(s, "Text", e.Text ?? "");
+                    SetIntField(s, "XPReward", e.XPReward);
+                }
+            }
+            return gff;
+        }
+
+        private GFF CreateReputeGFF(FactionReputationState repute)
+        {
+            var gff = new GFF();
+            var root = gff.Root;
+            if (repute?.Reputations == null) return gff;
+            var repList = new GFFList();
+            root.SetList("RepList", repList);
+            foreach (var srcKvp in repute.Reputations)
+            {
+                foreach (var tgtKvp in srcKvp.Value)
+                {
+                    var s = repList.Add();
+                    SetIntField(s, "FactionID1", srcKvp.Key);
+                    SetIntField(s, "FactionID2", tgtKvp.Key);
+                    SetIntField(s, "FactionRep", tgtKvp.Value);
+                }
+            }
             return gff;
         }
 
@@ -738,7 +971,9 @@ namespace Andastra.Game.Games.Odyssey.Save
             saveData.Name = GetStringField(root, "SAVEGAMENAME", "");
             saveData.CurrentAreaName = GetStringField(root, "AREANAME", "");
             saveData.PlayTime = TimeSpan.FromSeconds(GetFloatField(root, "TIMEPLAYED", 0f));
-            saveData.CurrentModule = GetStringField(root, "MODULENAME", "");
+            string mod = GetStringField(root, "MODULENAME", "");
+            if (string.IsNullOrEmpty(mod)) mod = GetStringField(root, "LASTMODULE", "");
+            saveData.CurrentModule = mod;
             saveData.SaveNumber = GetIntField(root, "SAVENUMBER", 0);
             saveData.CheatUsed = GetIntField(root, "CHEATUSED", 0) != 0;
             saveData.GameplayHint = GetIntField(root, "GAMEPLAYHINT", 0) != 0;
@@ -863,51 +1098,273 @@ namespace Andastra.Game.Games.Odyssey.Save
             return state;
         }
 
+        /// <summary>
+        /// Loads PARTYTABLE GFF matching Reva 0x0057dcd0 structure. Reads full PT_ fields and PartyList.
+        /// </summary>
         private PartyState LoadPartyTableGFF(GFF gff)
         {
             var state = new PartyState();
             var root = gff.Root;
-            if (root == null)
+            if (root == null) return state;
+
+            // PT root-level fields
+            state.PlayerCharacter = state.PlayerCharacter ?? new CreatureState();
+            state.PlayerCharacter.Tag = GetStringField(root, "PT_PCNAME", "");
+            state.Gold = GetIntField(root, "PT_GOLD", 0);
+            state.ItemComponent = GetIntField(root, "PT_ITEM_COMPONENT", 0);
+            state.ItemChemical = GetIntField(root, "PT_ITEM_CHEMICAL", 0);
+            state.Swoop1 = GetIntField(root, "PT_SWOOP1", 0);
+            state.Swoop2 = GetIntField(root, "PT_SWOOP2", 0);
+            state.Swoop3 = GetIntField(root, "PT_SWOOP3", 0);
+            state.ExperiencePoints = (int)GetFloatField(root, "PT_XP_POOL", 0f);
+            state.PlayTime = TimeSpan.FromSeconds(GetIntField(root, "PT_PLAYEDSECONDS", 0));
+            float controlledNpc = GetFloatField(root, "PT_CONTROLLED_NPC", -1f);
+            state.ControlledNPC = controlledNpc >= 0 ? (int)controlledNpc : -1;
+            state.SoloMode = GetIntField(root, "PT_SOLOMODE", 0) != 0;
+            state.CheatUsed = GetIntField(root, "PT_CHEAT_USED", 0) != 0;
+            state.AIState = (int)GetFloatField(root, "PT_AISTATE", 0f);
+            state.FollowState = (int)GetFloatField(root, "PT_FOLLOWSTATE", 0f);
+            state.LastGUIPanel = (int)GetFloatField(root, "PT_LAST_GUI_PNL", 0f);
+            state.DisableMap = GetFloatField(root, "PT_DISABLEMAP", 0f) != 0f;
+            state.DisableRegen = GetFloatField(root, "PT_DISABLEREGEN", 0f) != 0f;
+
+            // PT_AVAIL_NPCS, PT_INFLUENCE
+            var availNpcs = root.GetList("PT_AVAIL_NPCS");
+            if (availNpcs != null)
             {
-                return state;
+                int i = 0;
+                foreach (GFFStruct s in availNpcs)
+                {
+                    if (i >= 12) break;
+                    bool available = GetIntField(s, "PT_NPC_AVAIL", 0) != 0;
+                    bool selectable = GetIntField(s, "PT_NPC_SELECT", 0) != 0;
+                    if (state.AvailableMembers == null) state.AvailableMembers = new Dictionary<string, PartyMemberState>();
+                    // We'll populate from PartyList; here we just track flags if we had member list by index
+                    i++;
+                }
+            }
+            var influenceList = root.GetList("PT_INFLUENCE");
+            if (influenceList != null)
+            {
+                state.Influence = state.Influence ?? new List<int>();
+                state.Influence.Clear();
+                int idx = 0;
+                foreach (GFFStruct s in influenceList)
+                {
+                    if (idx >= 12) break;
+                    state.Influence.Add((int)GetFloatField(s, "PT_NPC_INFLUENCE", 50f));
+                    idx++;
+                }
             }
 
-            // Initialize collections if null
-            if (state.AvailableMembers == null)
+            // PT_PUPPETS, PT_AVAIL_PUPS, PT_PAZAAKCARDS, PT_PAZSIDELIST
+            var puppetsList = root.GetList("PT_PUPPETS");
+            if (puppetsList != null)
             {
-                state.AvailableMembers = new Dictionary<string, PartyMemberState>();
+                state.Puppets = state.Puppets ?? new List<uint>();
+                state.Puppets.Clear();
+                foreach (GFFStruct s in puppetsList)
+                    state.Puppets.Add((uint)GetFloatField(s, "PT_PUPPET_ID", 0f));
             }
-            if (state.SelectedParty == null)
+            var availPups = root.GetList("PT_AVAIL_PUPS");
+            if (availPups != null)
             {
-                state.SelectedParty = new List<string>();
+                state.AvailablePuppets = state.AvailablePuppets ?? new List<bool>();
+                state.SelectablePuppets = state.SelectablePuppets ?? new List<bool>();
+                state.AvailablePuppets.Clear();
+                state.SelectablePuppets.Clear();
+                int i = 0;
+                foreach (GFFStruct s in availPups)
+                {
+                    if (i >= 3) break;
+                    state.AvailablePuppets.Add(GetIntField(s, "PT_PUP_AVAIL", 0) != 0);
+                    state.SelectablePuppets.Add(GetIntField(s, "PT_PUP_SELECT", 0) != 0);
+                    i++;
+                }
+            }
+            var pazaakCards = root.GetList("PT_PAZAAKCARDS");
+            if (pazaakCards != null)
+            {
+                state.PazaakCards = state.PazaakCards ?? new List<int>();
+                state.PazaakCards.Clear();
+                foreach (GFFStruct s in pazaakCards)
+                    state.PazaakCards.Add((int)GetFloatField(s, "PT_PAZAAKCOUNT", 0f));
+            }
+            var pazaakSide = root.GetList("PT_PAZSIDELIST");
+            if (pazaakSide != null)
+            {
+                state.PazaakSideList = state.PazaakSideList ?? new List<int>();
+                state.PazaakSideList.Clear();
+                foreach (GFFStruct s in pazaakSide)
+                    state.PazaakSideList.Add((int)GetFloatField(s, "PT_PAZSIDECARD", 0f));
             }
 
+            LoadMessageLists(root, state);
+
+            var costMult = root.GetList("PT_COST_MULT_LIST");
+            if (costMult != null)
+            {
+                state.CostMultipliers = state.CostMultipliers ?? new List<float>();
+                state.CostMultipliers.Clear();
+                foreach (GFFStruct s in costMult)
+                    state.CostMultipliers.Add(GetFloatField(s, "PT_COST_MULT_VALUE", 1f));
+            }
+
+            // PT_TUT_WND_SHOWN
+            try
+            {
+                byte[] tutBytes = root.GetBinary("PT_TUT_WND_SHOWN");
+                if (tutBytes != null && tutBytes.Length >= 33)
+                {
+                    state.TutorialWindowsShown = state.TutorialWindowsShown ?? new List<bool>();
+                    state.TutorialWindowsShown.Clear();
+                    for (int i = 0; i < 33; i++)
+                        state.TutorialWindowsShown.Add(tutBytes[i] != 0);
+                }
+            }
+            catch { }
+
+            // PartyList (our format) - primary source for members
+            if (state.AvailableMembers == null) state.AvailableMembers = new Dictionary<string, PartyMemberState>();
+            if (state.SelectedParty == null) state.SelectedParty = new List<string>();
             var partyList = root.GetList("PartyList");
             if (partyList != null)
             {
                 foreach (GFFStruct memberStruct in partyList)
                 {
                     string templateResRef = GetStringField(memberStruct, "TemplateResRef", "");
-                    if (string.IsNullOrEmpty(templateResRef))
-                    {
-                        continue;
-                    }
-
-                    var memberState = new PartyMemberState
-                    {
-                        TemplateResRef = templateResRef
-                    };
+                    if (string.IsNullOrEmpty(templateResRef)) continue;
+                    var memberState = new PartyMemberState { TemplateResRef = templateResRef, IsAvailable = true, IsSelectable = true };
                     bool isInParty = GetIntField(memberStruct, "IsInParty", 0) != 0;
-
                     state.AvailableMembers[templateResRef] = memberState;
-
-                    if (isInParty)
-                    {
-                        state.SelectedParty.Add(templateResRef);
-                    }
+                    if (isInParty) state.SelectedParty.Add(templateResRef);
                 }
             }
 
+            // PT_MEMBERS - use for leader/order if PartyList didn't provide; also fallback when PartyList empty
+            var ptMembers = root.GetList("PT_MEMBERS");
+            if (ptMembers != null && (state.SelectedParty == null || state.SelectedParty.Count == 0))
+            {
+                var resRefsByIndex = new List<string>();
+                if (partyList != null)
+                {
+                    foreach (GFFStruct m in partyList)
+                    {
+                        string r = GetStringField(m, "TemplateResRef", "");
+                        if (!string.IsNullOrEmpty(r)) resRefsByIndex.Add(r);
+                    }
+                }
+                foreach (GFFStruct entry in ptMembers)
+                {
+                    int memberId = (int)GetFloatField(entry, "PT_MEMBER_ID", 0f);
+                    bool isLeader = GetIntField(entry, "PT_IS_LEADER", 0) != 0;
+                    string resRef = memberId < resRefsByIndex.Count ? resRefsByIndex[memberId] : null;
+                    if (resRef != null)
+                    {
+                        if (state.SelectedParty == null) state.SelectedParty = new List<string>();
+                        if (!state.SelectedParty.Contains(resRef)) state.SelectedParty.Add(resRef);
+                        if (isLeader) state.LeaderResRef = resRef;
+                    }
+                }
+            }
+            else if (ptMembers != null && state.SelectedParty != null)
+            {
+                var resRefsByIndex = new List<string>(state.SelectedParty);
+                foreach (GFFStruct entry in ptMembers)
+                {
+                    int memberId = (int)GetFloatField(entry, "PT_MEMBER_ID", 0f);
+                    bool isLeader = GetIntField(entry, "PT_IS_LEADER", 0) != 0;
+                    if (memberId >= 0 && memberId < resRefsByIndex.Count && isLeader)
+                        state.LeaderResRef = resRefsByIndex[memberId];
+                }
+            }
+
+            if (state.SelectedParty != null && state.SelectedParty.Count > 0 && string.IsNullOrEmpty(state.LeaderResRef))
+                state.LeaderResRef = state.SelectedParty[0];
+
+            return state;
+        }
+
+        private void LoadMessageLists(GFFStruct root, PartyState state)
+        {
+            var fbList = root.GetList("PT_FB_MSG_LIST");
+            if (fbList != null)
+            {
+                state.FeedbackMessages = state.FeedbackMessages ?? new List<FeedbackMessage>();
+                state.FeedbackMessages.Clear();
+                foreach (GFFStruct s in fbList)
+                    state.FeedbackMessages.Add(new FeedbackMessage { Message = GetStringField(s, "PT_FB_MSG_MSG", ""), Type = GetIntField(s, "PT_FB_MSG_TYPE", 0), Color = (byte)GetIntField(s, "PT_FB_MSG_COLOR", 0) });
+            }
+            var dlgList = root.GetList("PT_DLG_MSG_LIST");
+            if (dlgList != null)
+            {
+                state.DialogueMessages = state.DialogueMessages ?? new List<DialogueMessage>();
+                state.DialogueMessages.Clear();
+                foreach (GFFStruct s in dlgList)
+                    state.DialogueMessages.Add(new DialogueMessage { Speaker = GetStringField(s, "PT_DLG_MSG_SPKR", ""), Message = GetStringField(s, "PT_DLG_MSG_MSG", "") });
+            }
+            var comList = root.GetList("PT_COM_MSG_LIST");
+            if (comList != null)
+            {
+                state.CombatMessages = state.CombatMessages ?? new List<CombatMessage>();
+                state.CombatMessages.Clear();
+                foreach (GFFStruct s in comList)
+                    state.CombatMessages.Add(new CombatMessage { Message = GetStringField(s, "PT_COM_MSG_MSG", ""), Type = GetIntField(s, "PT_COM_MSG_TYPE", 0), Color = (byte)GetIntField(s, "PT_COM_MSG_COOR", 0) });
+            }
+        }
+
+        private void LoadJournalGFF(GFF gff, SaveGameData saveData)
+        {
+            var root = gff.Root;
+            if (root == null) return;
+            saveData.QuestStates = new Dictionary<string, int>();
+            saveData.JournalEntries = new List<JournalEntry>();
+            var qsList = root.GetList("QuestStates");
+            if (qsList != null)
+            {
+                foreach (GFFStruct s in qsList)
+                {
+                    string tag = GetStringField(s, "QuestTag", "");
+                    if (!string.IsNullOrEmpty(tag))
+                        saveData.QuestStates[tag] = GetIntField(s, "State", 0);
+                }
+            }
+            var entryList = root.GetList("EntryList");
+            if (entryList != null)
+            {
+                foreach (GFFStruct s in entryList)
+                {
+                    saveData.JournalEntries.Add(new JournalEntry
+                    {
+                        QuestTag = GetStringField(s, "QuestTag", ""),
+                        State = GetIntField(s, "State", 0),
+                        DateAdded = GetInt64Field(s, "DateAdded", 0) != 0 ? DateTime.FromFileTime(GetInt64Field(s, "DateAdded", 0)) : default,
+                        Text = GetStringField(s, "Text", ""),
+                        XPReward = GetIntField(s, "XPReward", 0)
+                    });
+                }
+            }
+        }
+
+        private FactionReputationState LoadReputeGFF(GFF gff)
+        {
+            var state = new FactionReputationState();
+            var root = gff.Root;
+            if (root == null) return state;
+            if (state.Reputations == null) state.Reputations = new Dictionary<int, Dictionary<int, int>>();
+            var repList = root.GetList("RepList");
+            if (repList != null)
+            {
+                foreach (GFFStruct s in repList)
+                {
+                    int id1 = GetIntField(s, "FactionID1", 0);
+                    int id2 = GetIntField(s, "FactionID2", 0);
+                    int rep = GetIntField(s, "FactionRep", 0);
+                    if (!state.Reputations.ContainsKey(id1))
+                        state.Reputations[id1] = new Dictionary<int, int>();
+                    state.Reputations[id1][id2] = rep;
+                }
+            }
             return state;
         }
 
