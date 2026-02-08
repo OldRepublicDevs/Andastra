@@ -28,7 +28,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Entity registration: RegisterEntity/UnregisterEntity for adding/removing entities from world
     ///
     /// Engine-specific implementations:
-    /// - Odyssey (swkotor.exe, swkotor2.exe): OdysseyWorld : BaseWorld
+    /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): OdysseyWorld : BaseWorld
     ///   - ObjectId lookup via "ObjectId" string reference, ObjectId assignment and serialization
     ///   - AreaId management via "AreaId" string reference
     ///   - Module management with ARE/GIT file loading

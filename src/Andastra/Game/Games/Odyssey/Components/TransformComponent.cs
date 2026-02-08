@@ -8,9 +8,9 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// </summary>
     /// <remarks>
     /// Odyssey Transform Component:
-    /// - Based on swkotor.exe and swkotor2.exe entity transform system
-    /// - swkotor.exe: XPosition @ 0x00745d80, YPosition @ 0x00745d74, ZPosition @ 0x00745d68, XOrientation @ 0x00745d38, YOrientation @ 0x00745d48, ZOrientation @ 0x00745d58
-    /// - swkotor2.exe: XPosition @ 0x007bd000, YPosition @ 0x007bcff4, ZPosition @ 0x007bcfe8, XOrientation @ 0x007bcfb8, YOrientation @ 0x007bcfc8, ZOrientation @ 0x007bcfd8
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe entity transform system
+    /// - k1_win_gog_swkotor.exe: XPosition @ 0x00745d80, YPosition @ 0x00745d74, ZPosition @ 0x00745d68, XOrientation @ 0x00745d38, YOrientation @ 0x00745d48, ZOrientation @ 0x00745d58
+    /// - k2_win_gog_aspyr_swkotor2.exe: XPosition @ 0x007bd000, YPosition @ 0x007bcff4, ZPosition @ 0x007bcfe8, XOrientation @ 0x007bcfb8, YOrientation @ 0x007bcfc8, ZOrientation @ 0x007bcfd8
     /// - "PositionX" @ 0x007bc474 (position X field), "PositionY" @ 0x007bc468 (position Y field), "PositionZ" @ 0x007bc45c (position Z field)
     /// - "Position" @ 0x007bd154 (position field), "position" @ 0x007ba168 (position constant)
     /// - "positionkey" @ 0x007ba150 (position key field), "positionbezierkey" @ 0x007ba13c (position bezier key field)

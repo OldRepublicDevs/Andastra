@@ -105,7 +105,7 @@ namespace BioWare.Resource.Formats.GFF.Generics.GUI
 
             // Color and Alpha
             // Based on PyKotor: Color is Vector3 (RGB), ALPHA is separate float field
-            // Original implementation: swkotor.exe/swkotor2.exe stores COLOR as RGB and ALPHA separately
+            // Original implementation: k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe stores COLOR as RGB and ALPHA separately
             if (control.Color != null)
             {
                 gffStruct.SetVector3("COLOR", new Vector3(control.Color.R, control.Color.G, control.Color.B));

@@ -17,8 +17,8 @@ namespace Andastra.Game.Games.Common.Components
     /// - Engine-specific: Animation file format details, animation system integration, event handling, duration calculation
     ///
     /// Based on verified components analysis of:
-    /// - swkotor.exe: Animation system with MDL/MDX animation arrays
-    /// - swkotor2.exe: Enhanced animation system (0x005223a0 @ 0x005223a0 loads animation data, 0x00589520 @ 0x00589520 handles animation state)
+    /// - k1_win_gog_swkotor.exe: Animation system with MDL/MDX animation arrays
+    /// - k2_win_gog_aspyr_swkotor2.exe: Enhanced animation system (0x005223a0 @ 0x005223a0 loads animation data, 0x00589520 @ 0x00589520 handles animation state)
     /// - nwmain.exe: Aurora animation system using Gob::PlayAnimation (0x140052580) with Animation class hierarchy
     /// - daorigins.exe: Eclipse animation system with animation tree support
     /// - DragonAge2.exe: Enhanced Eclipse animation system

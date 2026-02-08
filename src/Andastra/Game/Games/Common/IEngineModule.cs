@@ -21,7 +21,7 @@ namespace Andastra.Game.Games.Engines.Common
     /// Common Patterns Identified Across All Engines:
     /// 1. Module Loading Sequence:
     ///    - All engines: Validate module name -> Check module existence -> Load module resources -> Initialize module state -> Set current module
-    ///    - Odyssey (swkotor.exe, swkotor2.exe): IFO -> LYT -> VIS -> GIT -> ARE -> Spawn entities -> Set ModuleLoaded flag
+    ///    - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): IFO -> LYT -> VIS -> GIT -> ARE -> Spawn entities -> Set ModuleLoaded flag
     ///    - Aurora (nwmain.exe): Module.ifo -> Area files -> HAK files -> Entity spawning -> Module state initialization
     ///    - Eclipse (daorigins.exe, DragonAge2.exe, , ): UnrealScript LoadModuleMessage -> Package loading -> Area streaming
     ///    - Infinity (.exe, .exe, .exe): ARE -> WED -> GAM -> BIF resources -> Entity spawning

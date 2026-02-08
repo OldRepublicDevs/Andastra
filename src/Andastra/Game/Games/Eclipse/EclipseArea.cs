@@ -1213,7 +1213,7 @@ namespace Andastra.Game.Games.Eclipse
             root.SetUInt32("Grass_Diffuse", 0);
 
             // Additional ARE format fields for compatibility
-            // Engine reads AlphaTest as float (swkotor.exe: 0x00508c50 line 303-304, swkotor2.exe: 0x004e3ff0 line 307-308)
+            // Engine reads AlphaTest as float (k1_win_gog_swkotor.exe: 0x00508c50 line 303-304, k2_win_gog_aspyr_swkotor2.exe: 0x004e3ff0 line 307-308)
             // Default value: 0.2, but using 0.0 for Eclipse compatibility
             root.SetSingle("AlphaTest", 0.0f);
             root.SetInt32("CameraStyle", 0);

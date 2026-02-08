@@ -14,10 +14,10 @@ using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
 using ParsingResourceType = BioWare.Common.ResourceType;
 
-namespace Andastra.Game.Graphics.Common.Backends.Odyssey
+namespace Andastra.Game.Graphics.Common.Backends
 {
     /// <summary>
-    /// Graphics backend for Star Wars: Knights of the Old Republic II - The Sith Lords,
+    /// KOTOR2-specific implementation (partial). Graphics backend for Star Wars: Knights of the Old Republic II - The Sith Lords,
     /// matching swkotor2.exe rendering exactly 1:1.
     ///
     /// This backend implements the exact rendering code from swkotor2.exe,
@@ -44,15 +44,11 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// - Texture setup: Similar pattern but with KOTOR2-specific global variable addresses
     /// - Display mode handling: 0x00462560 has floating-point comparison for refresh rate
     /// </remarks>
-    public class Kotor2GraphicsBackend : OdysseyGraphicsBackend
+    public partial class OdysseyGraphicsBackend
     {
-        // Resource provider for loading texture data
-        // Matches swkotor2.exe resource loading system (CExoResMan, CExoKeyTable)
-        private IGameResourceProvider _resourceProvider;
-
-        // Delegate for window procedure
+        // Delegate for window procedure (K2)
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate IntPtr WndProcDelegate(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
+        private delegate IntPtr WndProcDelegateK2(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
 
         #region KOTOR2 Global Variables (matching swkotor2.exe addresses)
 
@@ -299,48 +295,6 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         #endregion
 
-        // BackendType is inherited from OdysseyGraphicsBackend and returns GraphicsBackendType.OdysseyEngine
-
-        protected override string GetGameName() => "Star Wars: Knights of the Old Republic II - The Sith Lords";
-
-        /// <summary>
-        /// Sets the resource provider for texture loading.
-        /// This should be called during initialization to enable texture loading from game resources.
-        /// Matches swkotor2.exe resource loading system (CExoResMan, CExoKeyTable).
-        /// </summary>
-        /// <param name="resourceProvider">The resource provider to use for loading textures.</param>
-        public void SetResourceProvider(IGameResourceProvider resourceProvider)
-        {
-            _resourceProvider = resourceProvider;
-        }
-
-        protected override bool DetermineGraphicsApi()
-        {
-            // KOTOR 2 uses OpenGL (not DirectX)
-            // Based on reverse engineering: swkotor2.exe uses OPENGL32.DLL and wglCreateContext
-            // swkotor2.exe: 0x00461c50 @ 0x00461c50 uses wglCreateContext
-            _useDirectX9 = false;
-            _useOpenGL = true;
-            _adapterIndex = 0;
-            _fullscreen = true; // Default to fullscreen (swkotor2.exe: 0x00461c50 @ 0x00461c50, param_7 != 0 = fullscreen)
-            _refreshRate = 60; // Default refresh rate
-
-            return true;
-        }
-
-        protected override D3DPRESENT_PARAMETERS CreatePresentParameters(D3DDISPLAYMODE displayMode)
-        {
-            // KOTOR 2 specific present parameters
-            // Matches swkotor2.exe present parameters exactly
-            var presentParams = base.CreatePresentParameters(displayMode);
-
-            // KOTOR 2 specific settings
-            presentParams.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
-            presentParams.SwapEffect = D3DSWAPEFFECT_DISCARD;
-
-            return presentParams;
-        }
-
         #region KOTOR 2-Specific Implementation
 
         /// <summary>
@@ -355,7 +309,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// - Display mode handling: 0x00462560 @ 0x00462560 (has floating-point refresh rate comparison)
         /// - Global texture IDs: DAT_0082b264, DAT_0082b258, DAT_0082b25c, DAT_0082b260
         /// </remarks>
-        protected override bool CreateOdysseyOpenGLContext(IntPtr windowHandle, int width, int height, bool fullscreen, int refreshRate)
+        private bool CreateOdysseyOpenGLContextK2(IntPtr windowHandle, int width, int height, bool fullscreen, int refreshRate)
         {
             // Matching swkotor2.exe: 0x00461c50 @ 0x00461c50
             // This function creates the OpenGL context and initializes graphics
@@ -595,6 +549,8 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
                 }
             }
 
+            _glContext = _kotor2PrimaryContext;
+            _glDevice = _kotor2PrimaryDC;
             return true;
         }
 
@@ -854,59 +810,10 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             }
         }
 
-        #region KOTOR2 OpenGL Constants and P/Invoke Declarations
+        #region KOTOR2-Only OpenGL Constants and Delegates (shared ones are in K1 partial)
 
-        // Additional OpenGL constants for texture loading (matching swkotor2.exe)
-        private const uint GL_TEXTURE_CUBE_MAP = 0x8513;
-        private const uint GL_TEXTURE_CUBE_MAP_POSITIVE_X = 0x8515;
-        private const uint GL_TEXTURE_CUBE_MAP_NEGATIVE_X = 0x8516;
-        private const uint GL_TEXTURE_CUBE_MAP_POSITIVE_Y = 0x8517;
-        private const uint GL_TEXTURE_CUBE_MAP_NEGATIVE_Y = 0x8518;
-        private const uint GL_TEXTURE_CUBE_MAP_POSITIVE_Z = 0x8519;
-        private const uint GL_TEXTURE_CUBE_MAP_NEGATIVE_Z = 0x851A;
-        private const uint GL_RGB = 0x1907;
-        private const uint GL_BGR = 0x80E0;
-        private const uint GL_BGRA = 0x80E1;
-        private const uint GL_LUMINANCE = 0x1909;
-        private const uint GL_MIRRORED_REPEAT = 0x8370;
-        private const uint GL_NEAREST = 0x2600;
-        private const uint GL_NEAREST_MIPMAP_NEAREST = 0x2700;
-        private const uint GL_COMPRESSED_RGB_S3TC_DXT1_EXT = 0x83F0;
-        private const uint GL_COMPRESSED_RGBA_S3TC_DXT3_EXT = 0x83F2;
-        private const uint GL_COMPRESSED_RGBA_S3TC_DXT5_EXT = 0x83F3;
-
-        // P/Invoke declarations for compressed texture functions
-        [DllImport("opengl32.dll", EntryPoint = "glCompressedTexImage2D")]
-        private static extern void glCompressedTexImage2D(uint target, int level, int internalformat, int width, int height, int border, int imageSize, IntPtr data);
-
-        [DllImport("opengl32.dll", EntryPoint = "glDeleteTextures")]
-        private static extern void glDeleteTextures(int n, ref uint textures);
-
-        // OpenGL display list functions (matching swkotor2.exe: 0x00461200, 0x00461220)
-        [DllImport("opengl32.dll", EntryPoint = "glDeleteLists")]
-        private static extern void glDeleteLists(uint list, int range);
-
-        [DllImport("opengl32.dll", EntryPoint = "glGenLists")]
-        private static extern uint glGenLists(int range);
-
-        [DllImport("opengl32.dll", EntryPoint = "glNewList")]
-        private static extern void glNewList(uint list, uint mode);
-
-        [DllImport("opengl32.dll", EntryPoint = "glEndList")]
-        private static extern void glEndList();
-
-        [DllImport("opengl32.dll", EntryPoint = "glBitmap")]
-        private static extern void glBitmap(int width, int height, float xorig, float yorig, float xmove, float ymove, IntPtr bitmap);
-
-        [DllImport("opengl32.dll", EntryPoint = "glPixelStorei")]
-        private static extern void glPixelStorei(uint pname, int param);
-
-        // OpenGL constants for display lists
-        private const uint GL_COMPILE = 0x1300;
-        private const uint GL_PIXEL_UNPACK_ALIGNMENT = 0x0CF5;
         private const uint GL_BLEND = 0x0BE2;
 
-        // Delegate for function pointer call in InitializeKotor2DisplayListCleanup
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void Kotor2FunctionPointerDelegate(int param);
 
@@ -925,7 +832,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
             WNDCLASSA wndClass = new WNDCLASSA();
             wndClass.style = 0xb;
-            WndProcDelegate wndProcDelegate = DefWindowProcA;
+            WndProcDelegateK2 wndProcDelegate = DefWindowProcA;
             wndClass.lpfnWndProc = Marshal.GetFunctionPointerForDelegate(wndProcDelegate);
             wndClass.cbClsExtra = 0;
             wndClass.cbWndExtra = 0;
@@ -1547,7 +1454,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             if (classAtom == IntPtr.Zero)
             {
                 // Class not registered, register it now
-                WndProcDelegate wndProc = (hWnd, uMsg, wParam, lParam) => DefWindowProcA(hWnd, uMsg, wParam, lParam);
+                WndProcDelegateK2 wndProc = (hWnd, uMsg, wParam, lParam) => DefWindowProcA(hWnd, uMsg, wParam, lParam);
                 WNDCLASSA wndClass = new WNDCLASSA();
                 wndClass.style = 0;
                 wndClass.lpfnWndProc = Marshal.GetFunctionPointerForDelegate(wndProc);
@@ -2201,7 +2108,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// - Area system performs actual scene rendering
         /// - This separation matches the original engine's design
         /// </remarks>
-        protected override void RenderOdysseyScene()
+        private void RenderOdysseySceneK2()
         {
             // KOTOR 2 scene rendering
             // Matches swkotor2.exe rendering code exactly
@@ -2253,7 +2160,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// - Mipmap handling: All mipmap levels uploaded sequentially
         /// - Cube map support: GL_TEXTURE_CUBE_MAP for environment maps
         /// </remarks>
-        protected override IntPtr LoadOdysseyTexture(string path)
+        private IntPtr LoadOdysseyTextureK2(string path)
         {
             // KOTOR 2 texture loading
             // Matches swkotor2.exe texture loading code exactly
@@ -2399,320 +2306,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             }
         }
 
-        /// <summary>
-        /// Loads texture data from resource system or file system.
-        /// Matches swkotor2.exe resource loading pattern (CExoResMan, CExoKeyTable).
-        /// </summary>
-        private byte[] LoadTextureData(string resRef)
-        {
-            if (_resourceProvider != null)
-            {
-                // Try TPC first (most common format for KOTOR 2)
-                ResourceIdentifier tpcId = new ResourceIdentifier(resRef, ParsingResourceType.TPC);
-                Task<bool> existsTask = _resourceProvider.ExistsAsync(tpcId, CancellationToken.None);
-                existsTask.Wait();
-                if (existsTask.Result)
-                {
-                    Task<byte[]> dataTask = _resourceProvider.GetResourceBytesAsync(tpcId, CancellationToken.None);
-                    dataTask.Wait();
-                    return dataTask.Result;
-                }
-
-                // Try TGA format as fallback
-                ResourceIdentifier tgaId = new ResourceIdentifier(resRef, ParsingResourceType.TGA);
-                existsTask = _resourceProvider.ExistsAsync(tgaId, CancellationToken.None);
-                existsTask.Wait();
-                if (existsTask.Result)
-                {
-                    Task<byte[]> dataTask = _resourceProvider.GetResourceBytesAsync(tgaId, CancellationToken.None);
-                    dataTask.Wait();
-                    return dataTask.Result;
-                }
-
-                // Try DDS format (compressed textures)
-                ResourceIdentifier ddsId = new ResourceIdentifier(resRef, ParsingResourceType.DDS);
-                existsTask = _resourceProvider.ExistsAsync(ddsId, CancellationToken.None);
-                existsTask.Wait();
-                if (existsTask.Result)
-                {
-                    Task<byte[]> dataTask = _resourceProvider.GetResourceBytesAsync(ddsId, CancellationToken.None);
-                    dataTask.Wait();
-                    return dataTask.Result;
-                }
-
-                Console.WriteLine($"[Kotor2GraphicsBackend] LoadTextureData: Texture resource not found for '{resRef}' (tried TPC, TGA, DDS)");
-                return null;
-            }
-
-            // Fallback: Try to load from file system (for development/testing)
-            string[] extensions = { ".tpc", ".tga", ".dds" };
-            foreach (string ext in extensions)
-            {
-                string filePath = resRef + ext;
-                if (File.Exists(filePath))
-                {
-                    return File.ReadAllBytes(filePath);
-                }
-            }
-
-            Console.WriteLine($"[Kotor2GraphicsBackend] LoadTextureData: No resource provider set and file not found for '{resRef}'");
-            return null;
-        }
-
-        /// <summary>
-        /// Uploads texture data to OpenGL with mipmap support.
-        /// Matches swkotor2.exe texture upload pattern (glTexImage2D, glCompressedTexImage2D).
-        /// </summary>
-        private bool UploadTextureData(uint textureTarget, TPC tpc, TPCTextureFormat tpcFormat)
-        {
-            try
-            {
-                // Convert TPC format to OpenGL format
-                uint glFormat = ConvertTPCFormatToOpenGLFormat(tpcFormat);
-                uint glInternalFormat = ConvertTPCFormatToOpenGLInternalFormat(tpcFormat);
-                uint glType = GL_UNSIGNED_BYTE;
-
-                // Check if format is compressed (DXT1, DXT3, DXT5)
-                bool isCompressed = tpcFormat == TPCTextureFormat.DXT1 ||
-                                    tpcFormat == TPCTextureFormat.DXT3 ||
-                                    tpcFormat == TPCTextureFormat.DXT5;
-
-                // Handle cube maps
-                if (tpc.IsCubeMap && tpc.Layers.Count == 6)
-                {
-                    // Cube map has 6 faces
-                    uint[] cubeMapTargets = new uint[]
-                    {
-                        GL_TEXTURE_CUBE_MAP_POSITIVE_X,
-                        GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
-                        GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
-                        GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
-                        GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
-                        GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
-                    };
-
-                    for (int face = 0; face < 6 && face < tpc.Layers.Count; face++)
-                    {
-                        var layer = tpc.Layers[face];
-                        for (int mip = 0; mip < layer.Mipmaps.Count; mip++)
-                        {
-                            var mipmap = layer.Mipmaps[mip];
-                            int mipWidth = Math.Max(1, mipmap.Width);
-                            int mipHeight = Math.Max(1, mipmap.Height);
-
-                            if (isCompressed)
-                            {
-                                UploadCompressedTextureData(cubeMapTargets[face], mip, glInternalFormat, mipWidth, mipHeight, mipmap.Data);
-                            }
-                            else
-                            {
-                                UploadUncompressedTextureData(cubeMapTargets[face], mip, glInternalFormat, mipWidth, mipHeight, glFormat, glType, mipmap.Data);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    // Regular 2D texture
-                    var layer = tpc.Layers[0];
-                    for (int mip = 0; mip < layer.Mipmaps.Count; mip++)
-                    {
-                        var mipmap = layer.Mipmaps[mip];
-                        int mipWidth = Math.Max(1, mipmap.Width);
-                        int mipHeight = Math.Max(1, mipmap.Height);
-
-                        if (isCompressed)
-                        {
-                            UploadCompressedTextureData(textureTarget, mip, glInternalFormat, mipWidth, mipHeight, mipmap.Data);
-                        }
-                        else
-                        {
-                            UploadUncompressedTextureData(textureTarget, mip, glInternalFormat, mipWidth, mipHeight, glFormat, glType, mipmap.Data);
-                        }
-                    }
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[Kotor2GraphicsBackend] UploadTextureData: Exception uploading texture: {ex.Message}");
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Uploads uncompressed texture data to OpenGL.
-        /// Matches swkotor2.exe: glTexImage2D pattern.
-        /// Handles BGRA/BGR to RGBA/RGB conversion for OpenGL compatibility.
-        /// </summary>
-        private void UploadUncompressedTextureData(uint target, int level, uint internalFormat, int width, int height, uint format, uint type, byte[] data)
-        {
-            if (data == null || data.Length == 0)
-            {
-                return;
-            }
-
-            byte[] uploadData = data;
-            uint uploadFormat = format;
-
-            // Convert BGRA/BGR to RGBA/RGB for OpenGL (swkotor2.exe does this conversion)
-            if (format == GL_BGRA)
-            {
-                uploadData = ConvertBGRAToRGBA(data);
-                uploadFormat = GL_RGBA;
-            }
-            else if (format == GL_BGR)
-            {
-                uploadData = ConvertBGRToRGB(data);
-                uploadFormat = GL_RGB;
-            }
-
-            // Pin data for P/Invoke
-            GCHandle handle = GCHandle.Alloc(uploadData, GCHandleType.Pinned);
-            try
-            {
-                IntPtr dataPtr = handle.AddrOfPinnedObject();
-                glTexImage2D(target, level, (int)internalFormat, width, height, 0, uploadFormat, type, dataPtr);
-            }
-            finally
-            {
-                handle.Free();
-            }
-        }
-
-        /// <summary>
-        /// Converts BGRA pixel data to RGBA.
-        /// Matches swkotor2.exe BGRA to RGBA conversion.
-        /// </summary>
-        private byte[] ConvertBGRAToRGBA(byte[] bgraData)
-        {
-            if (bgraData == null || bgraData.Length == 0)
-            {
-                return bgraData;
-            }
-
-            byte[] rgbaData = new byte[bgraData.Length];
-            for (int i = 0; i < bgraData.Length; i += 4)
-            {
-                if (i + 3 < bgraData.Length)
-                {
-                    // BGRA -> RGBA: swap R and B channels
-                    rgbaData[i] = bgraData[i + 2];     // R
-                    rgbaData[i + 1] = bgraData[i + 1]; // G
-                    rgbaData[i + 2] = bgraData[i];     // B
-                    rgbaData[i + 3] = bgraData[i + 3]; // A
-                }
-            }
-            return rgbaData;
-        }
-
-        /// <summary>
-        /// Converts BGR pixel data to RGB.
-        /// Matches swkotor2.exe BGR to RGB conversion.
-        /// </summary>
-        private byte[] ConvertBGRToRGB(byte[] bgrData)
-        {
-            if (bgrData == null || bgrData.Length == 0)
-            {
-                return bgrData;
-            }
-
-            byte[] rgbData = new byte[bgrData.Length];
-            for (int i = 0; i < bgrData.Length; i += 3)
-            {
-                if (i + 2 < bgrData.Length)
-                {
-                    // BGR -> RGB: swap R and B channels
-                    rgbData[i] = bgrData[i + 2];     // R
-                    rgbData[i + 1] = bgrData[i + 1];  // G
-                    rgbData[i + 2] = bgrData[i];      // B
-                }
-            }
-            return rgbData;
-        }
-
-        /// <summary>
-        /// Uploads compressed texture data to OpenGL (DXT1, DXT3, DXT5).
-        /// Matches swkotor2.exe: glCompressedTexImage2D pattern.
-        /// </summary>
-        private void UploadCompressedTextureData(uint target, int level, uint internalFormat, int width, int height, byte[] data)
-        {
-            if (data == null || data.Length == 0)
-            {
-                return;
-            }
-
-            // Pin data for P/Invoke
-            GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
-            try
-            {
-                IntPtr dataPtr = handle.AddrOfPinnedObject();
-                glCompressedTexImage2D(target, level, (int)internalFormat, width, height, 0, data.Length, dataPtr);
-            }
-            finally
-            {
-                handle.Free();
-            }
-        }
-
-        /// <summary>
-        /// Converts TPC texture format to OpenGL format.
-        /// Matches swkotor2.exe format conversion logic.
-        /// </summary>
-        private uint ConvertTPCFormatToOpenGLFormat(TPCTextureFormat tpcFormat)
-        {
-            switch (tpcFormat)
-            {
-                case TPCTextureFormat.RGB:
-                    return GL_RGB;
-                case TPCTextureFormat.RGBA:
-                    return GL_RGBA;
-                case TPCTextureFormat.BGRA:
-                    return GL_BGRA;
-                case TPCTextureFormat.BGR:
-                    return GL_BGR;
-                case TPCTextureFormat.Greyscale:
-                    return GL_LUMINANCE;
-                case TPCTextureFormat.DXT1:
-                case TPCTextureFormat.DXT3:
-                case TPCTextureFormat.DXT5:
-                    // Compressed formats use internal format, not format parameter
-                    return GL_RGBA; // Not used for compressed, but required for function signature
-                default:
-                    return GL_RGBA;
-            }
-        }
-
-        /// <summary>
-        /// Converts TPC texture format to OpenGL internal format.
-        /// Matches swkotor2.exe format conversion logic.
-        /// </summary>
-        private uint ConvertTPCFormatToOpenGLInternalFormat(TPCTextureFormat tpcFormat)
-        {
-            switch (tpcFormat)
-            {
-                case TPCTextureFormat.RGB:
-                    return GL_RGB;
-                case TPCTextureFormat.RGBA:
-                    return GL_RGBA8;
-                case TPCTextureFormat.BGRA:
-                    return GL_RGBA8; // BGRA converted to RGBA8 internally
-                case TPCTextureFormat.BGR:
-                    return GL_RGB; // BGR converted to RGB internally
-                case TPCTextureFormat.Greyscale:
-                    return GL_LUMINANCE;
-                case TPCTextureFormat.DXT1:
-                    return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
-                case TPCTextureFormat.DXT3:
-                    return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
-                case TPCTextureFormat.DXT5:
-                    return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-                default:
-                    return GL_RGBA8;
-            }
-        }
-
+        // LoadTextureData, UploadTextureData, ConvertBGRAToRGBA, etc. are defined in K1 partial and shared.
 
         #endregion
     }

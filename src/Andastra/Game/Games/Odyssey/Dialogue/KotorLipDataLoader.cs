@@ -14,7 +14,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
     /// </summary>
     /// <remarks>
     /// LIP Data Loader (Odyssey-specific):
-    /// - CLIP::LoadLip @ (K1: swkotor.exe: 0x0070c590, TSL: swkotor2.exe: 0x0077fb30): LIP file loading system
+    /// - CLIP::LoadLip @ (K1: k1_win_gog_swkotor.exe: 0x0070c590, TSL: k2_win_gog_aspyr_swkotor2.exe: 0x0077fb30): LIP file loading system
     /// - Located via string references:
     ///   - K1: "LIPS:localization" @ 0x00745898, "LIPS:%s_loc" @ 0x007458ac, "LIP V1.0" @ 0x0075fb14
     ///   - TSL: "LIPS:localization" @ 0x007be654, "LIPS:%s_loc" @ 0x007be668, "LIP V1.0" @ 0x007d98d4
@@ -29,14 +29,14 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
     /// - LIP file format: "LIP V1.0" signature (8 bytes), duration (float, 4 bytes), keyframe count (uint32, 4 bytes), keyframes (time + shape pairs)
     /// - LIP files are paired with WAV voice-over files (same ResRef, different extension)
     /// - Original engine behavior (1:1 parity):
-    ///   - K1 (swkotor.exe: 0x0070c590): CLIP::LoadLip (thiscall, member function)
+    ///   - K1 (k1_win_gog_swkotor.exe: 0x0070c590): CLIP::LoadLip (thiscall, member function)
     ///     * Creates CResRef from CExoString parameter
     ///     * Sets resource reference via CResHelper&lt;CResLIP,3004&gt;::SetResRef
     ///     * Demands resource via CRes::Demand
     ///     * Validates "LIP V1.0" signature (8 bytes)
     ///     * Parses duration (float at offset 0x8), entry_count (uint32 at offset 0xC), keyframes (array at offset 0x10)
     ///     * Sets field5_0x20 to 1 on success
-    ///   - TSL (swkotor2.exe: 0x0077fb30): CLIP::LoadLip (fastcall, member function)
+    ///   - TSL (k2_win_gog_aspyr_swkotor2.exe: 0x0077fb30): CLIP::LoadLip (fastcall, member function)
     ///     * Creates CResRef from CExoString parameter (via FUN_00406e70)
     ///     * Sets resource reference via FUN_0077f8f0 (equivalent to CResHelper&lt;CResLIP,3004&gt;::SetResRef)
     ///     * Demands resource via FUN_00409df0 (equivalent to CRes::Demand)
@@ -64,8 +64,8 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
         /// <returns>The loaded lip sync data, or null if not found.</returns>
         /// <remarks>
         /// Original engine implementation:
-        /// - K1: swkotor.exe: 0x0070c590 (CLIP::LoadLip)
-        /// - TSL: swkotor2.exe: 0x0077fb30 (CLIP::LoadLip)
+        /// - K1: k1_win_gog_swkotor.exe: 0x0070c590 (CLIP::LoadLip)
+        /// - TSL: k2_win_gog_aspyr_swkotor2.exe: 0x0077fb30 (CLIP::LoadLip)
         /// </remarks>
         public LipSyncData LoadLipData(string resRef)
         {

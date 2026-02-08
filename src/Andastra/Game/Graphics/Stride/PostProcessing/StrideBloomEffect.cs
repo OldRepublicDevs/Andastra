@@ -596,7 +596,7 @@ shader BlurEffect : ShaderBase
         /// - EffectCompiler compiles shader source code to Effect bytecode
         /// - EffectCompiler can be accessed from GraphicsDevice services (EffectSystem)
         /// - Compilation requires proper SDSL syntax and shader structure
-        /// - Original game: DirectX 8/9 fixed-function pipeline (swkotor2.exe: d3d9.dll @ 0x0080a6c0)
+        /// - Original game: DirectX 8/9 fixed-function pipeline (k2_win_gog_aspyr_swkotor2.exe: d3d9.dll @ 0x0080a6c0)
         /// - Modern implementation: Uses programmable shaders with runtime compilation
         /// </remarks>
         private StrideGraphics.Effect CompileShaderFromSource(string shaderSource, string shaderName)

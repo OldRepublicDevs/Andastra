@@ -31,7 +31,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
     /// </summary>
     /// <remarks>
     /// KOTOR GUI Manager (MonoGame Implementation - Odyssey Engine):
-    /// - Based on swkotor.exe and swkotor2.exe GUI system (modern MonoGame adaptation)
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe GUI system (modern MonoGame adaptation)
     /// - Located via string references: GUI system references throughout executable
     /// - GUI files: "gui_mp_arwalk00" through "gui_mp_arwalk15" @ 0x007b59bc-0x007b58dc (GUI animation frames)
     /// - "gui_mp_arrun00" through "gui_mp_arrun15" @ 0x007b5aac-0x007b59dc (GUI run animation frames)
@@ -50,8 +50,8 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
     /// - Font rendering: Loads bitmap fonts from ResRef using BitmapFont class with TXI metrics
     ///
     /// Ghidra verified components Analysis Required:
-    /// - swkotor.exe: GUI font loading and text rendering functions (needs Ghidra address verification)
-    /// - swkotor2.exe: 0x0070a2e0 @ 0x0070a2e0 demonstrates GUI loading pattern with button initialization (needs verification)
+    /// - k1_win_gog_swkotor.exe: GUI font loading and text rendering functions (needs Ghidra address verification)
+    /// - k2_win_gog_aspyr_swkotor2.exe: 0x0070a2e0 @ 0x0070a2e0 demonstrates GUI loading pattern with button initialization (needs verification)
     /// - nwmain.exe: Aurora engine GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
     /// - daorigins.exe: Eclipse engine GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
     /// - DragonAge2.exe: Eclipse engine GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
@@ -60,7 +60,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
     ///
     /// Cross-Engine Inheritance Structure (to be implemented after Ghidra analysis):
     /// - Base Class: BaseGuiManager (Runtime.Games.Common) - Common GUI loading/rendering patterns
-    ///   - Odyssey: KotorGuiManager : BaseGuiManager (swkotor.exe: 0x..., swkotor2.exe: 0x0070a2e0)
+    ///   - Odyssey: KotorGuiManager : BaseGuiManager (k1_win_gog_swkotor.exe: 0x..., k2_win_gog_aspyr_swkotor2.exe: 0x0070a2e0)
     ///   - Aurora: AuroraGuiManager : BaseGuiManager (nwmain.exe: 0x...)
     ///   - Eclipse: EclipseGuiManager : BaseGuiManager (daorigins.exe: 0x..., DragonAge2.exe: 0x...)
     ///   - Infinity: InfinityGuiManager : BaseGuiManager (: 0x..., : 0x...)
@@ -89,16 +89,19 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
         /// <summary>
         /// KOTOR native GUI resolution. GUIs are authored at 800x600.
-        /// Reference: reone gui.setResolution(800, 600) in mainmenu.cpp
-        /// Reference: KotOR.js uses 800x600 as base resolution for control positioning.
+        /// Reva (k1_win_gog_swkotor.exe): CSWGuiManager::CSWGuiManager @ 0x0040bad0 sets viewport resolution string to "800x600"
+        /// (CExoString::operator= at 0x0040bb29). GetScreenResolutionString @ 0x0040a3e0 returns "800x600" as default when
+        /// (width, height) is not one of 1024x768, 1280x960, 1280x1024, or 1600x1200; used for control positioning.
         /// </summary>
         private const int KotorGuiNativeWidth = 800;
         private const int KotorGuiNativeHeight = 600;
 
         /// <summary>
         /// Separate full-screen background texture for the main menu.
-        /// Reference: KotOR.js MainMenu.ts line 44: this.background = '1600x1200back'
-        /// Reference: reone mainmenu.cpp: loadBackground(BackgroundType::Menu)
+        /// Reva (k1_win_gog_swkotor.exe): CSWGuiPanel::GetFullScreenBG @ 0x0040a900 builds background resref by
+        /// GetScreenResolutionString(screenWidth,screenHeight) + "back" (e.g. "1600x1200back"). GetScreenResolutionString
+        /// @ 0x0040a3e0 returns "1600x1200" when width==0x640 and height==0x4b0. CSWGuiMainMenu::LoadFromLayout @ 0x0067ace0
+        /// binds LBL_MENUBG for menu background label.
         /// </summary>
         private Texture2D _backgroundTexture;
 
@@ -116,7 +119,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         /// </summary>
         /// <remarks>
         /// Checkbox Click Event:
-        /// - Based on swkotor.exe and swkotor2.exe: Checkbox click handling in options menu
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Checkbox click handling in options menu
         /// - Original implementation: Checkboxes toggle state when clicked (CB_VSYNC, CB_FRAMEBUFF, etc.)
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): OptionsGraphicsAdvancedMenu::callbackActive handles CB_VSYNC @ 0x006e3e80
         /// - When checkbox is clicked, its IsSelected state is toggled
@@ -128,12 +131,12 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         /// </summary>
         /// <remarks>
         /// Highlighted Button Tag:
-        /// - Based on swkotor.exe and swkotor2.exe: Button hover detection for sound effects
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Button hover detection for sound effects
         /// - Updated during Update() method when mouse moves over buttons
         /// - Used for playing hover sound effects ("gui_actscroll" or "gui_actscroll1")
         /// - Returns null if no button is currently highlighted
         /// - Original implementation: Button hover state tracked internally for rendering and sound effects
-        /// - Based on swkotor.exe 0x0067ace0 @ 0x0067ace0: Button hover state tracking
+        /// - Based on k1_win_gog_swkotor.exe 0x0067ace0 @ 0x0067ace0: Button hover state tracking
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x006d0790 @ 0x006d0790: Button hover state tracking
         /// </remarks>
         [CanBeNull]
@@ -226,9 +229,8 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 }
 
                 // Detect native GUI resolution from the root control's EXTENT.
-                // KOTOR GUIs are authored at 800x600 (K1) or 800x600 (K2).
-                // Reference: reone gui.setResolution(800, 600) in mainmenu.cpp:60
-                // Reference: KotOR.js uses 800x600 as base resolution
+                // KOTOR GUIs are authored at 800x600 (K1/K2). Reva: CSWGuiManager default resolution string "800x600"
+                // (k1_win_gog_swkotor.exe CSWGuiManager @ 0x0040bad0, GetScreenResolutionString @ 0x0040a3e0).
                 int guiNativeWidth = KotorGuiNativeWidth;
                 int guiNativeHeight = KotorGuiNativeHeight;
                 if (gui.Root != null && gui.Root.Size.X > 0 && gui.Root.Size.Y > 0)
@@ -263,17 +265,15 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 _buttonList = null;
 
                 // Note: RIM file loading (e.g., "RIMS:MAINMENU") is handled automatically by InstallationResourceManager
-                // Based on swkotor.exe 0x0067c4c0 @ 0x0067c4c0:65-69 and swkotor2.exe 0x006d2350 @ 0x006d2350:76-80
+                // Based on k1_win_gog_swkotor.exe 0x0067c4c0 @ 0x0067c4c0:65-69 and k2_win_gog_aspyr_swkotor2.exe 0x006d2350 @ 0x006d2350:76-80
                 // Original engines explicitly load "RIMS:MAINMENU" RIM file after GUI load (0x004087c0/0x004089f0)
                 // Our resource system automatically searches RIM files during resource lookup, so explicit loading is not required
                 // The RIM file contains additional resources (textures, etc.) needed for the menu, which are loaded on-demand
 
                 Console.WriteLine($"[KotorGuiManager] Successfully loaded GUI: {guiName} (native: {guiNativeWidth}x{guiNativeHeight}, window: {width}x{height}) - {gui.Controls.Count} controls");
 
-                // Load separate background texture for main menu.
-                // Reference: KotOR.js MainMenu.ts: this.background = '1600x1200back'
-                // Reference: reone mainmenu.cpp: loadBackground(BackgroundType::Menu)
-                // The original game renders a separate background image behind the GUI controls.
+                // Load separate background texture for main menu. Reva (k1_win_gog_swkotor.exe): GetFullScreenBG @ 0x0040a900
+                // returns resolution string + "back" (e.g. "1600x1200back"); LBL_MENUBG bound in LoadFromLayout @ 0x0067ace0.
                 if (guiName.IndexOf("MAINMENU", StringComparison.OrdinalIgnoreCase) >= 0 ||
                     guiName.IndexOf("mainmenu", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
@@ -321,9 +321,9 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
         /// <summary>
         /// Loads the main menu background texture.
-        /// Reference: KotOR.js MainMenu.ts: this.background = '1600x1200back'
-        /// Reference: reone mainmenu.cpp: loadBackground(BackgroundType::Menu)
-        /// The original game renders 1600x1200back (K1) behind the GUI.
+        /// Reva (k1_win_gog_swkotor.exe): CSWGuiPanel::GetFullScreenBG @ 0x0040a900 builds resref as
+        /// GetScreenResolutionString(screenWidth,screenHeight)+"back" (e.g. "1600x1200back"). Original game renders
+        /// that texture (K1) behind the GUI.
         /// </summary>
         private void LoadMainMenuBackground()
         {
@@ -370,8 +370,8 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         }
 
         // Removed: ShouldRenderSolidColor - solid color fill rendering removed to match observed game behavior.
-        // In reone, if border.fill texture is missing, nothing is rendered. COLOR is for edge/corner tinting only.
-        // In KotOR.js, borderFillEnabled is set to false when no texture is available.
+        // Reva (k1_win_gog_swkotor.exe): CSWGuiBorder::Draw @ 0x004168c0 - if fill texture missing (field3_0x68==0), no fill
+        // is drawn. COLOR is for edge/corner tinting only.
         /// <summary>
         /// Unloads a GUI from memory.
         /// </summary>
@@ -456,7 +456,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
         /// <summary>
         /// Updates the border fill texture for a control by tag.
-        /// Based on swkotor.exe and swkotor2.exe: Control texture updates
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Control texture updates
         /// - Original implementation: Controls can have their border fill textures updated dynamically
         /// - Used for loading screen images, dynamic backgrounds, etc.
         /// - This method updates the Border.Fill ResRef and invalidates texture cache for the control
@@ -534,7 +534,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
         /// <summary>
         /// Updates GUI input handling (mouse/keyboard).
-        /// Based on swkotor.exe and swkotor2.exe: Keyboard navigation with arrow keys and Enter
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Keyboard navigation with arrow keys and Enter
         /// </summary>
         /// <param name="gameTime">Current game time.</param>
         public override void Update(object gameTime)
@@ -556,7 +556,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             }
 
             // Handle keyboard navigation
-            // Based on swkotor.exe and swkotor2.exe: Arrow keys navigate buttons, Enter/Space activates
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Arrow keys navigate buttons, Enter/Space activates
             if (_buttonList != null && _buttonList.Count > 0)
             {
                 // Arrow key navigation
@@ -607,7 +607,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             UpdateHighlightedButton(currentMouseState.X, currentMouseState.Y);
 
             // Play hover sound when button highlight changes
-            // Based on swkotor.exe 0x0067ace0: Plays "gui_actscroll" or "gui_actscroll1" on button hover
+            // Based on k1_win_gog_swkotor.exe 0x0067ace0: Plays "gui_actscroll" or "gui_actscroll1" on button hover
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x006d0790: Plays "gui_actscroll" or "gui_actscroll1" on button hover
             if (_highlightedButtonTag != _previousHighlightedButtonTag && !string.IsNullOrEmpty(_highlightedButtonTag))
             {
@@ -859,7 +859,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         /// </summary>
         /// <remarks>
         /// Mouse Click Handling:
-        /// - Based on swkotor.exe and swkotor2.exe: Mouse click handling for GUI controls
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Mouse click handling for GUI controls
         /// - Original implementation: Buttons and checkboxes respond to mouse clicks
         /// - Checkboxes toggle their IsSelected state when clicked
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): OptionsGraphicsAdvancedMenu::callbackActive handles CB_VSYNC checkbox clicks
@@ -1019,8 +1019,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
         /// <summary>
         /// Renders a panel control with proper border rendering (fill, edges, corners).
-        /// Reference: KotOR.js GUIControl.ts buildBorder() - renders fill, 4 edges, 4 corners.
-        /// Reference: reone control.cpp renderBorder() - renders fill with edge/corner transforms.
+        /// Reva (k1_win_gog_swkotor.exe): CSWGuiBorder::Draw @ 0x004168c0 - renders fill (when texture present), edges, corners.
         /// </summary>
         private void RenderPanel(GUIPanel panel, XnaVector2 position, XnaVector2 size)
         {
@@ -1039,7 +1038,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             }
 
             // When we have a dedicated main-menu background (1600x1200back), do not draw the root panel's fill
-            // so the background texture is not covered by the root's metallic/panel texture (reone setBackground draws first).
+            // so the background texture is not covered (Reva: GetFullScreenBG provides back texture; drawn first).
             bool isRootPanel = _currentGui?.Gui?.Root == panel ||
                                (_currentGui?.Gui?.Controls?.Count > 0 &&
                                 _currentGui.Gui.Controls[0] == panel &&
@@ -1047,8 +1046,8 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             bool skipRootFill = isRootPanel && _backgroundTexture != null;
 
             // Render panel background using border fill texture if available.
-            // Reference: reone control.cpp renderBorder() - renders fill ONLY when border.fill texture exists.
-            // Reference: KotOR.js GUIControl.ts - sets borderFillEnabled=false when no texture.
+            // Reva (k1_win_gog_swkotor.exe): CSWGuiBorder::Draw @ 0x004168c0 - fill drawn only when field3_0x68 (fill texture) non-null;
+            // early goto when extent zero or when field3_0x68==0. No solid fill when texture missing.
             // CRITICAL: Do NOT render solid color when fill texture is missing. The COLOR field is for
             // edge/corner tinting only, NOT for solid background fills. Rendering it as solid fill
             // causes incorrect colored rectangles (e.g., cyan rectangles over the menu).
@@ -1073,7 +1072,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                     }
                 }
             }
-            // No solid color fallback - matches reone and KotOR.js behavior.
+            // No solid color fallback - matches Reva CSWGuiBorder::Draw @ 0x004168c0 (fill only when texture present).
 
             // Render border edges and corners
             RenderBorderEdgesAndCorners(panel.Border, position, size, alpha);
@@ -1081,8 +1080,8 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
         /// <summary>
         /// Renders the edge and corner textures for a border.
-        /// Reference: KotOR.js GUIControl.ts buildBorder() - creates 4 edge + 4 corner planes.
-        /// Reference: reone control.cpp:200-280 renderBorder() - renders fill, edges, corners.
+        /// Reva (k1_win_gog_swkotor.exe): CSWGuiBorder::Draw @ 0x004168c0 - uses GetBorderDim, extent, fill/edge/corner
+        /// textures (field3_0x68, field4_0x6c); draws fill, then edges and corners in 9-patch layout.
         ///
         /// 9-patch layout:
         /// [TL corner] [Top edge   ] [TR corner]
@@ -1206,8 +1205,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             }
 
             // Render button background fill texture.
-            // Reference: reone control.cpp renderBorder() - only renders fill when texture exists.
-            // Reference: KotOR.js GUIControl.ts - borderFillEnabled=false when no texture.
+            // Reva (k1_win_gog_swkotor.exe): CSWGuiBorder::Draw @ 0x004168c0 - fill only when texture (field3_0x68) present.
             // Do NOT render solid color fallback when no fill texture exists.
             if (borderToUse?.Fill != null && !borderToUse.Fill.IsBlank())
             {
@@ -1227,7 +1225,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                     _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
-            // No solid color fallback - matches reone and KotOR.js behavior.
+            // No solid color fallback - matches Reva CSWGuiBorder::Draw @ 0x004168c0.
 
             // Render border edges and corners for the active border state
             RenderBorderEdgesAndCorners(borderToUse ?? button.Border, position, size, 1.0f);
@@ -1336,7 +1334,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
         /// <summary>
         /// Renders a list box control.
-        /// Based on swkotor.exe and swkotor2.exe: CSWGuiListBox::Draw
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: CSWGuiListBox::Draw
         /// Original implementation: Items rendered using ProtoItem template with proper states and scrolling
         /// </summary>
         private void RenderListBox(GUIListBox listBox, XnaVector2 position, XnaVector2 size)
@@ -1411,7 +1409,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         /// <summary>
         /// Gets the list of items to render in a list box.
         /// Items can be stored in Properties["Items"] or as child ProtoItem controls.
-        /// Based on swkotor.exe and swkotor2.exe: CSWGuiListBox item storage
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: CSWGuiListBox item storage
         /// </summary>
         private List<string> GetListBoxItems(GUIListBox listBox)
         {
@@ -1452,7 +1450,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
         /// <summary>
         /// Gets the scroll offset (starting item index) for a list box.
-        /// Based on swkotor.exe and swkotor2.exe: Scroll offset calculation
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Scroll offset calculation
         /// </summary>
         private int GetListBoxScrollOffset(GUIListBox listBox, int totalItemCount)
         {
@@ -1479,7 +1477,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
         /// <summary>
         /// Calculates how many items can fit in the visible area of the list box.
-        /// Based on swkotor.exe and swkotor2.exe: Visible item count calculation
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Visible item count calculation
         /// </summary>
         private int GetVisibleItemCount(GUIListBox listBox, int totalItemCount, XnaVector2 listBoxSize)
         {
@@ -1511,7 +1509,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
         /// <summary>
         /// Gets the index of the currently selected item in a list box.
-        /// Based on swkotor.exe and swkotor2.exe: Selected item tracking
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Selected item tracking
         /// </summary>
         private int GetSelectedListBoxItemIndex(GUIListBox listBox, int totalItemCount)
         {
@@ -1544,7 +1542,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
         /// <summary>
         /// Checks if a list box item at a specific render position is currently highlighted (mouse over).
-        /// Based on swkotor.exe and swkotor2.exe: Mouse hover detection
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Mouse hover detection
         /// </summary>
         private bool IsListBoxItemHighlighted(GUIListBox listBox, XnaVector2 listBoxPosition, XnaVector2 listBoxSize, int itemIndex, float itemHeight, int padding)
         {
@@ -1577,7 +1575,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
         /// <summary>
         /// Renders a proto item control.
-        /// Based on swkotor.exe and swkotor2.exe: ProtoItem rendering with state support
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: ProtoItem rendering with state support
         /// Original implementation: ProtoItem renders differently based on selected/highlighted states
         /// </summary>
         private void RenderProtoItem(GUIProtoItem protoItem, XnaVector2 position, XnaVector2 size, string itemText, bool isSelected, bool isHighlighted)
@@ -1602,7 +1600,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             }
 
             // Render proto item background fill texture.
-            // Reference: reone control.cpp - only renders fill when texture exists.
+            // Reva (k1_win_gog_swkotor.exe): CSWGuiBorder::Draw @ 0x004168c0 - fill only when texture present.
             // Do NOT render solid color fallback when no fill texture exists.
             if (borderToUse?.Fill != null && !borderToUse.Fill.IsBlank())
             {
@@ -1622,7 +1620,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                     _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
-            // No solid color fallback - matches reone and KotOR.js behavior.
+            // No solid color fallback - matches Reva CSWGuiBorder::Draw @ 0x004168c0.
 
             // Render proto item text if available
             if (!string.IsNullOrEmpty(itemText))
@@ -1667,7 +1665,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
         /// <summary>
         /// Renders the scrollbar for a list box.
-        /// Based on swkotor.exe and swkotor2.exe: ListBox scrollbar rendering
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: ListBox scrollbar rendering
         /// </summary>
         private void RenderListBoxScrollbar(GUIListBox listBox, XnaVector2 listBoxPosition, XnaVector2 listBoxSize, int totalItemCount, int visibleItemCount)
         {
@@ -1807,7 +1805,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             }
 
             // Render checkbox background fill texture.
-            // Reference: reone control.cpp - only renders fill when texture exists.
+            // Reva (k1_win_gog_swkotor.exe): CSWGuiBorder::Draw @ 0x004168c0 - fill only when texture present.
             // Do NOT render solid color fallback when no fill texture exists.
             if (borderToUse?.Fill != null && !borderToUse.Fill.IsBlank())
             {
@@ -1827,7 +1825,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                     _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
-            // No solid color fallback - matches reone and KotOR.js behavior.
+            // No solid color fallback - matches Reva CSWGuiBorder::Draw @ 0x004168c0.
 
             // Render checkmark if IsSelected is true
             if (isSelected)
@@ -1936,7 +1934,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         /// - Uses Bresenham's line algorithm for accurate pixel placement (matches OpenGL glLineWidth behavior)
         /// - Handles line thickness by drawing perpendicular pixels to the line direction
         /// - Supports both horizontal/vertical and diagonal lines with proper anti-aliasing consideration
-        /// - Original engine: swkotor2.exe uses OpenGL glLineWidth for line rendering
+        /// - Original engine: k2_win_gog_aspyr_swkotor2.exe uses OpenGL glLineWidth for line rendering
         /// - This implementation: Uses pixel texture with SpriteBatch for MonoGame compatibility
         /// </remarks>
         private void DrawLine(Texture2D pixel, XnaVector2 start, XnaVector2 end, float thickness, XnaColor color)
@@ -2023,7 +2021,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
         /// <summary>
         /// Renders a slider control.
-        /// Based on swkotor.exe and swkotor2.exe: Slider rendering with thumb positioning
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Slider rendering with thumb positioning
         /// Original implementation: Slider thumb position calculated from CURVALUE/MAXVALUE ratio
         /// Thumb position = (CURVALUE / MAXVALUE) × track length
         /// </summary>
@@ -2041,7 +2039,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             }
 
             // Render slider thumb at current value position
-            // Based on swkotor.exe: Slider thumb rendering
+            // Based on k1_win_gog_swkotor.exe: Slider thumb rendering
             // Thumb position calculated from Value, MinValue, MaxValue ratio
             // Direction: "horizontal" (0) = left-right, "vertical" (1) = top-bottom
 
@@ -2088,7 +2086,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             bool isHorizontal = slider.Direction == null || slider.Direction == "horizontal" || slider.Direction == "0";
 
             // Calculate thumb position and size
-            // Based on swkotor.exe and swkotor2.exe: Slider thumb size and position calculation
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Slider thumb size and position calculation
             // Thumb size should use actual texture dimensions when available
             XnaVector2 thumbPosition;
             XnaVector2 thumbSize;
@@ -2096,7 +2094,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             if (isHorizontal)
             {
                 // Horizontal slider: thumb moves left-right
-                // Based on swkotor.exe and swkotor2.exe: Slider thumb size calculation
+                // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Slider thumb size calculation
                 // Use actual texture width if reasonable, otherwise use proportional sizing
                 float thumbWidth = thumbTexture.Width > 0 && thumbTexture.Width <= size.X ? thumbTexture.Width : Math.Min(size.X * 0.1f, 20.0f);
                 float thumbHeight = thumbTexture.Height > 0 && thumbTexture.Height <= size.Y ? thumbTexture.Height : Math.Min(size.Y * 0.8f, size.Y);
@@ -2116,7 +2114,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             else
             {
                 // Vertical slider: thumb moves top-bottom
-                // Based on swkotor.exe and swkotor2.exe: Slider thumb size calculation
+                // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Slider thumb size calculation
                 // Use actual texture dimensions if reasonable, otherwise use proportional sizing
                 float thumbWidth = thumbTexture.Width > 0 && thumbTexture.Width <= size.X ? thumbTexture.Width : Math.Min(size.X * 0.8f, size.X);
                 float thumbHeight = thumbTexture.Height > 0 && thumbTexture.Height <= size.Y ? thumbTexture.Height : Math.Min(size.Y * 0.1f, 20.0f);
@@ -2251,7 +2249,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             float alpha = control.Alpha;
 
             // Render background if border fill texture is available.
-            // Reference: reone control.cpp - only renders fill when texture exists.
+            // Reva (k1_win_gog_swkotor.exe): CSWGuiBorder::Draw @ 0x004168c0 - fill only when texture present.
             // Do NOT render solid color fallback when no fill texture exists.
             if (control.Border?.Fill != null && !control.Border.Fill.IsBlank())
             {
@@ -2263,7 +2261,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                         (int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
-            // No solid color fallback - matches reone and KotOR.js behavior.
+            // No solid color fallback - matches Reva CSWGuiBorder::Draw @ 0x004168c0.
 
             // Render border edges and corners
             RenderBorderEdgesAndCorners(control.Border, position, size, alpha);
@@ -2289,9 +2287,8 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
             try
             {
-                // Lookup texture resource (TPC format first, TGA fallback)
-                // Reference: reone textures.cpp - tries TPC first, then TGA
-                // Reference: KotOR.js TextureLoader.ts - tries TPC first, then TGA
+                // Lookup texture resource (TPC format first, TGA fallback). Reva: K1/K2 engine texture loading
+                // uses TPC then TGA (resource lookup order in executable; format handled by engine loaders).
                 var resourceResult = _installation.Resources.LookupResource(textureName, ResourceType.TPC, null, null);
                 if (resourceResult == null || resourceResult.Data == null || resourceResult.Data.Length == 0)
                 {
@@ -2305,7 +2302,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
                 // Parse TPC/TGA from resource data
                 // TPCAuto.ReadTpc handles both TPC and TGA formats
-                // Reference: vendor/reone textures.cpp - loads both TPC and TGA formats
+                // Reva: Engine loads TPC/TGA from resource system; TPCAuto.ReadTpc handles both.
                 TPC tpc = TPCAuto.ReadTpc(resourceResult.Data);
                 if (tpc == null || tpc.Layers.Count == 0 || tpc.Layers[0].Mipmaps.Count == 0)
                 {
@@ -2315,10 +2312,10 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
                 // Convert TPC to MonoGame Texture2D
                 // GUI textures are always 2D (not cube maps), so set generateMipmaps to false for better performance
-                // Based on swkotor.exe and swkotor2.exe: GUI textures loaded without mipmaps for immediate rendering
+                // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: GUI textures loaded without mipmaps for immediate rendering
                 // Original engine: DirectX GUI textures created with D3DX_DEFAULT (no mipmap generation for GUI)
                 // Note: Do NOT flip textures - KOTOR uses top-left origin coordinate system (same as MonoGame/DirectX)
-                // Reference: vendor/reone GUI rendering (no texture flipping), vendor/KotOR.js (proper texture orientation)
+                // Reva (k1_win_gog_swkotor.exe): GUI sprite drawing uses same UV orientation as MonoGame (no flip).
                 Texture convertedTexture = TpcToMonoGameTextureConverter.Convert(tpc, _graphicsDevice, false, flipVertical: false, flipHorizontal: false);
                 if (convertedTexture is TextureCube)
                 {
@@ -2419,7 +2416,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         /// <param name="textSize">Measured text size.</param>
         /// <returns>The calculated text position.</returns>
         /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe: GUI text alignment calculations
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: GUI text alignment calculations
         /// Alignment values: 0=TopLeft, 1=TopCenter, 2=TopRight, 3=MiddleLeft, 4=Center, 5=MiddleRight, 6=BottomLeft, 7=BottomCenter, 8=BottomRight
         /// </remarks>
         private XnaVector2 CalculateTextPosition(int alignment, XnaVector2 position, XnaVector2 size, XnaVector2 textSize)
@@ -2600,7 +2597,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
         /// <summary>
         /// Plays button hover sound effect.
-        /// Based on swkotor.exe 0x0067ace0 @ 0x0067ace0: Plays "gui_actscroll" or "gui_actscroll1" on button hover
+        /// Based on k1_win_gog_swkotor.exe 0x0067ace0 @ 0x0067ace0: Plays "gui_actscroll" or "gui_actscroll1" on button hover
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x006d0790 @ 0x006d0790: Plays "gui_actscroll" or "gui_actscroll1" on button hover
         /// </summary>
         private void PlayButtonHoverSound()
@@ -2632,7 +2629,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
         /// <summary>
         /// Plays button click sound effect.
-        /// Based on swkotor.exe 0x0067ace0 @ 0x0067ace0: Plays "gui_actclick" or "gui_actclick1" on button click
+        /// Based on k1_win_gog_swkotor.exe 0x0067ace0 @ 0x0067ace0: Plays "gui_actclick" or "gui_actclick1" on button click
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x006d0790 @ 0x006d0790: Plays "gui_actclick" or "gui_actclick1" on button click
         /// </summary>
         private void PlayButtonClickSound()

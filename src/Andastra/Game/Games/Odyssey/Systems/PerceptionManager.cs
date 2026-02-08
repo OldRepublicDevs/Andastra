@@ -692,7 +692,7 @@ namespace Andastra.Game.Games.Odyssey.Systems
         /// </summary>
         /// <remarks>
         /// Hearing Detection (Odyssey-specific):
-        /// Based on swkotor.exe: 0x005afce0 @ 0x005afce0 (perception check function)
+        /// Based on k1_win_gog_swkotor.exe: 0x005afce0 @ 0x005afce0 (perception check function)
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005fb0f0 @ 0x005fb0f0 (perception update system)
         /// Located via string references: EFFECT_TYPE_DEAF @ ScriptDefs constant 13
         /// Original implementation: Comprehensive hearing detection with multiple checks:
@@ -716,11 +716,11 @@ namespace Andastra.Game.Games.Odyssey.Systems
         private bool CanHearInternal(IEntity creature, IEntity target)
         {
             // Check if creature is deafened
-            // Based on swkotor.exe: EFFECT_TYPE_DEAF = 13 prevents hearing perception
+            // Based on k1_win_gog_swkotor.exe: EFFECT_TYPE_DEAF = 13 prevents hearing perception
             // Located via string references: EFFECT_TYPE_DEAF @ ScriptDefs constant 13
             // Original implementation: Deafness effect blocks hearing perception checks
-            // swkotor.exe: 0x005afce0 @ 0x005afce0 (perception check function)
-            // swkotor2.exe: 0x005fb0f0 @ 0x005fb0f0 (perception update system)
+            // k1_win_gog_swkotor.exe: 0x005afce0 @ 0x005afce0 (perception check function)
+            // k2_win_gog_aspyr_swkotor2.exe: 0x005fb0f0 @ 0x005fb0f0 (perception update system)
             // Checks for EFFECT_TYPE_DEAF (13) in creature's effect list before allowing hearing perception
             if (_effectSystem.HasEffect(creature, EffectType.Deafness))
             {

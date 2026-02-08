@@ -12,7 +12,7 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// - Odyssey-specific: UTD file format, GFF field names, transition flag system
     /// - TSL-specific fields (Min1HP, NotBlastable) are supported but default to false for K1 compatibility
     /// - Located via string references:
-    ///   - ["Door List"]    @ (TSL: 0x007bd248) - swkotor2.exe GIT door list
+    ///   - ["Door List"]    @ (TSL: 0x007bd248) - k2_win_gog_aspyr_swkotor2.exe GIT door list
     ///   - ["GenericDoors"] @ (TSL: 0x007c4ba8) - generic doors 2DA table
     ///   - ["DoorTypes"]    @ (TSL: 0x007c4b9c) - door types field
     ///   - ["SecretDoorDC"] @ (TSL: 0x007c1acc) - secret door DC field
@@ -75,7 +75,7 @@ namespace Andastra.Game.Games.Odyssey.Components
     ///     - ["PointZ"] @ (TSL: 0x007c1c04) - Z position of geometry polygon vertex
     ///   - Loads LoadScreenID, SetByPlayerParty
     ///   - Geometry vertices are transformed by door position/orientation (relative to door transform)
-    /// - swkotor2.exe: [TODO: Name function] @ (K1: TODO: Find address, TSL: 0x00585ec0) - save door data to GFF/UTD template
+    /// - k2_win_gog_aspyr_swkotor2.exe: [TODO: Name function] @ (K1: TODO: Find address, TSL: 0x00585ec0) - save door data to GFF/UTD template
     ///   - Saves script hooks:
     ///     - ["ScriptHeartbeat"] @ (TSL: 0x007c1a28) - heartbeat script
     ///     - ["ScriptOnEnter"] @ (TSL: 0x007c1a38) - enter script
@@ -119,7 +119,7 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// - [TODO: Name function] @ (K1: 0x0050a0e0, TSL: TODO: Find address) - load door list from GIT
     /// - [TODO: Name function] @ (K1: 0x00507810, TSL: TODO: Find address) - save door list to GIT
     /// - [TODO: Name function] @ (K1: 0x004dcfb0, TSL: TODO: Find address) - door event handling, including transition events
-    /// - Note: swkotor.exe uses identical UTD template structure and transition flag system as swkotor2.exe; exact function addresses for door property loading from UTD templates in swkotor.exe need verification
+    /// - Note: k1_win_gog_swkotor.exe uses identical UTD template structure and transition flag system as k2_win_gog_aspyr_swkotor2.exe; exact function addresses for door property loading from UTD templates in k1_win_gog_swkotor.exe need verification
     /// - Doors have open/closed states, locks, traps, module transitions
     /// - Based on UTD file format (GFF with "UTD " signature) containing door template data
     /// - Script events:
@@ -283,9 +283,9 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// - Located via UTD field: "Min1HP" (UInt8/Byte, KotOR2 only)
         /// - Original implementation: If Min1HP is true (1), door cannot drop below 1 HP when damaged
         /// - Plot doors: Min1HP=1 prevents door from being destroyed, making it effectively indestructible
-        /// - swkotor2.exe: 0x00584f40 @ 0x00584f40 loads Min1HP from UTD template
-        /// - swkotor2.exe: 0x00585ec0 @ 0x00585ec0 saves Min1HP to UTD template
-        /// - Note: This field does not exist in swkotor.exe (KotOR1); always false for K1 doors
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x00584f40 @ 0x00584f40 loads Min1HP from UTD template
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x00585ec0 @ 0x00585ec0 saves Min1HP to UTD template
+        /// - Note: This field does not exist in k1_win_gog_swkotor.exe (KotOR1); always false for K1 doors
         /// </remarks>
         public bool Min1HP { get; set; }
 
@@ -298,9 +298,9 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// - Located via UTD field: "NotBlastable" (UInt8/Byte, KotOR2 only)
         /// - Original implementation: If NotBlastable is true (1), door cannot be blasted (explosive damage)
         /// - Blasting: Refers to damage from explosives, grenades, or force powers that bypass normal hardness
-        /// - swkotor2.exe: 0x00584f40 @ 0x00584f40 loads NotBlastable from UTD template
-        /// - swkotor2.exe: 0x00585ec0 @ 0x00585ec0 saves NotBlastable to UTD template
-        /// - Note: This field does not exist in swkotor.exe (KotOR1); always false for K1 doors
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x00584f40 @ 0x00584f40 loads NotBlastable from UTD template
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x00585ec0 @ 0x00585ec0 saves NotBlastable to UTD template
+        /// - Note: This field does not exist in k1_win_gog_swkotor.exe (KotOR1); always false for K1 doors
         /// </remarks>
         public bool NotBlastable { get; set; }
 
@@ -311,18 +311,18 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// </summary>
         /// <remarks>
         /// Module Transition Check:
-        /// - Based on swkotor.exe and swkotor2.exe door transition system
-        /// - swkotor.exe: Door list loading (0x0050a0e0 @ 0x0050a0e0 loads door list from GIT), door saving (0x00507810 @ 0x00507810 saves door list to GIT)
-        /// - swkotor.exe: Door event handling (0x004dcfb0 @ 0x004dcfb0 handles door events including transitions)
-        /// - swkotor.exe: Door transition system uses same UTD template fields (LinkedToModule, LinkedToFlags) as swkotor2.exe
-        /// - Located via string references: "LinkedToModule" @ 0x007bd7bc (swkotor2.exe), "LinkedToFlags" @ 0x007bd788 (swkotor2.exe)
-        /// - swkotor2.exe door loading: 0x005838d0 @ 0x005838d0 reads LinkedToModule and LinkedToFlags from UTD template
-        /// - swkotor2.exe door loading: 0x00580ed0 @ 0x00580ed0 loads door properties including transition data
-        /// - swkotor2.exe GIT loading: 0x004e5920 @ 0x004e5920 loads door instances from GIT with transition fields
-        /// - Original implementation: LinkedToFlags bit 1 (0x1) = module transition flag (same in both swkotor.exe and swkotor2.exe)
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe door transition system
+        /// - k1_win_gog_swkotor.exe: Door list loading (0x0050a0e0 @ 0x0050a0e0 loads door list from GIT), door saving (0x00507810 @ 0x00507810 saves door list to GIT)
+        /// - k1_win_gog_swkotor.exe: Door event handling (0x004dcfb0 @ 0x004dcfb0 handles door events including transitions)
+        /// - k1_win_gog_swkotor.exe: Door transition system uses same UTD template fields (LinkedToModule, LinkedToFlags) as k2_win_gog_aspyr_swkotor2.exe
+        /// - Located via string references: "LinkedToModule" @ 0x007bd7bc (k2_win_gog_aspyr_swkotor2.exe), "LinkedToFlags" @ 0x007bd788 (k2_win_gog_aspyr_swkotor2.exe)
+        /// - k2_win_gog_aspyr_swkotor2.exe door loading: 0x005838d0 @ 0x005838d0 reads LinkedToModule and LinkedToFlags from UTD template
+        /// - k2_win_gog_aspyr_swkotor2.exe door loading: 0x00580ed0 @ 0x00580ed0 loads door properties including transition data
+        /// - k2_win_gog_aspyr_swkotor2.exe GIT loading: 0x004e5920 @ 0x004e5920 loads door instances from GIT with transition fields
+        /// - Original implementation: LinkedToFlags bit 1 (0x1) = module transition flag (same in both k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe)
         /// - Module transition: If LinkedToFlags & 1 != 0 and LinkedToModule is non-empty, door triggers module transition
         /// - Transition destination: TransitionDestination waypoint tag specifies where party spawns in new module
-        /// - Note: swkotor.exe uses identical transition flag system to swkotor2.exe; exact function addresses for door property loading in swkotor.exe need verification  MCP
+        /// - Note: k1_win_gog_swkotor.exe uses identical transition flag system to k2_win_gog_aspyr_swkotor2.exe; exact function addresses for door property loading in k1_win_gog_swkotor.exe need verification  MCP
         /// </remarks>
         public override bool IsModuleTransition
         {
@@ -334,19 +334,19 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// </summary>
         /// <remarks>
         /// Area Transition Check:
-        /// - Based on swkotor.exe and swkotor2.exe door transition system
-        /// - swkotor.exe: Door list loading (0x0050a0e0 @ 0x0050a0e0 loads door list from GIT), door saving (0x00507810 @ 0x00507810 saves door list to GIT)
-        /// - swkotor.exe: Door event handling (0x004dcfb0 @ 0x004dcfb0 handles door events including transitions)
-        /// - swkotor.exe: Door transition system uses same UTD template fields (LinkedTo, LinkedToFlags, TransitionDestination) as swkotor2.exe
-        /// - Located via string references: "LinkedTo" @ 0x007bd798 (swkotor2.exe), "LinkedToFlags" @ 0x007bd788 (swkotor2.exe), "TransitionDestination" @ 0x007bd7a4 (swkotor2.exe)
-        /// - swkotor2.exe door loading: 0x005838d0 @ 0x005838d0 reads LinkedTo and LinkedToFlags from UTD template
-        /// - swkotor2.exe door loading: 0x00580ed0 @ 0x00580ed0 loads door properties including transition data
-        /// - swkotor2.exe GIT loading: 0x004e5920 @ 0x004e5920 loads door instances from GIT with transition fields
-        /// - Original implementation: LinkedToFlags bit 2 (0x2) = area transition flag (same in both swkotor.exe and swkotor2.exe)
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe door transition system
+        /// - k1_win_gog_swkotor.exe: Door list loading (0x0050a0e0 @ 0x0050a0e0 loads door list from GIT), door saving (0x00507810 @ 0x00507810 saves door list to GIT)
+        /// - k1_win_gog_swkotor.exe: Door event handling (0x004dcfb0 @ 0x004dcfb0 handles door events including transitions)
+        /// - k1_win_gog_swkotor.exe: Door transition system uses same UTD template fields (LinkedTo, LinkedToFlags, TransitionDestination) as k2_win_gog_aspyr_swkotor2.exe
+        /// - Located via string references: "LinkedTo" @ 0x007bd798 (k2_win_gog_aspyr_swkotor2.exe), "LinkedToFlags" @ 0x007bd788 (k2_win_gog_aspyr_swkotor2.exe), "TransitionDestination" @ 0x007bd7a4 (k2_win_gog_aspyr_swkotor2.exe)
+        /// - k2_win_gog_aspyr_swkotor2.exe door loading: 0x005838d0 @ 0x005838d0 reads LinkedTo and LinkedToFlags from UTD template
+        /// - k2_win_gog_aspyr_swkotor2.exe door loading: 0x00580ed0 @ 0x00580ed0 loads door properties including transition data
+        /// - k2_win_gog_aspyr_swkotor2.exe GIT loading: 0x004e5920 @ 0x004e5920 loads door instances from GIT with transition fields
+        /// - Original implementation: LinkedToFlags bit 2 (0x2) = area transition flag (same in both k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe)
         /// - Area transition: If LinkedToFlags & 2 != 0 and LinkedTo is non-empty, door triggers area transition within module
         /// - LinkedTo: Waypoint or trigger tag to transition to (within current module)
         /// - Transition destination: TransitionDestination waypoint tag specifies where party spawns after transition
-        /// - Note: swkotor.exe uses identical transition flag system to swkotor2.exe; exact function addresses for door property loading in swkotor.exe need verification  MCP
+        /// - Note: k1_win_gog_swkotor.exe uses identical transition flag system to k2_win_gog_aspyr_swkotor2.exe; exact function addresses for door property loading in k1_win_gog_swkotor.exe need verification  MCP
         /// </remarks>
         public override bool IsAreaTransition
         {
@@ -367,10 +367,10 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// </summary>
         /// <remarks>
         /// Door Locking:
-        /// - Based on swkotor.exe and swkotor2.exe door locking system
-        /// - Located via string references: "OnLock" @ 0x007c1a28 (swkotor2.exe), "EVENT_LOCK_OBJECT" @ 0x007bcd20 (swkotor2.exe, case 0xd in 0x004dcfb0)
-        /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754 (swkotor2.exe, 0x1c)
-        /// - Event dispatching: 0x004dcfb0 @ 0x004dcfb0 (swkotor2.exe) handles EVENT_LOCK_OBJECT (case 0xd, fires before script execution)
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe door locking system
+        /// - Located via string references: "OnLock" @ 0x007c1a28 (k2_win_gog_aspyr_swkotor2.exe), "EVENT_LOCK_OBJECT" @ 0x007bcd20 (k2_win_gog_aspyr_swkotor2.exe, case 0xd in 0x004dcfb0)
+        /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754 (k2_win_gog_aspyr_swkotor2.exe, 0x1c)
+        /// - Event dispatching: 0x004dcfb0 @ 0x004dcfb0 (k2_win_gog_aspyr_swkotor2.exe) handles EVENT_LOCK_OBJECT (case 0xd, fires before script execution)
         /// - Original implementation: Sets IsLocked flag to true, fires OnLock script event
         /// - Lock validation: Only locks if Lockable flag is true (from UTD template)
         /// - Script execution: OnLock script (ScriptOnLock field in UTD template) executes after door is locked
@@ -393,7 +393,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// <param name="damage">The amount of damage to apply.</param>
         /// <remarks>
         /// Door Bashing:
-        /// - Based on swkotor.exe and swkotor2.exe door bashing system
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe door bashing system
         /// - Located via string references: ["gui_mp_bashdp"] @ (TSL: 0x007b5e04) - door bash GUI panels
         /// - ["gui_mp_bashup"] @ (TSL: 0x007b5e14) - door bash GUI elements
         /// - Original implementation: Applies damage minus hardness, destroys door when HP reaches 0
@@ -415,7 +415,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// <param name="damageType">The type of damage being applied.</param>
         /// <remarks>
         /// Door Damage Application with Type:
-        /// - Based on swkotor.exe and swkotor2.exe door damage system
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe door damage system
         /// - Located via string references:
         ///   - ["gui_mp_bashdp"] @ (TSL: 0x007b5e04) - door bash GUI panels
         ///   - ["gui_mp_bashup"] @ (TSL: 0x007b5e14) - door bash GUI elements

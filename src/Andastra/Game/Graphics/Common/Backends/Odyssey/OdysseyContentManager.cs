@@ -18,7 +18,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Content Manager:
-    /// - Based on verified components of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe
     /// - Original game content system: CExoResMan, CExoKeyTable, ERF/BIF archives
     /// - Located via string references: "Resource" @ 0x007c14d4, "Loading" @ 0x007c7e40
     /// - CExoKeyTable @ 0x007b6078, 0x00633270 @ 0x00633270 (resource path resolution)
@@ -74,7 +74,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Loads an asset of the specified type.
-        /// Based on swkotor.exe/swkotor2.exe: CExoResMan resource loading
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: CExoResMan resource loading
         /// </summary>
         /// <typeparam name="T">Asset type.</typeparam>
         /// <param name="assetName">Asset name (without extension).</param>

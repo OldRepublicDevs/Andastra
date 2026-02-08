@@ -70,7 +70,7 @@ namespace Andastra.Game.Games.Common
     /// - State Synchronization: Module state flags synchronized with engine systems
     ///
     /// Cross-Engine Implementation Notes:
-    /// - Odyssey (swkotor.exe, swkotor2.exe): Uses IFO/GIT/ARE file formats, NCS VM for scripts
+    /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): Uses IFO/GIT/ARE file formats, NCS VM for scripts
     /// - Aurora (nwmain.exe, nwn2main.exe): Uses Module.ifo/ARE/GIT file formats, NCS VM for scripts, HAK file system
     /// - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe): Uses UnrealScript-based architecture
     /// - Infinity (bgmain.exe, iwd.exe): Uses ARE/GAM file formats, different script system

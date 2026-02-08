@@ -22,9 +22,9 @@ namespace Andastra.Game.Core
     /// - Registry keys: K2 uses "SOFTWARE\Obsidian\KOTOR2" or "SOFTWARE\LucasArts\KotOR2"
     /// - Registry value: "Path" entry contains installation directory path (HKEY_LOCAL_MACHINE)
     /// - Wow6432Node: 64-bit Windows registry redirector for 32-bit applications (checks both locations)
-    /// - Validation: Checks for chitin.key (keyfile) and game executable (swkotor.exe/swkotor2.exe)
+    /// - Validation: Checks for chitin.key (keyfile) and game executable (k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe)
     /// - chitin.key: Keyfile containing resource file mappings and encryption keys (required for resource loading)
-    /// - Executable validation: Checks for swkotor.exe (K1) or swkotor2.exe (K2) in installation directory
+    /// - Executable validation: Checks for k1_win_gog_swkotor.exe (K1) or k2_win_gog_aspyr_swkotor2.exe (K2) in installation directory
     /// - Engine initialization: 0x00404250 @ 0x00404250 reads installation path during startup
     /// - Path resolution: 0x00633270 @ 0x00633270 resolves resource paths based on installation directory
     /// - This implementation: Enhanced with Steam, GOG, and environment variable detection
@@ -519,7 +519,7 @@ namespace Andastra.Game.Core
             }
 
             // Check for game executable
-            string exeName = game == KotorGame.K1 ? "swkotor.exe" : "swkotor2.exe";
+            string exeName = game == KotorGame.K1 ? "k1_win_gog_swkotor.exe" : "k2_win_gog_aspyr_swkotor2.exe";
             if (!File.Exists(Path.Combine(path, exeName)))
             {
                 return false;

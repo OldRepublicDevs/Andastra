@@ -23,7 +23,7 @@ namespace Andastra.Game.Scripting.Interfaces
     /// - Return value: Functions return Variable (can be int, float, string, object, location, void)
     /// - Function implementations must match original engine behavior for script compatibility
     /// - Based on NCS VM ACTION opcode semantics in vendor/PyKotor/wiki/NCS-File-Format.md
-    /// - swkotor.exe: ExecuteCode @ 0x005d2bd0, ACTION case calls ExecuteCommand vtable function with routine ID and arg count
+    /// - k1_win_gog_swkotor.exe: ExecuteCode @ 0x005d2bd0, ACTION case calls ExecuteCommand vtable function with routine ID and arg count
     /// </remarks>
     public interface IEngineApi
     {

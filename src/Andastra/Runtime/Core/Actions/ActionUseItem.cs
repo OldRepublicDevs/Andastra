@@ -38,8 +38,8 @@ namespace Andastra.Runtime.Core.Actions
     /// Use Item Action:
     /// - Common item usage system across all BioWare engines
     /// - Based on verified components of:
-    ///   - swkotor.exe/swkotor2.exe: "OnUsed" @ 0x007c1f70, "i_useitemm" @ 0x007ccde0, "BTN_USEITEM" @ 0x007d1080
-    ///   - swkotor2.exe: "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM" @ 0x007bc8f0, "Mod_OnActvtItem" @ 0x007be7f4
+    ///   - k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: "OnUsed" @ 0x007c1f70, "i_useitemm" @ 0x007ccde0, "BTN_USEITEM" @ 0x007d1080
+    ///   - k2_win_gog_aspyr_swkotor2.exe: "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM" @ 0x007bc8f0, "Mod_OnActvtItem" @ 0x007be7f4
     ///   - nwmain.exe: Aurora item usage system (similar patterns)
     ///   - daorigins.exe/DragonAge2.exe: Eclipse item usage with enhanced effects
     /// - Common functionality across engines:
@@ -203,9 +203,9 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // For consumable items, apply effects based on baseitems.2da item class if no properties found
-            // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Item usage checks baseitems.2da for item class and chargesstarting
-            // swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - Item usage checks baseitems.2da for item class and chargesstarting
-            // Located via string references: "baseitems" @ 0x007c4594 (swkotor2.exe), "BASEITEMS" @ 0x0074b294 (swkotor.exe)
+            // k1_win_gog_swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Item usage checks baseitems.2da for item class and chargesstarting
+            // k2_win_gog_aspyr_swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - Item usage checks baseitems.2da for item class and chargesstarting
+            // Located via string references: "baseitems" @ 0x007c4594 (k2_win_gog_aspyr_swkotor2.exe), "BASEITEMS" @ 0x0074b294 (k1_win_gog_swkotor.exe)
             // Note: 0x005fb0f0 is a different function (save game loading, not baseitems.2da loading)
             // Items with chargesstarting > 0 in baseitems.2da are consumables that apply effects when used
             if (itemComponent.Properties.Count == 0 && itemComponent.Charges > 0)
@@ -215,8 +215,8 @@ namespace Andastra.Runtime.Core.Actions
                 if (baseItemId >= 0)
                 {
                     // Load baseitems.2da to get item class and consumable information
-                    // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Base item stats loaded from baseitems.2da via GameDataProvider
-                    // swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - Base item stats loaded from baseitems.2da via GameDataProvider
+                    // k1_win_gog_swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Base item stats loaded from baseitems.2da via GameDataProvider
+                    // k2_win_gog_aspyr_swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - Base item stats loaded from baseitems.2da via GameDataProvider
                     // Both functions load the BASEITEMS 2DA table and populate CSWBaseItemArray with item class, chargesstarting, and other properties
                     TwoDA baseitemsTable = null;
                     if (caster.World.GameDataProvider != null)
@@ -240,19 +240,19 @@ namespace Andastra.Runtime.Core.Actions
                             if (baseItemRow != null)
                             {
                                 // Get item class from baseitems.2da
-                                // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - ItemClass read via C2DA::GetCExoStringEntry as string
-                                // swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - ItemClass read via C2DA::GetCExoStringEntry as string
+                                // k1_win_gog_swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - ItemClass read via C2DA::GetCExoStringEntry as string
+                                // k2_win_gog_aspyr_swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - ItemClass read via C2DA::GetCExoStringEntry as string
                                 // Item class determines item category and behavior (weapon, armor, consumable, etc.)
                                 string itemClass = baseItemRow.GetString("itemclass", "").ToLowerInvariant();
 
                                 // Get chargesstarting to confirm it's a consumable
-                                // swkotor2.exe: 0x007c4438 "ChargesStarting" string reference - Items with chargesstarting > 0 are consumables
-                                // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Items with chargesstarting > 0 are consumables
+                                // k2_win_gog_aspyr_swkotor2.exe: 0x007c4438 "ChargesStarting" string reference - Items with chargesstarting > 0 are consumables
+                                // k1_win_gog_swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Items with chargesstarting > 0 are consumables
                                 int? chargesStarting = baseItemRow.GetInteger("chargesstarting", null);
 
                                 // Apply effects based on item class for consumable items
-                                // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Different item classes have different effects when used
-                                // swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - Different item classes have different effects when used
+                                // k1_win_gog_swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Different item classes have different effects when used
+                                // k2_win_gog_aspyr_swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - Different item classes have different effects when used
                                 if (chargesStarting.HasValue && chargesStarting.Value > 0)
                                 {
                                     ApplyEffectsByItemClass(effectSystem, target, caster, baseItemRow, itemClass, itemComponent);
@@ -294,9 +294,9 @@ namespace Andastra.Runtime.Core.Actions
         /// </summary>
         /// <remarks>
         /// Item Class-Based Effect Application:
-        /// - swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - ItemClass determines item category and behavior
-        /// - swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - ItemClass determines item category and behavior
-        /// - Located via string references: "baseitems" @ 0x007c4594 (swkotor2.exe), "BASEITEMS" @ 0x0074b294 (swkotor.exe)
+        /// - k1_win_gog_swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - ItemClass determines item category and behavior
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - ItemClass determines item category and behavior
+        /// - Located via string references: "baseitems" @ 0x007c4594 (k2_win_gog_aspyr_swkotor2.exe), "BASEITEMS" @ 0x0074b294 (k1_win_gog_swkotor.exe)
         /// - Original implementation: Different item classes have different effects when used
         /// - Item class is a string column in baseitems.2da (read via C2DA::GetCExoStringEntry)
         /// - Common consumable item classes:
@@ -318,8 +318,8 @@ namespace Andastra.Runtime.Core.Actions
             int? chargesStarting = baseItemRow.GetInteger("chargesstarting", null);
 
             // Determine effect based on item class string and label
-            // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Item class determines what effects are applied when item is used
-            // swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - Item class determines what effects are applied when item is used
+            // k1_win_gog_swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Item class determines what effects are applied when item is used
+            // k2_win_gog_aspyr_swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - Item class determines what effects are applied when item is used
             // Item class is a string that identifies the item category (weapon, armor, consumable, etc.)
             ItemCategory category = GetItemCategoryFromItemClass(itemClass);
 
@@ -430,7 +430,7 @@ namespace Andastra.Runtime.Core.Actions
         /// Calculates healing amount for medical consumables based on charges and chargesstarting.
         /// </summary>
         /// <remarks>
-        /// Healing Calculation (K1: swkotor.exe: 0x004fc210 UseItem, 0x005b31d0 CSWBaseItemArray::Load, TSL: swkotor2.exe: similar addresses):
+        /// Healing Calculation (K1: k1_win_gog_swkotor.exe: 0x004fc210 UseItem, 0x005b31d0 CSWBaseItemArray::Load, TSL: k2_win_gog_aspyr_swkotor2.exe: similar addresses):
         /// Healing amount scales with item charges and base charges (chargesStarting).
         /// - Base healing comes from item property CostValue or Param1Value (if healing property exists)
         /// - ChargesStarting indicates item quality/tier: higher chargesStarting = better quality = more base healing
@@ -505,8 +505,8 @@ namespace Andastra.Runtime.Core.Actions
         /// <returns>Item category determined from item class string.</returns>
         /// <remarks>
         /// Item Class Category Determination:
-        /// - swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - ItemClass read as string via C2DA::GetCExoStringEntry
-        /// - swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - ItemClass read as string via C2DA::GetCExoStringEntry
+        /// - k1_win_gog_swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - ItemClass read as string via C2DA::GetCExoStringEntry
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - ItemClass read as string via C2DA::GetCExoStringEntry
         /// - Item class string determines item category and behavior:
         ///   - Medical consumables: "medical", "medpac", "heal" patterns, or numeric strings for BASE_ITEM_MEDICAL_EQUIPMENT (55)
         ///   - Stimulants: "stim", "adrenal", "combat" patterns, or numeric strings for BASE_ITEM_ADRENALINE (53), BASE_ITEM_COMBAT_SHOTS (54)
@@ -638,8 +638,8 @@ namespace Andastra.Runtime.Core.Actions
         /// Calculates bonus amount for stimulants based on charges and chargesstarting.
         /// </summary>
         /// <remarks>
-        /// swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Stim bonus amounts scale with item quality (chargesstarting)
-        /// swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - Stim bonus amounts scale with item quality (chargesstarting)
+        /// k1_win_gog_swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Stim bonus amounts scale with item quality (chargesstarting)
+        /// k2_win_gog_aspyr_swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - Stim bonus amounts scale with item quality (chargesstarting)
         /// </remarks>
         private int CalculateStimBonusAmount(IItemComponent itemComponent, int? chargesStarting)
         {
@@ -707,7 +707,7 @@ namespace Andastra.Runtime.Core.Actions
         /// - Located via string references: "ItemPropDef" @ 0x007c4c20, "itempropdef.2da" in resource system
         /// - Original implementation: Accesses itempropdef.2da through game data provider
         /// - Uses IWorld.GameDataProvider to access 2DA tables in engine-agnostic way
-        /// - swkotor2.exe: Item property definitions are loaded from itempropdef.2da via C2DA/2DA system
+        /// - k2_win_gog_aspyr_swkotor2.exe: Item property definitions are loaded from itempropdef.2da via C2DA/2DA system
         /// </remarks>
         [CanBeNull]
         private TwoDA TryGetItemPropDefTable(ItemProperty property, IWorld world)
@@ -785,7 +785,7 @@ namespace Andastra.Runtime.Core.Actions
         /// </summary>
         /// <remarks>
         /// Property Type Mappings (Aurora Engine Standard):
-        /// Based on nwscript.nss constants and swkotor2.exe implementation
+        /// Based on nwscript.nss constants and k2_win_gog_aspyr_swkotor2.exe implementation
         /// Property types 0-58 map to various effects (ability bonuses, AC, damage, etc.)
         /// </remarks>
         [CanBeNull]

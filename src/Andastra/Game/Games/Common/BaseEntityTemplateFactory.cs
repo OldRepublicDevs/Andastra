@@ -26,11 +26,11 @@ namespace Andastra.Game.Games.Common
     /// - Null return for failed template loading or entity creation
     ///
     /// Engine-specific differences:
-    /// - Odyssey (swkotor.exe, swkotor2.exe): UTC GFF templates, EntityFactory wrapper
-    ///   - swkotor.exe: 0x0050a350 @ 0x0050a350 loads templates from GIT with TemplateResRef field
-    ///   - swkotor2.exe: 0x005261b0 @ 0x005261b0 loads creature templates, 0x005fb0f0 @ 0x005fb0f0 loads template data
+    /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): UTC GFF templates, EntityFactory wrapper
+    ///   - k1_win_gog_swkotor.exe: 0x0050a350 @ 0x0050a350 loads templates from GIT with TemplateResRef field
+    ///   - k2_win_gog_aspyr_swkotor2.exe: 0x005261b0 @ 0x005261b0 loads creature templates, 0x005fb0f0 @ 0x005fb0f0 loads template data
     ///   - Template loading: 0x005fb0f0 @ 0x005fb0f0 loads creature templates from GFF, reads TemplateResRef field
-    ///   - Located via string references: "TemplateResRef" @ 0x00747494 (swkotor.exe), "TemplateResRef" @ 0x007bd00c (swkotor2.exe)
+    ///   - Located via string references: "TemplateResRef" @ 0x00747494 (k1_win_gog_swkotor.exe), "TemplateResRef" @ 0x007bd00c (k2_win_gog_aspyr_swkotor2.exe)
     /// - Aurora (nwmain.exe): Similar template system, different GFF format
     ///   - Located via string references: "TemplateResRef" @ 0x140dddee8 (nwmain.exe)
     /// - Eclipse (daorigins.exe, DragonAge2.exe): TemplateResRef string exists but may use different system

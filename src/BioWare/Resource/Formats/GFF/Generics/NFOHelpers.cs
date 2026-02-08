@@ -4,8 +4,8 @@ using BioWare.Resource.Formats.GFF;
 
 namespace BioWare.Resource.Formats.GFF.Generics
 {
-    // Engine references: swkotor2.exe:0x00707290, swkotor.exe:0x006c8e50 (NFO loading)
-    // Engine references: swkotor2.exe:0x004eb750, swkotor.exe:0x004b3110 (NFO serialization)
+    // Engine references: k2_win_gog_aspyr_swkotor2.exe:0x00707290, k1_win_gog_swkotor.exe:0x006c8e50 (NFO loading)
+    // Engine references: k2_win_gog_aspyr_swkotor2.exe:0x004eb750, k1_win_gog_swkotor.exe:0x004b3110 (NFO serialization)
     internal static class NFOHelpers
     {
         public static NFOData ConstructNfo(GFF gff)
@@ -15,14 +15,14 @@ namespace BioWare.Resource.Formats.GFF.Generics
             GFFStruct root = gff.Root ?? new GFFStruct();
             var nfo = new NFOData();
 
-            // Engine default: "" (swkotor2.exe:0x00707290 line 153, swkotor.exe:0x006c8e50 line 137)
+            // Engine default: "" (k2_win_gog_aspyr_swkotor2.exe:0x00707290 line 153, k1_win_gog_swkotor.exe:0x006c8e50 line 137)
             nfo.AreaName = root.Acquire("AREANAME", string.Empty);
 
-            // Engine default: "" (swkotor2.exe:0x00707290 line 162, swkotor.exe:0x006c8e50 line 146)
+            // Engine default: "" (k2_win_gog_aspyr_swkotor2.exe:0x00707290 line 162, k1_win_gog_swkotor.exe:0x006c8e50 line 146)
             nfo.LastModule = root.Acquire("LASTMODULE", string.Empty);
 
             // Engine default: "", but if field not found, defaults to "Old Save Game"
-            // (swkotor2.exe:0x00707290 lines 173, 181, swkotor.exe:0x006c8e50 lines 157, 165)
+            // (k2_win_gog_aspyr_swkotor2.exe:0x00707290 lines 173, 181, k1_win_gog_swkotor.exe:0x006c8e50 lines 157, 165)
             bool savegameNameExists = root.Exists("SAVEGAMENAME");
             nfo.SavegameName = root.Acquire("SAVEGAMENAME", string.Empty);
             if (!savegameNameExists && string.IsNullOrEmpty(nfo.SavegameName))
@@ -30,10 +30,10 @@ namespace BioWare.Resource.Formats.GFF.Generics
                 nfo.SavegameName = "Old Save Game";
             }
 
-            // Engine default: 0 (swkotor2.exe:0x00707290 line 169, swkotor.exe:0x006c8e50 line 153)
+            // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x00707290 line 169, k1_win_gog_swkotor.exe:0x006c8e50 line 153)
             nfo.TimePlayedSeconds = root.Acquire("TIMEPLAYED", 0);
 
-            // Engine default: 0 if not present (swkotor2.exe:0x00707290 line 205)
+            // Engine default: 0 if not present (k2_win_gog_aspyr_swkotor2.exe:0x00707290 line 205)
             // TIMESTAMP is commonly FILETIME in a 64-bit integer; tolerate both signed/unsigned.
             if (root.Exists("TIMESTAMP"))
             {
@@ -49,21 +49,21 @@ namespace BioWare.Resource.Formats.GFF.Generics
                 }
             }
 
-            // Engine default: 0 (swkotor2.exe:0x00707290 line 187, swkotor.exe:0x006c8e50 line 171)
+            // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x00707290 line 187, k1_win_gog_swkotor.exe:0x006c8e50 line 171)
             nfo.CheatUsed = root.Acquire("CHEATUSED", (byte)0) != 0;
 
             // Engine default: Uses existing value in object if field missing, otherwise 0
-            // For new objects, default is 0 (swkotor2.exe:0x00707290 line 219, swkotor.exe:0x006c8e50 line 190)
+            // For new objects, default is 0 (k2_win_gog_aspyr_swkotor2.exe:0x00707290 line 219, k1_win_gog_swkotor.exe:0x006c8e50 line 190)
             nfo.GameplayHint = root.Acquire("GAMEPLAYHINT", (byte)0);
 
             // STORYHINT variants:
             // - Legacy single byte (K1 only, K2 uses indexed STORYHINT0-9)
-            // Engine default: 0 (swkotor.exe:0x006c8e50 line 194)
+            // Engine default: 0 (k1_win_gog_swkotor.exe:0x006c8e50 line 194)
             nfo.StoryHintLegacy = root.Acquire("STORYHINT", (byte)0);
 
             // - Per-index flags 0..9 (K2 only)
             // Engine default: Uses existing value in object if field missing, otherwise 0
-            // For new objects, default is 0 for each index (swkotor2.exe:0x00707290 lines 223-252)
+            // For new objects, default is 0 for each index (k2_win_gog_aspyr_swkotor2.exe:0x00707290 lines 223-252)
             bool anyIndexed = false;
             for (int i = 0; i < 10; i++)
             {
@@ -84,18 +84,18 @@ namespace BioWare.Resource.Formats.GFF.Generics
                 // Leave list as-is; consumers can choose legacy or indexed.
             }
 
-            // Engine default: "" (swkotor.exe:0x006c8e50 line 236, swkotor2.exe:0x00707290 line 304)
+            // Engine default: "" (k1_win_gog_swkotor.exe:0x006c8e50 line 236, k2_win_gog_aspyr_swkotor2.exe:0x00707290 line 304)
             // Engine reads PORTRAIT fields in loop using format "PORTRAIT%d" (0, 1, 2)
-            // (swkotor.exe:0x006c8e50 lines 234-244, swkotor2.exe:0x00707290 lines 302-312)
+            // (k1_win_gog_swkotor.exe:0x006c8e50 lines 234-244, k2_win_gog_aspyr_swkotor2.exe:0x00707290 lines 302-312)
             nfo.Portrait0 = root.Acquire("PORTRAIT0", ResRef.FromBlank());
             nfo.Portrait1 = root.Acquire("PORTRAIT1", ResRef.FromBlank());
             nfo.Portrait2 = root.Acquire("PORTRAIT2", ResRef.FromBlank());
 
-            // Engine default: 0 (swkotor2.exe:0x00707290 line 253, swkotor.exe:0x006c8e50 line 196)
+            // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x00707290 line 253, k1_win_gog_swkotor.exe:0x006c8e50 line 196)
             nfo.LiveContentBitmask = root.Acquire("LIVECONTENT", (byte)0);
 
             // Live entries: tolerate 1..9.
-            // Engine default: "" for each LIVE field (swkotor.exe:0x006c8e50 line 207, swkotor2.exe:0x00707290 line 264)
+            // Engine default: "" for each LIVE field (k1_win_gog_swkotor.exe:0x006c8e50 line 207, k2_win_gog_aspyr_swkotor2.exe:0x00707290 line 264)
             for (int i = 1; i <= 9; i++)
             {
                 string field = "LIVE" + i;
@@ -105,7 +105,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
                 }
             }
 
-            // Engine default: "" (swkotor.exe:0x006c8e50 - not explicitly read in K1, swkotor2.exe:0x00707290 line 209)
+            // Engine default: "" (k1_win_gog_swkotor.exe:0x006c8e50 - not explicitly read in K1, k2_win_gog_aspyr_swkotor2.exe:0x00707290 line 209)
             nfo.PcName = root.Acquire("PCNAME", string.Empty);
 
             return nfo;

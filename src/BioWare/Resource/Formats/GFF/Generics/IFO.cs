@@ -274,7 +274,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
         public int XpScale { get; set; }
 
         // Game time fields (current game time stored in IFO)
-        // SerializeIfoGameTime @ (K1: TODO: Find this address, TSL: 0x00500290) (swkotor2.exe: SerializeIfoGameTime @ 0x00500290)
+        // SerializeIfoGameTime @ (K1: TODO: Find this address, TSL: 0x00500290) (k2_win_gog_aspyr_swkotor2.exe: SerializeIfoGameTime @ 0x00500290)
         // Lines 96-100: Writes current game time as Mod_StartMinute/Second/MiliSec and Mod_PauseDay/PauseTime
         // These fields are written from the current game time when the IFO is saved
         // Implementation: Use IFOHelpers.PopulateIfoGameTimeFromTimeManager() to populate these fields from TimeManager
@@ -283,7 +283,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
         /// Written to IFO as Mod_StartMinute field.
         /// </summary>
         /// <remarks>
-        /// SerializeIfoGameTime @ (K1: TODO: Find this address, TSL: 0x00500290) line 96 (swkotor2.exe: SerializeIfoGameTime @ 0x00500290)
+        /// SerializeIfoGameTime @ (K1: TODO: Find this address, TSL: 0x00500290) line 96 (k2_win_gog_aspyr_swkotor2.exe: SerializeIfoGameTime @ 0x00500290)
         /// Written via FUN_004137e0(param_1, param_2, local_5c[0], "Mod_StartMinute")
         /// Populated by IFOHelpers.PopulateIfoGameTimeFromTimeManager() which matches original engine behavior
         /// </remarks>
@@ -294,7 +294,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
         /// Written to IFO as Mod_StartSecond field.
         /// </summary>
         /// <remarks>
-        /// SerializeIfoGameTime @ (K1: TODO: Find this address, TSL: 0x00500290) line 97 (swkotor2.exe: SerializeIfoGameTime @ 0x00500290)
+        /// SerializeIfoGameTime @ (K1: TODO: Find this address, TSL: 0x00500290) line 97 (k2_win_gog_aspyr_swkotor2.exe: SerializeIfoGameTime @ 0x00500290)
         /// Written via FUN_004137e0(param_1, param_2, local_58[0], "Mod_StartSecond")
         /// Populated by IFOHelpers.PopulateIfoGameTimeFromTimeManager() which matches original engine behavior
         /// </remarks>
@@ -305,7 +305,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
         /// Written to IFO as Mod_StartMiliSec field.
         /// </summary>
         /// <remarks>
-        /// SerializeIfoGameTime @ (K1: TODO: Find this address, TSL: 0x00500290) line 98 (swkotor2.exe: SerializeIfoGameTime @ 0x00500290)
+        /// SerializeIfoGameTime @ (K1: TODO: Find this address, TSL: 0x00500290) line 98 (k2_win_gog_aspyr_swkotor2.exe: SerializeIfoGameTime @ 0x00500290)
         /// Written via FUN_004137e0(param_1, param_2, local_54[0], "Mod_StartMiliSec")
         /// Populated by IFOHelpers.PopulateIfoGameTimeFromTimeManager() which matches original engine behavior
         /// </remarks>
@@ -316,7 +316,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
         /// Written to IFO as Mod_PauseDay field.
         /// </summary>
         /// <remarks>
-        /// SerializeIfoGameTime @ (K1: TODO: Find this address, TSL: 0x00500290) line 99 (swkotor2.exe: SerializeIfoGameTime @ 0x00500290)
+        /// SerializeIfoGameTime @ (K1: TODO: Find this address, TSL: 0x00500290) line 99 (k2_win_gog_aspyr_swkotor2.exe: SerializeIfoGameTime @ 0x00500290)
         /// Written via FUN_00413880(param_1, param_2, uVar1, "Mod_PauseDay")
         /// Value comes from offset +0x28 of time system object (from FUN_004dc6e0 result)
         /// Populated by IFOHelpers.PopulateIfoGameTimeFromTimeManager() which matches original engine behavior
@@ -328,7 +328,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
         /// Written to IFO as Mod_PauseTime field.
         /// </summary>
         /// <remarks>
-        /// SerializeIfoGameTime @ (K1: TODO: Find this address, TSL: 0x00500290) line 100 (swkotor2.exe: SerializeIfoGameTime @ 0x00500290)
+        /// SerializeIfoGameTime @ (K1: TODO: Find this address, TSL: 0x00500290) line 100 (k2_win_gog_aspyr_swkotor2.exe: SerializeIfoGameTime @ 0x00500290)
         /// Written via FUN_00413880(param_1, param_2, uVar2, "Mod_PauseTime")
         /// Value comes from offset +0x2c of time system object (from FUN_004dc6e0 result)
         /// String reference: "Mod_PauseTime" @ (K1: TODO: Find this address, TSL: 0x007be89c)

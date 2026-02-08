@@ -11,7 +11,7 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// </summary>
     /// <remarks>
     /// Odyssey Quick Slot Component:
-    /// - Based on swkotor.exe and swkotor2.exe quick slot system
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe quick slot system
     /// - Located via string references: Quick slot system stores items/abilities for quick use
     /// - Quick slots: 0-11 (12 slots total) for storing items or abilities (spells/feats)
     /// - Quick slot types: QUICKSLOT_TYPE_ITEM (0), QUICKSLOT_TYPE_ABILITY (1)
@@ -20,8 +20,8 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// - Quick slot fields: QuickSlot_0 through QuickSlot_11 (12 fields total) in UTC GFF format
     /// - Each QuickSlot_* field contains: Type (0=item, 1=ability), Item/ObjectId (for items), AbilityID (for abilities)
     /// - Quick slot usage: Using a slot triggers ActionUseItem (for items) or ActionCastSpellAtObject (for abilities)
-    /// - swkotor.exe: Quick slot system identical to swkotor2.exe (function addresses to be determined )
-    /// - swkotor2.exe: Enhanced quick slot system with 12 slots (0x005226d0 @ 0x005226d0 saves, 0x005223a0 @ 0x005223a0 loads)
+    /// - k1_win_gog_swkotor.exe: Quick slot system identical to k2_win_gog_aspyr_swkotor2.exe (function addresses to be determined )
+    /// - k2_win_gog_aspyr_swkotor2.exe: Enhanced quick slot system with 12 slots (0x005226d0 @ 0x005226d0 saves, 0x005223a0 @ 0x005223a0 loads)
     /// - Engine-specific quick slot component classes have been merged into BaseQuickSlotComponent
     /// </remarks>
     public class QuickSlotComponent : BaseQuickSlotComponent

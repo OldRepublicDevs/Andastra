@@ -116,7 +116,7 @@ namespace Andastra.Runtime.Core.Actions
 
                 Vector3 newPosition = transform.Position + direction * moveDistance;
 
-                // Project position to walkmesh surface (matches 0x004f5070 in swkotor2.exe)
+                // Project position to walkmesh surface (matches 0x004f5070 in k2_win_gog_aspyr_swkotor2.exe)
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
                 IArea area = actor.World?.CurrentArea;
                 if (area != null && area.NavigationMesh != null)
@@ -302,7 +302,7 @@ namespace Andastra.Runtime.Core.Actions
 
         /// <summary>
         /// Applies spell effects to entities at a target location within radius.
-        /// swkotor2.exe: Spell effect application at location (part of spell casting system)
+        /// k2_win_gog_aspyr_swkotor2.exe: Spell effect application at location (part of spell casting system)
         /// Located via string references: "OnSpellCastAt" @ 0x007c1a44, "EVENT_SPELL_IMPACT" @ 0x007bcd8c
         /// Original implementation: Applies visual effects and executes impact scripts for all entities in range
         /// This is called for both instant spells (immediately) and projectile spells (on impact)
@@ -328,7 +328,7 @@ namespace Andastra.Runtime.Core.Actions
             IEnumerable<IEntity> entitiesInRange = caster.World.GetEntitiesInRadius(targetLocation, spellRadius, ObjectType.Creature);
 
             // Handle spell-specific effects (damage, healing, status effects) from spells.2da
-            // swkotor2.exe: Spell effects are applied to entities in range via impact scripts
+            // k2_win_gog_aspyr_swkotor2.exe: Spell effects are applied to entities in range via impact scripts
             // Spell effects come from impact scripts (impactscript column) which apply damage/healing/status effects
             // Full implementation: Executes impact scripts directly and applies spell effects from spell data
             // Impact scripts are the primary mechanism for spell effects - they contain all damage, healing, and status effect logic
@@ -345,7 +345,7 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Apply spell effects to target
-                // swkotor2.exe: Spell effects are applied based on spell data and impact scripts
+                // k2_win_gog_aspyr_swkotor2.exe: Spell effects are applied based on spell data and impact scripts
                 // This executes impact scripts directly and applies visual effects from spell data
                 // Impact scripts receive target as OBJECT_SELF, caster as triggerer
                 // Spell ID and caster level available via GetLastSpellId/GetLastSpellCasterLevel engine functions
@@ -537,7 +537,7 @@ namespace Andastra.Runtime.Core.Actions
 
                                 // Projectile will be handled by rendering/movement system
                                 // On impact, projectile applies spell effects to entities at target location
-                                // swkotor2.exe: Projectile impact handled via scheduled callback system (DelayScheduler)
+                                // k2_win_gog_aspyr_swkotor2.exe: Projectile impact handled via scheduled callback system (DelayScheduler)
                                 // Original implementation: Projectile travels from caster to target location at constant speed (30.0 units/sec)
                                 // When projectile reaches target location, applies spell effects to all entities within spell radius
                                 // Spell effects applied via ApplySpellEffectsToEntitiesAtLocation (impact scripts + visual effects)
@@ -570,7 +570,7 @@ namespace Andastra.Runtime.Core.Actions
                                     if (projectileEntity.IsValid && capturedCaster.World != null)
                                     {
                                         // Apply spell effects at impact location
-                                        // swkotor2.exe: Projectile impact applies spell effects to entities at target location
+                                        // k2_win_gog_aspyr_swkotor2.exe: Projectile impact applies spell effects to entities at target location
                                         // Effects are applied to all entities within spell radius at impact location
                                         // This matches original engine behavior where projectile impact triggers spell effect application
                                         // Function: ApplySpellEffectsToEntitiesAtLocation handles:

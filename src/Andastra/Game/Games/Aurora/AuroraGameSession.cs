@@ -19,7 +19,7 @@ namespace Andastra.Game.Games.Aurora
     /// - Based on nwmain.exe: CServerExoAppInternal::UnloadModule @ 0x14056df00 (unloads current module, VERIFIED)
     /// - Located via string references: Module loading/unloading functions in CServerExoAppInternal
     /// - Cross-engine analysis:
-    ///   - Odyssey (swkotor.exe, swkotor2.exe): 0x006caab0 @ 0x006caab0 (swkotor2.exe) - server command parser, manages module state flags
+    ///   - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): 0x006caab0 @ 0x006caab0 (k2_win_gog_aspyr_swkotor2.exe) - server command parser, manages module state flags
     ///   - Aurora (nwmain.exe, nwn2main.exe): CServerExoAppInternal::LoadModule/UnloadModule - similar module state management, different file formats
     ///   - Eclipse (daorigins.exe, DragonAge2.exe): UnrealScript-based module loading, different architecture
     /// - Inheritance: BaseEngineGame (Runtime.Games.Common) implements common module state management

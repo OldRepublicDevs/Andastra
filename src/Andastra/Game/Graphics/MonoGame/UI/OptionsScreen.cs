@@ -10,7 +10,7 @@ namespace Andastra.Game.Graphics.MonoGame.UI
     /// <summary>
     /// Options screen - 1:1 with Reva CSWGuiOptionsMain.
     /// Graphics, Sound, Game options. Persists to config file.
-    /// swkotor.exe OnOptionsPicked @ 0x0067b2f0: CSWGuiOptionsMain.
+    /// k1_win_gog_swkotor.exe OnOptionsPicked @ 0x0067b2f0: CSWGuiOptionsMain.
     /// </summary>
     public class OptionsScreen
     {

@@ -6,15 +6,15 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 {
     /// <summary>
     /// Odyssey engine graphics device implementation.
-    /// Wraps the OpenGL context created by Kotor1/Kotor2GraphicsBackend.
+    /// Wraps the OpenGL context created by OdysseyGraphicsBackend.
     /// </summary>
     /// <remarks>
     /// Odyssey Graphics Device:
-    /// - Based on verified components of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe
     /// - Original game graphics device: OpenGL context with WGL extensions
     /// - Graphics device operations: glClear, glViewport, glDrawArrays, glDrawElements
-    /// - swkotor.exe: Graphics functions at 0x0044dab0 (init), 0x00427c90 (textures)
-    /// - swkotor2.exe: Graphics functions at 0x00461c50 (init), 0x0042a100 (textures)
+    /// - k1_win_gog_swkotor.exe: Graphics functions at 0x0044dab0 (init), 0x00427c90 (textures)
+    /// - k2_win_gog_aspyr_swkotor2.exe: Graphics functions at 0x00461c50 (init), 0x0042a100 (textures)
     /// - This implementation: Wraps OpenGL context for IGraphicsDevice interface
     /// </remarks>
     public class OdysseyGraphicsDevice : IGraphicsDevice
@@ -23,95 +23,95 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         private readonly IntPtr _glContext;
         private readonly IntPtr _glDevice;
         private readonly IntPtr _windowHandle;
-        
+
         // Viewport and render state
         private Viewport _viewport;
         private IRenderTarget _currentRenderTarget;
         private IDepthStencilBuffer _depthStencilBuffer;
-        
+
         // Currently bound buffers for rendering
         private IVertexBuffer _currentVertexBuffer;
         private IIndexBuffer _currentIndexBuffer;
-        
+
         // Backend reference for GL operations
         private readonly OdysseyGraphicsBackend _backend;
-        
+
         #region OpenGL P/Invoke
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glClear")]
         private static extern void glClear(uint mask);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glClearColor")]
         private static extern void glClearColor(float red, float green, float blue, float alpha);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glClearDepth")]
         private static extern void glClearDepth(double depth);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glClearStencil")]
         private static extern void glClearStencil(int s);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glViewport")]
         private static extern void glViewport(int x, int y, int width, int height);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glEnable")]
         private static extern void glEnable(uint cap);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glDisable")]
         private static extern void glDisable(uint cap);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glGenTextures")]
         private static extern void glGenTextures(int n, uint[] textures);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glBindTexture")]
         private static extern void glBindTexture(uint target, uint texture);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glTexImage2D")]
         private static extern void glTexImage2D(uint target, int level, int internalformat, int width, int height, int border, uint format, uint type, IntPtr pixels);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glTexParameteri")]
         private static extern void glTexParameteri(uint target, uint pname, int param);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glDeleteTextures")]
         private static extern void glDeleteTextures(int n, uint[] textures);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glDrawArrays")]
         private static extern void glDrawArrays(uint mode, int first, int count);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glDrawElements")]
         private static extern void glDrawElements(uint mode, int count, uint type, IntPtr indices);
-        
+
         // Vertex Buffer Object (VBO) functions
         [DllImport("opengl32.dll", EntryPoint = "glGenBuffers")]
         private static extern void glGenBuffers(int n, uint[] buffers);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glBindBuffer")]
         private static extern void glBindBuffer(uint target, uint buffer);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glBufferData")]
         private static extern void glBufferData(uint target, int size, IntPtr data, uint usage);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glBufferSubData")]
         private static extern void glBufferSubData(uint target, int offset, int size, IntPtr data);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glGetBufferSubData")]
         private static extern void glGetBufferSubData(uint target, int offset, int size, IntPtr data);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glDeleteBuffers")]
         private static extern void glDeleteBuffers(int n, uint[] buffers);
-        
+
         // Renderbuffer functions (for depth-stencil buffers)
         [DllImport("opengl32.dll", EntryPoint = "glGenRenderbuffers")]
         private static extern void glGenRenderbuffers(int n, uint[] renderbuffers);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glBindRenderbuffer")]
         private static extern void glBindRenderbuffer(uint target, uint renderbuffer);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glRenderbufferStorage")]
         private static extern void glRenderbufferStorage(uint target, uint internalformat, int width, int height);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glDeleteRenderbuffers")]
         private static extern void glDeleteRenderbuffers(int n, uint[] renderbuffers);
-        
+
         // OpenGL constants
         private const uint GL_COLOR_BUFFER_BIT = 0x00004000;
         private const uint GL_DEPTH_BUFFER_BIT = 0x00000100;
@@ -131,24 +131,24 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         private const uint GL_STENCIL_TEST = 0x0B90;
         private const uint GL_BLEND = 0x0BE2;
         private const uint GL_CULL_FACE = 0x0B44;
-        
+
         // Buffer object constants
         private const uint GL_ARRAY_BUFFER = 0x8892;
         private const uint GL_ELEMENT_ARRAY_BUFFER = 0x8893;
         private const uint GL_STATIC_DRAW = 0x88E4;
         private const uint GL_DYNAMIC_DRAW = 0x88E8;
         private const uint GL_STREAM_DRAW = 0x88E0;
-        
+
         // Renderbuffer constants
         private const uint GL_RENDERBUFFER = 0x8D41;
         private const uint GL_DEPTH24_STENCIL8 = 0x88F0;
-        
+
         // Index type constants
         private const uint GL_UNSIGNED_SHORT = 0x1403;
         private const uint GL_UNSIGNED_INT = 0x1405;
-        
+
         #endregion
-        
+
         /// <summary>
         /// Creates a new Odyssey graphics device.
         /// </summary>
@@ -166,12 +166,12 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             _windowHandle = windowHandle;
             _viewport = new Viewport(0, 0, width, height, 0.0f, 1.0f);
         }
-        
+
         /// <summary>
         /// Gets the viewport dimensions.
         /// </summary>
         public Viewport Viewport => _viewport;
-        
+
         /// <summary>
         /// Gets or sets the render target (null for backbuffer).
         /// </summary>
@@ -180,7 +180,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             get { return _currentRenderTarget; }
             set { _currentRenderTarget = value; }
         }
-        
+
         /// <summary>
         /// Gets or sets the depth-stencil buffer.
         /// </summary>
@@ -189,15 +189,15 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             get { return _depthStencilBuffer; }
             set { _depthStencilBuffer = value; }
         }
-        
+
         /// <summary>
         /// Gets the native graphics device handle (OpenGL context).
         /// </summary>
         public IntPtr NativeHandle => _glContext;
-        
+
         /// <summary>
         /// Clears the render target with the specified color.
-        /// Based on swkotor.exe/swkotor2.exe: glClear(GL_COLOR_BUFFER_BIT)
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: glClear(GL_COLOR_BUFFER_BIT)
         /// </summary>
         /// <param name="color">Clear color.</param>
         public void Clear(Color color)
@@ -205,10 +205,10 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             glClearColor(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
             glClear(GL_COLOR_BUFFER_BIT);
         }
-        
+
         /// <summary>
         /// Clears the depth buffer.
-        /// Based on swkotor.exe/swkotor2.exe: glClear(GL_DEPTH_BUFFER_BIT)
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: glClear(GL_DEPTH_BUFFER_BIT)
         /// </summary>
         /// <param name="depth">Depth value (0.0 to 1.0).</param>
         public void ClearDepth(float depth)
@@ -216,10 +216,10 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             glClearDepth(depth);
             glClear(GL_DEPTH_BUFFER_BIT);
         }
-        
+
         /// <summary>
         /// Clears the stencil buffer.
-        /// Based on swkotor.exe/swkotor2.exe: glClear(GL_STENCIL_BUFFER_BIT)
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: glClear(GL_STENCIL_BUFFER_BIT)
         /// </summary>
         /// <param name="stencil">Stencil value.</param>
         public void ClearStencil(int stencil)
@@ -227,10 +227,10 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             glClearStencil(stencil);
             glClear(GL_STENCIL_BUFFER_BIT);
         }
-        
+
         /// <summary>
         /// Creates a texture from pixel data.
-        /// Based on swkotor.exe: 0x00427c90 @ 0x00427c90 (texture initialization)
+        /// Based on k1_win_gog_swkotor.exe: 0x00427c90 @ 0x00427c90 (texture initialization)
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0042a100 @ 0x0042a100 (texture initialization)
         /// </summary>
         /// <param name="width">Texture width.</param>
@@ -242,11 +242,11 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             uint[] textureIds = new uint[1];
             glGenTextures(1, textureIds);
             uint textureId = textureIds[0];
-            
+
             glBindTexture(GL_TEXTURE_2D, textureId);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
-            
+
             // Upload texture data
             if (data != null && data.Length > 0)
             {
@@ -265,10 +265,10 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             {
                 glTexImage2D(GL_TEXTURE_2D, 0, (int)GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, IntPtr.Zero);
             }
-            
+
             return new OdysseyTexture2D(textureId, width, height);
         }
-        
+
         /// <summary>
         /// Creates a render target.
         /// </summary>
@@ -278,22 +278,22 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             // Original game uses glCopyTexImage2D for render-to-texture
             return new OdysseyRenderTarget(width, height);
         }
-        
+
         /// <summary>
         /// Creates a depth-stencil buffer.
-        /// Based on swkotor.exe/swkotor2.exe: Depth-stencil buffer creation for z-buffering and stencil operations
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Depth-stencil buffer creation for z-buffering and stencil operations
         /// Uses OpenGL renderbuffers (glGenRenderbuffers, glRenderbufferStorage with GL_DEPTH24_STENCIL8)
-        /// Matching reone Renderbuffer implementation: glGenRenderbuffers -> glBindRenderbuffer -> glRenderbufferStorage
+        /// Reva: K1/K2 use DirectX; OpenGL backend uses same renderbuffer sequence for parity.
         /// </summary>
         public IDepthStencilBuffer CreateDepthStencilBuffer(int width, int height)
         {
             return new OdysseyDepthStencilBuffer(width, height);
         }
-        
+
         /// <summary>
         /// Creates a vertex buffer using OpenGL vertex buffer objects (VBO).
-        /// Based on swkotor.exe/swkotor2.exe: DirectX vertex buffer system with OpenGL VBO backend
-        /// Matching xoreos: VertexBuffer::initGL() - glGenBuffers, glBufferData
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: DirectX vertex buffer system with OpenGL VBO backend
+        /// Reva (k1_win_gog_swkotor.exe): GLRender::SetVertexBuffer @ 0x00425900 uses glBindBufferARB(0x8892), glVertexPointer; VBO when AurVertexBufferObjectARBAvailable().
         /// Matching PyKotor: glGenBuffers(1, &vbo), glBufferData(GL_ARRAY_BUFFER, ...)
         /// </summary>
         /// <typeparam name="T">Vertex type (must be a struct).</typeparam>
@@ -306,22 +306,22 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// - Uploads vertex data with glBufferData
         /// - Supports static, dynamic, and stream draw usage patterns
         /// - Automatically manages buffer binding and unbinding
-        /// - Original game: swkotor.exe/swkotor2.exe use DirectX vertex buffers, but OpenGL backend uses VBOs
+        /// - Original game: k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe use DirectX vertex buffers, but OpenGL backend uses VBOs
         /// - String references in original: "Disable Vertex Buffer Objects" @ 0x007b56bc (VBO option)
         /// - Vertex array extensions: "glVertexArrayRangeNV" @ 0x007b7ce8, "glVertexAttrib4fvNV" @ 0x007b7d24
         /// </remarks>
         public IVertexBuffer CreateVertexBuffer<T>(T[] data) where T : struct
         {
             // Create VBO using OdysseyVertexBuffer which implements full OpenGL VBO functionality
-            // Matching xoreos: VertexBuffer::initGL() - glGenBuffers(1, &_vbo), glBufferData(...)
+            // Reva: K1 SetVertexBuffer @ 0x00425900 binds GL_ARRAY_BUFFER (0x8892).
             // Matching PyKotor: glGenBuffers(1, &vbo), glBufferData(GL_ARRAY_BUFFER, len(vertex_data), ...)
             return new OdysseyVertexBuffer<T>(data);
         }
-        
+
         /// <summary>
         /// Creates an index buffer.
-        /// Based on swkotor.exe/swkotor2.exe: Index buffer creation for indexed primitive rendering
-        /// Matching xoreos IndexBuffer::initGL() - glGenBuffers, glBufferData with GL_ELEMENT_ARRAY_BUFFER
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Index buffer creation for indexed primitive rendering
+        /// Reva (k1_win_gog_swkotor.exe): K1 uses OpenGL VBO/IBO path (AurVertexBufferObjectARBAvailable); IBO semantics for indexed draw.
         /// The OdysseyIndexBuffer class already fully implements OpenGL IBO creation and management.
         /// </summary>
         /// <param name="indices">Index data array.</param>
@@ -332,16 +332,16 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// - OdysseyIndexBuffer fully implements OpenGL IBO (Index Buffer Object)
         /// - Uses glGenBuffers to create buffer, glBufferData to upload data
         /// - Supports both 16-bit (GL_UNSIGNED_SHORT) and 32-bit (GL_UNSIGNED_INT) indices
-        /// - Based on xoreos indexbuffer.cpp: initGL() @ lines 94-106
-        /// - Matching reone Mesh::init() - glGenBuffers(1, &_iboId), glBufferData(GL_ELEMENT_ARRAY_BUFFER, ...)
+        /// - Reva: K1 VBO/IBO in GLRender; index buffer bound for glDrawElements.
+        /// - Reva: K1/K2 use DirectX index buffers; OpenGL IBO sequence for parity.
         /// </remarks>
         public IIndexBuffer CreateIndexBuffer(int[] indices, bool isShort = true)
         {
             // OdysseyIndexBuffer constructor already creates the OpenGL IBO internally
-            // Matching xoreos: IndexBuffer::initGL() creates IBO in constructor
+            // Reva: K1 IBO created and bound for indexed drawing.
             return new OdysseyIndexBuffer(indices, isShort);
         }
-        
+
         /// <summary>
         /// Creates a sprite batch for 2D rendering.
         /// </summary>
@@ -349,10 +349,10 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         {
             return new OdysseySpriteBatch(this);
         }
-        
+
         /// <summary>
         /// Sets the vertex buffer for rendering.
-        /// Based on swkotor.exe/swkotor2.exe: glBindBuffer(GL_ARRAY_BUFFER, vbo)
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: glBindBuffer(GL_ARRAY_BUFFER, vbo)
         /// </summary>
         public void SetVertexBuffer(IVertexBuffer vertexBuffer)
         {
@@ -363,20 +363,20 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
                 _currentVertexBuffer = null;
                 return;
             }
-            
+
             // Bind the VBO
-            // Matching xoreos: glBindBuffer(GL_ARRAY_BUFFER, _vbo)
+            // Reva: K1 SetVertexBuffer binds GL_ARRAY_BUFFER.
             // Matching PyKotor: glBindBuffer(GL_ARRAY_BUFFER, self._vbo)
             uint vboId = (uint)vertexBuffer.NativeHandle.ToInt32();
             glBindBuffer(GL_ARRAY_BUFFER, vboId);
             _currentVertexBuffer = vertexBuffer;
         }
-        
+
         /// <summary>
         /// Sets the index buffer for rendering.
-        /// Based on swkotor.exe/swkotor2.exe: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo)
-        /// Matching xoreos: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBuffer.getIBO())
-        /// Matching reone: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _iboId) in Mesh::init()
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo)
+        /// Reva: K1 binds IBO for indexed draw.
+        /// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _iboId)
         /// </summary>
         /// <param name="indexBuffer">Index buffer to bind, or null to unbind.</param>
         /// <remarks>
@@ -384,32 +384,32 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// - Binds the IBO for use in subsequent glDrawElements calls
         /// - When IBO is bound, glDrawElements uses buffer data instead of client-side pointer
         /// - IBO remains bound until explicitly unbound or another IBO is bound
-        /// - Based on xoreos mesh.cpp: render() @ lines 222-224 (binds IBO before glDrawElements)
+        /// - Reva: K1 GLRender draws with bound IBO.
         /// </remarks>
         public void SetIndexBuffer(IIndexBuffer indexBuffer)
         {
             if (indexBuffer == null)
             {
                 // Unbind IBO
-                // Matching xoreos: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+                // Unbind IBO
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
                 _currentIndexBuffer = null;
                 return;
             }
-            
+
             // Bind the IBO
-            // Matching xoreos: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBuffer.getIBO())
-            // Matching reone: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _iboId)
+            // Bind IBO
+            // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _iboId)
             uint iboId = (uint)indexBuffer.NativeHandle.ToInt32();
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iboId);
             _currentIndexBuffer = indexBuffer;
         }
-        
+
         /// <summary>
         /// Draws indexed primitives.
-        /// Based on swkotor.exe/swkotor2.exe: glDrawElements
-        /// Matching xoreos: glDrawElements(mode, indexBuffer.getCount(), indexBuffer.getType(), 0)
-        /// Matching reone: glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_SHORT, nullptr)
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: glDrawElements
+        /// Reva: K1 uses OpenGL draw with bound IBO (type/count from buffer).
+        /// glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_SHORT, nullptr)
         /// </summary>
         /// <param name="primitiveType">Type of primitives to draw.</param>
         /// <param name="baseVertex">Base vertex index (for vertex offset, typically 0).</param>
@@ -422,8 +422,8 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// - Requires IBO to be bound via SetIndexBuffer() before calling this method
         /// - Uses glDrawElements with bound IBO and byte offset for startIndex
         /// - Index type (GL_UNSIGNED_SHORT or GL_UNSIGNED_INT) determined from bound IBO
-        /// - Based on xoreos mesh.cpp: render() @ lines 216-224 (glDrawElements with IBO)
-        /// - Based on reone mesh.cpp: draw() @ lines 118-122 (glDrawElements with VAO/IBO)
+        /// - Reva: K1 indexed draw with bound IBO.
+        /// - Reva: K1/K2 use DirectX DrawIndexedPrimitive; OpenGL glDrawElements for parity.
         /// </remarks>
         public void DrawIndexedPrimitives(PrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCount)
         {
@@ -436,29 +436,29 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
             uint mode = GetGLPrimitiveType(primitiveType);
             int indexCount = GetIndexCount(primitiveType, primitiveCount);
-            
+
             // Determine index type from bound IBO
-            // Matching xoreos: indexBuffer.getType() returns GL_UNSIGNED_SHORT or GL_UNSIGNED_INT
+            // Index type from bound IBO
             uint indexType = _currentIndexBuffer.IsShort ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT;
-            
+
             // Calculate byte offset for startIndex
             // When IBO is bound, glDrawElements last parameter is byte offset into buffer
-            // Matching xoreos: glDrawElements(mode, count, type, byteOffset)
-            // Matching reone: glDrawElements(mode, count, type, nullptr) - offset is 0 when using VAO
+            // glDrawElements with byte offset
+            // glDrawElements(mode, count, type, byteOffset)
             int indexSize = _currentIndexBuffer.IsShort ? sizeof(ushort) : sizeof(uint);
             IntPtr startIndexOffset = new IntPtr(startIndex * indexSize);
-            
+
             // Draw indexed primitives using bound IBO
-            // Based on swkotor.exe/swkotor2.exe: glDrawElements with IBO
-            // Matching xoreos: glDrawElements(_type, _indexBuffer.getCount(), _indexBuffer.getType(), 0)
+            // Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: glDrawElements with IBO
+            // glDrawElements(mode, indexCount, indexType, offset)
             // Note: baseVertex is not directly supported in OpenGL fixed-function pipeline
             // For baseVertex support, we would need to adjust vertex indices or use glDrawRangeElements
             glDrawElements(mode, indexCount, indexType, startIndexOffset);
         }
-        
+
         /// <summary>
         /// Draws primitives.
-        /// Based on swkotor.exe/swkotor2.exe: glDrawArrays
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: glDrawArrays
         /// </summary>
         public void DrawPrimitives(PrimitiveType primitiveType, int vertexOffset, int primitiveCount)
         {
@@ -466,7 +466,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             int vertexCount = GetVertexCount(primitiveType, primitiveCount);
             glDrawArrays(mode, vertexOffset, vertexCount);
         }
-        
+
         /// <summary>
         /// Sets the rasterizer state.
         /// </summary>
@@ -488,7 +488,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
                 }
             }
         }
-        
+
         /// <summary>
         /// Sets the depth-stencil state.
         /// </summary>
@@ -506,7 +506,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
                     {
                         glDisable(GL_DEPTH_TEST);
                     }
-                    
+
                     if (odysseyState.StencilEnabled)
                     {
                         glEnable(GL_STENCIL_TEST);
@@ -518,7 +518,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
                 }
             }
         }
-        
+
         /// <summary>
         /// Sets the blend state.
         /// </summary>
@@ -539,7 +539,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
                 }
             }
         }
-        
+
         /// <summary>
         /// Sets the sampler state for a texture slot.
         /// </summary>
@@ -547,7 +547,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         {
             // TODO: STUB - Apply sampler state (filtering, wrapping, etc.)
         }
-        
+
         /// <summary>
         /// Creates a basic effect for simple 3D rendering.
         /// </summary>
@@ -555,7 +555,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         {
             return new OdysseyBasicEffect(this);
         }
-        
+
         /// <summary>
         /// Creates a default rasterizer state.
         /// </summary>
@@ -563,7 +563,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         {
             return new OdysseyRasterizerState();
         }
-        
+
         /// <summary>
         /// Creates a default depth-stencil state.
         /// </summary>
@@ -571,7 +571,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         {
             return new OdysseyDepthStencilState();
         }
-        
+
         /// <summary>
         /// Creates a default blend state.
         /// </summary>
@@ -579,7 +579,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         {
             return new OdysseyBlendState();
         }
-        
+
         /// <summary>
         /// Creates a default sampler state.
         /// </summary>
@@ -587,17 +587,17 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         {
             return new OdysseySamplerState();
         }
-        
+
         /// <summary>
         /// Sets the viewport.
-        /// Based on swkotor.exe/swkotor2.exe: glViewport
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: glViewport
         /// </summary>
         public void SetViewport(int x, int y, int width, int height)
         {
             _viewport = new Viewport(x, y, width, height, 0.0f, 1.0f);
             glViewport(x, y, width, height);
         }
-        
+
         /// <summary>
         /// Disposes the graphics device.
         /// </summary>
@@ -605,9 +605,9 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         {
             // OpenGL context cleanup is handled by the backend
         }
-        
+
         #region Helper Methods
-        
+
         private uint GetGLPrimitiveType(PrimitiveType primitiveType)
         {
             switch (primitiveType)
@@ -626,7 +626,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
                     return GL_TRIANGLES;
             }
         }
-        
+
         private int GetIndexCount(PrimitiveType primitiveType, int primitiveCount)
         {
             switch (primitiveType)
@@ -645,12 +645,12 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
                     return primitiveCount;
             }
         }
-        
+
         private int GetVertexCount(PrimitiveType primitiveType, int primitiveCount)
         {
             return GetIndexCount(primitiveType, primitiveCount);
         }
-        
+
         #endregion
     }
 }

@@ -12,14 +12,14 @@ using Andastra.Runtime.Core.Interfaces.Components;
 namespace Andastra.Game.Games.Odyssey.UI
 {
     /// <summary>
-    /// Upgrade screen implementation for KOTOR 1 (swkotor.exe).
+    /// Upgrade screen implementation for KOTOR 1 (k1_win_gog_swkotor.exe).
     /// </summary>
     /// <remarks>
     /// K1 Upgrade Screen Implementation:
-    /// - Based on swkotor.exe: 0x006c7630 @ 0x006c7630 (constructor loads "upgradeitems")
-    /// - Based on swkotor.exe: 0x006c6b60 @ 0x006c6b60 (constructor loads "upcrystals" @ 0x006c6e20)
-    /// - Based on swkotor.exe: 0x006c6500 @ 0x006c6500 (upgrade button click handler)
-    /// - Based on swkotor.exe: 0x006c59a0 @ 0x006c59a0 (ApplyUpgrade implementation)
+    /// - Based on k1_win_gog_swkotor.exe: 0x006c7630 @ 0x006c7630 (constructor loads "upgradeitems")
+    /// - Based on k1_win_gog_swkotor.exe: 0x006c6b60 @ 0x006c6b60 (constructor loads "upcrystals" @ 0x006c6e20)
+    /// - Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 (upgrade button click handler)
+    /// - Based on k1_win_gog_swkotor.exe: 0x006c59a0 @ 0x006c59a0 (ApplyUpgrade implementation)
     /// - Located via string references: "upgradeitems" @ 0x00757438, "upcrystals" @ 0x0075741c
     /// - Uses "upgradeitems" for regular items (not "upgradeitems_p" like K2)
     /// - Uses "upcrystals" for lightsabers (same as K2)
@@ -47,7 +47,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// <returns>Table name for regular item upgrades.</returns>
         /// <remarks>
         /// K1 uses "upgradeitems" (not "upgradeitems_p" like K2).
-        /// Based on swkotor.exe: 0x006c7630 @ 0x006c7630 line 37 - loads "upgradeitems"
+        /// Based on k1_win_gog_swkotor.exe: 0x006c7630 @ 0x006c7630 line 37 - loads "upgradeitems"
         /// </remarks>
         protected override string GetRegularUpgradeTableName()
         {
@@ -59,7 +59,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// </summary>
         /// <returns>GUI name "upgradeitems".</returns>
         /// <remarks>
-        /// Based on swkotor.exe: 0x006c7630 @ 0x006c7630 line 37 - loads "upgradeitems"
+        /// Based on k1_win_gog_swkotor.exe: 0x006c7630 @ 0x006c7630 line 37 - loads "upgradeitems"
         /// </remarks>
         protected override string GetUpgradeGuiName()
         {
@@ -75,7 +75,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// <returns>True if upgrade was successful.</returns>
         /// <remarks>
         /// Apply Upgrade Logic (K1):
-        /// - Based on swkotor.exe: 0x006c59a0 @ 0x006c59a0 (ApplyUpgrade implementation)
+        /// - Based on k1_win_gog_swkotor.exe: 0x006c59a0 @ 0x006c59a0 (ApplyUpgrade implementation)
         /// - Called from: 0x006c6500 @ 0x006c6500 line 163
         /// - Original implementation:
         ///   1. Checks if upgrade item is already in upgrade list (offset 0x2f5c)
@@ -106,7 +106,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Check if slot is already occupied
-            // Based on swkotor.exe: 0x006c59a0 @ 0x006c59a0 line 12 - checks upgrade list at offset 0x2f5c
+            // Based on k1_win_gog_swkotor.exe: 0x006c59a0 @ 0x006c59a0 line 12 - checks upgrade list at offset 0x2f5c
             var existingUpgrade = itemComponent.Upgrades.FirstOrDefault(u => u.Index == upgradeSlot);
             if (existingUpgrade != null)
             {
@@ -123,7 +123,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Final skill check before applying upgrade
-            // Based on swkotor.exe: Character skills used for item creation/upgrading (NOT IMPLEMENTED in original)
+            // Based on k1_win_gog_swkotor.exe: Character skills used for item creation/upgrading (NOT IMPLEMENTED in original)
             // Skills are used to ensure character can successfully apply the upgrade
             // Higher skills improve success rate and may unlock additional upgrade options
             if (_characterSkills.Count > 0)
@@ -148,7 +148,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Get character inventory to find and remove upgrade item
-            // Based on swkotor.exe: 0x006c59a0 @ 0x006c59a0 line 24 - gets character from DAT_007a39fc
+            // Based on k1_win_gog_swkotor.exe: 0x006c59a0 @ 0x006c59a0 line 24 - gets character from DAT_007a39fc
             // DAT_007a39fc is a global variable that stores the current character entity pointer
             // In the original implementation, this is the character whose inventory is being accessed
             // If null, defaults to player character (party leader)
@@ -157,8 +157,8 @@ namespace Andastra.Game.Games.Odyssey.UI
             {
                 // Get player character from world using multiple fallback strategies
                 // Strategy 1: Try to find entity by tag "Player" (Odyssey engine pattern)
-                // Based on swkotor.exe: Player entity is tagged "Player" and stored in module player list
-                // Located via string references: "Player" @ 0x007be628 (swkotor2.exe), similar pattern in swkotor.exe
+                // Based on k1_win_gog_swkotor.exe: Player entity is tagged "Player" and stored in module player list
+                // Located via string references: "Player" @ 0x007be628 (k2_win_gog_aspyr_swkotor2.exe), similar pattern in k1_win_gog_swkotor.exe
                 // Original implementation: Player entity is stored in module player list and tagged "Player"
                 character = _world.GetEntityByTag("Player", 0);
 
@@ -172,7 +172,7 @@ namespace Andastra.Game.Games.Odyssey.UI
                 if (character == null)
                 {
                     // Strategy 3: Search through all entities for one marked as player
-                    // Based on swkotor.exe: Player entity has IsPlayer data flag set to true
+                    // Based on k1_win_gog_swkotor.exe: Player entity has IsPlayer data flag set to true
                     // Original implementation: Player entity is marked with IsPlayer flag during creation
                     // Located via GameSession.SpawnPlayer() which sets entity.Tag = "Player" and SetData("IsPlayer", true)
                     foreach (IEntity entity in _world.GetAllEntities())
@@ -219,7 +219,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Find upgrade item in inventory
-            // Based on swkotor.exe: 0x00555ed0 @ 0x00555ed0 - searches inventory by ResRef
+            // Based on k1_win_gog_swkotor.exe: 0x00555ed0 @ 0x00555ed0 - searches inventory by ResRef
             IEntity upgradeItem = null;
             foreach (IEntity inventoryItem in characterInventory.GetAllItems())
             {
@@ -246,7 +246,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Check stack count and remove from inventory
-            // Based on swkotor.exe: 0x006c59a0 @ 0x006c59a0 line 18 - checks stack count at offset 0xa3
+            // Based on k1_win_gog_swkotor.exe: 0x006c59a0 @ 0x006c59a0 line 18 - checks stack count at offset 0xa3
             // Get stack count from item component
             // If stack count < 2, remove from inventory (0x00555fd0)
             // If stack count >= 2, decrement stack (0x0055f280)
@@ -257,13 +257,13 @@ namespace Andastra.Game.Games.Odyssey.UI
                 if (stackSize < 2)
                 {
                     // Stack count is 1 or less - remove item completely from inventory
-                    // Based on swkotor.exe: 0x00555fd0 @ 0x00555fd0 - removes item from inventory
+                    // Based on k1_win_gog_swkotor.exe: 0x00555fd0 @ 0x00555fd0 - removes item from inventory
                     characterInventory.RemoveItem(upgradeItem);
                 }
                 else
                 {
                     // Stack count is 2 or more - decrement stack count by 1
-                    // Based on swkotor.exe: 0x0055f280 @ 0x0055f280 - decrements item stack
+                    // Based on k1_win_gog_swkotor.exe: 0x0055f280 @ 0x0055f280 - decrements item stack
                     upgradeItemComponent.StackSize = stackSize - 1;
                 }
             }
@@ -274,8 +274,8 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Load upgrade item UTI template and apply properties
-            // Based on swkotor.exe: 0x0055e160 @ 0x0055e160 - applies upgrade stats to item
-            // Based on swkotor.exe: 0x005226d0 @ 0x005226d0 - loads UTI template
+            // Based on k1_win_gog_swkotor.exe: 0x0055e160 @ 0x0055e160 - applies upgrade stats to item
+            // Based on k1_win_gog_swkotor.exe: 0x005226d0 @ 0x005226d0 - loads UTI template
             UTI upgradeUTI = LoadUpgradeUTITemplate(upgradeResRef);
             if (upgradeUTI == null)
             {
@@ -284,7 +284,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Apply upgrade to item
-            // Based on swkotor.exe: 0x006c59a0 @ 0x006c59a0 line 57 - stores upgrade at offset 0x2f74
+            // Based on k1_win_gog_swkotor.exe: 0x006c59a0 @ 0x006c59a0 line 57 - stores upgrade at offset 0x2f74
             ItemUpgrade upgrade = new ItemUpgrade
             {
                 UpgradeType = upgradeSlot, // UpgradeType corresponds to slot index
@@ -294,12 +294,12 @@ namespace Andastra.Game.Games.Odyssey.UI
             itemComponent.AddUpgrade(upgrade);
 
             // Track upgrade ResRef for removal
-            // Based on swkotor.exe: Upgrade tracking system - stores ResRef for later removal
+            // Based on k1_win_gog_swkotor.exe: Upgrade tracking system - stores ResRef for later removal
             string upgradeKey = item.ObjectId.ToString() + "_" + upgradeSlot.ToString();
             _upgradeResRefMap[upgradeKey] = upgradeResRef;
 
             // Apply upgrade properties to item
-            // Based on swkotor.exe: 0x0055e160 @ 0x0055e160 - applies upgrade stats to item
+            // Based on k1_win_gog_swkotor.exe: 0x0055e160 @ 0x0055e160 - applies upgrade stats to item
             // Properties from upgrade UTI modify item stats (damage bonuses, AC bonuses, etc.)
             if (!ApplyUpgradeProperties(item, upgradeUTI))
             {
@@ -310,7 +310,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Recalculate item stats and update display
-            // Based on swkotor.exe: Item stat recalculation after upgrade application
+            // Based on k1_win_gog_swkotor.exe: Item stat recalculation after upgrade application
             // Recalculates item damage, AC, and other stats based on new properties
             RecalculateItemStats(item);
 
@@ -325,7 +325,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// <returns>True if upgrade was removed.</returns>
         /// <remarks>
         /// Remove Upgrade Logic (K1):
-        /// - Based on swkotor.exe: 0x006c6500 @ 0x006c6500 lines 165-180 (removal logic)
+        /// - Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 lines 165-180 (removal logic)
         /// - Original implementation:
         ///   1. Gets upgrade item from slot array (offset 0x2f74)
         ///   2. Removes upgrade from slot array (sets to 0)
@@ -353,7 +353,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Find upgrade in slot
-            // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 169 - gets upgrade from offset 0x2f74
+            // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 line 169 - gets upgrade from offset 0x2f74
             var upgrade = itemComponent.Upgrades.FirstOrDefault(u => u.Index == upgradeSlot);
             if (upgrade == null)
             {
@@ -362,7 +362,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Get upgrade item ResRef from tracked upgrade data
-            // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 169 - gets item from slot array
+            // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 line 169 - gets item from slot array
             // We track upgrade ResRefs in _upgradeResRefMap for removal
             string upgradeKey = item.ObjectId.ToString() + "_" + upgradeSlot.ToString();
             string upgradeResRef = null;
@@ -375,19 +375,19 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Load upgrade UTI template to remove properties
-            // Based on swkotor.exe: 0x0055e160 @ 0x0055e160 - removes upgrade stats from item
-            // Based on swkotor.exe: 0x005226d0 @ 0x005226d0 - loads UTI template
+            // Based on k1_win_gog_swkotor.exe: 0x0055e160 @ 0x0055e160 - removes upgrade stats from item
+            // Based on k1_win_gog_swkotor.exe: 0x005226d0 @ 0x005226d0 - loads UTI template
             UTI upgradeUTI = LoadUpgradeUTITemplate(upgradeResRef);
 
             // Remove upgrade from item
-            // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 176 - removes from array using 0x006857a0
+            // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 line 176 - removes from array using 0x006857a0
             itemComponent.RemoveUpgrade(upgrade);
 
             // Remove upgrade ResRef from tracking map
             _upgradeResRefMap.Remove(upgradeKey);
 
             // Remove upgrade properties from item (damage bonuses, AC bonuses, etc.)
-            // Based on swkotor.exe: 0x0055e160 @ 0x0055e160 - removes upgrade stats from item
+            // Based on k1_win_gog_swkotor.exe: 0x0055e160 @ 0x0055e160 - removes upgrade stats from item
             // Properties from upgrade UTI are removed to restore original item stats
             if (upgradeUTI != null)
             {
@@ -395,12 +395,12 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Recalculate item stats and update display
-            // Based on swkotor.exe: Item stat recalculation after upgrade removal
+            // Based on k1_win_gog_swkotor.exe: Item stat recalculation after upgrade removal
             // Recalculates item damage, AC, and other stats after removing upgrade properties
             RecalculateItemStats(item);
 
             // Return upgrade item to inventory
-            // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 171 - returns to inventory using 0x0055d330
+            // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 line 171 - returns to inventory using 0x0055d330
             // Original implementation: 0x0055d330 @ 0x0055d330 creates item entity from UTI template and adds to inventory
             // Located via string references: "CreateItem" @ 0x007d07c8, "ItemComponent" @ 0x007c41e4
             // Function signature: 0x0055d330(void *param_1, void *param_2, int param_3)
@@ -421,7 +421,7 @@ namespace Andastra.Game.Games.Odyssey.UI
                 if (character == null)
                 {
                     // Get player character from world using multiple fallback strategies
-                    // Based on swkotor.exe: Player entity lookup patterns from multiple functions
+                    // Based on k1_win_gog_swkotor.exe: Player entity lookup patterns from multiple functions
                     character = _world.GetEntityByTag("Player", 0);
 
                     if (character == null)
@@ -461,7 +461,7 @@ namespace Andastra.Game.Games.Odyssey.UI
                 }
 
                 // Create upgrade item entity and add to inventory
-                // Based on swkotor.exe: 0x0055d330 @ 0x0055d330 - creates item and adds to inventory
+                // Based on k1_win_gog_swkotor.exe: 0x0055d330 @ 0x0055d330 - creates item and adds to inventory
                 // Uses base class method which implements the full creation and inventory addition logic
                 if (character != null)
                 {

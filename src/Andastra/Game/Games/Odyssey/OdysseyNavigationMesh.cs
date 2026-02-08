@@ -20,9 +20,9 @@ namespace Andastra.Game.Games.Odyssey
     /// - Supports point projection to walkable surfaces
     ///
     /// Based on verified components of:
-    /// - swkotor.exe: Walkmesh loading and navigation functions
-    /// - swkotor2.exe: Walkmesh projection (0x004f5070 @ 0x004f5070)
-    /// - swkotor2.exe: Line-of-sight raycast (UpdateCreatureMovement @ 0x0054be70) - performs walkmesh raycasts for visibility checks
+    /// - k1_win_gog_swkotor.exe: Walkmesh loading and navigation functions
+    /// - k2_win_gog_aspyr_swkotor2.exe: Walkmesh projection (0x004f5070 @ 0x004f5070)
+    /// - k2_win_gog_aspyr_swkotor2.exe: Line-of-sight raycast (UpdateCreatureMovement @ 0x0054be70) - performs walkmesh raycasts for visibility checks
     /// - Walkmesh binary format: Vertices, faces, adjacency information
     ///
     /// Walkmesh features:
@@ -34,7 +34,7 @@ namespace Andastra.Game.Games.Odyssey
     /// - Surface material walkability based on surfacemat.2da
     /// - Same walkmesh data structures and algorithms
     ///
-    /// Note: Function addresses differ between K1 (swkotor.exe) and K2 (swkotor2.exe), but behavior is identical.
+    /// Note: Function addresses differ between K1 (k1_win_gog_swkotor.exe) and K2 (k2_win_gog_aspyr_swkotor2.exe), but behavior is identical.
     /// This unified class handles both games since the walkmesh format and algorithms are the same.
     /// </remarks>
     [PublicAPI]
@@ -109,7 +109,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Tests if a point is on walkable ground.
         /// </summary>
         /// <remarks>
-        /// Based on walkmesh projection logic in swkotor2.exe.
+        /// Based on walkmesh projection logic in k2_win_gog_aspyr_swkotor2.exe.
         /// Checks if point can be projected onto a walkable triangle.
         ///
         /// Algorithm:
@@ -140,7 +140,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Projects a point onto the walkmesh surface using the exact engine function signature.
         /// </summary>
         /// <remarks>
-        /// swkotor2.exe: 0x004f5070 - Walkmesh projection system
+        /// k2_win_gog_aspyr_swkotor2.exe: 0x004f5070 - Walkmesh projection system
         /// 
         /// Original engine function signature:
         /// `float10 __thiscall FUN_004f5070(void *param_1, float *param_2, int param_3, int *param_4, int *param_5)`
@@ -178,7 +178,7 @@ namespace Andastra.Game.Games.Odyssey
         /// - Finds vertex index within face for height lookup
         /// - Returns height (Z coordinate) at projected point
         /// 
-        /// Called from 34 locations in swkotor2.exe:
+        /// Called from 34 locations in k2_win_gog_aspyr_swkotor2.exe:
         /// - UpdateCreatureMovement @ 0x0054be70 (line-of-sight and pathfinding)
         /// - FUN_00553970 @ 0x00553970 (creature movement)
         /// - FUN_005522e0 @ 0x005522e0 (entity positioning)
@@ -239,7 +239,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Projects a point onto the walkmesh surface.
         /// </summary>
         /// <remarks>
-        /// Based on 0x004f5070 @ 0x004f5070 in swkotor2.exe.
+        /// Based on 0x004f5070 @ 0x004f5070 in k2_win_gog_aspyr_swkotor2.exe.
         /// 
         /// This is a convenience wrapper that uses 3D projection mode by default.
         /// For exact engine behavior, use ProjectToWalkmeshExact.
@@ -266,7 +266,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Finds a face at a point with vertical tolerance (equivalent to FUN_004f4260).
         /// </summary>
         /// <remarks>
-        /// swkotor2.exe: 0x004f4260 - FindFaceAtWithTolerance
+        /// k2_win_gog_aspyr_swkotor2.exe: 0x004f4260 - FindFaceAtWithTolerance
         /// 
         /// Original engine function signature:
         /// `int __thiscall FUN_004f4260(void *this, float *param_1, undefined4 *param_2, int *param_3)`
@@ -324,7 +324,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Tests if a point is within a face with vertical tolerance.
         /// </summary>
         /// <remarks>
-        /// Based on FUN_0055b300 in swkotor2.exe which tests point-in-face with tolerance.
+        /// Based on FUN_0055b300 in k2_win_gog_aspyr_swkotor2.exe which tests point-in-face with tolerance.
         /// </remarks>
         private bool PointInFaceWithTolerance(Vector3 point, int faceIndex, float verticalTolerance)
         {
@@ -409,7 +409,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Projects point to walkmesh using 2D projection (equivalent to FUN_0055b210).
         /// </summary>
         /// <remarks>
-        /// swkotor2.exe: 0x0055b210 - 2D Projection
+        /// k2_win_gog_aspyr_swkotor2.exe: 0x0055b210 - 2D Projection
         /// 
         /// Original engine function signature:
         /// `float10 __thiscall FUN_0055b210(int param_1, int param_2, float param_3, undefined4 param_4)`
@@ -479,7 +479,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Projects point to walkmesh using 3D projection (equivalent to FUN_0055b1d0).
         /// </summary>
         /// <remarks>
-        /// swkotor2.exe: 0x0055b1d0 - 3D Projection
+        /// k2_win_gog_aspyr_swkotor2.exe: 0x0055b1d0 - 3D Projection
         /// 
         /// Original engine function signature:
         /// `float10 __thiscall FUN_0055b1d0(int param_1, float param_2, undefined4 param_3, undefined4 param_4, int param_5)`
@@ -550,7 +550,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Returns the walkable height at the given X,Z coordinates.
         /// Returns false if point is not over walkable surface.
         ///
-        /// Based on 0x004f5070 @ 0x004f5070 in swkotor2.exe.
+        /// Based on 0x004f5070 @ 0x004f5070 in k2_win_gog_aspyr_swkotor2.exe.
         public override Vector3? ProjectPoint(Vector3 point)
         {
             if (ProjectToWalkmesh(point, out Vector3 result, out float height))
@@ -613,7 +613,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Odyssey-specific check: walkable faces don't block line of sight.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe: walkable faces allow line of sight
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: walkable faces allow line of sight
         /// (e.g., through doorways, over walkable terrain).
         /// </remarks>
         protected override bool CheckHitBlocksLineOfSight(Vector3 hitPoint, int hitFace, Vector3 start, Vector3 end)
@@ -635,7 +635,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Finds a path from start to goal using A* algorithm on walkmesh adjacency graph.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe walkmesh pathfinding system.
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe walkmesh pathfinding system.
         /// Implements A* pathfinding algorithm over face adjacency graph.
         /// Uses face centers as waypoints and applies path smoothing for natural movement.
         ///
@@ -648,8 +648,8 @@ namespace Andastra.Game.Games.Odyssey
         /// 6. Apply path smoothing using line-of-sight checks
         ///
         /// Based on verified components of:
-        /// - swkotor.exe: Walkmesh pathfinding functions
-        /// - swkotor2.exe: A* pathfinding implementation on walkmesh adjacency
+        /// - k1_win_gog_swkotor.exe: Walkmesh pathfinding functions
+        /// - k2_win_gog_aspyr_swkotor2.exe: A* pathfinding implementation on walkmesh adjacency
         /// - Error messages: "failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510
         /// - Error messages: "failed to grid based pathfind from the ending path point ot the destiantion." @ 0x007be4b8
         /// </remarks>
@@ -755,7 +755,7 @@ namespace Andastra.Game.Games.Odyssey
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FindPathAroundObstacle @ 0x0061c390 - pathfinding around obstacles
         /// Function signature: `float* FindPathAroundObstacle(void* this, int* movingCreature, void* blockingCreature)`
         /// Called from UpdateCreatureMovement @ 0x0054be70 (line 183) when creature collision detected
-        /// Equivalent in swkotor.exe: FindPathAroundObstacle @ 0x005d0840 (called from UpdateCreatureMovement @ 0x00516630, line 254)
+        /// Equivalent in k1_win_gog_swkotor.exe: FindPathAroundObstacle @ 0x005d0840 (called from UpdateCreatureMovement @ 0x00516630, line 254)
         /// </summary>
         public override IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<ObstacleInfo> obstacles)
         {
@@ -1010,7 +1010,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Calculates the cost of traversing from one face to an adjacent face.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe walkmesh edge cost calculation.
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe walkmesh edge cost calculation.
         /// Base cost is distance, modified by surface material (water, mud, etc. cost more).
         /// </remarks>
         private float EdgeCost(int from, int to)
@@ -1027,7 +1027,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Gets the pathfinding cost modifier for a surface material.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe surface material cost modifiers.
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe surface material cost modifiers.
         /// Different materials have different movement costs:
         /// - Normal surfaces: 1.0 (no modifier)
         /// - Water, puddles, swamp, mud: 1.5 (slightly slower)
@@ -1096,7 +1096,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Smooths the path by removing redundant waypoints.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe path smoothing.
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe path smoothing.
         /// Uses line-of-sight checks to remove waypoints that can be skipped.
         /// Results in more natural movement paths.
         /// </remarks>
@@ -1165,7 +1165,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Finds the face index at a given position using 2D projection.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe walkmesh face lookup.
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe walkmesh face lookup.
         /// Uses AABB tree for spatial acceleration when available, falls back to brute force.
         /// Tests if point is within face bounds using 2D point-in-triangle test.
         /// </remarks>
@@ -1248,7 +1248,7 @@ namespace Andastra.Game.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Uses same-side test for point-in-triangle detection.
-        /// Based on standard point-in-triangle algorithm used in swkotor2.exe walkmesh.
+        /// Based on standard point-in-triangle algorithm used in k2_win_gog_aspyr_swkotor2.exe walkmesh.
         /// </remarks>
         private bool PointInFace2d(Vector3 point, int faceIndex)
         {
@@ -1290,7 +1290,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Gets the center point of a face.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe walkmesh face center calculation.
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe walkmesh face center calculation.
         /// Returns the centroid (average) of the three vertices.
         /// </remarks>
         public override Vector3 GetFaceCenter(int faceIndex)
@@ -1317,7 +1317,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Gets adjacent faces for a given face.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe walkmesh adjacency lookup.
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe walkmesh adjacency lookup.
         /// Adjacency encoding: adjacency_index = face_index * 3 + edge_index, -1 = no neighbor
         /// Returns the face indices of neighboring faces that share an edge.
         /// </remarks>
@@ -1355,7 +1355,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Checks if a face is walkable based on its surface material.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe walkmesh walkability checks.
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe walkmesh walkability checks.
         /// Surface materials are looked up from surfacemat.2da to determine walkability.
         /// Walkable materials include dirt, grass, stone, wood, water, carpet, metal, etc.
         /// Non-walkable materials include lava, deep water, non-walk surfaces, etc.
@@ -1375,7 +1375,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Gets the surface material index for a given face.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe walkmesh surface material lookup.
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe walkmesh surface material lookup.
         /// Surface materials are stored per-face and correspond to entries in surfacemat.2da.
         /// Material indices range from 0-30, with specific meanings:
         /// - 0: Undefined
@@ -1531,7 +1531,7 @@ namespace Andastra.Game.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Uses the Möller-Trumbore algorithm for ray-triangle intersection.
-        /// Based on standard ray-triangle intersection used in swkotor2.exe walkmesh collision.
+        /// Based on standard ray-triangle intersection used in k2_win_gog_aspyr_swkotor2.exe walkmesh collision.
         /// </remarks>
         private bool RayTriangleIntersect(Vector3 origin, Vector3 direction, int faceIndex, float maxDist, out float distance)
         {

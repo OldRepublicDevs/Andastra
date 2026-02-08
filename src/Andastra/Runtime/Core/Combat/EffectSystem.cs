@@ -403,7 +403,7 @@ namespace Andastra.Runtime.Core.Combat
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): AC effects modify total AC calculation
                     // Located via string references: "ArmorClass" @ 0x007c42a8, "EffectACIncrease" @ routine 115
                     // Original implementation: AC effects add to total AC (10 + DEX + Armor + Natural + Deflection + Effects)
-                    // swkotor2.exe: 0x0050b540 loads EffectList, AC effects are tracked and applied to total AC calculation
+                    // k2_win_gog_aspyr_swkotor2.exe: 0x0050b540 loads EffectList, AC effects are tracked and applied to total AC calculation
                     int acBonus = effect.Type == EffectType.ACIncrease ? effect.Amount : -effect.Amount;
                     if (apply)
                     {
@@ -421,7 +421,7 @@ namespace Andastra.Runtime.Core.Combat
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Attack effects modify total attack bonus
                     // Located via string references: "EffectAttackIncrease" @ routine 118
                     // Original implementation: Attack effects add to total attack (BAB + STR/DEX + Effects)
-                    // swkotor2.exe: 0x0050b540 loads EffectList, attack effects are tracked and applied to total attack bonus calculation
+                    // k2_win_gog_aspyr_swkotor2.exe: 0x0050b540 loads EffectList, attack effects are tracked and applied to total attack bonus calculation
                     int attackBonus = effect.Type == EffectType.AttackIncrease ? effect.Amount : -effect.Amount;
                     if (apply)
                     {
@@ -505,7 +505,7 @@ namespace Andastra.Runtime.Core.Combat
                 case EffectType.Deafness:
                     // These are handled by other systems (combat, movement, perception, etc.)
                     // Deafness: Prevents hearing perception checks (handled by PerceptionManager)
-                    // Based on swkotor.exe: EFFECT_TYPE_DEAF = 13 prevents hearing perception
+                    // Based on k1_win_gog_swkotor.exe: EFFECT_TYPE_DEAF = 13 prevents hearing perception
                     // Located via string references: EFFECT_TYPE_DEAF @ ScriptDefs constant 13
                     // Original implementation: Deafness effect blocks hearing perception checks
                     break;
@@ -526,7 +526,7 @@ namespace Andastra.Runtime.Core.Combat
                 case EffectType.AssuredHit:
                     // AssuredHit is handled by the combat system during attack resolution
                     // No stat modification needed - the combat system checks for this effect
-                    // Based on swkotor.exe: AssuredHit effect guarantees next attack hits
+                    // Based on k1_win_gog_swkotor.exe: AssuredHit effect guarantees next attack hits
                     // Located via string references: EffectAssuredHit @ routine 51
                     // Original implementation: Effect flag that forces attack to hit (bypasses AC check)
                     break;
@@ -636,11 +636,11 @@ namespace Andastra.Runtime.Core.Combat
         /// <returns>A deafness effect that prevents hearing perception checks.</returns>
         /// <remarks>
         /// Deafness Effect:
-        /// - Based on swkotor.exe: EFFECT_TYPE_DEAF = 13
+        /// - Based on k1_win_gog_swkotor.exe: EFFECT_TYPE_DEAF = 13
         /// - Located via string references: EFFECT_TYPE_DEAF @ ScriptDefs constant 13
         /// - Original implementation: Deafness effect prevents creature from hearing sounds
         /// - Used by PerceptionManager to block hearing perception checks
-        /// - Common across all engines: Odyssey (swkotor.exe, swkotor2.exe), Aurora (nwmain.exe), Eclipse (daorigins.exe, DragonAge2.exe), Infinity (, )
+        /// - Common across all engines: Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe), Aurora (nwmain.exe), Eclipse (daorigins.exe, DragonAge2.exe), Infinity (, )
         /// </remarks>
         public static Effect Deafness(int rounds = 0)
         {

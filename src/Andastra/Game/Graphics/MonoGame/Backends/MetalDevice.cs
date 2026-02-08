@@ -3812,7 +3812,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// The reference value is compared against the stencil buffer value using the stencil function
         /// specified in the depth-stencil state descriptor when the render pipeline state was created.
         /// This matches the behavior of DirectX 12 OMSetStencilRef and Vulkan vkCmdSetStencilReference.
-        /// swkotor2.exe: N/A - Original game used DirectX 9, not Metal
+        /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not Metal
         /// </summary>
         /// <param name="reference">The stencil reference value (0-255).</param>
         public void SetStencilRef(uint reference)
@@ -3866,7 +3866,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             // Metal API: MTLRenderCommandEncoder::drawPrimitives:vertexStart:vertexCount:instanceCount:baseInstance:
             // Method signature: - (void)drawPrimitives:(MTLPrimitiveType)primitiveType vertexStart:(NSUInteger)vertexStart vertexCount:(NSUInteger)vertexCount instanceCount:(NSUInteger)instanceCount baseInstance:(NSUInteger)baseInstance;
             // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1516321-drawprimitives
-            // swkotor2.exe: N/A - Original game used DirectX 9, not Metal
+            // k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not Metal
             MetalNative.DrawPrimitives(_currentRenderCommandEncoder, primitiveType, vertexStart, vertexCount, instanceCount, baseInstance);
         }
 
@@ -3952,7 +3952,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             // Metal API: MTLRenderCommandEncoder::drawIndexedPrimitives:indexCount:indexType:indexBuffer:indexBufferOffset:instanceCount:baseVertex:baseInstance:
             // Method signature: - (void)drawIndexedPrimitives:(MTLPrimitiveType)primitiveType indexCount:(NSUInteger)indexCount indexType:(MTLIndexType)indexType indexBuffer:(id<MTLBuffer>)indexBuffer indexBufferOffset:(NSUInteger)indexBufferOffset instanceCount:(NSUInteger)instanceCount baseVertex:(NSInteger)baseVertex baseInstance:(NSUInteger)baseInstance;
             // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515527-drawindexedprimitives
-            // swkotor2.exe: N/A - Original game used DirectX 9, not Metal
+            // k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not Metal
             MetalNative.DrawIndexedPrimitives(_currentRenderCommandEncoder, primitiveType, indexCount, indexType, indexBuffer, indexBufferOffset, instanceCount, baseVertex, baseInstance);
         }
 
@@ -4006,7 +4006,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             // For multi-draw indirect, we need to loop and call the method multiple times with stride-based offsets
             // Based on Metal API: MTLRenderCommandEncoder::drawPrimitives:indirectBuffer:indirectBufferOffset:
             // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515526-drawprimitives
-            // swkotor2.exe: N/A - Original game used DirectX 9, not Metal
+            // k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not Metal
             for (int i = 0; i < drawCount; i++)
             {
                 int currentOffset = offset + (i * stride);
@@ -4100,7 +4100,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             // For multi-draw indexed indirect, we need to loop and call the method multiple times with stride-based offsets
             // Based on Metal API: MTLRenderCommandEncoder::drawIndexedPrimitives:indexType:indexBuffer:indexBufferOffset:indirectBuffer:indirectBufferOffset:
             // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515544-drawindexedprimitives
-            // swkotor2.exe: N/A - Original game used DirectX 9, not Metal
+            // k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not Metal
             for (int i = 0; i < drawCount; i++)
             {
                 int currentOffset = offset + (i * stride);
@@ -6006,7 +6006,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// This sets the reference value used in stencil testing operations.
         /// The reference value is compared against the stencil buffer value using the stencil function
         /// specified in the depth-stencil state descriptor.
-        /// swkotor2.exe: N/A - Original game used DirectX 9, not Metal
+        /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not Metal
         /// </summary>
         /// <param name="renderCommandEncoder">The Metal render command encoder (id&lt;MTLRenderCommandEncoder&gt;).</param>
         /// <param name="reference">The stencil reference value (0-255).</param>
@@ -6042,7 +6042,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// 2. class_getInstanceMethod - Checks if the method exists in the class
         /// Based on Objective-C runtime: respondsToSelector: and class_getInstanceMethod
         /// Metal API Reference: Future API - setViewports:count: (not yet available in current Metal versions)
-        /// swkotor2.exe: N/A - Original game used DirectX 9, not Metal
+        /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not Metal
         /// </summary>
         /// <param name="renderCommandEncoder">The Metal render command encoder (id&lt;MTLRenderCommandEncoder&gt;).</param>
         /// <returns>True if the batch viewport API is available, false otherwise.</returns>

@@ -13,7 +13,7 @@ namespace Andastra.Runtime.Graphics.Common.Enums
     /// - Located via string references: "Render Window" @ 0x007b5680, "Graphics Options" @ 0x007b56a8
     /// - Original game shaders: Vertex shaders (!!VP1.0 @ 0x0081c228), pixel shaders (fixed-function and programmable)
     /// - Original game did not support geometry shaders, tessellation, compute shaders, or raytracing shaders
-    /// - This enum: Represents modern shader stages for advanced graphics APIs, not directly mapped to swkotor2.exe functions
+    /// - This enum: Represents modern shader stages for advanced graphics APIs, not directly mapped to k2_win_gog_aspyr_swkotor2.exe functions
     /// </remarks>
     [Flags]
     public enum ShaderStage

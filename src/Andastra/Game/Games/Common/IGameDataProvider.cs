@@ -10,7 +10,7 @@ namespace Andastra.Game.Games.Common
     /// - Provides abstraction for accessing game data across all engines
     /// - Common functionality: Lookup creature properties (radius, speed, etc.) from game data tables
     /// - Engine-specific implementations:
-    ///   - Odyssey (swkotor.exe, swkotor2.exe): Uses 2DA tables (appearance.2da) via GameDataManager
+    ///   - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): Uses 2DA tables (appearance.2da) via GameDataManager
     ///   - Aurora (nwmain.exe): Uses C2DA class for 2DA table access via AuroraTwoDATableManager
     ///   - Eclipse (daorigins.exe, DragonAge2.exe): Uses 2DA tables via EclipseTwoDATableManager
     ///   - Infinity: Uses 2DA tables (similar to Eclipse)

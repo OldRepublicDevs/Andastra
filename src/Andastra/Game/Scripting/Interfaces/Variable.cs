@@ -183,7 +183,7 @@ namespace Andastra.Game.Scripting.Interfaces
         /// <summary>
         /// Extracts an Effect object from this Variable.
         /// Returns the Effect if this Variable contains one, otherwise returns null.
-        /// Based on swkotor.exe and swkotor2.exe: Effect extraction from Variable type system
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Effect extraction from Variable type system
         /// </summary>
         public object AsEffect()
         {

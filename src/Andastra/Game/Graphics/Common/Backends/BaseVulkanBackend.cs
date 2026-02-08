@@ -29,7 +29,7 @@ namespace Andastra.Game.Graphics.Common.Backends
     /// - Located via string references: "Render Window" @ 0x007b5680, "Graphics Options" @ 0x007b56a8
     /// - Original game did not use Vulkan; this is a modern enhancement for cross-platform support and advanced features
     /// - Raytracing: Original game did not support raytracing; this is a modern enhancement
-    /// - This abstraction: Provides Vulkan backend for modern systems, not directly mapped to swkotor2.exe functions
+    /// - This abstraction: Provides Vulkan backend for modern systems, not directly mapped to k2_win_gog_aspyr_swkotor2.exe functions
     /// </remarks>
     public abstract class BaseVulkanBackend : BaseGraphicsBackend, IComputeBackend, IRaytracingBackend
     {

@@ -11,6 +11,9 @@
     <AssemblyName>Andastra.Graphics</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <MonoGameContentReference Include="..\Game\Content.mgcb" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.4.1" />
     <PackageReference Include="Stride.Audio" Version="4.2.1.2487" />

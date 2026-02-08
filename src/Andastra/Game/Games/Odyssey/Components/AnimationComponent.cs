@@ -12,10 +12,10 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// <remarks>
     /// Odyssey Animation Component Implementation:
     /// - Inherits from BaseAnimationComponent (Runtime.Games.Common.Components)
-    /// - Based on swkotor.exe and swkotor2.exe animation systems
-    /// - Located via string references: "Animation" @ 0x007bf604 (swkotor2.exe), "Animation" @ 0x00746060 (swkotor.exe)
-    /// - "AnimationTime" @ 0x007bf810 (swkotor2.exe), "AnimationLength" @ 0x007bf980 (swkotor2.exe)
-    /// - "AnimationState" @ 0x007c1f30 (swkotor2.exe)
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe animation systems
+    /// - Located via string references: "Animation" @ 0x007bf604 (k2_win_gog_aspyr_swkotor2.exe), "Animation" @ 0x00746060 (k1_win_gog_swkotor.exe)
+    /// - "AnimationTime" @ 0x007bf810 (k2_win_gog_aspyr_swkotor2.exe), "AnimationLength" @ 0x007bf980 (k2_win_gog_aspyr_swkotor2.exe)
+    /// - "AnimationState" @ 0x007c1f30 (k2_win_gog_aspyr_swkotor2.exe)
     /// - Original implementation: Entities with models can play animations from MDL animation arrays
     /// - Animation IDs reference animation indices in MDL animation arrays (0-based index)
     /// - Animations loaded from MDX files (animation keyframe data), referenced by MDL model files
@@ -44,7 +44,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// <remarks>
         /// Animation Duration Loading:
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): AnimationLength field accessed from MDL animation data
-        /// - Located via string references: "AnimationLength" @ 0x007bf980 (swkotor2.exe)
+        /// - Located via string references: "AnimationLength" @ 0x007bf980 (k2_win_gog_aspyr_swkotor2.exe)
         /// - MDX format: Animation header contains duration at offset 0x50 (80 bytes) as float
         /// - MDL format: MDLAnimationData.Length field contains animation duration in seconds
         /// - Animation ID is 0-based index into MDL model's Animations array

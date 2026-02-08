@@ -1,9 +1,9 @@
 // ---------------------------------------------------------------------------
 // MainMenuScreen.cs
-// Exhaustive main menu implementation matching:
-// - vendor/KotOR.js MainMenu (K1 + TSL), GameMenu base, LBL_3DView
-// - vendor/reone MainMenu, GameGUI, bindControls, setup3DView, startModuleSelection
-// - Reva: CClientExoApp::DisplayMainMenu, CSWGuiMainMenu, button handlers
+// Exhaustive main menu implementation matching Reva (k1_win_gog_swkotor.exe):
+// - CClientExoAppInternal::DisplayMainMenu @ 0x005fca30, CSWGuiMainMenu::CSWGuiMainMenu @ 0x0067c4c0
+// - CSWGuiMainMenu::LoadFromLayout @ 0x0067ace0 (control tags: LB_MODULES, BTN_*, LBL_3DVIEW, LBL_MENUBG, etc.)
+// - warp/newcontent/modules_listbox bit_flags & 0xfffffffd (hidden); 3D model "mainmenu" via CSWGuiScene::AddModel
 // ---------------------------------------------------------------------------
 
 using System;
@@ -17,7 +17,7 @@ using BioWare.Extract;
 namespace Andastra.Game.Graphics.MonoGame.UI.MainMenu
 {
     /// <summary>
-    /// Full main menu screen with every UI element from KotOR.js, reone, and Reva.
+    /// Full main menu screen with every UI element from Reva (CSWGuiMainMenu, LoadFromLayout control bindings).
     /// Supports both GFF-driven (via KotorGuiManager) and fallback (fully drawn) modes.
     /// </summary>
     public sealed class MainMenuScreen
@@ -182,7 +182,8 @@ namespace Andastra.Game.Graphics.MonoGame.UI.MainMenu
         }
 
         /// <summary>
-        /// Enable or hide warp button (reone: developer mode). reone mainmenu.cpp lines 83-86.
+        /// Enable or hide warp button. Reva (k1_win_gog_swkotor.exe): CSWGuiMainMenu @ 0x0067c4c0 sets
+        /// warp_button.bit_flags &amp;= 0xfffffffd (hidden by default); developer mode shows it.
         /// </summary>
         public void SetWarpButtonVisible(bool visible)
         {
@@ -197,7 +198,8 @@ namespace Andastra.Game.Graphics.MonoGame.UI.MainMenu
         }
 
         /// <summary>
-        /// Set list of module names for LB_MODULES (warp mode). reone loadModuleNames (lines 172-179).
+        /// Set list of module names for LB_MODULES (warp mode). Reva: LoadFromLayout @ 0x0067ace0 binds
+        /// modules_listbox to tag "LB_MODULES"; list populated for warp/module selection.
         /// </summary>
         public void SetModuleList(IEnumerable<string> moduleNames)
         {
@@ -210,8 +212,8 @@ namespace Andastra.Game.Graphics.MonoGame.UI.MainMenu
         }
 
         /// <summary>
-        /// Enter module selection mode. reone startModuleSelection (lines 152-170).
-        /// Hides menu buttons, shows LB_MODULES, hides 3D view and logo.
+        /// Enter module selection mode. Reva: same panel shows/hides controls; LB_MODULES, warp_button
+        /// bound in CSWGuiMainMenu::LoadFromLayout @ 0x0067ace0. Hides menu buttons, shows LB_MODULES, hides 3D view and logo.
         /// </summary>
         public void EnterModuleSelectionMode()
         {

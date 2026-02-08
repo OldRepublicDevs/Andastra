@@ -77,23 +77,23 @@ namespace BioWare.Resource.Formats.GFF.Generics
             }
 
             // Extract creature list - all fields optional
-            // swkotor.exe: 0x004c5bb0, swkotor2.exe: 0x004dfbb0
+            // k1_win_gog_swkotor.exe: 0x004c5bb0, k2_win_gog_aspyr_swkotor2.exe: 0x004dfbb0
             var creatureList = root.Acquire("Creature List", new GFFList());
             foreach (var creatureStruct in creatureList)
             {
                 var creature = new GITCreature();
-                // Engine default: "" (swkotor2.exe: 0x004dfbb0 line 99)
+                // Engine default: "" (k2_win_gog_aspyr_swkotor2.exe: 0x004dfbb0 line 99)
                 creature.ResRef = creatureStruct.Acquire("TemplateResRef", ResRef.FromBlank());
-                // Engine default: 0.0 (swkotor2.exe: 0x004dfbb0 line 65, swkotor.exe: 0x004dfbb0 line 60)
+                // Engine default: 0.0 (k2_win_gog_aspyr_swkotor2.exe: 0x004dfbb0 line 65, k1_win_gog_swkotor.exe: 0x004dfbb0 line 60)
                 float x = creatureStruct.Acquire("XPosition", 0.0f);
-                // Engine default: 0.0 (swkotor2.exe: 0x004dfbb0 line 67, swkotor.exe: 0x004dfbb0 line 58)
+                // Engine default: 0.0 (k2_win_gog_aspyr_swkotor2.exe: 0x004dfbb0 line 67, k1_win_gog_swkotor.exe: 0x004dfbb0 line 58)
                 float y = creatureStruct.Acquire("YPosition", 0.0f);
-                // Engine default: 0.0 (swkotor2.exe: 0x004dfbb0 line 69, swkotor.exe: 0x004dfbb0 line 56)
+                // Engine default: 0.0 (k2_win_gog_aspyr_swkotor2.exe: 0x004dfbb0 line 69, k1_win_gog_swkotor.exe: 0x004dfbb0 line 56)
                 float z = creatureStruct.Acquire("ZPosition", 0.0f);
                 creature.Position = new Vector3(x, y, z);
-                // Engine default: 0.0 (swkotor2.exe: 0x004dfbb0 line 80, swkotor.exe: 0x004dfbb0 line 80)
+                // Engine default: 0.0 (k2_win_gog_aspyr_swkotor2.exe: 0x004dfbb0 line 80, k1_win_gog_swkotor.exe: 0x004dfbb0 line 80)
                 float rotX = creatureStruct.Acquire("XOrientation", 0.0f);
-                // Engine default: 0.0 (swkotor2.exe: 0x004dfbb0 line 79, swkotor.exe: 0x004dfbb0 line 79)
+                // Engine default: 0.0 (k2_win_gog_aspyr_swkotor2.exe: 0x004dfbb0 line 79, k1_win_gog_swkotor.exe: 0x004dfbb0 line 79)
                 float rotY = creatureStruct.Acquire("YOrientation", 0.0f);
                 // Calculate bearing from orientation
                 var vec2 = new Vector2(rotX, rotY);
@@ -102,7 +102,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
             }
 
             // Extract door list - all fields optional
-            // swkotor.exe: 0x0050a0e0, swkotor2.exe: 0x004e56b0
+            // k1_win_gog_swkotor.exe: 0x0050a0e0, k2_win_gog_aspyr_swkotor2.exe: 0x004e56b0
             var doorList = root.Acquire("Door List", new GFFList());
             foreach (var doorStruct in doorList)
             {
@@ -140,7 +140,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
             }
 
             // Extract encounter list - all fields optional except geometry (which has fallback)
-            // swkotor.exe: 0x0050a7b0, swkotor2.exe: 0x004e2b20
+            // k1_win_gog_swkotor.exe: 0x0050a7b0, k2_win_gog_aspyr_swkotor2.exe: 0x004e2b20
             var encounterList = root.Acquire("Encounter List", new GFFList());
             foreach (var encounterStruct in encounterList)
             {

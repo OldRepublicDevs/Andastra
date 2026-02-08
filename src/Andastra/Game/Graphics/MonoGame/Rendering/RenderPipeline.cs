@@ -117,7 +117,7 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
         /// by managing resource lifetimes and pass ordering.
         ///
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system architecture:
-        /// - Original implementation: Render order sorting by material/shader (swkotor2.exe: "renderorder" @ 0x007bab50)
+        /// - Original implementation: Render order sorting by material/shader (k2_win_gog_aspyr_swkotor2.exe: "renderorder" @ 0x007bab50)
         /// - Original rendering: Single-pass rendering with depth testing (no explicit frame graph)
         /// - Modern enhancement: Frame graph system for advanced resource management and pass scheduling
         /// </summary>
@@ -153,7 +153,7 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
             // 1. Depth Pre-Pass (if enabled and we have opaque geometry)
             // Depth pre-pass renders geometry depth-only first, enabling early-Z rejection
             // This must come before any opaque geometry rendering
-            // Based on ModernRenderer.DepthPrePassEnabled check (swkotor2.exe: depth buffer testing)
+            // Based on ModernRenderer.DepthPrePassEnabled check (k2_win_gog_aspyr_swkotor2.exe: depth buffer testing)
             if (_modernRenderer.DepthPrePassEnabled && queueCounts.ContainsKey(RenderQueue.QueueType.Opaque))
             {
                 FrameGraph.FrameGraphNode depthPrePassNode = new FrameGraph.FrameGraphNode("DepthPrePass");
@@ -225,7 +225,7 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
 
             // 4. Opaque Geometry Pass
             // Main geometry rendering - most objects are opaque
-            // Based on original KOTOR render order: opaque geometry after background (swkotor2.exe: "renderorder" @ 0x007bab50)
+            // Based on original KOTOR render order: opaque geometry after background (k2_win_gog_aspyr_swkotor2.exe: "renderorder" @ 0x007bab50)
             if (queueCounts.ContainsKey(RenderQueue.QueueType.Opaque))
             {
                 FrameGraph.FrameGraphNode opaquePassNode = new FrameGraph.FrameGraphNode("OpaquePass");
@@ -342,7 +342,7 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
                 {
                     // Render transparent geometry from Transparent queue
                     // Rendered back-to-front for proper alpha blending
-                    // Based on original KOTOR: transparent objects sorted by distance (swkotor2.exe render order)
+                    // Based on original KOTOR: transparent objects sorted by distance (k2_win_gog_aspyr_swkotor2.exe render order)
                 };
                 _frameGraph.AddNode(transparentPassNode);
                 passNames.Add("TransparentPass");
@@ -382,7 +382,7 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
 
             // 9. Overlay/UI Pass
             // UI elements rendered on top of everything
-            // Based on original KOTOR: UI rendered last ("mgs_drawmain" @ swkotor2.exe:0x007cc8f0)
+            // Based on original KOTOR: UI rendered last ("mgs_drawmain" @ k2_win_gog_aspyr_swkotor2.exe:0x007cc8f0)
             if (queueCounts.ContainsKey(RenderQueue.QueueType.Overlay))
             {
                 FrameGraph.FrameGraphNode overlayPassNode = new FrameGraph.FrameGraphNode("OverlayPass");
@@ -408,7 +408,7 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
                 overlayPassNode.Execute = (context) =>
                 {
                     // Render UI/overlay elements from Overlay queue
-                    // Based on original KOTOR: UI rendered on top ("mgs_drawmain" @ swkotor2.exe:0x007cc8f0)
+                    // Based on original KOTOR: UI rendered on top ("mgs_drawmain" @ k2_win_gog_aspyr_swkotor2.exe:0x007cc8f0)
                 };
                 _frameGraph.AddNode(overlayPassNode);
                 passNames.Add("OverlayPass");
@@ -438,7 +438,7 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
         /// 9. Overlay/UI pass (UI elements rendered on top)
         ///
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system:
-        /// - Original implementation: Single-pass rendering with render order sorting (swkotor2.exe: "renderorder" @ 0x007bab50)
+        /// - Original implementation: Single-pass rendering with render order sorting (k2_win_gog_aspyr_swkotor2.exe: "renderorder" @ 0x007bab50)
         /// - Modern enhancement: Frame graph system for advanced pass scheduling and resource management
         /// </summary>
         /// <param name="outputTarget">Output render target. Must not be null.</param>

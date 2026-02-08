@@ -12,13 +12,13 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// <remarks>
     /// Odyssey Trigger Component:
     /// - Inherits from BaseTriggerComponent (common functionality)
-    /// - Odyssey-specific implementation for swkotor.exe and swkotor2.exe
-    /// - Based on swkotor.exe and swkotor2.exe trigger system
-    /// - Located via string references: "Trigger" @ 0x007bc51c, "TriggerList" @ 0x007bd254 (swkotor2.exe)
-    /// - "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "EVENT_LEFT_TRIGGER" @ 0x007bcdf4 (swkotor2.exe)
-    /// - "OnTrapTriggered" @ 0x007c1a34, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED" @ 0x007bc7ac (swkotor2.exe)
-    /// - Transition fields: "LinkedTo" @ 0x007bd798, "LinkedToModule" @ 0x007bd7bc, "LinkedToFlags" @ 0x007bd788 (swkotor2.exe)
-    /// - "TransitionDestination" @ 0x007bd7a4 (waypoint tag for positioning after transition) (swkotor2.exe)
+    /// - Odyssey-specific implementation for k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe trigger system
+    /// - Located via string references: "Trigger" @ 0x007bc51c, "TriggerList" @ 0x007bd254 (k2_win_gog_aspyr_swkotor2.exe)
+    /// - "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "EVENT_LEFT_TRIGGER" @ 0x007bcdf4 (k2_win_gog_aspyr_swkotor2.exe)
+    /// - "OnTrapTriggered" @ 0x007c1a34, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED" @ 0x007bc7ac (k2_win_gog_aspyr_swkotor2.exe)
+    /// - Transition fields: "LinkedTo" @ 0x007bd798, "LinkedToModule" @ 0x007bd7bc, "LinkedToFlags" @ 0x007bd788 (k2_win_gog_aspyr_swkotor2.exe)
+    /// - "TransitionDestination" @ 0x007bd7a4 (waypoint tag for positioning after transition) (k2_win_gog_aspyr_swkotor2.exe)
     /// - Original implementation: UTT (Trigger) GFF templates define trigger properties and geometry
     /// - Triggers are invisible polygonal volumes that fire scripts on enter/exit
     /// - Trigger types: Generic (0), Transition (1), Trap (2)
@@ -26,7 +26,7 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// - Trap triggers: OnTrapTriggered script fires when trap is activated
     /// - Geometry: Triggers have polygon geometry (Geometry field in GIT) defining trigger volume
     /// - Based on UTT file format documentation in vendor/PyKotor/wiki/
-    /// - 0x004e5920 @ 0x004e5920 (swkotor2.exe) loads trigger instances from GIT TriggerList, reads UTT templates
+    /// - 0x004e5920 @ 0x004e5920 (k2_win_gog_aspyr_swkotor2.exe) loads trigger instances from GIT TriggerList, reads UTT templates
     /// </remarks>
     public class TriggerComponent : BaseTriggerComponent
     {

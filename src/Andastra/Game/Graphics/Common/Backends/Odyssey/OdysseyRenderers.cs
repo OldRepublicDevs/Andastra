@@ -26,7 +26,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Room Mesh Renderer:
-    /// - Based on verified components of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe
     /// - Room rendering: Original engine renders WOK/LYT/VIS based area geometry
     /// - Uses OpenGL fixed-function pipeline for rendering
     /// - This implementation: OpenGL rendering for room meshes
@@ -45,7 +45,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Loads and converts MDL mesh data to OpenGL buffers for room rendering.
-        /// Based on swkotor.exe/swkotor2.exe: Room mesh loading and OpenGL buffer creation
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Room mesh loading and OpenGL buffer creation
         /// /K1/k1_win_gog_swkotor.exe: PartTriMesh @ 0x00445840, findalltrimeshparts @ 0x004461d0, SpawnRoom @ 0x00456f30
         /// Original engine recursively finds all trimesh parts and converts them to OpenGL VBO/IBO buffers.
         /// </summary>
@@ -114,7 +114,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Recursively extracts geometry from MDL node hierarchy.
-        /// Based on swkotor.exe/swkotor2.exe: findalltrimeshparts recursively processes all trimesh nodes
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: findalltrimeshparts recursively processes all trimesh nodes
         /// /K1/k1_win_gog_swkotor.exe: findalltrimeshparts @ 0x004461d0 (recursively finds all PartTriMesh instances)
         /// </summary>
         private void ExtractNodeGeometry([NotNull] MDLNode node, Matrix4x4 parentTransform, [NotNull] List<VertexPositionNormalTexture> vertices, [NotNull] List<int> indices)
@@ -169,7 +169,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             Matrix4x4 finalTransform = Matrix4x4.Multiply(nodeTransform, parentTransform);
 
             // Extract mesh geometry if present
-            // Based on swkotor.exe: PartTriMesh processes trimesh nodes
+            // Based on k1_win_gog_swkotor.exe: PartTriMesh processes trimesh nodes
             if (node.Mesh != null)
             {
                 ExtractMeshGeometry(node.Mesh, finalTransform, vertices, indices);
@@ -188,7 +188,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Extracts geometry from an MDL mesh and applies transform.
-        /// Based on swkotor.exe/swkotor2.exe: PartTriMesh processes vertex and face data
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: PartTriMesh processes vertex and face data
         /// /K1/k1_win_gog_swkotor.exe: PartTriMesh @ 0x00445840 (processes trimesh vertex/face data)
         /// </summary>
         private void ExtractMeshGeometry([NotNull] MDLMesh mesh, Matrix4x4 transform, [NotNull] List<VertexPositionNormalTexture> vertices, [NotNull] List<int> indices)
@@ -275,7 +275,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// <summary>
     /// Odyssey room mesh data implementation.
     /// Stores OpenGL VBO/IBO buffers for room mesh rendering.
-    /// Based on swkotor.exe/swkotor2.exe: Room mesh data structure with vertex/index buffers
+    /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Room mesh data structure with vertex/index buffers
     /// </summary>
     public class OdysseyRoomMeshData : IRoomMeshData, IDisposable
     {
@@ -300,7 +300,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Entity Model Renderer:
-    /// - Based on verified components of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe
     /// - Model rendering: Original engine renders MDL/MDX model files
     /// - Skeleton animation: Uses bone transforms for skeletal animation
     /// - This implementation: OpenGL rendering for entity models
@@ -448,7 +448,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
                 // Apply view/projection matrices and opacity via OpenGL state
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): glDrawElements with proper matrix setup
-                // Based on xoreos: graphics.cpp renderWorld() @ lines 1059-1081
+                // Reva: K1 3D world render; matrices and draw.
                 if (effect is OdysseyBasicEffect odysseyEffectForMesh2)
                 {
                     // Set world matrix for this mesh
@@ -761,7 +761,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Spatial Audio:
-    /// - Based on verified components of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe
     /// - Audio system: Original engine uses Miles Sound System (MSS)
     /// - 3D audio: Positional audio with distance attenuation
     /// - This implementation: Placeholder for spatial audio
@@ -921,7 +921,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Sound Player:
-    /// - Based on verified components of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe
     /// - Sound playback: Original engine uses Miles Sound System (MSS) or DirectSound
     /// - Sound files: Stored as WAV resources, referenced by ResRef (e.g., "sound01")
     /// - Positional audio: Sounds can be played at 3D positions with distance attenuation
@@ -1262,8 +1262,8 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Sets the master volume for all sounds.
-        /// swkotor2.exe:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0066a4f0 @ 0x0066a4f0 (reads "Sound Effects Volume" from swkotor2.ini @ 0x007c83e0),  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0066d6d0 @ 0x0066d6d0 (reads volume settings from INI)
-        /// swkotor.exe: TODO: Find equivalent function address
+        /// k2_win_gog_aspyr_swkotor2.exe:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0066a4f0 @ 0x0066a4f0 (reads "Sound Effects Volume" from swkotor2.ini @ 0x007c83e0),  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0066d6d0 @ 0x0066d6d0 (reads volume settings from INI)
+        /// k1_win_gog_swkotor.exe: TODO: Find equivalent function address
         /// Volume string references: "Sound Effects Volume" @ 0x007c83e0, "Voiceover Volume" @ 0x007c83cc, "Music Volume" @ 0x007c83bc
         /// Original engine uses Miles Sound System (MSS) or DirectSound for volume control; this implementation uses Windows waveOutSetVolume API.
         /// Volume is clamped to 0.0-1.0 range and applied immediately to all active sounds.
@@ -1295,8 +1295,8 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// <summary>
         /// Applies the current master volume to a specific sound instance.
         /// Uses Windows waveOutSetVolume API to set the volume for the waveOut device.
-        /// swkotor2.exe: Volume control via Miles Sound System (MSS) or DirectSound APIs (equivalent to waveOutSetVolume)
-        /// swkotor.exe: TODO: Find equivalent function address
+        /// k2_win_gog_aspyr_swkotor2.exe: Volume control via Miles Sound System (MSS) or DirectSound APIs (equivalent to waveOutSetVolume)
+        /// k1_win_gog_swkotor.exe: TODO: Find equivalent function address
         /// Original engine applies volume per-sound-instance; this implementation uses waveOutSetVolume for each active sound.
         /// </summary>
         private void ApplyVolumeToSound(uint instanceId, IntPtr waveOutHandle)
@@ -1419,7 +1419,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Music Player:
-    /// - Based on verified components of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe
     /// - Music playback: Original engine uses Miles Sound System (MSS) for background music
     /// - Music files: Stored as WAV or MP3 resources, referenced by ResRef (e.g., "mus_theme")
     /// - Volume control: Original engine has separate music volume setting
@@ -1427,7 +1427,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// - Music directories: "STREAMMUSIC" @ 0x007c69dc, "HD0:STREAMMUSIC" @ 0x007c771c
     /// - Music settings: "Music Volume" @ 0x007c83cc, "Music Enabled" @ 0x007c7258
     /// - This implementation: Uses Windows waveOut APIs for music playback with looping and volume control
-    /// - swkotor2.exe: Music playback system uses MSS streaming with looping support
+    /// - k2_win_gog_aspyr_swkotor2.exe: Music playback system uses MSS streaming with looping support
     /// </remarks>
     public class OdysseyMusicPlayer : IMusicPlayer
     {
@@ -1498,7 +1498,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// - Volume is applied immediately when playback starts
         /// - Original engine uses Miles Sound System (MSS) for streaming music
         /// - Music files are typically WAV format, stored in STREAMMUSIC directory
-        /// - Based on swkotor.exe 0x005f9af0: Music playback function
+        /// - Based on k1_win_gog_swkotor.exe 0x005f9af0: Music playback function
         /// </remarks>
         public bool Play(string musicResRef, float volume = 1.0f)
         {
@@ -2050,7 +2050,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Voice Player:
-    /// - Based on verified components of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe
     /// - Voice playback: Original engine uses Miles Sound System (MSS) or DirectSound
     /// - Voice files: Stored as WAV resources, referenced by ResRef (e.g., "n_darthmalak01")
     /// - This implementation: Uses Windows API PlaySound for simple playback (can be extended with OpenAL)

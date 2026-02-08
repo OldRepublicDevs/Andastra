@@ -20,7 +20,7 @@ namespace Andastra.Runtime.Games.Common
     /// </summary>
     /// <remarks>
     /// Unified AI Controller System:
-    /// - Supports Odyssey (swkotor.exe/swkotor2.exe), Aurora (nwmain.exe), and Eclipse (daorigins.exe/DragonAge2.exe) engines
+    /// - Supports Odyssey (k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe), Aurora (nwmain.exe), and Eclipse (daorigins.exe/DragonAge2.exe) engines
     /// - Uses conditional logic based on EngineFamily to handle engine-specific behaviors
     /// - Merged from Odyssey Systems/AIController, Aurora Systems/AuroraAIController, and Eclipse Systems/EclipseAIController
     ///
@@ -32,7 +32,7 @@ namespace Andastra.Runtime.Games.Common
     /// - Conversation checking: Eclipse has entity data-based checking, others use base implementation
     ///
     /// Based on verified components of:
-    /// - Odyssey: swkotor.exe/swkotor2.exe AI system
+    /// - Odyssey: k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe AI system
     /// - Aurora: nwmain.exe AI system with D20 perception
     /// - Eclipse: daorigins.exe/DragonAge2.exe AI system with UnrealScript integration
     /// </remarks>

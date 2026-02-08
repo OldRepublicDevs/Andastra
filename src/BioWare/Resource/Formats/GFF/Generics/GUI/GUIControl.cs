@@ -25,7 +25,7 @@ namespace BioWare.Resource.Formats.GFF.Generics.GUI
         /// Gets or sets the alpha transparency value (0.0-1.0).
         /// This property provides convenient access to the Color's alpha channel.
         /// Based on PyKotor: ALPHA field is stored separately from COLOR in GFF files.
-        /// Original implementation: swkotor.exe/swkotor2.exe stores COLOR as Vector3 (RGB) and ALPHA as separate float.
+        /// Original implementation: k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe stores COLOR as Vector3 (RGB) and ALPHA as separate float.
         /// </summary>
         public float Alpha
         {

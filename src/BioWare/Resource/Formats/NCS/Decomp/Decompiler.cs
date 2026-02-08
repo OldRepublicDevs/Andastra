@@ -99,7 +99,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp
 
         // Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:2289-2304
         // Original: public static String chooseOutputDirectory() { JFileChooser jFC = new JFileChooser(settings.getProperty("Output Directory")); jFC.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY); ... }
-        // Based on swkotor2.exe: Directory selection for output files
+        // Based on k2_win_gog_aspyr_swkotor2.exe: Directory selection for output files
         // Original implementation: Shows JFileChooser dialog to select output directory
         // C# implementation: CLI-compatible console-based directory chooser (UI version is in Decomp MainWindow)
         /// <summary>
@@ -108,7 +108,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp
         /// </summary>
         /// <returns>The selected or validated directory path.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: Directory selection for output files
+        /// Based on k2_win_gog_aspyr_swkotor2.exe: Directory selection for output files
         /// Original Java implementation: Uses JFileChooser to show GUI dialog
         /// C# CLI implementation: Uses console prompts for headless/CLI compatibility
         /// - Prompts user to enter directory path

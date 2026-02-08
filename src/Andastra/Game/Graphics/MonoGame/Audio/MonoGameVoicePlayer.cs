@@ -79,7 +79,7 @@ namespace Andastra.Game.Graphics.MonoGame.Audio
 
         /// <summary>
         /// Gets or sets the voice volume (0.0 to 1.0).
-        /// Based on swkotor.exe and swkotor2.exe: VoiceVolume setting from INI file
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: VoiceVolume setting from INI file
         /// </summary>
         public float Volume
         {

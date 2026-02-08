@@ -76,7 +76,7 @@ namespace Andastra.Runtime.Core
         /// </summary>
         /// <remarks>
         /// Mouse Sensitivity Setting:
-        /// - Based on swkotor.exe and swkotor2.exe mouse configuration system
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe mouse configuration system
         /// - Original implementation: Mouse sensitivity option in options menu (Controls category)
         /// - Controls how responsive mouse movement is for camera rotation/looking
         /// - Range: 0.0 (no sensitivity) to 1.0 (maximum sensitivity)
@@ -90,11 +90,11 @@ namespace Andastra.Runtime.Core
         /// </summary>
         /// <remarks>
         /// Mouse Y Inversion Setting:
-        /// - Based on swkotor.exe and swkotor2.exe mouse configuration system
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe mouse configuration system
         /// - Original implementation: Mouse invert option in options menu (Controls category)
         /// - When enabled, inverts the Y axis so moving mouse up looks down and vice versa
         /// - Used in camera look/rotation input processing
-        /// - Based on swkotor.exe and swkotor2.exe: Mouse invert implementation
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Mouse invert implementation
         /// </remarks>
         public bool InvertMouseY { get; set; } = false;
 
@@ -108,7 +108,7 @@ namespace Andastra.Runtime.Core
         /// - When InvertMouseY is true, negates the mouse Y delta (inverts the axis)
         /// - Used in camera look/rotation input processing
         /// - Call this method wherever mouse Y delta is used for camera pitch/vertical rotation
-        /// - Based on swkotor.exe and swkotor2.exe: Mouse invert implementation
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Mouse invert implementation
         /// </remarks>
         public float ApplyMouseYInversion(float mouseYDelta)
         {
@@ -134,7 +134,7 @@ namespace Andastra.Runtime.Core
         /// </summary>
         /// <remarks>
         /// Graphics Settings:
-        /// - Based on swkotor.exe and swkotor2.exe graphics configuration system
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe graphics configuration system
         /// - Located via string references: "Width" @ 0x007c2cd0, "Height" @ 0x007c2cd4, "Fullscreen" @ 0x007c2cd8
         /// - Original implementation: Graphics settings stored in INI file (swkotor2.ini for K2, swkotor.ini for K1)
         /// - Settings include: Resolution, Fullscreen mode, Texture quality, Shadow quality, Anti-aliasing
@@ -179,7 +179,7 @@ namespace Andastra.Runtime.Core
         /// </summary>
         /// <remarks>
         /// Autopause Settings:
-        /// - Based on swkotor.exe and swkotor2.exe autopause system
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe autopause system
         /// - Controls automatic pausing of the game under various conditions
         /// - Each setting corresponds to a different autopause trigger
         /// - Original implementation: Stored in INI file as boolean values
@@ -321,7 +321,7 @@ namespace Andastra.Runtime.Core
         /// </summary>
         /// <remarks>
         /// Feedback Settings:
-        /// - Based on swkotor.exe and swkotor2.exe feedback system
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe feedback system
         /// - Located via string references: "Feedback" options in main menu, "BTN_FEEDBACK" (feedback button in options menu)
         /// - Original implementation: Various visual/audio feedback options
         /// - Settings stored in INI file (swkotor.ini for K1, swkotor2.ini for K2)
@@ -336,7 +336,7 @@ namespace Andastra.Runtime.Core
         /// </summary>
         /// <remarks>
         /// Controls Settings:
-        /// - Based on swkotor.exe and swkotor2.exe controls/input system
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe controls/input system
         /// - Located via string references: "Mouse Sensitivity" @ 0x007c85cc, "Mouse Look" @ 0x007c8608, "Reverse Mouse Buttons" @ 0x007c8628
         /// - "keymap" @ 0x007c4cbc (keymap.2da file reference), "Pause" @ 0x007c4de8
         /// - Original implementation: Key bindings stored in keymap.2da, mouse settings in INI file
@@ -354,7 +354,7 @@ namespace Andastra.Runtime.Core
         /// </summary>
         /// <remarks>
         /// Feedback Settings:
-        /// - Based on swkotor.exe and swkotor2.exe feedback system
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe feedback system
         /// - Controls visual and audio feedback during gameplay
         /// - Settings stored in INI file (swkotor.ini for K1, swkotor2.ini for K2)
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWGuiOptionsMain::OnFeedbackOpt @ 0x006e2df0
@@ -442,7 +442,7 @@ namespace Andastra.Runtime.Core
         /// </summary>
         /// <remarks>
         /// Controls Settings:
-        /// - Based on swkotor.exe and swkotor2.exe controls/input system
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe controls/input system
         /// - Located via string references: "Mouse Sensitivity" @ 0x007c85cc, "Mouse Look" @ 0x007c8608, "Reverse Mouse Buttons" @ 0x007c8628
         /// - "keymap" @ 0x007c4cbc (keymap.2da file reference), "Pause" @ 0x007c4de8
         /// - Original implementation: Key bindings stored in keymap.2da, mouse settings in INI file
@@ -465,7 +465,7 @@ namespace Andastra.Runtime.Core
             /// </summary>
             /// <remarks>
             /// Key Bindings:
-            /// - Based on swkotor.exe and swkotor2.exe keymap.2da system
+            /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe keymap.2da system
             /// - Action names match keymap.2da labels (e.g., "Pause", "CycleParty", "QuickSlot1", etc.)
             /// - Key names use Keys enum names (e.g., "Space", "Tab", "D1", "D2", etc.)
             /// - Original implementation: Key bindings loaded from keymap.2da, can be customized in options menu
@@ -478,7 +478,7 @@ namespace Andastra.Runtime.Core
             /// </summary>
             /// <remarks>
             /// Mouse Button Bindings:
-            /// - Based on swkotor.exe and swkotor2.exe mouse input system
+            /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe mouse input system
             /// - Action names: "Move", "Attack", "ContextAction", "CameraRotate", "CameraZoom"
             /// - Button names: "Left", "Right", "Middle", "XButton1", "XButton2"
             /// - Original implementation: Mouse buttons can be rebound in options menu
@@ -491,7 +491,7 @@ namespace Andastra.Runtime.Core
             /// </summary>
             /// <remarks>
             /// Default Key Bindings:
-            /// - Based on swkotor.exe and swkotor2.exe default keymap.2da values
+            /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe default keymap.2da values
             /// - Matches original game's default control scheme
             /// - All bindings can be changed by the player in options menu
             /// </remarks>

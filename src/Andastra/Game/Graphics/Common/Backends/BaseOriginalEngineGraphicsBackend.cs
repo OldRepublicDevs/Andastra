@@ -27,7 +27,7 @@ namespace Andastra.Game.Graphics.Common.Backends
     /// Original Engine Graphics Backend:
     /// - This backend matches the original game engine rendering exactly 1:1
     /// - Graphics API usage (verified  reverse engineering):
-    ///   * Odyssey (KOTOR 1/2): OpenGL ONLY (swkotor.exe/swkotor2.exe import OPENGL32.DLL, GLU32.DLL)
+    ///   * Odyssey (KOTOR 1/2): OpenGL ONLY (k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe import OPENGL32.DLL, GLU32.DLL)
     ///   * Aurora (NWN:EE): OpenGL ONLY (nwmain.exe imports OPENGL32.DLL, GLU32.DLL)
     ///   * Eclipse (DA:O): DirectX 9 (daorigins.exe dynamically loads d3d9.dll, Direct3DCreate9)
     ///   * Eclipse (DA2): DirectX 11 primary with DirectX 9 fallback (DragonAge2.exe loads d3d11.dll/dxgi.dll, UseDirectX11Renderer flag)
@@ -258,7 +258,7 @@ namespace Andastra.Game.Graphics.Common.Backends
         /// Called at the start of each frame.
         /// Original engines call BeginScene at frame start.
         /// Matches nwmain.exe: RenderInterface::BeginScene() @ 0x1400be860
-        /// Matches swkotor2.exe: IDirect3DDevice9::BeginScene()
+        /// Matches k2_win_gog_aspyr_swkotor2.exe: IDirect3DDevice9::BeginScene()
         /// </summary>
         protected override void OnBeginFrame()
         {
@@ -279,7 +279,7 @@ namespace Andastra.Game.Graphics.Common.Backends
         /// Called at the end of each frame.
         /// Original engines call EndScene and Present/SwapBuffers at frame end.
         /// Matches nwmain.exe: RenderInterface::EndScene(int) @ 0x1400beac0, GLRender::SwapBuffers() @ 0x1400bb640
-        /// Matches swkotor2.exe: IDirect3DDevice9::EndScene(), IDirect3DDevice9::Present()
+        /// Matches k2_win_gog_aspyr_swkotor2.exe: IDirect3DDevice9::EndScene(), IDirect3DDevice9::Present()
         /// </summary>
         protected override void OnEndFrame()
         {
@@ -605,7 +605,7 @@ namespace Andastra.Game.Graphics.Common.Backends
 
         /// <summary>
         /// Creates OpenGL device using original engine's method.
-        /// Matches swkotor.exe: 0x0044dab0 @ 0x0044dab0 exactly.
+        /// Matches k1_win_gog_swkotor.exe: 0x0044dab0 @ 0x0044dab0 exactly.
         ///
         /// This function implements the exact OpenGL initialization sequence:
         /// 1. Get device context (GetDC) - if hdc is not provided
@@ -615,7 +615,7 @@ namespace Andastra.Game.Graphics.Common.Backends
         /// 5. Make context current (wglMakeCurrent)
         /// </summary>
         /// <remarks>
-        /// Based on verified components of swkotor.exe: 0x0044dab0:
+        /// Based on verified components of k1_win_gog_swkotor.exe: 0x0044dab0:
         /// - Line 117: hdc = GetDC(param_2)
         /// - Line 153: iStack_19c = ChoosePixelFormat(hdc,&PStack_188)
         /// - Line 155: SetPixelFormat(hdc,iStack_19c,...)
@@ -638,7 +638,7 @@ namespace Andastra.Game.Graphics.Common.Backends
             IntPtr actualHdc = hdc;
             IntPtr actualWindowHandle = windowHandle;
 
-            // Step 1: Get device context if not provided (matching swkotor.exe line 117)
+            // Step 1: Get device context if not provided (matching k1_win_gog_swkotor.exe line 117)
             if (actualHdc == IntPtr.Zero)
             {
                 if (actualWindowHandle == IntPtr.Zero)
@@ -662,7 +662,7 @@ namespace Andastra.Game.Graphics.Common.Backends
 
             try
             {
-                // Step 2: Choose pixel format if not provided (matching swkotor.exe lines 125-203)
+                // Step 2: Choose pixel format if not provided (matching k1_win_gog_swkotor.exe lines 125-203)
                 if (pixelFormat == 0)
                 {
                     PIXELFORMATDESCRIPTOR pfd = new PIXELFORMATDESCRIPTOR
@@ -689,7 +689,7 @@ namespace Andastra.Game.Graphics.Common.Backends
                         return false;
                     }
 
-                    // Step 3: Set pixel format (matching swkotor.exe line 155)
+                    // Step 3: Set pixel format (matching k1_win_gog_swkotor.exe line 155)
                     if (!SetPixelFormat(actualHdc, pixelFormat, ref pfd))
                     {
                         Console.WriteLine("[OriginalEngine] SetPixelFormat failed");
@@ -700,11 +700,11 @@ namespace Andastra.Game.Graphics.Common.Backends
                         return false;
                     }
 
-                    // Describe pixel format to get actual values (matching swkotor.exe line 157)
+                    // Describe pixel format to get actual values (matching k1_win_gog_swkotor.exe line 157)
                     DescribePixelFormat(actualHdc, pixelFormat, 40, ref pfd);
                 }
 
-                // Step 4: Create OpenGL context (matching swkotor.exe line 204)
+                // Step 4: Create OpenGL context (matching k1_win_gog_swkotor.exe line 204)
                 IntPtr hglrc = wglCreateContext(actualHdc);
                 if (hglrc == IntPtr.Zero)
                 {
@@ -716,7 +716,7 @@ namespace Andastra.Game.Graphics.Common.Backends
                     return false;
                 }
 
-                // Step 5: Make context current (matching swkotor.exe line 207)
+                // Step 5: Make context current (matching k1_win_gog_swkotor.exe line 207)
                 if (!wglMakeCurrent(actualHdc, hglrc))
                 {
                     Console.WriteLine("[OriginalEngine] wglMakeCurrent failed");
@@ -758,7 +758,7 @@ namespace Andastra.Game.Graphics.Common.Backends
 
         /// <summary>
         /// Creates an OpenGL texture using original engine's method.
-        /// Matches swkotor.exe: 0x00427c90 @ 0x00427c90 texture creation pattern.
+        /// Matches k1_win_gog_swkotor.exe: 0x00427c90 @ 0x00427c90 texture creation pattern.
         ///
         /// This function implements the exact OpenGL texture creation sequence:
         /// 1. Generate texture name (glGenTextures)
@@ -768,7 +768,7 @@ namespace Andastra.Game.Graphics.Common.Backends
         /// 5. Data loading is done separately via UploadOpenGLTextureData
         /// </summary>
         /// <remarks>
-        /// Based on verified components of swkotor.exe: 0x00427c90:
+        /// Based on verified components of k1_win_gog_swkotor.exe: 0x00427c90:
         /// - Uses glGenTextures(1, &textureId) to generate texture names
         /// - Uses glBindTexture(GL_TEXTURE_2D, textureId) to bind textures
         /// - Uses glTexParameteri for texture filtering and wrapping
@@ -805,7 +805,7 @@ namespace Andastra.Game.Graphics.Common.Backends
                 }
             }
 
-            // Step 1: Generate texture name (matching swkotor.exe: 0x00427c90)
+            // Step 1: Generate texture name (matching k1_win_gog_swkotor.exe: 0x00427c90)
             uint textureId = 0;
             glGenTextures(1, ref textureId);
             if (textureId == 0)
@@ -820,16 +820,16 @@ namespace Andastra.Game.Graphics.Common.Backends
                 };
             }
 
-            // Step 2: Bind texture (matching swkotor.exe: 0x00427c90)
+            // Step 2: Bind texture (matching k1_win_gog_swkotor.exe: 0x00427c90)
             glBindTexture(GL_TEXTURE_2D, textureId);
 
-            // Step 3: Set texture parameters (matching swkotor.exe: 0x00427c90)
+            // Step 3: Set texture parameters (matching k1_win_gog_swkotor.exe: 0x00427c90)
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
 
-            // Step 4: Allocate texture storage (matching swkotor.exe: 0x00427c90)
+            // Step 4: Allocate texture storage (matching k1_win_gog_swkotor.exe: 0x00427c90)
             // Allocate storage without data - data loading is done separately via UploadOpenGLTextureData
             uint format = ConvertTextureFormatToOpenGL(desc.Format);
             uint dataFormat = ConvertTextureFormatToOpenGLDataFormat(desc.Format);
@@ -924,7 +924,7 @@ namespace Andastra.Game.Graphics.Common.Backends
             // Step 3: Allocate buffer storage
             // Create empty buffer - data upload is done separately via UploadOpenGLBufferData method.
             // This matches the original engine pattern: create buffer, then upload data separately.
-            // Matches swkotor.exe: 0x00427c90 buffer creation pattern (glGenBuffers + glBufferData with NULL data).
+            // Matches k1_win_gog_swkotor.exe: 0x00427c90 buffer creation pattern (glGenBuffers + glBufferData with NULL data).
             glBufferData(target, (IntPtr)desc.SizeInBytes, IntPtr.Zero, GL_STATIC_DRAW);
 
             // Unbind buffer
@@ -965,7 +965,7 @@ namespace Andastra.Game.Graphics.Common.Backends
         /// 4. Upload data using glBufferData (full buffer) or glBufferSubData (partial update)
         /// 5. Unbind buffer
         ///
-        /// Matches swkotor.exe: 0x00427c90 buffer upload pattern (glBufferData with actual data pointer).
+        /// Matches k1_win_gog_swkotor.exe: 0x00427c90 buffer upload pattern (glBufferData with actual data pointer).
         /// Based on original engine behavior: buffers are created empty, then data is uploaded separately.
         /// </summary>
         /// <param name="handle">Buffer handle returned from CreateBuffer.</param>
@@ -1068,7 +1068,7 @@ namespace Andastra.Game.Graphics.Common.Backends
         /// 5. Handle BGRA to RGBA conversion for OpenGL compatibility
         /// 6. Unbind texture
         ///
-        /// Matches swkotor.exe: 0x00427c90 texture upload pattern (glTexImage2D with actual data pointer).
+        /// Matches k1_win_gog_swkotor.exe: 0x00427c90 texture upload pattern (glTexImage2D with actual data pointer).
         /// Based on original engine behavior: textures are created empty, then data is uploaded separately.
         /// </summary>
         /// <param name="handle">Texture handle returned from CreateTexture.</param>
@@ -1163,7 +1163,7 @@ namespace Andastra.Game.Graphics.Common.Backends
                         IntPtr dataPtr = pinnedData.AddrOfPinnedObject();
 
                         // Upload texture data using glTexImage2D
-                        // Matches swkotor.exe: 0x00427c90 @ 0x00427c90 texture upload pattern
+                        // Matches k1_win_gog_swkotor.exe: 0x00427c90 @ 0x00427c90 texture upload pattern
                         glTexImage2D(GL_TEXTURE_2D, mipmap.Level, (int)internalFormat, mipmap.Width, mipmap.Height, 0, uploadFormat, dataType, dataPtr);
 
                         // Check for OpenGL errors
@@ -1214,7 +1214,7 @@ namespace Andastra.Game.Graphics.Common.Backends
 
         /// <summary>
         /// Destroys an OpenGL resource.
-        /// Matches swkotor.exe: glDeleteTextures cleanup pattern.
+        /// Matches k1_win_gog_swkotor.exe: glDeleteTextures cleanup pattern.
         /// </summary>
         protected virtual void DestroyOpenGLResource(OriginalEngineResourceInfo info)
         {
@@ -1252,7 +1252,7 @@ namespace Andastra.Game.Graphics.Common.Backends
 
         /// <summary>
         /// Releases OpenGL context.
-        /// Matches swkotor.exe: wglDeleteContext cleanup pattern.
+        /// Matches k1_win_gog_swkotor.exe: wglDeleteContext cleanup pattern.
         /// </summary>
         protected virtual void ReleaseOpenGLContext()
         {
@@ -1264,7 +1264,7 @@ namespace Andastra.Game.Graphics.Common.Backends
                     wglMakeCurrent(IntPtr.Zero, IntPtr.Zero);
                 }
 
-                // Delete context (matching swkotor.exe line 376: wglDeleteContext)
+                // Delete context (matching k1_win_gog_swkotor.exe line 376: wglDeleteContext)
                 wglDeleteContext(_glContext);
                 _glContext = IntPtr.Zero;
                 Console.WriteLine("[OriginalEngine] OpenGL context released");
@@ -1273,7 +1273,7 @@ namespace Andastra.Game.Graphics.Common.Backends
 
         /// <summary>
         /// Releases OpenGL device.
-        /// Matches swkotor.exe: ReleaseDC cleanup pattern.
+        /// Matches k1_win_gog_swkotor.exe: ReleaseDC cleanup pattern.
         /// </summary>
         protected virtual void ReleaseOpenGLDevice()
         {
@@ -1282,7 +1282,7 @@ namespace Andastra.Game.Graphics.Common.Backends
                 IntPtr windowHandle = GetWindowHandle();
                 if (windowHandle != IntPtr.Zero)
                 {
-                    // Release device context (matching swkotor.exe line 379: ReleaseDC)
+                    // Release device context (matching k1_win_gog_swkotor.exe line 379: ReleaseDC)
                     ReleaseDC(windowHandle, _glDevice);
                 }
                 _glDevice = IntPtr.Zero;
@@ -1455,7 +1455,7 @@ namespace Andastra.Game.Graphics.Common.Backends
 
         /// <summary>
         /// Converts BGRA byte array to RGBA format for OpenGL compatibility.
-        /// Matches original engine's BGRA to RGBA conversion (swkotor.exe: texture loading).
+        /// Matches original engine's BGRA to RGBA conversion (k1_win_gog_swkotor.exe: texture loading).
         /// </summary>
         /// <param name="bgraData">BGRA pixel data.</param>
         /// <returns>RGBA pixel data.</returns>
@@ -1751,7 +1751,7 @@ namespace Andastra.Game.Graphics.Common.Backends
                 return;
             }
 
-            // Ensure OpenGL context is current (matching swkotor.exe: wglMakeCurrent pattern)
+            // Ensure OpenGL context is current (matching k1_win_gog_swkotor.exe: wglMakeCurrent pattern)
             if (wglGetCurrentContext() != _glContext)
             {
                 wglMakeCurrent(_glDevice, _glContext);

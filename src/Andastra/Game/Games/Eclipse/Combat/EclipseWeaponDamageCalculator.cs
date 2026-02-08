@@ -55,7 +55,7 @@ namespace Andastra.Game.Games.Eclipse.Combat
         /// Eclipse Main Hand Weapon Slot:
         /// - Based on daorigins.exe/DragonAge2.exe// weapon slot system
         /// - Cross-engine verification: All BioWare engines (Odyssey, Aurora, Eclipse) use slot 4 for main hand weapon
-        ///   - Odyssey: INVENTORY_SLOT_RIGHTWEAPON = 4 (swkotor.exe, swkotor2.exe)
+        ///   - Odyssey: INVENTORY_SLOT_RIGHTWEAPON = 4 (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
         ///   - Aurora: RIGHTHAND slot = 4 (nwmain.exe)
         ///   - Eclipse: Main hand weapon slot = 4 (daorigins.exe, DragonAge2.exe, , )
         /// - Verified via cross-reference analysis:
@@ -75,7 +75,7 @@ namespace Andastra.Game.Games.Eclipse.Combat
         /// Eclipse Offhand Weapon Slot:
         /// - Based on daorigins.exe/DragonAge2.exe// weapon slot system
         /// - Cross-engine verification: All BioWare engines (Odyssey, Aurora, Eclipse) use slot 5 for offhand weapon
-        ///   - Odyssey: INVENTORY_SLOT_LEFTWEAPON = 5 (swkotor.exe, swkotor2.exe)
+        ///   - Odyssey: INVENTORY_SLOT_LEFTWEAPON = 5 (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
         ///   - Aurora: LEFTHAND slot = 5 (nwmain.exe)
         ///   - Eclipse: Offhand weapon slot = 5 (daorigins.exe, DragonAge2.exe, , )
         /// - Verified via cross-reference analysis:
@@ -106,7 +106,7 @@ namespace Andastra.Game.Games.Eclipse.Combat
         ///   - damagebonus = base damage bonus (flat bonus added to rolled damage)
         /// - Original implementation: Eclipse executables access baseitems.2da via 2DA system (same as Odyssey/Aurora)
         /// - Cross-engine verification: Eclipse uses identical baseitems.2da structure to Odyssey/Aurora
-        ///   - Odyssey (swkotor.exe, swkotor2.exe): Uses numdice/dietoroll/damagebonus or damagedice/damagedie/damagebonus
+        ///   - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): Uses numdice/dietoroll/damagebonus or damagedice/damagedie/damagebonus
         ///   - Aurora (nwmain.exe): Uses numdice/dietoroll/damagebonus or damagedice/damagedie/damagebonus
         ///   - Eclipse (daorigins.exe, DragonAge2.exe, , ): Same column names as Odyssey/Aurora
         /// - Damage formula: Roll(damagedice * damagedie) + damagebonus + ability modifier
@@ -282,7 +282,7 @@ namespace Andastra.Game.Games.Eclipse.Combat
         /// - Default value: 2 (standard D20 critical multiplier)
         /// - Original implementation: Eclipse executables access baseitems.2da via 2DA system (same as Odyssey/Aurora)
         /// - Cross-engine verification: Eclipse uses identical baseitems.2da structure to Odyssey/Aurora
-        ///   - Odyssey (swkotor.exe, swkotor2.exe): Uses crithitmult column from baseitems.2da
+        ///   - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): Uses crithitmult column from baseitems.2da
         ///   - Aurora (nwmain.exe): Uses crithitmult column from baseitems.2da
         ///   - Eclipse (daorigins.exe, DragonAge2.exe, , ): Same crithitmult column as Odyssey/Aurora
         /// - Critical multiplier: Applied when isCritical is true in CalculateDamage
@@ -330,7 +330,7 @@ namespace Andastra.Game.Games.Eclipse.Combat
         /// - Default value: 20 (standard D20 critical threat range - only 20 is a critical threat)
         /// - Original implementation: Eclipse executables access baseitems.2da via 2DA system (same as Odyssey/Aurora)
         /// - Cross-engine verification: Eclipse uses identical baseitems.2da structure to Odyssey/Aurora
-        ///   - Odyssey (swkotor.exe, swkotor2.exe): Uses critthreat column from baseitems.2da
+        ///   - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): Uses critthreat column from baseitems.2da
         ///   - Aurora (nwmain.exe): Uses critthreat column from baseitems.2da
         ///   - Eclipse (daorigins.exe, DragonAge2.exe, , ): Same critthreat column as Odyssey/Aurora
         /// - Critical threat range: The highest d20 roll that can be a critical threat (e.g., 20 = only natural 20 threatens)

@@ -26,15 +26,15 @@ namespace Andastra.Game.Core
     /// </summary>
     /// <remarks>
     /// Character Creation Screen:
-    /// - Based on swkotor.exe and swkotor2.exe character generation system
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe character generation system
     /// - GUI Panel: "maincg" (character generation)
     /// - K1 Music: "mus_theme_rep", K2 Music: "mus_main"
     /// - Load Screen: K1 uses "load_chargen", K2 uses "load_default"
     /// - Flow: Main Menu → Character Creation → Module Load
     ///
     /// Based on verified components of:
-    /// - swkotor.exe: Character generation functions
-    /// - swkotor2.exe: Character generation functions
+    /// - k1_win_gog_swkotor.exe: Character generation functions
+    /// - k2_win_gog_aspyr_swkotor2.exe: Character generation functions
     /// - vendor/reone: CharacterGeneration class implementation
     ///
     /// Character Creation Steps:
@@ -191,7 +191,7 @@ namespace Andastra.Game.Core
             UpdateSkillPoints();
 
             // Load the maincg GUI panel
-            // Based on swkotor.exe and swkotor2.exe: Character creation uses "maincg" GUI panel
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Character creation uses "maincg" GUI panel
             // Original implementation: GUI panel is loaded when character creation screen is initialized
             int screenWidth = _graphicsDevice.Viewport.Width > 0 ? _graphicsDevice.Viewport.Width : 800;
             int screenHeight = _graphicsDevice.Viewport.Height > 0 ? _graphicsDevice.Viewport.Height : 600;
@@ -211,14 +211,14 @@ namespace Andastra.Game.Core
             _pixelTexture = _graphicsDevice.CreateTexture2D(1, 1, pixelData);
 
             // Initialize 3D model rendering system for character preview
-            // Based on swkotor.exe and swkotor2.exe: Character preview uses 3D model rendering
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Character preview uses 3D model rendering
             // Original implementation: 3D model renderer is created when character creation screen initializes
             InitializeModelRenderer();
         }
 
         /// <summary>
         /// Initializes the 3D model rendering system for character preview.
-        /// Based on swkotor.exe and swkotor2.exe: Character preview uses 3D model rendering
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Character preview uses 3D model rendering
         /// - Original implementation: 3D model renderer is created when character creation screen initializes
         /// - Model renderer loads and renders character models from MDL files
         /// - Preview entity is created with initial character appearance data
@@ -236,7 +236,7 @@ namespace Andastra.Game.Core
             try
             {
                 // Create entity model renderer from graphics backend
-                // Based on swkotor.exe and swkotor2.exe: Entity model renderer loads MDL models and renders entities
+                // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Entity model renderer loads MDL models and renders entities
                 // GameDataManager provides access to 2DA tables (appearance.2da) for model resolution
                 // Installation provides access to resource system (MDL files, textures, etc.)
                 _entityModelRenderer = _graphicsBackend.CreateEntityModelRenderer(_gameDataManager, _installation);
@@ -270,7 +270,7 @@ namespace Andastra.Game.Core
         /// </summary>
         /// <remarks>
         /// Character Creation Update Implementation:
-        /// - Based on swkotor.exe and swkotor2.exe character generation update logic
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe character generation update logic
         /// - Handles input for current step (keyboard and mouse)
         /// - Updates character model preview when appearance changes
         /// - Handles button clicks (Next, Back, Cancel, Finish)
@@ -278,8 +278,8 @@ namespace Andastra.Game.Core
         /// - Processes step-specific input (class selection, attributes, skills, feats, portrait, name)
         ///
         /// Based on verified components of:
-        /// - swkotor.exe: Character generation input handling and update loop
-        /// - swkotor2.exe: Character generation input handling and update loop
+        /// - k1_win_gog_swkotor.exe: Character generation input handling and update loop
+        /// - k2_win_gog_aspyr_swkotor2.exe: Character generation input handling and update loop
         /// - vendor/reone: CharacterGeneration::handle() and CharacterGeneration::update() methods
         /// </remarks>
         public void Update(float deltaTime, IKeyboardState keyboardState, IMouseState mouseState)
@@ -550,7 +550,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Handles input for skills step.
-        /// Based on swkotor.exe and swkotor2.exe: Skill selection allows adjusting skill ranks with available skill points
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Skill selection allows adjusting skill ranks with available skill points
         /// - Original implementation: Up/Down arrows navigate skill list, Left/Right adjusts skill rank, Enter/Space continues
         /// - Skill points are calculated based on class and Intelligence modifier
         /// - Class skills cost 1 point per rank, cross-class skills cost 2 points per rank
@@ -615,7 +615,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Adjusts a skill rank with validation.
-        /// Based on swkotor.exe and swkotor2.exe: Skill rank adjustment validates point costs and maximum ranks
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Skill rank adjustment validates point costs and maximum ranks
         /// - Original implementation: Checks if skill is class skill (1 point) or cross-class (2 points)
         /// - Validates maximum rank: class skills can go to 4, cross-class to 2 at level 1
         /// - Updates available skill points when rank changes
@@ -666,7 +666,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Updates available skill points based on class and Intelligence.
-        /// Based on swkotor.exe and swkotor2.exe: Skill points = (class skill point base + INT modifier) / 2, multiplied by 4 for level 1
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Skill points = (class skill point base + INT modifier) / 2, multiplied by 4 for level 1
         /// - Original implementation: Calculates skill points from class data (skillpointbase from classes.2da) and Intelligence modifier
         /// - Level 1 characters get 4x the normal skill points
         /// - Formula: points = max(1, (skillpointbase + INT_modifier) / 2) * 4
@@ -710,7 +710,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Handles input for feats step.
-        /// Based on swkotor.exe and swkotor2.exe: Feat selection allows browsing available feats and selecting/deselecting them
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Feat selection allows browsing available feats and selecting/deselecting them
         /// - Original implementation: Up/Down arrows navigate feat list, Enter/Space selects/deselects feat, Left/Right scrolls description
         /// - Feats are filtered by class and prerequisites
         /// </summary>
@@ -965,7 +965,7 @@ namespace Andastra.Game.Core
         /// </summary>
         /// <remarks>
         /// Character Creation Rendering Implementation:
-        /// - Based on swkotor.exe and swkotor2.exe character generation rendering
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe character generation rendering
         /// - Renders "maincg" GUI panel as the base UI
         /// - Renders character model preview in 3D viewport
         /// - Renders step-specific UI elements (class selection, attributes, skills, feats, portrait, name, summary)
@@ -973,8 +973,8 @@ namespace Andastra.Game.Core
         /// - Updates GUI control states based on current step and selections
         ///
         /// Based on verified components of:
-        /// - swkotor.exe: Character generation rendering functions
-        /// - swkotor2.exe: Character generation rendering functions
+        /// - k1_win_gog_swkotor.exe: Character generation rendering functions
+        /// - k2_win_gog_aspyr_swkotor2.exe: Character generation rendering functions
         /// - vendor/reone: CharacterGeneration::draw() method
         /// </remarks>
         /// <param name="spriteBatch">Sprite batch for 2D rendering.</param>
@@ -987,7 +987,7 @@ namespace Andastra.Game.Core
             }
 
             // Render the maincg GUI panel
-            // Based on swkotor.exe and swkotor2.exe: "maincg" GUI panel is the base UI for character creation
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: "maincg" GUI panel is the base UI for character creation
             // The GUI manager handles rendering of the GUI panel using its internal sprite batch
             // We render step-specific UI and buttons on top using the provided sprite batch
             if (_guiLoaded)
@@ -1004,14 +1004,14 @@ namespace Andastra.Game.Core
             try
             {
                 // Render character model preview
-                // Based on swkotor.exe and swkotor2.exe: Character model is rendered in a 3D viewport
+                // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Character model is rendered in a 3D viewport
                 // Original implementation: 3D model is rendered with rotation animation
-                // swkotor.exe: Character preview rendering uses 3D model viewport with camera rotation
-                // swkotor2.exe: Character preview rendering uses 3D model viewport with camera rotation
+                // k1_win_gog_swkotor.exe: Character preview rendering uses 3D model viewport with camera rotation
+                // k2_win_gog_aspyr_swkotor2.exe: Character preview rendering uses 3D model viewport with camera rotation
                 RenderCharacterModelPreview(spriteBatch);
 
                 // Render step-specific UI based on current step
-                // Based on swkotor.exe and swkotor2.exe: Each step has specific UI elements
+                // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Each step has specific UI elements
                 switch (_currentStep)
                 {
                     case CreationStep.ClassSelection:
@@ -1041,7 +1041,7 @@ namespace Andastra.Game.Core
                 }
 
                 // Render navigation buttons (Next, Back, Cancel, Finish)
-                // Based on swkotor.exe and swkotor2.exe: Navigation buttons are always visible
+                // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Navigation buttons are always visible
                 RenderNavigationButtons(spriteBatch, font);
             }
             finally
@@ -1052,11 +1052,11 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Initializes the preview entity for 3D character model rendering.
-        /// Based on swkotor.exe and swkotor2.exe: Character preview entity is created with appearance data
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Character preview entity is created with appearance data
         /// - Original implementation: Creates temporary creature entity with appearance type for preview
         /// - Entity is positioned at origin and rotated for preview display
-        /// - swkotor.exe: Character preview entity created with appearance data from character creation
-        /// - swkotor2.exe: Character preview entity created with appearance data from character creation
+        /// - k1_win_gog_swkotor.exe: Character preview entity created with appearance data from character creation
+        /// - k2_win_gog_aspyr_swkotor2.exe: Character preview entity created with appearance data from character creation
         /// </summary>
         private void InitializePreviewEntity()
         {
@@ -1066,14 +1066,14 @@ namespace Andastra.Game.Core
             }
 
             // Create a temporary entity for preview
-            // Based on swkotor.exe and swkotor2.exe: Character preview uses temporary creature entity
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Character preview uses temporary creature entity
             _previewEntity = new Entity(RuntimeObjectType.Creature, null);
             _previewEntity.Tag = "CharacterPreview";
             _previewEntity.Position = Vector3.Zero;
             _previewEntity.Facing = 0f;
 
             // Add transform component (required by EntityModelRenderer for rendering)
-            // Based on swkotor.exe and swkotor2.exe: Entity transform component provides position/rotation for rendering
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Entity transform component provides position/rotation for rendering
             var transformComponent = new TransformComponent(Vector3.Zero, 0f);
             transformComponent.Owner = _previewEntity;
             _previewEntity.AddComponent<ITransformComponent>(transformComponent);
@@ -1097,7 +1097,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Initializes the preview camera matrices for 3D character model rendering.
-        /// Based on swkotor.exe and swkotor2.exe: Character preview uses fixed camera position
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Character preview uses fixed camera position
         /// - Original implementation: Camera positioned to show character from front/side angle
         /// - Projection matrix set up for preview viewport aspect ratio
         /// </summary>
@@ -1118,7 +1118,7 @@ namespace Andastra.Game.Core
             float aspectRatio = (float)previewWidth / (float)previewHeight;
 
             // Set up view matrix: Camera positioned to look at character from front/side
-            // Based on swkotor.exe and swkotor2.exe: Character preview camera positioned at (0, 1.5, 3) looking at (0, 0.9, 0)
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Character preview camera positioned at (0, 1.5, 3) looking at (0, 0.9, 0)
             Vector3 cameraPosition = new Vector3(0f, 1.5f, 3f);
             Vector3 cameraTarget = new Vector3(0f, 0.9f, 0f); // Character center (approximately eye level)
             Vector3 cameraUp = Vector3.UnitY;
@@ -1127,7 +1127,7 @@ namespace Andastra.Game.Core
             _previewViewMatrix = Matrix4x4.CreateLookAt(cameraPosition, cameraTarget, cameraUp);
 
             // Set up projection matrix: Perspective projection for 3D preview
-            // Based on swkotor.exe and swkotor2.exe: Character preview uses ~45 degree FOV
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Character preview uses ~45 degree FOV
             float fieldOfView = (float)Math.PI / 4f; // 45 degrees
             float nearPlane = 0.1f;
             float farPlane = 100f;
@@ -1137,7 +1137,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Updates the preview model when appearance, gender, or class changes.
-        /// Based on swkotor.exe and swkotor2.exe: Model updates when character data changes
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Model updates when character data changes
         /// - Original implementation: Reloads model from appearance.2da when appearance changes
         /// </summary>
         private void UpdatePreviewModel()
@@ -1170,13 +1170,13 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Renders the character model preview.
-        /// Based on swkotor.exe and swkotor2.exe: Character model is rendered in a 3D viewport with rotation
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Character model is rendered in a 3D viewport with rotation
         /// - Original implementation: 3D model is rendered using DirectX with camera positioned for character preview
         /// - Model rotates slowly to show character from different angles
         /// - Model updates when appearance, gender, or class changes
         /// - Preview viewport is typically positioned on the right side of the screen
-        /// - swkotor.exe: Character preview rendering function handles 3D viewport setup
-        /// - swkotor2.exe: Character preview rendering function handles 3D viewport setup
+        /// - k1_win_gog_swkotor.exe: Character preview rendering function handles 3D viewport setup
+        /// - k2_win_gog_aspyr_swkotor2.exe: Character preview rendering function handles 3D viewport setup
         /// </summary>
         private void RenderCharacterModelPreview(ISpriteBatch spriteBatch)
         {
@@ -1199,7 +1199,7 @@ namespace Andastra.Game.Core
                 try
                 {
                     // Ensure preview render target is created
-                    // Based on swkotor.exe and swkotor2.exe: Character preview uses render target for viewport rendering
+                    // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Character preview uses render target for viewport rendering
                     if (_previewRenderTarget == null || _previewRenderTarget.Width != previewWidth || _previewRenderTarget.Height != previewHeight)
                     {
                         // Dispose old render target if it exists
@@ -1210,7 +1210,7 @@ namespace Andastra.Game.Core
                         }
 
                         // Create render target for preview region
-                        // Based on swkotor.exe and swkotor2.exe: Render target created with depth buffer for 3D rendering
+                        // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Render target created with depth buffer for 3D rendering
                         _previewRenderTarget = _graphicsDevice.CreateRenderTarget(previewWidth, previewHeight, true);
                         if (_previewRenderTarget != null)
                         {
@@ -1235,12 +1235,12 @@ namespace Andastra.Game.Core
                             // The render target automatically sets the appropriate viewport
 
                             // Clear render target with dark background
-                            // Based on swkotor.exe and swkotor2.exe: Character preview uses dark background color
+                            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Character preview uses dark background color
                             _graphicsDevice.Clear(new GraphicsColor(20, 20, 25, 255));
                             _graphicsDevice.ClearDepth(1.0f);
 
                             // Apply rotation to view matrix for animated rotation
-                            // Based on swkotor.exe and swkotor2.exe: Character preview rotates slowly
+                            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Character preview rotates slowly
                             // Rotate the camera around the character (orbit camera)
                             Vector3 cameraTarget = new Vector3(0f, 0.9f, 0f); // Character center (approximately eye level)
 
@@ -1264,7 +1264,7 @@ namespace Andastra.Game.Core
                             Matrix4x4 projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fieldOfView, aspectRatio, nearPlane, farPlane);
 
                             // Render the entity model with rotation
-                            // Based on swkotor.exe and swkotor2.exe: Entity model rendered with view/projection matrices
+                            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Entity model rendered with view/projection matrices
                             _entityModelRenderer.RenderEntity(_previewEntity, rotatedViewMatrix, projectionMatrix);
                         }
                         finally
@@ -1274,7 +1274,7 @@ namespace Andastra.Game.Core
                         }
 
                         // Draw the rendered preview texture as a sprite in the preview area
-                        // Based on swkotor.exe and swkotor2.exe: Preview texture drawn to screen position
+                        // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Preview texture drawn to screen position
                         spriteBatch.Draw(_previewTexture, new Rectangle(previewX, previewY, previewWidth, previewHeight), GraphicsColor.White);
                     }
                 }
@@ -1288,7 +1288,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Renders the class selection UI.
-        /// Based on swkotor.exe and swkotor2.exe: Class selection displays available classes with descriptions
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Class selection displays available classes with descriptions
         /// - K1: Scout, Soldier, Scoundrel
         /// - K2: Jedi Guardian, Jedi Sentinel, Jedi Consular
         /// </summary>
@@ -1330,7 +1330,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Renders the Quick or Custom selection UI.
-        /// Based on swkotor.exe and swkotor2.exe: Player chooses between Quick (defaults) or Custom (full customization)
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Player chooses between Quick (defaults) or Custom (full customization)
         /// </summary>
         private void RenderQuickOrCustomUI(ISpriteBatch spriteBatch, IFont font)
         {
@@ -1364,7 +1364,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Renders the attributes UI.
-        /// Based on swkotor.exe and swkotor2.exe: Attributes are displayed with current values and adjustment controls
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Attributes are displayed with current values and adjustment controls
         /// - Attributes: STR, DEX, CON, INT, WIS, CHA
         /// - Each attribute can be adjusted within valid ranges (8-20)
         /// - Total points available for allocation are displayed
@@ -1431,7 +1431,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Renders the skills UI.
-        /// Based on swkotor.exe and swkotor2.exe: Skills are displayed with current ranks and available points
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Skills are displayed with current ranks and available points
         /// - Skills are based on class and Intelligence modifier
         /// - Available skill points are calculated and displayed
         /// - Each skill shows name, current rank, and adjustment controls
@@ -1624,7 +1624,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Renders the feats UI.
-        /// Based on swkotor.exe and swkotor2.exe: Feats are displayed with available feats for selection
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Feats are displayed with available feats for selection
         /// - Feats are based on class (starting feats from featgain.2da)
         /// - Available feats are listed with names, descriptions, and selection status
         /// - Selected feats are highlighted
@@ -1796,7 +1796,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Renders the portrait selection UI.
-        /// Based on swkotor.exe and swkotor2.exe: Portrait selection displays available portraits
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Portrait selection displays available portraits
         /// - Portraits are loaded from game resources
         /// - Current portrait is highlighted
         /// </summary>
@@ -1823,7 +1823,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Renders the portrait thumbnail for the currently selected portrait.
-        /// Based on swkotor.exe and swkotor2.exe: Portrait thumbnails are displayed in character creation
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Portrait thumbnails are displayed in character creation
         /// - Original implementation: Loads portrait texture from portraits.2da baseresref column
         /// - Portrait textures are TPC or TGA files stored in game resources
         /// - Thumbnails are rendered at a fixed size (typically 128x128 or 256x256 pixels)
@@ -1837,7 +1837,7 @@ namespace Andastra.Game.Core
             }
 
             // Render portrait thumbnail
-            // Based on swkotor.exe and swkotor2.exe: Portrait thumbnails are typically 128x128 or 256x256 pixels
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Portrait thumbnails are typically 128x128 or 256x256 pixels
             // Original implementation: Portraits are rendered at fixed size with selection border
             int thumbnailX = 50;
             int thumbnailY = 250;
@@ -1875,7 +1875,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Loads a portrait texture from game resources and caches it.
-        /// Based on swkotor.exe and swkotor2.exe: Portrait textures are loaded from TPC/TGA files
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Portrait textures are loaded from TPC/TGA files
         /// - Original implementation: Loads portrait texture from installation using ResRef
         /// - Portraits are stored in PORTRAITS search location or CHITIN archives
         /// - Textures are cached to avoid redundant loading
@@ -1900,7 +1900,7 @@ namespace Andastra.Game.Core
             try
             {
                 // Load portrait texture from installation
-                // Based on swkotor.exe and swkotor2.exe: Portraits are searched in PORTRAITS, OVERRIDE, and CHITIN locations
+                // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Portraits are searched in PORTRAITS, OVERRIDE, and CHITIN locations
                 // Original implementation: Searches for TPC first, then TGA, in multiple search locations
                 TPC tpcTexture = _installation.Texture(
                     portraitResRef,
@@ -1918,7 +1918,7 @@ namespace Andastra.Game.Core
                 }
 
                 // Convert TPC to ITexture2D
-                // Based on swkotor.exe and swkotor2.exe: TPC textures are converted to DirectX textures for rendering
+                // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: TPC textures are converted to DirectX textures for rendering
                 // Original implementation: TPC mipmaps are decompressed and uploaded to GPU as RGBA textures
                 ITexture2D texture = ConvertTpcToTexture2D(tpcTexture);
 
@@ -1939,7 +1939,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Converts a TPC texture to ITexture2D for rendering.
-        /// Based on swkotor.exe and swkotor2.exe: TPC textures are converted to DirectX textures
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: TPC textures are converted to DirectX textures
         /// - Original implementation: TPC mipmaps are decompressed (DXT1/DXT3/DXT5) or converted (BGR/BGRA to RGB/RGBA)
         /// - First mipmap (largest) is used for portrait thumbnails
         /// - Texture format is converted to RGBA for compatibility with rendering system
@@ -1984,7 +1984,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Converts TPC pixel data to RGBA byte array.
-        /// Based on swkotor.exe and swkotor2.exe: TPC formats are converted to RGBA for rendering
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: TPC formats are converted to RGBA for rendering
         /// - Original implementation: DXT formats are decompressed, BGR/BGRA are converted to RGB/RGBA
         /// - Greyscale is expanded to RGBA
         /// - RGB/RGBA formats are used directly (may need byte order conversion)
@@ -2075,7 +2075,7 @@ namespace Andastra.Game.Core
 
                     case TPCTextureFormat.DXT1:
                         // Decompress DXT1 to RGBA
-                        // Based on swkotor.exe and swkotor2.exe: DXT formats are decompressed by DirectX
+                        // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: DXT formats are decompressed by DirectX
                         // Original implementation: DirectX handles DXT decompression automatically
                         // This implementation: Software decompression using DXT algorithm
                         try
@@ -2094,7 +2094,7 @@ namespace Andastra.Game.Core
 
                     case TPCTextureFormat.DXT3:
                         // Decompress DXT3 to RGBA
-                        // Based on swkotor.exe and swkotor2.exe: DXT formats are decompressed by DirectX
+                        // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: DXT formats are decompressed by DirectX
                         // Original implementation: DirectX handles DXT decompression automatically
                         // This implementation: Software decompression using DXT algorithm
                         try
@@ -2113,7 +2113,7 @@ namespace Andastra.Game.Core
 
                     case TPCTextureFormat.DXT5:
                         // Decompress DXT5 to RGBA
-                        // Based on swkotor.exe and swkotor2.exe: DXT formats are decompressed by DirectX
+                        // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: DXT formats are decompressed by DirectX
                         // Original implementation: DirectX handles DXT decompression automatically
                         // This implementation: Software decompression using DXT algorithm
                         try
@@ -2145,7 +2145,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Renders the name entry UI.
-        /// Based on swkotor.exe and swkotor2.exe: Name entry displays text input field
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Name entry displays text input field
         /// - Current name is displayed and can be edited
         /// - Text input is handled in Update method
         /// </summary>
@@ -2183,7 +2183,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Renders the summary UI.
-        /// Based on swkotor.exe and swkotor2.exe: Summary displays all character creation choices
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Summary displays all character creation choices
         /// - Shows class, attributes, skills, feats, portrait, and name
         /// - Allows final review before completing character creation
         /// </summary>
@@ -2251,7 +2251,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Renders navigation buttons (Next, Back, Cancel, Finish).
-        /// Based on swkotor.exe and swkotor2.exe: Navigation buttons are always visible at the bottom of the screen
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Navigation buttons are always visible at the bottom of the screen
         /// - Next: Advances to next step (or finishes on summary step)
         /// - Back: Returns to previous step
         /// - Cancel: Cancels character creation and returns to main menu
@@ -2350,7 +2350,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Updates the available feats list based on current class.
-        /// Based on swkotor.exe and swkotor2.exe: 0x0060d1d0 (LoadFeatGain) loads starting feats from featgain.2da
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: 0x0060d1d0 (LoadFeatGain) loads starting feats from featgain.2da
         /// - Original implementation: Gets starting feats from featgain.2da _REG and _BON columns
         /// - Feats are filtered to only include selectable feats that meet prerequisites
         /// </summary>
@@ -2382,7 +2382,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Checks if a feat's prerequisites are met.
-        /// Based on swkotor.exe and swkotor2.exe: Feat prerequisite checking in character creation
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Feat prerequisite checking in character creation
         /// - Original implementation: Checks if prerequisite feats are in SelectedFeats list
         /// - Also checks attribute requirements (minlevel, minstr, mindex, etc.) based on current character attributes
         /// </summary>
@@ -2411,7 +2411,7 @@ namespace Andastra.Game.Core
             }
 
             // Check attribute requirements (minstr, mindex, minint, minwis, mincon, mincha)
-            // Based on swkotor.exe and swkotor2.exe: Attribute requirements checked during feat selection
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Attribute requirements checked during feat selection
             // Original implementation: Compares character attributes against feat.2da minstr/mindex/etc. columns
             if (featData.MinStr > 0 && _characterData.Strength < featData.MinStr)
             {
@@ -2508,14 +2508,14 @@ namespace Andastra.Game.Core
         public int Charisma { get; set; }
         /// <summary>
         /// List of selected feat IDs during character creation.
-        /// Based on swkotor.exe and swkotor2.exe: Character creation stores selected feats in character data
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Character creation stores selected feats in character data
         /// - Original implementation: Selected feats are stored as list of feat IDs from feat.2da
         /// - Feats are added to creature's FeatList when character is created
         /// </summary>
         public List<int> SelectedFeats { get; set; }
         /// <summary>
         /// Skill ranks allocated during character creation.
-        /// Based on swkotor.exe and swkotor2.exe: Character creation stores skill ranks in character data
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Character creation stores skill ranks in character data
         /// - Original implementation: Skill ranks are stored as dictionary mapping skill ID (0-7) to rank value
         /// - Skills are set on creature's StatsComponent when character is created
         /// - Skill ranks: 0 = untrained, 1-4 for class skills, 1-2 for cross-class skills at level 1

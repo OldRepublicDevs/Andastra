@@ -17,9 +17,9 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Component state is serialized/deserialized as part of entity save/load operations
     ///
     /// Engine-specific implementations:
-    /// - Odyssey (swkotor.exe, swkotor2.exe): Component serialization via GFF format
-    ///   - swkotor.exe: Component save/load functions (exact addresses to be determined via reverse engineering)
-    ///   - swkotor2.exe: 0x005226d0 @ 0x005226d0 saves entity components to GFF, 0x005223a0 @ 0x005223a0 loads entity components from GFF
+    /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): Component serialization via GFF format
+    ///   - k1_win_gog_swkotor.exe: Component save/load functions (exact addresses to be determined via reverse engineering)
+    ///   - k2_win_gog_aspyr_swkotor2.exe: 0x005226d0 @ 0x005226d0 saves entity components to GFF, 0x005223a0 @ 0x005223a0 loads entity components from GFF
     /// - Aurora (nwmain.exe, nwn2main.exe): Component serialization via GFF format
     ///   - nwmain.exe: SaveCreature @ 0x1403a0a60, LoadCreatures @ 0x140360570 (component save/load)
     ///   - Component system similar to Odyssey with CExoString-based string handling

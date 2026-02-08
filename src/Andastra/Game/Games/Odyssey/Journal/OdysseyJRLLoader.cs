@@ -14,12 +14,12 @@ using JRL = BioWare.Resource.Formats.GFF.Generics.JRL;
 namespace Andastra.Game.Games.Odyssey.Journal
 {
     /// <summary>
-    /// Odyssey-specific JRL loader implementation (swkotor.exe, swkotor2.exe).
+    /// Odyssey-specific JRL loader implementation (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe).
     /// </summary>
     /// <remarks>
     /// Odyssey JRL Loader:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): JRL file loading (GFF with "JRL " signature)
-    /// - Based on swkotor.exe: Similar JRL system (needs reverse engineering)
+    /// - Based on k1_win_gog_swkotor.exe: Similar JRL system (needs reverse engineering)
     /// - JRL file format: GFF with "JRL " signature containing journal entry definitions
     /// - JRL structure: JRL -> JRLQuest -> JRLQuestEntry
     /// - Each quest has a Tag and a list of entries

@@ -247,10 +247,10 @@ namespace KotorDiff.Diff
                     // Not an installation, treat as folder
                     isInstallation = false;
                     logFunc($"Treating as folder, attempting game detection: path={installationOrFolderPath}");
-                    // Try to detect game from folder structure (look for chitin.key or swkotor.exe)
+                    // Try to detect game from folder structure (look for chitin.key or k1_win_gog_swkotor.exe)
                     string chitinKey = Path.Combine(installationOrFolderPath, "chitin.key");
-                    string swkotorExe = Path.Combine(installationOrFolderPath, "swkotor.exe");
-                    string swkotor2Exe = Path.Combine(installationOrFolderPath, "swkotor2.exe");
+                    string swkotorExe = Path.Combine(installationOrFolderPath, "k1_win_gog_swkotor.exe");
+                    string swkotor2Exe = Path.Combine(installationOrFolderPath, "k2_win_gog_aspyr_swkotor2.exe");
 
                     bool chitinExists = File.Exists(chitinKey);
                     bool swkotorExists = File.Exists(swkotorExe);
@@ -260,7 +260,7 @@ namespace KotorDiff.Diff
                     if (swkotor2Exists)
                     {
                         game = Game.K2;
-                        logFunc($"Detected K2 from swkotor2.exe: game={game}, path={installationOrFolderPath}");
+                        logFunc($"Detected K2 from k2_win_gog_aspyr_swkotor2.exe: game={game}, path={installationOrFolderPath}");
                     }
                     else if (swkotorExists || chitinExists)
                     {

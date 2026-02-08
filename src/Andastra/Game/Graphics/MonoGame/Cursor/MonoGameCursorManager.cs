@@ -14,7 +14,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics.Cursor
     /// </summary>
     /// <remarks>
     /// MonoGame Cursor Manager:
-    /// - Based on swkotor.exe and swkotor2.exe cursor management system
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe cursor management system
     /// - Cursor loading: Loads cursors from game resources or creates programmatic fallbacks
     /// - Cursor caching: Caches loaded cursors to avoid reloading
     /// - Cursor state: Tracks current cursor type and pressed state
@@ -41,7 +41,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics.Cursor
         /// Maps CursorType to (upGroupId, downGroupId) pairs.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe, swkotor2.exe: Cursor group IDs stored in EXE PE resources
+        /// Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe: Cursor group IDs stored in EXE PE resources
         /// Based on reone/xoreos implementations: Cursor group ID mappings
         /// - Default: Groups 1, 2 (normal cursor)
         /// - Talk: Groups 11, 12 (when hovering over NPCs)
@@ -185,7 +185,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics.Cursor
             // Cursor resources are stored as Windows PE resources (type 0x1 = kPECursor)
 
             // Note: Full implementation would require:
-            // 1. PE resource reading from EXE file (swkotor.exe or swkotor2.exe)
+            // 1. PE resource reading from EXE file (k1_win_gog_swkotor.exe or k2_win_gog_aspyr_swkotor2.exe)
             // 2. Parsing cursor group structure to get cursor resource IDs
             // 3. Loading cursor resources (CUR format) and extracting bitmap/hotspot data
             // 4. Converting CUR bitmap data to texture format

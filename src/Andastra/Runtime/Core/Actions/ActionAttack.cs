@@ -149,7 +149,7 @@ namespace Andastra.Runtime.Core.Actions
                 return;
             }
 
-            // Attack calculation based on swkotor2.exe combat system
+            // Attack calculation based on k2_win_gog_aspyr_swkotor2.exe combat system
             // Located via string references: "AttackBonusTable" @ 0x007c2b54, "Base Attack Bonus" @ 0x007c3b44
             // "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4, "OnMeleeAttacked" @ 0x007c1a5c
             // Original implementation: d20 roll + attack bonus vs target AC

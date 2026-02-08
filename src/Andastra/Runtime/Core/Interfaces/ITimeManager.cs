@@ -7,7 +7,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// Time Manager Interface:
     /// - Common time management interface shared across all BioWare engines (Odyssey, Aurora, Eclipse, Infinity)
     /// - Implementations: BaseTimeManager (Runtime.Games.Common) provides base functionality
-    ///   - OdysseyTimeManager (Runtime.Games.Odyssey) for swkotor.exe, swkotor2.exe
+    ///   - OdysseyTimeManager (Runtime.Games.Odyssey) for k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe
     ///   - AuroraTimeManager (Runtime.Games.Aurora) for nwmain.exe, nwn2main.exe
     ///   - EclipseTimeManager (Runtime.Games.Eclipse) for daorigins.exe, DragonAge2.exe, , 
     ///   - InfinityTimeManager (Runtime.Games.Infinity) for  executables

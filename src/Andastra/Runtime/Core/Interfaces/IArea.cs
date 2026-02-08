@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Interfaces
     ///
     /// Cross-Engine Analysis (Ghidra reverse engineering):
     ///
-    /// Odyssey Engine (swkotor.exe, swkotor2.exe):
+    /// Odyssey Engine (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe):
     /// - String references: "Area" @ 0x007be340, "AreaName" @ 0x007be340, "AREANAME" @ 0x007be1dc
     /// - "AreaId" @ 0x007bef48, "AreaMap" @ 0x007bd118, "AreaMapResX" @ 0x007bd10c, "AreaMapResY" @ 0x007bd100
     /// - "AreaProperties" @ 0x007bd228, "AreaEffectList" @ 0x007bd0d4, "AreaList" @ 0x007c0b7c
@@ -62,7 +62,7 @@ namespace Andastra.Runtime.Core.Interfaces
     ///
     /// Inheritance Structure:
     /// - Base Class: BaseArea (Runtime.Games.Common) - Contains common functionality
-    ///   - Odyssey: OdysseyArea : BaseArea (swkotor.exe, swkotor2.exe)
+    ///   - Odyssey: OdysseyArea : BaseArea (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
     ///   - Aurora: AuroraArea : BaseArea (nwmain.exe)
     ///   - Eclipse: EclipseArea : BaseArea (daorigins.exe, DragonAge2.exe, , )
     ///
@@ -146,11 +146,11 @@ namespace Andastra.Runtime.Core.Interfaces
         /// TRUE means stealth XP is enabled, FALSE means it is disabled.
         /// </summary>
         /// <remarks>
-        /// Odyssey Engine Specific (swkotor.exe, swkotor2.exe):
+        /// Odyssey Engine Specific (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe):
         /// - StealthXPEnabled stored in AreaProperties GFF nested struct
-        /// - Located via string references: "StealthXPEnabled" @ 0x007bd1b4 (swkotor2.exe)
-        /// - LoadAreaProperties @ 0x004e26d0 (swkotor2.exe) reads from ARE file
-        /// - SaveAreaProperties @ 0x004e11d0 (swkotor2.exe) writes to ARE file
+        /// - Located via string references: "StealthXPEnabled" @ 0x007bd1b4 (k2_win_gog_aspyr_swkotor2.exe)
+        /// - LoadAreaProperties @ 0x004e26d0 (k2_win_gog_aspyr_swkotor2.exe) reads from ARE file
+        /// - SaveAreaProperties @ 0x004e11d0 (k2_win_gog_aspyr_swkotor2.exe) writes to ARE file
         /// - Not present in Aurora or Eclipse engines (always returns false in those implementations)
         /// </remarks>
         bool StealthXPEnabled { get; set; }

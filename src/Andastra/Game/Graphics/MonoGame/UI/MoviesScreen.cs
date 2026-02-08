@@ -11,7 +11,7 @@ namespace Andastra.Game.Graphics.MonoGame.UI
     /// <summary>
     /// Movies screen - 1:1 with Reva CSWGuiTitleMovies.
     /// Lists BIK movies from game movies folder, plays selected movie on Enter.
-    /// swkotor.exe OnMoviesPicked @ 0x0067b250: CSWGuiTitleMovies.
+    /// k1_win_gog_swkotor.exe OnMoviesPicked @ 0x0067b250: CSWGuiTitleMovies.
     /// </summary>
     public class MoviesScreen
     {

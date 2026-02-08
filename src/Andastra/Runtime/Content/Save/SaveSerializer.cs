@@ -434,8 +434,8 @@ namespace Andastra.Runtime.Content.Save
         #region Global Variables
 
         // Serialize global variables to GFF format
-        // swkotor.exe: 0x0052ad10 (CSWGlobalVariableTable::Save) - Constructs path "{savePath}\GLOBALVARS", calls WriteTable internally
-        // swkotor2.exe: 0x005ac670 (SaveGlobalVariables) - Constructs path "{savePath}\GLOBALVARS", calls FUN_005ab310 @ 0x005ab310 internally
+        // k1_win_gog_swkotor.exe: 0x0052ad10 (CSWGlobalVariableTable::Save) - Constructs path "{savePath}\GLOBALVARS", calls WriteTable internally
+        // k2_win_gog_aspyr_swkotor2.exe: 0x005ac670 (SaveGlobalVariables) - Constructs path "{savePath}\GLOBALVARS", calls FUN_005ab310 @ 0x005ab310 internally
         // Located via string reference: "GLOBALVARS" @ 0x007484ec (K1), "GLOBALVARS" @ 0x007c27bc (TSL)
         // Original implementation: Creates GFF with "GVT " signature and "V2.0" version string
         // Structure: Catalog lists (CatBoolean, CatNumber, CatLocation, CatString) with separate value arrays
@@ -2021,7 +2021,7 @@ namespace Andastra.Runtime.Content.Save
         #region Inventory, Repute, Cached Characters, Cached Modules
 
         // Serialize inventory (INVENTORY.res) - player inventory items
-        // Based on swkotor.exe: Inventory is stored as a GFF file in savegame.sav
+        // Based on k1_win_gog_swkotor.exe: Inventory is stored as a GFF file in savegame.sav
         // Located via string reference: "INVENTORY" @ (needs verification)
         private byte[] SerializeInventory(PartyState partyState)
         {
@@ -2103,7 +2103,7 @@ namespace Andastra.Runtime.Content.Save
         }
 
         // Serialize repute (REPUTE.fac) - faction reputation
-        // Based on swkotor.exe: Repute is stored as a FAC file in savegame.sav
+        // Based on k1_win_gog_swkotor.exe: Repute is stored as a FAC file in savegame.sav
         // Located via string reference: "REPUTE" @ (needs verification)
         // FAC file format: GFF with "FAC " signature, contains FactionList and RepList
         // FactionList: List of Faction structs (FactionName: string, FactionGlobal: uint)
@@ -2246,7 +2246,7 @@ namespace Andastra.Runtime.Content.Save
         }
 
         // Serialize cached characters (AVAILNPC*.utc) - companion character templates
-        // Based on swkotor.exe: Cached characters are stored as UTC files in savegame.sav
+        // Based on k1_win_gog_swkotor.exe: Cached characters are stored as UTC files in savegame.sav
         // Located via string reference: "AVAILNPC" @ (needs verification)
         // Each companion character template is serialized as a UTC file with ResRef "AVAILNPC" + index (0-based)
         private void SerializeCachedCharacters(SaveNestedCapsule nestedCapsule, PartyState partyState)
@@ -2276,7 +2276,7 @@ namespace Andastra.Runtime.Content.Save
 
                 // Serialize UTC to bytes with StackSize support for save games
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005675e0 @ 0x005675e0 writes StackSize to ItemList struct when serializing creatures
-                // swkotor2.exe: SerializeCreature_K2 @ 0x005226d0 calls 0x005675e0 for each inventory item
+                // k2_win_gog_aspyr_swkotor2.exe: SerializeCreature_K2 @ 0x005226d0 calls 0x005675e0 for each inventory item
                 byte[] utcData = SerializeUtcForSaveGame(utc, BioWareGame.K2, itemStackSizes);
 
                 // Create ResRef for cached character (AVAILNPC + index)
@@ -2416,7 +2416,7 @@ namespace Andastra.Runtime.Content.Save
                                         if (spellsTable != null)
                                         {
                                             // Get row index by label - in spells.2da, row index IS the spell/power ID
-                                            // swkotor2.exe: spells.2da structure where row index directly corresponds to spell ID
+                                            // k2_win_gog_aspyr_swkotor2.exe: spells.2da structure where row index directly corresponds to spell ID
                                             // Based on vendor/PyKotor/wiki/2DA-spells.md: Row index = Spell ID (integer)
                                             int powerRowIndex = spellsTable.GetRowIndex(powerStr);
                                             utcClass.Powers.Add(powerRowIndex);
@@ -2477,7 +2477,7 @@ namespace Andastra.Runtime.Content.Save
                                 if (featTable != null)
                                 {
                                     // Get row index by label - in feat.2da, row index IS the feat ID
-                                    // swkotor2.exe: feat.2da structure where row index directly corresponds to feat ID
+                                    // k2_win_gog_aspyr_swkotor2.exe: feat.2da structure where row index directly corresponds to feat ID
                                     int featRowIndex = featTable.GetRowIndex(featStr);
                                     utc.Feats.Add(featRowIndex);
                                     featAdded = true;
@@ -2545,7 +2545,7 @@ namespace Andastra.Runtime.Content.Save
             // Set inventory from Inventory list
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ItemList in UTC format stores one entry per unique item template
             // StackSize is written when serializing creatures in save games (0x005675e0 @ 0x005675e0 line 15)
-            // swkotor2.exe: SerializeCreature_K2 @ 0x005226d0 iterates through inventory and calls 0x005675e0 for each item
+            // k2_win_gog_aspyr_swkotor2.exe: SerializeCreature_K2 @ 0x005226d0 iterates through inventory and calls 0x005675e0 for each item
             // 0x005675e0 writes StackSize, Charges, Upgrades, and other item properties to ItemList struct
             // For save game UTC files, StackSize is preserved in the ItemList structure
             if (creatureState.Inventory != null)
@@ -2611,7 +2611,7 @@ namespace Andastra.Runtime.Content.Save
         /// <summary>
         /// Serializes a UTC object to bytes for save game format, including StackSize in ItemList.
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005675e0 @ 0x005675e0 writes StackSize to ItemList struct when serializing creatures in save games.
-        /// swkotor2.exe: SerializeCreature_K2 @ 0x005226d0 calls 0x005675e0 for each inventory item.
+        /// k2_win_gog_aspyr_swkotor2.exe: SerializeCreature_K2 @ 0x005226d0 calls 0x005675e0 for each inventory item.
         /// </summary>
         /// <param name="utc">The UTC object to serialize.</param>
         /// <param name="game">The game version.</param>
@@ -2630,7 +2630,7 @@ namespace Andastra.Runtime.Content.Save
 
             // Modify ItemList to include StackSize for each item
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005675e0 @ 0x005675e0 line 15 writes StackSize as WORD (ushort)
-            // swkotor2.exe: StackSize is written to ItemList struct when serializing creatures in save games
+            // k2_win_gog_aspyr_swkotor2.exe: StackSize is written to ItemList struct when serializing creatures in save games
             if (itemStackSizes != null && itemStackSizes.Count > 0 && utc.Inventory != null && utc.Inventory.Count > 0)
             {
                 GFFList itemList = root.Acquire<GFFList>("ItemList", new GFFList());
@@ -2667,7 +2667,7 @@ namespace Andastra.Runtime.Content.Save
         }
 
         // Serialize cached modules (nested ERF/RIM files) - previously visited areas
-        // Based on swkotor.exe: Cached modules are stored as ERF/RIM files (ResourceType.SAV) in savegame.sav
+        // Based on k1_win_gog_swkotor.exe: Cached modules are stored as ERF/RIM files (ResourceType.SAV) in savegame.sav
         // Located via string reference: Module state files are stored as [module]_s.rim in savegame.sav
         private void SerializeCachedModules(SaveNestedCapsule nestedCapsule, Dictionary<string, AreaState> areaStates)
         {
@@ -2683,7 +2683,7 @@ namespace Andastra.Runtime.Content.Save
                 AreaState areaState = kvp.Value;
 
                 // Cached modules are stored as ResourceType.SAV (2057) with ResRef = areaResRef
-                // The data inside is RIM format (standard format for area state in swkotor2.exe)
+                // The data inside is RIM format (standard format for area state in k2_win_gog_aspyr_swkotor2.exe)
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area state is stored as [module]_s.rim in savegame.sav
                 // SerializeAreaStateAsModule creates a RIM archive containing the area state GFF
                 byte[] moduleData = SerializeAreaStateAsModule(areaState);
@@ -2715,7 +2715,7 @@ namespace Andastra.Runtime.Content.Save
         }
 
         // Serialize area state as a module (ERF/RIM format)
-        // Based on swkotor.exe: Area state is stored as [module]_s.rim in savegame.sav
+        // Based on k1_win_gog_swkotor.exe: Area state is stored as [module]_s.rim in savegame.sav
         // Located via string reference: Module state files are stored as [module]_s.rim in savegame.sav
         // Original implementation: Area state is serialized as a RIM file containing a GFF resource with the area state data
         // The RIM file contains one resource: the area ResRef as a GFF file (ResourceType.GFF)

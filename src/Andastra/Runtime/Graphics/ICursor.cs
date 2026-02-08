@@ -8,7 +8,7 @@ namespace Andastra.Runtime.Graphics
     /// </summary>
     /// <remarks>
     /// Cursor Interface:
-    /// - Based on swkotor.exe and swkotor2.exe cursor system
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe cursor system
     /// - Original implementation: Cursor changes when hovering over interactive elements (buttons, doors, etc.)
     /// - Cursor types: Default cursor (normal), hand/pointer cursor (hovering buttons), talk cursor, door cursor, etc.
     /// - Cursor resources: Stored as Windows PE resources in EXE file (cursor groups 1, 2 for default, 11, 12 for talk, etc.)

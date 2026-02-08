@@ -124,7 +124,7 @@ namespace BioWare.Resource.Formats.LIP
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lip/lip_data.py:399-421
         // Original: def get_shape_at_time(self, time: float) -> LIPShape | None
-        // swkotor2.exe: 0x007be654 - LIP file interpolation implementation
+        // k2_win_gog_aspyr_swkotor2.exe: 0x007be654 - LIP file interpolation implementation
         // Uses transition matrix for smooth interpolation between discrete viseme shapes
         public LIPShape? GetShapeAtTime(float time)
         {
@@ -141,7 +141,7 @@ namespace BioWare.Resource.Formats.LIP
             // Use transition matrix to determine interpolated shape
             // The transition matrix defines intermediate shapes based on phoneme similarity
             // and natural mouth movement patterns for smooth animation
-            // swkotor2.exe: Original engine uses transition-based interpolation for lip sync
+            // k2_win_gog_aspyr_swkotor2.exe: Original engine uses transition-based interpolation for lip sync
             return LIPShapeTransitionMatrix.GetInterpolatedShape(leftShape, rightShape, factor);
         }
 

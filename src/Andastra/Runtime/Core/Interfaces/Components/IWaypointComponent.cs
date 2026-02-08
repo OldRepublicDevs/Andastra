@@ -8,7 +8,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// - Common interface for waypoint functionality across all BioWare engines
     /// - Base implementation: BaseWaypointComponent in Runtime.Games.Common.Components
     /// - Engine-specific implementations:
-    ///   - Odyssey: OdysseyWaypointComponent (swkotor.exe, swkotor2.exe)
+    ///   - Odyssey: OdysseyWaypointComponent (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
     ///   - Aurora: AuroraWaypointComponent (nwmain.exe)
     ///   - Eclipse: EclipseWaypointComponent (daorigins.exe, DragonAge2.exe) - if waypoints are supported
     ///   - Infinity: InfinityWaypointComponent (, ) - if waypoints are supported

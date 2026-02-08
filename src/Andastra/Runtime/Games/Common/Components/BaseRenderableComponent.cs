@@ -16,7 +16,7 @@ namespace Andastra.Runtime.Games.Common.Components
     /// - Base classes MUST only contain functionality that is identical across ALL engines
     /// - Engine-specific details MUST be in subclasses
     /// - Cross-engine analysis:
-    ///   - Odyssey: swkotor.exe, swkotor2.exe
+    ///   - Odyssey: k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe
     ///   - Aurora: nwmain.exe, nwn2main.exe
     ///   - Eclipse: daorigins.exe, DragonAge2.exe
     ///   - Infinity: MassEffect.exe, MassEffect2.exe

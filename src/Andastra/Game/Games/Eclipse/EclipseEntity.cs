@@ -239,7 +239,7 @@ namespace Andastra.Game.Games.Eclipse
         /// - Component initialization: Properties loaded from entity template files and can be modified at runtime
         ///
         /// Cross-engine analysis:
-        /// - Odyssey (swkotor.exe, swkotor2.exe): Uses CreatureComponent, StatsComponent, InventoryComponent, QuickSlotComponent, OdysseyFactionComponent
+        /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): Uses CreatureComponent, StatsComponent, InventoryComponent, QuickSlotComponent, OdysseyFactionComponent
         ///   - ComponentInitializer @ Odyssey/Systems/ComponentInitializer.cs attaches these components
         /// - Aurora (nwmain.exe, nwn2main.exe): Similar component structure with AuroraCreatureComponent, StatsComponent, InventoryComponent, AuroraFactionComponent
         /// - Eclipse (daorigins.exe, DragonAge2.exe): Enhanced component system with StatsComponent, InventoryComponent, EclipseFactionComponent, EclipseAnimationComponent
@@ -458,7 +458,7 @@ namespace Andastra.Game.Games.Eclipse
         /// - Uses UTS file format (GFF with "UTS " signature) for sound templates, same as Odyssey/Aurora
         ///
         /// Cross-engine analysis:
-        /// - Odyssey (swkotor.exe, swkotor2.exe): Uses SoundComponent with UTS GFF templates
+        /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): Uses SoundComponent with UTS GFF templates
         ///   - SoundList @ 0x007bd080 (GIT sound list), Sound @ 0x007bc500 (sound entity type)
         ///   - 0x004e08e0 @ 0x004e08e0 loads sound instances from GIT
         ///   - ComponentInitializer attaches sound component during entity creation

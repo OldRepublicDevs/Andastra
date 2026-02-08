@@ -8,7 +8,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// - Common animation interface shared across all BioWare engines (Odyssey, Aurora, Eclipse, Infinity)
     /// - Base implementation: BaseAnimationComponent (Runtime.Games.Common.Components)
     /// - Engine-specific implementations:
-    ///   - Odyssey: OdysseyAnimationComponent (swkotor.exe, swkotor2.exe)
+    ///   - Odyssey: OdysseyAnimationComponent (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
     ///   - Aurora: AuroraAnimationComponent (nwmain.exe)
     ///   - Eclipse: EclipseAnimationComponent (daorigins.exe, DragonAge2.exe)
     ///   - Infinity: InfinityAnimationComponent (, )

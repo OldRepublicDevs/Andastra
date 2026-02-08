@@ -29,12 +29,12 @@ namespace Andastra.Game.Games.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Save Serializer Implementation:
-    /// - Based on swkotor.exe and swkotor2.exe save systems
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe save systems
     /// - Uses GFF format with "SAV " and "NFO " signatures
     /// - Handles entity serialization, global variables, party data
     ///
     /// Based on verified components of:
-    /// - [SerializeSaveNfo]() @ (K1: Manual verification needed - search for "NFO " string @ 0x0074542c and "savenfo" @ 0x0074542c in swkotor.exe, TSL: 0x004eb750) - for metadata creation
+    /// - [SerializeSaveNfo]() @ (K1: Manual verification needed - search for "NFO " string @ 0x0074542c and "savenfo" @ 0x0074542c in k1_win_gog_swkotor.exe, TSL: 0x004eb750) - for metadata creation
     /// - [save] @ (K1: TODO: Find address, TSL: 0x004e28c0)
     /// - [load] @ (K1: TODO: Find address, TSL: 0x005fb0f0)
     /// - Party management and companion state saving
@@ -94,8 +94,8 @@ namespace Andastra.Game.Games.Odyssey
         /// Serializes save game metadata to NFO format.
         /// </summary>
         /// <remarks>
-        /// Based on SerializeSaveNfo @ 0x004eb750 in swkotor2.exe (TSL).
-        /// K1 equivalent: Manual verification needed - search for "NFO " string @ 0x0074542c in swkotor.exe.
+        /// Based on SerializeSaveNfo @ 0x004eb750 in k2_win_gog_aspyr_swkotor2.exe (TSL).
+        /// K1 equivalent: Manual verification needed - search for "NFO " string @ 0x0074542c in k1_win_gog_swkotor.exe.
         /// Creates GFF with "NFO " signature containing save information.
         /// Includes SAVEGAMENAME, TIMEPLAYED, AREANAME, SAVENUMBER, and all metadata fields.
         /// Implementation verified against decompiled TSL function for 1:1 parity.
@@ -108,7 +108,7 @@ namespace Andastra.Game.Games.Odyssey
         /// - AREANAME: Current area resource
         /// - LASTMODIFIED: Timestamp
         ///
-        /// Original implementation (swkotor2.exe: 0x004eb750):
+        /// Original implementation (k2_win_gog_aspyr_swkotor2.exe: 0x004eb750):
         /// 1. Creates GFF with "NFO " signature (4 bytes) and "V2.0" version string
         /// 2. Writes fields in this exact order:
         ///    - AREANAME (string): Current area name from module state
@@ -173,8 +173,8 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // LASTMODULE: Last module ResRef
-            // swkotor2.exe: SerializeSaveNfo @ 0x004eb750 - Line 166:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00413a90(puVar10,&uStack_8c,local_78,"LASTMODULE");
-            // K1: Manual verification needed - search for "NFO " string @ 0x0074542c in swkotor.exe
+            // k2_win_gog_aspyr_swkotor2.exe: SerializeSaveNfo @ 0x004eb750 - Line 166:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00413a90(puVar10,&uStack_8c,local_78,"LASTMODULE");
+            // K1: Manual verification needed - search for "NFO " string @ 0x0074542c in k1_win_gog_swkotor.exe
             // Original implementation: LASTMODULE is the ResRef of the currently loaded module
             // Extraction priority:
             // 1. Direct from saveData.CurrentModule (most reliable)
@@ -409,8 +409,8 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // PORTRAIT0-2: Player portrait resource references
-            // swkotor2.exe: SerializeSaveNfo @ 0x004eb750 - Lines 244-263: Portrait extraction from party system
-            // K1: Manual verification needed - search for "NFO " string @ 0x0074542c in swkotor.exe
+            // k2_win_gog_aspyr_swkotor2.exe: SerializeSaveNfo @ 0x004eb750 - Lines 244-263: Portrait extraction from party system
+            // K1: Manual verification needed - search for "NFO " string @ 0x0074542c in k1_win_gog_swkotor.exe
             // Portrait order: PORTRAIT0 = leader, PORTRAIT1/2 = selected party members (excluding leader)
             // Portraits are stored as ResRefs extracted from portraits.2da using PortraitId from creature components
             // Original implementation: Gets PortraitId from each party member's UTC data, looks up ResRef in portraits.2da
@@ -510,7 +510,7 @@ namespace Andastra.Game.Games.Odyssey
             byte[] nfoBytes = NFOAuto.BytesNfo(nfo);
 
             // SAVENUMBER: Save slot number (int32)
-            // swkotor2.exe: 0x004eb750 - Line 180:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00413880(puVar10,&uStack_8c,*(undefined4 *)((int)param_1 + 0x1f2fc),"SAVENUMBER");
+            // k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 - Line 180:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00413880(puVar10,&uStack_8c,*(undefined4 *)((int)param_1 + 0x1f2fc),"SAVENUMBER");
             // Original implementation reads SAVENUMBER from offset 0x1f2fc in the save context structure
             // We need to add this field manually since NFOData doesn't include it
             int saveNumber = 0;
@@ -567,7 +567,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Returns structured metadata for save game display.
         ///
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00707290 @ 0x00707290 (NFO loading)
-        /// Based on swkotor.exe: 0x006c8e50 @ 0x006c8e50 (NFO loading)
+        /// Based on k1_win_gog_swkotor.exe: 0x006c8e50 @ 0x006c8e50 (NFO loading)
         /// Located via string reference: "savenfo" @ 0x007be1f0
         ///
         /// Original implementation:
@@ -728,12 +728,12 @@ namespace Andastra.Game.Games.Odyssey
         /// Serializes global game state.
         /// </summary>
         /// <remarks>
-        /// Based on global variable serialization in swkotor2.exe.
+        /// Based on global variable serialization in k2_win_gog_aspyr_swkotor2.exe.
         /// Saves quest states, player choices, persistent variables.
         /// Uses GFF format with variable categories.
         ///
-        /// swkotor.exe: 0x0052ad10 (CSWGlobalVariableTable::Save) - Constructs path and calls WriteTable @ 0x005299b0
-        /// swkotor2.exe: 0x005ac670 (CSWGlobalVariableTable::Save) - Constructs path and calls WriteTable @ 0x005ab310
+        /// k1_win_gog_swkotor.exe: 0x0052ad10 (CSWGlobalVariableTable::Save) - Constructs path and calls WriteTable @ 0x005299b0
+        /// k2_win_gog_aspyr_swkotor2.exe: 0x005ac670 (CSWGlobalVariableTable::Save) - Constructs path and calls WriteTable @ 0x005ab310
         /// Located via string reference: "GLOBALVARS" @ 0x007484ec (K1) / 0x007c27bc (TSL)
         /// Original implementation: Creates GFF with "GLOB" signature (for save games) containing VariableList array
         /// GFF structure: VariableList array with VariableName, VariableType, VariableValue fields
@@ -761,8 +761,8 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Create GFF with VariableList structure
-            // swkotor.exe: 0x0052ad10 (CSWGlobalVariableTable::Save) - Creates GFF structure
-            // swkotor2.exe: 0x005ac670 (CSWGlobalVariableTable::Save) - Creates GFF structure
+            // k1_win_gog_swkotor.exe: 0x0052ad10 (CSWGlobalVariableTable::Save) - Creates GFF structure
+            // k2_win_gog_aspyr_swkotor2.exe: 0x005ac670 (CSWGlobalVariableTable::Save) - Creates GFF structure
             // GLOB GFF structure: VariableList array with VariableName, VariableType, VariableValue
             var gff = new GFF();
             var root = gff.Root;
@@ -771,8 +771,8 @@ namespace Andastra.Game.Games.Odyssey
 
             // Get all global variable names from game state
             // Based on IGameState interface: GetGlobalNames() returns all variable names
-            // swkotor.exe: 0x005299b0 (CSWGlobalVariableTable::WriteTable) - Iterates through identifier table
-            // swkotor2.exe: 0x005ab310 (CSWGlobalVariableTable::WriteTable) - Iterates through identifier table
+            // k1_win_gog_swkotor.exe: 0x005299b0 (CSWGlobalVariableTable::WriteTable) - Iterates through identifier table
+            // k2_win_gog_aspyr_swkotor2.exe: 0x005ab310 (CSWGlobalVariableTable::WriteTable) - Iterates through identifier table
             // No explicit error handling in original, but we handle cases where GetGlobalNames is not implemented or fails gracefully
             IEnumerable<string> globalNames;
             try
@@ -817,8 +817,8 @@ namespace Andastra.Game.Games.Odyssey
             var processedVariables = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             // Iterate through all global variable names and serialize them by type
-            // swkotor.exe: 0x005299b0 (CSWGlobalVariableTable::WriteTable) - Processes each variable type separately
-            // swkotor2.exe: 0x005ab310 (CSWGlobalVariableTable::WriteTable) - Processes each variable type separately
+            // k1_win_gog_swkotor.exe: 0x005299b0 (CSWGlobalVariableTable::WriteTable) - Processes each variable type separately
+            // k2_win_gog_aspyr_swkotor2.exe: 0x005ab310 (CSWGlobalVariableTable::WriteTable) - Processes each variable type separately
             // The original engine iterates through variables stored in separate typed dictionaries and serializes them by type
             foreach (string varName in globalNames)
             {
@@ -836,8 +836,8 @@ namespace Andastra.Game.Games.Odyssey
 
                 // Determine variable type by attempting to retrieve it as each type
                 // Priority: bool (type 0), int (type 1), string (type 3)
-                // swkotor.exe: 0x005299b0 (CSWGlobalVariableTable::WriteTable) - Variables are stored in separate typed dictionaries
-                // swkotor2.exe: 0x005ab310 (CSWGlobalVariableTable::WriteTable) - Variables are stored in separate typed dictionaries
+                // k1_win_gog_swkotor.exe: 0x005299b0 (CSWGlobalVariableTable::WriteTable) - Variables are stored in separate typed dictionaries
+                // k2_win_gog_aspyr_swkotor2.exe: 0x005ab310 (CSWGlobalVariableTable::WriteTable) - Variables are stored in separate typed dictionaries
                 // The original engine maintains separate arrays for each variable type (bool, int, location, string) in memory.
                 // Variable type is determined by the top 2 bits of the identifier word: 0=bool, 1=int, 2=location, 3=string.
                 // The IGameState interface routes GetGlobal<T> to the appropriate dictionary based on T
@@ -2380,8 +2380,8 @@ namespace Andastra.Game.Games.Odyssey
         /// - Dynamic lighting changes
         ///
         /// Based on verified components of:
-        /// - swkotor2.exe: 0x005226d0 @ 0x005226d0 saves entity states to GFF format
-        /// - swkotor2.exe: Area state stored in [module]_s.rim ERF archive as ARE resources
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x005226d0 @ 0x005226d0 saves entity states to GFF format
+        /// - k2_win_gog_aspyr_swkotor2.exe: Area state stored in [module]_s.rim ERF archive as ARE resources
         /// - Located via string references: "Creature List" @ 0x007c0c80, "DoorList" @ 0x007c0c90
         /// - Original implementation: Saves entity positions, door/placeable states, HP, local variables, etc.
         /// - Each area state GFF contains:
@@ -2872,7 +2872,7 @@ namespace Andastra.Game.Games.Odyssey
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): TemplateResRef is stored in entity's template data
             // TemplateResRef is stored using entity.SetData("TemplateResRef", ...) when entities are created
             // Based on EclipseArea.cs: TemplateResRef is accessed via entity.GetData<string>("TemplateResRef")
-            // Located via string references: "TemplateResRef" @ 0x007bd00c in swkotor2.exe
+            // Located via string references: "TemplateResRef" @ 0x007bd00c in k2_win_gog_aspyr_swkotor2.exe
             try
             {
                 // Try to get TemplateResRef from entity data
@@ -3238,8 +3238,8 @@ namespace Andastra.Game.Games.Odyssey
         /// Applies area effects and transition states.
         ///
         /// Based on verified components of:
-        /// - swkotor2.exe: 0x005fb0f0 @ 0x005fb0f0 loads area state from save game
-        /// - swkotor2.exe: Area state stored in [module]_s.rim ERF archive as ARE resources
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x005fb0f0 @ 0x005fb0f0 loads area state from save game
+        /// - k2_win_gog_aspyr_swkotor2.exe: Area state stored in [module]_s.rim ERF archive as ARE resources
         /// - Located via string references: "Creature List" @ 0x007c0c80, "DoorList" @ 0x007c0c90
         /// - Original implementation: Loads entity states, door/placeable states, destroyed entities, spawned entities
         /// - Each area state GFF contains:
@@ -3278,7 +3278,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Parse GFF area data into AreaState structure
-            // swkotor2.exe: Area state loading - GFF structure parsed from [module]_s.rim files in savegame.sav ERF
+            // k2_win_gog_aspyr_swkotor2.exe: Area state loading - GFF structure parsed from [module]_s.rim files in savegame.sav ERF
             // Original engine loads area state when entering an area from save game
             // GFF structure: Root contains entity lists (CreatureList, DoorList, etc.), destroyed entities, spawned entities, and local variables
             AreaState areaState = DeserializeAreaStateFromGFF(areaData);
@@ -3335,7 +3335,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Deserializes AreaState from GFF byte array.
         /// </summary>
         /// <remarks>
-        /// swkotor2.exe: Area state GFF parsing - loads area state from [module]_s.rim GFF files
+        /// k2_win_gog_aspyr_swkotor2.exe: Area state GFF parsing - loads area state from [module]_s.rim GFF files
         /// Located via string references: "Creature List" @ 0x007bd01c, "CreatureList" @ 0x007c0c80
         /// GFF structure matches engine's area state serialization format
         /// </remarks>
@@ -3371,7 +3371,7 @@ namespace Andastra.Game.Games.Odyssey
                 }
 
                 // Deserialize entity state lists
-                // swkotor2.exe: Entity lists stored as GFF lists - engine uses both "Creature List" (with space) and "CreatureList" (no space)
+                // k2_win_gog_aspyr_swkotor2.exe: Entity lists stored as GFF lists - engine uses both "Creature List" (with space) and "CreatureList" (no space)
                 // Support both naming conventions for compatibility
                 DeserializeEntityStateList(root, "CreatureList", areaState.CreatureStates);
                 if (areaState.CreatureStates.Count == 0)
@@ -3546,7 +3546,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Position (can be stored as X/Y/Z, XPosition/YPosition/ZPosition, or as Vector3)
-            // swkotor2.exe: Position stored as XPosition, YPosition, ZPosition in entity state GFF
+            // k2_win_gog_aspyr_swkotor2.exe: Position stored as XPosition, YPosition, ZPosition in entity state GFF
             if (structData.Exists("XPosition") && structData.Exists("YPosition") && structData.Exists("ZPosition"))
             {
                 state.Position = new System.Numerics.Vector3(
@@ -3570,7 +3570,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Orientation (can be stored as XOrientation/YOrientation/ZOrientation or as Facing)
-            // swkotor2.exe: Orientation stored as XOrientation, YOrientation, ZOrientation (Euler angles) or Facing (single float)
+            // k2_win_gog_aspyr_swkotor2.exe: Orientation stored as XOrientation, YOrientation, ZOrientation (Euler angles) or Facing (single float)
             if (structData.Exists("XOrientation") && structData.Exists("YOrientation") && structData.Exists("ZOrientation"))
             {
                 // Convert Euler angles to facing (Y rotation)
@@ -3617,7 +3617,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Additional entity state fields that may be present
-            // swkotor2.exe: Entity state may contain additional fields like ScriptHeartbeat, ScriptOnNotice, etc.
+            // k2_win_gog_aspyr_swkotor2.exe: Entity state may contain additional fields like ScriptHeartbeat, ScriptOnNotice, etc.
             // These are typically stored in creature serialization but may also appear in area state
             // Note: Script fields are not stored in EntityState as they're template properties, not runtime state
 
@@ -3665,7 +3665,7 @@ namespace Andastra.Game.Games.Odyssey
                             effect.SpellId = effectStruct.GetInt32("SpellId");
                         }
                         // Effect parameters - deserialize if present
-                        // swkotor2.exe: Effect parameters stored as IntParams, FloatParams, StringParams, ObjectParams lists
+                        // k2_win_gog_aspyr_swkotor2.exe: Effect parameters stored as IntParams, FloatParams, StringParams, ObjectParams lists
                         if (effectStruct.Exists("IntParams"))
                         {
                             GFFList intParamsList = effectStruct.GetList("IntParams");
@@ -4402,7 +4402,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Located via string references: "CreateObject" @ 0x007bd0e0
         /// Spawns entities from BlueprintResRef that were not in original GIT
         ///
-        /// Original implementation (swkotor2.exe: 0x005fb0f0 @ 0x005fb0f0):
+        /// Original implementation (k2_win_gog_aspyr_swkotor2.exe: 0x005fb0f0 @ 0x005fb0f0):
         /// - Loads SpawnedList from area state GFF
         /// - For each spawned entity:
         ///   1. Creates entity from BlueprintResRef template (UTC, UTP, UTD, etc.)
@@ -5163,8 +5163,8 @@ namespace Andastra.Game.Games.Odyssey
                 string tag = entityStruct.Exists("Tag") ? (entityStruct.GetString("Tag") ?? "") : null;
 
                 // Create entity with ObjectId, ObjectType, and Tag
-                // swkotor2.exe: DeserializeCreatureFromGFF_K2 @ 0x005fb0f0 creates entities from save data
-                // swkotor.exe: LoadCreatures_K1 @ 0x00504a70 loads creatures from save data (reads ObjectId at line 40-41)
+                // k2_win_gog_aspyr_swkotor2.exe: DeserializeCreatureFromGFF_K2 @ 0x005fb0f0 creates entities from save data
+                // k1_win_gog_swkotor.exe: LoadCreatures_K1 @ 0x00504a70 loads creatures from save data (reads ObjectId at line 40-41)
                 // Entity creation: ObjectId, ObjectType, Tag are required for entity creation
                 // Located via string references:
                 // - "ObjectId"   @ (K1: 0x00744c24, TSL: 0x007bce5c)
@@ -5419,8 +5419,8 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Add GLOBALVARS.res (global variable state)
-            // swkotor.exe: 0x0052ad10 (CSWGlobalVariableTable::Save) - Saves global variables to GFF
-            // swkotor2.exe: 0x005ac670 (CSWGlobalVariableTable::Save) - Saves global variables to GFF
+            // k1_win_gog_swkotor.exe: 0x0052ad10 (CSWGlobalVariableTable::Save) - Saves global variables to GFF
+            // k2_win_gog_aspyr_swkotor2.exe: 0x005ac670 (CSWGlobalVariableTable::Save) - Saves global variables to GFF
             if (saveData.GameState != null)
             {
                 try
@@ -5458,7 +5458,7 @@ namespace Andastra.Game.Games.Odyssey
                 // Try to get module name from CurrentAreaInstance or CurrentArea
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module state lookup priority
                 // Original implementation: Uses CurrentModule if available, then tries area instance, then infers from area name
-                // Located via string reference: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
+                // Located via string reference: "Mod_Area_list" @ 0x007be748 (k2_win_gog_aspyr_swkotor2.exe)
                 string moduleName = null;
 
                 // Priority 1: Try to get module name from area instance via reflection
@@ -5503,7 +5503,7 @@ namespace Andastra.Game.Games.Odyssey
                             // Search ModuleAreaMappings to find which module contains this area
                             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module state lookup by area name
                             // Original implementation: Searches ModuleAreaMappings to find which module contains the current area
-                            // Located via string reference: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
+                            // Located via string reference: "Mod_Area_list" @ 0x007be748 (k2_win_gog_aspyr_swkotor2.exe)
                             // Module IFO file contains Mod_Area_list (GFF List) with Area_Name fields for each area
                             foreach (var kvp in saveData.ModuleAreaMappings)
                             {
@@ -5529,7 +5529,7 @@ namespace Andastra.Game.Games.Odyssey
                     // Module name might be derivable from area name
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module state lookup by area name
                     // Original implementation: Searches ModuleAreaMappings to find which module contains the current area
-                    // Located via string reference: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
+                    // Located via string reference: "Mod_Area_list" @ 0x007be748 (k2_win_gog_aspyr_swkotor2.exe)
                     // Module IFO file contains Mod_Area_list (GFF List) with Area_Name fields for each area
                     foreach (var kvp in saveData.ModuleAreaMappings)
                     {

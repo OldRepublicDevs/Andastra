@@ -137,7 +137,7 @@ namespace Andastra.Game.Games.Aurora.GUI
                 // Validate GFF format signature
                 // Based on GFF format: First 4 bytes must be "GFF " signature
                 // Verified: Aurora GUI files use standard GFF format with "GFF " signature (nwmain.exe: CExoResMan loads as GFF)
-                // Cross-engine: Same validation as Eclipse engine (daorigins.exe/DragonAge2.exe) and Odyssey engine (swkotor.exe/swkotor2.exe)
+                // Cross-engine: Same validation as Eclipse engine (daorigins.exe/DragonAge2.exe) and Odyssey engine (k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe)
                 if (resourceResult.Data.Length < 4)
                 {
                     Console.WriteLine($"[AuroraGuiManager] ERROR: GUI file too small: {guiName}");

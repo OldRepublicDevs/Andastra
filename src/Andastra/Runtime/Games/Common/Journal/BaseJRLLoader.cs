@@ -24,7 +24,7 @@ namespace Andastra.Runtime.Games.Common.Journal
     /// - Talk table (TLK) integration for LocalizedString resolution
     ///
     /// Engine-specific differences:
-    /// - Odyssey (swkotor.exe, swkotor2.exe): GFF with "JRL " signature, JRLQuest/JRLQuestEntry structure
+    /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): GFF with "JRL " signature, JRLQuest/JRLQuestEntry structure
     /// - Aurora (nwmain.exe): Different JRL format, CNWSJournal structure
     /// - Eclipse (daorigins.exe): May use different file format or structure
     /// </remarks>

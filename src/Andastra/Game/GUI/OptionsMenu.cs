@@ -12,14 +12,14 @@ namespace Andastra.Game
     /// </summary>
     /// <remarks>
     /// Options Menu:
-    /// - Based on swkotor.exe and swkotor2.exe options menu system
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe options menu system
     /// - Located via string references: "BTN_OPTIONS" (options button in main menu)
     /// - GUI Panel: "options" (options menu panel)
     /// - Settings categories: Graphics (resolution, fullscreen), Audio (volume), Game (skip intro, debug)
     /// - Original implementation: Options menu allows configuration of game settings
     /// - Settings persistence: Settings saved to swkotor.ini (K1) or swkotor2.ini (K2)
-    /// - Function: 0x00633270 @ 0x00633270 (loads configuration from INI file in swkotor2.exe)
-    /// - Function: 0x00631ff0 @ 0x00631ff0 (writes INI values in swkotor2.exe)
+    /// - Function: 0x00633270 @ 0x00633270 (loads configuration from INI file in k2_win_gog_aspyr_swkotor2.exe)
+    /// - Function: 0x00631ff0 @ 0x00631ff0 (writes INI values in k2_win_gog_aspyr_swkotor2.exe)
     /// </remarks>
     public static class OptionsMenu
     {
@@ -155,7 +155,7 @@ namespace Andastra.Game
         /// </summary>
         /// <remarks>
         /// Key Binding Rebind Handler:
-        /// - Based on swkotor.exe and swkotor2.exe key binding system
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe key binding system
         /// - Original implementation: When rebinding a key, waits for next key press and assigns it to the action
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Key binding UI captures next key press and updates binding
         /// </remarks>
@@ -351,9 +351,9 @@ namespace Andastra.Game
             var options = new Dictionary<OptionsCategory, List<OptionItem>>();
 
             // Graphics options
-            // Based on swkotor.exe and swkotor2.exe: Graphics options menu (swkotor2.exe: CSWGuiOptionsMain @ 0x006e3e80)
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Graphics options menu (k2_win_gog_aspyr_swkotor2.exe: CSWGuiOptionsMain @ 0x006e3e80)
             // Original implementation: Graphics options include Resolution, Texture Quality, Shadow Quality, VSync, Fullscreen
-            // VSync: Controlled via DirectX Present parameters (swkotor2.exe: DirectX device presentation)
+            // VSync: Controlled via DirectX Present parameters (k2_win_gog_aspyr_swkotor2.exe: DirectX device presentation)
             // VSync synchronizes frame rendering with monitor refresh rate to prevent screen tearing
             var graphicsOptions = new List<OptionItem>
             {
@@ -373,7 +373,7 @@ namespace Andastra.Game
             };
             options[OptionsCategory.Graphics] = graphicsOptions;
 
-            // Audio options - based on swkotor2.exe audio configuration system
+            // Audio options - based on k2_win_gog_aspyr_swkotor2.exe audio configuration system
             var audioOptions = new List<OptionItem>
             {
                 new OptionItem("Master Volume", OptionType.Numeric, () => (int)(settings.Audio.MasterVolume * 100.0f),
@@ -433,7 +433,7 @@ namespace Andastra.Game
             };
             options[OptionsCategory.Game] = gameOptions;
 
-            // Feedback options - based on swkotor2.exe interface/feedback options
+            // Feedback options - based on k2_win_gog_aspyr_swkotor2.exe interface/feedback options
             var feedbackOptions = new List<OptionItem>
             {
                 new OptionItem("Show Damage Numbers", OptionType.Boolean, () => settings.Feedback.ShowDamageNumbers ? 1 : 0, v => settings.Feedback.ShowDamageNumbers = v > 0, 0, 1),
@@ -446,7 +446,7 @@ namespace Andastra.Game
             };
             options[OptionsCategory.Feedback] = feedbackOptions;
 
-            // Autopause options - based on swkotor2.exe autopause system
+            // Autopause options - based on k2_win_gog_aspyr_swkotor2.exe autopause system
             var autopauseOptions = new List<OptionItem>
             {
                 new OptionItem("Pause on Lost Focus", OptionType.Boolean, () => settings.Autopause.PauseOnLostFocus ? 1 : 0, v => settings.Autopause.PauseOnLostFocus = v > 0, 0, 1),
@@ -459,7 +459,7 @@ namespace Andastra.Game
             };
             options[OptionsCategory.Autopause] = autopauseOptions;
 
-            // Controls options - based on swkotor.exe and swkotor2.exe controls system
+            // Controls options - based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe controls system
             // Located via string references: "Mouse Sensitivity" @ 0x007c85cc, "Mouse Look" @ 0x007c8608, "Reverse Mouse Buttons" @ 0x007c8628
             // "keymap" @ 0x007c4cbc (keymap.2da file reference), "Pause" @ 0x007c4de8
             // Original implementation: Key bindings stored in keymap.2da, mouse settings in INI file
@@ -476,7 +476,7 @@ namespace Andastra.Game
                 new OptionItem("Mouse Sensitivity", OptionType.Numeric, () => (int)(settings.MouseSensitivity * 100), v => settings.MouseSensitivity = (float)v / 100.0f, 1, 100),
                 new OptionItem("Invert Mouse Y", OptionType.Boolean, () => settings.InvertMouseY ? 1 : 0, v => settings.InvertMouseY = v > 0, 0, 1),
 
-                // Key bindings - based on swkotor.exe and swkotor2.exe keymap.2da system
+                // Key bindings - based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe keymap.2da system
                 // All key bindings can be rebound by selecting the option and pressing a new key
                 new KeyBindingOptionItem("Pause", () => settings.Controls.GetKeyBinding("Pause", "Space"), k => settings.Controls.KeyBindings["Pause"] = k),
                 new KeyBindingOptionItem("Cycle Party Leader", () => settings.Controls.GetKeyBinding("CycleParty", "Tab"), k => settings.Controls.KeyBindings["CycleParty"] = k),
@@ -495,7 +495,7 @@ namespace Andastra.Game
                 new KeyBindingOptionItem("Journal", () => settings.Controls.GetKeyBinding("Journal", "J"), k => settings.Controls.KeyBindings["Journal"] = k),
                 new KeyBindingOptionItem("Map", () => settings.Controls.GetKeyBinding("Map", "M"), k => settings.Controls.KeyBindings["Map"] = k),
 
-                // Mouse button bindings - based on swkotor.exe and swkotor2.exe mouse input system
+                // Mouse button bindings - based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe mouse input system
                 new MouseButtonBindingOptionItem("Move/Attack Button", () => settings.Controls.GetMouseButtonBinding("Move", "Left"), b => settings.Controls.MouseButtonBindings["Move"] = b),
                 new MouseButtonBindingOptionItem("Context Action Button", () => settings.Controls.GetMouseButtonBinding("ContextAction", "Right"), b => settings.Controls.MouseButtonBindings["ContextAction"] = b)
             };
@@ -648,7 +648,7 @@ namespace Andastra.Game
         /// </summary>
         /// <remarks>
         /// Key Binding Option Item:
-        /// - Based on swkotor.exe and swkotor2.exe key binding system
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe key binding system
         /// - Located via string references: "keymap" @ 0x007c4cbc (keymap.2da file reference)
         /// - Original implementation: Key bindings can be changed in options menu by selecting and pressing a new key
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Key binding UI allows rebinding any action to any key
@@ -681,7 +681,7 @@ namespace Andastra.Game
         /// </summary>
         /// <remarks>
         /// Mouse Button Binding Option Item:
-        /// - Based on swkotor.exe and swkotor2.exe mouse input system
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe mouse input system
         /// - Located via string references: "Reverse Mouse Buttons" @ 0x007c8628
         /// - Original implementation: Mouse buttons can be rebound in options menu
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Mouse button configuration allows rebinding actions to different mouse buttons

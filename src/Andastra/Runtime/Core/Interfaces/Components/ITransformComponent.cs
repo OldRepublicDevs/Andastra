@@ -10,16 +10,16 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// - Common interface for transform functionality shared across all BioWare engines
     /// - Base implementation: BaseTransformComponent (Runtime.Games.Common.Components)
     /// - Engine-specific implementations:
-    ///   - Odyssey: TransformComponent (swkotor.exe, swkotor2.exe)
+    ///   - Odyssey: TransformComponent (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
     ///   - Aurora: AuroraTransformComponent (nwmain.exe)
     ///   - Eclipse: EclipseTransformComponent (daorigins.exe, DragonAge2.exe)
     ///   - Infinity: InfinityTransformComponent (, )
     ///
     /// Cross-Engine Analysis (Reverse Engineered):
-    /// - Odyssey (swkotor.exe, swkotor2.exe):
-    ///   - swkotor.exe: XPosition @ 0x00745d80, YPosition @ 0x00745d74, ZPosition @ 0x00745d68
+    /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe):
+    ///   - k1_win_gog_swkotor.exe: XPosition @ 0x00745d80, YPosition @ 0x00745d74, ZPosition @ 0x00745d68
     ///     XOrientation @ 0x00745d38, YOrientation @ 0x00745d48, ZOrientation @ 0x00745d58
-    ///   - swkotor2.exe: XPosition @ 0x007bd000, YPosition @ 0x007bcff4, ZPosition @ 0x007bcfe8
+    ///   - k2_win_gog_aspyr_swkotor2.exe: XPosition @ 0x007bd000, YPosition @ 0x007bcff4, ZPosition @ 0x007bcfe8
     ///     XOrientation @ 0x007bcfb8, YOrientation @ 0x007bcfc8, ZOrientation @ 0x007bcfd8
     ///   - 0x005226d0 @ 0x005226d0 (save entity position/orientation to GFF)
     ///   - 0x004e08e0 @ 0x004e08e0 (load placeable/door position from GIT)

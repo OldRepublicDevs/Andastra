@@ -11,7 +11,7 @@ using UTI = BioWare.Resource.Formats.GFF.Generics.UTI.UTI;
 namespace Andastra.Game.Games.Odyssey.UI
 {
     /// <summary>
-    /// Upgrade screen implementation for KOTOR 2: TSL (swkotor2.exe).
+    /// Upgrade screen implementation for KOTOR 2: TSL (k2_win_gog_aspyr_swkotor2.exe).
     /// </summary>
     /// <remarks>
     /// K2 Upgrade Screen Implementation:
@@ -125,7 +125,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Character skills used for item creation/upgrading (NOT IMPLEMENTED in original)
             // Skills are used to ensure character can successfully apply the upgrade
             // Higher skills improve success rate and may unlock additional upgrade options
-            // swkotor2.exe: 0x00729640 @ 0x00729640 - ApplyUpgrade implementation (no skill checks in original)
+            // k2_win_gog_aspyr_swkotor2.exe: 0x00729640 @ 0x00729640 - ApplyUpgrade implementation (no skill checks in original)
             // This enhancement adds comprehensive skill-based success rate calculation for item creation/upgrading
             if (_characterSkills.Count > 0)
             {
@@ -364,9 +364,9 @@ namespace Andastra.Game.Games.Odyssey.UI
             RecalculateItemStats(item);
 
             // Return upgrade item to inventory
-            // Based on swkotor2.exe: 0x0072e260 @ 0x0072e260 line 221 - returns to inventory using CItemRepository::AddItem (0x00567ce0)
-            // Based on swkotor2.exe: 0x00567ce0 @ 0x00567ce0 - CItemRepository::AddItem (adds item to inventory container)
-            // Located via string references: "ItemComponent" @ 0x007c41e4 (swkotor2.exe)
+            // Based on k2_win_gog_aspyr_swkotor2.exe: 0x0072e260 @ 0x0072e260 line 221 - returns to inventory using CItemRepository::AddItem (0x00567ce0)
+            // Based on k2_win_gog_aspyr_swkotor2.exe: 0x00567ce0 @ 0x00567ce0 - CItemRepository::AddItem (adds item to inventory container)
+            // Located via string references: "ItemComponent" @ 0x007c41e4 (k2_win_gog_aspyr_swkotor2.exe)
             // Note: CItemRepository::AddItem only adds already-created items to inventory
             // This function (CreateItemFromTemplateAndAddToInventory) implements a higher-level operation that:
             //   1. Loads UTI template from ResRef
@@ -382,7 +382,7 @@ namespace Andastra.Game.Games.Odyssey.UI
                 IEntity character = base.GetCharacterEntity();
 
                 // Create upgrade item entity and add to inventory
-                // Based on swkotor2.exe: 0x00567ce0 @ 0x00567ce0 - CItemRepository::AddItem (adds item to inventory container)
+                // Based on k2_win_gog_aspyr_swkotor2.exe: 0x00567ce0 @ 0x00567ce0 - CItemRepository::AddItem (adds item to inventory container)
                 // Uses base class method which implements the full creation and inventory addition logic
                 if (character != null)
                 {

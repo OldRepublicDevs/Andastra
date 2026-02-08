@@ -83,7 +83,7 @@ namespace Andastra.Runtime.Core.Save
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Mod_Area_list field in module IFO file contains the list of areas belonging to each module.
         /// This mapping is stored in save data to enable checking if an area belongs to a module even when the module is not loaded.
         /// Original implementation: Module IFO file contains Mod_Area_list (GFF List) with Area_Name fields for each area.
-        /// Located via string reference: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
+        /// Located via string reference: "Mod_Area_list" @ 0x007be748 (k2_win_gog_aspyr_swkotor2.exe)
         /// </remarks>
         public Dictionary<string, List<string>> ModuleAreaMappings { get; set; }
 

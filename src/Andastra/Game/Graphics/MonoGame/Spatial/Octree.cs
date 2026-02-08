@@ -241,10 +241,10 @@ namespace Andastra.Game.Graphics.MonoGame.Spatial
         /// <param name="currentRoomName">Optional current room name for VIS lookup. If null or empty, VIS culling is skipped.</param>
         /// <param name="getRoomName">Optional function to get room name from object. If null, VIS culling is skipped.</param>
         /// <remarks>
-        /// swkotor.exe: Scene::LoadVisibility @ 0x004568d0 - Loads VIS file for area visibility culling
-        /// swkotor.exe: Scene::SetVisibility @ 0x00454940 - Establishes room visibility relationships
-        /// swkotor.exe: Scene::SaveVisibility @ 0x00452b70 - Saves VIS file (editor tool)
-        /// swkotor2.exe: Scene::SaveVisibility @ 0x00466d90 - TSL equivalent
+        /// k1_win_gog_swkotor.exe: Scene::LoadVisibility @ 0x004568d0 - Loads VIS file for area visibility culling
+        /// k1_win_gog_swkotor.exe: Scene::SetVisibility @ 0x00454940 - Establishes room visibility relationships
+        /// k1_win_gog_swkotor.exe: Scene::SaveVisibility @ 0x00452b70 - Saves VIS file (editor tool)
+        /// k2_win_gog_aspyr_swkotor2.exe: Scene::SaveVisibility @ 0x00466d90 - TSL equivalent
         /// </remarks>
         public void QueryFrustumWithVIS(
             Culling.Frustum frustum,

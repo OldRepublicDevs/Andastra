@@ -17,10 +17,10 @@ namespace Andastra.Game.Graphics.MonoGame.Materials
     /// Factory for creating PBR materials from KOTOR material data.
     /// 
     /// Material Factory Implementation:
-    /// - Based on swkotor.exe and swkotor2.exe material initialization system
-    /// - Located via string references: "glMaterialfv" @ swkotor.exe:0x0078c234, swkotor2.exe:0x0080ad74
-    /// - "glColorMaterial" @ swkotor.exe:0x0078c244, swkotor2.exe:0x0080ad84
-    /// - "glBindMaterialParameterEXT" @ swkotor.exe:0x0073f75c, swkotor2.exe:0x007b77b0
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe material initialization system
+    /// - Located via string references: "glMaterialfv" @ k1_win_gog_swkotor.exe:0x0078c234, k2_win_gog_aspyr_swkotor2.exe:0x0080ad74
+    /// - "glColorMaterial" @ k1_win_gog_swkotor.exe:0x0078c244, k2_win_gog_aspyr_swkotor2.exe:0x0080ad84
+    /// - "glBindMaterialParameterEXT" @ k1_win_gog_swkotor.exe:0x0073f75c, k2_win_gog_aspyr_swkotor2.exe:0x007b77b0
     /// - Original implementation: KOTOR uses OpenGL fixed-function pipeline with glMaterialfv for material properties
     /// - Material loading: Materials loaded from MDL file format, textures loaded from TPC files
     /// - Texture loading: Uses resource system to load TPC files from installation (chitin.bif, texture packs, override)
@@ -151,7 +151,7 @@ namespace Andastra.Game.Graphics.MonoGame.Materials
         /// Preloads all materials for a module.
         /// 
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) module material loading system
-        /// Located via string references: "glMaterialfv" @ swkotor2.exe:0x0080ad74
+        /// Located via string references: "glMaterialfv" @ k2_win_gog_aspyr_swkotor2.exe:0x0080ad74
         /// Original implementation: Materials are loaded on-demand when models are rendered
         /// - Material data is stored in MDL file nodes (textures, colors, properties)
         /// - Materials are initialized via glMaterialfv calls when rendering models
@@ -612,7 +612,7 @@ namespace Andastra.Game.Graphics.MonoGame.Materials
             }
 
             // Upload texture data to backend
-            // Matches original engine behavior: swkotor.exe and swkotor2.exe create texture objects
+            // Matches original engine behavior: k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe create texture objects
             // and then upload pixel data using glTexImage2D/glCompressedTexImage2D for each mipmap level
             // This implementation follows the same pattern: create texture, then upload data
             TextureMipmapData[] mipmapData = new TextureMipmapData[mipLevels];

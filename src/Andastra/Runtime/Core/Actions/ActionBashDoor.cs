@@ -11,9 +11,9 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Bash Door Action:
-    /// - Based on swkotor.exe and swkotor2.exe door bashing system
-    /// - Located via string references: "gui_mp_bashdp" @ 0x007b5e04, "gui_mp_bashup" @ 0x007b5e14 (swkotor2.exe door bash GUI panels)
-    /// - "gui_mp_bashd" @ 0x007b5e24, "gui_mp_bashu" @ 0x007b5e34 (swkotor2.exe door bash GUI elements)
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe door bashing system
+    /// - Located via string references: "gui_mp_bashdp" @ 0x007b5e04, "gui_mp_bashup" @ 0x007b5e14 (k2_win_gog_aspyr_swkotor2.exe door bash GUI panels)
+    /// - "gui_mp_bashd" @ 0x007b5e24, "gui_mp_bashu" @ 0x007b5e34 (k2_win_gog_aspyr_swkotor2.exe door bash GUI elements)
     /// - Original implementation: Repeatedly attempts to break door by applying damage until HP reaches 0
     /// - Each bash attempt: Strength check (d20 + STR modifier vs LockDC), then apply damage if successful
     /// - Bash damage: STR modifier + 1d4 (base bash damage), minimum 1 damage per hit
@@ -21,7 +21,7 @@ namespace Andastra.Runtime.Core.Actions
     /// - When door HP <= 0, door is marked as bashed (IsBashed=true), unlocked, and opened
     /// - Door OpenState is set to 2 (destroyed state) when bashed open
     /// - Attack interval: ~2.0 seconds between bash attempts (similar to combat attack intervals)
-    /// - Based on swkotor.exe: Door bashing damage application (0x005226d0 @ 0x005226d0 references door bashing)
+    /// - Based on k1_win_gog_swkotor.exe: Door bashing damage application (0x005226d0 @ 0x005226d0 references door bashing)
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Door bashing system (door damage handling in door component)
     /// </remarks>
     public class ActionBashDoor : ActionBase
@@ -129,7 +129,7 @@ namespace Andastra.Runtime.Core.Actions
         /// </summary>
         /// <remarks>
         /// Bash Attempt:
-        /// - Based on swkotor.exe and swkotor2.exe door bashing system
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe door bashing system
         /// - Original implementation: Strength check (d20 + STR modifier vs LockDC)
         /// - If check succeeds: Apply damage (STR modifier + 1d4, minimum 1)
         /// - Damage is reduced by door Hardness (handled by doorComponent.ApplyDamage)
@@ -153,19 +153,19 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // Roll d20 + STR modifier vs LockDC
-            // Based on swkotor.exe: Door bashing strength check
+            // Based on k1_win_gog_swkotor.exe: Door bashing strength check
             // Original implementation: Performs strength check before applying damage
             Random random = new Random();
             int roll = random.Next(1, 21); // d20 roll
             int total = roll + strengthModifier;
 
             // If check succeeds, apply bash damage
-            // Based on swkotor.exe: Door bashing damage application
+            // Based on k1_win_gog_swkotor.exe: Door bashing damage application
             // Original implementation: Applies damage if strength check succeeds
             if (total >= doorComponent.LockDC)
             {
                 // Apply bash damage: STR modifier + 1d4 (base bash damage)
-                // Based on swkotor.exe: 0x005226d0 @ 0x005226d0 (door bashing damage calculation)
+                // Based on k1_win_gog_swkotor.exe: 0x005226d0 @ 0x005226d0 (door bashing damage calculation)
                 // Original implementation: STR modifier + 1d4 base bash damage
                 int bashDamage = strengthModifier + random.Next(1, 5); // STR mod + 1d4
                 if (bashDamage < 1)
@@ -174,7 +174,7 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Apply damage to door (handles HP reduction, hardness, and destruction)
-                // Based on swkotor.exe and swkotor2.exe: Door bashing damage application
+                // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Door bashing damage application
                 // Located via string references: Door bashing system
                 // Original implementation: ApplyDamage handles HP reduction, hardness reduction, and sets bashed state
                 // Hardness reduces damage taken (minimum 1 damage per hit, even if hardness exceeds damage)

@@ -15,7 +15,7 @@ namespace Andastra.Game.Games.Engines.Common
     /// Base Engine - Common Implementation Across All BioWare Engines:
     ///
     /// This base class implements the IEngine interface with common functionality shared across all engine families:
-    /// - Odyssey Engine (swkotor.exe, swkotor2.exe): KOTOR 1/2, Jade Empire
+    /// - Odyssey Engine (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): KOTOR 1/2, Jade Empire
     /// - Aurora Engine (nwmain.exe, nwn2main.exe): Neverwinter Nights, Neverwinter Nights 2
     /// - Eclipse Engine (daorigins.exe, DragonAge2.exe): Dragon Age: Origins, Dragon Age 2
     ///

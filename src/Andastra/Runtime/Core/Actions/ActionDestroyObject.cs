@@ -32,7 +32,7 @@ namespace Andastra.Runtime.Core.Actions
         // Located via string references: "FadeLength" @ 0x007c3580 (fade length parameter)
         // Original implementation: Uses fade duration of 1.0 seconds for object destruction fade
         // Fade duration: 1.0 seconds for smooth visual transition (matches original engine behavior)
-        // swkotor2.exe: 0x004dcfb0 @ 0x004dcfb0 handles DestroyObject with fade length parameter
+        // k2_win_gog_aspyr_swkotor2.exe: 0x004dcfb0 @ 0x004dcfb0 handles DestroyObject with fade length parameter
         private const float DestroyObjectFadeDuration = 1.0f;
 
         private readonly uint _targetObjectId;
@@ -85,7 +85,7 @@ namespace Andastra.Runtime.Core.Actions
                             // Set flag for rendering system to fade out
                             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DestroyObject fade implementation
                             // Stores fade state on entity for rendering system to process
-                            // swkotor2.exe: 0x004dcfb0 sets fade flags before starting fade animation
+                            // k2_win_gog_aspyr_swkotor2.exe: 0x004dcfb0 sets fade flags before starting fade animation
                             targetEntity.SetData("DestroyFade", true);
                             targetEntity.SetData("DestroyFadeStartTime", ElapsedTime);
                             targetEntity.SetData("DestroyFadeDuration", DestroyObjectFadeDuration);
@@ -111,7 +111,7 @@ namespace Andastra.Runtime.Core.Actions
 
             // If fade, wait for fade duration to complete
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DestroyObject fade completion check
-            // swkotor2.exe: 0x004dcfb0 @ 0x004dcfb0 waits for fade duration after fade starts
+            // k2_win_gog_aspyr_swkotor2.exe: 0x004dcfb0 @ 0x004dcfb0 waits for fade duration after fade starts
             // Fade starts at _fadeStartTime (when we set DestroyFade flag on entity)
             // Fade completes after DestroyObjectFadeDuration seconds from fade start time
             // The rendering system handles the actual visual fade based on "DestroyFade" flag

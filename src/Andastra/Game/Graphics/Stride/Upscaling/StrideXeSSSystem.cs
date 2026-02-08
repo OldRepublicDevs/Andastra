@@ -201,7 +201,7 @@ namespace Andastra.Game.Stride.Upscaling
         /// The NativeCommandList property provides the native pointer, which works for both backends
         /// since Stride abstracts the underlying graphics API.
         ///
-        /// swkotor2.exe: Graphics device command list management @ 0x004eb750 (original engine behavior)
+        /// k2_win_gog_aspyr_swkotor2.exe: Graphics device command list management @ 0x004eb750 (original engine behavior)
         /// </remarks>
         private IntPtr GetCurrentCommandList()
         {

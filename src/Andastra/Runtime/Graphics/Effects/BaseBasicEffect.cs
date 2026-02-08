@@ -20,7 +20,7 @@ namespace Andastra.Runtime.Graphics.Common.Effects
     /// - Original game effects: VisualEffect_01 @ 0x007c0210, VisualEffect_02 @ 0x007c01f0, VisualEffect_03 @ 0x007c01d0, VisualEffect_04 @ 0x007c01b0
     /// - Effect types: DEffectType @ 0x007c016b
     /// - Original game used fixed-function pipeline and programmable shaders (vertex/pixel shaders)
-    /// - This abstraction: Provides modern effect system for different graphics backends, not directly mapped to swkotor2.exe functions
+    /// - This abstraction: Provides modern effect system for different graphics backends, not directly mapped to k2_win_gog_aspyr_swkotor2.exe functions
     /// </remarks>
     public abstract class BaseBasicEffect : IBasicEffect
     {

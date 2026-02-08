@@ -18,7 +18,7 @@ namespace Andastra.Game.Games.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Entity Implementation:
-    /// - Based on swkotor.exe and swkotor2.exe entity systems
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe entity systems
     /// - Implements ObjectId, Tag, ObjectType structure
     /// - Component-based architecture for modular functionality
     /// - Script hooks for events and behaviors
@@ -67,7 +67,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <param name="objectType">The type of object this entity represents.</param>
         /// <param name="tag">Tag string for script lookups.</param>
         /// <remarks>
-        /// Based on entity creation in swkotor2.exe.
+        /// Based on entity creation in k2_win_gog_aspyr_swkotor2.exe.
         /// ObjectId must be unique within the game session.
         /// ObjectType determines available components and behaviors.
         /// </remarks>
@@ -97,7 +97,7 @@ namespace Andastra.Game.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Script-accessible identifier for GetObjectByTag functions.
-        /// Located via string references in swkotor.exe and swkotor2.exe (various locations).
+        /// Located via string references in k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe (various locations).
         /// Object logging format: "OID: %08x, Tag: %s, %s" @ (K1: TODO: Find this address, TSL: 0x007c76b8) used for debug/error logging
         /// Can be changed at runtime for dynamic lookups.
         /// </remarks>
@@ -144,7 +144,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// LoadAreaIdFromGFF @ (K1: TODO: Find this address, TSL: 0x005223a0): Loads AreaId from GFF at offset 0x90
         /// Located via string reference: "AreaId" @ 0x007bef48
-        /// Original implementation: FUN_005223a0 @ 0x005223a0 in swkotor2.exe loads AreaId from GFF struct using field name "AreaId" (via FUN_00412d40)
+        /// Original implementation: FUN_005223a0 @ 0x005223a0 in k2_win_gog_aspyr_swkotor2.exe loads AreaId from GFF struct using field name "AreaId" (via FUN_00412d40)
         /// and stores it at offset 0x90 in the entity structure.
         /// Implementation: EntityFactory.Create*FromGit methods load AreaId from GIT struct using GetIntField("AreaId", 0).
         /// AreaId identifies which area the entity is located in.
@@ -221,7 +221,7 @@ namespace Andastra.Game.Games.Odyssey
         private void AttachCommonComponents()
         {
             // Attach transform component for all entities
-            // Based on swkotor.exe and swkotor2.exe: All entities have transform data (position, orientation, scale)
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: All entities have transform data (position, orientation, scale)
             // Transform data is loaded from GIT files (0x004e08e0 @ 0x004e08e0 loads placeable/door position from GIT)
             // Position stored as XPosition, YPosition, ZPosition in GFF structures
             // Orientation stored as XOrientation, YOrientation, ZOrientation in GFF structures
@@ -247,10 +247,10 @@ namespace Andastra.Game.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Creatures have stats, inventory, combat capabilities, etc.
-        /// Based on creature component structure in swkotor.exe and swkotor2.exe.
+        /// Based on creature component structure in k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe.
         ///
         /// Component attachment pattern:
-        /// - Based on swkotor.exe and swkotor2.exe: Creature components are attached during entity creation from UTC templates
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Creature components are attached during entity creation from UTC templates
         /// - ComponentInitializer also handles this, but we ensure it's attached here for consistency
         /// - Component provides: Stats (HP, abilities, skills, saves), Inventory (equipped items and inventory bag),
         ///   Faction (hostility relationships), QuickSlots (quick-use items/abilities), Creature (appearance, classes, feats, force powers)
@@ -258,8 +258,8 @@ namespace Andastra.Game.Games.Odyssey
         /// - Component initialization: Properties loaded from entity template files (UTC) and can be modified at runtime
         ///
         /// Based on verified components of:
-        /// - swkotor.exe: Creature initialization ([0x004af630] @ (K1: 0x004af630, TSL: TODO: Find this address) handles creature events)
-        /// - swkotor2.exe: [0x005261b0] @ (K1: TODO: Find this address, TSL: 0x005261b0) loads creature from UTC template
+        /// - k1_win_gog_swkotor.exe: Creature initialization ([0x004af630] @ (K1: 0x004af630, TSL: TODO: Find this address) handles creature events)
+        /// - k2_win_gog_aspyr_swkotor2.exe: [0x005261b0] @ (K1: TODO: Find this address, TSL: 0x005261b0) loads creature from UTC template
         ///   - Calls [0x005fb0f0] @ (K1: TODO: Find this address, TSL: 0x005fb0f0) to load creature data from GFF
         ///   - Calls [0x0050c510] @ (K1: TODO: Find this address, TSL: 0x0050c510) to load script hooks
         ///   - Calls [0x00521d40] @ (K1: TODO: Find this address, TSL: 0x00521d40) to initialize equipment and items
@@ -269,7 +269,7 @@ namespace Andastra.Game.Games.Odyssey
         /// - ComponentInitializer @ Odyssey/Systems/ComponentInitializer.cs attaches these components
         ///
         /// Cross-engine analysis:
-        /// - Odyssey (swkotor.exe, swkotor2.exe): Uses CreatureComponent, StatsComponent, InventoryComponent, QuickSlotComponent, OdysseyFactionComponent
+        /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): Uses CreatureComponent, StatsComponent, InventoryComponent, QuickSlotComponent, OdysseyFactionComponent
         /// - Aurora (nwmain.exe, nwn2main.exe): Similar component structure with AuroraCreatureComponent, StatsComponent, InventoryComponent, AuroraFactionComponent
         /// - Eclipse (daorigins.exe, DragonAge2.exe): Enhanced component system with StatsComponent, InventoryComponent, EclipseFactionComponent, EclipseAnimationComponent
         /// - Infinity (, ): Streamlined component system (to be reverse engineered)
@@ -277,7 +277,7 @@ namespace Andastra.Game.Games.Odyssey
         private void AttachCreatureComponents()
         {
             // Attach creature component if not already present
-            // Based on swkotor.exe and swkotor2.exe: Creature component is attached during entity creation
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Creature component is attached during entity creation
             // ComponentInitializer also handles this, but we ensure it's attached here for consistency
             // Component provides: TemplateResRef, Tag, Conversation, Appearance, Classes, Feats, KnownPowers, EquippedItems
             if (!HasComponent<CreatureComponent>())
@@ -288,7 +288,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Attach stats component if not already present
-            // Based on swkotor.exe and swkotor2.exe: Stats component is attached during entity creation
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Stats component is attached during entity creation
             // ComponentInitializer also handles this, but we ensure it's attached here for consistency
             // Component provides: CurrentHP, MaxHP, CurrentFP, MaxFP, Abilities (STR, DEX, CON, INT, WIS, CHA), Skills, Saves, BAB, AC, Level
             if (!HasComponent<IStatsComponent>())
@@ -298,7 +298,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Attach inventory component if not already present
-            // Based on swkotor.exe and swkotor2.exe: Inventory component is attached during entity creation
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Inventory component is attached during entity creation
             // ComponentInitializer also handles this, but we ensure it's attached here for consistency
             // Component provides: Equipped items (slots 0-17), Inventory bag (slots 18+), GetItemInSlot, AddItem, RemoveItem, EquipItem, UnequipItem
             if (!HasComponent<IInventoryComponent>())
@@ -308,7 +308,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Attach quick slot component if not already present
-            // Based on swkotor.exe and swkotor2.exe: Quick slot component is attached during entity creation
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Quick slot component is attached during entity creation
             // ComponentInitializer also handles this, but we ensure it's attached here for consistency
             // Component provides: Quick slots 0-11 (12 slots total) for storing items or abilities (spells/feats) for quick use
             if (!HasComponent<IQuickSlotComponent>())
@@ -318,7 +318,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Attach faction component if not already present
-            // Based on swkotor.exe and swkotor2.exe: Faction component is attached during entity creation
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Faction component is attached during entity creation
             // ComponentInitializer also handles this, but we ensure it's attached here for consistency
             // Component provides: FactionId, IsHostile, GetReputation, SetReputation, TemporaryHostileTargets
             // Set FactionID from entity data if available (loaded from UTC template)
@@ -342,7 +342,7 @@ namespace Andastra.Game.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Doors have open/close state, lock state, transition logic.
-        /// Based on door component structure in swkotor2.exe.
+        /// Based on door component structure in k2_win_gog_aspyr_swkotor2.exe.
         /// - [0x005838d0] @ (K1: TODO: Find this address, TSL: 0x005838d0): Door initialization from GIT/GFF
         /// - [0x00580ed0] @ (K1: TODO: Find this address, TSL: 0x00580ed0): Door loading function that loads door properties
         /// - Door component attached during entity creation from UTD templates
@@ -367,14 +367,14 @@ namespace Andastra.Game.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Placeables have interaction state, inventory, use logic.
-        /// Based on placeable component structure in swkotor2.exe.
+        /// Based on placeable component structure in k2_win_gog_aspyr_swkotor2.exe.
         /// - [LoadPlaceableFromGFF] @ (K1: TODO: Find this address, TSL: 0x00588010) - Loads placeable data from GIT GFF into placeable object
         ///   - Located via string reference: "Placeable List" @ (K1: TODO: Find this address, TSL: 0x007bd260) (GFF list field in GIT)
         ///   - Reads Tag, TemplateResRef, LocName, AutoRemoveKey, Faction, Invulnerable, Plot, NotBlastable, Min1HP, PartyInteract, OpenLockDC, OpenLockDiff, OpenLockDiffMod, KeyName, TrapDisarmable, TrapDetectable, DisarmDC, TrapDetectDC, OwnerDemolitionsSkill, TrapFlag, TrapOneShot, TrapType, Useable, Static, Appearance, UseTweakColor, TweakColor, HP, CurrentHP, and other placeable properties from GFF
         /// - [SavePlaceableToGFF] @ (K1: TODO: Find this address, TSL: 0x00589520) - Saves placeable data to GFF save data
         ///   - Located via string reference: "Placeable List" @ (K1: TODO: Find this address, TSL: 0x007bd260)
         ///   - Writes Tag, LocName, AutoRemoveKey, Faction, Plot, NotBlastable, Min1HP, OpenLockDC, OpenLockDiff, OpenLockDiffMod, KeyName, TrapDisarmable, TrapDetectable, DisarmDC, TrapDetectDC, OwnerDemolitionsSkill, TrapFlag, TrapOneShot, TrapType, Useable, Static, GroundPile, Appearance, UseTweakColor, TweakColor, HP, CurrentHP, Hardness, Fort, Will, Ref, Lockable, Locked, HasInventory, KeyRequired, CloseLockDC, Open, PartyInteract, Portrait, Conversation, BodyBag, DieWhenEmpty, LightState, Description, OnClosed, OnDamaged, OnDeath, OnDisarm, OnHeartbeat, OnInvDisturbed, OnLock, OnMeleeAttacked, OnOpen, OnSpellCastAt, OnUnlock, OnUsed, OnUserDefined, OnDialog, OnEndDialogue, OnTrapTriggered, OnFailToOpen, Animation, ItemList (ObjectId) for each item in placeable inventory, Bearing, position (X, Y, Z), IsBodyBag, IsBodyBagVisible, IsCorpse, PCLevel
-        /// - Original implementation: [LoadPlaceablesFromGIT] @ (K1: TODO: Find this address via string reference "Placeable List" in swkotor.exe, TSL: 0x004e5d80) - load placeable instances from GIT "Placeable List"
+        /// - Original implementation: [LoadPlaceablesFromGIT] @ (K1: TODO: Find this address via string reference "Placeable List" in k1_win_gog_swkotor.exe, TSL: 0x004e5d80) - load placeable instances from GIT "Placeable List"
         ///   - Located via string reference: "Placeable List" @ (K1: TODO: Find this address, TSL: 0x007bd260)
         ///   - Function signature: `undefined4 __thiscall LoadPlaceablesFromGIT(void *this, void *param_1, uint *param_2, void *param_3, int param_4)`
         ///   - param_1: GFF structure pointer
@@ -427,7 +427,7 @@ namespace Andastra.Game.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Triggers have enter/exit detection, script firing.
-        /// Based on trigger component structure in swkotor.exe and swkotor2.exe.
+        /// Based on trigger component structure in k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe.
         /// - [0x004e5920] @ (K1: TODO: Find this address, TSL: 0x004e5920) - loads trigger instances from GIT TriggerList, reads UTT templates
         ///   - Function signature: `undefined4 0x004e5920(void *param_1, uint *param_2, int param_3, int param_4)`
         ///   - Reads "TriggerList" list from GFF structure
@@ -439,7 +439,7 @@ namespace Andastra.Game.Games.Odyssey
         ///     - Reads trap properties: TrapFlag, TrapType, TrapDetectable, TrapDetectDC, TrapDisarmable, TrapDisarmDC, TrapOneShot
         ///     - Reads script hooks: OnEnter, OnExit, OnHeartbeat, OnClick, OnDisarm, OnTrapTriggered
         /// - Located via string references: "Trigger" @ (K1: TODO: Find this address, TSL: 0x007bc51c), "TriggerList" @ (K1: TODO: Find this address, TSL: 0x007bd254)
-        /// - "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "EVENT_LEFT_TRIGGER" @ 0x007bcdf4 (swkotor2.exe)
+        /// - "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "EVENT_LEFT_TRIGGER" @ 0x007bcdf4 (k2_win_gog_aspyr_swkotor2.exe)
         /// - "OnTrapTriggered" @ (K1: TODO: Find this address, TSL: 0x007c1a34), "[CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED] @ (K1: TODO: Find this address, TSL: 0x007bc7ac)"
         /// - Transition fields: "LinkedTo" @ (K1: TODO: Find this address, TSL: 0x007bd798), "LinkedToModule" @ (K1: TODO: Find this address, TSL: 0x007bd7bc), "LinkedToFlags" @ (K1: TODO: Find this address, TSL: 0x007bd788)"
         /// - "TransitionDestination" @ (K1: TODO: Find this address, TSL: 0x007bd7a4) (waypoint tag for positioning after transition)
@@ -455,7 +455,7 @@ namespace Andastra.Game.Games.Odyssey
         private void AttachTriggerComponents()
         {
             // Attach trigger component if not already present
-            // Based on swkotor.exe and swkotor2.exe: Trigger component is attached during entity creation
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Trigger component is attached during entity creation
             // ComponentInitializer also handles this, but we ensure it's attached here for consistency
             if (!HasComponent<ITriggerComponent>())
             {
@@ -470,7 +470,7 @@ namespace Andastra.Game.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Waypoints have position data, pathfinding integration.
-        /// Based on waypoint component structure in swkotor2.exe.
+        /// Based on waypoint component structure in k2_win_gog_aspyr_swkotor2.exe.
         /// [0x004e08e0] @ (K1: TODO: Find this address, TSL: 0x004e08e0) - loads waypoint instances from GIT
         /// </remarks>
         private void AttachWaypointComponents()
@@ -487,7 +487,7 @@ namespace Andastra.Game.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Sounds have audio playback, spatial positioning.
-        /// Based on sound component structure in swkotor.exe and swkotor2.exe.
+        /// Based on sound component structure in k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe.
         /// - [0x004e08e0] @ (K1: TODO: Find this address, TSL: 0x004e08e0) - loads sound instances from GIT SoundList
         ///   - Located via string reference: "SoundList" @ (K1: TODO: Find this address, TSL: 0x007bd080) (GIT sound list), "Sound" @ (K1: TODO: Find this address, TSL: 0x007bc500) (sound entity type)
         ///   - Reads ObjectId, Tag, TemplateResRef, position (XPosition, YPosition, ZPosition)
@@ -512,7 +512,7 @@ namespace Andastra.Game.Games.Odyssey
         private void AttachSoundComponents()
         {
             // Attach sound component if not already present
-            // Based on swkotor.exe and swkotor2.exe: Sound component is attached during entity creation
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Sound component is attached during entity creation
             // ComponentInitializer also handles this, but we ensure it's attached here for consistency
             if (!HasComponent<ISoundComponent>())
             {
@@ -750,7 +750,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Serializes entity data for save games.
         /// </summary>
         /// <remarks>
-        /// Based on [0x004e28c0] @ (K1: TODO: Find this address, TSL: 0x004e28c0) in swkotor2.exe.
+        /// Based on [0x004e28c0] @ (K1: TODO: Find this address, TSL: 0x004e28c0) in k2_win_gog_aspyr_swkotor2.exe.
         /// Serializes ObjectId, Tag, components, and custom data.
         /// Uses GFF format for structured data storage.
         ///

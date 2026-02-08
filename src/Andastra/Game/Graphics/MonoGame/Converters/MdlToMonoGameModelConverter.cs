@@ -236,7 +236,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
                 {
                     // Force identity orientation for spell visual attachment points
                     // These dummy nodes should not have any rotation - they're just attachment points
-                    // swkotor2.exe: 0x006f8590 validates that these nodes have identity quaternion (0,0,0,1)
+                    // k2_win_gog_aspyr_swkotor2.exe: 0x006f8590 validates that these nodes have identity quaternion (0,0,0,1)
                     rotation = Quaternion.Identity;
                 }
                 else

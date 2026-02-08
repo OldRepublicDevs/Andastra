@@ -68,7 +68,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
         /// - Extracts the underlying MonoGame GraphicsDevice from the IGraphicsDevice wrapper
         /// - Creates MyraMenuRenderer with the extracted GraphicsDevice
         /// - Handles errors gracefully with detailed logging
-        /// - Based on exhaustive verified components of swkotor.exe and swkotor2.exe menu initialization
+        /// - Based on exhaustive verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe menu initialization
         /// - All engines (Odyssey, Aurora, Eclipse, Infinity) use the same menu renderer interface
         /// </remarks>
         private static BaseMenuRenderer CreateMonoGameMenuRenderer(IGraphicsDevice graphicsDevice)
@@ -181,9 +181,9 @@ namespace Andastra.Runtime.Graphics.Common.GUI
         /// - Extracts the underlying Stride GraphicsDevice from the IGraphicsDevice wrapper
         /// - Creates StrideMenuRenderer with the extracted GraphicsDevice
         /// - Handles errors gracefully with detailed logging
-        /// - Based on exhaustive verified components of swkotor.exe and swkotor2.exe menu initialization
-        /// - swkotor2.exe: 0x006d2350 @ 0x006d2350 (menu constructor/initializer)
-        /// - swkotor.exe: 0x0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
+        /// - Based on exhaustive verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe menu initialization
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x006d2350 @ 0x006d2350 (menu constructor/initializer)
+        /// - k1_win_gog_swkotor.exe: 0x0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
         /// - All engines (Odyssey, Aurora, Eclipse, Infinity) use the same menu renderer interface
         /// </remarks>
         private static BaseMenuRenderer CreateStrideMenuRenderer(IGraphicsDevice graphicsDevice)
@@ -200,7 +200,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
                 Type graphicsDeviceType = graphicsDevice.GetType();
 
                 // Check if it's a StrideGraphicsDevice (using string comparison to avoid compile-time dependency)
-                if (graphicsDeviceType.FullName != "Runtime.Stride.Graphics.StrideGraphicsDevice")
+                if (graphicsDeviceType.FullName != "Andastra.Game.Stride.Graphics.StrideGraphicsDevice")
                 {
                     Console.WriteLine($"[MenuRendererFactory] ERROR: GraphicsDevice is not a StrideGraphicsDevice (type: {graphicsDeviceType.FullName})");
                     return null;
@@ -217,7 +217,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
 
                 // Load the StrideMenuRenderer type using reflection
                 Assembly strideAssembly = graphicsDeviceType.Assembly;
-                Type strideMenuRendererType = strideAssembly.GetType("Runtime.Stride.GUI.StrideMenuRenderer");
+                Type strideMenuRendererType = strideAssembly.GetType("Andastra.Game.Stride.GUI.StrideMenuRenderer");
 
                 if (strideMenuRendererType == null)
                 {
@@ -357,9 +357,9 @@ namespace Andastra.Runtime.Graphics.Common.GUI
         /// - This is necessary because the wrapper doesn't expose the underlying device publicly
         /// - Handles reflection errors gracefully with detailed logging
         /// - Returns null if the field cannot be accessed or is null
-        /// - Based on exhaustive verified components of swkotor.exe and swkotor2.exe menu initialization
-        /// - swkotor2.exe: 0x006d2350 @ 0x006d2350 (menu constructor/initializer)
-        /// - swkotor.exe: 0x0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
+        /// - Based on exhaustive verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe menu initialization
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x006d2350 @ 0x006d2350 (menu constructor/initializer)
+        /// - k1_win_gog_swkotor.exe: 0x0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
         /// </remarks>
         private static object ExtractStrideGraphicsDevice(object wrapper)
         {

@@ -19,7 +19,7 @@ namespace Andastra.Game.Games.Eclipse.Data
     /// - Based on BioWare.Resource.Formats.TwoDA.TwoDA for parsing
     /// - Key 2DA tables (Eclipse-specific): appearance.2da, baseitems.2da, classes.2da, spells.2da, skills.2da, portraits.2da
     /// - Cross-engine analysis:
-    ///   - Odyssey (swkotor.exe, swkotor2.exe): Similar 2DA loading via resource system
+    ///   - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): Similar 2DA loading via resource system
     ///   - Aurora (nwmain.exe): C2DA::Load2DArray @ 0x1401a73a0 - loads 2DA files via C2DA class
     ///   - Eclipse: Uses same Installation.Resources.LookupResource pattern as Odyssey/Aurora
     /// </remarks>

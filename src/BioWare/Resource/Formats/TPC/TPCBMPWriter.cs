@@ -7,7 +7,7 @@ namespace BioWare.Resource.Formats.TPC
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/io_bmp.py:16-78
     // Complete BMP writer implementation with standard Windows Bitmap format support
     // BMP format specification: Standard Windows Bitmap (24-bit RGB, bottom-to-top pixel order)
-    // swkotor.exe/swkotor2.exe: BMP format support for texture export (standard format, no vendor-specific implementation needed)
+    // k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: BMP format support for texture export (standard format, no vendor-specific implementation needed)
     public class TPCBMPWriter : IDisposable
     {
         private readonly TPC _tpc;

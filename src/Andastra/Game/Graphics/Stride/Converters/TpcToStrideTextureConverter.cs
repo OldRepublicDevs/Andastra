@@ -15,14 +15,14 @@ namespace Andastra.Game.Stride.Converters
     /// <remarks>
     /// TPC to Stride Texture Converter:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) texture loading system (modern Stride adaptation)
-    /// - Original game: DirectX 9 fixed-function pipeline (swkotor2.exe: d3d9.dll @ 0x0080a6c0)
+    /// - Original game: DirectX 9 fixed-function pipeline (k2_win_gog_aspyr_swkotor2.exe: d3d9.dll @ 0x0080a6c0)
     /// - TPC format: BioWare texture format supporting DXT1/DXT3/DXT5 compression, RGB/RGBA, grayscale
     /// - Original engine: Uses DirectX texture creation APIs (D3DXCreateTextureFromFileInMemory, etc.)
     /// - This Stride implementation: Converts TPC format to Stride Graphics.Texture
     /// - Compression: Handles DXT compression formats, converts to RGBA for Stride compatibility
     /// - Mipmaps: Preserves mipmap chain from TPC or generates mipmaps if missing
     /// - Based on Stride Graphics API: Texture.New2D(GraphicsDevice, width, height, mipCount, PixelFormat)
-    /// - Original game: swkotor2.exe: d3d9.dll texture loading @ 0x0080a6c0
+    /// - Original game: k2_win_gog_aspyr_swkotor2.exe: d3d9.dll texture loading @ 0x0080a6c0
     /// </remarks>
     public static class TpcToStrideTextureConverter
     {
@@ -36,7 +36,7 @@ namespace Andastra.Game.Stride.Converters
         /// <returns>A Stride Graphics.Texture ready for rendering.</returns>
         /// <remarks>
         /// Based on Stride API: Texture.New2D(GraphicsDevice, int width, int height, PixelFormat format, TextureFlags flags, int arraySize, ResourceUsage usage)
-        /// Original game: DirectX 9 texture creation (swkotor2.exe: d3d9.dll @ 0x0080a6c0)
+        /// Original game: DirectX 9 texture creation (k2_win_gog_aspyr_swkotor2.exe: d3d9.dll @ 0x0080a6c0)
         /// </remarks>
         public static StrideGraphics.Texture Convert(
             [NotNull] TPC tpc,
@@ -413,7 +413,7 @@ namespace Andastra.Game.Stride.Converters
         #region DXT Decompression
 
         // DXT decompression methods - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) texture loading system
-        // Original game: DirectX 9 DXT texture decompression (swkotor2.exe: d3d9.dll @ 0x0080a6c0)
+        // Original game: DirectX 9 DXT texture decompression (k2_win_gog_aspyr_swkotor2.exe: d3d9.dll @ 0x0080a6c0)
         private static void DecompressDxt1(byte[] input, byte[] output, int width, int height)
         {
             int blockCountX = (width + 3) / 4;

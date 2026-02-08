@@ -64,7 +64,7 @@ namespace Andastra.Game.Games.Common.Components
         /// </summary>
         /// <remarks>
         /// Engine-specific slot counts:
-        /// - Odyssey: 12 slots (0-11) - swkotor.exe, swkotor2.exe
+        /// - Odyssey: 12 slots (0-11) - k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe
         /// - Aurora: 36 slots - nwmain.exe, nwn2main.exe (typically supports more slots than Odyssey)
         /// - Eclipse: 24 slots - daorigins.exe, DragonAge2.exe (typically supports more slots than Odyssey)
         /// </remarks>

@@ -12,7 +12,7 @@ namespace Andastra.Game.Games.Odyssey.Profiles
     /// </summary>
     /// <remarks>
     /// KOTOR 1 Game Profile:
-    /// - Based on swkotor.exe game profile system
+    /// - Based on k1_win_gog_swkotor.exe game profile system
     /// - Located via string references: Game version checking, resource path resolution
     /// - Resource files: "chitin.key" @ 0x007c6bcc (keyfile), "dialog.tlk" @ 0x007c6bd0 (dialogue file)
     /// - Directory paths: ".\modules" @ 0x007c6bcc, ".\override" @ 0x007c6bd4, ".\saves" @ 0x007c6b0c
@@ -23,7 +23,7 @@ namespace Andastra.Game.Games.Odyssey.Profiles
     /// - Resource paths: Uses K1-specific texture pack files (swpc_tex_tpa.erf, swpc_tex_tpb.erf, swpc_tex_tpc.erf)
     /// - Feature support: Pazaak, Swoop Racing, Turret minigames supported in K1 (not in K2)
     /// - Feature differences: K1 does not support Influence system, Prestige Classes, Combat Forms, Item Crafting
-    /// - Based on swkotor.exe game version detection and resource loading
+    /// - Based on k1_win_gog_swkotor.exe game version detection and resource loading
     /// - 0x00633270 @ 0x00633270 sets up all game directories including MODULES, OVERRIDE, SAVES
     /// </remarks>
     public class OdysseyKotor1GameProfile : BaseEngineProfile

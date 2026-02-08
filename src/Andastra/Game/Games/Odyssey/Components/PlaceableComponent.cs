@@ -10,10 +10,10 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// <remarks>
     /// Odyssey Placeable Component:
     /// - Inherits from BasePlaceableComponent (common functionality)
-    /// - Odyssey-specific implementation for swkotor.exe and swkotor2.exe
-    /// - LoadPlaceableFromGFF @ 0x00588010 (swkotor2.exe) - Loads placeable data from GIT GFF into placeable object (located via "Placeable List" @ 0x007bd260)
+    /// - Odyssey-specific implementation for k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe
+    /// - LoadPlaceableFromGFF @ 0x00588010 (k2_win_gog_aspyr_swkotor2.exe) - Loads placeable data from GIT GFF into placeable object (located via "Placeable List" @ 0x007bd260)
     ///   - Reads Tag, TemplateResRef, LocName, AutoRemoveKey, Faction, Invulnerable, Plot, NotBlastable, Min1HP, PartyInteract, OpenLockDC, OpenLockDiff, OpenLockDiffMod, KeyName, TrapDisarmable, TrapDetectable, DisarmDC, TrapDetectDC, OwnerDemolitionsSkill, TrapFlag, TrapOneShot, TrapType, Useable, Static, Appearance, UseTweakColor, TweakColor, HP, CurrentHP, and other placeable properties from GFF
-    /// - SavePlaceableToGFF @ 0x00589520 (swkotor2.exe) - Saves placeable data to GFF save data (located via "Placeable List" @ 0x007bd260)
+    /// - SavePlaceableToGFF @ 0x00589520 (k2_win_gog_aspyr_swkotor2.exe) - Saves placeable data to GFF save data (located via "Placeable List" @ 0x007bd260)
     ///   - Writes Tag, LocName, AutoRemoveKey, Faction, Plot, NotBlastable, Min1HP, OpenLockDC, OpenLockDiff, OpenLockDiffMod, KeyName, TrapDisarmable, TrapDetectable, DisarmDC, TrapDetectDC, OwnerDemolitionsSkill, TrapFlag, TrapOneShot, TrapType, Useable, Static, GroundPile, Appearance, UseTweakColor, TweakColor, HP, CurrentHP, Hardness, Fort, Will, Ref, Lockable, Locked, HasInventory, KeyRequired, CloseLockDC, Open, PartyInteract, Portrait, Conversation, BodyBag, DieWhenEmpty, LightState, Description, OnClosed, OnDamaged, OnDeath, OnDisarm, OnHeartbeat, OnInvDisturbed, OnLock, OnMeleeAttacked, OnOpen, OnSpellCastAt, OnUnlock, OnUsed, OnUserDefined, OnDialog, OnEndDialogue, OnTrapTriggered, OnFailToOpen, Animation, ItemList (ObjectId) for each item in placeable inventory, Bearing, position (X, Y, Z), IsBodyBag, IsBodyBagVisible, IsCorpse, PCLevel
     /// - Located via string references: "Placeable" @ 0x007bc530 (placeable object type), "Placeable List" @ 0x007bd260 (GFF list field in GIT)
     /// - "Placeables" @ 0x007c4bd0 (placeable objects), "placeableobjsnds" @ 0x007c4bf0 (placeable object sounds directory)

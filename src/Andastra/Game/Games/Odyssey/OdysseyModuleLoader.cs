@@ -21,7 +21,7 @@ namespace Andastra.Game.Games.Odyssey
     /// Module Loading Process:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006caab0 @ 0x006caab0 (server command parser, handles module loading commands)
     /// - Located via string references: "MODULES:" @ 0x007b58b4, "MODULES" @ 0x007c6bc4, "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58
-    /// - Cross-engine: Similar functions in swkotor.exe (K1), nwmain.exe (Aurora), daorigins.exe (Eclipse)
+    /// - Cross-engine: Similar functions in k1_win_gog_swkotor.exe (K1), nwmain.exe (Aurora), daorigins.exe (Eclipse)
     /// - Inheritance: BaseEngineModule (Runtime.Games.Common) implements common module loading/unloading
     ///   - Odyssey: OdysseyModuleLoader : BaseEngineModule (Runtime.Games.Odyssey) - Odyssey-specific module file formats (IFO, LYT, VIS, GIT, ARE)
     /// - Directory setup: 0x00633270 @ 0x00633270 (sets up MODULES, OVERRIDE, SAVES, etc. directory aliases)

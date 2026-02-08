@@ -11,11 +11,11 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// <remarks>
     /// Perception Component (Odyssey-specific):
     /// - Inherits from BasePerceptionComponent (common functionality)
-    /// - Based on swkotor.exe: 0x00500610 @ 0x00500610, 0x005afce0 @ 0x005afce0 (perception data serialization)
+    /// - Based on k1_win_gog_swkotor.exe: 0x00500610 @ 0x00500610, 0x005afce0 @ 0x005afce0 (perception data serialization)
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005fb0f0 @ 0x005fb0f0 (perception checking), 0x005226d0 @ 0x005226d0 (perception data serialization)
-    /// - Located via string references: "PerceptionData" @ 0x007bf6c4 (swkotor2.exe), "PerceptionList" @ 0x007bf6d4 (swkotor2.exe)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION" @ 0x007bcb68 (swkotor2.exe), "PerceptionRange" @ 0x007c4080 (swkotor2.exe)
-    /// - "PERCEPTIONDIST" @ 0x007c4070 (swkotor2.exe), "PERCEPTIONDIST" @ 0x0074ae10 (swkotor.exe)
+    /// - Located via string references: "PerceptionData" @ 0x007bf6c4 (k2_win_gog_aspyr_swkotor2.exe), "PerceptionList" @ 0x007bf6d4 (k2_win_gog_aspyr_swkotor2.exe)
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION" @ 0x007bcb68 (k2_win_gog_aspyr_swkotor2.exe), "PerceptionRange" @ 0x007c4080 (k2_win_gog_aspyr_swkotor2.exe)
+    /// - "PERCEPTIONDIST" @ 0x007c4070 (k2_win_gog_aspyr_swkotor2.exe), "PERCEPTIONDIST" @ 0x0074ae10 (k1_win_gog_swkotor.exe)
     /// - Original implementation: Creatures have sight and hearing perception ranges
     /// - Perception updates periodically (checked during heartbeat/update loop)
     /// - Scripts can query GetLastPerceived, GetObjectSeen, etc. (NWScript engine API)

@@ -9,7 +9,7 @@ namespace Andastra.Runtime.Games.Common.Actions
     /// </summary>
     /// <remarks>
     /// Base Action Queue Implementation:
-    /// Common action queue system shared across Odyssey (swkotor.exe, swkotor2.exe) and Aurora (nwmain.exe, nwn2main.exe).
+    /// Common action queue system shared across Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe) and Aurora (nwmain.exe, nwn2main.exe).
     /// 
     /// Common structure across engines:
     /// - FIFO queue: Actions processed sequentially, current action executes until complete
@@ -20,7 +20,7 @@ namespace Andastra.Runtime.Games.Common.Actions
     /// - Instruction count tracking: Accumulates instruction count from script executions during action processing
     /// 
     /// Engine-specific implementations:
-    /// - Odyssey (swkotor.exe, swkotor2.exe): OdysseyActionQueue - specific function addresses for GFF loading/saving
+    /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): OdysseyActionQueue - specific function addresses for GFF loading/saving
     /// - Aurora (nwmain.exe, nwn2main.exe): AuroraActionQueue - CNWSObject::LoadActionQueue/SaveActionQueue methods
     /// - Eclipse (daorigins.exe, DragonAge2.exe, ): Uses ActionFramework (different architecture)
     /// - Infinity (, ): May use different system (needs investigation)

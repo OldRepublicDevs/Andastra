@@ -142,8 +142,8 @@ namespace Andastra.Runtime.Core.Save
         /// <param name="saveType">Type of save.</param>
         /// <returns>True if save succeeded.</returns>
         /// <remarks>
-        /// swkotor.exe: 0x004b333a (StallEventSaveGame) - Main save function, calls CSWGlobalVariableTable::Save @ 0x0052ad10
-        /// swkotor2.exe: 0x004eb750 (SerializeSaveNfo) - Main save function, calls SaveGlobalVariables @ 0x005ac670
+        /// k1_win_gog_swkotor.exe: 0x004b333a (StallEventSaveGame) - Main save function, calls CSWGlobalVariableTable::Save @ 0x0052ad10
+        /// k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 (SerializeSaveNfo) - Main save function, calls SaveGlobalVariables @ 0x005ac670
         /// Located via string reference: "savenfo" @ 0x007be1f0
         /// Original implementation:
         /// 1. Creates save directory "SAVES:\{saveName}"
@@ -204,8 +204,8 @@ namespace Andastra.Runtime.Core.Save
         /// Creates save data from current game state.
         /// </summary>
         /// <remarks>
-        /// swkotor.exe: 0x004b333a (StallEventSaveGame) - Collects module info, game time, global variables (via CSWGlobalVariableTable::Save @ 0x0052ad10), party state, and area states
-        /// swkotor2.exe: 0x004eb750 (SerializeSaveNfo) - Collects module info, game time, global variables (via SaveGlobalVariables @ 0x005ac670), party state (via SavePartyTable @ 0x0057bd70), and area states
+        /// k1_win_gog_swkotor.exe: 0x004b333a (StallEventSaveGame) - Collects module info, game time, global variables (via CSWGlobalVariableTable::Save @ 0x0052ad10), party state, and area states
+        /// k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 (SerializeSaveNfo) - Collects module info, game time, global variables (via SaveGlobalVariables @ 0x005ac670), party state (via SavePartyTable @ 0x0057bd70), and area states
         /// Original implementation: Collects module info (current module, entry position/facing), game time (year/month/day/hour/minute),
         /// global variables (via SaveGlobalVariables), party state (via SavePartyTable), and area states.
         /// Saves entity positions, HP, door/placeable states for current area.
@@ -272,8 +272,8 @@ namespace Andastra.Runtime.Core.Save
         }
 
         // Save global variables to save data structure
-        // swkotor.exe: 0x0052ad10 (CSWGlobalVariableTable::Save) - Constructs path "{savePath}\GLOBALVARS", calls WriteTable internally
-        // swkotor2.exe: 0x005ac670 (SaveGlobalVariables) - Constructs path "{savePath}\GLOBALVARS", calls FUN_005ab310 internally
+        // k1_win_gog_swkotor.exe: 0x0052ad10 (CSWGlobalVariableTable::Save) - Constructs path "{savePath}\GLOBALVARS", calls WriteTable internally
+        // k2_win_gog_aspyr_swkotor2.exe: 0x005ac670 (SaveGlobalVariables) - Constructs path "{savePath}\GLOBALVARS", calls FUN_005ab310 internally
         // Located via string reference: "GLOBALVARS" @ 0x007484ec (K1), "GLOBALVARS" @ 0x007c27bc (TSL)
         // Original implementation: Constructs path "{savePath}\GLOBALVARS", writes GFF file containing all global int/bool/string/location variables
         // GFF structure: "GVT " signature, "V2.0" version, catalog lists (CatBoolean, CatNumber, CatLocation, CatString) with separate value arrays
@@ -338,7 +338,7 @@ namespace Andastra.Runtime.Core.Save
             }
 
             // Save location variables (Locations)
-            // swkotor2.exe: 0x005ab310 - Location variables stored as 12 floats per entry (x,y,z,ori_x,ori_y,ori_z,6 padding floats)
+            // k2_win_gog_aspyr_swkotor2.exe: 0x005ab310 - Location variables stored as 12 floats per entry (x,y,z,ori_x,ori_y,ori_z,6 padding floats)
             // Location objects are converted to SavedLocation with Position (Vector3) and Facing (float)
             if (globalLocationsField != null)
             {
@@ -470,7 +470,7 @@ namespace Andastra.Runtime.Core.Save
         /// Saves plot state to save data.
         /// </summary>
         /// <remarks>
-        /// Plot State Saving (swkotor2.exe):
+        /// Plot State Saving (k2_win_gog_aspyr_swkotor2.exe):
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Plot state is saved as part of game state
         /// - Original implementation: Plot states are tracked and saved to prevent duplicate processing
         /// - Plot state includes: plot index, label, triggered status, completed status, trigger count
@@ -506,7 +506,7 @@ namespace Andastra.Runtime.Core.Save
         /// Saves faction reputation state to save data.
         /// </summary>
         /// <remarks>
-        /// Faction Reputation Saving (swkotor2.exe):
+        /// Faction Reputation Saving (k2_win_gog_aspyr_swkotor2.exe):
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Faction reputation is saved as REPUTE.fac file in savegame.sav
         /// - Located via string reference: "REPUTE" @ (needs verification)
         /// - Original implementation: Faction relationships stored in GFF structures with FactionID, FactionRep fields
@@ -636,7 +636,7 @@ namespace Andastra.Runtime.Core.Save
             // Save module-to-area mapping for the current module
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Mod_Area_list in module IFO file
             // Original implementation: Module IFO contains Mod_Area_list field (GFF List) with area ResRefs
-            // Located via string references: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
+            // Located via string references: "Mod_Area_list" @ 0x007be748 (k2_win_gog_aspyr_swkotor2.exe)
             // This allows verification of area-to-module relationships without loading the module IFO
             Runtime.Core.Interfaces.IModule module = _world.CurrentModule;
             if (module != null && !string.IsNullOrEmpty(module.ResRef))
@@ -1874,7 +1874,7 @@ namespace Andastra.Runtime.Core.Save
         /// Restores plot state from save data.
         /// </summary>
         /// <remarks>
-        /// Plot State Restoration (swkotor2.exe):
+        /// Plot State Restoration (k2_win_gog_aspyr_swkotor2.exe):
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Plot state is restored from save data
         /// - Original implementation: Plot states are restored to prevent duplicate processing
         /// - Plot state includes: plot index, label, triggered status, completed status, trigger count
@@ -1913,7 +1913,7 @@ namespace Andastra.Runtime.Core.Save
         /// Restores faction reputation state from save data.
         /// </summary>
         /// <remarks>
-        /// Faction Reputation Restoration (swkotor2.exe):
+        /// Faction Reputation Restoration (k2_win_gog_aspyr_swkotor2.exe):
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Faction reputation is restored from REPUTE.fac file in savegame.sav
         /// - Original implementation: Faction relationships restored from GFF structures with FactionID, FactionRep fields
         /// - Faction reputation matrix: Dictionary&lt;sourceFaction, Dictionary&lt;targetFaction, reputation&gt;&gt;
@@ -2079,7 +2079,7 @@ namespace Andastra.Runtime.Core.Save
         /// by checking if areas are present in the module's Mod_Area_list
         ///
         /// Reverse engineering notes:
-        /// - Located via string reference: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
+        /// - Located via string reference: "Mod_Area_list" @ 0x007be748 (k2_win_gog_aspyr_swkotor2.exe)
         /// - Function validates module state during save/load operations
         /// - Called from module transition system to determine if module state should be restored
         /// - Validates by iterating through saved area states and checking if they belong to the module
@@ -2094,7 +2094,7 @@ namespace Andastra.Runtime.Core.Save
         /// - Handles both loaded modules (via IModule.GetArea()) and unloaded modules (via ModuleAreaMappings)
         ///
         /// Cross-engine analysis:
-        /// - Odyssey (swkotor.exe, swkotor2.exe): Mod_Area_list in IFO GFF file
+        /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): Mod_Area_list in IFO GFF file
         /// - Aurora (nwmain.exe): Similar area list in Module.ifo
         /// - Eclipse (daorigins.exe, DragonAge2.exe): Area list in module definition
         /// - Infinity: Level area associations
@@ -2160,12 +2160,12 @@ namespace Andastra.Runtime.Core.Save
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area-to-module relationship validation
         /// Original implementation: Checks if area ResRef exists in module's Mod_Area_list
-        /// Located via string references: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
+        /// Located via string references: "Mod_Area_list" @ 0x007be748 (k2_win_gog_aspyr_swkotor2.exe)
         /// Module IFO file contains Mod_Area_list field (GFF List) with area ResRefs
         /// This method verifies the relationship by checking if the module contains the area
         ///
         /// Cross-engine analysis:
-        /// - Odyssey (swkotor.exe, swkotor2.exe): Mod_Area_list in IFO GFF file
+        /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): Mod_Area_list in IFO GFF file
         /// - Aurora (nwmain.exe): Similar area list in Module.ifo
         /// - Eclipse (daorigins.exe, DragonAge2.exe): Area list in module definition
         /// - Infinity (, ): Level area associations
@@ -2195,7 +2195,7 @@ namespace Andastra.Runtime.Core.Save
                 // Module is not currently loaded - use saved module-to-area mapping
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Mod_Area_list in module IFO file
                 // Original implementation: Module IFO contains Mod_Area_list field (GFF List) with area ResRefs
-                // Located via string references: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
+                // Located via string references: "Mod_Area_list" @ 0x007be748 (k2_win_gog_aspyr_swkotor2.exe)
                 // The mapping is populated when saving by extracting the area list from the module
                 if (CurrentSave != null && CurrentSave.ModuleAreaMappings != null)
                 {

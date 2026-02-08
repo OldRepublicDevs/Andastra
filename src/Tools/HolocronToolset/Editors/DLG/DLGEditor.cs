@@ -37,8 +37,8 @@ namespace HolocronToolset.Editors.DLG
     // Original: class DLGEditor(Editor):
     // DLG (Dialogue) format is Aurora Engine format used by:
     // - Neverwinter Nights: Enhanced Edition (Aurora) - nwmain.exe: Uses base DLG format
-    // - KotOR 1 (Odyssey) - swkotor.exe: Uses base DLG format
-    // - KotOR 2 (Odyssey) - swkotor2.exe: Uses extended DLG format with K2-specific fields
+    // - KotOR 1 (Odyssey) - k1_win_gog_swkotor.exe: Uses base DLG format
+    // - KotOR 2 (Odyssey) - k2_win_gog_aspyr_swkotor2.exe: Uses extended DLG format with K2-specific fields
     //   K2-specific root fields: AlienRaceOwner, PostProcOwner, RecordNoVO, NextNodeID
     //   K2-specific node fields: ActionParam1-5, Script2, AlienRaceNode, NodeID, Emotion, FacialAnim, etc.
     //   K2-specific link fields: Active2, Logic, Not, Not2, Param1-5, ParamStrA/B, etc.
@@ -613,7 +613,7 @@ namespace HolocronToolset.Editors.DLG
             // Initialize script parameter widgets (K2-specific)
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
             // Original: QSpinBox script1Param1Spin
-            // K2-specific: ActionParam1 field only exists in KotOR 2 (swkotor2.exe: 0x005ea880)
+            // K2-specific: ActionParam1 field only exists in KotOR 2 (k2_win_gog_aspyr_swkotor2.exe: 0x005ea880)
             // Aurora (NWN) and Eclipse (DA/ME) use base DLG format without K2 extensions
             _script1Param1Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
             _script1Param1Spin.ValueChanged += (s, e) => OnNodeUpdate();
@@ -626,7 +626,7 @@ namespace HolocronToolset.Editors.DLG
             // Initialize script2 parameter widgets (K2-specific)
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
             // Original: QSpinBox script2Param1Spin, script2Param2Spin, script2Param3Spin, script2Param4Spin, script2Param5Spin
-            // K2-specific: ActionParam1b, ActionParam2b, ActionParam3b, ActionParam4b, ActionParam5b fields only exist in KotOR 2 (swkotor2.exe: 0x005ea880)
+            // K2-specific: ActionParam1b, ActionParam2b, ActionParam3b, ActionParam4b, ActionParam5b fields only exist in KotOR 2 (k2_win_gog_aspyr_swkotor2.exe: 0x005ea880)
             // Aurora (NWN) and Eclipse (DA/ME) use base DLG format without K2 extensions
             _script2Param1Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
             _script2Param1Spin.ValueChanged += (s, e) => OnNodeUpdate();
@@ -790,8 +790,8 @@ namespace HolocronToolset.Editors.DLG
             // Original: QComboBox plotIndexCombo, QDoubleSpinBox plotXpSpin
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:405-406
             // Original: self.ui.plotIndexCombo.currentIndexChanged.connect(self.on_node_update), self.ui.plotXpSpin.valueChanged.connect(self.on_node_update)
-            // VERIFIED: PlotXpPercentage field aligns with swkotor2.exe DLG format
-            // - Field name "PlotXPPercentage" confirmed in swkotor2.exe string table @ 0x007c35cc (DialogueManager.cs:1098)
+            // VERIFIED: PlotXpPercentage field aligns with k2_win_gog_aspyr_swkotor2.exe DLG format
+            // - Field name "PlotXPPercentage" confirmed in k2_win_gog_aspyr_swkotor2.exe string table @ 0x007c35cc (DialogueManager.cs:1098)
             // - Field type: float (matches GFF Single type, default 1.0f in DLGNode.cs)
             // - GFF I/O: DLGHelper.cs reads as Acquire("PlotXPPercentage", 0.0f), writes conditionally when != 0.0f
             // - UI: NumericUpDown (0-100 int) converted to float for storage
@@ -1601,7 +1601,7 @@ namespace HolocronToolset.Editors.DLG
             bool isK2 = currentGame.IsK2();
 
             // Show/hide K2-specific controls
-            // K2-specific: Script1Param1 (ActionParam1) only exists in KotOR 2 (swkotor2.exe: 0x005ea880)
+            // K2-specific: Script1Param1 (ActionParam1) only exists in KotOR 2 (k2_win_gog_aspyr_swkotor2.exe: 0x005ea880)
             // Aurora (NWN) and Eclipse (DA/ME) use base DLG format without K2 extensions
             // Matching PyKotor: K2-specific widgets are shown/hidden based on game type
             if (_script1Param1Panel != null)

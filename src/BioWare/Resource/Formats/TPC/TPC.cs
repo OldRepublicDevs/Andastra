@@ -9,7 +9,7 @@ using BioWare.Resource;
 namespace BioWare.Resource.Formats.TPC
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:317-529
-    // swkotor.exe/swkotor2.exe: TPC texture container with full feature set
+    // k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: TPC texture container with full feature set
     public class TPC : IEquatable<TPC>
     {
         public static readonly ResourceType BINARY_TYPE = ResourceType.TPC;
@@ -386,7 +386,7 @@ namespace BioWare.Resource.Formats.TPC
         // DXT compression helpers
         // Based on standard DXT/S3TC compression algorithms
         // Reference: PyKotor compress_dxt.py - comprehensive BC1/DXT1 encoder implementation
-        // swkotor.exe/swkotor2.exe/daorigins.exe: DXT1 compression uses standard S3TC algorithm
+        // k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe/daorigins.exe: DXT1 compression uses standard S3TC algorithm
 
         private static byte[] RgbToDxt1(byte[] rgb, int width, int height)
         {

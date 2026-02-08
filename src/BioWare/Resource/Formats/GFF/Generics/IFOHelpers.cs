@@ -148,7 +148,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
         /// 
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/ifo.py:127-182
         /// Original: def construct_ifo(gff: GFF) -> IFO:
-        /// Engine references: swkotor2.exe:0x00501fa0, swkotor.exe:0x004c9050
+        /// Engine references: k2_win_gog_aspyr_swkotor2.exe:0x00501fa0, k1_win_gog_swkotor.exe:0x004c9050
         /// </remarks>
         public static IFO ConstructIfo(GFF gff)
         {
@@ -156,14 +156,14 @@ namespace BioWare.Resource.Formats.GFF.Generics
             var root = gff.Root;
 
             // Extract basic fields (matching Python field names)
-            // Engine default: 16-byte array (swkotor2.exe:0x00501fa0 line 119, swkotor.exe:0x004c9050 line 110)
+            // Engine default: 16-byte array (k2_win_gog_aspyr_swkotor2.exe:0x00501fa0 line 119, k1_win_gog_swkotor.exe:0x004c9050 line 110)
             ifo.ModId = root.Acquire<byte[]>("Mod_ID", new byte[16]);
 
-            // Engine default: LocalizedString (swkotor2.exe:0x00501fa0 line 129, swkotor.exe:0x004c9050 line 120)
+            // Engine default: LocalizedString (k2_win_gog_aspyr_swkotor2.exe:0x00501fa0 line 129, k1_win_gog_swkotor.exe:0x004c9050 line 120)
             ifo.ModName = root.Acquire<LocalizedString>("Mod_Name", LocalizedString.FromInvalid());
             ifo.Name = ifo.ModName; // Alias
 
-            // Engine default: "" (swkotor2.exe:0x00501fa0 line 152, swkotor.exe:0x004c9050 line 143)
+            // Engine default: "" (k2_win_gog_aspyr_swkotor2.exe:0x00501fa0 line 152, k1_win_gog_swkotor.exe:0x004c9050 line 143)
             ifo.Tag = root.Acquire<string>("Mod_Tag", "");
 
             // Engine default: "" (K1: 0x004c7050 line 57, TSL: 0x00500290) line 57
@@ -383,7 +383,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
         /// <param name="timeManager">The time manager to get game time from.</param>
         /// <param name="minutesPerHour">Number of minutes per hour for time conversion (typically 60, but can vary by time scale).</param>
         /// <remarks>
-        /// Original engine behavior (swkotor2.exe: SerializeIfoGameTime @ 0x00500290):
+        /// Original engine behavior (k2_win_gog_aspyr_swkotor2.exe: SerializeIfoGameTime @ 0x00500290):
         /// - Line 79: Gets time system object via FUN_004dc6e0
         /// - Line 80: Gets current game time (day, milliseconds) via FUN_004db710
         /// - Line 86: Converts time to minute/second/millisecond via FUN_004db660

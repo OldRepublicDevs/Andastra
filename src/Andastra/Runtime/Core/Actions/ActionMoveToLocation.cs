@@ -35,7 +35,7 @@ namespace Andastra.Runtime.Core.Actions
         private const float ArrivalThreshold = 0.5f;
         private BaseCreatureCollisionDetector _collisionDetector;
 
-        // Bump counter tracking (matches offset 0x268 in swkotor2.exe entity structure)
+        // Bump counter tracking (matches offset 0x268 in k2_win_gog_aspyr_swkotor2.exe entity structure)
         // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 tracks bump count at param_1[0xe0] + 0x268
         // Located via string reference: "aborted walking, Maximum number of bumps happened" @ 0x007c0458
         // Maximum bumps: 5 (aborts movement if exceeded)
@@ -62,9 +62,9 @@ namespace Andastra.Runtime.Core.Actions
         /// - Checks world's type namespace to determine engine (Odyssey, Aurora, Eclipse)
         /// - Uses reflection to instantiate engine-specific collision detector classes
         /// - Falls back to DefaultCreatureCollisionDetector if engine type cannot be determined
-        /// - Based on swkotor.exe, swkotor2.exe, nwmain.exe, daorigins.exe collision systems
-        /// - Original implementation: 0x005479f0 @ 0x005479f0 (swkotor2.exe) uses creature bounding box
-        /// - swkotor.exe: UpdateCreatureMovement @ 0x00516630 uses 0x005479f0 equivalent
+        /// - Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe, nwmain.exe, daorigins.exe collision systems
+        /// - Original implementation: 0x005479f0 @ 0x005479f0 (k2_win_gog_aspyr_swkotor2.exe) uses creature bounding box
+        /// - k1_win_gog_swkotor.exe: UpdateCreatureMovement @ 0x00516630 uses 0x005479f0 equivalent
         /// - nwmain.exe: CPathfindInformation class with creature collision checking
         /// - daorigins.exe/DragonAge2.exe: PhysX-based collision detection system
         /// </remarks>
@@ -286,7 +286,7 @@ namespace Andastra.Runtime.Core.Actions
             Vector3 currentPosition = transform.Position;
             Vector3 newPosition = currentPosition + direction * moveDistance;
 
-            // Project position to walkmesh surface (matches 0x004f5070 in swkotor2.exe)
+            // Project position to walkmesh surface (matches 0x004f5070 in k2_win_gog_aspyr_swkotor2.exe)
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
             // Located via string references: Walkmesh projection in movement system
             // Original implementation: 0x004f5070 projects 3D position to walkmesh surface height
@@ -323,7 +323,7 @@ namespace Andastra.Runtime.Core.Actions
 
             if (hasCollision)
             {
-                // Get bump counter (stored at offset 0x268 in swkotor2.exe entity structure)
+                // Get bump counter (stored at offset 0x268 in k2_win_gog_aspyr_swkotor2.exe entity structure)
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 tracks bump count at param_1[0xe0] + 0x268
                 int bumpCount = GetBumpCounter(actor);
                 bumpCount++;
@@ -342,7 +342,7 @@ namespace Andastra.Runtime.Core.Actions
                     return ActionStatus.Failed;
                 }
 
-                // Check if same creature blocks repeatedly (matches offset 0x254 in swkotor2.exe)
+                // Check if same creature blocks repeatedly (matches offset 0x254 in k2_win_gog_aspyr_swkotor2.exe)
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement checks if local_c0 == entity ID at offset 0x254
                 // Original implementation: If same creature blocks repeatedly, aborts movement
                 uint lastBlockingCreature = GetLastBlockingCreature(actor);
@@ -382,7 +382,7 @@ namespace Andastra.Runtime.Core.Actions
                 //   - 0x0061b520: Inserts waypoints into existing path array to route around obstacles
                 //   - 0x0061c1e0: Gets waypoint array from pathfinding context
                 // Equivalent functions in other engines:
-                //   - swkotor.exe: FindPathAroundObstacle @ 0x005d0840 (called from UpdateCreatureMovement @ 0x00516630, line 254)
+                //   - k1_win_gog_swkotor.exe: FindPathAroundObstacle @ 0x005d0840 (called from UpdateCreatureMovement @ 0x00516630, line 254)
                 //   - nwmain.exe: CPathfindInformation class with obstacle avoidance in pathfinding system
                 //   - daorigins.exe/DragonAge2.exe: Advanced dynamic obstacle system (different architecture)
                 if (currentArea != null && currentArea.NavigationMesh != null)

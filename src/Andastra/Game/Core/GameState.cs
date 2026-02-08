@@ -58,7 +58,7 @@ namespace Andastra.Runtime.Game.Core
         /// </summary>
         /// <remarks>
         /// Character Creation State:
-        /// - Based on swkotor.exe and swkotor2.exe character generation system
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe character generation system
         /// - GUI Panel: "maincg" (character generation)
         /// - K1 Music: "mus_theme_rep", K2 Music: "mus_main"
         /// - Load Screen: K1 uses "load_chargen", K2 uses "load_default"
@@ -71,7 +71,7 @@ namespace Andastra.Runtime.Game.Core
         /// </summary>
         /// <remarks>
         /// Options Menu State:
-        /// - Based on swkotor.exe and swkotor2.exe options menu system
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe options menu system
         /// - Located via string references: "BTN_OPTIONS" (options button in main menu)
         /// - GUI Panel: "optionsmain" (main menu options) or "optionsingame" (in-game options)
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWGuiOptionsMain class @ 0x006e3e80 (constructor), 0x006de240 (OnGameplayOpt), 0x006de2c0 (OnAutopauseOpt), 0x006e2df0 (OnFeedbackOpt), 0x006e3d80 (OnGraphicsOpt), 0x006e3e00 (OnSoundOpt), 0x006de340 (SetDescription), 0x006dff10 (HandleInputEvent)
@@ -118,12 +118,12 @@ namespace Andastra.Runtime.Game.Core
         /// </summary>
         /// <remarks>
         /// Movies Menu State:
-        /// - Based on swkotor.exe and swkotor2.exe movies menu system
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe movies menu system
         /// - Located via string references: "BTN_MOVIES" (movies button in main menu)
         /// - Movies are stored as BIK (Bink Video) files in the movies directory
-        /// - Movie playback: Uses CExoMoviePlayerInternal (swkotor.exe/swkotor2.exe)
-        /// - Function: 0x00404c80 @ 0x00404c80 (main playback loop in swkotor.exe)
-        /// - Function: 0x004053e0 @ 0x004053e0 (movie initialization in swkotor.exe)
+        /// - Movie playback: Uses CExoMoviePlayerInternal (k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe)
+        /// - Function: 0x00404c80 @ 0x00404c80 (main playback loop in k1_win_gog_swkotor.exe)
+        /// - Function: 0x004053e0 @ 0x004053e0 (movie initialization in k1_win_gog_swkotor.exe)
         /// - Movie file paths: "MOVIES:%s" format, ".\\movies" or "d:\\movies" directories
         /// - Original implementation: Movies menu lists available BIK files, player selects to play
         /// - Playback: Fullscreen, blocking until completion or cancellation

@@ -29,7 +29,7 @@ namespace Andastra.Game.Graphics.Common.Backends
     /// - Located via string references: "Render Window" @ 0x007b5680, "Graphics Options" @ 0x007b56a8
     /// - Original game did not use DirectX 12; this is a modern enhancement for raytracing and advanced features
     /// - Raytracing: Original game did not support raytracing; this is a modern enhancement
-    /// - This abstraction: Provides DirectX 12 backend for modern Windows systems, not directly mapped to swkotor2.exe functions
+    /// - This abstraction: Provides DirectX 12 backend for modern Windows systems, not directly mapped to k2_win_gog_aspyr_swkotor2.exe functions
     /// </remarks>
     public abstract class BaseDirect3D12Backend : BaseGraphicsBackend, IComputeBackend, IRaytracingBackend,
         IMeshShaderBackend, IVariableRateShadingBackend, ISamplerFeedbackBackend, IBindlessResourcesBackend

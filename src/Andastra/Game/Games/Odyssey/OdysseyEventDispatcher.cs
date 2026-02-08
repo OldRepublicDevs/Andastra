@@ -20,8 +20,8 @@ namespace Andastra.Game.Games.Odyssey
     /// - Routes events to appropriate handlers based on type
     ///
     /// Based on verified components of:
-    /// - swkotor.exe: Event dispatching functions (KOTOR 1)
-    /// - swkotor2.exe: DispatchEvent @ 0x004dcfb0 (KOTOR 2)
+    /// - k1_win_gog_swkotor.exe: Event dispatching functions (KOTOR 1)
+    /// - k2_win_gog_aspyr_swkotor2.exe: DispatchEvent @ 0x004dcfb0 (KOTOR 2)
     /// - Event types: AREA_TRANSITION (0x1a), REMOVE_FROM_AREA (4), etc. (common across both games)
     /// - Script events: ON_HEARTBEAT (0), ON_PERCEPTION (1), etc. (common across both games)
     ///
@@ -61,7 +61,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Dispatches an event immediately.
         /// </summary>
         /// <remarks>
-        /// Based on DispatchEvent @ 0x004dcfb0 in swkotor2.exe.
+        /// Based on DispatchEvent @ 0x004dcfb0 in k2_win_gog_aspyr_swkotor2.exe.
         /// Maps event IDs and routes to appropriate handlers.
         /// May queue events for later processing if needed.
         /// </remarks>
@@ -89,23 +89,23 @@ namespace Andastra.Game.Games.Odyssey
                     HandleAreaTransition(targetEntity, targetAreaResRef, sourceEntity);
                     break;
 
-                case 4: // EVENT_REMOVE_FROM_AREA (swkotor2.exe: 0x004dcfb0 line 48)
+                case 4: // EVENT_REMOVE_FROM_AREA (k2_win_gog_aspyr_swkotor2.exe: 0x004dcfb0 line 48)
                     // Area removal - entity is being removed from current area
                     // For removal, we don't need a target area, just remove from current
                     HandleAreaTransition(targetEntity, null);
                     break;
 
-                case 6: // EVENT_CLOSE_OBJECT (swkotor2.exe: 0x004dcfb0 line 54)
-                case 7: // EVENT_OPEN_OBJECT (swkotor2.exe: 0x004dcfb0 line 57)
-                case 0xc: // EVENT_UNLOCK_OBJECT (swkotor2.exe: 0x004dcfb0 line 72)
-                case 0xd: // EVENT_LOCK_OBJECT (swkotor2.exe: 0x004dcfb0 line 75)
+                case 6: // EVENT_CLOSE_OBJECT (k2_win_gog_aspyr_swkotor2.exe: 0x004dcfb0 line 54)
+                case 7: // EVENT_OPEN_OBJECT (k2_win_gog_aspyr_swkotor2.exe: 0x004dcfb0 line 57)
+                case 0xc: // EVENT_UNLOCK_OBJECT (k2_win_gog_aspyr_swkotor2.exe: 0x004dcfb0 line 72)
+                case 0xd: // EVENT_LOCK_OBJECT (k2_win_gog_aspyr_swkotor2.exe: 0x004dcfb0 line 75)
                     HandleObjectEvent(targetEntity, eventType);
                     break;
 
-                case 0xa: // EVENT_SIGNAL_EVENT (swkotor2.exe: 0x004dcfb0 line 66) - script events, uses eventSubtype
+                case 0xa: // EVENT_SIGNAL_EVENT (k2_win_gog_aspyr_swkotor2.exe: 0x004dcfb0 line 66) - script events, uses eventSubtype
                     if (targetEntity != null)
                     {
-                        // eventSubtype 4 = CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED (swkotor2.exe: 0x004dcfb0 line 137)
+                        // eventSubtype 4 = CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED (k2_win_gog_aspyr_swkotor2.exe: 0x004dcfb0 line 137)
                         if (eventSubtype == 4)
                         {
                             HandleCombatEvent(targetEntity, eventType, sourceEntity);
@@ -117,8 +117,8 @@ namespace Andastra.Game.Games.Odyssey
                     }
                     break;
 
-                case 0xb: // EVENT_DESTROY_OBJECT (swkotor2.exe: 0x004dcfb0 line 69)
-                case 0xf: // EVENT_ON_MELEE_ATTACKED (swkotor2.exe: 0x004dcfb0 line 81)
+                case 0xb: // EVENT_DESTROY_OBJECT (k2_win_gog_aspyr_swkotor2.exe: 0x004dcfb0 line 69)
+                case 0xf: // EVENT_ON_MELEE_ATTACKED (k2_win_gog_aspyr_swkotor2.exe: 0x004dcfb0 line 81)
                     if (targetEntity != null)
                         HandleCombatEvent(targetEntity, eventType, sourceEntity);
                     break;
@@ -201,11 +201,11 @@ namespace Andastra.Game.Games.Odyssey
         /// <param name="targetArea">The target area ResRef.</param>
         /// <param name="sourceEntity">Optional source entity (door/trigger) that triggered the transition. Used to resolve LinkedTo waypoint positioning.</param>
         /// <remarks>
-        /// Based on EVENT_AREA_TRANSITION (0x1a) and EVENT_REMOVE_FROM_AREA (4) handling in swkotor2.exe: DispatchEvent @ 0x004dcfb0.
+        /// Based on EVENT_AREA_TRANSITION (0x1a) and EVENT_REMOVE_FROM_AREA (4) handling in k2_win_gog_aspyr_swkotor2.exe: DispatchEvent @ 0x004dcfb0.
         /// Manages entity movement between areas.
         /// Updates area membership and triggers transition effects.
         ///
-        /// Transition flow (based on swkotor2.exe area transition system):
+        /// Transition flow (based on k2_win_gog_aspyr_swkotor2.exe area transition system):
         /// 1. Validate entity and world reference
         /// 2. Get current area from entity's AreaId or world's CurrentArea
         /// 3. If targetArea is null (EVENT_REMOVE_FROM_AREA), remove entity from current area only
@@ -266,7 +266,7 @@ namespace Andastra.Game.Games.Odyssey
             if (targetAreaInstance != currentArea)
             {
                 // Check for stored area transition bitmap on player entity
-                // Based on swkotor.exe: SetAreaTransitionBMP stores bitmap on player entity
+                // Based on k1_win_gog_swkotor.exe: SetAreaTransitionBMP stores bitmap on player entity
                 // Original implementation: Area transition bitmap is displayed during area transitions
                 string transitionBitmap = GetAreaTransitionBitmap(entity);
 
@@ -333,7 +333,7 @@ namespace Andastra.Game.Games.Odyssey
 
         /// <summary>
         /// Gets the area transition bitmap stored on the entity.
-        /// Based on swkotor.exe: SetAreaTransitionBMP stores bitmap on player entity
+        /// Based on k1_win_gog_swkotor.exe: SetAreaTransitionBMP stores bitmap on player entity
         /// Original implementation: Bitmap is retrieved from entity data during area transitions
         /// </summary>
         /// <param name="entity">Entity to get transition bitmap from (usually player entity)</param>
@@ -483,10 +483,10 @@ namespace Andastra.Game.Games.Odyssey
         /// Loads or gets the target area for transition.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area streaming system (swkotor2.exe: LoadAreaProperties @ 0x004e26d0)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area streaming system (k2_win_gog_aspyr_swkotor2.exe: LoadAreaProperties @ 0x004e26d0)
         /// Checks if area is already loaded in current module, otherwise loads it via ModuleLoader.
         ///
-        /// Area streaming flow (based on swkotor2.exe area transition system):
+        /// Area streaming flow (based on k2_win_gog_aspyr_swkotor2.exe area transition system):
         /// 1. Check if area is already loaded in current module (via IModule.GetArea)
         /// 2. Check if area is the current area
         /// 3. If not found and ModuleLoader is available:
@@ -499,8 +499,8 @@ namespace Andastra.Game.Games.Odyssey
         /// 4. If ModuleLoader is not available, return null (area streaming disabled)
         ///
         /// Based on verified components of:
-        /// - swkotor2.exe: Area loading during transitions (0x004e26d0 @ 0x004e26d0)
-        /// - swkotor.exe: Similar area loading system (KOTOR 1)
+        /// - k2_win_gog_aspyr_swkotor2.exe: Area loading during transitions (0x004e26d0 @ 0x004e26d0)
+        /// - k1_win_gog_swkotor.exe: Similar area loading system (KOTOR 1)
         /// - Area resources: ARE (properties), GIT (instances), LYT (layout), VIS (visibility)
         /// - Module resource lookup: Areas are loaded from module archives using area ResRef
         /// </remarks>
@@ -717,7 +717,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Projects an entity's position to the target area's walkmesh.
         /// </summary>
         /// <remarks>
-        /// swkotor2.exe: 0x004f5070 - Walkmesh projection system
+        /// k2_win_gog_aspyr_swkotor2.exe: 0x004f5070 - Walkmesh projection system
         /// 
         /// Original engine function: `float10 __thiscall FUN_004f5070(void *param_1, float *param_2, int param_3, int *param_4, int *param_5)`
         /// 
@@ -726,7 +726,7 @@ namespace Andastra.Game.Games.Odyssey
         /// - Supports both 2D and 3D projection modes
         /// - Returns height at projected point
         /// 
-        /// Called from 34 locations in swkotor2.exe including:
+        /// Called from 34 locations in k2_win_gog_aspyr_swkotor2.exe including:
         /// - UpdateCreatureMovement @ 0x0054be70 (line-of-sight and pathfinding)
         /// - FUN_00553970 @ 0x00553970 (creature movement)
         /// - FUN_005522e0 @ 0x005522e0 (entity positioning)
@@ -881,13 +881,13 @@ namespace Andastra.Game.Games.Odyssey
         /// Calls area's AddEntityToArea method.
         /// 
         /// Original engine behavior (based on Ghidra analysis):
-        /// - K1 (swkotor.exe): Entity-type-specific AddToArea methods (e.g., CSWSPlaceable::AddToArea @ 0x00587170)
+        /// - K1 (k1_win_gog_swkotor.exe): Entity-type-specific AddToArea methods (e.g., CSWSPlaceable::AddToArea @ 0x00587170)
         ///   - Removes entity from current area first (RemoveFromArea)
         ///   - Sets entity's area reference (CSWSObject::SetArea)
         ///   - Sets entity's position (CSWSObject::SetPosition)
         ///   - Reads properties from 2DA files (PreciseUse, Hostile from placeables.2da)
         ///   - Adds entity to area's object list
-        /// - TSL (swkotor2.exe): Unified AddToArea @ 0x00589ce0 for all entity types
+        /// - TSL (k2_win_gog_aspyr_swkotor2.exe): Unified AddToArea @ 0x00589ce0 for all entity types
         ///   - Removes entity from current area first (FUN_00587000)
         ///   - Sets entity's area reference and position (FUN_00504660, FUN_00506580)
         ///   - Reads properties from GFF/2DA (PreciseUse, Hostile, ModelName)
@@ -979,23 +979,23 @@ namespace Andastra.Game.Games.Odyssey
         /// Updates object state and triggers associated scripts.
         /// Handles visual/audio feedback for state changes.
         ///
-        /// Implementation based on swkotor2.exe: DispatchEvent @ 0x004dcfb0
+        /// Implementation based on k2_win_gog_aspyr_swkotor2.exe: DispatchEvent @ 0x004dcfb0
         /// - EVENT_OPEN_OBJECT (case 7): Opens door/placeable, fires OnOpen script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN = 0x16)
         /// - EVENT_CLOSE_OBJECT (case 6): Closes door/placeable, fires OnClose script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE = 0x17)
         /// - EVENT_LOCK_OBJECT (case 0xd): Locks door/placeable, fires OnLock script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED = 0x1c)
         /// - EVENT_UNLOCK_OBJECT (case 0xc): Unlocks door/placeable, fires OnUnlock script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED = 0x1d)
         ///
         /// Located via string references:
-        /// - "EVENT_OPEN_OBJECT" @ 0x007bcda0 (swkotor2.exe, case 7)
-        /// - "EVENT_CLOSE_OBJECT" @ 0x007bcdb4 (swkotor2.exe, case 6)
-        /// - "EVENT_LOCK_OBJECT" @ 0x007bcd20 (swkotor2.exe, case 0xd)
-        /// - "EVENT_UNLOCK_OBJECT" @ 0x007bcd34 (swkotor2.exe, case 0xc)
-        /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844 (swkotor2.exe, 0x16)
-        /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE" @ 0x007bc820 (swkotor2.exe, 0x17)
-        /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754 (swkotor2.exe, 0x1c)
-        /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ 0x007bc72c (swkotor2.exe, 0x1d)
+        /// - "EVENT_OPEN_OBJECT" @ 0x007bcda0 (k2_win_gog_aspyr_swkotor2.exe, case 7)
+        /// - "EVENT_CLOSE_OBJECT" @ 0x007bcdb4 (k2_win_gog_aspyr_swkotor2.exe, case 6)
+        /// - "EVENT_LOCK_OBJECT" @ 0x007bcd20 (k2_win_gog_aspyr_swkotor2.exe, case 0xd)
+        /// - "EVENT_UNLOCK_OBJECT" @ 0x007bcd34 (k2_win_gog_aspyr_swkotor2.exe, case 0xc)
+        /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844 (k2_win_gog_aspyr_swkotor2.exe, 0x16)
+        /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE" @ 0x007bc820 (k2_win_gog_aspyr_swkotor2.exe, 0x17)
+        /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754 (k2_win_gog_aspyr_swkotor2.exe, 0x1c)
+        /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ 0x007bc72c (k2_win_gog_aspyr_swkotor2.exe, 0x1d)
         ///
-        /// Object event handling flow (based on swkotor2.exe: DispatchEvent @ 0x004dcfb0):
+        /// Object event handling flow (based on k2_win_gog_aspyr_swkotor2.exe: DispatchEvent @ 0x004dcfb0):
         /// 1. EVENT_OPEN_OBJECT (7): Opens door/placeable
         ///    - Sets IsOpen=true, OpenState/AnimationState=1 (open)
         ///    - Fires OnOpen script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN = 0x16)
@@ -1052,19 +1052,19 @@ namespace Andastra.Game.Games.Odyssey
             // Handle different object event types
             switch (eventType)
             {
-                case 7: // EVENT_OPEN_OBJECT (swkotor2.exe: 0x004dcfb0 case 7, line 66)
+                case 7: // EVENT_OPEN_OBJECT (k2_win_gog_aspyr_swkotor2.exe: 0x004dcfb0 case 7, line 66)
                     HandleOpenObjectEvent(entity, world);
                     break;
 
-                case 6: // EVENT_CLOSE_OBJECT (swkotor2.exe: 0x004dcfb0 case 6, line 63)
+                case 6: // EVENT_CLOSE_OBJECT (k2_win_gog_aspyr_swkotor2.exe: 0x004dcfb0 case 6, line 63)
                     HandleCloseObjectEvent(entity, world);
                     break;
 
-                case 0xd: // EVENT_LOCK_OBJECT (swkotor2.exe: 0x004dcfb0 case 0xd, line 84)
+                case 0xd: // EVENT_LOCK_OBJECT (k2_win_gog_aspyr_swkotor2.exe: 0x004dcfb0 case 0xd, line 84)
                     HandleLockObjectEvent(entity, world);
                     break;
 
-                case 0xc: // EVENT_UNLOCK_OBJECT (swkotor2.exe: 0x004dcfb0 case 0xc, line 81)
+                case 0xc: // EVENT_UNLOCK_OBJECT (k2_win_gog_aspyr_swkotor2.exe: 0x004dcfb0 case 0xc, line 81)
                     HandleUnlockObjectEvent(entity, world);
                     break;
 
@@ -1082,7 +1082,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <param name="world">The world containing the entity.</param>
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_OPEN_OBJECT opens door/placeable and fires OnOpen script
-        /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 7, line 66)
+        /// (k2_win_gog_aspyr_swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 7, line 66)
         /// </remarks>
         private void HandleOpenObjectEvent(IEntity entity, IWorld world)
         {
@@ -1155,7 +1155,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <param name="world">The world containing the entity.</param>
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_CLOSE_OBJECT closes door/placeable and fires OnClose script
-        /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 6, line 63)
+        /// (k2_win_gog_aspyr_swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 6, line 63)
         /// </remarks>
         private void HandleCloseObjectEvent(IEntity entity, IWorld world)
         {
@@ -1228,7 +1228,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <param name="world">The world containing the entity.</param>
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_LOCK_OBJECT locks door/placeable and fires OnLock script
-        /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 0xd, line 84)
+        /// (k2_win_gog_aspyr_swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 0xd, line 84)
         /// </remarks>
         private void HandleLockObjectEvent(IEntity entity, IWorld world)
         {
@@ -1395,7 +1395,7 @@ namespace Andastra.Game.Games.Odyssey
         /// - "EVENT_DESTROY_OBJECT" @ 0x007bcd48 (case 0xb) - fires OnDeath script if entity is dead, or handles object destruction
         /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14 (eventSubtype 4) - fires OnDamaged script
         ///
-        /// Combat event handling flow (based on swkotor2.exe: DispatchEvent @ 0x004dcfb0):
+        /// Combat event handling flow (based on k2_win_gog_aspyr_swkotor2.exe: DispatchEvent @ 0x004dcfb0):
         /// 1. EVENT_ON_MELEE_ATTACKED (0xf): Fires OnPhysicalAttacked script on target entity with attacker as triggerer
         ///    - Script fires regardless of hit/miss (before damage is applied)
         ///    - Located via "OnMeleeAttacked" @ 0x007c1a5c, "ScriptAttacked" @ 0x007bee80
@@ -1442,7 +1442,7 @@ namespace Andastra.Game.Games.Odyssey
             // Handle different combat event types
             switch (eventType)
             {
-                case 0xf: // EVENT_ON_MELEE_ATTACKED (swkotor2.exe: 0x004dcfb0 case 0xf, line 89)
+                case 0xf: // EVENT_ON_MELEE_ATTACKED (k2_win_gog_aspyr_swkotor2.exe: 0x004dcfb0 case 0xf, line 89)
                     // Fire OnPhysicalAttacked script event on target entity
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_ON_MELEE_ATTACKED fires OnMeleeAttacked script
                     // Located via string references: "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4 (case 0xf), "OnMeleeAttacked" @ 0x007c1a5c, "ScriptAttacked" @ 0x007bee80
@@ -1453,7 +1453,7 @@ namespace Andastra.Game.Games.Odyssey
                     HandleMeleeAttackedEvent(entity, sourceEntity, world);
                     break;
 
-                case 0xb: // EVENT_DESTROY_OBJECT (swkotor2.exe: 0x004dcfb0 case 0xb, line 77)
+                case 0xb: // EVENT_DESTROY_OBJECT (k2_win_gog_aspyr_swkotor2.exe: 0x004dcfb0 case 0xb, line 77)
                     // Handle object destruction or entity death
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_DESTROY_OBJECT can indicate entity death or object destruction
                     // Located via string references: "EVENT_DESTROY_OBJECT" @ 0x007bcd48 (case 0xb)
@@ -1490,7 +1490,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <param name="world">The world containing the entities.</param>
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_ON_MELEE_ATTACKED fires OnPhysicalAttacked script
-        /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 0xf, line 89)
+        /// (k2_win_gog_aspyr_swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 0xf, line 89)
         /// </remarks>
         private void HandleMeleeAttackedEvent(IEntity entity, IEntity attacker, IWorld world)
         {
@@ -1512,7 +1512,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <param name="world">The world containing the entities.</param>
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_DESTROY_OBJECT handles entity death or object destruction
-        /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 0xb, line 77)
+        /// (k2_win_gog_aspyr_swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 0xb, line 77)
         /// </remarks>
         private void HandleDestroyObjectEvent(IEntity entity, IEntity killer, IWorld world)
         {
@@ -1549,7 +1549,7 @@ namespace Andastra.Game.Games.Odyssey
                 // - Physics cleanup (removes entity from physics system if applicable)
                 // - Event system cleanup (unregisters entity from event handlers)
                 // - Memory cleanup (disposes entity resources)
-                // Note: There is no OnDestroy script event in the original game (swkotor2.exe)
+                // Note: There is no OnDestroy script event in the original game (k2_win_gog_aspyr_swkotor2.exe)
                 // EVENT_DESTROY_OBJECT is a world event that triggers entity destruction, not a script event
                 if (world != null)
                 {
@@ -1571,7 +1571,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <param name="world">The world containing the entities.</param>
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED fires when entity takes damage
-        /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0, eventSubtype 4, line 145)
+        /// (k2_win_gog_aspyr_swkotor2.exe: DispatchEvent @ 0x004dcfb0, eventSubtype 4, line 145)
         /// </remarks>
         private void HandleDamagedEvent(IEntity entity, IEntity damager, IWorld world)
         {
@@ -1599,7 +1599,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Executes entity-specific scripts based on event type.
         /// Handles heartbeat, perception, dialogue, etc.
         ///
-        /// Implementation based on swkotor2.exe: DispatchEvent @ 0x004dcfb0
+        /// Implementation based on k2_win_gog_aspyr_swkotor2.exe: DispatchEvent @ 0x004dcfb0
         /// - When eventType is 10 (EVENT_SIGNAL_EVENT), eventSubtype maps to CSWSSCRIPTEVENT_EVENTTYPE_ON_* constants
         /// - Maps eventSubtype to ScriptEvent enum (0=ON_HEARTBEAT, 1=ON_PERCEPTION, 2=ON_SPELL_CAST_AT, 4=ON_DAMAGED, etc.)
         /// - Gets script ResRef from entity's IScriptHooksComponent for the mapped ScriptEvent
@@ -1702,7 +1702,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <param name="eventSubtype">The event subtype from EVENT_SIGNAL_EVENT.</param>
         /// <returns>The corresponding ScriptEvent enum value.</returns>
         /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe: Event subtype mapping is identical between K1 and TSL.
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Event subtype mapping is identical between K1 and TSL.
         /// Maps CSWSSCRIPTEVENT_EVENTTYPE_ON_* constants to ScriptEvent enum.
         /// Returns ScriptEvent.OnUserDefined for unknown subtypes.
         ///

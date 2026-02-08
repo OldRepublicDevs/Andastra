@@ -162,7 +162,7 @@ namespace Andastra.Game.Stride.Graphics
         /// In newer Stride versions, the immediate CommandList is obtained from Game.GraphicsContext.CommandList.
         /// This extension method provides compatibility for code that only has access to GraphicsDevice.
         ///
-        /// swkotor2.exe: Graphics device command list management @ 0x004eb750 (original engine behavior)
+        /// k2_win_gog_aspyr_swkotor2.exe: Graphics device command list management @ 0x004eb750 (original engine behavior)
         /// </remarks>
         [JetBrains.Annotations.CanBeNull]
         public static StrideGraphics.CommandList ImmediateContext(this StrideGraphics.GraphicsDevice device)
@@ -217,7 +217,7 @@ namespace Andastra.Game.Stride.Graphics
             //
             // Based on Stride Graphics API: https://doc.stride3d.net/latest/en/manual/graphics/
             // CommandList is obtained from Game.GraphicsContext.CommandList, not created from GraphicsDevice
-            // swkotor2.exe: Graphics device command list management @ 0x004eb750 (original engine behavior)
+            // k2_win_gog_aspyr_swkotor2.exe: Graphics device command list management @ 0x004eb750 (original engine behavior)
             return null;
         }
 
@@ -234,7 +234,7 @@ namespace Andastra.Game.Stride.Graphics
         /// Based on Stride Graphics API: GraphicsContext is obtained from Game.GraphicsContext
         /// This extension method provides compatibility for code that only has access to GraphicsDevice.
         ///
-        /// swkotor2.exe: Graphics context management @ 0x004eb750 (original engine behavior)
+        /// k2_win_gog_aspyr_swkotor2.exe: Graphics context management @ 0x004eb750 (original engine behavior)
         /// </remarks>
         [JetBrains.Annotations.CanBeNull]
         public static StrideGraphics.GraphicsContext GraphicsContext(this StrideGraphics.GraphicsDevice device)

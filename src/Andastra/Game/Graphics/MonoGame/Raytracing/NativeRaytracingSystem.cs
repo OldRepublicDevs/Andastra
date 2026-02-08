@@ -2861,7 +2861,7 @@ namespace Andastra.Game.Graphics.MonoGame.Raytracing
             return @"
 // Temporal Denoiser Compute Shader
 // Based on standard temporal accumulation with variance clipping
-// swkotor2.exe: N/A (modern raytracing denoiser, not in original game)
+// k2_win_gog_aspyr_swkotor2.exe: N/A (modern raytracing denoiser, not in original game)
 
 cbuffer DenoiserConstants : register(b0)
 {
@@ -2969,7 +2969,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             return @"
 // Spatial Denoiser Compute Shader
 // Based on edge-aware bilateral filtering
-// swkotor2.exe: N/A (modern raytracing denoiser, not in original game)
+// k2_win_gog_aspyr_swkotor2.exe: N/A (modern raytracing denoiser, not in original game)
 
 cbuffer DenoiserConstants : register(b0)
 {
@@ -3118,7 +3118,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
         /// In production, shaders should be pre-compiled offline and embedded as resources.
         /// This runtime compilation is provided as a fallback for development and testing.
         ///
-        /// swkotor2.exe: N/A (modern raytracing shader compilation, not in original game)
+        /// k2_win_gog_aspyr_swkotor2.exe: N/A (modern raytracing shader compilation, not in original game)
         /// </summary>
         private byte[] CompileHlslToBytecode(string hlslSource, string shaderName, GraphicsBackend backend)
         {
@@ -3169,7 +3169,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
         /// This method locates DXC, writes the HLSL source to a temporary file, executes
         /// DXC to compile it, and reads the resulting DXIL bytecode.
         ///
-        /// swkotor2.exe: N/A (modern raytracing shader compilation, not in original game)
+        /// k2_win_gog_aspyr_swkotor2.exe: N/A (modern raytracing shader compilation, not in original game)
         /// </summary>
         private byte[] CompileHlslToDxil(string hlslSource, string shaderName)
         {
@@ -3322,7 +3322,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
         /// glslc after converting HLSL to GLSL, but that conversion is complex and
         /// error-prone, so we only support DXC with SPIR-V output.
         ///
-        /// swkotor2.exe: N/A (modern raytracing shader compilation, not in original game)
+        /// k2_win_gog_aspyr_swkotor2.exe: N/A (modern raytracing shader compilation, not in original game)
         /// </summary>
         private byte[] CompileHlslToSpirv(string hlslSource, string shaderName)
         {
@@ -3349,7 +3349,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
         /// DXC supports compiling HLSL directly to SPIR-V, which is the preferred
         /// method for Vulkan raytracing shaders as it maintains HLSL semantics.
         ///
-        /// swkotor2.exe: N/A (modern raytracing shader compilation, not in original game)
+        /// k2_win_gog_aspyr_swkotor2.exe: N/A (modern raytracing shader compilation, not in original game)
         /// </summary>
         private byte[] CompileHlslToSpirvWithDXC(string hlslSource, string shaderName, string dxcPath)
         {
@@ -3493,7 +3493,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
         ///
         /// This method searches common installation locations and PATH.
         ///
-        /// swkotor2.exe: N/A (modern raytracing shader compilation, not in original game)
+        /// k2_win_gog_aspyr_swkotor2.exe: N/A (modern raytracing shader compilation, not in original game)
         /// </summary>
         private string FindDXCPath()
         {
@@ -3778,7 +3778,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
         /// - SBT records must be written to GPU-accessible memory before DispatchRays
         /// - Records are written at specific offsets: RayGen (0), Miss (64), HitGroup (128)
         ///
-        /// swkotor2.exe: N/A (DirectX 9, no raytracing support)
+        /// k2_win_gog_aspyr_swkotor2.exe: N/A (DirectX 9, no raytracing support)
         /// Modern engines: Retrieve shader identifiers after pipeline creation via GetShaderIdentifier
         /// </summary>
         private void WriteShaderBindingTable()

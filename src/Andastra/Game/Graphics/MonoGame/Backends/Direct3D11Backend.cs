@@ -262,7 +262,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// Uploads texture pixel data to a previously created texture.
         /// Matches original engine behavior: DirectX 9 uses IDirect3DTexture9::LockRect/UnlockRect
         /// to upload texture data. DirectX 11 uses ID3D11DeviceContext::UpdateSubresource.
-        /// Based on swkotor.exe and swkotor2.exe texture upload patterns.
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe texture upload patterns.
         /// </summary>
         public bool UploadTextureData(IntPtr handle, TextureUploadData data)
         {
@@ -298,7 +298,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             {
                 // For DirectX 11, we use ID3D11DeviceContext::UpdateSubresource to upload texture data
                 // This matches the original engine's pattern of uploading texture data after creation
-                // Original engine: swkotor.exe and swkotor2.exe use DirectX 8/9 LockRect/UnlockRect pattern
+                // Original engine: k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe use DirectX 8/9 LockRect/UnlockRect pattern
                 // DirectX 11 equivalent: UpdateSubresource for each mipmap level
                 // Based on DirectX 11 API documentation: https://learn.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11devicecontext-updatesubresource
                 // Implementation follows Microsoft's recommended pattern for uploading texture mipmaps
@@ -840,7 +840,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// <summary>
         /// Creates a D3D11 texture using ID3D11Device::CreateTexture2D COM method.
         /// Based on D3D11 API: https://docs.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11device-createtexture2d
-        /// Matches original engine behavior: swkotor.exe and swkotor2.exe create textures with IDirect3DDevice9::CreateTexture.
+        /// Matches original engine behavior: k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe create textures with IDirect3DDevice9::CreateTexture.
         /// </summary>
         /// <param name="desc">D3D11_TEXTURE2D_DESC structure describing the texture</param>
         /// <param name="ppTexture2D">Output pointer to receive the created ID3D11Texture2D*</param>
@@ -964,7 +964,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// Creates the actual D3D11 texture resource if it doesn't exist.
         /// This is called during UploadTextureData if the texture wasn't created in CreateTexture.
         /// Based on D3D11 API: ID3D11Device::CreateTexture2D
-        /// Matches original engine behavior: swkotor.exe and swkotor2.exe create textures with IDirect3DDevice9::CreateTexture.
+        /// Matches original engine behavior: k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe create textures with IDirect3DDevice9::CreateTexture.
         /// </summary>
         private unsafe bool CreateTextureResource(ref ResourceInfo info, TextureUploadData uploadData)
         {
@@ -1442,7 +1442,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// Updates a subresource (mipmap level) in a D3D11 texture using UpdateSubresource.
         /// This is the DirectX 11 equivalent of DirectX 8/9's LockRect/UnlockRect pattern.
         /// Based on D3D11 API: ID3D11DeviceContext::UpdateSubresource
-        /// Matches original engine behavior: swkotor.exe and swkotor2.exe upload each mipmap level individually.
+        /// Matches original engine behavior: k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe upload each mipmap level individually.
         /// </summary>
         /// <param name="texture">Native D3D11 texture pointer (ID3D11Texture2D*)</param>
         /// <param name="mipLevel">Mipmap level index (0 = base level)</param>
@@ -1492,7 +1492,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             // - SrcDepthPitch = depthPitch (rowPitch * height for 2D textures)
             //
             // This matches the original engine's pattern:
-            // - swkotor.exe and swkotor2.exe use IDirect3DTexture9::LockRect to get a pointer to mipmap data
+            // - k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe use IDirect3DTexture9::LockRect to get a pointer to mipmap data
             // - They then copy pixel data into the locked region
             // - Finally, they call UnlockRect to commit the changes
             // - DirectX 11's UpdateSubresource is the equivalent operation, but copies data directly without locking

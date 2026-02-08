@@ -8,7 +8,7 @@ using BioWare.Resource;
 namespace BioWare.Resource.Formats.TPC
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_auto.py
-    // swkotor.exe/swkotor2.exe: TPC file format detection and I/O operations
+    // k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: TPC file format detection and I/O operations
     // Complete implementation with BioWare DDS header heuristic, automatic TXI file detection, and comprehensive error handling
     public static class TPCAuto
     {
@@ -125,7 +125,7 @@ namespace BioWare.Resource.Formats.TPC
             }
 
             // BioWare DDS header heuristic: width/height/bpp/datasize (uint32 LE)
-            // swkotor.exe/swkotor2.exe: BioWare uses custom DDS format with different header structure
+            // k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: BioWare uses custom DDS format with different header structure
             if (sample.Length >= 20)
             {
                 uint width = BitConverter.ToUInt32(sample, 0);

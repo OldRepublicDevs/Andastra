@@ -329,7 +329,7 @@ namespace Andastra.Game.Games.Engines.Eclipse.EngineApi
         // They are identical across all engines (Odyssey, Aurora, Eclipse, Infinity)
         // Verified  MCP analysis:
         // - nwmain.exe: ExecuteCommandGetPosition @ 0x14052f5b0, ExecuteCommandGetFacing @ 0x140523a70
-        // - swkotor.exe/swkotor2.exe: Equivalent transform system implementations
+        // - k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Equivalent transform system implementations
         // - daorigins.exe: Equivalent transform system implementations
         // EclipseEngineApi now calls base.Func_GetPosition/base.Func_GetFacing for routine IDs 27, 28, and 201
 
@@ -1203,7 +1203,7 @@ namespace Andastra.Game.Games.Engines.Eclipse.EngineApi
         /// </summary>
         /// <remarks>
         /// Based on Eclipse engine: GetFaction implementation
-        /// Located via string reference: "Faction" @ 0x007c0ca0 (swkotor2.exe pattern, Eclipse uses similar system)
+        /// Located via string reference: "Faction" @ 0x007c0ca0 (k2_win_gog_aspyr_swkotor2.exe pattern, Eclipse uses similar system)
         /// Original implementation: Returns faction ID from IFactionComponent.FactionId
         /// Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
         /// </remarks>
@@ -1229,7 +1229,7 @@ namespace Andastra.Game.Games.Engines.Eclipse.EngineApi
         /// </summary>
         /// <remarks>
         /// Based on Eclipse engine: SetFaction implementation
-        /// Located via string reference: "Faction" @ 0x007c0ca0 (swkotor2.exe pattern, Eclipse uses similar system)
+        /// Located via string reference: "Faction" @ 0x007c0ca0 (k2_win_gog_aspyr_swkotor2.exe pattern, Eclipse uses similar system)
         /// Original implementation: Sets faction ID in IFactionComponent.FactionId
         /// Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
         /// </remarks>
@@ -1593,7 +1593,7 @@ namespace Andastra.Game.Games.Engines.Eclipse.EngineApi
         /// </summary>
         /// <remarks>
         /// Based on Eclipse engine: GetItemInSlot implementation
-        /// Located via string reference: "InventorySlot" @ 0x007bf7d0 (swkotor2.exe pattern, Eclipse uses similar system)
+        /// Located via string reference: "InventorySlot" @ 0x007bf7d0 (k2_win_gog_aspyr_swkotor2.exe pattern, Eclipse uses similar system)
         /// Original implementation: Returns object ID of item in specified slot from IInventoryComponent.GetItemInSlot
         /// Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
         /// </remarks>
@@ -1672,7 +1672,7 @@ namespace Andastra.Game.Games.Engines.Eclipse.EngineApi
         /// </summary>
         /// <remarks>
         /// Based on Eclipse engine: GetAbilityScore implementation
-        /// Located via string reference: "STR", "DEX", "CON", "INT", "WIS", "CHA" (swkotor2.exe pattern, Eclipse uses similar system)
+        /// Located via string reference: "STR", "DEX", "CON", "INT", "WIS", "CHA" (k2_win_gog_aspyr_swkotor2.exe pattern, Eclipse uses similar system)
         /// Original implementation: Returns ability score (STR, DEX, CON, INT, WIS, CHA) from IStatsComponent.GetAbility
         /// Ability enum: 0=Strength, 1=Dexterity, 2=Constitution, 3=Intelligence, 4=Wisdom, 5=Charisma
         /// Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
@@ -1705,7 +1705,7 @@ namespace Andastra.Game.Games.Engines.Eclipse.EngineApi
         /// </summary>
         /// <remarks>
         /// Based on Eclipse engine: GetAbilityModifier implementation
-        /// Located via string reference: "STR", "DEX", "CON", "INT", "WIS", "CHA" (swkotor2.exe pattern, Eclipse uses similar system)
+        /// Located via string reference: "STR", "DEX", "CON", "INT", "WIS", "CHA" (k2_win_gog_aspyr_swkotor2.exe pattern, Eclipse uses similar system)
         /// Original implementation: Calculates ability modifier from ability score using IStatsComponent.GetAbilityModifier
         /// Ability modifier formula: (score - 10) / 2 (D20 system standard)
         /// Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
@@ -1738,7 +1738,7 @@ namespace Andastra.Game.Games.Engines.Eclipse.EngineApi
         /// </summary>
         /// <remarks>
         /// Based on Eclipse engine: GetAreaTag implementation
-        /// Located via string reference: "AREANAME" @ 0x007be1dc (swkotor2.exe pattern, Eclipse uses similar system)
+        /// Located via string reference: "AREANAME" @ 0x007be1dc (k2_win_gog_aspyr_swkotor2.exe pattern, Eclipse uses similar system)
         /// Original implementation: Returns area tag from IArea.Tag or entity tag
         /// Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
         /// </remarks>
@@ -2629,7 +2629,7 @@ namespace Andastra.Game.Games.Engines.Eclipse.EngineApi
         /// </summary>
         /// <remarks>
         /// Based on Eclipse engine: GetFirstItemInInventory implementation
-        /// Located via string reference: "InventorySlot" @ 0x007bf7d0 (swkotor2.exe pattern, Eclipse uses similar system)
+        /// Located via string reference: "InventorySlot" @ 0x007bf7d0 (k2_win_gog_aspyr_swkotor2.exe pattern, Eclipse uses similar system)
         /// Original implementation: Returns first item in inventory, initializes iteration state for GetNextItemInInventory
         /// Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
         /// </remarks>
@@ -2673,7 +2673,7 @@ namespace Andastra.Game.Games.Engines.Eclipse.EngineApi
         /// </summary>
         /// <remarks>
         /// Based on Eclipse engine: GetNextItemInInventory implementation
-        /// Located via string reference: "InventorySlot" @ 0x007bf7d0 (swkotor2.exe pattern, Eclipse uses similar system)
+        /// Located via string reference: "InventorySlot" @ 0x007bf7d0 (k2_win_gog_aspyr_swkotor2.exe pattern, Eclipse uses similar system)
         /// Original implementation: Returns next item in inventory, continues iteration state from GetFirstItemInInventory
         /// Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
         /// </remarks>
@@ -2833,7 +2833,7 @@ namespace Andastra.Game.Games.Engines.Eclipse.EngineApi
         /// </summary>
         /// <remarks>
         /// Based on Eclipse engine: GetHasAbility implementation
-        /// Located via string reference: "STR", "DEX", "CON", "INT", "WIS", "CHA" (swkotor2.exe pattern, Eclipse uses similar system)
+        /// Located via string reference: "STR", "DEX", "CON", "INT", "WIS", "CHA" (k2_win_gog_aspyr_swkotor2.exe pattern, Eclipse uses similar system)
         /// Original implementation: Checks if creature has ability (spell, talent, feat) using IStatsComponent
         /// Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
         /// </remarks>
@@ -2899,7 +2899,7 @@ namespace Andastra.Game.Games.Engines.Eclipse.EngineApi
         /// </summary>
         /// <remarks>
         /// Based on Eclipse engine: GetAreaByTag implementation
-        /// Located via string reference: "AREANAME" @ 0x007be1dc (swkotor2.exe pattern, Eclipse uses similar system)
+        /// Located via string reference: "AREANAME" @ 0x007be1dc (k2_win_gog_aspyr_swkotor2.exe pattern, Eclipse uses similar system)
         /// Original implementation: Searches for area with matching tag, returns area object ID
         /// Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
         /// </remarks>
@@ -2927,7 +2927,7 @@ namespace Andastra.Game.Games.Engines.Eclipse.EngineApi
 
             // Search for area by tag (areas are typically loaded modules)
             // Based on Eclipse engine: GetAreaByTag searches all registered areas
-            // Located via string reference: "AREANAME" @ 0x007be1dc (swkotor2.exe pattern, Eclipse uses similar system)
+            // Located via string reference: "AREANAME" @ 0x007be1dc (k2_win_gog_aspyr_swkotor2.exe pattern, Eclipse uses similar system)
             // Original implementation: Iterates through all loaded areas and returns first match by tag
             // Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
             // Implementation: Search all registered areas in world, return AreaId of first matching tag

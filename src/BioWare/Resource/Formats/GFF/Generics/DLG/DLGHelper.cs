@@ -333,8 +333,8 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG
             // K2-specific root fields - only write for K2
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:516-520
             // Original: if game.is_k2(): root.set_int32("AlienRaceOwner", ...), etc.
-            // Ghidra analysis: swkotor2.exe:0x005ea880 line 75-76 reads AlienRaceOwner (K2-specific)
-            // Ghidra analysis: swkotor.exe:0x005a2ae0 does NOT read AlienRaceOwner (K1 doesn't have it)
+            // Ghidra analysis: k2_win_gog_aspyr_swkotor2.exe:0x005ea880 line 75-76 reads AlienRaceOwner (K2-specific)
+            // Ghidra analysis: k1_win_gog_swkotor.exe:0x005a2ae0 does NOT read AlienRaceOwner (K1 doesn't have it)
             // NOTE: Eclipse games (DAO/DA2/ME) use .cnv format, NOT DLG - no Eclipse-specific logic needed here
             if (game.IsK2())
             {
@@ -484,7 +484,7 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG
             // K2-specific node fields - only write for K2
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:459-481
             // Original: if game.is_k2(): gff_struct.set_int32("ActionParam1", ...), etc.
-            // Ghidra analysis confirms K2-specific node fields (ActionParam1-5, Script2, etc.) only in swkotor2.exe
+            // Ghidra analysis confirms K2-specific node fields (ActionParam1-5, Script2, etc.) only in k2_win_gog_aspyr_swkotor2.exe
             // NOTE: Eclipse games (DAO/DA2/ME) use .cnv format, NOT DLG - no Eclipse-specific logic needed
             if (game.IsK2())
             {
@@ -556,7 +556,7 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG
             // K2-specific link fields - only write for K2
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:368-384
             // Original: if game.is_k2(): gff_struct.set_resref("Active2", ...), etc.
-            // Ghidra analysis confirms K2-specific link fields (Active2, Logic, Param1-5, etc.) only in swkotor2.exe
+            // Ghidra analysis confirms K2-specific link fields (Active2, Logic, Param1-5, etc.) only in k2_win_gog_aspyr_swkotor2.exe
             // NOTE: Eclipse games (DAO/DA2/ME) use .cnv format, NOT DLG - no Eclipse-specific logic needed
             if (game.IsK2())
             {

@@ -9,7 +9,7 @@ namespace Andastra.Game.Games.Common.Actions
     /// </summary>
     /// <remarks>
     /// Base Action Queue Implementation:
-    /// Common action queue system shared across Odyssey (swkotor.exe, swkotor2.exe) and Aurora (nwmain.exe, nwn2main.exe).
+    /// Common action queue system shared across Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe) and Aurora (nwmain.exe, nwn2main.exe).
     ///
     /// All engine-specific action queue classes (OdysseyActionQueue, AuroraActionQueue) have been merged into this base class
     /// since their implementations are identical - they only call the base constructor.
@@ -23,10 +23,10 @@ namespace Andastra.Game.Games.Common.Actions
     /// - Instruction count tracking: Accumulates instruction count from script executions during action processing
     ///
     /// Engine-Specific Details (Documented):
-    /// - Odyssey (swkotor.exe, swkotor2.exe):
-    ///   - Located via string references: "ActionList" @ 0x007bebdc (swkotor2.exe), "ActionList" @ 0x00745ea0 (swkotor.exe)
-    ///   - swkotor2.exe: 0x00508260 @ 0x00508260 (load ActionList from GFF), 0x00505bc0 @ 0x00505bc0 (save ActionList to GFF)
-    ///   - swkotor.exe: 0x004cecb0 @ 0x004cecb0 (load ActionList from GFF), 0x004cc7e0 @ 0x004cc7e0 (save ActionList to GFF)
+    /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe):
+    ///   - Located via string references: "ActionList" @ 0x007bebdc (k2_win_gog_aspyr_swkotor2.exe), "ActionList" @ 0x00745ea0 (k1_win_gog_swkotor.exe)
+    ///   - k2_win_gog_aspyr_swkotor2.exe: 0x00508260 @ 0x00508260 (load ActionList from GFF), 0x00505bc0 @ 0x00505bc0 (save ActionList to GFF)
+    ///   - k1_win_gog_swkotor.exe: 0x004cecb0 @ 0x004cecb0 (load ActionList from GFF), 0x004cc7e0 @ 0x004cc7e0 (save ActionList to GFF)
     /// - Aurora (nwmain.exe, nwn2main.exe):
     ///   - Located via string references: "ActionList" @ 0x140df11e0 (nwmain.exe)
     ///   - CNWSObject::LoadActionQueue @ 0x1404963f0 (nwmain.exe) - loads ActionList from GFF

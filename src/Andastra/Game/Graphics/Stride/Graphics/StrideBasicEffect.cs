@@ -52,7 +52,7 @@ namespace Andastra.Game.Stride.Graphics
         /// - Alpha blending
         ///
         /// Based on MonoGame BasicEffect API and Stride Material system.
-        /// Original game: DirectX 9 fixed-function pipeline (swkotor2.exe: d3d9.dll @ 0x0080a6c0)
+        /// Original game: DirectX 9 fixed-function pipeline (k2_win_gog_aspyr_swkotor2.exe: d3d9.dll @ 0x0080a6c0)
         /// </summary>
         private void InitializeEffect()
         {
@@ -76,7 +76,7 @@ namespace Andastra.Game.Stride.Graphics
                 // MaterialSpecularMapFeature constructor takes a ComputeColor parameter
                 // Based on Stride API: MaterialSpecularMapFeature(ComputeColor) constructor
                 // Specular power is set via custom parameter key (MaterialKeys.SpecularPowerValue doesn't exist)
-                // Original game: DirectX 9 fixed-function pipeline specular lighting (swkotor2.exe: d3d9.dll @ 0x0080a6c0)
+                // Original game: DirectX 9 fixed-function pipeline specular lighting (k2_win_gog_aspyr_swkotor2.exe: d3d9.dll @ 0x0080a6c0)
                 if (_lightingEnabled && _specularPower > 0.0f)
                 {
                     var specularColor = new Color4(_specularColor.X, _specularColor.Y, _specularColor.Z, 1.0f);
@@ -191,7 +191,7 @@ namespace Andastra.Game.Stride.Graphics
         ///
         /// Based on Stride API: EffectInstance requires an Effect, but can be created with null
         /// for parameter management. The actual Effect will come from Material when it's built.
-        /// Original game: DirectX 9 fixed-function pipeline (swkotor2.exe: d3d9.dll @ 0x0080a6c0)
+        /// Original game: DirectX 9 fixed-function pipeline (k2_win_gog_aspyr_swkotor2.exe: d3d9.dll @ 0x0080a6c0)
         /// - Fixed-function pipeline doesn't use programmable shaders
         /// - Material states are set via DirectX state blocks
         /// - Modern Stride implementation uses programmable shaders with Material system
@@ -557,7 +557,7 @@ namespace Andastra.Game.Stride.Graphics
                     // This handles any parameter types not explicitly handled above
                     // Based on Stride API: Parameters.Set<T>(ValueParameterKey<T> key, T value) for value types
                     // and Parameters.Set<T>(ObjectParameterKey<T> key, T value) for reference types
-                    // Original game: DirectX 9 fixed-function pipeline parameter setting (swkotor2.exe: d3d9.dll @ 0x0080a6c0)
+                    // Original game: DirectX 9 fixed-function pipeline parameter setting (k2_win_gog_aspyr_swkotor2.exe: d3d9.dll @ 0x0080a6c0)
                     try
                     {
                         // Get the type from ParameterKey<T> by extracting the generic type argument
@@ -1199,7 +1199,7 @@ namespace Andastra.Game.Stride.Graphics
         /// building it if necessary to create a valid EffectInstance.
         ///
         /// Based on MonoGame BasicEffect material properties.
-        /// Original game: DirectX 9 fixed-function materials (swkotor2.exe: d3d9.dll material states)
+        /// Original game: DirectX 9 fixed-function materials (k2_win_gog_aspyr_swkotor2.exe: d3d9.dll material states)
         /// </summary>
         private void UpdateMaterialProperties()
         {
@@ -1238,7 +1238,7 @@ namespace Andastra.Game.Stride.Graphics
                 // MaterialSpecularMapFeature uses parameterless constructor and SpecularMap property
                 // Based on Stride API: MaterialSpecularMapFeature() constructor, then set SpecularMap property
                 // Specular power is set via custom parameter key (MaterialKeys.SpecularPowerValue doesn't exist)
-                // Original game: DirectX 9 fixed-function pipeline specular lighting (swkotor2.exe: d3d9.dll @ 0x0080a6c0)
+                // Original game: DirectX 9 fixed-function pipeline specular lighting (k2_win_gog_aspyr_swkotor2.exe: d3d9.dll @ 0x0080a6c0)
                 if (_lightingEnabled && _specularPower > 0.0f)
                 {
                     var specularColor = new Color4(

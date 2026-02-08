@@ -5,7 +5,7 @@ using BioWare.Resource.Formats.TXI;
 namespace BioWare.Resource.Formats.TPC
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/io_tpc.py:85-270
-    // swkotor.exe/swkotor2.exe: TPC binary reader with full format conversions (deswizzling, cubemap normalization, animated texture handling)
+    // k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: TPC binary reader with full format conversions (deswizzling, cubemap normalization, animated texture handling)
     public class TPCBinaryReader : IDisposable
     {
         private readonly BioWare.Common.RawBinaryReader _reader;
@@ -120,7 +120,7 @@ namespace BioWare.Resource.Formats.TPC
 
                 // Detect animated textures from TXI data
                 // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/io_tpc.py:169-193
-                // swkotor.exe/swkotor2.exe: Animated texture detection via TXI proceduretype=cycle
+                // k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Animated texture detection via TXI proceduretype=cycle
                 TXI.TXI txiData = _tpc.TxiObject;
                 _tpc.IsAnimated = !string.IsNullOrWhiteSpace(_tpc.Txi) &&
                                   !string.IsNullOrWhiteSpace(txiData.Features.Proceduretype) &&
@@ -219,7 +219,7 @@ namespace BioWare.Resource.Formats.TPC
 
                 // Deswizzle BGRA format data
                 // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/io_tpc.py:256-264
-                // swkotor.exe/swkotor2.exe: BGRA textures are stored in swizzled format for GPU-friendly access
+                // k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: BGRA textures are stored in swizzled format for GPU-friendly access
                 if (_tpc.Format() == TPCTextureFormat.BGRA)
                 {
                     foreach (var layer in _tpc.Layers)
@@ -238,7 +238,7 @@ namespace BioWare.Resource.Formats.TPC
 
                 // Normalize cubemaps (convert format, rotate layers, swap layers 0 and 1)
                 // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/io_tpc.py:266-287
-                // swkotor.exe/swkotor2.exe: Cubemap normalization for proper face orientation
+                // k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Cubemap normalization for proper face orientation
                 if (_tpc.IsCubeMap)
                 {
                     NormalizeCubemaps();
@@ -257,7 +257,7 @@ namespace BioWare.Resource.Formats.TPC
 
         // Deswizzle pixel data from GPU-friendly layout to linear layout
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/io_tpc.py:55-81
-        // swkotor.exe/swkotor2.exe: BGRA textures use swizzled memory layout for GPU cache optimization
+        // k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: BGRA textures use swizzled memory layout for GPU cache optimization
         private static byte[] Deswizzle(byte[] data, int width, int height, int bytesPerPixel)
         {
             if (data == null || data.Length == 0)
@@ -324,7 +324,7 @@ namespace BioWare.Resource.Formats.TPC
 
         // Normalize cubemaps: convert format, rotate layers, swap layers 0 and 1
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/io_tpc.py:271-287
-        // swkotor.exe/swkotor2.exe: Cubemap face orientation normalization
+        // k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Cubemap face orientation normalization
         private void NormalizeCubemaps()
         {
             // Convert to RGB (if DXT1) or RGBA (if DXT5)

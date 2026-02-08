@@ -16,8 +16,8 @@ namespace Andastra.Runtime.Games.Common
     /// - Supports both immediate and queued event processing
     ///
     /// Based on verified components of:
-    /// - swkotor.exe: Event dispatching systems
-    /// - swkotor2.exe: Event routing and script event handling
+    /// - k1_win_gog_swkotor.exe: Event dispatching systems
+    /// - k2_win_gog_aspyr_swkotor2.exe: Event routing and script event handling
     /// - nwmain.exe: Aurora event systems
     /// - daorigins.exe: Eclipse event management
     /// - Common event patterns: Script events, combat events, interaction events

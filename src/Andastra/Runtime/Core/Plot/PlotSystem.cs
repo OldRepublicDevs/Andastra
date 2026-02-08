@@ -23,7 +23,7 @@ namespace Andastra.Runtime.Core.Plot
     ///   - Tracks plot completion status
     ///   - Integrates with journal system for quest updates
     /// - Cross-engine analysis:
-    ///   - swkotor.exe: Similar plot system (needs reverse engineering)
+    ///   - k1_win_gog_swkotor.exe: Similar plot system (needs reverse engineering)
     ///   - nwmain.exe: Different plot system (needs reverse engineering)
     ///   - daorigins.exe: Plot system may differ (needs reverse engineering)
     /// </remarks>

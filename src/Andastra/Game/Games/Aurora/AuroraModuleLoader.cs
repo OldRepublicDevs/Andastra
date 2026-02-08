@@ -33,7 +33,7 @@ namespace Andastra.Game.Games.Aurora
     /// - Based on nwmain.exe: CNWSModule::LoadModule (needs Ghidra address verification)
     /// - Based on nwmain.exe: CServerExoApp::LoadModule (needs Ghidra address verification)
     /// - Located via string references: "MODULES" (needs Ghidra verification), "Module.ifo" (needs Ghidra verification)
-    /// - Cross-engine: Similar functions in swkotor.exe (Odyssey), daorigins.exe (Eclipse)
+    /// - Cross-engine: Similar functions in k1_win_gog_swkotor.exe (Odyssey), daorigins.exe (Eclipse)
     /// - Inheritance: BaseEngineModule (Runtime.Games.Common) implements common module loading/unloading
     ///   - Aurora: AuroraModuleLoader : BaseEngineModule (Runtime.Games.Aurora) - Aurora-specific module file formats (Module.ifo, ARE, GIT, HAK files)
     ///
@@ -1818,8 +1818,8 @@ namespace Andastra.Game.Games.Aurora
         /// - CNWSCreatureStats::LoadCreatureStats loads stats from UTC GFF
         /// - Properties are applied to creature object after template loading
         ///
-        /// Based on swkotor.exe, swkotor2.exe: UTC template loading:
-        /// - swkotor.exe: 0x005026d0, swkotor2.exe: 0x005261b0 - Load creature from UTC template
+        /// Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe: UTC template loading:
+        /// - k1_win_gog_swkotor.exe: 0x005026d0, k2_win_gog_aspyr_swkotor2.exe: 0x005261b0 - Load creature from UTC template
         /// - UTCHelpers.ConstructUtc parses UTC GFF and creates UTC object
         /// - All UTC properties are applied to creature component
         /// </remarks>
@@ -1855,7 +1855,7 @@ namespace Andastra.Game.Games.Aurora
 
                 // Apply UTC template properties to creature component
                 // Based on nwmain.exe: CNWSCreatureStats::LoadCreatureStats applies UTC properties
-                // Based on swkotor.exe, swkotor2.exe: UTC properties applied to creature object
+                // Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe: UTC properties applied to creature object
 
                 // Basic properties
                 if (!string.IsNullOrEmpty(utc.Tag))
@@ -2214,7 +2214,7 @@ namespace Andastra.Game.Games.Aurora
             // Fire OnModuleLoad script event
             // Based on nwmain.exe: OnModuleLoad executes when module finishes loading (after entities spawned, before gameplay starts)
             // Located via string references: "OnModuleLoad" @ 0x007bee40 (approximate - needs Ghidra verification for nwmain.exe)
-            // Original implementation: 0x005226d0 @ 0x005226d0 in swkotor2.exe executes module load scripts
+            // Original implementation: 0x005226d0 @ 0x005226d0 in k2_win_gog_aspyr_swkotor2.exe executes module load scripts
             // Aurora uses similar pattern: EventBus queues script event, script executor processes event and executes script
             if (!string.IsNullOrEmpty(onModuleLoadScript))
             {

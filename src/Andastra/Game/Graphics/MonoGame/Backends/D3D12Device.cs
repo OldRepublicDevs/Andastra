@@ -953,7 +953,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             // Create D3D12 compute pipeline state object
             // Based on DirectX 12 Compute Pipeline State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcomputepipelinestate
             // VTable index 44 for ID3D12Device::CreateComputePipelineState
-            // Based on swkotor.exe/swkotor2.exe: Compute shader pipeline creation for compute operations
+            // Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Compute shader pipeline creation for compute operations
 
             // Platform check: DirectX 12 COM is Windows-only
             if (Environment.OSVersion.Platform != PlatformID.Win32NT)
@@ -4276,7 +4276,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         ///
         /// DirectX 12 GPU descriptor handles are used to reference descriptors from command lists during GPU execution.
         /// The handle must be preserved until all referencing command lists have finished execution.
-        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+        /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
         /// </summary>
         private unsafe D3D12_GPU_DESCRIPTOR_HANDLE CallGetGPUDescriptorHandleForHeapStart(IntPtr descriptorHeap)
         {
@@ -4579,7 +4579,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// Calls ID3D12Device::CreateFence through COM vtable.
         /// VTable index 11 for ID3D12Device.
         /// Based on DirectX 12 Fence Creation: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createfence
-        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+        /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
         /// </summary>
         private unsafe int CallCreateFence(IntPtr device, ulong initialValue, uint flags, ref Guid riid, IntPtr ppFence)
         {
@@ -4619,7 +4619,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// Calls ID3D12CommandQueue::Signal through COM vtable.
         /// VTable index 5 for ID3D12CommandQueue (after IUnknown and ExecuteCommandLists).
         /// Based on DirectX 12 Command Queue Signaling: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandqueue-signal
-        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+        /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
         /// </summary>
         private unsafe ulong CallSignalFence(IntPtr commandQueue, IntPtr fence, ulong value)
         {
@@ -4659,7 +4659,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// Calls ID3D12Fence::GetCompletedValue through COM vtable.
         /// VTable index 3 for ID3D12Fence (after IUnknown methods).
         /// Based on DirectX 12 Fence Queries: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12fence-getcompletedvalue
-        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+        /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
         /// </summary>
         private unsafe ulong CallGetFenceCompletedValue(IntPtr fence)
         {
@@ -4699,7 +4699,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// Calls ID3D12Fence::SetEventOnCompletion through COM vtable.
         /// VTable index 4 for ID3D12Fence (after GetCompletedValue).
         /// Based on DirectX 12 Fence Synchronization: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12fence-seteventoncompletion
-        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+        /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
         /// </summary>
         private unsafe int CallSetEventOnCompletion(IntPtr fence, ulong value, IntPtr hEvent)
         {
@@ -5587,7 +5587,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             // Create SRV descriptor directly at the provided handle
             // This is similar to CreateSrvDescriptorForTexture but writes directly to the provided handle
             // Based on DirectX 12 Shader Resource Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createshaderresourceview
-            // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            // k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
 
             // Determine SRV dimension based on resource dimension
             uint srvDimension;
@@ -6406,7 +6406,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             // Create D3D12_SHADER_RESOURCE_VIEW_DESC structure for acceleration structure
             // Based on DirectX 12 Raytracing Acceleration Structure SRV: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_shader_resource_view_desc
             // Acceleration structures use D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE (value 11)
-            // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            // k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
             var srvDesc = new D3D12_SHADER_RESOURCE_VIEW_DESC
             {
                 Format = 0, // DXGI_FORMAT_UNKNOWN - acceleration structures don't use formats
@@ -8207,7 +8207,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
                 // In DirectX 12, GPU descriptor handles are obtained from the descriptor heap
                 // and can be offset by descriptor index * descriptor increment size
                 // Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/direct3d12/descriptors-overview
-                // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+                // k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
                 //
                 // NOTE: This constructor is a fallback for legacy code paths. The preferred constructor
                 // accepts a pre-calculated GPU descriptor handle with the proper offset.
@@ -8481,7 +8481,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
 
                     // Query ID3D12StateObjectProperties from ID3D12StateObject
                     // Based on DirectX 12 COM QueryInterface: https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-queryinterface
-                    // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+                    // k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
                     IntPtr propertiesPtr = Marshal.AllocHGlobal(IntPtr.Size);
                     try
                     {
@@ -8556,7 +8556,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
                     // Based on D3D12 DXR API: ID3D12StateObjectProperties::GetShaderIdentifier
                     // Returns pointer to 32-byte shader identifier, or NULL if export name not found
                     // https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12stateobjectproperties-getshaderidentifier
-                    // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+                    // k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
                     IntPtr shaderIdPtr = _parentDevice.CallStateObjectPropertiesGetShaderIdentifier(properties, pExportName);
                     if (shaderIdPtr == IntPtr.Zero)
                     {
@@ -8638,7 +8638,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             /// Opens the command list for recording commands.
             /// Resets the command allocator and command list before starting a new recording session.
             /// Based on DirectX 12 Command List Recording: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-reset
-            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
             /// </summary>
             public void Open()
             {
@@ -8737,8 +8737,8 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             /// https://docs.microsoft.com/en-us/windows/win32/direct3d12/uploading-resource-data
             ///
             /// Pattern matches original engine behavior:
-            /// - swkotor.exe: Uses DirectX 9 UpdateSubresource pattern (D3D12 equivalent is upload heap + CopyBufferRegion)
-            /// - swkotor2.exe: Uses DirectX 9 UpdateSubresource pattern (D3D12 equivalent is upload heap + CopyBufferRegion)
+            /// - k1_win_gog_swkotor.exe: Uses DirectX 9 UpdateSubresource pattern (D3D12 equivalent is upload heap + CopyBufferRegion)
+            /// - k2_win_gog_aspyr_swkotor2.exe: Uses DirectX 9 UpdateSubresource pattern (D3D12 equivalent is upload heap + CopyBufferRegion)
             /// - Original engine uploads buffer data via IDirect3DDevice9::UpdateSubresource
             /// - D3D12 equivalent: CreateCommittedResource with D3D12_HEAP_TYPE_UPLOAD, Map, copy, Unmap, CopyBufferRegion
             /// </summary>
@@ -8932,8 +8932,8 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             /// https://docs.microsoft.com/en-us/windows/win32/direct3d12/uploading-resource-data
             ///
             /// Pattern matches original engine behavior:
-            /// - swkotor.exe: Uses DirectX 9 UpdateSubresource pattern (D3D12 equivalent is upload heap + CopyBufferRegion)
-            /// - swkotor2.exe: Uses DirectX 9 UpdateSubresource pattern (D3D12 equivalent is upload heap + CopyBufferRegion)
+            /// - k1_win_gog_swkotor.exe: Uses DirectX 9 UpdateSubresource pattern (D3D12 equivalent is upload heap + CopyBufferRegion)
+            /// - k2_win_gog_aspyr_swkotor2.exe: Uses DirectX 9 UpdateSubresource pattern (D3D12 equivalent is upload heap + CopyBufferRegion)
             /// </summary>
             /// <typeparam name="T">Unmanaged type for the array elements.</typeparam>
             /// <param name="buffer">Target buffer to write data to.</param>
@@ -9924,7 +9924,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             /// Calls ID3D12CommandAllocator::Reset through COM vtable.
             /// VTable index 3 for ID3D12CommandAllocator (first method after IUnknown: QueryInterface, AddRef, Release).
             /// Based on DirectX 12 Command Allocator Reset: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandallocator-reset
-            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
             /// </summary>
             private unsafe int CallCommandAllocatorReset(IntPtr commandAllocator)
             {
@@ -9955,7 +9955,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             /// Calls ID3D12GraphicsCommandList::Reset through COM vtable.
             /// VTable index 4 for ID3D12GraphicsCommandList (first method after IUnknown: QueryInterface, AddRef, Release, GetDevice).
             /// Based on DirectX 12 Command List Reset: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-reset
-            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
             /// </summary>
             private unsafe int CallCommandListReset(IntPtr commandList, IntPtr pAllocator, IntPtr pInitialState)
             {
@@ -9986,7 +9986,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             /// Calls ID3D12GraphicsCommandList::Close through COM vtable.
             /// VTable index 5 for ID3D12GraphicsCommandList (after Reset at index 4).
             /// Based on DirectX 12 Command List Close: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-close
-            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
             /// </summary>
             private unsafe int CallClose(IntPtr commandList)
             {
@@ -10158,7 +10158,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             /// Calls ID3D12GraphicsCommandList::DrawIndexedInstanced through COM vtable.
             /// VTable index 101 for ID3D12GraphicsCommandList.
             /// Based on DirectX 12 DrawIndexedInstanced: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-drawindexedinstanced
-            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
             /// </summary>
             private unsafe void CallDrawIndexedInstanced(IntPtr commandList, uint IndexCountPerInstance, uint InstanceCount, uint StartIndexLocation, int BaseVertexLocation, uint StartInstanceLocation)
             {
@@ -10549,7 +10549,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             /// Calls ID3D12GraphicsCommandList::OMSetStencilRef through COM vtable.
             /// VTable index 46 for ID3D12GraphicsCommandList.
             /// Based on DirectX 12 Output Merger Stencil Reference: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-omsetstencilref
-            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
             /// </summary>
             private unsafe void CallOMSetStencilRef(IntPtr commandList, uint StencilRef)
             {
@@ -11313,7 +11313,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
                     // In D3D12, each binding set maps to one root parameter index in the root signature
                     // Root parameter indices are determined by the order of binding layouts in the pipeline
                     // Based on DirectX 12 Root Signatures: https://docs.microsoft.com/en-us/windows/win32/direct3d12/root-signatures
-                    // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+                    // k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
                     GraphicsPipelineDesc pipelineDesc = d3d12Pipeline.Desc;
                     IBindingLayout[] pipelineBindingLayouts = pipelineDesc.BindingLayouts;
 
@@ -12087,7 +12087,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             /// Sets the blend constant color used for blending operations.
             /// Converts Vector4 color to float[4] array and calls OMSetBlendFactor.
             /// Based on DirectX 12 Blend Factor: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-omsetblendfactor
-            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
             /// </summary>
             public unsafe void SetBlendConstant(Vector4 color)
             {
@@ -12116,7 +12116,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             /// Sets the stencil reference value for the output merger stage.
             /// In DirectX 12, this calls ID3D12GraphicsCommandList::OMSetStencilRef.
             /// Based on DirectX 12 Output Merger Stencil Reference: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-omsetstencilref
-            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
             /// </summary>
             public void SetStencilRef(uint reference)
             {
@@ -12137,7 +12137,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             /// Draws non-indexed primitives using instanced drawing.
             /// In DirectX 12, all non-indexed drawing is done through DrawInstanced.
             /// Based on DirectX 12 DrawInstanced: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-drawinstanced
-            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
             /// </summary>
             public void Draw(DrawArguments args)
             {
@@ -12185,7 +12185,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             /// Draws indexed primitives using instanced drawing.
             /// In DirectX 12, all indexed drawing is done through DrawIndexedInstanced.
             /// Based on DirectX 12 DrawIndexedInstanced: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-drawindexedinstanced
-            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
             /// </summary>
             public void DrawIndexed(DrawArguments args)
             {
@@ -12300,7 +12300,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
                 // For multi-draw indirect, MaxCommandCount is drawCount
                 // The count buffer is NULL (IntPtr.Zero) and CountBufferOffset is 0 when not using count buffer
                 // Based on DirectX 12 ExecuteIndirect: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-executeindirect
-                // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+                // k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
                 _device.CallExecuteIndirect(
                     _d3d12CommandList,
                     commandSignature,
@@ -12379,7 +12379,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
                 // For multi-draw indexed indirect, MaxCommandCount is drawCount
                 // The count buffer is NULL (IntPtr.Zero) and CountBufferOffset is 0 when not using count buffer
                 // Based on DirectX 12 ExecuteIndirect: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-executeindirect
-                // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+                // k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
                 _device.CallExecuteIndirect(
                     _d3d12CommandList,
                     commandSignature,
@@ -12487,7 +12487,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
                     // In D3D12, each binding set maps to one root parameter index in the root signature
                     // Root parameter indices are determined by the order of binding layouts in the pipeline
                     // Based on DirectX 12 Root Signatures: https://docs.microsoft.com/en-us/windows/win32/direct3d12/root-signatures
-                    // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+                    // k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
                     ComputePipelineDesc pipelineDesc = d3d12Pipeline.Desc;
                     IBindingLayout[] pipelineBindingLayouts = pipelineDesc.BindingLayouts;
 
@@ -12519,7 +12519,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
                         // Get GPU descriptor handle from binding set
                         // The GPU descriptor handle points to the start of the descriptor table in the heap
                         // Based on DirectX 12 Root Parameters: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setcomputerootdescriptortable
-                        // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+                        // k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
                         D3D12_GPU_DESCRIPTOR_HANDLE handle = d3d12BindingSet.GetGpuDescriptorHandle();
                         if (handle.ptr != 0)
                         {
@@ -12598,7 +12598,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
                 // For single dispatch indirect (no count buffer), MaxCommandCount is 1
                 // The count buffer is NULL (IntPtr.Zero) and CountBufferOffset is 0
                 // Based on DirectX 12 ExecuteIndirect: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-executeindirect
-                // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+                // k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
                 _device.CallExecuteIndirect(
                     _d3d12CommandList,
                     commandSignature,
@@ -13062,7 +13062,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             /// Builds a top-level acceleration structure (TLAS) from instance data.
             /// Based on D3D12 API: ID3D12GraphicsCommandList4::BuildRaytracingAccelerationStructure
             /// D3D12 DXR API Reference: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist4-buildraytracingaccelerationstructure
-            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
             /// </summary>
             public void BuildTopLevelAccelStruct(IAccelStruct accelStruct, AccelStructInstance[] instances)
             {
@@ -14521,7 +14521,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// Creates or retrieves cached command signature for DrawIndirect.
         /// Command signatures describe the structure of indirect arguments in GPU buffers.
         /// Based on DirectX 12 CreateCommandSignature: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommandsignature
-        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+        /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
         /// </summary>
         internal unsafe IntPtr CreateDrawIndirectCommandSignature()
         {
@@ -14619,7 +14619,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// Creates or retrieves cached command signature for DrawIndexedIndirect.
         /// Command signatures describe the structure of indirect arguments in GPU buffers.
         /// Based on DirectX 12 CreateCommandSignature: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommandsignature
-        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+        /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
         /// </summary>
         internal unsafe IntPtr CreateDrawIndexedIndirectCommandSignature()
         {

@@ -58,27 +58,27 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
     /// </remarks>
     public class DialogueManager : BaseDialogueManager
     {
-        // Plot XP calculation multipliers (swkotor2.exe data addresses)
-        // swkotor2.exe: 0x005e6870 (ProcessPlotXPThreshold) - Checks threshold and calculates base multiplier
-        // swkotor2.exe: 0x0057eb20 (AwardPlotXP) - Calculates final XP and awards it to party
-        // K1 (swkotor.exe): TODO - Find equivalent addresses (needs reverse engineering)
+        // Plot XP calculation multipliers (k2_win_gog_aspyr_swkotor2.exe data addresses)
+        // k2_win_gog_aspyr_swkotor2.exe: 0x005e6870 (ProcessPlotXPThreshold) - Checks threshold and calculates base multiplier
+        // k2_win_gog_aspyr_swkotor2.exe: 0x0057eb20 (AwardPlotXP) - Calculates final XP and awards it to party
+        // K1 (k1_win_gog_swkotor.exe): TODO - Find equivalent addresses (needs reverse engineering)
         // _DAT_007b99b4: Base multiplier applied to plotXpPercentage
         // _DAT_007b5f88: Additional multiplier applied to final XP calculation
         // Verified reverse engineering:
         // - 0x005e6870 (ProcessPlotXPThreshold) line 17: param_2 * _DAT_007b99b4
         // - 0x0057eb20 (AwardPlotXP) line 30: (float)(local_18 * param_2) * _DAT_007b5f88
-        // Memory read from swkotor2.exe:
+        // Memory read from k2_win_gog_aspyr_swkotor2.exe:
         // - 0x007b99b4: 00 00 C8 42 = 100.0f
         // - 0x007b5f88: 0A D7 23 3C = 0.009999999776482582f (approximately 0.01f)
         // Note: Function names are descriptive based on reverse engineering analysis and need Ghidra verification
         private const float PLOT_XP_BASE_MULTIPLIER = 100.0f; // _DAT_007b99b4 @ 0x007b99b4 - Verified 
         private const float PLOT_XP_ADDITIONAL_MULTIPLIER = 0.009999999776482582f; // _DAT_007b5f88 @ 0x007b5f88 - Verified 
 
-        // Plot XP threshold check (swkotor2.exe: 0x005e6870 (ProcessPlotXPThreshold))
+        // Plot XP threshold check (k2_win_gog_aspyr_swkotor2.exe: 0x005e6870 (ProcessPlotXPThreshold))
         // Only processes XP if threshold < plotXpPercentage
         // Verified reverse engineering:
         // - 0x005e6870 (ProcessPlotXPThreshold) line 13: if ((param_1 != -1) && (_DAT_007b56fc < param_2))
-        // - Memory read from swkotor2.exe @ 0x007b56fc: 00 00 00 00 = 0.0f
+        // - Memory read from k2_win_gog_aspyr_swkotor2.exe @ 0x007b56fc: 00 00 00 00 = 0.0f
         // Logic verification: Comparison "threshold < plotXpPercentage" with threshold=0.0f correctly filters:
         //   - plotXpPercentage = 0.0f → 0.0 < 0.0 = false → No XP (correct, 0% means no XP award)
         //   - plotXpPercentage > 0.0f → 0.0 < percentage = true → XP processed (correct, any positive % processes XP)
@@ -953,7 +953,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
         /// </summary>
         /// <param name="node">The dialogue node (DLGEntry or DLGReply)</param>
         /// <remarks>
-        /// Quest Field Processing (swkotor2.exe: 0x005e61d0 @ 0x005e61d0):
+        /// Quest Field Processing (k2_win_gog_aspyr_swkotor2.exe: 0x005e61d0 @ 0x005e61d0):
         /// - Called from 0x005e7cb0 @ 0x005e7f85 (dialogue entry processing)
         /// - Called from 0x005ec340 @ 0x005ec6a9 (dialogue reply processing)
         /// - Located via string references: "Quest" @ 0x007c35e4, "QuestEntry" @ 0x007c35d8
@@ -970,7 +970,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
         ///   - QuestEntry: offset 0xa0 (param_2)
         ///   - Player ID: param_3
         /// - Cross-engine analysis:
-        ///   - swkotor.exe: Similar quest processing (needs reverse engineering)
+        ///   - k1_win_gog_swkotor.exe: Similar quest processing (needs reverse engineering)
         ///   - nwmain.exe: Journal system uses different format (JRL files)
         ///   - daorigins.exe: Quest system may differ (needs reverse engineering)
         /// </remarks>
@@ -1097,8 +1097,8 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
             }
 
             // Process plot index and XP percentage if present
-            // swkotor2.exe: 0x005e6870 (ProcessPlotXPThreshold) -> 0x0057eb20 (AwardPlotXP)
-            // K1 (swkotor.exe): TODO - Find equivalent addresses (needs reverse engineering)
+            // k2_win_gog_aspyr_swkotor2.exe: 0x005e6870 (ProcessPlotXPThreshold) -> 0x0057eb20 (AwardPlotXP)
+            // K1 (k1_win_gog_swkotor.exe): TODO - Find equivalent addresses (needs reverse engineering)
             // Located via string references: "PlotIndex" @ 0x007c35c4, "PlotXPPercentage" @ 0x007c35cc
             // Original implementation: Updates plot flags and awards XP based on PlotIndex and PlotXpPercentage
             // Flow: ProcessPlotXPThreshold (0x005e6870) -> AwardPlotXP (0x0057eb20)
@@ -1122,7 +1122,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
         /// <param name="questTag">Quest tag from dialogue node (if available)</param>
         /// <param name="questEntryIndex">Quest entry index from dialogue node (if available)</param>
         /// <remarks>
-        /// Comprehensive PlotIndex Processing (swkotor2.exe: 0x005e6870 (ProcessPlotXPThreshold) -> 0x0057eb20 (AwardPlotXP)):
+        /// Comprehensive PlotIndex Processing (k2_win_gog_aspyr_swkotor2.exe: 0x005e6870 (ProcessPlotXPThreshold) -> 0x0057eb20 (AwardPlotXP)):
         /// - ProcessPlotXPThreshold (0x005e6870): Checks if plotIndex != -1 and threshold < plotXpPercentage
         ///   - Calculates: plotXpPercentage * _DAT_007b99b4 (base multiplier)
         ///   - Calls AwardPlotXP (0x0057eb20) with plotIndex and calculated value
@@ -1139,7 +1139,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
         ///   6. Update quest/journal state if plot label matches a quest
         ///   7. Mark plot as triggered/completed
         /// - Cross-engine analysis:
-        ///   - swkotor.exe: Similar plot system (needs reverse engineering)
+        ///   - k1_win_gog_swkotor.exe: Similar plot system (needs reverse engineering)
         ///   - nwmain.exe: Different plot system (needs reverse engineering)
         ///   - daorigins.exe: Plot system may differ (needs reverse engineering)
         /// </remarks>
@@ -1151,8 +1151,8 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
             }
 
             // Look up plot.2da row using PlotIndex
-            // swkotor2.exe: 0x0057eb20 (AwardPlotXP) looks up plot.2da data
-            // K1 (swkotor.exe): TODO - Find equivalent address (needs reverse engineering)
+            // k2_win_gog_aspyr_swkotor2.exe: 0x0057eb20 (AwardPlotXP) looks up plot.2da data
+            // K1 (k1_win_gog_swkotor.exe): TODO - Find equivalent address (needs reverse engineering)
             TwoDA plotTable = _gameDataManager.GetTable("plot");
             if (plotTable == null)
             {
@@ -1192,8 +1192,8 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
                 plotAlreadyTriggered = _plotSystem.IsPlotTriggered(plotIndex);
             }
 
-            // Process plot XP (swkotor2.exe: 0x005e6870 (ProcessPlotXPThreshold) -> 0x0057eb20 (AwardPlotXP))
-            // K1 (swkotor.exe): TODO - Find equivalent addresses (needs reverse engineering)
+            // Process plot XP (k2_win_gog_aspyr_swkotor2.exe: 0x005e6870 (ProcessPlotXPThreshold) -> 0x0057eb20 (AwardPlotXP))
+            // K1 (k1_win_gog_swkotor.exe): TODO - Find equivalent addresses (needs reverse engineering)
             // Original implementation flow:
             //   1. ProcessPlotXPThreshold checks if plotIndex != -1 and threshold < plotXpPercentage
             //   2. Calculate: plotXpPercentage * _DAT_007b99b4 (base multiplier)
@@ -1207,12 +1207,12 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
                 baseXP.HasValue &&
                 baseXP.Value > 0)
             {
-                // Step 1: Calculate base multiplier value (swkotor2.exe: 0x005e6870 (ProcessPlotXPThreshold))
+                // Step 1: Calculate base multiplier value (k2_win_gog_aspyr_swkotor2.exe: 0x005e6870 (ProcessPlotXPThreshold))
                 // Calculates: plotXpPercentage * _DAT_007b99b4 (base multiplier)
                 // This is param_2 passed to AwardPlotXP
                 float multiplierValue = plotXpPercentage * PLOT_XP_BASE_MULTIPLIER;
 
-                // Step 2: Calculate final XP (swkotor2.exe: 0x0057eb20 (AwardPlotXP))
+                // Step 2: Calculate final XP (k2_win_gog_aspyr_swkotor2.exe: 0x0057eb20 (AwardPlotXP))
                 // Calculates: (plotXP * param_2) * _DAT_007b5f88 (additional multiplier)
                 // Where plotXP is baseXP from plot.2da and param_2 is multiplierValue from step 1
                 // Original implementation: (baseXP * multiplierValue) * additionalMultiplier
@@ -1220,12 +1220,12 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
 
                 if (finalXP > 0)
                 {
-                    // Award XP to all active party members (swkotor2.exe: 0x0057ccd0 @ 0x0057ccd0)
+                    // Award XP to all active party members (k2_win_gog_aspyr_swkotor2.exe: 0x0057ccd0 @ 0x0057ccd0)
                     // Original implementation awards XP to all active party members
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057ccd0 awards XP to party
                     _partySystem.AwardXP(finalXP);
 
-                    // Notify journal system (swkotor2.exe: 0x00681a10 @ 0x00681a10)
+                    // Notify journal system (k2_win_gog_aspyr_swkotor2.exe: 0x00681a10 @ 0x00681a10)
                     // Original implementation: Journal system is notified when XP is awarded via plot
                     // This allows journal to track XP rewards and update UI accordingly
                     // 0x00681a10: Updates journal entry XPReward when plot XP is awarded
@@ -1267,14 +1267,14 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
         }
 
         /// <summary>
-        /// Notifies journal system when plot XP is awarded (swkotor2.exe: 0x00681a10 @ 0x00681a10).
+        /// Notifies journal system when plot XP is awarded (k2_win_gog_aspyr_swkotor2.exe: 0x00681a10 @ 0x00681a10).
         /// </summary>
         /// <param name="plotLabel">Plot label from plot.2da</param>
         /// <param name="plotXP">XP amount awarded via plot</param>
         /// <param name="questTag">Quest tag from dialogue node (if available)</param>
         /// <param name="questEntryIndex">Quest entry index from dialogue node (if available)</param>
         /// <remarks>
-        /// Journal Notification for Plot XP (swkotor2.exe: 0x00681a10 @ 0x00681a10):
+        /// Journal Notification for Plot XP (k2_win_gog_aspyr_swkotor2.exe: 0x00681a10 @ 0x00681a10):
         /// - Called from AwardPlotXP (0x0057eb20) when plot XP is awarded
         /// - Original implementation:
         ///   1. Finds journal entry associated with plot/quest
@@ -1359,7 +1359,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
         /// <param name="entryId">Entry ID (0-based index in entry list).</param>
         /// <returns>The entry text, or null if not found.</returns>
         /// <remarks>
-        /// Quest Entry Text Lookup (swkotor2.exe):
+        /// Quest Entry Text Lookup (k2_win_gog_aspyr_swkotor2.exe):
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Quest entry text is loaded from JRL files
         /// - Original implementation:
         ///   1. Loads JRL file by quest tag (or uses global.jrl)

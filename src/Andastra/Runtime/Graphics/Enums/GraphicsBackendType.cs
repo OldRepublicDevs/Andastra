@@ -98,7 +98,7 @@ namespace Andastra.Runtime.Graphics.Common.Enums
 
         /// <summary>
         /// Odyssey Engine - KOTOR 1 and KOTOR 2 rendering backend.
-        /// Matches swkotor.exe and swkotor2.exe rendering implementation exactly.
+        /// Matches k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe rendering implementation exactly.
         /// </summary>
         OdysseyEngine = 1 << 13,
 

@@ -8,12 +8,12 @@ namespace Andastra.Game.Scripting.VM
     /// </summary>
     /// <remarks>
     /// Script Globals Factory:
-    /// - Based on swkotor.exe and swkotor2.exe script variable system initialization
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe script variable system initialization
     /// - Creates appropriate script globals implementation based on game type (K1 or K2)
     /// - Factory pattern ensures correct script globals instance is created for each game
     /// - Original implementation: Game-specific initialization may differ between K1 and K2
-    /// - K1: Uses K1ScriptGlobals (based on swkotor.exe)
-    /// - K2: Uses K2ScriptGlobals (based on swkotor2.exe)
+    /// - K1: Uses K1ScriptGlobals (based on k1_win_gog_swkotor.exe)
+    /// - K2: Uses K2ScriptGlobals (based on k2_win_gog_aspyr_swkotor2.exe)
     /// </remarks>
     public static class ScriptGlobalsFactory
     {
@@ -24,10 +24,10 @@ namespace Andastra.Game.Scripting.VM
         /// <returns>Script globals instance appropriate for the game type.</returns>
         /// <remarks>
         /// Script Globals Creation:
-        /// - Based on swkotor.exe and swkotor2.exe: Script globals system initializes global variables
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Script globals system initializes global variables
         /// - Original implementation: Global variables persist across saves, initialized at game start
-        /// - K1: Returns K1ScriptGlobals instance (based on swkotor.exe)
-        /// - K2: Returns K2ScriptGlobals instance (based on swkotor2.exe)
+        /// - K1: Returns K1ScriptGlobals instance (based on k1_win_gog_swkotor.exe)
+        /// - K2: Returns K2ScriptGlobals instance (based on k2_win_gog_aspyr_swkotor2.exe)
         /// - Factory pattern ensures correct implementation is used for each game
         /// </remarks>
         public static IScriptGlobals Create(KotorGame game)

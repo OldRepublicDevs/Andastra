@@ -19,7 +19,7 @@ namespace Andastra.Game.Games.Common
     ///
     /// Inheritance Structure:
     /// - BaseGuiManager (Runtime.Games.Common) - Common GUI operations
-    ///   - Odyssey: KotorGuiManager : BaseGuiManager (swkotor.exe, swkotor2.exe)
+    ///   - Odyssey: KotorGuiManager : BaseGuiManager (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
     ///   - Aurora: AuroraGuiManager : BaseGuiManager (nwmain.exe)
     ///   - Eclipse: EclipseGuiManager : BaseGuiManager (daorigins.exe, DragonAge2.exe)
     /// </remarks>

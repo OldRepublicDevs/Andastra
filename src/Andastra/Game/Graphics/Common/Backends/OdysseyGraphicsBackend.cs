@@ -1,33 +1,43 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Andastra.Runtime.Graphics;
 using Andastra.Game.Graphics.Common.Backends.Odyssey;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
+using Andastra.Runtime.Core;
+using Andastra.Runtime.Content.Interfaces;
+using BioWare;
+using BioWare.Resource.Formats.TPC;
+using BioWare.Common;
+using BioWare.Resource;
+using ResourceType = BioWare.Common.ResourceType;
 
 namespace Andastra.Game.Graphics.Common.Backends
 {
     /// <summary>
-    /// Abstract base class for Odyssey engine graphics backends.
+    /// Odyssey engine graphics backend for both KOTOR1 and KOTOR2.
     ///
     /// Odyssey engine is used by:
-    /// - Star Wars: Knights of the Old Republic (swkotor.exe)
-    /// - Star Wars: Knights of the Old Republic II - The Sith Lords (swkotor2.exe)
+    /// - Star Wars: Knights of the Old Republic (k1_win_gog_swkotor.exe)
+    /// - Star Wars: Knights of the Old Republic II - The Sith Lords (k2_win_gog_aspyr_swkotor2.exe)
     ///
     /// This backend matches the Odyssey engine's rendering implementation exactly 1:1,
-    /// as reverse-engineered from swkotor.exe and swkotor2.exe.
+    /// as reverse-engineered from k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe.
+    /// Game-specific behavior is selected via the constructor (KotorGame.K1 or KotorGame.K2).
     /// </summary>
     /// <remarks>
     /// Odyssey Engine Graphics Backend:
-    /// - Based on verified components of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe
     /// - Original game graphics system: OpenGL (OPENGL32.DLL) with WGL extensions
     /// - Graphics initialization:
-    ///   - swkotor.exe: 0x0044dab0 @ 0x0044dab0 (OpenGL context creation)
-    ///   - swkotor2.exe: 0x00461c50 @ 0x00461c50 (OpenGL context creation)
+    ///   - k1_win_gog_swkotor.exe: 0x0044dab0 @ 0x0044dab0 (OpenGL context creation)
+    ///   - k2_win_gog_aspyr_swkotor2.exe: 0x00461c50 @ 0x00461c50 (OpenGL context creation)
     /// - Common initialization pattern (both games):
     ///   1. Window setup (ShowWindow, SetWindowPos, AdjustWindowRect)
     ///   2. Display mode enumeration (EnumDisplaySettingsA, ChangeDisplaySettingsA)
@@ -36,20 +46,45 @@ namespace Andastra.Game.Graphics.Common.Backends
     ///   5. Context sharing setup (wglShareLists) - for multi-threaded rendering
     ///   6. Texture initialization (glGenTextures, glBindTexture, glTexImage2D)
     /// - Located via string references:
-    ///   - "wglCreateContext" @ swkotor.exe:0x0073d2b8, swkotor2.exe:0x007b52cc
-    ///   - "wglChoosePixelFormatARB" @ swkotor.exe:0x0073f444, swkotor2.exe:0x007b880c
-    ///   - "WGL_NV_render_texture_rectangle" @ swkotor.exe:0x00740798, swkotor2.exe:0x007b880c
+    ///   - "wglCreateContext" @ k1_win_gog_swkotor.exe:0x0073d2b8, k2_win_gog_aspyr_swkotor2.exe:0x007b52cc
+    ///   - "wglChoosePixelFormatARB" @ k1_win_gog_swkotor.exe:0x0073f444, k2_win_gog_aspyr_swkotor2.exe:0x007b880c
+    ///   - "WGL_NV_render_texture_rectangle" @ k1_win_gog_swkotor.exe:0x00740798, k2_win_gog_aspyr_swkotor2.exe:0x007b880c
     /// - Original game graphics device: OpenGL with WGL extensions for Windows
     /// - This implementation: Direct 1:1 match of Odyssey engine rendering code
-    ///
-    /// Inheritance Structure:
-    /// - BaseOriginalEngineGraphicsBackend (Common) - Original engine graphics backend base
-    ///   - OdysseyGraphicsBackend (this class) - Common Odyssey OpenGL initialization
-    ///     - Kotor1GraphicsBackend (swkotor.exe: 0x0044dab0, 0x00427c90, 0x00426cc0) - KOTOR1-specific
-    ///     - Kotor2GraphicsBackend (swkotor2.exe: 0x00461c50, 0x0042a100, 0x00462560) - KOTOR2-specific
     /// </remarks>
-    public abstract class OdysseyGraphicsBackend : BaseOriginalEngineGraphicsBackend, IGraphicsBackend
+    public partial class OdysseyGraphicsBackend : BaseOriginalEngineGraphicsBackend, IGraphicsBackend
     {
+        /// <summary>Which KOTOR game this backend is for (K1 or K2).</summary>
+        private readonly KotorGame _gameKind;
+
+        /// <summary>Resource provider for loading texture data. Set via SetResourceProvider.</summary>
+        private IGameResourceProvider _resourceProvider;
+
+        /// <summary>
+        /// Creates an Odyssey graphics backend for the specified game.
+        /// </summary>
+        /// <param name="gameKind">KotorGame.K1 or KotorGame.K2.</param>
+        public OdysseyGraphicsBackend(KotorGame gameKind)
+        {
+            _gameKind = gameKind;
+        }
+
+        protected override string GetGameName()
+        {
+            return _gameKind == KotorGame.K1
+                ? "Star Wars: Knights of the Old Republic"
+                : "Star Wars: Knights of the Old Republic II - The Sith Lords";
+        }
+
+        /// <summary>
+        /// Sets the resource provider for loading texture data.
+        /// Matches k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe resource loading system (CExoResMan, CExoKeyTable).
+        /// </summary>
+        public void SetResourceProvider(IGameResourceProvider resourceProvider)
+        {
+            _resourceProvider = resourceProvider;
+        }
+
         #region IGraphicsBackend Implementation Fields
 
         // IGraphicsBackend implementation objects
@@ -112,17 +147,21 @@ namespace Andastra.Game.Graphics.Common.Backends
         protected override bool DetermineGraphicsApi()
         {
             // Odyssey engine uses OpenGL (not DirectX)
-            // Both swkotor.exe and swkotor2.exe use OPENGL32.DLL
-            // Based on reverse engineering:
-            // - swkotor.exe: 0x0044dab0 @ 0x0044dab0 uses wglCreateContext
-            // - swkotor2.exe: 0x00461c50 @ 0x00461c50 uses wglCreateContext
+            // Both k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe use OPENGL32.DLL
             _useDirectX9 = false;
             _useOpenGL = true;
             _adapterIndex = 0;
-            _fullscreen = true; // Default to fullscreen (swkotor.exe: 0x0044dab0 @ 0x0044dab0, param_7 != 0 = fullscreen)
-            _refreshRate = 60; // Default refresh rate
-
+            _fullscreen = true;
+            _refreshRate = 60;
             return true;
+        }
+
+        protected override D3DPRESENT_PARAMETERS CreatePresentParameters(D3DDISPLAYMODE displayMode)
+        {
+            var presentParams = base.CreatePresentParameters(displayMode);
+            presentParams.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+            presentParams.SwapEffect = D3DSWAPEFFECT_DISCARD;
+            return presentParams;
         }
 
         protected override void InitializeCapabilities()
@@ -529,61 +568,71 @@ namespace Andastra.Game.Graphics.Common.Backends
         #region Common Odyssey OpenGL Initialization
 
         /// <summary>
-        /// Common OpenGL context creation pattern shared by both KOTOR1 and KOTOR2.
-        /// Based on verified components of swkotor.exe and swkotor2.exe.
+        /// Creates the OpenGL context for the given window.
+        /// For K1/K2, game-specific overrides run (CreateOdysseyOpenGLContextK1/K2) and set _glContext, _glDevice.
         /// </summary>
-        /// <remarks>
-        /// Common Pattern (both games):
-        /// - swkotor.exe: 0x0044dab0 @ 0x0044dab0 calls wglCreateContext
-        /// - swkotor2.exe: 0x00461c50 @ 0x00461c50 calls wglCreateContext
-        /// - Both use: ChoosePixelFormat, SetPixelFormat, wglCreateContext, wglMakeCurrent
-        /// - Both set up context sharing with wglShareLists for multi-threaded rendering
-        /// </remarks>
         protected virtual bool CreateOdysseyOpenGLContext(IntPtr windowHandle, int width, int height, bool fullscreen, int refreshRate)
         {
-            // Common OpenGL context creation for both KOTOR1 and KOTOR2
-            // This matches the pattern from both swkotor.exe and swkotor2.exe
+            if (_gameKind == KotorGame.K1)
+                return CreateOdysseyOpenGLContextK1(windowHandle, width, height, fullscreen, refreshRate);
+            if (_gameKind == KotorGame.K2)
+                return CreateOdysseyOpenGLContextK2(windowHandle, width, height, fullscreen, refreshRate);
+            return CreateOdysseyOpenGLContextDefault(windowHandle, width, height, fullscreen, refreshRate);
+        }
 
-            // 1. Window setup (common to both)
-            // ShowWindow(windowHandle, 0) - hide window during setup
-            // SetWindowPos(...) - position window
-            // AdjustWindowRect(...) - adjust window size
-
-            // 2. Display mode enumeration (common to both)
-            // EnumDisplaySettingsA(...) - enumerate display modes
-            // ChangeDisplaySettingsA(...) - change display mode if fullscreen
-
-            // 3. Pixel format selection (common to both)
-            // ChoosePixelFormat(...) - choose pixel format
-            // SetPixelFormat(...) - set pixel format
-
-            // 4. OpenGL context creation (common to both)
-            // GetDC(windowHandle) - get device context
-            // wglCreateContext(hdc) - create OpenGL context
-            // wglMakeCurrent(hdc, context) - make context current
-
-            // 5. Context sharing setup (common to both)
-            // wglShareLists(primaryContext, secondaryContext) - share contexts for multi-threading
-
-            // Game-specific differences are handled in derived classes
-            return CreateOpenGLDevice();
+        /// <summary>Default/minimal OpenGL context creation (used when no game-specific path runs).</summary>
+        private bool CreateOdysseyOpenGLContextDefault(IntPtr windowHandle, int width, int height, bool fullscreen, int refreshRate)
+        {
+            IntPtr tempGlDevice = GetDC(windowHandle);
+            if (tempGlDevice == IntPtr.Zero) return false;
+            PIXELFORMATDESCRIPTOR pfd = new PIXELFORMATDESCRIPTOR
+            {
+                nSize = 40,
+                nVersion = 1,
+                dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
+                iPixelType = PFD_TYPE_RGBA,
+                cColorBits = 32,
+                cRedBits = 8,
+                cGreenBits = 8,
+                cBlueBits = 8,
+                cAlphaBits = 8,
+                cDepthBits = 24,
+                cStencilBits = 8,
+                iLayerType = PFD_MAIN_PLANE
+            };
+            int pixelFormat = ChoosePixelFormat(tempGlDevice, ref pfd);
+            if (pixelFormat == 0 || !SetPixelFormat(tempGlDevice, pixelFormat, ref pfd))
+            {
+                ReleaseDC(windowHandle, tempGlDevice);
+                return false;
+            }
+            IntPtr tempGlContext = wglCreateContext(tempGlDevice);
+            if (tempGlContext == IntPtr.Zero || !wglMakeCurrent(tempGlDevice, tempGlContext))
+            {
+                if (tempGlContext != IntPtr.Zero) wglDeleteContext(tempGlContext);
+                ReleaseDC(windowHandle, tempGlDevice);
+                return false;
+            }
+            _glDevice = tempGlDevice;
+            _glContext = tempGlContext;
+            return true;
         }
 
         /// <summary>
         /// Common texture initialization pattern shared by both KOTOR1 and KOTOR2.
-        /// Based on verified components of swkotor.exe and swkotor2.exe.
+        /// Based on verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe.
         /// </summary>
         /// <remarks>
         /// Common Pattern (both games):
-        /// - swkotor.exe: 0x00427c90 @ 0x00427c90 initializes textures
-        /// - swkotor2.exe: 0x0042a100 @ 0x0042a100 initializes textures
+        /// - k1_win_gog_swkotor.exe: 0x00427c90 @ 0x00427c90 initializes textures
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x0042a100 @ 0x0042a100 initializes textures
         /// - Both use: glGenTextures, glBindTexture, glTexImage2D, glTexParameteri
         /// - Both create multiple texture objects for rendering pipeline
         /// </remarks>
         protected virtual void InitializeOdysseyTextures()
         {
             // Common texture initialization for both KOTOR1 and KOTOR2
-            // This matches the pattern from both swkotor.exe and swkotor2.exe
+            // This matches the pattern from both k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe
 
             // Pattern (both games):
             // 1. Generate texture names: glGenTextures(1, &textureId)
@@ -600,24 +649,30 @@ namespace Andastra.Game.Graphics.Common.Backends
 
         /// <summary>
         /// Odyssey engine-specific rendering methods.
-        /// These match the original Odyssey engine's rendering code exactly.
+        /// Branches to K1 or K2 implementation based on _gameKind.
         /// </summary>
-        protected virtual void RenderOdysseyScene()
+        protected void RenderOdysseyScene()
         {
-            // Odyssey engine scene rendering
-            // Matches swkotor.exe/swkotor2.exe rendering code
+            if (_gameKind == KotorGame.K1)
+                RenderOdysseySceneK1();
+            else
+                RenderOdysseySceneK2();
         }
 
         /// <summary>
         /// Odyssey engine-specific texture loading.
-        /// Matches Odyssey engine's texture loading code.
+        /// Branches to K1 or K2 implementation based on _gameKind.
         /// </summary>
-        protected virtual IntPtr LoadOdysseyTexture(string path)
+        protected IntPtr LoadOdysseyTexture(string path)
         {
-            // Odyssey engine texture loading
-            // Matches swkotor.exe/swkotor2.exe texture loading code
-            return IntPtr.Zero;
+            if (_gameKind == KotorGame.K1)
+                return LoadOdysseyTextureK1(path);
+            return LoadOdysseyTextureK2(path);
         }
+
+        // K1/K2 implementations in partials (Kotor1GraphicsBackend.cs, Kotor2GraphicsBackend.cs).
+
+        private static IntPtr LoadOdysseyTextureDefault(string path) => IntPtr.Zero;
 
         #endregion
 
@@ -676,7 +731,7 @@ namespace Andastra.Game.Graphics.Common.Backends
 
         /// <summary>
         /// Initializes the graphics backend.
-        /// Based on swkotor.exe: 0x0044dab0 @ 0x0044dab0
+        /// Based on k1_win_gog_swkotor.exe: 0x0044dab0 @ 0x0044dab0
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00461c50 @ 0x00461c50
         /// </summary>
         /// <param name="width">Initial window width.</param>
@@ -697,8 +752,7 @@ namespace Andastra.Game.Graphics.Common.Backends
 
             Console.WriteLine($"[OdysseyGraphicsBackend] Initializing: {_width}x{_height}, fullscreen={_isFullscreen}");
 
-            // Create the window and OpenGL context
-            // This is implemented by derived classes (Kotor1/Kotor2GraphicsBackend)
+            // Create the window and OpenGL context (game-specific for K1/K2 via CreateOdysseyOpenGLContext)
             if (!CreateOdysseyWindowAndContext())
             {
                 throw new InvalidOperationException("Failed to create Odyssey window and OpenGL context");
@@ -725,7 +779,7 @@ namespace Andastra.Game.Graphics.Common.Backends
         /// <summary>
         /// Creates the Odyssey window and OpenGL context.
         /// Override in derived classes for game-specific initialization.
-        /// Based on swkotor.exe: 0x0044dab0 @ 0x0044dab0
+        /// Based on k1_win_gog_swkotor.exe: 0x0044dab0 @ 0x0044dab0
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00461c50 @ 0x00461c50
         /// </summary>
         protected virtual bool CreateOdysseyWindowAndContext()
@@ -734,7 +788,7 @@ namespace Andastra.Game.Graphics.Common.Backends
             {
                 Console.WriteLine("[OdysseyGraphicsBackend] Creating window and OpenGL context...");
 
-                // Step 1: Register window class (matching swkotor.exe pattern)
+                // Step 1: Register window class (matching k1_win_gog_swkotor.exe pattern)
                 IntPtr hInstance = GetModuleHandleA(null);
 
                 _wndProcDelegate = new WndProcDelegate(WindowProc);
@@ -764,7 +818,7 @@ namespace Andastra.Game.Graphics.Common.Backends
                     }
                 }
 
-                // Step 2: Calculate window size (matching swkotor.exe AdjustWindowRect pattern)
+                // Step 2: Calculate window size (matching k1_win_gog_swkotor.exe AdjustWindowRect pattern)
                 uint windowStyle = _isFullscreen ? WS_POPUP : WS_OVERLAPPEDWINDOW;
 
                 RECT rect = new RECT
@@ -794,7 +848,7 @@ namespace Andastra.Game.Graphics.Common.Backends
                     windowHeight = screenHeight;
                 }
 
-                // Step 3: Create the window (matching swkotor.exe CreateWindowExA pattern)
+                // Step 3: Create the window (matching k1_win_gog_swkotor.exe CreateWindowExA pattern)
                 Console.WriteLine($"[OdysseyGraphicsBackend] Creating window: {windowWidth}x{windowHeight} at ({windowX},{windowY})");
 
                 _windowHandle = CreateWindowExA(
@@ -819,7 +873,7 @@ namespace Andastra.Game.Graphics.Common.Backends
 
                 Console.WriteLine($"[OdysseyGraphicsBackend] Window created: HWND=0x{_windowHandle.ToInt64():X}");
 
-                // Step 4: Change display mode for fullscreen (matching swkotor.exe ChangeDisplaySettingsA pattern)
+                // Step 4: Change display mode for fullscreen (matching k1_win_gog_swkotor.exe ChangeDisplaySettingsA pattern)
                 if (_isFullscreen)
                 {
                     DEVMODEA devMode = new DEVMODEA();
@@ -842,107 +896,12 @@ namespace Andastra.Game.Graphics.Common.Backends
                 SetForegroundWindow(_windowHandle);
                 SetFocus(_windowHandle);
 
-                // Step 6: Create OpenGL context
+                // Step 6: Create OpenGL context (game-specific for K1/K2, default otherwise)
                 Console.WriteLine("[OdysseyGraphicsBackend] Creating OpenGL context...");
-
-                IntPtr tempGlDevice = IntPtr.Zero;
-                IntPtr tempGlContext = IntPtr.Zero;
-                bool contextMadeCurrent = false;
-
-                try
+                if (!CreateOdysseyOpenGLContext(_windowHandle, _width, _height, _isFullscreen, _refreshRate))
                 {
-                    tempGlDevice = GetDC(_windowHandle);
-                    if (tempGlDevice == IntPtr.Zero)
-                    {
-                        Console.WriteLine("[OdysseyGraphicsBackend] GetDC failed");
-                        return false;
-                    }
-
-                    // Set up pixel format (matching swkotor.exe ChoosePixelFormat pattern)
-                    PIXELFORMATDESCRIPTOR pfd = new PIXELFORMATDESCRIPTOR
-                    {
-                        nSize = 40,
-                        nVersion = 1,
-                        dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
-                        iPixelType = PFD_TYPE_RGBA,
-                        cColorBits = 32,
-                        cRedBits = 8,
-                        cGreenBits = 8,
-                        cBlueBits = 8,
-                        cAlphaBits = 8,
-                        cDepthBits = 24,
-                        cStencilBits = 8,
-                        iLayerType = PFD_MAIN_PLANE
-                    };
-
-                    int pixelFormat = ChoosePixelFormat(tempGlDevice, ref pfd);
-                    if (pixelFormat == 0)
-                    {
-                        Console.WriteLine("[OdysseyGraphicsBackend] ChoosePixelFormat failed");
-                        return false;
-                    }
-
-                    Console.WriteLine($"[OdysseyGraphicsBackend] Chose pixel format: {pixelFormat}");
-
-                    if (!SetPixelFormat(tempGlDevice, pixelFormat, ref pfd))
-                    {
-                        Console.WriteLine("[OdysseyGraphicsBackend] SetPixelFormat failed");
-                        return false;
-                    }
-
-                    // Create OpenGL context (matching swkotor.exe wglCreateContext pattern)
-                    tempGlContext = wglCreateContext(tempGlDevice);
-                    if (tempGlContext == IntPtr.Zero)
-                    {
-                        Console.WriteLine("[OdysseyGraphicsBackend] wglCreateContext failed");
-                        return false;
-                    }
-
-                    Console.WriteLine($"[OdysseyGraphicsBackend] Created OpenGL context: 0x{tempGlContext.ToInt64():X}");
-
-                    // Make context current (matching swkotor.exe wglMakeCurrent pattern)
-                    if (!wglMakeCurrent(tempGlDevice, tempGlContext))
-                    {
-                        Console.WriteLine("[OdysseyGraphicsBackend] wglMakeCurrent failed");
-                        return false;
-                    }
-
-                    contextMadeCurrent = true;
-
-                    // Success - assign to instance fields
-                    _glDevice = tempGlDevice;
-                    _glContext = tempGlContext;
-                    tempGlDevice = IntPtr.Zero; // Prevent cleanup
-                    tempGlContext = IntPtr.Zero; // Prevent cleanup
-                }
-                finally
-                {
-                    // Clean up resources if initialization failed
-                    // Always deactivate context if one was made current before deleting it
-                    if (contextMadeCurrent)
-                    {
-                        wglMakeCurrent(IntPtr.Zero, IntPtr.Zero);
-                    }
-
-                    // Clean up OpenGL context if it was created but not successfully assigned
-                    if (tempGlContext != IntPtr.Zero)
-                    {
-                        // Defensive: ensure context is not current before deletion
-                        // (Even though wglMakeCurrent may have failed, some drivers might leave state)
-                        if (!contextMadeCurrent && tempGlDevice != IntPtr.Zero)
-                        {
-                            wglMakeCurrent(IntPtr.Zero, IntPtr.Zero);
-                        }
-                        wglDeleteContext(tempGlContext);
-                        Console.WriteLine("[OdysseyGraphicsBackend] Cleaned up OpenGL context after failure");
-                    }
-
-                    // Clean up device context if it was acquired but not successfully assigned
-                    if (tempGlDevice != IntPtr.Zero && _windowHandle != IntPtr.Zero)
-                    {
-                        ReleaseDC(_windowHandle, tempGlDevice);
-                        Console.WriteLine("[OdysseyGraphicsBackend] Cleaned up device context after failure");
-                    }
+                    Console.WriteLine("[OdysseyGraphicsBackend] CreateOdysseyOpenGLContext failed");
+                    return false;
                 }
 
                 // Step 7: Query OpenGL info
@@ -958,7 +917,7 @@ namespace Andastra.Game.Graphics.Common.Backends
                 Console.WriteLine($"[OdysseyGraphicsBackend] OpenGL Renderer: {renderer}");
                 Console.WriteLine($"[OdysseyGraphicsBackend] OpenGL Version: {version}");
 
-                // Step 8: Set initial OpenGL state (matching swkotor.exe pattern)
+                // Step 8: Set initial OpenGL state
                 glEnable(GL_DEPTH_TEST);
                 glEnable(GL_STENCIL_TEST);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -982,7 +941,7 @@ namespace Andastra.Game.Graphics.Common.Backends
 
         /// <summary>
         /// Window procedure for handling Windows messages.
-        /// Based on swkotor.exe/swkotor2.exe: Window message handling
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Window message handling
         /// </summary>
         private IntPtr WindowProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
         {
@@ -1030,7 +989,7 @@ namespace Andastra.Game.Graphics.Common.Backends
 
         /// <summary>
         /// Runs the game loop (blocks until exit).
-        /// Based on swkotor.exe/swkotor2.exe: Main game loop with PeekMessageA/GetMessageA
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Main game loop with PeekMessageA/GetMessageA
         /// </summary>
         /// <param name="updateAction">Action called each frame for game logic update.</param>
         /// <param name="drawAction">Action called each frame for rendering.</param>
@@ -1049,7 +1008,7 @@ namespace Andastra.Game.Graphics.Common.Backends
 
             Console.WriteLine("[OdysseyGraphicsBackend] Starting game loop");
 
-            // Main game loop - matches swkotor.exe/swkotor2.exe message loop pattern
+            // Main game loop - matches k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe message loop pattern
             MSG msg = new MSG();
             while (!_isExiting)
             {
@@ -1162,7 +1121,7 @@ namespace Andastra.Game.Graphics.Common.Backends
 
         /// <summary>
         /// Ends the current frame and presents to screen.
-        /// Based on swkotor.exe/swkotor2.exe: SwapBuffers(hdc)
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: SwapBuffers(hdc)
         /// </summary>
         public new void EndFrame()
         {
@@ -1247,7 +1206,7 @@ namespace Andastra.Game.Graphics.Common.Backends
 
         /// <summary>
         /// Sets VSync state.
-        /// Based on swkotor.exe/swkotor2.exe: wglSwapIntervalEXT
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: wglSwapIntervalEXT
         /// </summary>
         public void SetVSync(bool enabled)
         {

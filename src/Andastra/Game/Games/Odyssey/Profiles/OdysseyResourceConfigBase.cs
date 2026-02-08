@@ -9,7 +9,7 @@ namespace Andastra.Game.Games.Odyssey.Profiles
     /// </summary>
     /// <remarks>
     /// Common Odyssey Resource Paths:
-    /// - Based on swkotor.exe and swkotor2.exe resource path resolution
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe resource path resolution
     /// - Both K1 and K2 use: "chitin.key", "dialog.tlk", "modules", "override", "saves"
     /// - Only TexturePackFiles differs between K1 and K2
     /// </remarks>

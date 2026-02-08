@@ -196,7 +196,7 @@ namespace Andastra.Runtime.Core.Module
             try
             {
                 // 1. Play movies sequentially (if provided) - BEFORE loading screen
-                // Based on swkotor.exe/swkotor2.exe: Movie playback before module transition
+                // Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Movie playback before module transition
                 // Movies play blocking (wait for each to finish before playing next)
                 // Movie files are BIK format (Bink video) - requires BINKW32.DLL
                 // If movie playback fails, continues with module transition
@@ -730,7 +730,7 @@ namespace Andastra.Runtime.Core.Module
 
         /// <summary>
         /// Plays movies sequentially before module transition.
-        /// Based on swkotor.exe/swkotor2.exe: Movie playback system
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Movie playback system
         /// Located via string references: Movie playback occurs before module transition
         /// Original implementation: Movies play blocking (wait for each to finish before playing next)
         /// Movie files are BIK format (Bink video) - requires BINKW32.DLL
@@ -752,7 +752,7 @@ namespace Andastra.Runtime.Core.Module
             }
 
             // Play movies sequentially, blocking until each completes
-            // Based on swkotor.exe/swkotor2.exe: 0x00404c80 @ 0x00404c80 (playback loop)
+            // Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: 0x00404c80 @ 0x00404c80 (playback loop)
             // Original implementation: Movies play sequentially, blocking (waits for each to finish before playing next)
             // If movie playback fails, continues with module transition (graceful error handling)
             CancellationToken cancellationToken = CancellationToken.None;

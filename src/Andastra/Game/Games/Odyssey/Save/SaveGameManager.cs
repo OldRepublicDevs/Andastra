@@ -24,12 +24,12 @@ namespace Andastra.Game.Games.Odyssey.Save
     /// Odyssey Save Game Manager:
     /// - Inherits from BaseSaveGameManager for common save directory naming (shared with Aurora)
     /// - Odyssey-specific: ERF archive save format, NFO GFF metadata structure
-    /// - Based on swkotor.exe and swkotor2.exe save game systems
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe save game systems
     ///
     /// Engine-Specific Details (Odyssey):
     /// - Save file format: ERF archive with "MOD V1.0" signature
-    /// - Save function: 0x004eb750 @ 0x004eb750 (swkotor2.exe) creates save game ERF archive
-    /// - Load function: 0x00708990 @ 0x00708990 (swkotor2.exe) loads ERF archive
+    /// - Save function: 0x004eb750 @ 0x004eb750 (k2_win_gog_aspyr_swkotor2.exe) creates save game ERF archive
+    /// - Load function: 0x00708990 @ 0x00708990 (k2_win_gog_aspyr_swkotor2.exe) loads ERF archive
     ///   - Located via string references: "savenfo" @ 0x007be1f0, "SAVEGAME" @ 0x007be28c, "SAVES:" @ 0x007be284
     ///   - "LoadSavegame" @ 0x007bdc90, "SavegameList" @ 0x007bdca0, "GetSavegameList" @ 0x007bdcb0
     ///   - "SAVEGAMENAME" @ 0x007be1a8, "Mod_IsSaveGame" @ 0x007bea48, "BTN_SAVEGAME" @ 0x007d0dbc

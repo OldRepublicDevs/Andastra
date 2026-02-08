@@ -30,7 +30,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// - HP regeneration: Implementation details vary by engine
     ///
     /// For engine-specific implementation details and function addresses, see:
-    /// - Odyssey: StatsComponent (swkotor.exe, swkotor2.exe)
+    /// - Odyssey: StatsComponent (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
     /// - Aurora: AuroraStatsComponent (nwmain.exe)
     /// - Eclipse: EclipseStatsComponent (daorigins.exe, DragonAge2.exe)
     /// </remarks>

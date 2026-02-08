@@ -7,7 +7,7 @@ namespace Andastra.Game.Graphics.MonoGame.UI
 {
     /// <summary>
     /// Save game screen - 1:1 with Reva CSWGuiSaveLoad (save mode).
-    /// swkotor.exe BTN_SAVEGAME @ 0x007d0dbc: CSWGuiSaveLoad(manager, 1, 1) - param 1 = save mode.
+    /// k1_win_gog_swkotor.exe BTN_SAVEGAME @ 0x007d0dbc: CSWGuiSaveLoad(manager, 1, 1) - param 1 = save mode.
     /// </summary>
     public class SaveGameScreen
     {

@@ -9,7 +9,7 @@ namespace Andastra.Game.Games.Common.Components
     /// </summary>
     /// <remarks>
     /// Base Creature Component:
-    /// - Common functionality shared between Odyssey (swkotor.exe, swkotor2.exe) and Aurora (nwmain.exe, nwn2main.exe)
+    /// - Common functionality shared between Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe) and Aurora (nwmain.exe, nwn2main.exe)
     /// - Base classes MUST only contain functionality that is identical across BOTH engines
     /// - Engine-specific details MUST be in subclasses:
     ///   - Odyssey: CreatureComponent (single FeatList, KnownPowers for force powers)
@@ -17,7 +17,7 @@ namespace Andastra.Game.Games.Common.Components
     /// - Common: TemplateResRef, Tag, Conversation, Appearance, Vital Statistics, Attributes, Combat properties, Classes, Equipment
     /// - Engine-specific: Feat storage (Odyssey: single list, Aurora: two lists), Force powers (Odyssey only)
     /// - Cross-engine analysis:
-    ///   - Odyssey: swkotor.exe, swkotor2.exe - single feat list, force powers
+    ///   - Odyssey: k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe - single feat list, force powers
     ///   - Aurora: nwmain.exe, nwn2main.exe - two feat lists (normal + bonus), no force powers
     ///   - Eclipse: daorigins.exe, DragonAge2.exe, ,  - uses talents/abilities, not feats
     ///   - Infinity: Uses different character system, not yet reverse engineered
@@ -206,7 +206,7 @@ namespace Andastra.Game.Games.Common.Components
 
         /// <summary>
         /// Gets base attack bonus using classes.2da for accurate calculation.
-        /// Based on verified components of swkotor.exe, swkotor2.exe, nwmain.exe:
+        /// Based on verified components of k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe, nwmain.exe:
         /// - Each class has an attackbonustable column in classes.2da that references a BAB progression table
         /// - BAB progression tables (e.g., cls_atk_jedi_guardian.2da) contain BAB values per level
         /// - For multi-class characters, BAB from all classes is summed together
@@ -215,8 +215,8 @@ namespace Andastra.Game.Games.Common.Components
         /// <param name="gameDataProvider">Game data provider for accessing 2DA tables.</param>
         /// <returns>Total base attack bonus from all class levels.</returns>
         /// <remarks>
-        /// Based on verified components of swkotor.exe, swkotor2.exe, nwmain.exe:
-        /// - swkotor2.exe: 0x005d63d0 @ 0x005d63d0 reads "attackbonustable" column from classes.2da
+        /// Based on verified components of k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe, nwmain.exe:
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x005d63d0 @ 0x005d63d0 reads "attackbonustable" column from classes.2da
         /// - Attack bonus tables are named like "cls_atk_jedi_guardian" (referenced in classes.2da)
         /// - Each attack bonus table has rows for each level (row 0 = level 1, row 1 = level 2, etc.)
         /// - Table columns typically include "BAB" or "Value" column with the BAB value for that level
@@ -348,7 +348,7 @@ namespace Andastra.Game.Games.Common.Components
         /// Key: Feat ID, Value: Remaining uses today
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe, swkotor2.exe, nwmain.exe: Feat daily usage tracking system
+        /// Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe, nwmain.exe: Feat daily usage tracking system
         /// Located via string references: Feat usage tracking in creature data structure
         /// Original implementation: Tracks remaining uses per day for feats with daily limits
         /// Daily uses reset when creature rests or new day begins
@@ -376,7 +376,7 @@ namespace Andastra.Game.Games.Common.Components
         /// <param name="gameDataProvider">GameDataProvider to look up feat data (engine-specific interface).</param>
         /// <returns>True if the feat is usable, false if exhausted or restricted.</returns>
         /// <remarks>
-        /// Based on swkotor.exe, swkotor2.exe, nwmain.exe: GetHasFeat usability checking
+        /// Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe, nwmain.exe: GetHasFeat usability checking
         /// Located via string references: Feat usability checking in GetHasFeat function
         /// Original implementation: Checks if feat has remaining daily uses
         /// - If feat has UsesPerDay = -1: Always usable (unlimited or special handling)
@@ -497,7 +497,7 @@ namespace Andastra.Game.Games.Common.Components
         /// <param name="gameDataProvider">GameDataProvider to look up feat and class data.</param>
         /// <returns>True if the feat is usable, false otherwise.</returns>
         /// <remarks>
-        /// Based on swkotor.exe, swkotor2.exe, nwmain.exe: Special feat usage calculation
+        /// Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe, nwmain.exe: Special feat usage calculation
         /// Located via string references: Class-level-based feat usage in creature data
         /// Original implementation: Some feats (e.g., Stunning Fist) have uses per day = class level
         /// 
@@ -555,7 +555,7 @@ namespace Andastra.Game.Games.Common.Components
         /// <param name="gameDataProvider">GameDataProvider to look up feat data.</param>
         /// <returns>True if the feat was successfully used, false if it couldn't be used.</returns>
         /// <remarks>
-        /// Based on swkotor.exe, swkotor2.exe, nwmain.exe: Feat usage tracking
+        /// Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe, nwmain.exe: Feat usage tracking
         /// Located via string references: Feat usage decrement in creature data
         /// Original implementation: Decrements remaining uses when feat is used
         /// </remarks>
@@ -617,7 +617,7 @@ namespace Andastra.Game.Games.Common.Components
         /// <param name="gameDataProvider">GameDataProvider to look up feat data.</param>
         /// <param name="getFeatList">Function to get the list of feat IDs for this creature (engine-specific).</param>
         /// <remarks>
-        /// Based on swkotor.exe, swkotor2.exe, nwmain.exe: Daily feat use reset on rest
+        /// Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe, nwmain.exe: Daily feat use reset on rest
         /// Located via string references: Feat usage reset in rest system
         /// Original implementation: Resets all feat daily uses to maximum when creature rests
         /// </remarks>

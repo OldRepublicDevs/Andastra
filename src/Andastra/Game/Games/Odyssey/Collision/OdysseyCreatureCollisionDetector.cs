@@ -6,11 +6,11 @@ namespace Andastra.Game.Games.Odyssey.Collision
 {
     /// <summary>
     /// Base class for Odyssey-specific creature collision detection.
-    /// Defaults to K2 (swkotor2.exe) behavior for backward compatibility.
+    /// Defaults to K2 (k2_win_gog_aspyr_swkotor2.exe) behavior for backward compatibility.
     /// </summary>
     /// <remarks>
     /// Odyssey Creature Collision Detection:
-    /// - Unified collision detection logic for both K1 (swkotor.exe) and K2 (swkotor2.exe)
+    /// - Unified collision detection logic for both K1 (k1_win_gog_swkotor.exe) and K2 (k2_win_gog_aspyr_swkotor2.exe)
     /// - Uses appearance.2da hitradius for bounding box dimensions
     /// - K1 and K2 have different bounding box structure offsets (0x340 vs 0x380) in the original engine,
     ///   but the collision logic is identical, using radius from appearance.2da for all dimensions
@@ -80,7 +80,7 @@ namespace Andastra.Game.Games.Odyssey.Collision
             int appearanceType = GetAppearanceType(entity);
 
             // Get bounding box dimensions from entity structure
-            // CheckCreatureCollision (swkotor2.exe: 0x005479f0 @ 0x005479f0) gets width and height from entity structure
+            // CheckCreatureCollision (k2_win_gog_aspyr_swkotor2.exe: 0x005479f0 @ 0x005479f0) gets width and height from entity structure
             // Width stored at offset 0x380 + 0x14: `fVar8 = *(float *)(iVar1 + 0x14) + fVar9 + _DAT_007b6888;`
             // Height stored at offset 0x380 + 0xbc: `uVar12 = *(undefined4 *)(iVar1 + 0xbc);`
             // Initialization (0x0050e170 @ 0x0050e170):

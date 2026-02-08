@@ -12,18 +12,18 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// Odyssey Faction Component:
     /// - Inherits common functionality from BaseFactionComponent
     /// - Implements Odyssey-specific faction system using repute.2da table
-    /// - Based on swkotor.exe and swkotor2.exe faction systems
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe faction systems
     ///
     /// Odyssey-specific details:
-    /// - swkotor.exe: Faction component system with repute.2da table (0x005b1b90 @ 0x005b1b90 loads faction data)
-    /// - swkotor2.exe: Enhanced faction system with repute.2da table (0x005fb0f0 @ 0x005fb0f0 loads faction data)
-    /// - Located via string references: "FactionID" @ 0x007c40b4 (swkotor2.exe) / 0x0074ae48 (swkotor.exe)
-    /// - "Faction" @ 0x007c0ca0 (swkotor2.exe), "FactionList" @ 0x007be604 (swkotor2.exe)
-    /// - "FactionRep" @ 0x007c290c (swkotor2.exe), "FACTIONREP" @ 0x007bcec8 (swkotor2.exe)
-    /// - "FactionGlobal" @ 0x007c28e0 (swkotor2.exe), "FactionName" @ 0x007c2900 (swkotor2.exe)
-    /// - "FactionParentID" @ 0x007c28f0 (swkotor2.exe), "FactionID1" @ 0x007c2924, "FactionID2" @ 0x007c2918
-    /// - Error: "Cannot set creature %s to faction %d because faction does not exist! Setting to Hostile1." @ 0x007bf2a8 (swkotor2.exe)
-    /// - Debug: "Faction: " @ 0x007caed0 (swkotor2.exe)
+    /// - k1_win_gog_swkotor.exe: Faction component system with repute.2da table (0x005b1b90 @ 0x005b1b90 loads faction data)
+    /// - k2_win_gog_aspyr_swkotor2.exe: Enhanced faction system with repute.2da table (0x005fb0f0 @ 0x005fb0f0 loads faction data)
+    /// - Located via string references: "FactionID" @ 0x007c40b4 (k2_win_gog_aspyr_swkotor2.exe) / 0x0074ae48 (k1_win_gog_swkotor.exe)
+    /// - "Faction" @ 0x007c0ca0 (k2_win_gog_aspyr_swkotor2.exe), "FactionList" @ 0x007be604 (k2_win_gog_aspyr_swkotor2.exe)
+    /// - "FactionRep" @ 0x007c290c (k2_win_gog_aspyr_swkotor2.exe), "FACTIONREP" @ 0x007bcec8 (k2_win_gog_aspyr_swkotor2.exe)
+    /// - "FactionGlobal" @ 0x007c28e0 (k2_win_gog_aspyr_swkotor2.exe), "FactionName" @ 0x007c2900 (k2_win_gog_aspyr_swkotor2.exe)
+    /// - "FactionParentID" @ 0x007c28f0 (k2_win_gog_aspyr_swkotor2.exe), "FactionID1" @ 0x007c2924, "FactionID2" @ 0x007c2918
+    /// - Error: "Cannot set creature %s to faction %d because faction does not exist! Setting to Hostile1." @ 0x007bf2a8 (k2_win_gog_aspyr_swkotor2.exe)
+    /// - Debug: "Faction: " @ 0x007caed0 (k2_win_gog_aspyr_swkotor2.exe)
     /// - Original implementation: FactionId references repute.2da row (defines faction relationships)
     /// - Faction relationships stored in repute.2da (FactionID1, FactionID2, FactionRep columns)
     /// - FactionRep values: 0=friendly, 1=enemy, 2=neutral (defines relationship between two factions)

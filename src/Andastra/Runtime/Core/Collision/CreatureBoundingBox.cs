@@ -9,11 +9,11 @@ namespace Andastra.Runtime.Core.Collision
     /// </summary>
     /// <remarks>
     /// Creature Bounding Box:
-    /// - Based on swkotor.exe and swkotor2.exe further analysis
-    /// - K1 (swkotor.exe): Bounding box pointer at offset 0x340, radius at +8, width at +4
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe further analysis
+    /// - K1 (k1_win_gog_swkotor.exe): Bounding box pointer at offset 0x340, radius at +8, width at +4
     ///   - 0x004ed6e0 @ 0x004ed6e0: `*(float *)(*(int *)(param_1 + 0x340) + 8)` (radius)
     ///   - 0x004f1310 @ 0x004f1310: Adds two radii for collision distance
-    /// - K2 (swkotor2.exe): Bounding box pointer at offset 0x380, width at +0x14, height at +0xbc
+    /// - K2 (k2_win_gog_aspyr_swkotor2.exe): Bounding box pointer at offset 0x380, width at +0x14, height at +0xbc
     ///   - 0x005479f0 @ 0x005479f0: `*(float *)(iVar1 + 0x14)` (width), `*(undefined4 *)(iVar1 + 0xbc)` (height)
     /// - Width and height are half-extents (radius-like values)
     /// - Bounding box is axis-aligned and centered at entity position

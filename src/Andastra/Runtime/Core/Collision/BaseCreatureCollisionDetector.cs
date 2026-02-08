@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Collision
     /// <remarks>
     /// Base Creature Collision Detection:
     /// - Common collision detection logic shared across all engines
-    /// - Based on swkotor.exe, swkotor2.exe, nwmain.exe, daorigins.exe collision systems
+    /// - Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe, nwmain.exe, daorigins.exe collision systems
     /// - Provides line-segment vs axis-aligned bounding box intersection testing
     /// - Engine-specific subclasses handle bounding box retrieval and specific collision details
     /// </remarks>

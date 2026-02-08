@@ -8,8 +8,8 @@ namespace Andastra.Runtime.Core.Audio
     /// </summary>
     /// <remarks>
     /// Voice Player Interface:
-    /// - Based on swkotor.exe and swkotor2.exe voice-over playback system
-    /// - Located via string references: "VoiceVolume" @ 0x007c2ce4 (voice volume setting in swkotor2.exe)
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe voice-over playback system
+    /// - Located via string references: "VoiceVolume" @ 0x007c2ce4 (voice volume setting in k2_win_gog_aspyr_swkotor2.exe)
     /// - "PlayVoice" @ 0x007c5f80 (voice playback function reference), "Voice" @ 0x007bc560 (voice entity type)
     /// - Original implementation: KOTOR plays WAV files for voice-over dialogue
     /// - Voice files: Stored as WAV resources, referenced by ResRef (e.g., "n_darthmalak01.wav")

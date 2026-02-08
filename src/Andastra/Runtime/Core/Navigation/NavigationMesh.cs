@@ -313,12 +313,12 @@ namespace Andastra.Runtime.Core.Navigation
     /// Old Republic games. Files are stored on disk with a .wok extension (for area walkmeshes),
     /// .pwk extension (for placeable walkmeshes), or .dwk extension (for door walkmeshes).
     /// 
-    /// The BWM file structure (based on swkotor2.exe: WriteBWMFile @ 0x0055aef0):
+    /// The BWM file structure (based on k2_win_gog_aspyr_swkotor2.exe: WriteBWMFile @ 0x0055aef0):
     /// 
     /// 1. FILE HEADER (8 bytes):
     ///    - Bytes 0-3: Magic string "BWM " (space-padded, identifies file type)
     ///    - Bytes 4-7: Version string "V1.0" (only version used in KotOR games)
-    ///    - Located via string reference: "BWM V1.0" @ 0x007c061c in swkotor2.exe
+    ///    - Located via string reference: "BWM V1.0" @ 0x007c061c in k2_win_gog_aspyr_swkotor2.exe
     ///    - Original implementation: 0x0055aef0 @ 0x0055aef0 writes this header (line 58)
     /// 
     /// 2. WALKMESH PROPERTIES (52 bytes, offset 0x08):
@@ -505,7 +505,7 @@ namespace Andastra.Runtime.Core.Navigation
     /// HOW DOES FACEFINDING WORK?
     /// 
     /// When the game needs to find which triangle contains a specific point (like where a character is standing),
-    /// it uses the FindFaceAt function. This is based on swkotor2.exe: 0x004f4260 @ 0x004f4260.
+    /// it uses the FindFaceAt function. This is based on k2_win_gog_aspyr_swkotor2.exe: 0x004f4260 @ 0x004f4260.
     /// 
     /// The algorithm works in stages:
     /// 
@@ -569,7 +569,7 @@ namespace Andastra.Runtime.Core.Navigation
     /// HOW DOES HEIGHT CALCULATION WORK?
     /// 
     /// When the game needs to know the height of the ground at a specific (x, y) position, it uses height
-    /// calculation functions. This is based on swkotor2.exe: 0x0055b1d0 @ 0x0055b1d0 and 0x0055b210 @ 0x0055b210.
+    /// calculation functions. This is based on k2_win_gog_aspyr_swkotor2.exe: 0x0055b1d0 @ 0x0055b1d0 and 0x0055b210 @ 0x0055b210.
     /// 
     /// The algorithm works in steps:
     /// 
@@ -640,7 +640,7 @@ namespace Andastra.Runtime.Core.Navigation
     /// 
     /// Raycasting is like shooting an invisible laser and seeing what it hits. The game uses this to check
     /// if there's a clear line of sight between two points, or to find where a ray hits the walkmesh.
-    /// This is based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts.
+    /// This is based on k2_win_gog_aspyr_swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts.
     /// 
     /// The raycast algorithm works in multiple stages:
     /// 
@@ -824,7 +824,7 @@ namespace Andastra.Runtime.Core.Navigation
     /// - If direct walkmesh pathfinding fails, the game uses grid-based pathfinding
     /// - Grid-based pathfinding divides the area into a grid and finds paths through grid cells
     /// - Used for initial/terminal path segments when walkmesh pathfinding fails
-    /// - Error messages from swkotor2.exe indicate this:
+    /// - Error messages from k2_win_gog_aspyr_swkotor2.exe indicate this:
     ///   * "failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510
     ///   * "failed to grid based pathfind from the ending path point ot the destiantion." @ 0x007be4b8
     /// - Original implementation: Grid-based pathfinding is used as fallback in UpdateCreatureMovement
@@ -1786,8 +1786,8 @@ namespace Andastra.Runtime.Core.Navigation
         ///     7. Updates path array and adjusts path index if waypoints inserted
         ///   - If pathfinding fails, returns null and movement is aborted
         /// Equivalent functions in other engines:
-        ///   - swkotor.exe: FindPathAroundObstacle @ 0x005d0840 (called from UpdateCreatureMovement @ 0x00516630, line 254)
-        ///     - Similar structure to swkotor2.exe, uses same obstacle avoidance algorithm
+        ///   - k1_win_gog_swkotor.exe: FindPathAroundObstacle @ 0x005d0840 (called from UpdateCreatureMovement @ 0x00516630, line 254)
+        ///     - Similar structure to k2_win_gog_aspyr_swkotor2.exe, uses same obstacle avoidance algorithm
         ///   - nwmain.exe: CPathfindInformation class with obstacle avoidance
         ///     - Tile-based pathfinding with obstacle blocking
         ///     - AIActionCheckInterAreaPathfinding @ 0x1403b1dc0 handles inter-area pathfinding
@@ -3580,7 +3580,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// 
         /// ORIGINAL IMPLEMENTATION:
         /// 
-        /// swkotor.exe: CSWSArea::ClearLineOfSight @ 0x0050c330 - Line of sight checks are performed during perception updates.
+        /// k1_win_gog_swkotor.exe: CSWSArea::ClearLineOfSight @ 0x0050c330 - Line of sight checks are performed during perception updates.
         /// Called from CSWSCreature::DoPerceptionUpdateOnCreature @ 0x00502ac0 (line 152) during creature perception updates.
         /// The original engine uses walkmesh raycasting via NoNonWalkPolysDetailed to determine if creatures can see each other.
         /// Non-walkable faces (walls, obstacles) block line of sight, while walkable faces (ground) do not block line of sight.
@@ -3598,7 +3598,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// Eye positions are calculated with eye height offset (FLOAT_0073f414, approximately 1.5 units) along Z axis.
         /// The function performs walkmesh raycast and checks if non-walkable faces block the line of sight.
         /// 
-        /// swkotor2.exe: TSL equivalent function needs to be located (may use different function name or address).
+        /// k2_win_gog_aspyr_swkotor2.exe: TSL equivalent function needs to be located (may use different function name or address).
         /// 
         /// Located via cross-reference: Perception systems use TestLineOfSight to check visibility
         /// between creatures. The original engine performs similar checks during AI perception updates.

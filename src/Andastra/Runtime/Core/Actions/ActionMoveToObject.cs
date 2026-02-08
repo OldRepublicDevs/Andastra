@@ -34,9 +34,9 @@ namespace Andastra.Runtime.Core.Actions
         private const float ArrivalThreshold = 0.1f;
         private BaseCreatureCollisionDetector _collisionDetector;
 
-        // Bump counter tracking (matches offset 0x268 in swkotor2.exe entity structure)
-        // K1 (swkotor.exe): CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 - Tracks bump count in CAvoidCreature structure
-        // TSL (swkotor2.exe): UpdateCreatureMovement @ 0x0054be70 - Tracks bump count at offset 0x268 in entity structure (param_1[0xe0] + 0x268)
+        // Bump counter tracking (matches offset 0x268 in k2_win_gog_aspyr_swkotor2.exe entity structure)
+        // K1 (k1_win_gog_swkotor.exe): CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 - Tracks bump count in CAvoidCreature structure
+        // TSL (k2_win_gog_aspyr_swkotor2.exe): UpdateCreatureMovement @ 0x0054be70 - Tracks bump count at offset 0x268 in entity structure (param_1[0xe0] + 0x268)
         // Located via string references: "aborted walking, Maximum number of bumps happened" @ 0x00747d08 (K1), @ 0x007c0458 (TSL)
         // Maximum bumps: 5 (aborts movement if exceeded)
         private const string BumpCounterKey = "ActionMoveToObject_BumpCounter";
@@ -63,8 +63,8 @@ namespace Andastra.Runtime.Core.Actions
         /// - Checks world's type namespace to determine engine (Odyssey, Aurora, Eclipse)
         /// - Uses reflection to instantiate engine-specific collision detector classes
         /// - Falls back to DefaultCreatureCollisionDetector if engine type cannot be determined
-        /// - Based on swkotor.exe, swkotor2.exe, nwmain.exe, daorigins.exe collision systems
-        /// - Original implementation: 0x005479f0 @ 0x005479f0 (swkotor2.exe) uses creature bounding box
+        /// - Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe, nwmain.exe, daorigins.exe collision systems
+        /// - Original implementation: 0x005479f0 @ 0x005479f0 (k2_win_gog_aspyr_swkotor2.exe) uses creature bounding box
         /// </remarks>
         private BaseCreatureCollisionDetector GetOrCreateCollisionDetector(IWorld world)
         {
@@ -273,8 +273,8 @@ namespace Andastra.Runtime.Core.Actions
             Vector3 newPosition = currentPosition + direction2 * moveDistance;
 
             // Project position to walkmesh surface
-            // K1 (swkotor.exe): CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 projects positions to walkmesh after movement
-            // TSL (swkotor2.exe): UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
+            // K1 (k1_win_gog_swkotor.exe): CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 projects positions to walkmesh after movement
+            // TSL (k2_win_gog_aspyr_swkotor2.exe): UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
             // Located via string references: Walkmesh projection in movement system
             // Original implementation: Projects 3D position to walkmesh surface height using walkmesh height lookup functions
             IArea area = actor.World.CurrentArea;
@@ -292,8 +292,8 @@ namespace Andastra.Runtime.Core.Actions
             BaseCreatureCollisionDetector collisionDetector = GetOrCreateCollisionDetector(actor.World);
 
             // Check for creature collisions along movement path
-            // swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 checks for creature collisions via CAvoidCreature
-            // swkotor2.exe: 0x005479f0 checks for creature collisions during movement
+            // k1_win_gog_swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 checks for creature collisions via CAvoidCreature
+            // k2_win_gog_aspyr_swkotor2.exe: 0x005479f0 checks for creature collisions during movement
             // Located via string references:
             //   - "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0
             //   - "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
@@ -311,8 +311,8 @@ namespace Andastra.Runtime.Core.Actions
             // - CheckLineSegmentVsBoundingBox() performs line-segment vs axis-aligned bounding box intersection
             // - Uses Minkowski sum to expand creature bounding box by actor's bounding box for accurate collision
             // - Matches original engine behavior: 0x005479f0 uses bounding box width/height from entity structure
-            // - K1 (swkotor.exe): Radius at offset +8 from bounding box pointer (0x340)
-            // - K2 (swkotor2.exe): Width at +0x14, height at +0xbc from bounding box pointer (0x380)
+            // - K1 (k1_win_gog_swkotor.exe): Radius at offset +8 from bounding box pointer (0x340)
+            // - K2 (k2_win_gog_aspyr_swkotor2.exe): Width at +0x14, height at +0xbc from bounding box pointer (0x380)
             // Exclude target object from collision checking (we're moving towards it)
             uint blockingCreatureId;
             Vector3 collisionNormal;
@@ -320,16 +320,16 @@ namespace Andastra.Runtime.Core.Actions
 
             if (hasCollision)
             {
-                // Get bump counter (stored at offset 0x268 in swkotor2.exe entity structure)
-                // K1 (swkotor.exe): CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 tracks bump count in CAvoidCreature structure
-                // TSL (swkotor2.exe): UpdateCreatureMovement @ 0x0054be70 tracks bump count at offset 0x268 in entity structure (param_1[0xe0] + 0x268)
+                // Get bump counter (stored at offset 0x268 in k2_win_gog_aspyr_swkotor2.exe entity structure)
+                // K1 (k1_win_gog_swkotor.exe): CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 tracks bump count in CAvoidCreature structure
+                // TSL (k2_win_gog_aspyr_swkotor2.exe): UpdateCreatureMovement @ 0x0054be70 tracks bump count at offset 0x268 in entity structure (param_1[0xe0] + 0x268)
                 int bumpCount = GetBumpCounter(actor);
                 bumpCount++;
                 SetBumpCounter(actor, bumpCount);
 
                 // Check if maximum bumps exceeded
-                // swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 aborts movement if bump count > 5
-                // swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 aborts movement if bump count > 5
+                // k1_win_gog_swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 aborts movement if bump count > 5
+                // k2_win_gog_aspyr_swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 aborts movement if bump count > 5
                 // Located via string reference: "aborted walking, Maximum number of bumps happened" @ 0x007c0458
                 // Original implementation: If bump count > 5, clears path array and sets path length to 0
                 if (bumpCount > MaxBumps)
@@ -339,9 +339,9 @@ namespace Andastra.Runtime.Core.Actions
                     return ActionStatus.Failed;
                 }
 
-                // Check if same creature blocks repeatedly (matches offset 0x254 in swkotor2.exe)
-                // K1 (swkotor.exe): CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 checks if same creature blocks repeatedly in CAvoidCreature structure
-                // TSL (swkotor2.exe): UpdateCreatureMovement @ 0x0054be70 checks if blocking creature ID matches entity ID at offset 0x254
+                // Check if same creature blocks repeatedly (matches offset 0x254 in k2_win_gog_aspyr_swkotor2.exe)
+                // K1 (k1_win_gog_swkotor.exe): CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 checks if same creature blocks repeatedly in CAvoidCreature structure
+                // TSL (k2_win_gog_aspyr_swkotor2.exe): UpdateCreatureMovement @ 0x0054be70 checks if blocking creature ID matches entity ID at offset 0x254
                 // Original implementation: If same creature blocks repeatedly, aborts movement
                 uint lastBlockingCreature = GetLastBlockingCreature(actor);
                 if (blockingCreatureId != 0x7F000000 && blockingCreatureId == lastBlockingCreature)
@@ -354,13 +354,13 @@ namespace Andastra.Runtime.Core.Actions
                 SetLastBlockingCreature(actor, blockingCreatureId);
 
                 // Try to navigate around the blocking creature
-                // swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 calls CAvoidCreature::PlotPathAroundCreature for pathfinding around obstacles
-                // swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 calls FindPathAroundObstacle @ 0x0061c390 for pathfinding around obstacles
+                // k1_win_gog_swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 calls CAvoidCreature::PlotPathAroundCreature for pathfinding around obstacles
+                // k2_win_gog_aspyr_swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 calls FindPathAroundObstacle @ 0x0061c390 for pathfinding around obstacles
                 // Located via string reference: "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
                 // Original implementation: FindPathAroundObstacle @ 0x0061c390 finds alternative path around blocking creature
                 // Function signature: `float* FindPathAroundObstacle(void* this, int* movingCreature, void* blockingCreature)`
                 // Equivalent functions:
-                //   - swkotor.exe: FindPathAroundObstacle @ 0x005d0840 (called from UpdateCreatureMovement @ 0x00516630)
+                //   - k1_win_gog_swkotor.exe: FindPathAroundObstacle @ 0x005d0840 (called from UpdateCreatureMovement @ 0x00516630)
                 //   - nwmain.exe: CPathfindInformation obstacle avoidance in pathfinding system
                 //   - daorigins.exe/DragonAge2.exe: Dynamic obstacle system with cover integration
                 // For ActionMoveToObject, we use direct movement but still try to avoid obstacles when blocked
@@ -435,8 +435,8 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Could not find path around obstacle - action fails
-                // swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 aborts movement if PlotPathAroundCreature fails
-                // swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 aborts movement if FindPathAroundObstacle @ 0x0061c390 returns null
+                // k1_win_gog_swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 aborts movement if PlotPathAroundCreature fails
+                // k2_win_gog_aspyr_swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 aborts movement if FindPathAroundObstacle @ 0x0061c390 returns null
                 return ActionStatus.Failed;
             }
 
@@ -455,12 +455,12 @@ namespace Andastra.Runtime.Core.Actions
         /// </summary>
         /// <remarks>
         /// Collision Radius Calculation:
-        /// - Based on swkotor.exe and swkotor2.exe further analysis
-        /// - K1 (swkotor.exe): 0x004ed6e0 @ 0x004ed6e0 updates bounding box from appearance.2da
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe further analysis
+        /// - K1 (k1_win_gog_swkotor.exe): 0x004ed6e0 @ 0x004ed6e0 updates bounding box from appearance.2da
         ///   - Radius stored at offset +8 from bounding box pointer (at offset 0x340)
         ///   - 0x004f1310 @ 0x004f1310: `*(float *)(*(int *)(iVar3 + 0x340) + 8)` gets radius for collision distance
         ///   - Uses appearance.2da HITRADIUS column, defaults to 0.6f (0x3f19999a) if not found
-        /// - K2 (swkotor2.exe): 0x005479f0 @ 0x005479f0 uses width at +0x14 and height at +0xbc
+        /// - K2 (k2_win_gog_aspyr_swkotor2.exe): 0x005479f0 @ 0x005479f0 uses width at +0x14 and height at +0xbc
         ///   - Width and depth are half-extents, radius is typically max(width, depth) for horizontal collision
         /// - Implementation: Uses collision detector's GetCreatureBoundingBoxPublic to get engine-specific bounding box
         ///   - Derives radius as maximum of width and depth (horizontal extent)
@@ -478,8 +478,8 @@ namespace Andastra.Runtime.Core.Actions
             BaseCreatureCollisionDetector collisionDetector = GetOrCreateCollisionDetector(world);
 
             // Use collision detector to get bounding box (handles engine-specific logic)
-            // Based on swkotor.exe: 0x004f1310 gets radius from bounding box at offset +8
-            // swkotor2.exe: 0x005479f0 uses width at +0x14 for collision checking
+            // Based on k1_win_gog_swkotor.exe: 0x004f1310 gets radius from bounding box at offset +8
+            // k2_win_gog_aspyr_swkotor2.exe: 0x005479f0 uses width at +0x14 for collision checking
             CreatureBoundingBox boundingBox = collisionDetector.GetCreatureBoundingBoxPublic(entity);
 
             // Derive radius from bounding box
@@ -489,7 +489,7 @@ namespace Andastra.Runtime.Core.Actions
             float radius = Math.Max(boundingBox.Width, boundingBox.Depth);
 
             // Ensure minimum radius (matches K1/K2 default of 0.6f)
-            // Based on swkotor.exe: Default width is 0.6f (0x3f19999a) if not found in appearance.2da
+            // Based on k1_win_gog_swkotor.exe: Default width is 0.6f (0x3f19999a) if not found in appearance.2da
             if (radius < 0.6f)
             {
                 radius = 0.6f;
@@ -501,8 +501,8 @@ namespace Andastra.Runtime.Core.Actions
         /// <summary>
         /// Gets the bump counter for an entity.
         /// Bump counter stored in CAvoidCreature structure (K1) or at offset 0x268 in entity structure (TSL).
-        /// K1 (swkotor.exe): CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 uses CAvoidCreature structure for bump tracking.
-        /// TSL (swkotor2.exe): UpdateCreatureMovement @ 0x0054be70 stores bump count at offset 0x268.
+        /// K1 (k1_win_gog_swkotor.exe): CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 uses CAvoidCreature structure for bump tracking.
+        /// TSL (k2_win_gog_aspyr_swkotor2.exe): UpdateCreatureMovement @ 0x0054be70 stores bump count at offset 0x268.
         /// </summary>
         private int GetBumpCounter(IEntity entity)
         {
@@ -515,8 +515,8 @@ namespace Andastra.Runtime.Core.Actions
 
         /// <summary>
         /// Sets the bump counter for an entity.
-        /// swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 stores bump counter in CAvoidCreature structure
-        /// swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 stores bump counter at offset 0x268 in entity structure
+        /// k1_win_gog_swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 stores bump counter in CAvoidCreature structure
+        /// k2_win_gog_aspyr_swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 stores bump counter at offset 0x268 in entity structure
         /// </summary>
         private void SetBumpCounter(IEntity entity, int count)
         {
@@ -539,8 +539,8 @@ namespace Andastra.Runtime.Core.Actions
 
         /// <summary>
         /// Gets the last blocking creature ObjectId for an entity.
-        /// swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 stores last blocking creature in CAvoidCreature structure
-        /// swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 stores last blocking creature at offset 0x254 in entity structure
+        /// k1_win_gog_swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 stores last blocking creature in CAvoidCreature structure
+        /// k2_win_gog_aspyr_swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 stores last blocking creature at offset 0x254 in entity structure
         /// </summary>
         private uint GetLastBlockingCreature(IEntity entity)
         {
@@ -553,8 +553,8 @@ namespace Andastra.Runtime.Core.Actions
 
         /// <summary>
         /// Sets the last blocking creature ObjectId for an entity.
-        /// swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 stores last blocking creature in CAvoidCreature structure
-        /// swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 stores last blocking creature at offset 0x254 in entity structure
+        /// k1_win_gog_swkotor.exe: CSWSCreature::WalkUpdateLocationDistance @ 0x00516630 stores last blocking creature in CAvoidCreature structure
+        /// k2_win_gog_aspyr_swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 stores last blocking creature at offset 0x254 in entity structure
         /// </summary>
         private void SetLastBlockingCreature(IEntity entity, uint creatureId)
         {

@@ -9,18 +9,18 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// Trigger Component Interface:
     /// Common interface for trigger volumes across all BioWare engines (Odyssey, Aurora, Eclipse).
     /// Implementation is split into engine-specific subclasses that inherit from BaseTriggerComponent:
-    /// - Odyssey: TriggerComponent (swkotor.exe, swkotor2.exe)
+    /// - Odyssey: TriggerComponent (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
     /// - Aurora: AuroraTriggerComponent (nwmain.exe)
     /// - Eclipse: EclipseTriggerComponent (daorigins.exe, DragonAge2.exe)
     ///
     /// Cross-Engine Analysis:
     ///
-    /// Odyssey Engine (swkotor.exe, swkotor2.exe):
+    /// Odyssey Engine (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe):
     /// - Based on UTT (Trigger) GFF template format
-    /// - swkotor.exe: "Trigger" @ 0x007442e4, "TriggerList" @ 0x0074768c
+    /// - k1_win_gog_swkotor.exe: "Trigger" @ 0x007442e4, "TriggerList" @ 0x0074768c
     ///   - "EVENT_ENTERED_TRIGGER" @ 0x00744bd0, "EVENT_LEFT_TRIGGER" @ 0x00744bbc
     ///   - "OnTrapTriggered" @ 0x007495ec
-    /// - swkotor2.exe: "Trigger" @ 0x007bc51c, "TriggerList" @ 0x007bd254
+    /// - k2_win_gog_aspyr_swkotor2.exe: "Trigger" @ 0x007bc51c, "TriggerList" @ 0x007bd254
     ///   - "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "EVENT_LEFT_TRIGGER" @ 0x007bcdf4
     ///   - "OnTrapTriggered" @ 0x007c1a34, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED" @ 0x007bc7ac
     ///   - Transition fields: "LinkedTo" @ 0x007bd798, "LinkedToModule" @ 0x007bd7bc, "LinkedToFlags" @ 0x007bd788

@@ -14,7 +14,7 @@ namespace Andastra.Game.Games.Odyssey.Systems
     /// </summary>
     /// <remarks>
     /// Component Initializer:
-    /// - Based on common component initialization logic between swkotor.exe (KOTOR 1) and swkotor2.exe (KOTOR 2)
+    /// - Based on common component initialization logic between k1_win_gog_swkotor.exe (KOTOR 1) and k2_win_gog_aspyr_swkotor2.exe (KOTOR 2)
     /// - Component initialization occurs during entity creation from GIT instances and GFF templates
     /// - All entity types receive TransformComponent for position/orientation (XPosition, YPosition, ZPosition, XOrientation, YOrientation, ZOrientation)
     /// - Renderable entities (creatures, doors, placeables, items) receive RenderableComponent
@@ -23,7 +23,7 @@ namespace Andastra.Game.Games.Odyssey.Systems
     /// - All entities receive ScriptHooksComponent for script execution (ScriptHeartbeat, ScriptOnNotice, etc.)
     /// - Type-specific components are added based on ObjectType (CreatureComponent, DoorComponent, PlaceableComponent, etc.)
     ///
-    /// Original Implementation (swkotor.exe):
+    /// Original Implementation (k1_win_gog_swkotor.exe):
     /// - GIT loading: [TODO: Function name] @ (K1: 0x0050dd80, TSL: 0x004e9440) - loads GIT file and creates entities from lists
     ///   - [TODO: Function name] @ (K1: 0x00504a70, TSL: 0x004dff20) - creates creatures from "Creature List"
     ///   - [TODO: Function name] @ (K1: 0x00504de0, TSL: 0x004e56b0) - creates doors from "Door List"
@@ -57,7 +57,7 @@ namespace Andastra.Game.Games.Odyssey.Systems
         /// Initializes default components for an entity based on its object type.
         /// </summary>
         /// <remarks>
-        /// This method implements the common component initialization logic from both swkotor.exe and swkotor2.exe.
+        /// This method implements the common component initialization logic from both k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe.
         /// Components are added based on the entity's ObjectType, matching the behavior of the original engine.
         ///
         /// Component initialization order:
@@ -271,15 +271,15 @@ namespace Andastra.Game.Games.Odyssey.Systems
         /// Determines if an entity type should have an ActionQueueComponent.
         /// </summary>
         /// <remarks>
-        /// Based on common logic from both swkotor.exe and swkotor2.exe:
+        /// Based on common logic from both k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe:
         /// - Creatures can perform actions (movement, combat, item use, etc.)
         /// - Doors can perform actions (opening, closing, locking, etc.)
         /// - Placeables can perform actions (opening, closing, using, etc.)
         /// - Other entity types do not have action queues
         ///
         /// Verified against:
-        /// - swkotor.exe: Action queue system for creatures, doors, placeables
-        /// - swkotor2.exe: Action queue system for creatures, doors, placeables
+        /// - k1_win_gog_swkotor.exe: Action queue system for creatures, doors, placeables
+        /// - k2_win_gog_aspyr_swkotor2.exe: Action queue system for creatures, doors, placeables
         /// </remarks>
         /// <param name="objectType">The object type to check.</param>
         /// <returns>True if the entity type should have an ActionQueueComponent, false otherwise.</returns>
@@ -300,7 +300,7 @@ namespace Andastra.Game.Games.Odyssey.Systems
         /// Determines if an entity type should have a RenderableComponent.
         /// </summary>
         /// <remarks>
-        /// Based on common logic from both swkotor.exe and swkotor2.exe:
+        /// Based on common logic from both k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe:
         /// - Creatures have visual models (MDL files) and are rendered in the world
         /// - Doors have visual models and are rendered when open/closed
         /// - Placeables have visual models and are rendered in the world
@@ -308,8 +308,8 @@ namespace Andastra.Game.Games.Odyssey.Systems
         /// - Other entity types (triggers, waypoints, sounds, stores, encounters) do not have visual models
         ///
         /// Verified against:
-        /// - swkotor.exe: Renderable entities include creatures, doors, placeables, items
-        /// - swkotor2.exe: Renderable entities include creatures, doors, placeables, items
+        /// - k1_win_gog_swkotor.exe: Renderable entities include creatures, doors, placeables, items
+        /// - k2_win_gog_aspyr_swkotor2.exe: Renderable entities include creatures, doors, placeables, items
         /// </remarks>
         /// <param name="objectType">The object type to check.</param>
         /// <returns>True if the entity type should have a RenderableComponent, false otherwise.</returns>
@@ -331,15 +331,15 @@ namespace Andastra.Game.Games.Odyssey.Systems
         /// Determines if an entity type should have an AnimationComponent.
         /// </summary>
         /// <remarks>
-        /// Based on common logic from both swkotor.exe and swkotor2.exe:
+        /// Based on common logic from both k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe:
         /// - Creatures play animations (walking, combat, idle, etc.)
         /// - Doors play animations (opening, closing, etc.)
         /// - Placeables play animations (opening, closing, using, etc.)
         /// - Other entity types do not play animations
         ///
         /// Verified against:
-        /// - swkotor.exe: Animated entities include creatures, doors, placeables
-        /// - swkotor2.exe: Animated entities include creatures, doors, placeables
+        /// - k1_win_gog_swkotor.exe: Animated entities include creatures, doors, placeables
+        /// - k2_win_gog_aspyr_swkotor2.exe: Animated entities include creatures, doors, placeables
         /// </remarks>
         /// <param name="objectType">The object type to check.</param>
         /// <returns>True if the entity type should have an AnimationComponent, false otherwise.</returns>

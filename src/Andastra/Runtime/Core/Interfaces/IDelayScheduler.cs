@@ -17,7 +17,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// Engine-specific implementations:
     /// - Single implementation: BaseDelayScheduler (Andastra.Game.Games.Common) handles all engines
     ///   - Engine-specific delay scheduler classes (OdysseyDelayScheduler, AuroraDelayScheduler, EclipseDelayScheduler) have been merged
-    ///   - Odyssey: Based on swkotor.exe/swkotor2.exe DelayCommand system (float-based time)
+    ///   - Odyssey: Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe DelayCommand system (float-based time)
     ///   - Aurora: Based on nwmain.exe ExecuteCommandDelayCommand (uses float-based time for simplicity)
     ///   - Eclipse: Based on daorigins.exe/DragonAge2.exe delay systems (float-based time)
     /// - Infinity: InfinityDelayScheduler (, ) - float-based time

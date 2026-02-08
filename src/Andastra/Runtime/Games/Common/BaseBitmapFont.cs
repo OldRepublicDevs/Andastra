@@ -18,7 +18,7 @@ namespace Andastra.Runtime.Games.Common
     /// 
     /// Inheritance Structure:
     /// - BaseBitmapFont (Runtime.Games.Common) - Common font operations
-    ///   - Odyssey: OdysseyBitmapFont : BaseBitmapFont (swkotor.exe, swkotor2.exe)
+    ///   - Odyssey: OdysseyBitmapFont : BaseBitmapFont (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
     ///   - Aurora: AuroraBitmapFont : BaseBitmapFont (nwmain.exe)
     ///   - Eclipse: EclipseBitmapFont : BaseBitmapFont (daorigins.exe, DragonAge2.exe)
     ///   - Infinity: InfinityBitmapFont : BaseBitmapFont (, )

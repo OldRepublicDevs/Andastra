@@ -498,11 +498,11 @@ namespace Andastra.Game.GUI
             {
                 case GameType.K1:
                     return File.Exists(Path.Combine(path, "chitin.key")) &&
-                           File.Exists(Path.Combine(path, "swkotor.exe"));
+                           File.Exists(Path.Combine(path, "k1_win_gog_swkotor.exe"));
 
                 case GameType.K2:
                     return File.Exists(Path.Combine(path, "chitin.key")) &&
-                           File.Exists(Path.Combine(path, "swkotor2.exe"));
+                           File.Exists(Path.Combine(path, "k2_win_gog_aspyr_swkotor2.exe"));
 
                 case GameType.NWN:
                     {

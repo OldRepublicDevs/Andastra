@@ -13,11 +13,11 @@ namespace Andastra.Game.Games.Odyssey.Input
     /// </summary>
     /// <remarks>
     /// Odyssey Player Input Handler Base:
-    /// - Common input handling logic shared between K1 (swkotor.exe) and K2 (swkotor2.exe)
-    /// - Based on verified components of both swkotor.exe and swkotor2.exe input systems
+    /// - Common input handling logic shared between K1 (k1_win_gog_swkotor.exe) and K2 (k2_win_gog_aspyr_swkotor2.exe)
+    /// - Based on verified components of both k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe input systems
     /// - Located via string references:
-    ///   - K1 (swkotor.exe): "Input" @ 0x007c2520, "Mouse" @ 0x007cb908, "Mouse Sensitivity" @ 0x007c85cc
-    ///   - K2 (swkotor2.exe): "Input" @ 0x007c2520, "Mouse" @ 0x007cb908, "Mouse Sensitivity" @ 0x007c85cc
+    ///   - K1 (k1_win_gog_swkotor.exe): "Input" @ 0x007c2520, "Mouse" @ 0x007cb908, "Mouse Sensitivity" @ 0x007c85cc
+    ///   - K2 (k2_win_gog_aspyr_swkotor2.exe): "Input" @ 0x007c2520, "Mouse" @ 0x007cb908, "Mouse Sensitivity" @ 0x007c85cc
     /// - Input class: "CExoInputInternal" (exoinputinternal.cpp @ 0x007c64dc in K2)
     /// - Original implementation: Uses DirectInput8 (DINPUT8.dll, DirectInput8Create) for both K1 and K2
     /// - Common features: Click-to-move, object interaction, party control, pause, quick slots
@@ -33,8 +33,8 @@ namespace Andastra.Game.Games.Odyssey.Input
     /// - Inheritance structure:
     ///   - PlayerInputHandler (Runtime.Core.Movement): Core input handling interface
     ///   - OdysseyPlayerInputHandler (Runtime.Games.Odyssey.Input): Common Odyssey logic
-    ///   - K1PlayerInputHandler (Runtime.Games.Odyssey.Input): K1-specific (swkotor.exe)
-    ///   - K2PlayerInputHandler (Runtime.Games.Odyssey.Input): K2-specific (swkotor2.exe)
+    ///   - K1PlayerInputHandler (Runtime.Games.Odyssey.Input): K1-specific (k1_win_gog_swkotor.exe)
+    ///   - K2PlayerInputHandler (Runtime.Games.Odyssey.Input): K2-specific (k2_win_gog_aspyr_swkotor2.exe)
     /// </remarks>
     public class OdysseyPlayerInputHandler : PlayerInputHandler
     {
@@ -61,8 +61,8 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// <returns>The default melee attack range.</returns>
         /// <remarks>
         /// Based on reverse engineering:
-        /// - K1 (swkotor.exe): Default melee range is 2.0f (based on weapon system)
-        /// - K2 (swkotor2.exe): Default melee range is 2.0f (based on weapon system)
+        /// - K1 (k1_win_gog_swkotor.exe): Default melee range is 2.0f (based on weapon system)
+        /// - K2 (k2_win_gog_aspyr_swkotor2.exe): Default melee range is 2.0f (based on weapon system)
         /// Both games use the same base melee range, with ranged weapons having longer range.
         /// </remarks>
         protected virtual float GetDefaultMeleeRange()
@@ -77,8 +77,8 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// <returns>The default ranged weapon attack range.</returns>
         /// <remarks>
         /// Based on reverse engineering:
-        /// - K1 (swkotor.exe): Default ranged weapon range is approximately 10.0f
-        /// - K2 (swkotor2.exe): Default ranged weapon range is approximately 10.0f
+        /// - K1 (k1_win_gog_swkotor.exe): Default ranged weapon range is approximately 10.0f
+        /// - K2 (k2_win_gog_aspyr_swkotor2.exe): Default ranged weapon range is approximately 10.0f
         /// Both games use similar ranged weapon ranges, though exact values may vary based on weapon type.
         /// </remarks>
         protected virtual float GetDefaultRangedWeaponRange()
@@ -93,8 +93,8 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// <returns>The conversation interaction range.</returns>
         /// <remarks>
         /// Based on reverse engineering:
-        /// - K1 (swkotor.exe): Conversation range is 2.0f
-        /// - K2 (swkotor2.exe): Conversation range is 2.0f
+        /// - K1 (k1_win_gog_swkotor.exe): Conversation range is 2.0f
+        /// - K2 (k2_win_gog_aspyr_swkotor2.exe): Conversation range is 2.0f
         /// Both games use the same interaction range for conversations.
         /// </remarks>
         protected virtual float GetConversationRange()
@@ -109,8 +109,8 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// <returns>The door/placeable interaction range.</returns>
         /// <remarks>
         /// Based on reverse engineering:
-        /// - K1 (swkotor.exe): Door/placeable interaction range is 1.5f
-        /// - K2 (swkotor2.exe): Door/placeable interaction range is 1.5f
+        /// - K1 (k1_win_gog_swkotor.exe): Door/placeable interaction range is 1.5f
+        /// - K2 (k2_win_gog_aspyr_swkotor2.exe): Door/placeable interaction range is 1.5f
         /// Both games use the same interaction range for doors and placeables.
         /// </remarks>
         protected virtual float GetInteractionRange()

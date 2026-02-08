@@ -9,7 +9,7 @@ namespace BioWare.Resource.Formats.TPC
     /// </summary>
     /// <remarks>
     /// TPC Format Parser Implementation:
-    /// - Based on KotOR engine TPC texture loading (swkotor.exe, swkotor2.exe)
+    /// - Based on KotOR engine TPC texture loading (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
     /// - Supports TPC format variants used in KotOR games
     /// - Handles DXT compression formats (DXT1/DXT5) and uncompressed formats (RGB/RGBA/Greyscale/BGRA)
     /// - Converts all formats to RGBA for use with IGraphicsDevice.CreateTexture2D
@@ -26,8 +26,8 @@ namespace BioWare.Resource.Formats.TPC
     /// - Texture data starts at offset 0x80
     /// 
     /// Based on verified components analysis:
-    /// - swkotor.exe: TPC texture loading functions process texture data
-    /// - swkotor2.exe: TPC texture loading functions process texture data
+    /// - k1_win_gog_swkotor.exe: TPC texture loading functions process texture data
+    /// - k2_win_gog_aspyr_swkotor2.exe: TPC texture loading functions process texture data
     /// - Format compatibility: TPC format supports DXT compression and uncompressed formats
     /// - Located via string references: TPC file extensions and texture loading in KotOR engine
     /// 

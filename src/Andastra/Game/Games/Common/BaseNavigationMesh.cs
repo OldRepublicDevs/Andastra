@@ -14,7 +14,7 @@ namespace Andastra.Game.Games.Common
     /// - Common patterns: raycast-based line of sight, walkable surface checks, tolerance handling
     /// 
     /// Cross-engine analysis:
-    /// - Odyssey (swkotor.exe, swkotor2.exe): Walkmesh-based line of sight with walkable face checks
+    /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): Walkmesh-based line of sight with walkable face checks
     /// - Aurora (nwmain.exe): Tile-based line of sight with blocking tile checks
     /// - Eclipse (daorigins.exe, DragonAge2.exe): Dynamic obstacle-aware line of sight
     /// - Infinity (BaldurGate.exe, IcewindDale.exe, PlanescapeTorment.exe): Similar to Eclipse with physics integration

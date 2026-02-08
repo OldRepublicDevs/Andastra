@@ -222,7 +222,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
         /// <remarks>
         /// VSync Implementation:
         /// - Based on MonoGame GraphicsDeviceManager.SynchronizeWithVerticalRetrace
-        /// - Original game: VSync controlled via DirectX Present parameters (swkotor2.exe: DirectX device presentation)
+        /// - Original game: VSync controlled via DirectX Present parameters (k2_win_gog_aspyr_swkotor2.exe: DirectX device presentation)
         /// - MonoGame uses GraphicsDeviceManager to control VSync
         /// - Changes are applied immediately via ApplyChanges()
         /// - VSync synchronizes frame rendering with monitor refresh rate to prevent screen tearing

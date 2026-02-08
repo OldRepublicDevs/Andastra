@@ -414,7 +414,7 @@ namespace Andastra.Game.Stride.PostProcessing
         /// 6. Apply velocity-weighted blending for better quality
         /// 7. Depth-based rejection to discard invalid samples
         ///
-        /// Original game: swkotor2.exe - Frame buffer post-processing @ 0x007c8408
+        /// Original game: k2_win_gog_aspyr_swkotor2.exe - Frame buffer post-processing @ 0x007c8408
         /// Original implementation: Uses frame buffers for rendering and effects
         /// This implementation: Full TAA pipeline with temporal accumulation and ghosting reduction
         /// </remarks>
@@ -670,7 +670,7 @@ shader TemporalAAEffect : ShaderBase
         /// - EffectCompiler compiles shader source code to Effect bytecode
         /// - EffectCompiler can be accessed from GraphicsDevice services (EffectSystem)
         /// - Compilation requires proper SDSL syntax and shader structure
-        /// - Original game: DirectX 8/9 fixed-function pipeline (swkotor2.exe: Frame buffer post-processing @ 0x007c8408)
+        /// - Original game: DirectX 8/9 fixed-function pipeline (k2_win_gog_aspyr_swkotor2.exe: Frame buffer post-processing @ 0x007c8408)
         /// - Modern implementation: Uses programmable shaders with runtime compilation
         /// </remarks>
         private StrideGraphics.Effect CompileShaderFromSource(string shaderSource, string shaderName)

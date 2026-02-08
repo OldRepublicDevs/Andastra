@@ -1568,7 +1568,7 @@ namespace Andastra.Game.GUI
         /// <summary>
         /// VSync (vertical synchronization) setting for all graphics backends.
         /// When enabled, synchronizes frame rendering with monitor refresh rate to prevent screen tearing.
-        /// Based on swkotor.exe and swkotor2.exe: VSync controlled via DirectX Present parameters.
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: VSync controlled via DirectX Present parameters.
         /// Original implementation: VSync can be toggled in real-time without requiring a restart.
         /// </summary>
         public bool? WindowVSync { get; set; }

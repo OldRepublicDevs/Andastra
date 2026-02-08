@@ -256,8 +256,8 @@ namespace Andastra.Runtime.Core.Combat
         /// <returns>The determined attack type (Melee, Ranged, Force, or Touch).</returns>
         /// <remarks>
         /// Attack Type Classification:
-        /// - swkotor.exe: 0x004d3da0 - CSWSCombatRound::GetWeaponAttackType (returns internal attack type ID 0-8)
-        /// - swkotor2.exe: TODO: Find equivalent address - CSWSCombatRound::GetWeaponAttackType
+        /// - k1_win_gog_swkotor.exe: 0x004d3da0 - CSWSCombatRound::GetWeaponAttackType (returns internal attack type ID 0-8)
+        /// - k2_win_gog_aspyr_swkotor2.exe: TODO: Find equivalent address - CSWSCombatRound::GetWeaponAttackType
         /// - Located via string references: "RangedAttack" @ (K1: 0x00746144, TSL: 0x007bf8f8), "OnMeleeAttacked" @ (K1: 0x00749644, TSL: 0x007c1a5c)
         /// - Original implementation: GetWeaponAttackType returns internal ID, then weapon's "rangedweapon" property from baseitems.2da determines Melee vs Ranged
         /// - Internal attack type IDs from GetWeaponAttackType:
@@ -316,7 +316,7 @@ namespace Andastra.Runtime.Core.Combat
             }
 
             // Check if weapon is ranged by looking up "rangedweapon" column in baseitems.2da
-            // swkotor.exe: Weapon type determination via baseitems.2da "rangedweapon" column
+            // k1_win_gog_swkotor.exe: Weapon type determination via baseitems.2da "rangedweapon" column
             // Original implementation: Reads rangedweapon field from baseitems.2da row indexed by BaseItem ID
             if (_world != null && _world.GameDataProvider != null)
             {
@@ -386,7 +386,7 @@ namespace Andastra.Runtime.Core.Combat
             }
 
             // Check for AssuredHit effect
-            // Based on swkotor.exe: AssuredHit effect guarantees attack hits (bypasses AC check)
+            // Based on k1_win_gog_swkotor.exe: AssuredHit effect guarantees attack hits (bypasses AC check)
             // Located via string references: EffectAssuredHit @ routine 51
             // Original implementation: Effect flag that forces attack to hit unless natural 1
             bool hasAssuredHit = false;

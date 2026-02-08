@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// - Common interface for sound functionality across all BioWare engines
     /// - Base implementation: BaseSoundComponent in Runtime.Games.Common.Components (if common functionality exists)
     /// - Engine-specific implementations:
-    ///   - Odyssey: SoundComponent (swkotor.exe, swkotor2.exe)
+    ///   - Odyssey: SoundComponent (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
     ///   - Aurora: AuroraSoundComponent (nwmain.exe) - if sounds are supported
     ///   - Eclipse: EclipseSoundComponent (daorigins.exe, DragonAge2.exe) - if sounds are supported
     ///   - Infinity: InfinitySoundComponent (, ) - if sounds are supported

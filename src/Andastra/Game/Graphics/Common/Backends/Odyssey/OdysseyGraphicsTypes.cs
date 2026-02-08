@@ -141,9 +141,8 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
     /// <summary>
     /// Odyssey depth-stencil buffer implementation.
-    /// Uses OpenGL renderbuffer.
-    /// Based on swkotor.exe/swkotor2.exe: Depth-stencil buffer creation for z-buffering and stencil operations
-    /// Matching reone Renderbuffer implementation: glGenRenderbuffers -> glBindRenderbuffer -> glRenderbufferStorage
+    /// Uses OpenGL renderbuffer. Reva: k1_win_gog_swkotor.exe / k2 executables use DirectX; this OpenGL backend
+    /// uses glGenRenderbuffers -> glBindRenderbuffer -> glRenderbufferStorage for depth-stencil parity.
     /// </summary>
     public class OdysseyDepthStencilBuffer : IDepthStencilBuffer
     {
@@ -174,8 +173,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Creates a new depth-stencil buffer.
-        /// Based on swkotor.exe/swkotor2.exe: Depth-stencil buffer initialization
-        /// Matching reone Renderbuffer::init(): glGenRenderbuffers -> glBindRenderbuffer -> glRenderbufferStorage
+        /// Reva: K1/K2 use DirectX; OpenGL path uses glGenRenderbuffers -> glBindRenderbuffer -> glRenderbufferStorage.
         /// </summary>
         /// <param name="width">Buffer width.</param>
         /// <param name="height">Buffer height.</param>
@@ -193,15 +191,15 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             _width = width;
             _height = height;
 
-            // Matching reone Renderbuffer::init(): glGenRenderbuffers(1, &_nameGL)
+            // glGenRenderbuffers(1, &_nameGL)
             uint[] renderbufferIds = new uint[1];
             glGenRenderbuffers(1, renderbufferIds);
             _renderbufferId = renderbufferIds[0];
 
-            // Matching reone Renderbuffer::bind(): glBindRenderbuffer(GL_RENDERBUFFER, _nameGL)
+            // glBindRenderbuffer(GL_RENDERBUFFER, _nameGL)
             glBindRenderbuffer(GL_RENDERBUFFER, _renderbufferId);
 
-            // Matching reone Renderbuffer::refresh(): glRenderbufferStorage(GL_RENDERBUFFER, format, width, height)
+            // glRenderbufferStorage(GL_RENDERBUFFER, format, width, height)
             // Using GL_DEPTH24_STENCIL8 (0x88F0) for 24-bit depth and 8-bit stencil
             // This matches the original game's depth-stencil buffer format
             glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
@@ -212,14 +210,13 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         public IntPtr NativeHandle => new IntPtr(_renderbufferId);
 
         /// <summary>
-        /// Disposes the depth-stencil buffer.
-        /// Matching reone Renderbuffer::deinit(): glDeleteRenderbuffers(1, &_nameGL)
+        /// Disposes the depth-stencil buffer. glDeleteRenderbuffers(1, &amp;_nameGL).
         /// </summary>
         public void Dispose()
         {
             if (!_disposed)
             {
-                // Matching reone Renderbuffer::deinit(): glDeleteRenderbuffers(1, &_nameGL)
+                // glDeleteRenderbuffers(1, &_nameGL)
                 if (_renderbufferId != 0)
                 {
                     uint[] renderbufferIds = new uint[] { _renderbufferId };
@@ -259,16 +256,11 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// <summary>
     /// Odyssey vertex buffer implementation.
     /// Uses OpenGL vertex buffer objects (VBO).
-    /// Based on xoreos VertexBuffer and PyKotor Mesh VBO implementation.
+    /// Reva (k1_win_gog_swkotor.exe): GLRender::SetVertexBuffer @ 0x00425900 uses glBindBufferARB(0x8892),
+    /// glVertexPointer; AurVertexBufferObjectARBAvailable(); VBO from requestPoolManager.
     /// </summary>
     /// <remarks>
-    /// OpenGL VBO Implementation:
-    /// - Based on verified components of swkotor.exe and swkotor2.exe
-    /// - Original game: Uses DirectX vertex buffers, but OpenGL backend uses VBOs
-    /// - xoreos: Uses glGenBuffers, glBufferData, glBindBuffer for VBO management
-    /// - PyKotor: Uses glGenBuffers(1, &vbo), glBufferData(GL_ARRAY_BUFFER, ...) for VBO creation
-    /// - Matching xoreos vertexbuffer.cpp: initGL(), updateGL(), destroyGL()
-    /// - Matching PyKotor mesh.py: glGenBuffers(1), glBufferData(GL_ARRAY_BUFFER, ...)
+    /// OpenGL VBO: Reva K1 uses GL_ARRAY_BUFFER (0x8892), glVertexPointer; VBO path when ARB available.
     /// </remarks>
     public class OdysseyVertexBuffer<T> : IVertexBuffer where T : struct
     {
@@ -284,8 +276,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Creates a new vertex buffer with the specified data.
-        /// Matching xoreos: VertexBuffer::initGL() - glGenBuffers, glBufferData
-        /// Matching PyKotor: glGenBuffers(1, &vbo), glBufferData(GL_ARRAY_BUFFER, ...)
+        /// Reva: K1 SetVertexBuffer @ 0x00425900 binds GL_ARRAY_BUFFER (0x8892).
         /// </summary>
         public OdysseyVertexBuffer(T[] data)
         {
@@ -304,8 +295,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Creates the OpenGL vertex buffer object.
-        /// Matching xoreos: VertexBuffer::initGL() - glGenBuffers(1, &_vbo), glBufferData(...)
-        /// Matching PyKotor: glGenBuffers(1, &vbo), glBufferData(GL_ARRAY_BUFFER, len(vertex_data), ...)
+        /// Reva: K1 VBO creation; glGenBuffers/glBufferData for GL_ARRAY_BUFFER.
         /// </summary>
         private void CreateVBO()
         {
@@ -315,8 +305,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             }
 
             // Generate buffer object
-            // Matching xoreos: glGenBuffers(1, &_vbo)
-            // Matching PyKotor: glGenBuffers(1, &vbo)
+            // glGenBuffers(1, &_vbo)
             uint[] buffers = new uint[1];
             OdysseyBufferHelpers.glGenBuffers(1, buffers);
             _bufferId = buffers[0];
@@ -327,14 +316,13 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             }
 
             // Bind buffer and upload data
-            // Matching xoreos: glBindBuffer(GL_ARRAY_BUFFER, _vbo), glBufferData(...)
-            // Matching PyKotor: glBindBuffer(GL_ARRAY_BUFFER, vbo), glBufferData(GL_ARRAY_BUFFER, ...)
+            // Reva: K1 SetVertexBuffer binds 0x8892 (GL_ARRAY_BUFFER).
             OdysseyBufferHelpers.glBindBuffer(GL_ARRAY_BUFFER, _bufferId);
 
             int dataSize = _data.Length * _vertexStride;
 
             // Pin the array and pass pointer directly to glBufferData
-            // Matching xoreos: glBufferData(GL_ARRAY_BUFFER, _count * _size, _data, _hint)
+            // glBufferData(GL_ARRAY_BUFFER, size, data, hint)
             // Matching PyKotor: glBufferData(GL_ARRAY_BUFFER, len(vertex_data), vertex_data_mv, GL_STATIC_DRAW)
             GCHandle handle = GCHandle.Alloc(_data, GCHandleType.Pinned);
             try
@@ -359,7 +347,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Sets vertex data in the buffer.
-        /// Matching xoreos: VertexBuffer::updateGL() - glBufferData or glBufferSubData
+        /// Reva: K1 VBO update (glBufferData/glBufferSubData pattern).
         /// </summary>
         public void SetData<TData>(TData[] data) where TData : struct
         {
@@ -386,7 +374,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
                 int dataSize = _data.Length * _vertexStride;
 
                 // Pin the array and pass pointer directly to glBufferData
-                // Matching xoreos: glBufferData(GL_ARRAY_BUFFER, _count * _size, _data, _hint)
+                // glBufferData for full update
                 GCHandle handle = GCHandle.Alloc(_data, GCHandleType.Pinned);
                 try
                 {
@@ -410,7 +398,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Gets vertex data from the buffer.
-        /// Matching xoreos: Reads from _data (CPU-side copy)
+        /// Reva: K1 can use CPU-side copy or pool pointer.
         /// </summary>
         public void GetData<TData>(TData[] data) where TData : struct
         {
@@ -430,7 +418,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             }
 
             // Copy from local data (CPU-side copy)
-            // For GPU-side read, we would use glGetBufferSubData, but xoreos uses CPU-side _data
+            // GPU read via glGetBufferSubData if needed; K1 uses pool/CPU copy.
             if (_data != null)
             {
                 Array.Copy(_data, data, Math.Min(_data.Length, data.Length));
@@ -439,7 +427,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Disposes the vertex buffer and releases OpenGL resources.
-        /// Matching xoreos: VertexBuffer::destroyGL() - glDeleteBuffers(1, &_vbo)
+        /// Reva: K1 VBO released; glDeleteBuffers(1, &_vbo).
         /// Matching PyKotor: glDeleteBuffers(1, &vbo)
         /// </summary>
         public void Dispose()
@@ -447,7 +435,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             if (!_disposed)
             {
                 // Delete VBO
-                // Matching xoreos: glDeleteBuffers(1, &_vbo)
+                // glDeleteBuffers(1, &_vbo)
                 // Matching PyKotor: glDeleteBuffers(1, &vbo)
                 if (_bufferId != 0)
                 {
@@ -465,14 +453,10 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// <summary>
     /// Odyssey index buffer implementation.
     /// Uses OpenGL index buffer objects (IBO/EBO).
-    /// Based on xoreos IndexBuffer implementation.
+    /// Reva (k1_win_gog_swkotor.exe): K1 uses OpenGL VBO/IBO when AurVertexBufferObjectARBAvailable(); indexed draw with bound IBO.
     /// </summary>
     /// <remarks>
-    /// OpenGL IBO Implementation:
-    /// - Based on verified components of swkotor.exe and swkotor2.exe
-    /// - Original game: Uses DirectX index buffers, but OpenGL backend uses IBOs
-    /// - xoreos: Uses glGenBuffers, glBufferData, glBindBuffer for IBO management
-    /// - Matching xoreos indexbuffer.cpp: initGL(), updateGL(), destroyGL()
+    /// OpenGL IBO: Reva K1 GLRender draws with bound index buffer (GL_ELEMENT_ARRAY_BUFFER).
     /// - Index type: GL_UNSIGNED_SHORT (16-bit) if IsShort=true, GL_UNSIGNED_INT (32-bit) if IsShort=false
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Index buffer system for indexed primitive rendering
     /// </remarks>
@@ -490,7 +474,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Creates a new index buffer with the specified data.
-        /// Matching xoreos: IndexBuffer::initGL() - glGenBuffers, glBufferData
+        /// Reva: K1 IBO creation; glGenBuffers/glBufferData for GL_ELEMENT_ARRAY_BUFFER.
         /// </summary>
         public OdysseyIndexBuffer(int[] indices, bool isShort)
         {
@@ -509,8 +493,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Creates the OpenGL index buffer object.
-        /// Matching xoreos: IndexBuffer::initGL() - glGenBuffers(1, &_ibo), glBufferData(GL_ELEMENT_ARRAY_BUFFER, ...)
-        /// Based on xoreos indexbuffer.cpp: initGL() @ lines 94-106
+        /// Reva: K1 IBO init; glGenBuffers(1), glBufferData(GL_ELEMENT_ARRAY_BUFFER, ...).
         /// </summary>
         private void CreateIBO()
         {
@@ -520,7 +503,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             }
 
             // Generate buffer object
-            // Matching xoreos: glGenBuffers(1, &_ibo)
+            // glGenBuffers(1, &_ibo)
             uint[] buffers = new uint[1];
             OdysseyBufferHelpers.glGenBuffers(1, buffers);
             _bufferId = buffers[0];
@@ -531,7 +514,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             }
 
             // Bind buffer and upload data
-            // Matching xoreos: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo), glBufferData(...)
+            // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo), glBufferData(...)
             OdysseyBufferHelpers.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bufferId);
 
             // Calculate data size based on index type (16-bit or 32-bit)
@@ -540,7 +523,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
             // Convert indices to appropriate format (ushort[] or uint[])
             // Pin the array and pass pointer directly to glBufferData
-            // Matching xoreos: glBufferData(GL_ELEMENT_ARRAY_BUFFER, _count * _size, _data, _hint)
+            // glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, hint)
             if (_isShort)
             {
                 // Convert int[] to ushort[] for 16-bit indices
@@ -585,7 +568,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             }
 
             // Unbind buffer
-            // Matching xoreos: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+            // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
             OdysseyBufferHelpers.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
             _iboCreated = true;
@@ -597,8 +580,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Sets index data in the buffer.
-        /// Matching xoreos: IndexBuffer::updateGL() - glBufferData or glBufferSubData
-        /// Based on xoreos indexbuffer.cpp: updateGL() @ lines 108-114
+        /// Reva: K1 IBO update; glBufferData or glBufferSubData.
         /// </summary>
         public void SetData(int[] indices)
         {
@@ -623,8 +605,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Updates the OpenGL index buffer object with new data.
-        /// Matching xoreos: IndexBuffer::updateGL() - glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo), glBufferData(...)
-        /// Based on xoreos indexbuffer.cpp: updateGL() @ lines 108-114
+        /// Reva: K1 IBO update; bind then glBufferData.
         /// </summary>
         private void UpdateIBO()
         {
@@ -634,7 +615,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             }
 
             // Bind buffer
-            // Matching xoreos: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo)
+            // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo)
             OdysseyBufferHelpers.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bufferId);
 
             // Calculate data size based on index type (16-bit or 32-bit)
@@ -643,7 +624,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
             // Convert indices to appropriate format (ushort[] or uint[])
             // Pin the array and pass pointer directly to glBufferData
-            // Matching xoreos: glBufferData(GL_ELEMENT_ARRAY_BUFFER, _count * _size, _data, _hint)
+            // glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, hint)
             if (_isShort)
             {
                 // Convert int[] to ushort[] for 16-bit indices
@@ -690,7 +671,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             }
 
             // Unbind buffer
-            // Matching xoreos: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+            // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
             OdysseyBufferHelpers.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         }
 
@@ -704,15 +685,14 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Disposes the index buffer and releases OpenGL resources.
-        /// Matching xoreos: IndexBuffer::destroyGL() - glDeleteBuffers(1, &_ibo)
-        /// Based on xoreos indexbuffer.cpp: destroyGL() @ lines 116-121
+        /// Reva: K1 IBO destroy; glDeleteBuffers(1, &_ibo).
         /// </summary>
         public void Dispose()
         {
             if (!_disposed)
             {
                 // Delete IBO if it was created
-                // Matching xoreos: glDeleteBuffers(1, &_ibo)
+                // glDeleteBuffers(1, &_ibo)
                 if (_iboCreated && _bufferId != 0)
                 {
                     uint[] buffers = new uint[1] { _bufferId };
@@ -730,8 +710,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// <summary>
     /// Odyssey sprite batch implementation.
     /// Uses immediate mode OpenGL for 2D rendering.
-    /// Based on xoreos: guiquad.cpp render() @ lines 274-344
-    /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 2D sprite rendering for GUI elements
+    /// Reva (k1_win_gog_swkotor.exe): K1 2D/GUI uses OpenGL quads (AurGUIImage, CSWGuiBorder::Draw); sprite batch matches engine pattern.
     /// </summary>
     public class OdysseySpriteBatch : ISpriteBatch
     {
@@ -838,7 +817,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// <summary>
         /// Begins sprite batch rendering.
         /// Sets up 2D orthographic projection and saves OpenGL state.
-        /// Based on xoreos: graphics.cpp setOrthogonal() @ lines 561-575
+        /// Reva: K1 ortho/projection for 2D; glMatrixMode, glOrtho pattern.
         /// </summary>
         public void Begin(SpriteSortMode sortMode = SpriteSortMode.Deferred, BlendState blendState = null)
         {
@@ -846,7 +825,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             _currentBlendState = blendState ?? BlendState.Default;
 
             // Save OpenGL state
-            // Based on xoreos: guiquad.cpp render() saves state with glPushAttrib
+            // Reva: K1 saves/restores GL state for 2D.
             glPushAttrib(GL_COLOR_BUFFER_BIT | GL_TEXTURE_BIT | GL_ENABLE_BIT | GL_TRANSFORM_BIT);
             glPushMatrix();
 
@@ -865,7 +844,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             int viewportHeight = viewport[3];
 
             // Setup 2D orthographic projection
-            // Based on xoreos: graphics.cpp ortho() @ lines 577-609
+            // Reva: K1 ortho projection for 2D viewport.
             // Orthographic projection: left=0, right=width, bottom=0, top=height, zNear=-1, zFar=1
             glMatrixMode(GL_PROJECTION);
             glLoadIdentity();
@@ -925,7 +904,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Draws a texture at the specified position.
-        /// Based on xoreos: guiquad.cpp render() @ lines 322-331
+        /// Reva: K1 2D quad draw (textured quad per sprite).
         /// </summary>
         public void Draw(ITexture2D texture, Runtime.Graphics.Vector2 position, Color color)
         {
@@ -972,7 +951,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Draws a texture with full parameters (rotation, origin, effects, layer depth).
-        /// Based on xoreos: guiquad.cpp render() @ lines 274-344
+        /// Reva: K1 sprite/quad render (alpha blending, textured quads).
         /// </summary>
         public void Draw(ITexture2D texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotation, Runtime.Graphics.Vector2 origin, SpriteEffects effects, float layerDepth)
         {
@@ -1027,7 +1006,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             float y2 = destinationRectangle.Y + destinationRectangle.Height;
 
             // Apply rotation if needed
-            // Based on xoreos: guiquad.cpp render() @ lines 314-318
+            // Reva: K1 quad draw (texture bind, vertex array).
             if (rotation != 0.0f)
             {
                 float centerX = x1 + destinationRectangle.Width * (origin.X / (float)destinationRectangle.Width);
@@ -1039,8 +1018,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
                 glTranslatef(-centerX, -centerY, 0.0f);
             }
 
-            // Draw quad using immediate mode
-            // Based on xoreos: guiquad.cpp render() @ lines 322-331
+            // Draw quad using immediate mode (Reva: K1 2D quads for sprites)
             glBegin(GL_QUADS);
 
             // Top-left
@@ -1070,7 +1048,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Draws text using a sprite font.
-        /// Based on xoreos: texturefont.cpp render() @ lines 52-94
+        /// Reva: K1 font render (textured quad per glyph); character width + spacing for advance.
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Font rendering system @ 0x007b6380 (dialogfont16x16)
         /// </summary>
         public void DrawString(IFont font, string text, Runtime.Graphics.Vector2 position, Color color)
@@ -1141,11 +1119,11 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
                 };
 
                 // Draw character as sprite using font texture and glyph coordinates
-                // Based on xoreos: texturefont.cpp render() - draws each character as textured quad
+                // Reva: K1 draws each character as textured quad
                 Draw(fontTexture, destRect, sourceRect, color, 0.0f, Runtime.Graphics.Vector2.Zero, SpriteEffects.None, 0.0f);
 
                 // Advance position for next character
-                // Based on xoreos: texturefont.cpp - advances X position by character width + spacing
+                // Reva: K1 advances X by character width + spacing
                 currentX += glyphValue.Width + bitmapFont.SpacingR;
             }
         }
@@ -1162,11 +1140,11 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Basic Effect:
-    /// - Based on verified components of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe
     /// - Original game graphics: OpenGL fixed-function pipeline (OPENGL32.dll @ 0x00809ce2)
     /// - Matrix application: Original engine uses glMatrixMode(GL_PROJECTION) and glMatrixMode(GL_MODELVIEW)
-    /// - Based on xoreos implementation: graphics.cpp renderWorld() @ lines 1059-1081
-    /// - Opacity/Alpha: Original engine uses glColor4f for alpha blending (swkotor2.exe: FadeTime @ 0x007c60ec)
+    /// Reva: K1 world render; projection/modelview set for 3D; GUI overlay uses ortho.
+    /// - Opacity/Alpha: Original engine uses glColor4f for alpha blending (k2_win_gog_aspyr_swkotor2.exe: FadeTime @ 0x007c60ec)
     /// - This implementation: Applies matrices and opacity via OpenGL fixed-function pipeline
     /// </remarks>
     public class OdysseyBasicEffect : IBasicEffect
@@ -1267,7 +1245,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// Applies the effect to OpenGL state.
         /// Sets projection, view, and world matrices, and applies opacity via color/blending.
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): glDrawElements with proper matrix setup
-        /// Based on xoreos: graphics.cpp renderWorld() @ lines 1059-1081
+        /// Reva: K1 3D scene render (projection, modelview, then draw).
         ///
         /// Note: In OpenGL fixed-function pipeline:
         /// - Projection matrix is typically set once per frame
@@ -1278,14 +1256,14 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         public void Apply()
         {
             // Apply projection matrix
-            // Based on xoreos: glMatrixMode(GL_PROJECTION); glMultMatrixf(_perspective);
+            // Reva: K1 sets projection matrix for 3D.
             glMatrixMode(GL_PROJECTION);
             glLoadIdentity();
             float[] projectionArray = MatrixToFloatArray(_projection);
             glMultMatrixf(projectionArray);
 
             // Apply view and world matrices to MODELVIEW
-            // Based on xoreos: glMatrixMode(GL_MODELVIEW); glLoadIdentity(); then apply view transform
+            // Reva: K1 sets modelview, view transform.
             glMatrixMode(GL_MODELVIEW);
             glLoadIdentity();
 
@@ -1305,7 +1283,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             if (_alpha < 1.0f)
             {
                 // Enable blending for transparency
-                // Based on xoreos: guiquad.cpp render() @ lines 274-297 (alpha blending)
+                // Reva: K1 alpha blending for overlay.
                 glEnable(GL_BLEND);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -1337,7 +1315,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// <summary>
         /// Converts System.Numerics.Matrix4x4 to OpenGL column-major float array.
         /// OpenGL matrices are column-major, System.Numerics uses row-major.
-        /// Based on xoreos: glm::value_ptr() usage for glMultMatrixf
+        /// Reva: K1 matrix upload to GL (column-major).
         /// </summary>
         private float[] MatrixToFloatArray(Matrix4x4 matrix)
         {

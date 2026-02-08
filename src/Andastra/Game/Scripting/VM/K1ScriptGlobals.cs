@@ -7,7 +7,7 @@ namespace Andastra.Game.Scripting.VM
     /// </summary>
     /// <remarks>
     /// K1 Script Globals System:
-    /// - Based on swkotor.exe script variable system
+    /// - Based on k1_win_gog_swkotor.exe script variable system
     /// - Located via string references: "GLOBALVARS" (save file global variables GFF field name)
     /// - "Global" (global constant), "GLOBAL" (global constant uppercase)
     /// - "RIMS:GLOBAL" (global RIM directory path), "globalcat" (global catalog field)
@@ -33,7 +33,7 @@ namespace Andastra.Game.Scripting.VM
         /// </summary>
         /// <remarks>
         /// K1 Script Globals Initialization:
-        /// - Based on swkotor.exe: Script globals system initializes global variables at game start
+        /// - Based on k1_win_gog_swkotor.exe: Script globals system initializes global variables at game start
         /// - Original implementation: Global variables initialized from GLOBALVARS.res if present, otherwise empty
         /// - K1-specific initialization can be added here if needed (e.g., default story flags, quest states)
         /// </remarks>

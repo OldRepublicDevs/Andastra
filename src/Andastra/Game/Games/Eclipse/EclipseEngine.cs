@@ -145,7 +145,7 @@ namespace Andastra.Game.Games.Engines.Eclipse
         /// - Detection method: Uses Game enum from profile, with fallback to executable detection
         /// - Dragon Age: Origins: BioWareGame.DA or BioWareGame.DA_ORIGINS, checks for "daorigins.exe"
         /// - Dragon Age 2: BioWareGame.DA2 or Game.DRAGON_AGE_2, checks for "DragonAge2.exe"
-        /// - Similar to Odyssey Engine detection pattern (swkotor.exe/swkotor2.exe detection)
+        /// - Similar to Odyssey Engine detection pattern (k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe detection)
         /// - Original implementation: Eclipse Engine executables identify themselves via executable name
         /// - Cross-engine: Similar detection pattern across all BioWare engines (executable name + fallback file checks)
         /// </remarks>

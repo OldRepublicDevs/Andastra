@@ -8,7 +8,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// - Common interface for placeable components across all BioWare engines
     /// - Base implementation: BasePlaceableComponent (Runtime.Games.Common.Components)
     /// - Engine-specific implementations:
-    ///   - Odyssey: PlaceableComponent (swkotor.exe, swkotor2.exe)
+    ///   - Odyssey: PlaceableComponent (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
     ///   - Aurora: AuroraPlaceableComponent (nwmain.exe)
     ///   - Eclipse: EclipsePlaceableComponent (daorigins.exe, DragonAge2.exe)
     ///   - Infinity: InfinityPlaceableComponent (, )

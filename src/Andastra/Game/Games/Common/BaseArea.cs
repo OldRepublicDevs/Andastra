@@ -33,7 +33,7 @@ namespace Andastra.Game.Games.Common
     ///
     /// Inheritance Structure:
     /// - BaseArea (this class) - Common functionality only
-    ///   - OdysseyArea : BaseArea (swkotor.exe, swkotor2.exe)
+    ///   - OdysseyArea : BaseArea (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
     ///   - AuroraArea : BaseArea (nwmain.exe)
     ///   - EclipseArea : BaseArea (daorigins.exe, DragonAge2.exe, , )
     /// </remarks>
@@ -390,7 +390,7 @@ namespace Andastra.Game.Games.Common
         /// Base implementation checks current area and module's loaded areas.
         /// Engine-specific implementations should override to add area streaming (loading areas on demand).
         ///
-        /// Area lookup flow (based on swkotor2.exe area transition system):
+        /// Area lookup flow (based on k2_win_gog_aspyr_swkotor2.exe area transition system):
         /// 1. Check if target area is the current area (fast path)
         /// 2. Check if area is already loaded in module via IModule.GetArea(resRef)
         /// 3. If not found, return null (area streaming/loading handled by engine-specific overrides)
@@ -402,8 +402,8 @@ namespace Andastra.Game.Games.Common
         /// - Return loaded area
         ///
         /// Based on verified components of:
-        /// - swkotor2.exe: Area loading during transitions (0x004e26d0 @ 0x004e26d0)
-        /// - swkotor.exe: Similar area loading system (KOTOR 1)
+        /// - k2_win_gog_aspyr_swkotor2.exe: Area loading during transitions (0x004e26d0 @ 0x004e26d0)
+        /// - k1_win_gog_swkotor.exe: Similar area loading system (KOTOR 1)
         /// - Area resources: ARE (properties), GIT (instances), LYT (layout), VIS (visibility)
         /// - Module resource lookup: Areas are loaded from module archives using area ResRef
         /// </remarks>

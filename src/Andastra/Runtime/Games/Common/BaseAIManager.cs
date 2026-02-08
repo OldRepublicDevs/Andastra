@@ -16,8 +16,8 @@ namespace Andastra.Runtime.Games.Common
     /// - Provides foundation for engine-specific AI behaviors
     ///
     /// Based on verified components of:
-    /// - swkotor.exe: Basic AI with perception and combat
-    /// - swkotor2.exe: Advanced AI with influence, factions, complex behaviors
+    /// - k1_win_gog_swkotor.exe: Basic AI with perception and combat
+    /// - k2_win_gog_aspyr_swkotor2.exe: Advanced AI with influence, factions, complex behaviors
     /// - nwmain.exe: D20-based AI with tactical positioning
     /// - daorigins.exe: Complex tactical AI with positioning and abilities
     /// - DragonAge2.exe: Enhanced Eclipse engine AI with improved combat behavior and party tactics

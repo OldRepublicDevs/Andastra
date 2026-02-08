@@ -13,7 +13,7 @@ namespace Andastra.Game.Graphics.MonoGame.UI
 {
     /// <summary>
     /// Load game screen - 1:1 with Reva CSWGuiSaveLoad (load mode).
-    /// swkotor.exe OnLoadSaveGame @ 0x0067b1a0: CSWGuiSaveLoad(manager, 0, 1) - param 0 = load mode.
+    /// k1_win_gog_swkotor.exe OnLoadSaveGame @ 0x0067b1a0: CSWGuiSaveLoad(manager, 0, 1) - param 0 = load mode.
     /// </summary>
     public class LoadGameScreen
     {

@@ -15,8 +15,8 @@ namespace Andastra.Runtime.Games.Common
     /// - Provides foundation for engine-specific module systems
     ///
     /// Based on verified components of:
-    /// - swkotor.exe: Basic module loading with ARE/GIT files
-    /// - swkotor2.exe: Enhanced module system with transitions
+    /// - k1_win_gog_swkotor.exe: Basic module loading with ARE/GIT files
+    /// - k2_win_gog_aspyr_swkotor2.exe: Enhanced module system with transitions
     /// - nwmain.exe: Aurora module management
     /// - daorigins.exe: Eclipse module streaming
     /// - DragonAge2.exe: Eclipse module management with message-based loading

@@ -24,7 +24,7 @@ namespace Andastra.Game.Games.Odyssey
     /// - Unified implementation for both KOTOR1 and KOTOR2
     /// - Inherits from BaseScriptExecutor (Runtime.Games.Common) with Odyssey-specific resource loading
     /// - Uses Installation resource system for NCS bytecode loading
-    /// - Supports both swkotor.exe (KOTOR1) and swkotor2.exe (KOTOR2) via OdysseyEngineApi parameter
+    /// - Supports both k1_win_gog_swkotor.exe (KOTOR1) and k2_win_gog_aspyr_swkotor2.exe (KOTOR2) via OdysseyEngineApi parameter
     /// - Game-specific behavior is handled by OdysseyEngineApi (conditional logic based on BioWareGame enum)
     ///
     /// Common Odyssey script execution features:
@@ -39,8 +39,8 @@ namespace Andastra.Game.Games.Odyssey
     /// - Instruction budget tracking: Tracks instruction count per entity for budget enforcement
     ///
     /// Based on verified components of:
-    /// - swkotor.exe: Script execution functions (KOTOR1)
-    /// - swkotor2.exe: DispatchScriptEvent @ 0x004dd730, 0x004dcfb0 @ 0x004dcfb0 (KOTOR2)
+    /// - k1_win_gog_swkotor.exe: Script execution functions (KOTOR1)
+    /// - k2_win_gog_aspyr_swkotor2.exe: DispatchScriptEvent @ 0x004dd730, 0x004dcfb0 @ 0x004dcfb0 (KOTOR2)
     /// - Script execution: 0x004dcfb0 dispatches script events and executes scripts
     ///   - Function signature: `int 0x004dcfb0(void *param_1, int param_2, void *param_3, int param_4)`
     ///   - param_1: Entity pointer (owner of script)
@@ -94,7 +94,7 @@ namespace Andastra.Game.Games.Odyssey
 
                 // Execute script via VM
                 // Common across KOTOR1 and KOTOR2: Script execution with instruction budget tracking
-                // Based on swkotor.exe/swkotor2.exe: Script execution budget limits per frame
+                // Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Script execution budget limits per frame
                 // Original implementation: Tracks instruction count per entity for budget enforcement
                 int returnValue = _vm.Execute(bytecode, context);
 
@@ -116,7 +116,7 @@ namespace Andastra.Game.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Common across KOTOR1 and KOTOR2: Uses Installation.ResourceLookup for NCS files.
-        /// Based on swkotor.exe/swkotor2.exe resource loading patterns.
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe resource loading patterns.
         /// </remarks>
         protected override byte[] LoadNcsBytecode(string scriptResRef)
         {
@@ -147,8 +147,8 @@ namespace Andastra.Game.Games.Odyssey
         /// - UISystem: UI screen and overlay management
         ///
         /// Based on verified components of:
-        /// - swkotor.exe: Script execution context setup (KOTOR1)
-        /// - swkotor2.exe: 0x005226d0 @ 0x005226d0 (script execution context setup, KOTOR2)
+        /// - k1_win_gog_swkotor.exe: Script execution context setup (KOTOR1)
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x005226d0 @ 0x005226d0 (script execution context setup, KOTOR2)
         /// - Engine API functions (Kotor1, TheSithLords) access AdditionalContext as IGameServicesContext
         /// - Script execution: Engine API functions check for VMExecutionContext.AdditionalContext
         ///   and cast to IGameServicesContext to access game services

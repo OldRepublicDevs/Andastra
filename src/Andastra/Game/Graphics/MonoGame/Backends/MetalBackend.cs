@@ -406,8 +406,8 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// to upload texture data after creating the texture resource.
         ///
         /// Based on original engine texture upload pattern:
-        /// - swkotor.exe: 0x00428380 @ 0x00428380 (texture upload with mipmap generation)
-        /// - swkotor2.exe: 0x00428380 @ 0x00428380 (texture upload with mipmap generation)
+        /// - k1_win_gog_swkotor.exe: 0x00428380 @ 0x00428380 (texture upload with mipmap generation)
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x00428380 @ 0x00428380 (texture upload with mipmap generation)
         /// - Original engine uses glTexImage2D for each mipmap level, Metal equivalent is replaceRegion
         /// - Both engines upload mipmaps sequentially, starting from base level (0)
         ///
@@ -1331,7 +1331,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// Metal API Reference: https://developer.apple.com/documentation/metal/mtltexture/replace(region:mipmaplevel:withbytes:bytesperrow:)
         ///
         /// Matches original engine behavior: texture uploads use format-specific row pitch calculations.
-        /// Original engine: swkotor.exe and swkotor2.exe calculate row pitch based on format for DirectX texture uploads.
+        /// Original engine: k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe calculate row pitch based on format for DirectX texture uploads.
         /// </summary>
         private uint CalculateBytesPerRow(TextureFormat format, int width)
         {
@@ -1430,7 +1430,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// For compressed formats: ((width + 3) / 4) * ((height + 3) / 4) * bytesPerBlock
         ///
         /// Matches original engine behavior: texture data size validation ensures correct upload.
-        /// Original engine: swkotor.exe and swkotor2.exe validate texture data size before upload.
+        /// Original engine: k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe validate texture data size before upload.
         /// </summary>
         private uint CalculateMipmapDataSize(TextureFormat format, int width, int height)
         {

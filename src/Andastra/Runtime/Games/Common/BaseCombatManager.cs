@@ -16,8 +16,8 @@ namespace Andastra.Runtime.Games.Common
     /// - Provides framework for initiative, rounds, and combat state
     ///
     /// Based on verified components of:
-    /// - swkotor.exe: Combat system functions
-    /// - swkotor2.exe: Advanced combat mechanics with force powers, feats
+    /// - k1_win_gog_swkotor.exe: Combat system functions
+    /// - k2_win_gog_aspyr_swkotor2.exe: Advanced combat mechanics with force powers, feats
     /// - nwmain.exe: D20-based combat system
     /// - daorigins.exe: Tactical combat with positioning and abilities
     /// - DragonAge2.exe: Enhanced tactical combat with improved party coordination, ability system, and real-time action

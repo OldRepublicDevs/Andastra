@@ -75,7 +75,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
         /// - Paths are resolved relative to RootDirectory
         /// - MonoGame's Load&lt;T&gt; throws ContentLoadException if asset not found
         /// 
-        /// Original game reference (swkotor2.exe):
+        /// Original game reference (k2_win_gog_aspyr_swkotor2.exe):
         /// - CExoKeyTable @ 0x007b6078 - resource lookup table
         /// - 0x00633270 @ 0x00633270 - resource path resolution
         /// - Original game checks ERF/BIF archives for resource existence

@@ -18,7 +18,7 @@ namespace Andastra.Game.Games.Odyssey
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006caab0 @ 0x006caab0 (server command parser, handles module commands)
     /// - Located via string references: "GAMEINPROGRESS" @ 0x007c15c8 (game in progress flag), "GameSession" @ 0x007be620
     /// - "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58 (module state tracking, referenced by 0x006caab0)
-    /// - Cross-engine: Similar functions in swkotor.exe (K1), nwmain.exe (Aurora), daorigins.exe (Eclipse)
+    /// - Cross-engine: Similar functions in k1_win_gog_swkotor.exe (K1), nwmain.exe (Aurora), daorigins.exe (Eclipse)
     /// - Inheritance: BaseEngineGame (Runtime.Games.Common) implements common module state management
     ///   - Odyssey: OdysseyGameSession : BaseEngineGame (Runtime.Games.Odyssey) - Odyssey-specific module loading
     /// - Original implementation: 0x006caab0 parses server commands starting with 'S', manages module state flags:
