@@ -153,8 +153,9 @@ namespace Andastra.Game.Games.Odyssey.Fonts
                 }
 
                 // Convert TPC to MonoGame Texture2D
-                // Fonts always use 2D textures, not cube maps
-                Texture convertedTexture = Graphics.MonoGame.Converters.TpcToMonoGameTextureConverter.Convert(fontTexture, graphicsDevice, false, flipVertical: true, flipHorizontal: true);
+                // Fonts always use 2D textures, not cube maps.
+                // Do NOT flip - KOTOR font textures use top-left origin (same as MonoGame/GUI). Flipping caused backwards text.
+                Texture convertedTexture = Graphics.MonoGame.Converters.TpcToMonoGameTextureConverter.Convert(fontTexture, graphicsDevice, false, flipVertical: false, flipHorizontal: false);
                 if (convertedTexture is TextureCube)
                 {
                     Console.WriteLine($"[OdysseyBitmapFont] ERROR: Font texture cannot be a cube map: {fontResRef}");

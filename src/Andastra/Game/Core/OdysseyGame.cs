@@ -6,6 +6,7 @@ using Andastra.Game.Graphics.MonoGame.Graphics;
 using Andastra.Game.Graphics.MonoGame.GUI;
 using Andastra.Game.Graphics.MonoGame.Rendering;
 using Andastra.Game.Graphics.MonoGame.UI;
+using Andastra.Game.Graphics.MonoGame.UI.MainMenu;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Keys = Andastra.Runtime.Graphics.Keys;
@@ -44,7 +45,7 @@ namespace Andastra.Game.Core
     /// Odyssey Game Wrapper:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00404250 @ 0x00404250 (WinMain equivalent, initializes game)
     /// - Original implementation: Initializes engine, creates game session, runs game loop
-    /// - Graphics backend: Provides cross-platform graphics abstraction (MonoGame, Stride)
+    /// - Graphics backend: MonoGame (exclusive)
     /// - Game session: Manages all game systems (combat, dialogue, AI, scripts, etc.)
     /// - Game loop: Coordinates update/draw callbacks with graphics backend
     /// </remarks>
@@ -58,7 +59,7 @@ namespace Andastra.Game.Core
         private IScriptGlobals _globals;
         private Installation _installation;
         private KotorGuiManager _mainMenuGui;
-        private FallbackMainMenu _fallbackMainMenu;
+        private MainMenuScreen _mainMenuScreen;
         private bool _useFallbackMainMenu;
         private bool _isInMainMenu = true;
         private bool _disposed;
@@ -164,7 +165,7 @@ namespace Andastra.Game.Core
             void EnsureMainMenuInitialized()
             {
                 // Already have KOTOR main menu or fallback menu
-                if (_mainMenuGui != null || _fallbackMainMenu != null)
+                if (_mainMenuGui != null || _mainMenuScreen != null)
                 {
                     return;
                 }
@@ -196,8 +197,8 @@ namespace Andastra.Game.Core
                 {
                     Console.WriteLine($"[OdysseyGame] ERROR initializing installation: {ex} - using fallback menu");
                     _useFallbackMainMenu = true;
-                    _fallbackMainMenu = CreateFallbackMainMenu(rawDevice);
-                    _fallbackMainMenu.OnButtonClicked += (tag) => HandleMainMenuButtonClick(tag);
+                    _mainMenuScreen = CreateMainMenuScreen(rawDevice, null);
+                    _mainMenuScreen.OnButtonClicked += (tag) => HandleMainMenuButtonClick(tag);
                     return;
                 }
 
@@ -210,13 +211,13 @@ namespace Andastra.Game.Core
                 // Load the main menu GUI
                 // K1: "MAINMENU" or "mainmenu16x12"
                 // K2: "MAINMENU" or "mainmenu8x6_p"
-                string mainMenuResRef = "MAINMENU";
+                string mainMenuResRef = _settings.Game == KotorGame.K1 ? "mainmenu16x12" : "mainmenu8x6_p";
                 bool loaded = _mainMenuGui.LoadGui(mainMenuResRef, _settings.Width, _settings.Height);
 
                 if (!loaded)
                 {
                     // Try alternate GUI files based on game type
-                    mainMenuResRef = _settings.Game == KotorGame.K1 ? "mainmenu16x12" : "mainmenu8x6_p";
+                    mainMenuResRef = "MAINMENU";
                     loaded = _mainMenuGui.LoadGui(mainMenuResRef, _settings.Width, _settings.Height);
                 }
 
@@ -238,8 +239,13 @@ namespace Andastra.Game.Core
                 {
                     Console.WriteLine($"[OdysseyGame] WARNING: Failed to load main menu GUI - using fallback menu");
                     _useFallbackMainMenu = true;
-                    _fallbackMainMenu = CreateFallbackMainMenu(rawDevice);
-                    _fallbackMainMenu.OnButtonClicked += (tag) => HandleMainMenuButtonClick(tag);
+                    _mainMenuScreen = CreateMainMenuScreen(rawDevice, _installation);
+                    _mainMenuScreen.OnButtonClicked += (tag) => HandleMainMenuButtonClick(tag);
+                    _mainMenuScreen.OnModuleSelected += (moduleName) =>
+                    {
+                        Console.WriteLine($"[OdysseyGame] Warp to module: {moduleName}");
+                        _graphicsBackend?.Exit();
+                    };
                     StartMainMenuMusic();
                 }
             }
@@ -270,7 +276,7 @@ namespace Andastra.Game.Core
                 }
             }
 
-            FallbackMainMenu CreateFallbackMainMenu(Microsoft.Xna.Framework.Graphics.GraphicsDevice rawDevice)
+            MainMenuScreen CreateMainMenuScreen(Microsoft.Xna.Framework.Graphics.GraphicsDevice rawDevice, Installation installation)
             {
                 Microsoft.Xna.Framework.Graphics.SpriteFont font = null;
                 if (_graphicsBackend?.ContentManager is MonoGameContentManager mgContent)
@@ -286,7 +292,10 @@ namespace Andastra.Game.Core
                 }
                 int w = _settings.Width > 0 ? _settings.Width : rawDevice.Viewport.Width;
                 int h = _settings.Height > 0 ? _settings.Height : rawDevice.Viewport.Height;
-                return new FallbackMainMenu(rawDevice, w, h, font);
+                bool isK2 = _settings.Game == KotorGame.K2;
+                var screen = new MainMenuScreen(rawDevice, w, h, isK2, font, installation);
+                screen.SetWarpButtonVisible(false);
+                return screen;
             }
 
             void HandleMainMenuButtonClick(string buttonTag)
@@ -345,6 +354,15 @@ namespace Andastra.Game.Core
                     {
                         Console.WriteLine("[OdysseyGame] Exit selected (Reva: OnQuitButtonPressed -> ExitProgram)");
                         _graphicsBackend?.Exit();
+                    }
+                    else if (string.Equals(buttonTag, "BTN_MUSIC", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var dev = (_graphicsBackend.GraphicsDevice as MonoGameGraphicsDevice)?.Device;
+                        if (dev != null)
+                        {
+                            _gameState = OdysseyGameState.Options;
+                            ShowOptionsScreen(dev);
+                        }
                     }
                     else if (string.Equals(buttonTag, "BTN_MOVIES", StringComparison.OrdinalIgnoreCase))
                     {
@@ -704,7 +722,7 @@ namespace Andastra.Game.Core
                 {
                     case OdysseyGameState.MainMenu:
                         if (_useFallbackMainMenu)
-                            _fallbackMainMenu?.Update(deltaTime);
+                            _mainMenuScreen?.Update(deltaTime);
                         else
                             _mainMenuGui?.Update(deltaTime);
                         return;
@@ -842,7 +860,7 @@ namespace Andastra.Game.Core
                 {
                     case OdysseyGameState.MainMenu:
                         if (_useFallbackMainMenu)
-                            _fallbackMainMenu?.Draw();
+                            _mainMenuScreen?.Draw();
                         else
                             _mainMenuGui?.Draw(null);
                         break;
@@ -1034,10 +1052,10 @@ namespace Andastra.Game.Core
                     _musicPlayer = null;
                 }
 
-                if (_fallbackMainMenu != null)
+                if (_mainMenuScreen != null)
                 {
-                    _fallbackMainMenu.Dispose();
-                    _fallbackMainMenu = null;
+                    _mainMenuScreen.Dispose();
+                    _mainMenuScreen = null;
                 }
 
                 if (_mainMenuGui != null)

@@ -4,12 +4,13 @@
       "type": "stdio",
       "command": "uvx",
       "args": [
+        "--refresh",
         "--from",
         "git+https://github.com/bolabaden/agentdecompile",
         "mcp-agentdecompile"
       ],
       "env": {
-        "AGENTDECOMPILE_PROJECT_PATH": "C:/Users/boden/AndastraGhidraProject.gpr",
+        "AGENT_DECOMPILE_PROJECT_PATH": "C:/Users/boden/AndastraGhidraProject.gpr",
         "GHIDRA_INSTALL_DIR": "C:/Users/boden/Downloads/ghidra_12.0_PUBLIC_20251205/ghidra_12.0_PUBLIC"
       },
       "alwaysAllow": [],
