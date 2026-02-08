@@ -84,15 +84,15 @@ namespace BioWare.Extract
             if (string.IsNullOrWhiteSpace(installPath) || !Directory.Exists(installPath))
                 return null;
 
-            // Check for swkotor2.exe (TSL)
-            string tsl64Exe = System.IO.Path.Combine(installPath, "swkotor2.exe");
+            // Check for k2_win_gog_aspyr_swkotor2.exe (TSL)
+            string tsl64Exe = System.IO.Path.Combine(installPath, "k2_win_gog_aspyr_swkotor2.exe");
             string tsl32Exe = System.IO.Path.Combine(installPath, "SWKOTOR2.EXE");
 
             if (File.Exists(tsl64Exe) || File.Exists(tsl32Exe))
                 return BioWareGame.TSL;
 
-            // Check for swkotor.exe (K1)
-            string k164Exe = System.IO.Path.Combine(installPath, "swkotor.exe");
+            // Check for k1_win_gog_swkotor.exe (K1)
+            string k164Exe = System.IO.Path.Combine(installPath, "k1_win_gog_swkotor.exe");
             string k132Exe = System.IO.Path.Combine(installPath, "SWKOTOR.EXE");
 
             if (File.Exists(k164Exe) || File.Exists(k132Exe))
@@ -346,7 +346,7 @@ namespace BioWare.Extract
 
         /// <summary>
         /// Gets all module roots available in the installation.
-        /// Uses ModuleFileDiscovery to match exact swkotor.exe/swkotor2.exe behavior.
+        /// Uses ModuleFileDiscovery to match exact k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe behavior.
         /// </summary>
         public List<string> GetModuleRoots()
         {
@@ -357,7 +357,7 @@ namespace BioWare.Extract
 
         /// <summary>
         /// Gets all module files for a specific module root, respecting priority rules.
-        /// Uses ModuleFileDiscovery to match exact swkotor.exe/swkotor2.exe behavior.
+        /// Uses ModuleFileDiscovery to match exact k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe behavior.
         /// </summary>
         public List<string> GetModuleFiles(string moduleRoot)
         {

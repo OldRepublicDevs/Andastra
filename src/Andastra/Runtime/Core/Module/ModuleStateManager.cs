@@ -7,7 +7,7 @@ namespace Andastra.Runtime.Core.Module
     /// Manages module state flags matching the original engine behavior.
     /// </summary>
     /// <remarks>
-    /// Module State Manager (swkotor2.exe: 0x006caab0 @ 0x006caab0):
+    /// Module State Manager (k2_win_gog_aspyr_swkotor2.exe: 0x006caab0 @ 0x006caab0):
     /// - Function signature: `undefined4 0x006caab0(char *param_1, int param_2)`
     /// - Parses server command strings like "S.Module.ModuleLoaded" or "S.Module.ModuleRunning"
     /// - Located via string references: "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58
@@ -67,7 +67,7 @@ namespace Andastra.Runtime.Core.Module
         /// </summary>
         /// <param name="state">The new module state to set.</param>
         /// <remarks>
-        /// swkotor2.exe: 0x006caab0 @ 0x006caab0 (server command parser):
+        /// k2_win_gog_aspyr_swkotor2.exe: 0x006caab0 @ 0x006caab0 (server command parser):
         /// - Sets module state value at DAT_008283d4 + 4 (uint16)
         /// - Sets bit flags at DAT_008283d4 + offset (uint32 pointer at puVar6)
         /// - State 0 (Idle): Sets state to 0, sets bit flag | 1
@@ -105,7 +105,7 @@ namespace Andastra.Runtime.Core.Module
         /// <param name="param2">Optional second parameter (unused in original, kept for signature compatibility).</param>
         /// <returns>True if the command was parsed successfully, false otherwise.</returns>
         /// <remarks>
-        /// swkotor2.exe: 0x006caab0 @ 0x006caab0 (server command parser):
+        /// k2_win_gog_aspyr_swkotor2.exe: 0x006caab0 @ 0x006caab0 (server command parser):
         /// - Function signature: `undefined4 0x006caab0(char *param_1, int param_2)`
         /// - Parses server command strings starting with 'S.' prefix
         /// - "S.Module.ModuleLoaded" -> Sets state to ModuleLoaded (1)
@@ -158,7 +158,7 @@ namespace Andastra.Runtime.Core.Module
         /// <param name="state">The module state.</param>
         /// <returns>The debug message string.</returns>
         /// <remarks>
-        /// swkotor2.exe: 0x006caab0 @ 0x006caab0 debug output:
+        /// k2_win_gog_aspyr_swkotor2.exe: 0x006caab0 @ 0x006caab0 debug output:
         /// - State 0: ":: Server mode: Idle.\n" @ 0x007cbc80
         /// - State 1: ":: Server mode: Module Loaded.\n" @ 0x007cbc68
         /// - State 2: ":: Server mode: Module Running.\n" @ 0x007cbc44

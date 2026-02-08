@@ -18,8 +18,8 @@ namespace Andastra.Game.Games.Common.Components
     /// - Engine-specific: File format details, trap systems, appearance systems, event handling, field names
     ///
     /// Based on verified components of:
-    /// - swkotor.exe: Placeable system with UTP template loading (LoadPlaceableFromGFF, SavePlaceableToGFF)
-    /// - swkotor2.exe: Enhanced placeable system (0x00588010 @ 0x00588010, 0x00589520 @ 0x00589520)
+    /// - k1_win_gog_swkotor.exe: Placeable system with UTP template loading (LoadPlaceableFromGFF, SavePlaceableToGFF)
+    /// - k2_win_gog_aspyr_swkotor2.exe: Enhanced placeable system (0x00588010 @ 0x00588010, 0x00589520 @ 0x00589520)
     ///   - Located via string references: "Placeable" @ 0x007bc530, "Placeable List" @ 0x007bd260
     ///   - Script hooks: "OnUsed" @ 0x007be1c4, "ScriptOnUsed" @ 0x007beeb8
     ///   - Object events: "EVENT_OPEN_OBJECT" @ 0x007bcda0, "EVENT_CLOSE_OBJECT" @ 0x007bcdb4
@@ -95,8 +95,8 @@ namespace Andastra.Game.Games.Common.Components
         /// Static Property:
         /// - Common across all engines: Controls whether placeable can be destroyed
         /// - CSWSPlaceable::LoadPlaceable @ (K1: 0x00585670, TSL: 0x00588010): "Static" field in UTP template
-        ///   - K1 (swkotor.exe: 0x00585670, line 123): Reads "Static" field via CResGFF::ReadFieldBYTE. If field missing, defaults to !usable. If field58_0x39c == 1, forces static_ to 0.
-        ///   - TSL (swkotor2.exe: 0x00588010): Equivalent function (needs Ghidra verification when TSL program is loaded)
+        ///   - K1 (k1_win_gog_swkotor.exe: 0x00585670, line 123): Reads "Static" field via CResGFF::ReadFieldBYTE. If field missing, defaults to !usable. If field58_0x39c == 1, forces static_ to 0.
+        ///   - TSL (k2_win_gog_aspyr_swkotor2.exe: 0x00588010): Equivalent function (needs Ghidra verification when TSL program is loaded)
         /// - Based on nwmain.exe: "Static" field in CNWSPlaceable (SavePlaceable @ 0x1404b6a60, line 57)
         /// - Engine-specific: Field names and storage may differ, but concept is common
         /// </remarks>
@@ -110,7 +110,7 @@ namespace Andastra.Game.Games.Common.Components
         /// - Common across all engines: Controls whether container placeable is open
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Open" field in UTP template (0x00589520 @ 0x00589520)
         /// - Based on nwmain.exe: "Open" field in CNWSPlaceable (SavePlaceable @ 0x1404b6a60)
-        /// - AnimationState 0=closed, 1=open (swkotor2.exe)
+        /// - AnimationState 0=closed, 1=open (k2_win_gog_aspyr_swkotor2.exe)
         /// - Engine-specific: Field names and storage may differ, but concept is common
         /// </remarks>
         public virtual bool IsOpen { get; set; }
@@ -194,7 +194,7 @@ namespace Andastra.Game.Games.Common.Components
         /// Animation State Property:
         /// - Common across all engines: Current animation state (0=closed, 1=open, etc.)
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Animation" field in UTP template (0x00589520 @ 0x00589520)
-        /// - AnimationState 0=closed, 1=open for containers (swkotor2.exe)
+        /// - AnimationState 0=closed, 1=open for containers (k2_win_gog_aspyr_swkotor2.exe)
         /// - Engine-specific: Field names and state values may differ, but concept is common
         /// </remarks>
         public virtual int AnimationState { get; set; }

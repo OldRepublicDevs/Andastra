@@ -37,7 +37,7 @@ namespace Andastra.Game.Games.Eclipse.Components
     /// - No Force Points (uses Stamina instead, mapped to FP for compatibility)
     /// 
     /// Cross-engine comparison:
-    /// - Odyssey (swkotor.exe, swkotor2.exe): HP/FP, 8 skills, AC-based defense
+    /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): HP/FP, 8 skills, AC-based defense
     /// - Aurora (nwmain.exe, nwn2main.exe): HP only (no FP), 27 skills, AC-based defense with size modifiers
     /// - Eclipse (daorigins.exe, DragonAge2.exe): Health/Stamina, different skills, Defense-based system
     /// </remarks>

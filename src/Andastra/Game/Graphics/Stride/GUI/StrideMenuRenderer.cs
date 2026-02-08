@@ -14,30 +14,30 @@ namespace Andastra.Game.Stride.GUI
     /// </summary>
     /// <remarks>
     /// Stride Menu Renderer:
-    /// - Based on exhaustive verified components of swkotor.exe and swkotor2.exe menu initialization
-    /// - swkotor2.exe: 0x006d2350 @ 0x006d2350 (menu constructor/initializer)
-    /// - swkotor.exe: 0x0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
+    /// - Based on exhaustive verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe menu initialization
+    /// - k2_win_gog_aspyr_swkotor2.exe: 0x006d2350 @ 0x006d2350 (menu constructor/initializer)
+    /// - k1_win_gog_swkotor.exe: 0x0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
     ///
     /// Initialization Sequence (matching original engines):
-    /// 1. Load "MAINMENU" GUI file first (swkotor2.exe: 0x006d2350:73, swkotor.exe: 0x0067c4c0:62)
-    /// 2. If GUI load succeeds, load "RIMS:MAINMENU" RIM file (swkotor2.exe: 0x006d2350:76-80, swkotor.exe: 0x0067c4c0:65-69)
-    /// 3. Clear menu flag at DAT_008283c0+0x34 (bit 2 = 0xfd mask) (swkotor2.exe: 0x006d2350:82)
-    /// 4. Set up event handlers for menu buttons (0x27, 0x2d, 0, 1 events) (swkotor2.exe: 0x006d2350:89-95)
+    /// 1. Load "MAINMENU" GUI file first (k2_win_gog_aspyr_swkotor2.exe: 0x006d2350:73, k1_win_gog_swkotor.exe: 0x0067c4c0:62)
+    /// 2. If GUI load succeeds, load "RIMS:MAINMENU" RIM file (k2_win_gog_aspyr_swkotor2.exe: 0x006d2350:76-80, k1_win_gog_swkotor.exe: 0x0067c4c0:65-69)
+    /// 3. Clear menu flag at DAT_008283c0+0x34 (bit 2 = 0xfd mask) (k2_win_gog_aspyr_swkotor2.exe: 0x006d2350:82)
+    /// 4. Set up event handlers for menu buttons (0x27, 0x2d, 0, 1 events) (k2_win_gog_aspyr_swkotor2.exe: 0x006d2350:89-95)
     ///
     /// String References:
-    /// - "RIMS:MAINMENU" @ swkotor2.exe:0x007b6044, swkotor.exe:0x0073e0a4 (main menu RIM file)
-    /// - "MAINMENU" @ swkotor2.exe:0x007cc030, swkotor.exe:0x00752f64 (main menu GUI constant)
-    /// - "mainmenu_p" @ swkotor2.exe:0x007cc000 (main menu panel)
-    /// - "mainmenu01-05" @ swkotor2.exe:0x007cc108-0x007cc138 (menu variants, swkotor2.exe only)
-    /// - "mainmenu" @ swkotor.exe:0x00752f4c (single menu panel, no variants)
+    /// - "RIMS:MAINMENU" @ k2_win_gog_aspyr_swkotor2.exe:0x007b6044, k1_win_gog_swkotor.exe:0x0073e0a4 (main menu RIM file)
+    /// - "MAINMENU" @ k2_win_gog_aspyr_swkotor2.exe:0x007cc030, k1_win_gog_swkotor.exe:0x00752f64 (main menu GUI constant)
+    /// - "mainmenu_p" @ k2_win_gog_aspyr_swkotor2.exe:0x007cc000 (main menu panel)
+    /// - "mainmenu01-05" @ k2_win_gog_aspyr_swkotor2.exe:0x007cc108-0x007cc138 (menu variants, k2_win_gog_aspyr_swkotor2.exe only)
+    /// - "mainmenu" @ k1_win_gog_swkotor.exe:0x00752f4c (single menu panel, no variants)
     ///
-    /// Menu Variants (swkotor2.exe only):
-    /// - Menu variant selection based on "gui3D_room" condition (swkotor2.exe: 0x006d2350:120-150)
+    /// Menu Variants (k2_win_gog_aspyr_swkotor2.exe only):
+    /// - Menu variant selection based on "gui3D_room" condition (k2_win_gog_aspyr_swkotor2.exe: 0x006d2350:120-150)
     /// - Variants: mainmenu01 (default), mainmenu02, mainmenu03, mainmenu04, mainmenu05
-    /// - swkotor.exe uses single "mainmenu" panel (no variants)
+    /// - k1_win_gog_swkotor.exe uses single "mainmenu" panel (no variants)
     ///
     /// Event Handlers:
-    /// - Menu buttons register handlers for events: 0x27, 0x2d, 0, 1 (swkotor2.exe: 0x006d2350:89-95)
+    /// - Menu buttons register handlers for events: 0x27, 0x2d, 0, 1 (k2_win_gog_aspyr_swkotor2.exe: 0x006d2350:89-95)
     /// - Event 0x27: Button press/select
     /// - Event 0x2d: Button release/deselect
     /// - Event 0: Unknown (likely hover/enter)
@@ -47,6 +47,9 @@ namespace Andastra.Game.Stride.GUI
     /// - Uses Stride SpriteBatch for menu rendering
     /// - Stride provides SpriteBatch for 2D rendering similar to MonoGame
     /// - Matches original engine initialization sequence and event handling patterns
+    /// - Stride SpriteBatch.Begin() requires GraphicsContext (from Game.GraphicsContext)
+    /// - SpriteBatch draws to whatever render target is currently set on CommandList
+    /// - StrideGameWrapper.Draw() sets the backbuffer as render target before firing DrawFrame
     ///
     /// Inheritance:
     /// - BaseMenuRenderer (Runtime.Graphics.Common.GUI) - Common menu functionality
@@ -59,6 +62,7 @@ namespace Andastra.Game.Stride.GUI
         private StrideGraphics.SpriteFont _font;
         private global::Stride.Graphics.Texture _whiteTexture;
         private bool _isDisposed = false;
+        private bool _deferredInit = false;
 
         /// <summary>
         /// Initializes a new instance of StrideMenuRenderer.
@@ -76,42 +80,54 @@ namespace Andastra.Game.Stride.GUI
             _graphicsDevice = graphicsDevice;
             _font = font;
 
-            InitializeStride();
+            // Attempt initialization now. If CommandList isn't available yet
+            // (common with Stride's deferred initialization), mark for retry on first Draw().
+            if (!TryInitializeStride())
+            {
+                _deferredInit = true;
+                Console.WriteLine("[StrideMenuRenderer] Deferred initialization - will retry on first Draw()");
+            }
         }
 
         /// <summary>
-        /// Initializes Stride-specific rendering resources.
+        /// Attempts to initialize Stride-specific rendering resources.
+        /// Returns true on success, false if resources aren't available yet.
         /// </summary>
-        private void InitializeStride()
+        private bool TryInitializeStride()
         {
             try
             {
-                // Get CommandList for SpriteBatch operations
-                var commandList = _graphicsDevice.ImmediateContext();
-
-                // Create SpriteBatch for 2D rendering
-                _spriteBatch = new global::Stride.Graphics.SpriteBatch(_graphicsDevice);
+                // Create SpriteBatch for 2D rendering (only needs GraphicsDevice, not CommandList)
+                if (_spriteBatch == null)
+                {
+                    _spriteBatch = new global::Stride.Graphics.SpriteBatch(_graphicsDevice);
+                }
 
                 // Create 1x1 white texture for drawing rectangles and backgrounds
-                _whiteTexture = global::Stride.Graphics.Texture.New2D(_graphicsDevice, 1, 1, StrideGraphics.PixelFormat.R8G8B8A8_UNorm);
-                var whitePixel = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
-                _whiteTexture.SetData(commandList, new[] { whitePixel });
+                // Stride Texture.New2D with initial data uses the graphics device internally
+                if (_whiteTexture == null)
+                {
+                    _whiteTexture = global::Stride.Graphics.Texture.New2D(
+                        _graphicsDevice, 1, 1,
+                        StrideGraphics.PixelFormat.R8G8B8A8_UNorm,
+                        new[] { new Color(255, 255, 255, 255) });
+                }
 
                 // Initialize base class with viewport dimensions
-                // Get viewport from presentation parameters
                 var presentParams = _graphicsDevice.Presenter?.Description;
                 int width = presentParams?.BackBufferWidth ?? 1920;
                 int height = presentParams?.BackBufferHeight ?? 1080;
                 Initialize(width, height);
 
+                _deferredInit = false;
                 Console.WriteLine("[StrideMenuRenderer] Stride menu renderer initialized successfully");
                 Console.WriteLine($"[StrideMenuRenderer] Viewport: {width}x{height}");
                 Console.WriteLine($"[StrideMenuRenderer] Font available: {_font != null}");
+                return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[StrideMenuRenderer] ERROR: Failed to initialize Stride menu renderer: {ex.Message}");
-                Console.WriteLine($"[StrideMenuRenderer] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[StrideMenuRenderer] Initialization deferred: {ex.Message}");
 
                 // Dispose any resources that were created before the exception
                 if (_whiteTexture != null)
@@ -127,6 +143,7 @@ namespace Andastra.Game.Stride.GUI
                 }
 
                 IsInitialized = false;
+                return false;
             }
         }
 
@@ -134,8 +151,14 @@ namespace Andastra.Game.Stride.GUI
         /// Updates the menu renderer (handles input, animations, etc.).
         /// </summary>
         /// <param name="elapsedTime">Elapsed time since last update in seconds.</param>
-        public void Update(float elapsedTime)
+        public override void Update(float elapsedTime)
         {
+            // Retry deferred initialization if needed
+            if (_deferredInit && !_isDisposed)
+            {
+                TryInitializeStride();
+            }
+
             if (!IsInitialized || _isDisposed)
             {
                 return;
@@ -147,59 +170,57 @@ namespace Andastra.Game.Stride.GUI
 
         /// <summary>
         /// Renders the menu using Stride SpriteBatch.
+        /// Stride SpriteBatch.Begin() requires GraphicsContext (from Game.GraphicsContext).
+        /// The CommandList must have the backbuffer set as render target before this is called
+        /// (handled by StrideGameWrapper.Draw()).
+        /// Reference: Stride docs - https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/spritebatch.html
+        ///   spriteBatch.Begin(Game.GraphicsContext, SpriteSortMode.Immediate);
+        ///   spriteBatch.Draw(myTexture, new Vector2(10, 20));
+        ///   spriteBatch.End();
         /// </summary>
-        public void Draw()
+        public override void Draw()
         {
+            // Retry deferred initialization if needed
+            if (_deferredInit && !_isDisposed)
+            {
+                TryInitializeStride();
+            }
+
             if (!IsVisible || !IsInitialized || _isDisposed)
             {
                 return;
             }
 
-            if (_graphicsDevice == null)
+            if (_graphicsDevice == null || _spriteBatch == null || _whiteTexture == null)
             {
-                Console.WriteLine("[StrideMenuRenderer] ERROR: GraphicsDevice is null in Draw");
-                return;
-            }
-
-            if (_spriteBatch == null)
-            {
-                Console.WriteLine("[StrideMenuRenderer] ERROR: SpriteBatch is null in Draw");
                 return;
             }
 
             try
             {
-                // Get CommandList for rendering
-                var commandList = _graphicsDevice.ImmediateContext();
-                if (commandList == null)
-                {
-                    Console.WriteLine("[StrideMenuRenderer] Warning: Could not render - CommandList unavailable");
-                    return;
-                }
-
-                // Begin sprite batch rendering
-                // Stride SpriteBatch.Begin requires GraphicsContext, obtained from GraphicsDevice extension method
-                // Based on Stride Graphics API: GraphicsContext is obtained from Game.GraphicsContext via extension method
-                // This provides 1:1 compatibility with original engine's graphics context management (swkotor2.exe: 0x004eb750)
+                // Get GraphicsContext for SpriteBatch.Begin() - required by Stride API
+                // Reference: Stride docs - spriteBatch.Begin(Game.GraphicsContext, ...)
                 var graphicsContext = _graphicsDevice.GraphicsContext();
                 if (graphicsContext == null)
                 {
-                    Console.WriteLine("[StrideMenuRenderer] Warning: Could not begin sprite batch - GraphicsContext unavailable from device");
-                    Console.WriteLine("[StrideMenuRenderer] Ensure Game instance is registered with GraphicsDeviceExtensions.RegisterGame()");
                     return;
                 }
 
+                // Get viewport dimensions from presentation parameters
+                var presentParams = _graphicsDevice.Presenter?.Description;
+                int viewportWidth = presentParams?.BackBufferWidth ?? 1920;
+                int viewportHeight = presentParams?.BackBufferHeight ?? 1080;
+
                 // Begin sprite batch with proper GraphicsContext (required by Stride API)
+                // Reference: Stride SpriteBatch docs - Begin accepts GraphicsContext, SpriteSortMode, BlendStateDescription
                 _spriteBatch.Begin(graphicsContext, StrideGraphics.SpriteSortMode.Deferred, StrideGraphics.BlendStates.AlphaBlend);
 
                 try
                 {
                     // Draw menu background (full screen dark blue)
+                    // Reference: reone mainmenu.cpp - loadBackground(BackgroundType::Menu)
+                    // Reference: KotOR.js MainMenu.ts - this.voidFill = true (fills void area with color)
                     var backgroundColor = new Color4(20.0f / 255.0f, 30.0f / 255.0f, 60.0f / 255.0f, 1.0f);
-                    // Get viewport dimensions from presentation parameters
-                    var presentParams = _graphicsDevice.Presenter?.Description;
-                    int viewportWidth = presentParams?.BackBufferWidth ?? 1920;
-                    int viewportHeight = presentParams?.BackBufferHeight ?? 1080;
                     _spriteBatch.Draw(_whiteTexture, new RectangleF(0, 0, viewportWidth, viewportHeight), backgroundColor);
 
                     // Draw menu panel background
@@ -222,9 +243,9 @@ namespace Andastra.Game.Stride.GUI
                 }
                 finally
                 {
-                    // Always end sprite batch rendering, even if an exception occurred
+                    // Always end sprite batch rendering, even if an exception occurred.
                     // This prevents leaving SpriteBatch in a "begun" state which would cause
-                    // InvalidOperationException on subsequent Begin() calls
+                    // InvalidOperationException on subsequent Begin() calls.
                     _spriteBatch.End();
                 }
             }

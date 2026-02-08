@@ -81,7 +81,7 @@ namespace BioWare.Resource.Formats.TPC
             }
         }
 
-        // swkotor.exe/swkotor2.exe: Mipmap downsampling for TPC textures
+        // k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Mipmap downsampling for TPC textures
         // Based on PyKotor: Libraries/PyKotor/src/pykotor/resource/formats/tpc/manipulate/downsample.py
         // Downsamples texture data from current mipmap level to next smaller level (half width/height)
         // - RGB formats: Uses box filter (averages 2x2 pixel blocks)

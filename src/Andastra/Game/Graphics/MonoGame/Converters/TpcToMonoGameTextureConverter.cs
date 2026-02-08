@@ -78,7 +78,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
             TPCTextureFormat format = tpc.Format();
 
             // Handle cube maps - Convert to MonoGame TextureCube
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) cube map texture loading (swkotor2.exe: texture cube map handling)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) cube map texture loading (k2_win_gog_aspyr_swkotor2.exe: texture cube map handling)
             // TPC cube maps have 6 layers, one for each face in DirectX/OpenGL order:
             // 0: PositiveX (right), 1: NegativeX (left), 2: PositiveY (top),
             // 3: NegativeY (bottom), 4: PositiveZ (front), 5: NegativeZ (back)
@@ -205,7 +205,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
                     else if (generateMipmaps)
                     {
                         // Generate mipmap by downsampling previous level
-                        // swkotor2.exe: Uses D3DXFilterTexture or similar for mipmap generation (box filter)
+                        // k2_win_gog_aspyr_swkotor2.exe: Uses D3DXFilterTexture or similar for mipmap generation (box filter)
                         // Based on PyKotor downsample_rgb implementation: box filter (2x2 average)
                         if (previousLevelRgba == null || previousLevelSize == 0)
                         {

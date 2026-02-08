@@ -164,7 +164,7 @@ namespace Andastra.Game.Graphics.MonoGame.Interfaces
 
         /// <summary>
         /// Uploads texture pixel data to a previously created texture.
-        /// Matches original engine behavior: swkotor.exe and swkotor2.exe use glTexImage2D/glCompressedTexImage2D
+        /// Matches original engine behavior: k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe use glTexImage2D/glCompressedTexImage2D
         /// to upload texture data after creating the texture object.
         /// </summary>
         /// <param name="handle">Handle to the texture created by CreateTexture.</param>

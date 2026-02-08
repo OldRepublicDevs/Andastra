@@ -30,8 +30,8 @@ namespace Andastra.Runtime.Games.Common
     /// - Engine-specific: 2DA file names, upgrade slot counts, UI implementation details
     ///
     /// Based on verified components of:
-    /// - swkotor.exe: 0x006c7630 (constructor), 0x006c6500 (button handler), 0x006c59a0 (ApplyUpgrade)
-    /// - swkotor2.exe: 0x00731a00 (constructor), 0x0072e260 (button handler), 0x00729640 (ApplyUpgrade)
+    /// - k1_win_gog_swkotor.exe: 0x006c7630 (constructor), 0x006c6500 (button handler), 0x006c59a0 (ApplyUpgrade)
+    /// - k2_win_gog_aspyr_swkotor2.exe: 0x00731a00 (constructor), 0x0072e260 (button handler), 0x00729640 (ApplyUpgrade)
     /// - daorigins.exe: ItemUpgrade, GUIItemUpgrade, COMMAND_OPENITEMUPGRADEGUI
     /// - DragonAge2.exe: ItemUpgrade, GUIItemUpgrade, UpgradePrereqType, GetAbilityUpgradedValue
     ///
@@ -490,7 +490,7 @@ namespace Andastra.Runtime.Games.Common
 
             // Get base item stats from baseitems.2da
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Base item stats columns: numdice, dietoroll, damagebonus, ac, critthreat, critmultiplier
-            // Located via string references: Base item data structure in swkotor2.exe
+            // Located via string references: Base item data structure in k2_win_gog_aspyr_swkotor2.exe
             int baseDamageBonus = 0;
             int baseAC = 0;
             int baseCriticalThreat = 20;
@@ -592,7 +592,7 @@ namespace Andastra.Runtime.Games.Common
                 // Calculate property bonuses based on property type
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property types map to stat modifications via itempropdef.2da
                 // Located via string references: Property type constants in nwscript.nss
-                // Property type mappings based on Aurora engine standard (swkotor2.exe uses same system)
+                // Property type mappings based on Aurora engine standard (k2_win_gog_aspyr_swkotor2.exe uses same system)
 
                 // ITEM_PROPERTY_ABILITY_BONUS (0): Ability score bonus
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property type 0 = ability bonus, subtype = ability ID (0-5: STR, DEX, CON, INT, WIS, CHA)
@@ -651,8 +651,8 @@ namespace Andastra.Runtime.Games.Common
                 // ITEM_PROPERTY_IMPROVED_SAVING_THROW (26): Saving throw bonus (all saves)
                 // ApplyImprovedSavingThrow @ (K1: 0x004e9230, TSL: 0x0051bc70): Property type 26 (0x1A) = saving throw bonus, affects all saves
                 // Located via constant search: Property type 26 (0x1A) check in CSWSItemPropertyHandler::ApplyImprovedSavingThrow function
-                // K1: Found at 0x004e9230 in swkotor.exe - function checks for property type 0x1A (26)
-                // TSL: Found at 0x0051bc70 in swkotor2.exe - FUN_0051bc70 handles property type 0x1A (26) via call from FUN_0051dc70 at line 50
+                // K1: Found at 0x004e9230 in k1_win_gog_swkotor.exe - function checks for property type 0x1A (26)
+                // TSL: Found at 0x0051bc70 in k2_win_gog_aspyr_swkotor2.exe - FUN_0051bc70 handles property type 0x1A (26) via call from FUN_0051dc70 at line 50
                 // Original implementation: CSWSItemPropertyHandler::ApplyImprovedSavingThrow checks if (*param_2 == 0x1A)
                 // Property amount stored in param_2[3] (CostValue), applied as saving throw bonus to all three save types (Fortitude, Reflex, Will)
                 // The bonus is applied cumulatively to totalSavingThrowBonus and individually to each save type

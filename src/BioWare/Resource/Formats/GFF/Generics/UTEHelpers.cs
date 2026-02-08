@@ -9,64 +9,64 @@ namespace BioWare.Resource.Formats.GFF.Generics
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/ute.py
     // Original: construct_ute and dismantle_ute functions
-    // Engine references: swkotor2.exe:0x0056d770 (FUN_0056d770), swkotor2.exe:0x0056c010 (FUN_0056c010), swkotor.exe:0x00592430 (FUN_00592430), swkotor.exe:0x00590820 (FUN_00590820)
+    // Engine references: k2_win_gog_aspyr_swkotor2.exe:0x0056d770 (FUN_0056d770), k2_win_gog_aspyr_swkotor2.exe:0x0056c010 (FUN_0056c010), k1_win_gog_swkotor.exe:0x00592430 (FUN_00592430), k1_win_gog_swkotor.exe:0x00590820 (FUN_00590820)
     public static class UTEHelpers
     {
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/ute.py:235-274
         // Original: def construct_ute(gff: GFF) -> UTE:
-        // Engine references: swkotor2.exe:0x0056d770, swkotor.exe:0x00592430
+        // Engine references: k2_win_gog_aspyr_swkotor2.exe:0x0056d770, k1_win_gog_swkotor.exe:0x00592430
         public static UTE ConstructUte(GFF gff)
         {
             var ute = new UTE();
             var root = gff.Root;
 
             // Extract basic fields
-            // Engine default: existing value (empty string for new objects) (swkotor2.exe:0x0056d770 line 112, swkotor.exe:0x00592430 line 111)
+            // Engine default: existing value (empty string for new objects) (k2_win_gog_aspyr_swkotor2.exe:0x0056d770 line 112, k1_win_gog_swkotor.exe:0x00592430 line 111)
             ute.Tag = root.Acquire<string>("Tag", "");
             // Engine default: existing value (blank ResRef for new objects) - TemplateResRef is not read by engine, only written
             ute.ResRef = root.Acquire<ResRef>("TemplateResRef", ResRef.FromBlank());
-            // Engine default: existing value (0 for new objects) (swkotor2.exe:0x0056d770 line 60, swkotor.exe:0x00592430 line 59)
+            // Engine default: existing value (0 for new objects) (k2_win_gog_aspyr_swkotor2.exe:0x0056d770 line 60, k1_win_gog_swkotor.exe:0x00592430 line 59)
             ute.Active = root.Acquire<int>("Active", 0) != 0;
-            // Engine default: -1 (special case!) (swkotor2.exe:0x0056d770 line 78, swkotor.exe:0x00592430 line 77)
+            // Engine default: -1 (special case!) (k2_win_gog_aspyr_swkotor2.exe:0x0056d770 line 78, k1_win_gog_swkotor.exe:0x00592430 line 77)
             ute.DifficultyId = root.Acquire<int>("DifficultyIndex", -1);
-            // Engine default: existing value (0 for new objects) (swkotor2.exe:0x0056d770 line 82, swkotor.exe:0x00592430 line 81)
+            // Engine default: existing value (0 for new objects) (k2_win_gog_aspyr_swkotor2.exe:0x0056d770 line 82, k1_win_gog_swkotor.exe:0x00592430 line 81)
             ute.DifficultyIndex = root.Acquire<int>("Difficulty", 0);
-            // Engine default: existing value (0 for new objects) (swkotor2.exe:0x0056d770 line 76, swkotor.exe:0x00592430 line 75)
+            // Engine default: existing value (0 for new objects) (k2_win_gog_aspyr_swkotor2.exe:0x0056d770 line 76, k1_win_gog_swkotor.exe:0x00592430 line 75)
             ute.Faction = root.Acquire<int>("Faction", 0);
-            // Engine default: existing value (0 for new objects) (swkotor2.exe:0x0056d770 line 70, swkotor.exe:0x00592430 line 69)
+            // Engine default: existing value (0 for new objects) (k2_win_gog_aspyr_swkotor2.exe:0x0056d770 line 70, k1_win_gog_swkotor.exe:0x00592430 line 69)
             ute.MaxCreatures = root.Acquire<int>("MaxCreatures", 0);
-            // Engine default: existing value (0 for new objects) (swkotor2.exe:0x0056d770 line 74, swkotor.exe:0x00592430 line 73)
+            // Engine default: existing value (0 for new objects) (k2_win_gog_aspyr_swkotor2.exe:0x0056d770 line 74, k1_win_gog_swkotor.exe:0x00592430 line 73)
             ute.PlayerOnly = root.Acquire<int>("PlayerOnly", 0) != 0 ? 1 : 0;
-            // Engine default: existing value (0 for new objects) (swkotor2.exe:0x0056d770 line 72, swkotor.exe:0x00592430 line 71)
+            // Engine default: existing value (0 for new objects) (k2_win_gog_aspyr_swkotor2.exe:0x0056d770 line 72, k1_win_gog_swkotor.exe:0x00592430 line 71)
             ute.RecCreatures = root.Acquire<int>("RecCreatures", 0);
-            // Engine default: existing value (0 for new objects) (swkotor2.exe:0x0056d770 line 62, swkotor.exe:0x00592430 line 61)
+            // Engine default: existing value (0 for new objects) (k2_win_gog_aspyr_swkotor2.exe:0x0056d770 line 62, k1_win_gog_swkotor.exe:0x00592430 line 61)
             ute.Reset = root.Acquire<int>("Reset", 0) != 0 ? 1 : 0;
-            // Engine default: existing value (0 for new objects) (swkotor2.exe:0x0056d770 line 64, swkotor.exe:0x00592430 line 63)
+            // Engine default: existing value (0 for new objects) (k2_win_gog_aspyr_swkotor2.exe:0x0056d770 line 64, k1_win_gog_swkotor.exe:0x00592430 line 63)
             ute.ResetTime = root.Acquire<int>("ResetTime", 0);
-            // Engine default: existing value (0 for new objects) (swkotor2.exe:0x0056d770 line 66, swkotor.exe:0x00592430 line 65)
+            // Engine default: existing value (0 for new objects) (k2_win_gog_aspyr_swkotor2.exe:0x0056d770 line 66, k1_win_gog_swkotor.exe:0x00592430 line 65)
             ute.Respawn = root.Acquire<int>("Respawns", 0);
-            // Engine default: existing value (0 for new objects) (swkotor2.exe:0x0056d770 line 68, swkotor.exe:0x00592430 line 67)
+            // Engine default: existing value (0 for new objects) (k2_win_gog_aspyr_swkotor2.exe:0x0056d770 line 68, k1_win_gog_swkotor.exe:0x00592430 line 67)
             ute.SingleSpawn = root.Acquire<int>("SpawnOption", 0) != 0 ? 1 : 0;
-            // Engine default: existing value (blank ResRef for new objects) (swkotor2.exe:0x0056c010 line 23, swkotor.exe:0x00590820 line 23)
+            // Engine default: existing value (blank ResRef for new objects) (k2_win_gog_aspyr_swkotor2.exe:0x0056c010 line 23, k1_win_gog_swkotor.exe:0x00590820 line 23)
             ute.OnEnteredScript = root.Acquire<ResRef>("OnEntered", ResRef.FromBlank());
-            // Engine default: existing value (blank ResRef for new objects) (swkotor2.exe:0x0056c010 line 31, swkotor.exe:0x00590820 line 31)
+            // Engine default: existing value (blank ResRef for new objects) (k2_win_gog_aspyr_swkotor2.exe:0x0056c010 line 31, k1_win_gog_swkotor.exe:0x00590820 line 31)
             ute.OnExitScript = root.Acquire<ResRef>("OnExit", ResRef.FromBlank());
-            // Engine default: existing value (blank ResRef for new objects) (swkotor2.exe:0x0056c010 line 47, swkotor.exe:0x00590820 line 47)
+            // Engine default: existing value (blank ResRef for new objects) (k2_win_gog_aspyr_swkotor2.exe:0x0056c010 line 47, k1_win_gog_swkotor.exe:0x00590820 line 47)
             ute.OnExhaustedScript = root.Acquire<ResRef>("OnExhausted", ResRef.FromBlank());
-            // Engine default: existing value (blank ResRef for new objects) (swkotor2.exe:0x0056c010 line 39, swkotor.exe:0x00590820 line 39)
+            // Engine default: existing value (blank ResRef for new objects) (k2_win_gog_aspyr_swkotor2.exe:0x0056c010 line 39, k1_win_gog_swkotor.exe:0x00590820 line 39)
             ute.OnHeartbeatScript = root.Acquire<ResRef>("OnHeartbeat", ResRef.FromBlank());
-            // Engine default: existing value (blank ResRef for new objects) (swkotor2.exe:0x0056c010 line 55, swkotor.exe:0x00590820 line 55)
+            // Engine default: existing value (blank ResRef for new objects) (k2_win_gog_aspyr_swkotor2.exe:0x0056c010 line 55, k1_win_gog_swkotor.exe:0x00590820 line 55)
             ute.OnUserDefinedScript = root.Acquire<ResRef>("OnUserDefined", ResRef.FromBlank());
             // Engine default: Comment field is NOT read by the engine
             ute.Comment = root.Acquire<string>("Comment", "");
-            // Engine default: existing value (invalid LocalizedString for new objects) (swkotor2.exe:0x0056d770 line 105, swkotor.exe:0x00592430 line 104)
+            // Engine default: existing value (invalid LocalizedString for new objects) (k2_win_gog_aspyr_swkotor2.exe:0x0056d770 line 105, k1_win_gog_swkotor.exe:0x00592430 line 104)
             ute.Name = root.Acquire<LocalizedString>("LocalizedName", LocalizedString.FromInvalid());
             // Engine default: PaletteID field is NOT read by the engine (toolset only)
             ute.PaletteId = root.Acquire<int>("PaletteID", 0);
 
             // Extract creature list
             // Engine behavior: if "CreatureList" list is missing, engine skips processing. Default is empty list.
-            // (swkotor2.exe:0x0056d770 line 183, swkotor.exe:0x00592430 line 182)
+            // (k2_win_gog_aspyr_swkotor2.exe:0x0056d770 line 183, k1_win_gog_swkotor.exe:0x00592430 line 182)
             var creatureList = root.Acquire<GFFList>("CreatureList", new GFFList());
             ute.Creatures.Clear();
             foreach (var creatureStruct in creatureList)
@@ -74,13 +74,13 @@ namespace BioWare.Resource.Formats.GFF.Generics
                 var creature = new UTECreature();
                 // Engine default: Appearance field is NOT read by the engine (toolset only)
                 creature.Appearance = creatureStruct.Acquire<int>("Appearance", 0);
-                // Engine default: 0.0 (swkotor2.exe:0x0056d770 line 217, swkotor.exe:0x00592430 line 216)
+                // Engine default: 0.0 (k2_win_gog_aspyr_swkotor2.exe:0x0056d770 line 217, k1_win_gog_swkotor.exe:0x00592430 line 216)
                 creature.CR = (int)creatureStruct.Acquire<float>("CR", 0.0f);
-                // Engine default: 0 (swkotor2.exe:0x0056d770 line 220, swkotor.exe:0x00592430 line 221)
+                // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x0056d770 line 220, k1_win_gog_swkotor.exe:0x00592430 line 221)
                 creature.SingleSpawn = creatureStruct.Acquire<int>("SingleSpawn", 0) != 0 ? 1 : 0;
-                // Engine default: existing value (blank ResRef for new objects) (swkotor2.exe:0x0056d770 line 215, swkotor.exe:0x00592430 line 214)
+                // Engine default: existing value (blank ResRef for new objects) (k2_win_gog_aspyr_swkotor2.exe:0x0056d770 line 215, k1_win_gog_swkotor.exe:0x00592430 line 214)
                 creature.ResRef = creatureStruct.Acquire<ResRef>("ResRef", ResRef.FromBlank());
-                // Engine default: 0 (K2 only) (swkotor2.exe:0x0056d770 line 223)
+                // Engine default: 0 (K2 only) (k2_win_gog_aspyr_swkotor2.exe:0x0056d770 line 223)
                 creature.GuaranteedCount = creatureStruct.Acquire<int>("GuaranteedCount", 0);
                 ute.Creatures.Add(creature);
             }

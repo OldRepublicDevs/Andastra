@@ -14,30 +14,30 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
     /// </summary>
     /// <remarks>
     /// Myra Menu Renderer:
-    /// - Based on exhaustive verified components of swkotor.exe and swkotor2.exe menu initialization
-    /// - swkotor2.exe: 0x006d2350 @ 0x006d2350 (menu constructor/initializer)
-    /// - swkotor.exe: 0x0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
+    /// - Based on exhaustive verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe menu initialization
+    /// - k2_win_gog_aspyr_swkotor2.exe: 0x006d2350 @ 0x006d2350 (menu constructor/initializer)
+    /// - k1_win_gog_swkotor.exe: 0x0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
     ///
     /// Initialization Sequence (matching original engines):
-    /// 1. Load "MAINMENU" GUI file first (swkotor2.exe: 0x006d2350:73, swkotor.exe: 0x0067c4c0:62)
-    /// 2. If GUI load succeeds, load "RIMS:MAINMENU" RIM file (swkotor2.exe: 0x006d2350:76-80, swkotor.exe: 0x0067c4c0:65-69)
-    /// 3. Clear menu flag at DAT_008283c0+0x34 (bit 2 = 0xfd mask) (swkotor2.exe: 0x006d2350:82)
-    /// 4. Set up event handlers for menu buttons (0x27, 0x2d, 0, 1 events) (swkotor2.exe: 0x006d2350:89-95)
+    /// 1. Load "MAINMENU" GUI file first (k2_win_gog_aspyr_swkotor2.exe: 0x006d2350:73, k1_win_gog_swkotor.exe: 0x0067c4c0:62)
+    /// 2. If GUI load succeeds, load "RIMS:MAINMENU" RIM file (k2_win_gog_aspyr_swkotor2.exe: 0x006d2350:76-80, k1_win_gog_swkotor.exe: 0x0067c4c0:65-69)
+    /// 3. Clear menu flag at DAT_008283c0+0x34 (bit 2 = 0xfd mask) (k2_win_gog_aspyr_swkotor2.exe: 0x006d2350:82)
+    /// 4. Set up event handlers for menu buttons (0x27, 0x2d, 0, 1 events) (k2_win_gog_aspyr_swkotor2.exe: 0x006d2350:89-95)
     ///
     /// String References:
-    /// - "RIMS:MAINMENU" @ swkotor2.exe:0x007b6044, swkotor.exe:0x0073e0a4 (main menu RIM file)
-    /// - "MAINMENU" @ swkotor2.exe:0x007cc030, swkotor.exe:0x00752f64 (main menu GUI constant)
-    /// - "mainmenu_p" @ swkotor2.exe:0x007cc000 (main menu panel)
-    /// - "mainmenu01-05" @ swkotor2.exe:0x007cc108-0x007cc138 (menu variants, swkotor2.exe only)
-    /// - "mainmenu" @ swkotor.exe:0x00752f4c (single menu panel, no variants)
+    /// - "RIMS:MAINMENU" @ k2_win_gog_aspyr_swkotor2.exe:0x007b6044, k1_win_gog_swkotor.exe:0x0073e0a4 (main menu RIM file)
+    /// - "MAINMENU" @ k2_win_gog_aspyr_swkotor2.exe:0x007cc030, k1_win_gog_swkotor.exe:0x00752f64 (main menu GUI constant)
+    /// - "mainmenu_p" @ k2_win_gog_aspyr_swkotor2.exe:0x007cc000 (main menu panel)
+    /// - "mainmenu01-05" @ k2_win_gog_aspyr_swkotor2.exe:0x007cc108-0x007cc138 (menu variants, k2_win_gog_aspyr_swkotor2.exe only)
+    /// - "mainmenu" @ k1_win_gog_swkotor.exe:0x00752f4c (single menu panel, no variants)
     ///
-    /// Menu Variants (swkotor2.exe only):
-    /// - Menu variant selection based on "gui3D_room" condition (swkotor2.exe: 0x006d2350:120-150)
+    /// Menu Variants (k2_win_gog_aspyr_swkotor2.exe only):
+    /// - Menu variant selection based on "gui3D_room" condition (k2_win_gog_aspyr_swkotor2.exe: 0x006d2350:120-150)
     /// - Variants: mainmenu01 (default), mainmenu02, mainmenu03, mainmenu04, mainmenu05
-    /// - swkotor.exe uses single "mainmenu" panel (no variants)
+    /// - k1_win_gog_swkotor.exe uses single "mainmenu" panel (no variants)
     ///
     /// Event Handlers:
-    /// - Menu buttons register handlers for events: 0x27, 0x2d, 0, 1 (swkotor2.exe: 0x006d2350:89-95)
+    /// - Menu buttons register handlers for events: 0x27, 0x2d, 0, 1 (k2_win_gog_aspyr_swkotor2.exe: 0x006d2350:89-95)
     /// - Event 0x27: Button press/select
     /// - Event 0x2d: Button release/deselect
     /// - Event 0: Unknown (likely hover/enter)
@@ -101,9 +101,9 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         /// - Myra can work with or without Game instance, but having it enables full input handling and resource management
         /// - Desktop is created after environment setup to ensure proper Myra context
         /// - Root panel is configured to fill viewport for full-screen menu rendering
-        /// - Based on exhaustive verified components of swkotor.exe and swkotor2.exe menu initialization
-        /// - swkotor2.exe: 0x006d2350 @ 0x006d2350 (menu constructor/initializer)
-        /// - swkotor.exe: 0x0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
+        /// - Based on exhaustive verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe menu initialization
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x006d2350 @ 0x006d2350 (menu constructor/initializer)
+        /// - k1_win_gog_swkotor.exe: 0x0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
         /// </remarks>
         private void InitializeMyra()
         {
@@ -293,9 +293,9 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         /// - Desktop.Render() handles all rendering internally using Myra's SpriteBatch
         /// - If MyraEnvironment.Game is set, Myra uses the Game's rendering context automatically
         /// - If Game is not available, Myra uses the provided GraphicsDevice directly
-        /// - Based on exhaustive verified components of swkotor.exe and swkotor2.exe menu rendering
-        /// - swkotor2.exe: Menu rendering pipeline (DirectX device presentation)
-        /// - swkotor.exe: Menu rendering pipeline (DirectX device presentation)
+        /// - Based on exhaustive verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe menu rendering
+        /// - k2_win_gog_aspyr_swkotor2.exe: Menu rendering pipeline (DirectX device presentation)
+        /// - k1_win_gog_swkotor.exe: Menu rendering pipeline (DirectX device presentation)
         /// </remarks>
         public void Draw(GameTime gameTime, GraphicsDevice device)
         {

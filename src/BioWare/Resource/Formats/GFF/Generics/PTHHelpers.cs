@@ -7,39 +7,39 @@ using BioWare.Resource;
 
 namespace BioWare.Resource.Formats.GFF.Generics
 {
-    // Engine references: swkotor2.exe:0x004e3650, swkotor.exe:0x00508400 (PTH loading)
+    // Engine references: k2_win_gog_aspyr_swkotor2.exe:0x004e3650, k1_win_gog_swkotor.exe:0x00508400 (PTH loading)
     public static class PTHHelpers
     {
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/pth.py:160-182
         // Original: def construct_pth(gff: GFF) -> PTH:
-        // Engine reference: swkotor2.exe:0x004e3650, swkotor.exe:0x00508400
+        // Engine reference: k2_win_gog_aspyr_swkotor2.exe:0x004e3650, k1_win_gog_swkotor.exe:0x00508400
         public static PTH ConstructPth(GFF gff)
         {
             var pth = new PTH();
             var root = gff.Root;
 
             // Engine default: Empty list if Path_Conections missing
-            // Engine checks if list exists (swkotor2.exe:0x004e3650 line 78, swkotor.exe:0x00508400 line 78)
+            // Engine checks if list exists (k2_win_gog_aspyr_swkotor2.exe:0x004e3650 line 78, k1_win_gog_swkotor.exe:0x00508400 line 78)
             // If missing, engine skips connection processing
             var connectionsList = root.Acquire<GFFList>("Path_Conections", new GFFList());
 
             // Engine default: Empty list if Path_Points missing
-            // Engine checks if list exists (swkotor2.exe:0x004e3650 line 44, swkotor.exe:0x00508400 line 44)
+            // Engine checks if list exists (k2_win_gog_aspyr_swkotor2.exe:0x004e3650 line 44, k1_win_gog_swkotor.exe:0x00508400 line 44)
             // If missing, engine skips point processing
             var pointsList = root.Acquire<GFFList>("Path_Points", new GFFList());
 
             foreach (var pointStruct in pointsList)
             {
-                // Engine default: 0 (swkotor2.exe:0x004e3650 line 66, swkotor.exe:0x00508400 line 66)
+                // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x004e3650 line 66, k1_win_gog_swkotor.exe:0x00508400 line 66)
                 int connections = pointStruct.Acquire<int>("Conections", 0);
 
-                // Engine default: 0 (swkotor2.exe:0x004e3650 line 69, swkotor.exe:0x00508400 line 69)
+                // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x004e3650 line 69, k1_win_gog_swkotor.exe:0x00508400 line 69)
                 int firstConnection = pointStruct.Acquire<int>("First_Conection", 0);
 
-                // Engine default: 0.0 (swkotor2.exe:0x004e3650 line 60, swkotor.exe:0x00508400 line 60)
+                // Engine default: 0.0 (k2_win_gog_aspyr_swkotor2.exe:0x004e3650 line 60, k1_win_gog_swkotor.exe:0x00508400 line 60)
                 float x = pointStruct.Acquire<float>("X", 0.0f);
 
-                // Engine default: 0.0 (swkotor2.exe:0x004e3650 line 63, swkotor.exe:0x00508400 line 63)
+                // Engine default: 0.0 (k2_win_gog_aspyr_swkotor2.exe:0x004e3650 line 63, k1_win_gog_swkotor.exe:0x00508400 line 63)
                 float y = pointStruct.Acquire<float>("Y", 0.0f);
 
                 int sourceIndex = pth.Add(x, y);
@@ -51,7 +51,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
                     {
                         continue;
                     }
-                    // Engine default: 0 (swkotor2.exe:0x004e3650 line 89, swkotor.exe:0x00508400 line 89)
+                    // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x004e3650 line 89, k1_win_gog_swkotor.exe:0x00508400 line 89)
                     int target = connectionStruct.Acquire<int>("Destination", 0);
                     pth.Connect(sourceIndex, target);
                 }

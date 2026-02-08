@@ -343,7 +343,7 @@ namespace Andastra.Game.Scripting.EngineApi
         ///   - Located via function dispatch table: CNWSVirtualMachineCommands::InitializeCommands @ 0x14054de30
         ///   - Original implementation: Pops object from stack, gets CGameObject from object array, retrieves position vector from offset 0xa4-0xac, pushes vector to stack
         ///   - Position stored as Vector3 (X, Y, Z) at offset 0xa4-0xac in CGameObject structure
-        /// - swkotor.exe and swkotor2.exe: Similar implementation using transform system
+        /// - k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Similar implementation using transform system
         /// - daorigins.exe: Similar implementation using transform system
         /// 
         /// Common implementation pattern across ALL engines (Odyssey, Aurora, Eclipse, Infinity):
@@ -359,8 +359,8 @@ namespace Andastra.Game.Scripting.EngineApi
         /// 
         /// Verified identical across all engines  MCP analysis:
         /// - nwmain.exe (Aurora): ExecuteCommandGetPosition @ 0x14052f5b0
-        /// - swkotor.exe (Odyssey): Transform system (equivalent implementation)
-        /// - swkotor2.exe (Odyssey): Transform system (equivalent implementation)
+        /// - k1_win_gog_swkotor.exe (Odyssey): Transform system (equivalent implementation)
+        /// - k2_win_gog_aspyr_swkotor2.exe (Odyssey): Transform system (equivalent implementation)
         /// - daorigins.exe (Eclipse): Transform system (equivalent implementation)
         /// </remarks>
         protected Variable Func_GetPosition(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -390,7 +390,7 @@ namespace Andastra.Game.Scripting.EngineApi
         ///   - Conversion: Uses atan2(Y, X) to get angle in radians, converts to degrees (multiplies by 180/PI)
         ///   - Normalization: If facing vector Y component is negative, adds 360 degrees to result
         ///   - Returns facing angle in degrees (0-360), where 0 = East, 90 = North, 180 = West, 270 = South
-        /// - swkotor.exe and swkotor2.exe: Similar implementation using transform system
+        /// - k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Similar implementation using transform system
         /// - daorigins.exe: Similar implementation using transform system
         /// 
         /// Common implementation pattern across ALL engines (Odyssey, Aurora, Eclipse, Infinity):
@@ -407,8 +407,8 @@ namespace Andastra.Game.Scripting.EngineApi
         /// 
         /// Verified identical across all engines  MCP analysis:
         /// - nwmain.exe (Aurora): ExecuteCommandGetFacing @ 0x140523a70
-        /// - swkotor.exe (Odyssey): Transform system (equivalent implementation)
-        /// - swkotor2.exe (Odyssey): Transform system (equivalent implementation)
+        /// - k1_win_gog_swkotor.exe (Odyssey): Transform system (equivalent implementation)
+        /// - k2_win_gog_aspyr_swkotor2.exe (Odyssey): Transform system (equivalent implementation)
         /// - daorigins.exe (Eclipse): Transform system (equivalent implementation)
         /// </remarks>
         protected Variable Func_GetFacing(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -784,7 +784,7 @@ namespace Andastra.Game.Scripting.EngineApi
         /// - Return value: Always returns void (script return value is not propagated to caller)
         /// 
         /// Common across all engines: Odyssey, Aurora, Eclipse all use script executor system
-        /// - Odyssey (swkotor.exe, swkotor2.exe): Uses Installation resource provider for NCS loading
+        /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): Uses Installation resource provider for NCS loading
         /// - Aurora (nwmain.exe): Uses HAK/module resource provider for NCS loading
         /// - Eclipse (daorigins.exe): Uses UnrealScript instead of NCS (different architecture)
         /// 

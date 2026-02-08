@@ -252,9 +252,9 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
 
         /// <summary>
         /// Uploads texture pixel data to a previously created texture.
-        /// Matches original engine behavior: swkotor.exe and swkotor2.exe use glTexImage2D/glCompressedTexImage2D
+        /// Matches original engine behavior: k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe use glTexImage2D/glCompressedTexImage2D
         /// to upload texture data after creating the texture object.
-        /// Based on swkotor.exe: 0x00427c90 @ 0x00427c90 and swkotor2.exe equivalent functions.
+        /// Based on k1_win_gog_swkotor.exe: 0x00427c90 @ 0x00427c90 and k2_win_gog_aspyr_swkotor2.exe equivalent functions.
         /// </summary>
         public bool UploadTextureData(IntPtr handle, TextureUploadData data)
         {
@@ -295,7 +295,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
                 // 3. For each mipmap level: glTexImage2D(GL_TEXTURE_2D, level, internalFormat, width, height, 0, format, type, data)
                 //    OR glCompressedTexImage2D for compressed formats
                 // 4. Set texture parameters: glTexParameteri
-                // Original engine: swkotor.exe: 0x00427c90 @ 0x00427c90 and swkotor2.exe equivalent functions
+                // Original engine: k1_win_gog_swkotor.exe: 0x00427c90 @ 0x00427c90 and k2_win_gog_aspyr_swkotor2.exe equivalent functions
 
                 // Step 1: Generate texture if not already created
                 if (info.GLHandle == 0)
@@ -387,13 +387,13 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
                             }
 
                             // Upload compressed texture using glCompressedTexImage2D
-                            // Matches original engine: swkotor.exe uses glCompressedTexImage2D for DXT/S3TC textures
+                            // Matches original engine: k1_win_gog_swkotor.exe uses glCompressedTexImage2D for DXT/S3TC textures
                             glCompressedTexImage2D(GL_TEXTURE_2D, mipmap.Level, internalFormat, mipmap.Width, mipmap.Height, 0, expectedSize, dataPtr);
                         }
                         else
                         {
                             // Upload uncompressed texture data
-                            // Matches original engine: swkotor.exe: 0x00427c90 @ 0x00427c90 uses glTexImage2D
+                            // Matches original engine: k1_win_gog_swkotor.exe: 0x00427c90 @ 0x00427c90 uses glTexImage2D
                             glTexImage2D(GL_TEXTURE_2D, mipmap.Level, (int)internalFormat, mipmap.Width, mipmap.Height, 0, uploadFormat, dataType, dataPtr);
                         }
 
@@ -414,7 +414,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
                 }
 
                 // Step 6: Set texture parameters
-                // Matches original engine: swkotor.exe sets texture filtering parameters
+                // Matches original engine: k1_win_gog_swkotor.exe sets texture filtering parameters
                 if (data.Mipmaps.Length > 1)
                 {
                     // Use mipmap filtering if multiple mip levels
@@ -713,7 +713,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
 
         // OpenGL texture functions
         // Based on OpenGL API: https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glGenTextures.xhtml
-        // Matches original engine: swkotor.exe and swkotor2.exe use these exact functions
+        // Matches original engine: k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe use these exact functions
         [DllImport("opengl32.dll", EntryPoint = "glGenTextures")]
         private static extern void glGenTextures(int n, ref uint textures);
 
@@ -775,7 +775,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         private const uint GL_SRGB8 = 0x8C41;
 
         // Compressed texture formats (S3TC/DXT)
-        // Based on original engine: swkotor.exe and swkotor2.exe use S3TC compression
+        // Based on original engine: k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe use S3TC compression
         private const uint GL_COMPRESSED_RGB_S3TC_DXT1_EXT = 0x83F0;
         private const uint GL_COMPRESSED_RGBA_S3TC_DXT1_EXT = 0x83F1;
         private const uint GL_COMPRESSED_RGBA_S3TC_DXT3_EXT = 0x83F2;
@@ -794,8 +794,8 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
 
         /// <summary>
         /// Converts TextureFormat to OpenGL format constant.
-        /// Matches original engine behavior: swkotor.exe and swkotor2.exe use these format mappings.
-        /// Based on swkotor.exe: 0x00427c90 @ 0x00427c90 texture format conversion.
+        /// Matches original engine behavior: k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe use these format mappings.
+        /// Based on k1_win_gog_swkotor.exe: 0x00427c90 @ 0x00427c90 texture format conversion.
         /// </summary>
         private uint ConvertTextureFormatToOpenGL(TextureFormat format)
         {
@@ -859,8 +859,8 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
 
         /// <summary>
         /// Gets OpenGL internal format constant for a texture format.
-        /// Matches original engine behavior: swkotor.exe and swkotor2.exe use these internal format mappings.
-        /// Based on swkotor.exe: 0x00427c90 @ 0x00427c90 internal format selection.
+        /// Matches original engine behavior: k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe use these internal format mappings.
+        /// Based on k1_win_gog_swkotor.exe: 0x00427c90 @ 0x00427c90 internal format selection.
         /// </summary>
         private uint GetOpenGLInternalFormat(TextureFormat format)
         {
@@ -1067,8 +1067,8 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
 
         /// <summary>
         /// Converts BGRA pixel data to RGBA.
-        /// Matches original engine behavior: swkotor.exe converts BGRA to RGBA for OpenGL.
-        /// Based on swkotor.exe: 0x00427c90 @ 0x00427c90 BGRA conversion.
+        /// Matches original engine behavior: k1_win_gog_swkotor.exe converts BGRA to RGBA for OpenGL.
+        /// Based on k1_win_gog_swkotor.exe: 0x00427c90 @ 0x00427c90 BGRA conversion.
         ///
         /// BGRA format: [B, G, R, A] per pixel (4 bytes)
         /// RGBA format: [R, G, B, A] per pixel (4 bytes)
@@ -1247,7 +1247,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             {
                 case ResourceType.Texture:
                     // Delete OpenGL texture
-                    // Matches original engine: swkotor.exe uses glDeleteTextures to clean up textures
+                    // Matches original engine: k1_win_gog_swkotor.exe uses glDeleteTextures to clean up textures
                     if (info.GLHandle != 0)
                     {
                         uint textureId = info.GLHandle;

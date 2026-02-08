@@ -81,7 +81,7 @@ namespace Andastra.Game.Stride.Graphics
         /// This property first checks the static registry (populated per-frame by BeginFrame()),
         /// then falls back to the local _graphicsContext field.
         /// Based on Stride Graphics API: CommandList is registered per-frame from Game.GraphicsContext.CommandList
-        /// swkotor2.exe: Graphics device command list management @ 0x004eb750 (original engine behavior)
+        /// k2_win_gog_aspyr_swkotor2.exe: Graphics device command list management @ 0x004eb750 (original engine behavior)
         /// </remarks>
         public StrideGraphics.CommandList ImmediateContext
         {

@@ -6,11 +6,11 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 {
     /// <summary>
     /// Odyssey engine window implementation.
-    /// Wraps native Windows HWND created by Kotor1/Kotor2GraphicsBackend.
+    /// Wraps native Windows HWND created by OdysseyGraphicsBackend.
     /// </summary>
     /// <remarks>
     /// Odyssey Window:
-    /// - Based on verified components of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe
     /// - Original game window: Windows HWND with "Render Window" class
     /// - Located via string references: "Render Window" @ 0x007b5680
     /// - "AllowWindowedMode" @ 0x007c75d0 (windowed mode option)
@@ -126,7 +126,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         
         /// <summary>
         /// Gets or sets the window title.
-        /// Based on swkotor.exe/swkotor2.exe: SetWindowTextA
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: SetWindowTextA
         /// </summary>
         public string Title
         {
@@ -143,7 +143,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         
         /// <summary>
         /// Gets or sets whether the mouse cursor is visible.
-        /// Based on swkotor.exe/swkotor2.exe: ShowCursor
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: ShowCursor
         /// </summary>
         public bool IsMouseVisible
         {
@@ -160,7 +160,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         
         /// <summary>
         /// Gets or sets whether the window is in fullscreen mode.
-        /// Based on swkotor.exe/swkotor2.exe: ChangeDisplaySettingsA
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: ChangeDisplaySettingsA
         /// </summary>
         public bool IsFullscreen
         {
@@ -209,7 +209,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         
         /// <summary>
         /// Gets whether the window is active (has focus).
-        /// Based on swkotor.exe/swkotor2.exe: GetForegroundWindow comparison
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: GetForegroundWindow comparison
         /// </summary>
         public bool IsActive
         {
@@ -223,7 +223,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         
         /// <summary>
         /// Closes the window.
-        /// Based on swkotor.exe/swkotor2.exe: DestroyWindow
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: DestroyWindow
         /// </summary>
         public void Close()
         {

@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Core.Camera
     /// </summary>
     /// <remarks>
     /// Camera Controller Interface:
-    /// - Based on swkotor.exe and swkotor2.exe camera system
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe camera system
     /// - Provides unified interface for camera control across all BioWare engines
     /// - Supports multiple camera modes: Chase, Free, Dialogue, Cinematic
     /// - Chase camera follows player with configurable distance, height offset, pitch/yaw

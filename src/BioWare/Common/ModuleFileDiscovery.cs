@@ -80,7 +80,7 @@ namespace BioWare.Common
             }
 
             // Check for area files to determine if we should use complex mode
-            // swkotor.exe: FUN_004094a0 line 61: Checks for ARE type 0xbba in _a.rim
+            // k1_win_gog_swkotor.exe: FUN_004094a0 line 61: Checks for ARE type 0xbba in _a.rim
             string areaRimPath = TryGetFilePathByName(fileNameToPath, moduleRoot + "_a.rim");
             string areaExtendedRimPath = TryGetFilePathByName(fileNameToPath, moduleRoot + "_adx.rim");
 
@@ -88,7 +88,7 @@ namespace BioWare.Common
             // Otherwise, check if .rim exists for simple mode
             bool complexMode = useComplexMode ?? (areaRimPath != null || areaExtendedRimPath != null);
 
-            // Simple Mode (swkotor.exe: FUN_004094a0 line 32-42)
+            // Simple Mode (k1_win_gog_swkotor.exe: FUN_004094a0 line 32-42)
             // Just load .rim file directly, return immediately
             if (!complexMode)
             {
@@ -112,7 +112,7 @@ namespace BioWare.Common
                 };
             }
 
-            // Complex Mode (swkotor.exe: FUN_004094a0 line 49-216)
+            // Complex Mode (k1_win_gog_swkotor.exe: FUN_004094a0 line 49-216)
             // Exact sequence from Ghidra decompilation:
 
             // Step 1: Check for _a.rim (line 61)
@@ -128,7 +128,7 @@ namespace BioWare.Common
             if (modPath != null)
             {
                 // .mod file exists - use only this file, ignore all rim-like files
-                // swkotor.exe: FUN_004094a0 line 136: Loads .mod, skips _s.rim check
+                // k1_win_gog_swkotor.exe: FUN_004094a0 line 136: Loads .mod, skips _s.rim check
                 return new ModuleFileGroup
                 {
                     ModuleRoot = moduleRoot,
@@ -156,7 +156,7 @@ namespace BioWare.Common
             }
 
             // In complex mode, .rim is NOT loaded - only _a.rim or _adx.rim are loaded as replacements
-            // swkotor.exe: FUN_004094a0 line 32: Simple mode loads .rim, complex mode does not
+            // k1_win_gog_swkotor.exe: FUN_004094a0 line 32: Simple mode loads .rim, complex mode does not
             // If neither _a.rim nor _adx.rim exists, we still need at least one file
             if (areaRimPath == null && areaExtendedRimPath == null && dataRimPath == null && dlgErfPath == null)
             {
@@ -238,7 +238,7 @@ namespace BioWare.Common
 
             string lowerName = fileName.ToLowerInvariant();
 
-            // Module containers (from swkotor.exe: FUN_004094a0 and swkotor2.exe: FUN_004096b0):
+            // Module containers (from k1_win_gog_swkotor.exe: FUN_004094a0 and k2_win_gog_aspyr_swkotor2.exe: FUN_004096b0):
             // - <root>.mod (override archive)
             // - <root>.rim (main archive, simple mode only)
             // - <root>_a.rim (area-specific RIM, complex mode)
@@ -257,7 +257,7 @@ namespace BioWare.Common
 
         /// <summary>
         /// Gets all module file paths for a module root, in priority order (registration order).
-        /// Matches exact loading order from swkotor.exe: FUN_004094a0 and swkotor2.exe: FUN_004096b0
+        /// Matches exact loading order from k1_win_gog_swkotor.exe: FUN_004094a0 and k2_win_gog_aspyr_swkotor2.exe: FUN_004096b0
         /// </summary>
         /// <param name="modulesPath">Path to the modules directory</param>
         /// <param name="moduleRoot">Module root name</param>
@@ -276,7 +276,7 @@ namespace BioWare.Common
             if (group.UsesModOverride)
             {
                 // .mod file overrides all - only this file is loaded
-                // swkotor.exe: FUN_004094a0 line 136: Loads .mod, skips _s.rim
+                // k1_win_gog_swkotor.exe: FUN_004094a0 line 136: Loads .mod, skips _s.rim
                 if (group.ModFile != null)
                 {
                     paths.Add(group.ModFile);
@@ -288,25 +288,25 @@ namespace BioWare.Common
                 // Order: _a.rim -> _adx.rim -> _s.rim -> _dlg.erf
                 // Note: .rim is NOT loaded in complex mode
 
-                // Step 1: _a.rim (swkotor.exe: FUN_004094a0 line 159)
+                // Step 1: _a.rim (k1_win_gog_swkotor.exe: FUN_004094a0 line 159)
                 if (group.AreaRimFile != null)
                 {
                     paths.Add(group.AreaRimFile);
                 }
 
-                // Step 2: _adx.rim (swkotor.exe: FUN_004094a0 line 85) - only if _a.rim not found
+                // Step 2: _adx.rim (k1_win_gog_swkotor.exe: FUN_004094a0 line 85) - only if _a.rim not found
                 if (group.AreaRimFile == null && group.AreaExtendedRimFile != null)
                 {
                     paths.Add(group.AreaExtendedRimFile);
                 }
 
-                // Step 3: _s.rim (swkotor.exe: FUN_004094a0 line 118) - only if .mod not found
+                // Step 3: _s.rim (k1_win_gog_swkotor.exe: FUN_004094a0 line 118) - only if .mod not found
                 if (group.DataRimFile != null)
                 {
                     paths.Add(group.DataRimFile);
                 }
 
-                // Step 4: _dlg.erf (swkotor2.exe: FUN_004096b0 line 147) - only if .mod not found (K2 only)
+                // Step 4: _dlg.erf (k2_win_gog_aspyr_swkotor2.exe: FUN_004096b0 line 147) - only if .mod not found (K2 only)
                 if (group.DlgErfFile != null)
                 {
                     paths.Add(group.DlgErfFile);
@@ -315,7 +315,7 @@ namespace BioWare.Common
             else
             {
                 // Simple mode: Just .rim file
-                // swkotor.exe: FUN_004094a0 line 42: Loads .rim directly
+                // k1_win_gog_swkotor.exe: FUN_004094a0 line 42: Loads .rim directly
                 if (group.MainRimFile != null)
                 {
                     paths.Add(group.MainRimFile);
@@ -328,7 +328,7 @@ namespace BioWare.Common
 
     /// <summary>
     /// Represents a group of module files for a single module root.
-    /// Matches exact behavior from swkotor.exe: FUN_004094a0 and swkotor2.exe: FUN_004096b0
+    /// Matches exact behavior from k1_win_gog_swkotor.exe: FUN_004094a0 and k2_win_gog_aspyr_swkotor2.exe: FUN_004096b0
     /// </summary>
     public class ModuleFileGroup
     {

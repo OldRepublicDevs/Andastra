@@ -6,9 +6,9 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// <remarks>
     /// Renderable Component Interface:
     /// - Cross-Engine Analysis (Reverse Engineered ):
-    ///   - Odyssey Engine (swkotor.exe, swkotor2.exe):
-    ///     - swkotor.exe: CSWCCreature::LoadModel() @ 0x0074f85c loads creature model from appearance.2da
-    ///     - swkotor2.exe: 0x005261b0 @ 0x005261b0 loads creature model from appearance.2da row
+    ///   - Odyssey Engine (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe):
+    ///     - k1_win_gog_swkotor.exe: CSWCCreature::LoadModel() @ 0x0074f85c loads creature model from appearance.2da
+    ///     - k2_win_gog_aspyr_swkotor2.exe: 0x005261b0 @ 0x005261b0 loads creature model from appearance.2da row
     ///     - String references: "ModelResRef" @ 0x007c2f6c (model resource reference field), "Appearance_Type" @ 0x007c40f0 (appearance type field)
     ///     - Model fields: "Model" @ 0x007c1ca8, "ModelName" @ 0x007c1c8c, "ModelA" @ 0x007bf4bc, "ModelB" (implied)
     ///     - "ModelType" @ 0x007c4568, "MODELTYPE" @ 0x007c036c, "ModelVariation" @ 0x007c0990
@@ -18,7 +18,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     ///     - "MODELMIN02" @ 0x007c4b3c, "MODELMIN03" @ 0x007c4b28
     ///     - Visibility: "VISIBLEVALUE" @ 0x007b6a58, "VisibleModel" @ 0x007c1c98, "IsBodyBagVisible" @ 0x007c1ff0
     ///     - "sdr_invisible" @ 0x007cb1dc (invisibility shader/material)
-    ///     - Error messages: "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (swkotor2.exe), @ 0x0074f85c (swkotor.exe)
+    ///     - Error messages: "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (k2_win_gog_aspyr_swkotor2.exe), @ 0x0074f85c (k1_win_gog_swkotor.exe)
     ///     - Model format: MDL/MDX files (model geometry/animation), textures from TPC files
     ///   - Aurora Engine (nwmain.exe, nwn2main.exe):
     ///     - nwmain.exe: CNWCCreature::LoadModel() loads creature models via CResRef

@@ -40,7 +40,7 @@ namespace Andastra.Game.Games.Common
     /// Engine Interface - Common Contract Across All BioWare Engines:
     ///
     /// This interface defines the common contract shared across all BioWare engine families:
-    /// - Odyssey Engine (swkotor.exe, swkotor2.exe): KOTOR 1/2, Jade Empire
+    /// - Odyssey Engine (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): KOTOR 1/2, Jade Empire
     /// - Aurora Engine (nwmain.exe, nwn2main.exe): Neverwinter Nights, Neverwinter Nights 2
     /// - Eclipse Engine (daorigins.exe, DragonAge2.exe): Dragon Age: Origins, Dragon Age 2
     ///
@@ -118,9 +118,9 @@ namespace Andastra.Game.Games.Common
     ///      * Pattern: BaseEngine takes profile, Eclipse adds game parameter for game type detection
     ///
     /// 5. Cross-Engine verified components References:
-    ///    - Odyssey Engine (swkotor.exe, swkotor2.exe):
-    ///      * 0x00404250 @ 0x00404250 (swkotor2.exe: WinMain equivalent, engine initialization)
-    ///      * 0x00633270 @ 0x00633270 (swkotor2.exe: Sets up resource directories)
+    ///    - Odyssey Engine (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe):
+    ///      * 0x00404250 @ 0x00404250 (k2_win_gog_aspyr_swkotor2.exe: WinMain equivalent, engine initialization)
+    ///      * 0x00633270 @ 0x00633270 (k2_win_gog_aspyr_swkotor2.exe: Sets up resource directories)
     ///      * Initialization pattern: Entry point -> Resource setup -> Module loading
     ///    - Aurora Engine (nwmain.exe, nwn2main.exe):
     ///      * CServerExoApp::Initialize (nwmain.exe: main initialization function)

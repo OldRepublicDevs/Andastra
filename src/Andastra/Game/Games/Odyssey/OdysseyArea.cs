@@ -27,15 +27,15 @@ namespace Andastra.Game.Games.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Area Implementation:
-    /// - Based on swkotor.exe and swkotor2.exe area systems
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe area systems
     /// - Uses ARE (area properties) and GIT (instances) file formats
     /// - Implements walkmesh navigation and area transitions
     /// - Supports stealth XP and area restrictions
     ///
     /// Based on verified components of:
-    /// - swkotor.exe: Area loading and management functions
-    /// - swkotor2.exe: LoadAreaProperties @ 0x004e26d0, SaveAreaProperties @ 0x004e11d0
-    /// - swkotor2.exe: DispatchEvent @ 0x004dcfb0 for area events
+    /// - k1_win_gog_swkotor.exe: Area loading and management functions
+    /// - k2_win_gog_aspyr_swkotor2.exe: LoadAreaProperties @ 0x004e26d0, SaveAreaProperties @ 0x004e11d0
+    /// - k2_win_gog_aspyr_swkotor2.exe: DispatchEvent @ 0x004dcfb0 for area events
     /// - Common ARE/GIT format documentation in vendor/PyKotor/wiki/
     ///
     /// Area structure:
@@ -110,7 +110,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <param name="gitData">GIT file data containing entity instances.</param>
         /// <param name="module">Optional Module reference for loading WOK walkmesh files. If provided, enables full walkmesh loading from room data.</param>
         /// <remarks>
-        /// Based on area loading sequence in swkotor2.exe.
+        /// Based on area loading sequence in k2_win_gog_aspyr_swkotor2.exe.
         /// Loads ARE file first for static properties, then GIT file for dynamic instances.
         /// Initializes walkmesh and area effects.
         ///
@@ -275,7 +275,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Tests if a point is on walkable ground.
         /// </summary>
         /// <remarks>
-        /// Based on walkmesh projection functions in swkotor2.exe.
+        /// Based on walkmesh projection functions in k2_win_gog_aspyr_swkotor2.exe.
         /// Checks if point can be projected onto walkable surface.
         /// </remarks>
         public override bool IsPointWalkable(Vector3 point)
@@ -299,9 +299,9 @@ namespace Andastra.Game.Games.Odyssey
         /// Projects a point onto the walkmesh.
         /// </summary>
         /// <remarks>
-        /// Based on 0x004f5070 @ 0x004f5070 in swkotor2.exe.
+        /// Based on 0x004f5070 @ 0x004f5070 in k2_win_gog_aspyr_swkotor2.exe.
         ///
-        /// Ghidra analysis (swkotor2.exe: 0x004f5070, verified):
+        /// Ghidra analysis (k2_win_gog_aspyr_swkotor2.exe: 0x004f5070, verified):
         /// - Signature: `float10 __thiscall 0x004f5070(void *param_1, float *param_2, int param_3, int *param_4, int *param_5)`
         /// - Projects point to walkmesh surface and returns height
         /// - Called from 34 locations throughout the engine for positioning and pathfinding
@@ -332,9 +332,9 @@ namespace Andastra.Game.Games.Odyssey
         /// Loads area properties from GFF data.
         /// </summary>
         /// <remarks>
-        /// Based on LoadAreaProperties @ 0x004e26d0 in swkotor2.exe.
+        /// Based on LoadAreaProperties @ 0x004e26d0 in k2_win_gog_aspyr_swkotor2.exe.
         ///
-        /// Ghidra analysis (swkotor2.exe: 0x004e26d0, verified):
+        /// Ghidra analysis (k2_win_gog_aspyr_swkotor2.exe: 0x004e26d0, verified):
         /// - Signature: `uint * __thiscall LoadAreaProperties(void *this, void *param_1, uint *param_2)`
         /// - this: Area object pointer
         /// - param_1: GFF struct pointer
@@ -452,7 +452,7 @@ namespace Andastra.Game.Games.Odyssey
                     _fogFar = root.GetSingle("SunFogFar");
                 }
 
-                // Read AreaProperties nested struct (based on Ghidra analysis: swkotor2.exe: 0x004e26d0)
+                // Read AreaProperties nested struct (based on Ghidra analysis: k2_win_gog_aspyr_swkotor2.exe: 0x004e26d0)
                 // Line 16: 0x00412b30(param_1, (int *)&param_2, param_2, "AreaProperties")
                 GFFStruct areaProperties = root.GetStruct("AreaProperties");
                 if (areaProperties != null)
@@ -545,9 +545,9 @@ namespace Andastra.Game.Games.Odyssey
         /// Saves area properties to GFF data.
         /// </summary>
         /// <remarks>
-        /// Based on SaveAreaProperties @ 0x004e11d0 in swkotor2.exe.
+        /// Based on SaveAreaProperties @ 0x004e11d0 in k2_win_gog_aspyr_swkotor2.exe.
         ///
-        /// Ghidra analysis (swkotor2.exe: 0x004e11d0, verified):
+        /// Ghidra analysis (k2_win_gog_aspyr_swkotor2.exe: 0x004e11d0, verified):
         /// - Signature: `void __thiscall SaveAreaProperties(void *this, void *param_1, uint *param_2)`
         /// - this: Area object pointer
         /// - param_1: GFF struct pointer (root or parent struct)
@@ -702,30 +702,30 @@ namespace Andastra.Game.Games.Odyssey
         /// Loads entities from GIT file.
         /// </summary>
         /// <remarks>
-        /// Based on entity loading in swkotor2.exe.
+        /// Based on entity loading in k2_win_gog_aspyr_swkotor2.exe.
         /// Parses GIT file GFF containing creature, door, placeable instances.
         /// Creates appropriate entity types and attaches components.
         ///
         /// Function addresses (verified  MCP):
-        /// - swkotor.exe: 0x004dfbb0 @ 0x004dfbb0 loads creature instances from GIT
+        /// - k1_win_gog_swkotor.exe: 0x004dfbb0 @ 0x004dfbb0 loads creature instances from GIT
         ///   - Located via string reference: "Creature List" @ 0x007bd01c
         ///   - Reads ObjectId, TemplateResRef, XPosition, YPosition, ZPosition, XOrientation, YOrientation
         ///   - Validates position on walkmesh (20.0 unit radius check) before spawning
         ///   - Converts orientation vector to quaternion
-        /// - swkotor2.exe: 0x004e08e0 @ 0x004e08e0 loads placeable/door/store instances from GIT
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x004e08e0 @ 0x004e08e0 loads placeable/door/store instances from GIT
         ///   - Located via string reference: "StoreList" (also handles "Door List" and "Placeable List")
         ///   - Reads ObjectId, ResRef, XPosition, YPosition, ZPosition, Bearing
         ///   - Loads template from UTP/UTD/UTM file
-        /// - swkotor2.exe: 0x004e5920 @ 0x004e5920 loads trigger instances from GIT
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x004e5920 @ 0x004e5920 loads trigger instances from GIT
         ///   - Located via string reference: "TriggerList" @ 0x007bd254
         ///   - Reads ObjectId, Tag, TemplateResRef, Position, Geometry, LinkedTo, LinkedToModule
-        /// - swkotor2.exe: 0x004e04a0 @ 0x004e04a0 loads waypoint instances from GIT
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x004e04a0 @ 0x004e04a0 loads waypoint instances from GIT
         ///   - Located via string reference: "WaypointList" @ 0x007bd060
         ///   - Reads ObjectId, Tag, TemplateResRef, Position, Orientation, MapNote, MapNoteEnabled
-        /// - swkotor2.exe: 0x004e06a0 @ 0x004e06a0 loads sound instances from GIT
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x004e06a0 @ 0x004e06a0 loads sound instances from GIT
         ///   - Located via string reference: "SoundList" @ 0x007bd080
         ///   - Reads ObjectId, Tag, TemplateResRef, Position, Active, Continuous, Looping, Volume
-        /// - swkotor2.exe: 0x004e2b20 @ 0x004e2b20 loads encounter instances from GIT
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x004e2b20 @ 0x004e2b20 loads encounter instances from GIT
         ///   - Located via string reference: "Encounter List" @ 0x007bd050
         ///   - Reads ObjectId, Tag, TemplateResRef, Position, Geometry, SpawnPointList
         ///
@@ -1051,13 +1051,13 @@ namespace Andastra.Game.Games.Odyssey
         /// Loads area geometry and walkmesh from ARE file.
         /// </summary>
         /// <remarks>
-        /// Based on ARE file loading in swkotor2.exe.
+        /// Based on ARE file loading in k2_win_gog_aspyr_swkotor2.exe.
         ///
         /// Function addresses (verified  MCP):
-        /// - swkotor.exe: Area geometry loading functions
-        /// - swkotor2.exe: ARE file parsing and walkmesh initialization
-        /// - swkotor2.exe: LoadAreaProperties @ 0x004e26d0 (verified - loads AreaProperties struct from GFF)
-        /// - swkotor2.exe: SaveAreaProperties @ 0x004e11d0 (verified - saves AreaProperties struct to GFF)
+        /// - k1_win_gog_swkotor.exe: Area geometry loading functions
+        /// - k2_win_gog_aspyr_swkotor2.exe: ARE file parsing and walkmesh initialization
+        /// - k2_win_gog_aspyr_swkotor2.exe: LoadAreaProperties @ 0x004e26d0 (verified - loads AreaProperties struct from GFF)
+        /// - k2_win_gog_aspyr_swkotor2.exe: SaveAreaProperties @ 0x004e11d0 (verified - saves AreaProperties struct to GFF)
         ///
         /// Odyssey ARE file structure (GFF with "ARE " signature):
         /// - Root struct contains: Tag, Name, ResRef, lighting, fog, grass properties
@@ -1073,7 +1073,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Based on official BioWare Aurora Engine ARE format specification:
         /// - vendor/PyKotor/wiki/Bioware-Aurora-AreaFile.md
         /// - vendor/PyKotor/wiki/GFF-ARE.md
-        /// - vendor/xoreos-docs/specs/bioware/AreaFile_Format.pdf
+        /// Reva: Area GFF layout from LoadAreaHeader and engine ARE loading. AreaFile format documented in specs.
         /// </remarks>
         protected override void LoadAreaGeometry(byte[] areData)
         {
@@ -1136,14 +1136,14 @@ namespace Andastra.Game.Games.Odyssey
         /// Loads walkmeshes from WOK files for all rooms and combines them into a single navigation mesh.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe/swkotor2.exe walkmesh loading system.
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe walkmesh loading system.
         ///
         /// Function addresses (verified  MCP):
-        /// - swkotor.exe: Walkmesh loading from WOK files
-        /// - swkotor2.exe: 0x0055aef0 @ 0x0055aef0 (verified - references "BWM V1.0" string, likely WriteBWMFile)
-        /// - swkotor2.exe: 0x006160c0 @ 0x006160c0 (verified - references "BWM V1.0" string, likely ValidateBWMHeader)
-        /// - swkotor2.exe: 0x004f5070 @ 0x004f5070 (verified - walkmesh projection function, called from raycast/pathfinding)
-        /// - swkotor2.exe: "BWM V1.0" string @ 0x007c061c (verified - BWM file signature)
+        /// - k1_win_gog_swkotor.exe: Walkmesh loading from WOK files
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x0055aef0 @ 0x0055aef0 (verified - references "BWM V1.0" string, likely WriteBWMFile)
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x006160c0 @ 0x006160c0 (verified - references "BWM V1.0" string, likely ValidateBWMHeader)
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x004f5070 @ 0x004f5070 (verified - walkmesh projection function, called from raycast/pathfinding)
+        /// - k2_win_gog_aspyr_swkotor2.exe: "BWM V1.0" string @ 0x007c061c (verified - BWM file signature)
         ///
         /// Walkmesh loading process:
         /// 1. For each room in _rooms, load corresponding WOK file (room.ModelName = WOK resref)
@@ -1171,8 +1171,7 @@ namespace Andastra.Game.Games.Odyssey
         ///
         /// Based on BWM file format documentation:
         /// - vendor/PyKotor/wiki/BWM-File-Format.md
-        /// - vendor/reone/src/libs/graphics/format/bwmreader.cpp
-        /// - vendor/KotOR.js/src/odyssey/OdysseyWalkMesh.ts
+        /// Reva (k1_win_gog_swkotor.exe): BWM/walkmesh loaded by engine; format from ARE/room data. See NavigationMesh for BWM parsing.
         /// </remarks>
 
         /// <summary>
@@ -1277,7 +1276,7 @@ namespace Andastra.Game.Games.Odyssey
                     // NavigationMeshFactory returns NavigationMesh (core/engine-agnostic class)
                     // For proper Odyssey abstraction, we wrap it in OdysseyNavigationMesh (engine-specific)
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area stores walkmesh with Odyssey-specific navigation behavior
-                    // swkotor2.exe: 0x004f5070 @ 0x004f5070 - walkmesh projection with Odyssey-specific logic
+                    // k2_win_gog_aspyr_swkotor2.exe: 0x004f5070 @ 0x004f5070 - walkmesh projection with Odyssey-specific logic
                     _navigationMesh = ConvertToOdysseyNavigationMesh(combinedNavMesh);
                 }
                 else
@@ -1298,12 +1297,12 @@ namespace Andastra.Game.Games.Odyssey
         /// Initializes area effects and environmental systems.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe area lighting and fog initialization.
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe area lighting and fog initialization.
         ///
         /// Function addresses (verified via verified components references):
-        /// - swkotor.exe: Area lighting initialization during area loading
-        /// - swkotor2.exe: Area lighting and fog setup during area property loading
-        /// - Based on reone engine implementation: Area::loadAmbientColor pattern
+        /// - k1_win_gog_swkotor.exe: Area lighting initialization during area loading
+        /// - k2_win_gog_aspyr_swkotor2.exe: Area lighting and fog setup during area property loading
+        /// Reva (k1_win_gog_swkotor.exe): CSWSArea::LoadAreaHeader @ 0x00508c50 reads "DynAmbientColor" via CResGFF::ReadFieldDWORD into (this->sw_area).dynamic_ambient_color.
         ///
         /// Initialization process:
         /// 1. Validate and normalize ambient lighting colors
@@ -1335,12 +1334,12 @@ namespace Andastra.Game.Games.Odyssey
         /// Based on ARE file format documentation:
         /// - vendor/PyKotor/wiki/GFF-ARE.md
         /// - vendor/PyKotor/wiki/Bioware-Aurora-AreaFile.md
-        /// - reone/src/libs/game/object/area.cpp: Area::loadAmbientColor
+        /// Reva: LoadAreaHeader @ 0x00508c50; DynAmbientColor string @ 0x007478e4.
         /// </remarks>
         protected override void InitializeAreaEffects()
         {
             // Initialize ambient lighting
-            // Based on reone: Prefer DynAmbientColor if non-zero, otherwise use default
+            // Reva: LoadAreaHeader stores DynAmbientColor in sw_area.dynamic_ambient_color; prefer if non-zero.
             // Default ambient color: 0x808080 (gray, equivalent to Vector3(0.5f, 0.5f, 0.5f) in linear space)
             // Original engine default: g_defaultAmbientColor = {0.2f} (0.2f in each component = 0x333333, but we use 0x808080 for compatibility)
             const uint defaultAmbientColor = 0xFF808080; // Gray ambient in BGR format
@@ -1348,7 +1347,7 @@ namespace Andastra.Game.Games.Odyssey
             if (_dynamicAmbientColor == 0)
             {
                 // If DynAmbientColor is zero or unset, use default
-                // This matches reone's behavior: _ambientColor = are.DynAmbientColor > 0 ? ... : g_defaultAmbientColor
+                // Reva: K1 uses (sw_area).dynamic_ambient_color from GFF; default when zero.
                 _ambientColor = defaultAmbientColor;
             }
             else
@@ -1486,7 +1485,7 @@ namespace Andastra.Game.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Odyssey-specific: Basic entity removal without physics system.
-        /// Based on swkotor.exe/swkotor2.exe entity management.
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe entity management.
         /// </remarks>
         internal override void RemoveEntityFromArea(IEntity entity)
         {
@@ -1524,7 +1523,7 @@ namespace Andastra.Game.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Odyssey-specific: Basic entity addition without physics system.
-        /// Based on swkotor.exe/swkotor2.exe entity management.
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe entity management.
         /// </remarks>
         internal override void AddEntityToArea(IEntity entity)
         {
@@ -1579,20 +1578,20 @@ namespace Andastra.Game.Games.Odyssey
         /// Updates area state each frame.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe area update logic.
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe area update logic.
         /// Updates area heartbeat timer and fires OnHeartbeat scripts every 6 seconds.
         /// Processes pending area transitions and updates environmental effects.
         ///
         /// Function addresses (verified  MCP):
-        /// - swkotor2.exe: 0x004e3ff0 @ 0x004e3ff0 (area update function called from game loop)
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x004e3ff0 @ 0x004e3ff0 (area update function called from game loop)
         ///   - Located via call from 0x004e9850 @ 0x004e9850 (main game update loop)
         ///   - Handles area heartbeat scripts and transition processing
-        /// - swkotor.exe: Similar area update logic with heartbeat script execution
+        /// - k1_win_gog_swkotor.exe: Similar area update logic with heartbeat script execution
         ///
         /// Heartbeat system:
         /// - Fires OnHeartbeat script every 6 seconds if area has heartbeat script configured
         /// - Uses area ResRef as script execution context (creates area entity if needed)
-        /// - Located via string references: "OnHeartbeat" @ 0x007bd720 (swkotor2.exe)
+        /// - Located via string references: "OnHeartbeat" @ 0x007bd720 (k2_win_gog_aspyr_swkotor2.exe)
         ///
         /// Area transitions:
         /// - Processes TransPending, TransPendNextID, TransPendCurrID from ARE file AreaProperties
@@ -1621,14 +1620,14 @@ namespace Andastra.Game.Games.Odyssey
         /// </summary>
         /// <param name="deltaTime">Time elapsed since last update.</param>
         /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe heartbeat system.
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe heartbeat system.
         /// Fires area OnHeartbeat script every 6 seconds if configured.
         /// Uses HeartbeatInterval constant (6.0f seconds) matching original engine.
         ///
         /// Script execution:
         /// - Creates/finds area entity using ResRef as tag for script context
         /// - Fires ScriptEvent.OnHeartbeat with area entity as caller
-        /// - Located via string references: "OnHeartbeat" @ 0x007bd720 (swkotor2.exe)
+        /// - Located via string references: "OnHeartbeat" @ 0x007bd720 (k2_win_gog_aspyr_swkotor2.exe)
         /// </remarks>
         private void UpdateAreaHeartbeat(float deltaTime)
         {
@@ -1652,7 +1651,7 @@ namespace Andastra.Game.Games.Odyssey
                     if (areaEntity != null)
                     {
                         // Fire OnHeartbeat script event
-                        // Located via string references: "OnHeartbeat" @ 0x007bd720 (swkotor2.exe)
+                        // Located via string references: "OnHeartbeat" @ 0x007bd720 (k2_win_gog_aspyr_swkotor2.exe)
                         world.EventBus.FireScriptEvent(areaEntity, ScriptEvent.OnHeartbeat, null);
                     }
                 }
@@ -2104,7 +2103,7 @@ namespace Andastra.Game.Games.Odyssey
         /// </summary>
         /// <param name="deltaTime">Time elapsed since last update.</param>
         /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe environmental effect updates.
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe environmental effect updates.
         /// Updates lighting colors and fog parameters dynamically.
         ///
         /// Lighting updates:
@@ -2590,7 +2589,7 @@ namespace Andastra.Game.Games.Odyssey
                         // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Room meshes are loaded from MDL files referenced in LYT file
                         // Located via string references: "Rooms" @ 0x007bd490, "RoomName" @ 0x007bd484
                         // Original implementation: Loads room MDL models from module archives when needed for rendering
-                        // swkotor2.exe: 0x004e3ff0 @ 0x004e3ff0 - Room mesh loading function
+                        // k2_win_gog_aspyr_swkotor2.exe: 0x004e3ff0 @ 0x004e3ff0 - Room mesh loading function
                         meshData = LoadRoomMeshOnDemand(room.ModelName, roomRenderer);
                         if (meshData != null)
                         {
@@ -2667,7 +2666,7 @@ namespace Andastra.Game.Games.Odyssey
         ///
         /// Implementation details:
         /// - Resource search order: Module.Model() -> Module.ModelExt() -> Installation (OVERRIDE -> CHITIN)
-        /// - Matches swkotor2.exe resource loading: Module -> Override -> Chitin
+        /// - Matches k2_win_gog_aspyr_swkotor2.exe resource loading: Module -> Override -> Chitin
         /// - MDL files: Loaded from Module.Model() or Module.ModelExt() as fallback
         /// - MDX files: Loaded from Module.ModelExt() (companion files containing vertex data)
         /// - Installation fallback: Uses Installation.Resource() with OVERRIDE and CHITIN search locations
@@ -2704,7 +2703,7 @@ namespace Andastra.Game.Games.Odyssey
                 // Load MDL file from Module or Installation
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Room models are loaded from module archives or installation (chitin/override)
                 // Original implementation: Uses Module.Resource() first, then falls back to Installation.Resource()
-                // swkotor2.exe: Resource search order is Module -> Override -> Chitin
+                // k2_win_gog_aspyr_swkotor2.exe: Resource search order is Module -> Override -> Chitin
                 byte[] mdlData = null;
                 byte[] mdxData = null;
 
@@ -2805,9 +2804,9 @@ namespace Andastra.Game.Games.Odyssey
             catch (Exception ex)
             {
                 // Log error but don't throw - just return null to skip this room
-                // swkotor.exe: Scene::SpawnRoom @ 0x00456f30 (lines 77-81): If FindModel returns null, function returns null instead of crashing
-                // swkotor.exe: CSWSArea::LoadRooms @ 0x00504870: Rooms are loaded sequentially; if any room fails, it's skipped and loading continues
-                // swkotor2.exe: CSWSArea::LoadAreaPropertiesAndRooms @ 0x004e3ff0: Room loading errors are handled gracefully - failed rooms are skipped, game continues
+                // k1_win_gog_swkotor.exe: Scene::SpawnRoom @ 0x00456f30 (lines 77-81): If FindModel returns null, function returns null instead of crashing
+                // k1_win_gog_swkotor.exe: CSWSArea::LoadRooms @ 0x00504870: Rooms are loaded sequentially; if any room fails, it's skipped and loading continues
+                // k2_win_gog_aspyr_swkotor2.exe: CSWSArea::LoadAreaPropertiesAndRooms @ 0x004e3ff0: Room loading errors are handled gracefully - failed rooms are skipped, game continues
                 // Original engine behavior: Room loading failures don't crash the game, rooms are just skipped
                 Console.WriteLine($"[OdysseyArea] Failed to load room mesh '{modelResRef}': {ex.Message}");
                 return null;
@@ -3087,7 +3086,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <summary>
         /// Finds the current room index based on camera/player position.
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Room finding logic checks if position is inside room bounds.
-        /// swkotor2.exe: Room bounds checking is performed via spatial queries on room geometry.
+        /// k2_win_gog_aspyr_swkotor2.exe: Room bounds checking is performed via spatial queries on room geometry.
         /// </summary>
         /// <param name="position">Camera or player position.</param>
         /// <returns>Room index, or -1 if not found.</returns>
@@ -3208,7 +3207,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Unloads the area and cleans up resources.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe/swkotor2.exe: Area unloading functions
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Area unloading functions
         /// Destroys all entities, frees walkmesh and geometry resources.
         /// Ensures proper cleanup to prevent memory leaks.
         ///
@@ -3231,7 +3230,7 @@ namespace Andastra.Game.Games.Odyssey
             allEntities.AddRange(_sounds);
 
             // Destroy all entities
-            // Based on swkotor.exe/swkotor2.exe: Entities are removed from area and destroyed
+            // Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Entities are removed from area and destroyed
             // If entity has World reference, use World.DestroyEntity (fires events, unregisters properly)
             // Otherwise, call Destroy directly (for entities not yet registered with world)
             foreach (IEntity entity in allEntities)
@@ -3256,7 +3255,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Dispose navigation mesh if it implements IDisposable
-            // Based on swkotor.exe/swkotor2.exe: Navigation mesh resources are freed
+            // Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Navigation mesh resources are freed
             if (_navigationMesh != null)
             {
                 if (_navigationMesh is IDisposable disposableMesh)
@@ -3267,7 +3266,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Clear room meshes and visibility data
-            // Based on swkotor.exe/swkotor2.exe: Room geometry is freed during area unload
+            // Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Room geometry is freed during area unload
             if (_roomMeshes != null)
             {
                 foreach (var roomMesh in _roomMeshes.Values)
@@ -3331,7 +3330,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Clear all entity lists
-            // Based on swkotor.exe/swkotor2.exe: Entity lists are cleared during unload
+            // Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Entity lists are cleared during unload
             _creatures.Clear();
             _placeables.Clear();
             _doors.Clear();
@@ -3340,7 +3339,7 @@ namespace Andastra.Game.Games.Odyssey
             _sounds.Clear();
 
             // Clear string references (optional cleanup)
-            // Based on swkotor.exe/swkotor2.exe: String references are cleared
+            // Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: String references are cleared
             _resRef = null;
             _displayName = null;
             _tag = null;

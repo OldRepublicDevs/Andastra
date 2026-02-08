@@ -24,7 +24,7 @@ namespace Andastra.Runtime.Games.Common.Journal
     /// - Journal entry addition and updates
     ///
     /// Engine-specific differences:
-    /// - Odyssey (swkotor.exe, swkotor2.exe): JRL files (GFF with "JRL " signature), quest states in global variables
+    /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): JRL files (GFF with "JRL " signature), quest states in global variables
     /// - Aurora (nwmain.exe): JRL files (different format), CNWSJournal class, per-creature journal storage
     /// - Eclipse (daorigins.exe): Different quest system structure, may use different file format
     /// </remarks>

@@ -18,6 +18,8 @@ using Andastra.Runtime.Core;
 using Andastra.Runtime.Core.Audio;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Graphics;
+using Andastra.Runtime.Graphics.Common.Enums;
+using Andastra.Runtime.Graphics.Common.GUI;
 using BioWare.Common;
 using BioWare.Extract;
 
@@ -81,6 +83,7 @@ namespace Andastra.Game.Core
         private bool _loadScreenFromPause;
         private bool _escapeWasDown;
         private ChaseCamera _chaseCamera;
+        private BaseMenuRenderer _fallbackMenuRenderer;
 
         /// <summary>
         /// Initializes a new instance of OdysseyGame.
@@ -128,7 +131,7 @@ namespace Andastra.Game.Core
             _vm = new NcsVm();
 
             // Create script globals using factory pattern based on game type
-            // Based on swkotor.exe and swkotor2.exe: Script globals system initializes global variables
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Script globals system initializes global variables
             // Original implementation: Global variables initialized at game start based on game type
             // Factory pattern ensures correct globals instance is created (K1ScriptGlobals for K1, K2ScriptGlobals for K2)
             _globals = ScriptGlobalsFactory.Create(_settings.Game);
@@ -164,14 +167,47 @@ namespace Andastra.Game.Core
 
             void EnsureMainMenuInitialized()
             {
-                // Already have KOTOR main menu or fallback menu
-                if (_mainMenuGui != null || _mainMenuScreen != null)
+                // Already have KOTOR main menu or fallback menu (MonoGame or Stride)
+                if (_mainMenuGui != null || _mainMenuScreen != null || _fallbackMenuRenderer != null)
                 {
                     return;
                 }
 
                 if (_graphicsBackend?.GraphicsDevice == null)
                 {
+                    return;
+                }
+
+                // Stride backend: use MenuRendererFactory to create StrideMenuRenderer. Reva (k1_win_gog_swkotor.exe): DisplayMainMenu @ 0x005fca30, CSWGuiMainMenu @ 0x0067c4c0, LoadFromLayout @ 0x0067ace0.
+                if (_graphicsBackend.BackendType == GraphicsBackendType.Stride)
+                {
+                    try
+                    {
+                        _fallbackMenuRenderer = MenuRendererFactory.CreateMenuRenderer(_graphicsBackend);
+                        if (_fallbackMenuRenderer != null)
+                        {
+                            _fallbackMenuRenderer.IsVisible = true;
+                            _useFallbackMainMenu = true;
+                            try
+                            {
+                                _installation = new Installation(_settings.GamePath);
+                            }
+                            catch
+                            {
+                                // Installation optional for Stride fallback (music may not play)
+                            }
+                            StartMainMenuMusic();
+                            Console.WriteLine("[OdysseyGame] Stride main menu (fallback) initialized");
+                        }
+                        else
+                        {
+                            Console.WriteLine("[OdysseyGame] ERROR: Failed to create Stride menu renderer");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[OdysseyGame] ERROR initializing Stride main menu: {ex.Message}");
+                    }
                     return;
                 }
 
@@ -183,7 +219,7 @@ namespace Andastra.Game.Core
                 }
                 else
                 {
-                    Console.WriteLine("[OdysseyGame] ERROR: Graphics backend is not MonoGame, cannot create main menu");
+                    Console.WriteLine("[OdysseyGame] ERROR: Graphics backend is not MonoGame or Stride, cannot create main menu");
                     return;
                 }
 
@@ -232,7 +268,7 @@ namespace Andastra.Game.Core
                         HandleMainMenuButtonClick(e.ButtonTag);
                     };
 
-                    // Start main menu music (1:1 with Reva swkotor.exe CClientExoAppInternal::DisplayMainMenu -> StartMenuMusic)
+                    // Start main menu music (1:1 with Reva k1_win_gog_swkotor.exe CClientExoAppInternal::DisplayMainMenu -> StartMenuMusic)
                     StartMainMenuMusic();
                 }
                 else
@@ -261,7 +297,7 @@ namespace Andastra.Game.Core
                     _musicPlayer = _graphicsBackend?.CreateMusicPlayer(resourceProvider) as IMusicPlayer;
                     if (_musicPlayer != null && (_settings.Audio?.MusicEnabled ?? true))
                     {
-                        // Reva swkotor.exe 0x005f9af0: param_1=1 -> mus_theme_cult (K1), K2 uses mus_sion
+                        // Reva k1_win_gog_swkotor.exe 0x005f9af0: param_1=1 -> mus_theme_cult (K1), K2 uses mus_sion
                         string mainMenuMusic = _settings.Game == KotorGame.K1 ? "mus_theme_cult" : "mus_sion";
                         float vol = _settings.Audio?.MusicVolume ?? 0.5f;
                         bool played = _musicPlayer.Play(mainMenuMusic, vol);
@@ -722,7 +758,12 @@ namespace Andastra.Game.Core
                 {
                     case OdysseyGameState.MainMenu:
                         if (_useFallbackMainMenu)
-                            _mainMenuScreen?.Update(deltaTime);
+                        {
+                            if (_mainMenuScreen != null)
+                                _mainMenuScreen.Update(deltaTime);
+                            else
+                                _fallbackMenuRenderer?.Update(deltaTime);
+                        }
                         else
                             _mainMenuGui?.Update(deltaTime);
                         return;
@@ -860,7 +901,12 @@ namespace Andastra.Game.Core
                 {
                     case OdysseyGameState.MainMenu:
                         if (_useFallbackMainMenu)
-                            _mainMenuScreen?.Draw();
+                        {
+                            if (_mainMenuScreen != null)
+                                _mainMenuScreen.Draw();
+                            else
+                                _fallbackMenuRenderer?.Draw();
+                        }
                         else
                             _mainMenuGui?.Draw(null);
                         break;
@@ -981,7 +1027,7 @@ namespace Andastra.Game.Core
         }
 
         /// <summary>
-        /// Ensures chase camera is initialized when InGame. Reva: swkotor.exe 0x004af630, swkotor2.exe 0x004dcfb0.
+        /// Ensures chase camera is initialized when InGame. Reva: k1_win_gog_swkotor.exe 0x004af630, k2_win_gog_aspyr_swkotor2.exe 0x004dcfb0.
         /// </summary>
         private void EnsureChaseCameraInitialized()
         {
@@ -1062,6 +1108,12 @@ namespace Andastra.Game.Core
                 {
                     _mainMenuGui.Dispose();
                     _mainMenuGui = null;
+                }
+
+                if (_fallbackMenuRenderer != null)
+                {
+                    _fallbackMenuRenderer.Dispose();
+                    _fallbackMenuRenderer = null;
                 }
 
                 _loadGameScreen?.Dispose();

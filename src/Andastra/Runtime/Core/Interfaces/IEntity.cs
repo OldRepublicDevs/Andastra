@@ -21,7 +21,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Entity serialization/deserialization: Save/load entity state for save games
     ///
     /// Engine-specific implementations:
-    /// - Odyssey (swkotor.exe, swkotor2.exe): OdysseyEntity - ObjectId at offset +4, GFF-based serialization
+    /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): OdysseyEntity - ObjectId at offset +4, GFF-based serialization
     /// - Aurora (nwmain.exe, nwn2main.exe): AuroraEntity - CExoString-based Tag, similar structure
     /// - Eclipse (daorigins.exe, DragonAge2.exe): EclipseEntity - Enhanced component system
     /// - Infinity (, ): InfinityEntity - Streamlined entity system

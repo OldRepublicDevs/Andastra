@@ -8,7 +8,7 @@ namespace Andastra.Runtime.Games.Common.Actions
     /// </summary>
     /// <remarks>
     /// Base Action Implementation:
-    /// Common action system shared across Odyssey (swkotor.exe, swkotor2.exe) and Aurora (nwmain.exe, nwn2main.exe).
+    /// Common action system shared across Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe) and Aurora (nwmain.exe, nwn2main.exe).
     /// 
     /// Common structure across engines:
     /// - ActionId (uint32): Action type identifier stored in GFF ActionList
@@ -21,7 +21,7 @@ namespace Andastra.Runtime.Games.Common.Actions
     /// - Action status: InProgress (continue), Complete (done), Failed (abort)
     /// 
     /// Engine-specific implementations:
-    /// - Odyssey (swkotor.exe, swkotor2.exe): OdysseyAction - specific function addresses for GFF loading/saving
+    /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): OdysseyAction - specific function addresses for GFF loading/saving
     /// - Aurora (nwmain.exe, nwn2main.exe): AuroraAction - CNWSObject::LoadActionQueue/SaveActionQueue methods
     /// - Eclipse (daorigins.exe, DragonAge2.exe, ): Uses ActionFramework (different architecture)
     /// - Infinity (, ): May use different system (needs investigation)

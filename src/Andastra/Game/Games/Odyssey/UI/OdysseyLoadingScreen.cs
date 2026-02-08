@@ -11,12 +11,12 @@ namespace Andastra.Game.Games.Odyssey.UI
     /// </summary>
     /// <remarks>
     /// Odyssey Loading Screen Implementation:
-    /// - Based on swkotor.exe and swkotor2.exe loading screen system
-    /// - Located via string references: "loadscreen_p" @ 0x007cbe40 (swkotor2.exe), "loadscreen" @ 0x00752db0 (swkotor.exe)
-    /// - "LoadScreenID" @ 0x007bd54c (swkotor2.exe), "LoadScreenID" @ 0x00747880 (swkotor.exe)
-    /// - "LBL_LOADING" @ 0x007cbe10 (swkotor2.exe), "Loading" @ 0x007c7e40 (swkotor2.exe)
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe loading screen system
+    /// - Located via string references: "loadscreen_p" @ 0x007cbe40 (k2_win_gog_aspyr_swkotor2.exe), "loadscreen" @ 0x00752db0 (k1_win_gog_swkotor.exe)
+    /// - "LoadScreenID" @ 0x007bd54c (k2_win_gog_aspyr_swkotor2.exe), "LoadScreenID" @ 0x00747880 (k1_win_gog_swkotor.exe)
+    /// - "LBL_LOADING" @ 0x007cbe10 (k2_win_gog_aspyr_swkotor2.exe), "Loading" @ 0x007c7e40 (k2_win_gog_aspyr_swkotor2.exe)
     /// - "PB_PROGRESS" @ 0x007cb33c (progress bar), "LBL_HINT" (loading hints), "LBL_LOGO" (logo label)
-    /// - Original implementation: 0x006cff90 @ 0x006cff90 (swkotor2.exe) initializes loading screen GUI panel
+    /// - Original implementation: 0x006cff90 @ 0x006cff90 (k2_win_gog_aspyr_swkotor2.exe) initializes loading screen GUI panel
     /// - Loading screen GUI: "loadscreen_p" GUI file contains panel with progress bar, hints, logo, and loading image
     /// - Loading screen image: Set via LoadScreenResRef from module IFO file (TPC format texture)
     /// - Loading screen display: Shown during module transitions, hidden after module load completes
@@ -151,8 +151,8 @@ namespace Andastra.Game.Games.Odyssey.UI
 
         /// <summary>
         /// Updates the loading screen progress bar.
-        /// swkotor.exe: 0x005edd40 (CClientExoApp::SetLoadBarProgress) - Progress bar updates during resource loading
-        /// swkotor2.exe: 0x00646f40 (SetLoadBarProgress) - Progress bar updates during resource loading
+        /// k1_win_gog_swkotor.exe: 0x005edd40 (CClientExoApp::SetLoadBarProgress) - Progress bar updates during resource loading
+        /// k2_win_gog_aspyr_swkotor2.exe: 0x00646f40 (SetLoadBarProgress) - Progress bar updates during resource loading
         /// - "PB_PROGRESS" control shows loading progress
         /// - "Load Bar = %d" @ 0x0074ec0c (K1), @ 0x007c760c (TSL) (progress debug output)
         /// - Original implementation: Progress bar updates as resources are loaded
@@ -171,8 +171,8 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Update progress bar if GUI is loaded
-            // swkotor.exe: 0x005edd40 (CClientExoApp::SetLoadBarProgress) - Updates PB_PROGRESS control with progress value
-            // swkotor2.exe: 0x00646f40 (SetLoadBarProgress) - Updates PB_PROGRESS control with progress value
+            // k1_win_gog_swkotor.exe: 0x005edd40 (CClientExoApp::SetLoadBarProgress) - Updates PB_PROGRESS control with progress value
+            // k2_win_gog_aspyr_swkotor2.exe: 0x00646f40 (SetLoadBarProgress) - Updates PB_PROGRESS control with progress value
             // - K1: Calls CSWGuiProgressBar::SetCurValue(&this_00->load_screen->progress_bar, param_1) to set progress value
             // - TSL: Calls FUN_00417800((void *)(*(int *)((int)this + 0x278) + 0x68), param_1) to set progress value
             // - Progress bar value is set by updating the control's current value property (0-100 range)
@@ -203,8 +203,8 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// - Image is loaded from TPC texture resource
         /// - Set as background or border fill on loading screen panel
         /// - Original implementation: 0x006cff90 @ 0x006cff90 sets loading screen image
-        /// - Based on reone implementation: Loading screen image is set on root control's border fill
-        /// - This matches the original engine behavior where the loading screen image is the background of the entire GUI panel
+        /// Reva (k1_win_gog_swkotor.exe): Loading screen image as root control background; CSWGuiBorder::Draw @ 0x004168c0
+        /// renders fill when texture present (field3_0x68). Root border fill = full-panel background.
         /// </summary>
         /// <param name="imageResRef">Resource reference for the loading screen image (TPC format).</param>
         private void UpdateLoadingScreenImage(string imageResRef)
@@ -216,7 +216,7 @@ namespace Andastra.Game.Games.Odyssey.UI
 
             // Update the loading screen image on the root control's border fill
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Loading screen image is set on the GUI panel root control
-            // Based on reone implementation: _gui->rootControl().setBorderFill(resRef)
+            // Reva: K1 root control border fill = loading image (CSWGuiBorder fill texture).
             // The root control represents the entire loading screen panel, and its border fill
             // is used as the background image for the loading screen
             if (_guiManager is KotorGuiManager kotorGuiManager)

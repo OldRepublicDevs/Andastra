@@ -186,7 +186,7 @@ namespace Andastra.Game.Games.Odyssey.Combat
             }
 
             // Check for AssuredHit effect
-            // Based on swkotor.exe: AssuredHit effect guarantees attack hits (bypasses AC check)
+            // Based on k1_win_gog_swkotor.exe: AssuredHit effect guarantees attack hits (bypasses AC check)
             // Located via string references: EffectAssuredHit @ routine 51
             // Original implementation: Effect flag that forces attack to hit unless natural 1
             bool hasAssuredHit = false;

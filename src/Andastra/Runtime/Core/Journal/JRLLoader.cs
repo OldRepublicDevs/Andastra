@@ -16,7 +16,7 @@ namespace Andastra.Runtime.Core.Journal
     /// Loads and caches JRL (Journal) files for quest entry text lookup (Odyssey-specific implementation).
     /// </summary>
     /// <remarks>
-    /// Odyssey JRL Loader (swkotor.exe, swkotor2.exe):
+    /// Odyssey JRL Loader (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe):
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) journal system
     /// - Located via string references: "JOURNAL" @ 0x007bdf44, "NW_JOURNAL" @ 0x007c20e8
     /// - JRL file format: GFF with "JRL " signature containing journal entry definitions
@@ -32,7 +32,7 @@ namespace Andastra.Runtime.Core.Journal
     ///   3. Find entry by EntryId in quest's entry list
     ///   4. Return entry Text (LocalizedString) resolved to string
     /// - Cross-engine analysis:
-    ///   - swkotor.exe: Similar JRL system (needs reverse engineering)
+    ///   - k1_win_gog_swkotor.exe: Similar JRL system (needs reverse engineering)
     ///   - nwmain.exe: Different journal format (needs reverse engineering)
     ///   - daorigins.exe: Journal system may differ (needs reverse engineering)
     ///

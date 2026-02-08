@@ -15,7 +15,7 @@ namespace Andastra.Game.Games.Common.Save
     /// - Common save directory naming format: "%06d - %s" (6-digit number - name)
     /// - Save number auto-generation and parsing
     /// - Directory name formatting and parsing
-    /// - Common across engines: Odyssey (swkotor.exe, swkotor2.exe) and Aurora (nwmain.exe)
+    /// - Common across engines: Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe) and Aurora (nwmain.exe)
     ///
     /// Based on verified components of save game management across multiple BioWare engines.
     ///

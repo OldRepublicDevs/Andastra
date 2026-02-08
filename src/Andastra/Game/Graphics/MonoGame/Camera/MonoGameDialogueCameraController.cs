@@ -15,14 +15,14 @@ namespace Andastra.Game.Graphics.MonoGame.Camera
     /// </summary>
     /// <remarks>
     /// Dialogue Camera Controller (MonoGame Implementation for Odyssey Engine):
-    /// - Based on swkotor.exe and swkotor2.exe dialogue camera system
-    /// - swkotor.exe (KOTOR 1): EndConversation @ 0x0074a7c0, dialogue loading 0x005a2ae0 @ 0x005a2ae0
-    /// - swkotor2.exe (KOTOR 2): EndConversation @ 0x007c38e0, dialogue loading 0x005ea880 @ 0x005ea880
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe dialogue camera system
+    /// - k1_win_gog_swkotor.exe (KOTOR 1): EndConversation @ 0x0074a7c0, dialogue loading 0x005a2ae0 @ 0x005a2ae0
+    /// - k2_win_gog_aspyr_swkotor2.exe (KOTOR 2): EndConversation @ 0x007c38e0, dialogue loading 0x005ea880 @ 0x005ea880
     /// - Located via string references: "CameraAnimation" @ 0x007c3460, "CameraAngle" @ 0x007c3490
     /// - "CameraModel" @ 0x007c3908, "CameraViewAngle" @ 0x007cb940
     /// - Camera hooks: "camerahook" @ 0x007c7dac, "camerahookt" @ 0x007c7da0, "camerahookz" @ 0x007c7db8, "camerahookh" @ 0x007c7dc4
     /// - "CAMERAHOOK" @ 0x007c7f10, "3CCameraHook" @ 0x007ca5ae, "CameraRotate" @ 0x007cb910
-    /// - Reverse engineered functions (swkotor2.exe):
+    /// - Reverse engineered functions (k2_win_gog_aspyr_swkotor2.exe):
     ///   - CGuiInGame::GetCameraAnimationName @ 0x006288f0 - Gets animation name from dialoganimations.2da
     ///   - CGuiInGame::SetDialogAnimations @ 0x006313a0 - Sets camera animations for dialogue
     ///   - CGuiInGame::ResetDialogAnimations @ 0x00631b70 - Resets camera animations
@@ -33,7 +33,7 @@ namespace Andastra.Game.Graphics.MonoGame.Camera
     /// - Camera animations: Smooth transitions between angles, scripted camera movements
     /// - Camera hooks: Attachment points on models for precise camera positioning
     /// - Camera animation data: Loaded from dialogue entries (CameraAnimation field) and resolved via dialoganimations.2da
-    /// - This implementation matches 1:1 with both swkotor.exe and swkotor2.exe behavior
+    /// - This implementation matches 1:1 with both k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe behavior
     /// - This implementation uses Runtime.Core.Camera.CameraController for actual camera control
     /// </remarks>
     public class MonoGameDialogueCameraController : IDialogueCameraController
@@ -56,12 +56,12 @@ namespace Andastra.Game.Graphics.MonoGame.Camera
 
         /// <summary>
         /// Initializes default camera animations (angles 0-3).
-        /// Based on swkotor.exe and swkotor2.exe: Default camera animation mappings are implicit in the engine
-        /// Located via string references: "CameraAnimation" @ 0x007c3460 (swkotor2.exe)
-        /// Reverse engineered from swkotor.exe (KOTOR 1):
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Default camera animation mappings are implicit in the engine
+        /// Located via string references: "CameraAnimation" @ 0x007c3460 (k2_win_gog_aspyr_swkotor2.exe)
+        /// Reverse engineered from k1_win_gog_swkotor.exe (KOTOR 1):
         ///   - CSWSDialog::LoadDialog @ 0x005a2ae0 - Main dialogue loading function
         ///   - LoadDialogCamera @ 0x0059eaa0 - Loads camera fields from dialogue entries
-        /// Reverse engineered from swkotor2.exe (KOTOR 2):
+        /// Reverse engineered from k2_win_gog_aspyr_swkotor2.exe (KOTOR 2):
         ///   - CSWSDialog_LoadDialog @ 0x005ea880 - Main dialogue loading function
         ///   - CSWSDialogEntry_LoadCameraFields @ 0x005e5a20 - Reads CameraAnimation field from dialogue entries
         /// Camera animation IDs 0-3 map directly to camera angles 0-3 (implicit/hardcoded mapping in both engines):
@@ -231,7 +231,7 @@ namespace Andastra.Game.Graphics.MonoGame.Camera
                 // Original implementation: Queries MDL model for nodes named "camerahook{N}" and uses their world-space positions
                 // Camera hooks are MDL dummy nodes that define precise camera positions relative to character models
                 // The GetCameraHookPosition method searches MDL node tree recursively for "camerahook{N}" nodes
-                // swkotor2.exe: 0x006c6020 (SearchMDLNodeTreeForCameraHook) - Searches MDL node tree for "camerahook" nodes
+                // k2_win_gog_aspyr_swkotor2.exe: 0x006c6020 (SearchMDLNodeTreeForCameraHook) - Searches MDL node tree for "camerahook" nodes
                 // Implementation:
                 //   1. Constructs camera hook node name (format: "camerahook{N}" where N is hookIndex)
                 //   2. Searches MDL model node tree recursively for matching node name
@@ -324,23 +324,23 @@ namespace Andastra.Game.Graphics.MonoGame.Camera
 
         /// <summary>
         /// Resets the camera to normal gameplay mode.
-        /// Based on swkotor.exe and swkotor2.exe: Camera reset to chase mode after dialogue ends
-        /// Reverse engineered from swkotor.exe:
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Camera reset to chase mode after dialogue ends
+        /// Reverse engineered from k1_win_gog_swkotor.exe:
         ///   - EndConversation script execution @ 0x0074a7c0 triggers camera reset
         ///   - Dialogue loading function 0x005a2ae0 @ 0x005a2ae0 loads EndConversation script reference (line 55)
         ///   - Camera reset occurs when dialogue ends (EndConversation script fires)
         ///   - Camera returns to chase mode following player entity
-        /// Reverse engineered from swkotor2.exe:
+        /// Reverse engineered from k2_win_gog_aspyr_swkotor2.exe:
         ///   - EndConversation script execution @ 0x007c38e0 triggers camera reset
         ///   - Dialogue loading function 0x005ea880 @ 0x005ea880 loads EndConversation script reference (line 55)
         ///   - Camera reset occurs when dialogue ends (EndConversation script fires)
         ///   - Camera returns to chase mode following player entity
-        /// Located via string references: "EndConversation" @ 0x0074a7c0 (swkotor.exe), @ 0x007c38e0 (swkotor2.exe)
+        /// Located via string references: "EndConversation" @ 0x0074a7c0 (k1_win_gog_swkotor.exe), @ 0x007c38e0 (k2_win_gog_aspyr_swkotor2.exe)
         /// Original implementation: When dialogue ends, camera resets to chase mode with player as target
-        /// This implementation matches 1:1 with both swkotor.exe and swkotor2.exe behavior
+        /// This implementation matches 1:1 with both k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe behavior
         /// Cross-engine analysis:
-        ///   - swkotor.exe (KOTOR 1): Camera reset to chase mode with player entity (this implementation matches)
-        ///   - swkotor2.exe (KOTOR 2): Camera reset to chase mode with player entity (this implementation matches)
+        ///   - k1_win_gog_swkotor.exe (KOTOR 1): Camera reset to chase mode with player entity (this implementation matches)
+        ///   - k2_win_gog_aspyr_swkotor2.exe (KOTOR 2): Camera reset to chase mode with player entity (this implementation matches)
         ///   - nwmain.exe (Aurora): Camera reset handled differently (no direct dialogue camera equivalent)
         ///   - daorigins.exe/DragonAge2.exe (Eclipse): Camera reset via UnrealScript, different architecture
         ///   - / (Infinity): Camera reset handled by level scripting system

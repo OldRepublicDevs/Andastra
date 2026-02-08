@@ -14,7 +14,7 @@ namespace Andastra.Runtime.Core.Actions
     /// - InfinityDelayScheduler for  (Runtime.Games.Infinity)
     /// 
     /// This implementation uses Odyssey-style delay scheduling (float-based time).
-    /// Based on swkotor.exe and swkotor2.exe DelayCommand system.
+    /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe DelayCommand system.
     /// </remarks>
     public class DelayScheduler : IDelayScheduler
     {

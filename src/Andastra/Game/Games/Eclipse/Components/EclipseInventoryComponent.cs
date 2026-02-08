@@ -43,7 +43,7 @@ namespace Andastra.Game.Games.Eclipse.Components
     /// - Different inventory bag structure
     /// 
     /// Cross-engine comparison:
-    /// - Odyssey (swkotor.exe, swkotor2.exe): GFF format, INVENTORY_SLOT_* constants (0-17 for equipped, 18+ for bag)
+    /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): GFF format, INVENTORY_SLOT_* constants (0-17 for equipped, 18+ for bag)
     /// - Aurora (nwmain.exe, nwn2main.exe): GFF format, similar slot numbering to Odyssey
     /// - Eclipse (daorigins.exe, DragonAge2.exe): Equip_ItemList binary format, different slot numbering, EquipmentLayout system
     /// </remarks>

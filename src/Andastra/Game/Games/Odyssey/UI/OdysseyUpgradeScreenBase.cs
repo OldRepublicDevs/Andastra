@@ -27,14 +27,14 @@ namespace Andastra.Game.Games.Odyssey.UI
     /// </summary>
     /// <remarks>
     /// Odyssey Upgrade Screen Implementation:
-    /// - Shared functionality between swkotor.exe (K1) and swkotor2.exe (K2)
+    /// - Shared functionality between k1_win_gog_swkotor.exe (K1) and k2_win_gog_aspyr_swkotor2.exe (K2)
     /// - Both use "upcrystals" for lightsabers
     /// - Both use "UpgradeType" and "Template" columns in upgrade tables
     /// - Both check inventory using similar logic
     /// - Differences: K2 uses "upgradeitems_p", K1 uses "upgradeitems" for regular items
     /// - Differences: K2 has 6 upgrade slots for lightsabers, K1 has 4
-    /// - Based on swkotor.exe: 0x006c7630 (constructor), 0x006c6500 (CUpgradeScreen::OnButtonClick), 0x006c59a0 (ApplyUpgrade)
-    /// - Based on swkotor2.exe: 0x00731a00 (constructor), 0x0072e260 (CUpgradeScreen::OnButtonClick), 0x00729640 (ApplyUpgrade)
+    /// - Based on k1_win_gog_swkotor.exe: 0x006c7630 (constructor), 0x006c6500 (CUpgradeScreen::OnButtonClick), 0x006c59a0 (ApplyUpgrade)
+    /// - Based on k2_win_gog_aspyr_swkotor2.exe: 0x00731a00 (constructor), 0x0072e260 (CUpgradeScreen::OnButtonClick), 0x00729640 (ApplyUpgrade)
     /// </remarks>
     public abstract class OdysseyUpgradeScreenBase : BaseUpgradeScreen
     {
@@ -48,7 +48,7 @@ namespace Andastra.Game.Games.Odyssey.UI
 
         // Upgrade slot and list box state tracking
         // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - tracks selected upgrade slot and list box selection
-        // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - tracks selected upgrade slot and list box selection
+        // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 - tracks selected upgrade slot and list box selection
         private int? _selectedUpgradeSlot;
         private List<string> _currentUpgradeList; // List of upgrade ResRefs currently displayed in LB_ITEMS
 
@@ -85,7 +85,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// </summary>
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00680cb0 @ 0x00680cb0 (ShowUpgradeScreen)
-        /// Based on swkotor.exe: Similar upgrade screen display logic
+        /// Based on k1_win_gog_swkotor.exe: Similar upgrade screen display logic
         /// Original implementation:
         /// - Creates upgrade screen object (0x00733bc0 for K2, 0x006c78d0 for K1)
         /// - Sets flags: item ID (offset 0x629), character ID (offset 0x18a8), disableItemCreation (offset 0x18c8), disableUpgrade (offset 0x18cc)
@@ -106,12 +106,12 @@ namespace Andastra.Game.Games.Odyssey.UI
 
             // Get GUI name based on game version
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00731a00 @ 0x00731a00 line 37 - loads "upgradeitems_p"
-            // Based on swkotor.exe: 0x006c7630 @ 0x006c7630 line 37 - loads "upgradeitems"
+            // Based on k1_win_gog_swkotor.exe: 0x006c7630 @ 0x006c7630 line 37 - loads "upgradeitems"
             _guiName = GetUpgradeGuiName();
 
             // Load upgrade screen GUI
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00731a00 @ 0x00731a00 - constructor loads GUI
-            // Based on swkotor.exe: 0x006c7630 @ 0x006c7630 - constructor loads GUI
+            // Based on k1_win_gog_swkotor.exe: 0x006c7630 @ 0x006c7630 - constructor loads GUI
             if (!LoadUpgradeGui())
             {
                 Console.WriteLine($"[OdysseyUpgradeScreen] ERROR: Failed to load GUI: {_guiName}");
@@ -120,7 +120,7 @@ namespace Andastra.Game.Games.Odyssey.UI
 
             // Initialize GUI controls and set up button handlers
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00731a00 @ 0x00731a00 lines 39-64 - sets up controls
-            // Based on swkotor.exe: 0x006c7630 @ 0x006c7630 lines 39-64 - sets up controls
+            // Based on k1_win_gog_swkotor.exe: 0x006c7630 @ 0x006c7630 lines 39-64 - sets up controls
             InitializeGuiControls();
 
             // Update GUI with current item and character data
@@ -138,7 +138,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// </summary>
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GUI hiding logic (inverse of ShowUpgradeScreen)
-        /// Based on swkotor.exe: Similar GUI hiding logic
+        /// Based on k1_win_gog_swkotor.exe: Similar GUI hiding logic
         /// Original implementation:
         /// - Removes GUI from GUI manager
         /// - Clears screen mode
@@ -151,7 +151,7 @@ namespace Andastra.Game.Games.Odyssey.UI
 
             // Clear GUI state
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GUI cleanup when hiding screen
-            // Based on swkotor.exe: GUI cleanup when hiding screen
+            // Based on k1_win_gog_swkotor.exe: GUI cleanup when hiding screen
             if (_guiInitialized)
             {
                 // Clear control references
@@ -252,13 +252,13 @@ namespace Andastra.Game.Games.Odyssey.UI
 
                 // Get character inventory ResRefs using base class helper
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0055f2a0 @ 0x0055f2a0 - searches inventory by ResRef
-                // Based on swkotor.exe: 0x00555ed0 @ 0x00555ed0 - searches inventory by ResRef
+                // Based on k1_win_gog_swkotor.exe: 0x00555ed0 @ 0x00555ed0 - searches inventory by ResRef
                 // These functions iterate through inventory items and compare ResRefs
                 HashSet<string> inventoryResRefs = GetCharacterInventoryResRefs(_character);
 
                 // Get column headers to check if required columns exist
                 // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - uses "UpgradeType" and "Template" columns
-                // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - uses "UpgradeType" and "Template" columns
+                // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 - uses "UpgradeType" and "Template" columns
                 List<string> headers = upgradeTable.GetHeaders();
                 bool hasUpgradeTypeColumn = headers.Contains("UpgradeType", StringComparer.OrdinalIgnoreCase);
                 bool hasTemplateColumn = headers.Contains("Template", StringComparer.OrdinalIgnoreCase);
@@ -271,7 +271,7 @@ namespace Andastra.Game.Games.Odyssey.UI
 
                 // Iterate through upgrade table rows and filter by compatibility
                 // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 lines 100-128, 144-172, 271-299
-                // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 lines 88-116
+                // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 lines 88-116
                 // Loop through all rows in upgrade table
                 for (int rowIndex = 0; rowIndex < upgradeTable.GetHeight(); rowIndex++)
                 {
@@ -279,7 +279,7 @@ namespace Andastra.Game.Games.Odyssey.UI
 
                     // Check UpgradeType compatibility (this is the slot index)
                     // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 102 - checks "UpgradeType" column
-                    // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 90 - checks "UpgradeType" column
+                    // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 line 90 - checks "UpgradeType" column
                     // UpgradeType column specifies which slot this upgrade can be placed in
                     // Can be:
                     // - Specific slot index (0, 1, 2, etc.) - matches upgradeSlot parameter
@@ -297,7 +297,7 @@ namespace Andastra.Game.Games.Odyssey.UI
 
                     // Check if UpgradeType matches the requested slot
                     // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 107, 151, 278 - compares UpgradeType with slot
-                    // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 95 - compares UpgradeType with slot
+                    // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 line 95 - compares UpgradeType with slot
                     bool slotMatches = false;
                     if (string.IsNullOrWhiteSpace(upgradeTypeValue) || upgradeTypeValue == "****")
                     {
@@ -334,7 +334,7 @@ namespace Andastra.Game.Games.Odyssey.UI
 
                     // Get Template ResRef from upgrade table row
                     // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 108, 152, 279 - uses "Template" column
-                    // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 96, 98 - uses "Template" column
+                    // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 line 96, 98 - uses "Template" column
                     // Template column contains the upgrade item template ResRef
                     string upgradeResRef = null;
                     try
@@ -353,7 +353,7 @@ namespace Andastra.Game.Games.Odyssey.UI
 
                     // Normalize ResRef (remove extension, lowercase)
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00631140 @ 0x00631140 - ResRef normalization
-                    // Based on swkotor.exe: 0x005e6080 @ 0x005e6080 - ResRef normalization
+                    // Based on k1_win_gog_swkotor.exe: 0x005e6080 @ 0x005e6080 - ResRef normalization
                     string normalizedResRef = upgradeResRef.ToLowerInvariant();
                     if (normalizedResRef.EndsWith(".uti"))
                     {
@@ -362,7 +362,7 @@ namespace Andastra.Game.Games.Odyssey.UI
 
                     // Check if upgrade item is in inventory
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0055f2a0 @ 0x0055f2a0 - searches inventory by ResRef, returns item ID or 0x7f000000
-                    // Based on swkotor.exe: 0x00555ed0 @ 0x00555ed0 - searches inventory by ResRef, returns item ID or 0x7f000000
+                    // Based on k1_win_gog_swkotor.exe: 0x00555ed0 @ 0x00555ed0 - searches inventory by ResRef, returns item ID or 0x7f000000
                     // 0x0055f2a0/0x00555ed0 iterate through inventory items and compare ResRefs using string comparison
                     if (inventoryResRefs.Contains(normalizedResRef))
                     {
@@ -417,7 +417,7 @@ namespace Andastra.Game.Games.Odyssey.UI
 
                         // Upgrade is compatible, available in inventory, and meets skill requirements
                         // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 79, 118, 162, 289 - checks if item found in inventory
-                        // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 66, 106 - checks if item found in inventory
+                        // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 line 66, 106 - checks if item found in inventory
                         if (meetsSkillRequirements && !availableUpgrades.Contains(normalizedResRef, StringComparer.OrdinalIgnoreCase))
                         {
                             availableUpgrades.Add(normalizedResRef);
@@ -456,7 +456,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// <returns>True if upgrade was removed.</returns>
         /// <remarks>
         /// Remove Upgrade Logic (Odyssey Engine - K1 and K2):
-        /// - Based on swkotor.exe: 0x006c6500 @ 0x006c6500 lines 165-180 (removal logic)
+        /// - Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 lines 165-180 (removal logic)
         /// - CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 lines 217-230 (removal logic)
         /// - Original implementation flow:
         ///   1. Gets upgrade item from slot array (K1: offset 0x2f74, K2: offset 0x3d54)
@@ -489,7 +489,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Find upgrade in slot
-            // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 169 - gets upgrade from offset 0x2f74
+            // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 line 169 - gets upgrade from offset 0x2f74
             // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 218 - gets upgrade from offset 0x3d54
             var upgrade = itemComponent.Upgrades.FirstOrDefault(u => u.Index == upgradeSlot);
             if (upgrade == null)
@@ -499,7 +499,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Get upgrade item ResRef from tracked upgrade data
-            // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 169 - gets item from slot array
+            // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 line 169 - gets item from slot array
             // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 218 - gets item from slot array
             // We track upgrade ResRefs in _upgradeResRefMap for removal
             string upgradeKey = item.ObjectId.ToString() + "_" + upgradeSlot.ToString();
@@ -508,21 +508,21 @@ namespace Andastra.Game.Games.Odyssey.UI
             {
                 // Upgrade ResRef not found in tracking map - cannot remove properties
                 // Still remove upgrade from item, but cannot restore properties
-                // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 176 - removes from array using 0x006857a0
+                // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 line 176 - removes from array using 0x006857a0
                 // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 219 - removes from array using 0x00431ec0
                 itemComponent.RemoveUpgrade(upgrade);
                 return true;
             }
 
             // Load upgrade UTI template to remove properties
-            // Based on swkotor.exe: 0x0055e160 @ 0x0055e160 - removes upgrade stats from item
-            // Based on swkotor.exe: 0x005226d0 @ 0x005226d0 - loads UTI template
+            // Based on k1_win_gog_swkotor.exe: 0x0055e160 @ 0x0055e160 - removes upgrade stats from item
+            // Based on k1_win_gog_swkotor.exe: 0x005226d0 @ 0x005226d0 - loads UTI template
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0055e160 @ 0x0055e160 - removes upgrade stats from item
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 - loads UTI template
             UTI upgradeUTI = LoadUpgradeUTITemplate(upgradeResRef);
 
             // Remove upgrade from item
-            // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 176 - removes from array using 0x006857a0
+            // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 line 176 - removes from array using 0x006857a0
             // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 219 - removes from array using 0x00431ec0
             // This clears the upgrade slot and removes it from the item's upgrade list
             itemComponent.RemoveUpgrade(upgrade);
@@ -532,7 +532,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             _upgradeResRefMap.Remove(upgradeKey);
 
             // Remove upgrade properties from item (damage bonuses, AC bonuses, etc.)
-            // Based on swkotor.exe: 0x0055e160 @ 0x0055e160 - removes upgrade stats from item
+            // Based on k1_win_gog_swkotor.exe: 0x0055e160 @ 0x0055e160 - removes upgrade stats from item
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0055e160 @ 0x0055e160 - removes upgrade stats from item
             // Properties from upgrade UTI are removed to restore original item stats
             if (upgradeUTI != null)
@@ -541,16 +541,16 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Recalculate item stats and update display
-            // Based on swkotor.exe: Item stat recalculation after upgrade removal
+            // Based on k1_win_gog_swkotor.exe: Item stat recalculation after upgrade removal
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item stat recalculation after upgrade removal
             // Recalculates item damage, AC, and other stats after removing upgrade properties
             RecalculateItemStats(item);
 
             // Return upgrade item to inventory
-            // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 171 - returns to inventory using CItemRepository::AddItem (0x0055d330)
-            // Based on swkotor2.exe: 0x0072e260 @ 0x0072e260 line 221 - returns to inventory using CItemRepository::AddItem (0x00567ce0)
-            // swkotor.exe: 0x0055d330 @ 0x0055d330 - CItemRepository::AddItem (adds item to inventory container)
-            // swkotor2.exe: 0x00567ce0 @ 0x00567ce0 - CItemRepository::AddItem (adds item to inventory container)
+            // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 line 171 - returns to inventory using CItemRepository::AddItem (0x0055d330)
+            // Based on k2_win_gog_aspyr_swkotor2.exe: 0x0072e260 @ 0x0072e260 line 221 - returns to inventory using CItemRepository::AddItem (0x00567ce0)
+            // k1_win_gog_swkotor.exe: 0x0055d330 @ 0x0055d330 - CItemRepository::AddItem (adds item to inventory container)
+            // k2_win_gog_aspyr_swkotor2.exe: 0x00567ce0 @ 0x00567ce0 - CItemRepository::AddItem (adds item to inventory container)
             // Original implementation: Creates upgrade item entity from UTI template and adds to character's inventory
             // This function combines item creation (from UTI template) and inventory addition into one operation
             CreateItemFromTemplateAndAddToInventory(upgradeResRef, _character);
@@ -564,7 +564,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// <returns>GUI name (e.g., "upgradeitems_p" for K2, "upgradeitems" for K1).</returns>
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00731a00 @ 0x00731a00 line 37 - uses "upgradeitems_p"
-        /// Based on swkotor.exe: 0x006c7630 @ 0x006c7630 line 37 - uses "upgradeitems"
+        /// Based on k1_win_gog_swkotor.exe: 0x006c7630 @ 0x006c7630 line 37 - uses "upgradeitems"
         /// </remarks>
         protected abstract string GetUpgradeGuiName();
 
@@ -574,7 +574,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// <returns>True if GUI was loaded successfully, false otherwise.</returns>
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00731a00 @ 0x00731a00 lines 37-38 - loads GUI using 0x00406e90 and 0x0040a810
-        /// Based on swkotor.exe: 0x006c7630 @ 0x006c7630 lines 37-38 - loads GUI using 0x00406d80 and 0x0040a680
+        /// Based on k1_win_gog_swkotor.exe: 0x006c7630 @ 0x006c7630 lines 37-38 - loads GUI using 0x00406d80 and 0x0040a680
         /// </remarks>
         private bool LoadUpgradeGui()
         {
@@ -587,7 +587,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             {
                 // Load GUI resource from installation
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00406e90 @ 0x00406e90 - loads GUI resource
-                // Based on swkotor.exe: 0x00406d80 @ 0x00406d80 - loads GUI resource
+                // Based on k1_win_gog_swkotor.exe: 0x00406d80 @ 0x00406d80 - loads GUI resource
                 ResourceResult guiResult = _installation.Resource(_guiName, ResourceType.GUI, null, null);
                 if (guiResult == null || guiResult.Data == null || guiResult.Data.Length == 0)
                 {
@@ -597,7 +597,7 @@ namespace Andastra.Game.Games.Odyssey.UI
 
                 // Parse GUI file using GUIReader
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GUI parsing system
-                // Based on swkotor.exe: GUI parsing system
+                // Based on k1_win_gog_swkotor.exe: GUI parsing system
                 GUIReader guiReader = new GUIReader(guiResult.Data);
                 _loadedGui = guiReader.Load();
 
@@ -623,7 +623,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// </summary>
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00731a00 @ 0x00731a00 lines 39-64 - sets up controls
-        /// Based on swkotor.exe: 0x006c7630 @ 0x006c7630 lines 39-64 - sets up controls
+        /// Based on k1_win_gog_swkotor.exe: 0x006c7630 @ 0x006c7630 lines 39-64 - sets up controls
         /// Original implementation:
         /// - Gets control references: LBL_TITLE, LB_ITEMS, LB_DESCRIPTION, BTN_UPGRADEITEM, BTN_BACK
         /// - Sets up button click handlers
@@ -638,12 +638,12 @@ namespace Andastra.Game.Games.Odyssey.UI
 
             // Build control and button maps for quick lookup
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Control mapping system
-            // Based on swkotor.exe: Control mapping system
+            // Based on k1_win_gog_swkotor.exe: Control mapping system
             BuildControlMaps(_loadedGui.Controls, _controlMap, _buttonMap);
 
             // Set up button click handlers
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00731a00 @ 0x00731a00 lines 80-82 - sets button handlers
-            // Based on swkotor.exe: 0x006c7630 @ 0x006c7630 lines 80-82 - sets button handlers
+            // Based on k1_win_gog_swkotor.exe: 0x006c7630 @ 0x006c7630 lines 80-82 - sets button handlers
             // Button handlers are set up via event system or callback registration
             // BTN_UPGRADEITEM: Calls ApplyUpgrade when clicked
             // BTN_BACK: Calls Hide() when clicked
@@ -697,7 +697,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// </summary>
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00680cb0 @ 0x00680cb0 lines 40-41 - sets item ID (offset 0x629) and character ID (offset 0x18a8)
-        /// Based on swkotor.exe: Similar data setting logic
+        /// Based on k1_win_gog_swkotor.exe: Similar data setting logic
         /// Original implementation:
         /// - Sets item ID in GUI object (offset 0x629)
         /// - Sets character ID in GUI object (offset 0x18a8)
@@ -709,7 +709,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         {
             // Update title label with item name if available
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00731a00 @ 0x00731a00 line 39 - sets LBL_TITLE
-            // Based on swkotor.exe: 0x006c7630 @ 0x006c7630 line 39 - sets LBL_TITLE
+            // Based on k1_win_gog_swkotor.exe: 0x006c7630 @ 0x006c7630 line 39 - sets LBL_TITLE
             if (_controlMap.TryGetValue("LBL_TITLE", out GUIControl titleControl))
             {
                 if (titleControl is GUILabel titleLabel)
@@ -737,7 +737,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// <param name="upgradeSlot">Upgrade slot index (0-based).</param>
         /// <remarks>
         /// CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - slot selection handler
-        /// Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - slot selection handler
+        /// Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 - slot selection handler
         /// Original implementation:
         /// - Sets selected slot index
         /// - Gets available upgrades for that slot
@@ -762,7 +762,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// </summary>
         /// <remarks>
         /// CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - populates upgrade list
-        /// Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - populates upgrade list
+        /// Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 - populates upgrade list
         /// Original implementation:
         /// - Gets available upgrades for current item and slot
         /// - Populates LB_ITEMS list box with available upgrade items
@@ -785,7 +785,7 @@ namespace Andastra.Game.Games.Odyssey.UI
 
             // Get available upgrades for the selected slot
             // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - gets available upgrades
-            // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - gets available upgrades
+            // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 - gets available upgrades
             _currentUpgradeList = GetAvailableUpgrades(_targetItem, _selectedUpgradeSlot.Value);
 
             // Populate list box with available upgrades
@@ -797,7 +797,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// </summary>
         /// <remarks>
         /// CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - populates LB_ITEMS list box
-        /// Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - populates LB_ITEMS list box
+        /// Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 - populates LB_ITEMS list box
         /// Original implementation:
         /// - Clears existing list box items
         /// - Adds each upgrade ResRef as a list box item
@@ -817,12 +817,12 @@ namespace Andastra.Game.Games.Odyssey.UI
 
             // Clear existing list box items (children represent list items)
             // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - clears list box before populating
-            // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - clears list box before populating
+            // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 - clears list box before populating
             listBox.Children.Clear();
 
             // Add each upgrade as a list box item
             // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - adds items to list box
-            // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - adds items to list box
+            // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 - adds items to list box
             foreach (string upgradeResRef in _currentUpgradeList)
             {
                 // Create a proto item for each upgrade
@@ -869,7 +869,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// <param name="buttonTag">Tag of the button that was clicked.</param>
         /// <remarks>
         /// CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - button click handler
-        /// Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - button click handler
+        /// Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 - button click handler
         /// Original implementation:
         /// - BTN_UPGRADEITEM: Applies selected upgrade to item
         /// - BTN_BACK: Hides upgrade screen
@@ -886,14 +886,14 @@ namespace Andastra.Game.Games.Odyssey.UI
                 case "BTN_UPGRADEITEM":
                     // Apply selected upgrade
                     // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 215 - calls ApplyUpgrade
-                    // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 163 - calls ApplyUpgrade
+                    // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 line 163 - calls ApplyUpgrade
                     HandleApplyUpgrade();
                     break;
 
                 case "BTN_BACK":
                     // Hide upgrade screen
                     // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - hides screen
-                    // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - hides screen
+                    // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 - hides screen
                     Hide();
                     break;
 
@@ -908,7 +908,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// </summary>
         /// <remarks>
         /// CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 215 - calls ApplyUpgrade
-        /// Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 163 - calls ApplyUpgrade
+        /// Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 line 163 - calls ApplyUpgrade
         /// Original implementation:
         /// - Gets selected upgrade slot (offset 0x18d0 in upgrade screen object)
         /// - Gets selected upgrade ResRef from LB_ITEMS list box (CurrentValue property)
@@ -924,7 +924,7 @@ namespace Andastra.Game.Games.Odyssey.UI
 
             // Check if upgrade slot is selected
             // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 216 - checks selected slot
-            // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 164 - checks selected slot
+            // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 line 164 - checks selected slot
             if (!_selectedUpgradeSlot.HasValue)
             {
                 // No upgrade slot selected - cannot apply upgrade
@@ -935,7 +935,7 @@ namespace Andastra.Game.Games.Odyssey.UI
 
             // Get selected upgrade ResRef from list box
             // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 217 - gets selected item from LB_ITEMS
-            // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 165 - gets selected item from LB_ITEMS
+            // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 line 165 - gets selected item from LB_ITEMS
             // List box CurrentValue property contains the selected item index
             string selectedUpgradeResRef = null;
             if (_controlMap.TryGetValue("LB_ITEMS", out GUIControl listBoxControl))
@@ -944,7 +944,7 @@ namespace Andastra.Game.Games.Odyssey.UI
                 {
                     // Get selected index from CurrentValue property
                     // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - uses CurrentValue to get selected index
-                    // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - uses CurrentValue to get selected index
+                    // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 - uses CurrentValue to get selected index
                     if (listBox.CurrentValue.HasValue && listBox.CurrentValue.Value >= 0 && listBox.CurrentValue.Value < _currentUpgradeList.Count)
                     {
                         int selectedIndex = listBox.CurrentValue.Value;
@@ -978,14 +978,14 @@ namespace Andastra.Game.Games.Odyssey.UI
 
             // Apply upgrade to item
             // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 215 - calls ApplyUpgrade
-            // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 163 - calls ApplyUpgrade
+            // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 line 163 - calls ApplyUpgrade
             bool success = ApplyUpgrade(_targetItem, upgradeSlot, selectedUpgradeResRef);
 
             if (success)
             {
                 // Refresh upgrade display to reflect changes
                 // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - refreshes display after applying upgrade
-                // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - refreshes display after applying upgrade
+                // Based on k1_win_gog_swkotor.exe: 0x006c6500 @ 0x006c6500 - refreshes display after applying upgrade
                 RefreshUpgradeDisplay();
             }
         }
@@ -1039,8 +1039,8 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// <returns>True if item was created and added successfully, false otherwise.</returns>
         /// <remarks>
         /// Item Creation and Inventory Addition (Odyssey Engine - K1 and K2):
-        /// - Based on swkotor.exe: 0x0055d330 @ 0x0055d330 - CItemRepository::AddItem (adds item to inventory container)
-        /// - Based on swkotor2.exe: 0x00567ce0 @ 0x00567ce0 - CItemRepository::AddItem (adds item to inventory container)
+        /// - Based on k1_win_gog_swkotor.exe: 0x0055d330 @ 0x0055d330 - CItemRepository::AddItem (adds item to inventory container)
+        /// - Based on k2_win_gog_aspyr_swkotor2.exe: 0x00567ce0 @ 0x00567ce0 - CItemRepository::AddItem (adds item to inventory container)
         /// - Note: The original engine functions (AddItem) only add already-created items to inventory
         /// - This function implements a higher-level operation that creates the item entity AND adds it to inventory
         /// - Original implementation flow for creating items from UTI templates:
@@ -1049,8 +1049,8 @@ namespace Andastra.Game.Games.Odyssey.UI
         ///   3. Configure item component with UTI template data (BaseItem, StackSize, Charges, Cost, Properties, Upgrades)
         ///   4. Add item to character's inventory using CItemRepository::AddItem (0x0055d330/0x00567ce0)
         ///   5. If inventory is full, item entity is destroyed and function returns false
-        /// - swkotor.exe: 0x0055d330 @ 0x0055d330 - CItemRepository::AddItem - handles stacking, inventory capacity, special items (gold, pazaak cards)
-        /// - swkotor2.exe: 0x00567ce0 @ 0x00567ce0 - CItemRepository::AddItem - equivalent function with same behavior
+        /// - k1_win_gog_swkotor.exe: 0x0055d330 @ 0x0055d330 - CItemRepository::AddItem - handles stacking, inventory capacity, special items (gold, pazaak cards)
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x00567ce0 @ 0x00567ce0 - CItemRepository::AddItem - equivalent function with same behavior
         /// </remarks>
         protected bool CreateItemFromTemplateAndAddToInventory(string templateResRef, IEntity character)
         {
@@ -1063,7 +1063,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             if (character == null)
             {
                 // Get player character from world using multiple fallback strategies
-                // Based on swkotor.exe: Player entity retrieval patterns
+                // Based on k1_win_gog_swkotor.exe: Player entity retrieval patterns
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Player entity retrieval patterns
                 character = _world.GetEntityByTag("Player", 0);
 
@@ -1118,7 +1118,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Load UTI template from installation
-            // Based on swkotor.exe: 0x005226d0 @ 0x005226d0 - loads UTI template
+            // Based on k1_win_gog_swkotor.exe: 0x005226d0 @ 0x005226d0 - loads UTI template
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 - loads UTI template
             UTI utiTemplate = LoadUpgradeUTITemplate(templateResRef);
             if (utiTemplate == null)
@@ -1128,7 +1128,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Create item entity
-            // Based on swkotor.exe/swkotor2.exe: Item entity creation via World.CreateEntity
+            // Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Item entity creation via World.CreateEntity
             // Located via string references: "CreateEntity" @ various addresses, ObjectType.Item enum
             // Original implementation: Creates item entity with ObjectType.Item, position Vector3.Zero, facing 0.0f
             // Item entities are created before being added to inventory containers
@@ -1140,7 +1140,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Set tag from template or use template name
-            // Based on swkotor.exe: Item tag assignment from UTI template
+            // Based on k1_win_gog_swkotor.exe: Item tag assignment from UTI template
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item tag assignment from UTI template
             if (!string.IsNullOrEmpty(utiTemplate.Tag))
             {
@@ -1152,8 +1152,8 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Add item component with UTI template data
-            // Based on swkotor.exe/swkotor2.exe: Item component configuration from UTI template
-            // Located via string references: "ItemComponent" @ 0x007c41e4 (swkotor2.exe)
+            // Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Item component configuration from UTI template
+            // Located via string references: "ItemComponent" @ 0x007c41e4 (k2_win_gog_aspyr_swkotor2.exe)
             // Original implementation: Item component is configured with BaseItem, StackSize, Charges, Cost, Identified, Properties, Upgrades from UTI template
             var itemComponent = new BaseItemComponent
             {
@@ -1166,7 +1166,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             };
 
             // Convert UTI properties to ItemProperty
-            // Based on swkotor.exe: Property conversion from UTI template
+            // Based on k1_win_gog_swkotor.exe: Property conversion from UTI template
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property conversion from UTI template
             foreach (var utiProp in utiTemplate.Properties)
             {
@@ -1183,7 +1183,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Convert UTI upgrades to ItemUpgrade (if any)
-            // Based on swkotor.exe: Upgrade conversion from UTI template
+            // Based on k1_win_gog_swkotor.exe: Upgrade conversion from UTI template
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Upgrade conversion from UTI template
             for (int i = 0; i < utiTemplate.Upgrades.Count; i++)
             {
@@ -1200,14 +1200,14 @@ namespace Andastra.Game.Games.Odyssey.UI
             itemEntity.AddComponent(itemComponent);
 
             // Add item to character's inventory
-            // Based on swkotor.exe: 0x0055d330 @ 0x0055d330 - CItemRepository::AddItem - adds item to inventory container
-            // Based on swkotor2.exe: 0x00567ce0 @ 0x00567ce0 - CItemRepository::AddItem - adds item to inventory container
+            // Based on k1_win_gog_swkotor.exe: 0x0055d330 @ 0x0055d330 - CItemRepository::AddItem - adds item to inventory container
+            // Based on k2_win_gog_aspyr_swkotor2.exe: 0x00567ce0 @ 0x00567ce0 - CItemRepository::AddItem - adds item to inventory container
             // Original implementation: CItemRepository::AddItem handles stacking, inventory capacity, special items (gold, pazaak cards)
             // If inventory is full, item entity must be destroyed and function returns false
             if (!characterInventory.AddItem(itemEntity))
             {
                 // Inventory full - destroy item entity
-                // Based on swkotor.exe/swkotor2.exe: Item entity destruction when inventory is full
+                // Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Item entity destruction when inventory is full
                 // Original implementation: Failed AddItem calls require item entity to be destroyed to prevent memory leaks
                 _world.DestroyEntity(itemEntity.ObjectId);
                 return false;
@@ -1223,7 +1223,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// <returns>Character entity, or null if not found.</returns>
         /// <remarks>
         /// Character Retrieval Logic (Odyssey Engine - K1 and K2):
-        /// - Based on swkotor.exe: DAT_007a39fc - global structure storing current player character pointer
+        /// - Based on k1_win_gog_swkotor.exe: DAT_007a39fc - global structure storing current player character pointer
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DAT_008283d4 - global structure storing current player character pointer
         /// - Original implementation: Both games use a global structure to store the current player character
         /// - The upgrade screen accesses the character from this global structure
@@ -1238,15 +1238,15 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Get player character from world
-            // Based on swkotor.exe: Player entity is tagged "Player"
+            // Based on k1_win_gog_swkotor.exe: Player entity is tagged "Player"
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Player entity is tagged "Player"
-            // Located via string references: "Player" @ 0x007be628 (swkotor2.exe), "Mod_PlayerList" @ 0x007be060 (swkotor2.exe)
+            // Located via string references: "Player" @ 0x007be628 (k2_win_gog_aspyr_swkotor2.exe), "Mod_PlayerList" @ 0x007be060 (k2_win_gog_aspyr_swkotor2.exe)
             IEntity character = _world.GetEntityByTag("Player", 0);
 
             if (character == null)
             {
                 // Fallback: Search through all entities for one marked as player
-                // Based on swkotor.exe: Player entity has IsPlayer data flag set to true
+                // Based on k1_win_gog_swkotor.exe: Player entity has IsPlayer data flag set to true
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Player entity has IsPlayer data flag set to true
                 // Original implementation: Player entity is marked with IsPlayer flag during creation
                 foreach (IEntity entity in _world.GetAllEntities())

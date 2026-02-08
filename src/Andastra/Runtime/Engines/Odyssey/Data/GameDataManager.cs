@@ -343,9 +343,9 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         /// <returns>List of feat IDs granted at the specified level, or empty list if not found.</returns>
         /// <remarks>
         /// Starting Feats from featgain.2da:
-        /// - Based on swkotor.exe: 0x005bcf70 @ 0x005bcf70 (LoadFeatGain)
-        /// - Based on swkotor2.exe: CSWClass_LoadFeatGain @ 0x0060d1d0 (swkotor2.exe: 0x0060d1d0)
-        /// - Located via string references: "CSWClass::LoadFeatGain: can't load featgain.2da" @ swkotor.exe: 0x0074b370, swkotor2.exe: 0x007c46bc
+        /// - Based on k1_win_gog_swkotor.exe: 0x005bcf70 @ 0x005bcf70 (LoadFeatGain)
+        /// - Based on k2_win_gog_aspyr_swkotor2.exe: CSWClass_LoadFeatGain @ 0x0060d1d0 (k2_win_gog_aspyr_swkotor2.exe: 0x0060d1d0)
+        /// - Located via string references: "CSWClass::LoadFeatGain: can't load featgain.2da" @ k1_win_gog_swkotor.exe: 0x0074b370, k2_win_gog_aspyr_swkotor2.exe: 0x007c46bc
         /// - Original implementation: Loads featgain.2da table, looks up class-specific columns with "_REG" and "_BON" suffixes
         /// - featgain.2da structure (based on Ghidra analysis):
         ///   - Rows: Feat gain entries (up to 50 rows, indexed 0-0x32)
@@ -435,7 +435,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         /// <returns>Column name prefix (e.g., "soldier", "scout"), or null if unknown.</returns>
         /// <remarks>
         /// Class Column Name Mapping:
-        /// - Based on swkotor.exe and swkotor2.exe: Class column names in featgain.2da
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Class column names in featgain.2da
         /// - Class IDs match classes.2da row indices
         /// - Column names are lowercase with underscores (e.g., "jedi_guardian")
         /// </remarks>
@@ -489,10 +489,10 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         /// <returns>List of feat IDs that should be granted at level 1 for this class, or empty list if not found.</returns>
         /// <remarks>
         /// Starting Feats from featgain.2da:
-        /// - Based on swkotor2.exe: CSWClass_LoadFeatGain @ 0x0060d1d0 (swkotor2.exe: 0x0060d1d0)
+        /// - Based on k2_win_gog_aspyr_swkotor2.exe: CSWClass_LoadFeatGain @ 0x0060d1d0 (k2_win_gog_aspyr_swkotor2.exe: 0x0060d1d0)
         /// - Located via string references: "CSWClass::LoadFeatGain: can't load featgain.2da" @ 0x007c46bc, "featgain" @ 0x007c46ec
         /// - Original implementation: 0x005d63d0 reads "FeatGain" column from classes.2da for each class, then calls CSWClass_LoadFeatGain
-        /// - CSWClass_LoadFeatGain (swkotor2.exe: 0x0060d1d0): Loads featgain.2da table, constructs column names by appending "_REG" and "_BON" to the FeatGain label
+        /// - CSWClass_LoadFeatGain (k2_win_gog_aspyr_swkotor2.exe: 0x0060d1d0): Loads featgain.2da table, constructs column names by appending "_REG" and "_BON" to the FeatGain label
         /// - Loops through rows 0 to 0x32 (50 rows) in featgain.2da, reading values from class-specific columns (e.g., "soldier_REG", "soldier_BON")
         /// - _REG column contains regular starting feats, _BON column contains bonus starting feats
         /// - Each row can contain a feat ID in the class-specific columns
@@ -504,7 +504,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             List<int> featIds = new List<int>();
 
             // Load featgain.2da table
-            // swkotor2.exe: 0x0060d1d0 - CSWClass_LoadFeatGain loads "featgain" 2DA table
+            // k2_win_gog_aspyr_swkotor2.exe: 0x0060d1d0 - CSWClass_LoadFeatGain loads "featgain" 2DA table
             TwoDA featgainTable = GetTable("featgain");
             if (featgainTable == null)
             {
@@ -512,7 +512,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             }
 
             // Get FeatGain row label from classes.2da
-            // swkotor2.exe: 0x005d63d0 reads "FeatGain" column from classes.2da for each class
+            // k2_win_gog_aspyr_swkotor2.exe: 0x005d63d0 reads "FeatGain" column from classes.2da for each class
             TwoDA classesTable = GetTable("classes");
             if (classesTable == null || classId < 0 || classId >= classesTable.GetHeight())
             {
@@ -526,7 +526,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             }
 
             // Get FeatGain column value (used to construct column names in featgain.2da)
-            // swkotor2.exe: 0x005d63d0 line 201-207 - reads "FeatGain" column and passes to CSWClass_LoadFeatGain
+            // k2_win_gog_aspyr_swkotor2.exe: 0x005d63d0 line 201-207 - reads "FeatGain" column and passes to CSWClass_LoadFeatGain
             string featGainLabel;
             try
             {
@@ -543,12 +543,12 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             }
 
             // Construct column names by appending "_REG" and "_BON" to the FeatGain label
-            // swkotor2.exe: 0x0060d1d0 lines 41-48 - constructs "classname_REG" and "classname_BON" column names
+            // k2_win_gog_aspyr_swkotor2.exe: 0x0060d1d0 lines 41-48 - constructs "classname_REG" and "classname_BON" column names
             string regColumnName = featGainLabel + "_REG";
             string bonColumnName = featGainLabel + "_BON";
 
             // Loop through rows 0 to 0x32 (50 rows) in featgain.2da
-            // swkotor2.exe: 0x0060d1d0 lines 51-64 - loops from 0 to 0x32 (50 iterations)
+            // k2_win_gog_aspyr_swkotor2.exe: 0x0060d1d0 lines 51-64 - loops from 0 to 0x32 (50 iterations)
             for (int rowIndex = 0; rowIndex < 50; rowIndex++)
             {
                 if (rowIndex >= featgainTable.GetHeight())
@@ -563,7 +563,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
                 }
 
                 // Read feat ID from _REG column (regular starting feats)
-                // swkotor2.exe: 0x0060d1d0 lines 54-57 - reads value from _REG column and stores at offset 0x1aa + rowIndex
+                // k2_win_gog_aspyr_swkotor2.exe: 0x0060d1d0 lines 54-57 - reads value from _REG column and stores at offset 0x1aa + rowIndex
                 int? regFeatId = row.GetInteger(regColumnName);
                 if (regFeatId.HasValue && regFeatId.Value >= 0)
                 {
@@ -571,7 +571,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
                 }
 
                 // Read feat ID from _BON column (bonus starting feats)
-                // swkotor2.exe: 0x0060d1d0 lines 59-62 - reads value from _BON column and stores at offset 0x178 + rowIndex
+                // k2_win_gog_aspyr_swkotor2.exe: 0x0060d1d0 lines 59-62 - reads value from _BON column and stores at offset 0x178 + rowIndex
                 int? bonFeatId = row.GetInteger(bonColumnName);
                 if (bonFeatId.HasValue && bonFeatId.Value >= 0)
                 {
@@ -828,7 +828,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         /// </summary>
         /// <remarks>
         /// Skill Data Access:
-        /// - Based on swkotor.exe and swkotor2.exe: Skills are loaded from skills.2da
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Skills are loaded from skills.2da
         /// - Located via string references: "skills.2da" in resource system
         /// - Original implementation: Loads skill data from skills.2da for skill names and descriptions
         /// - Skill ID is row index in skills.2da (0-7 for KOTOR: COMPUTER_USE, DEMOLITIONS, STEALTH, AWARENESS, PERSUADE, REPAIR, SECURITY, TREAT_INJURY)
@@ -888,7 +888,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         /// <returns>True if the skill is a class skill for this class, false otherwise.</returns>
         /// <remarks>
         /// Class Skill Check:
-        /// - Based on swkotor.exe and swkotor2.exe: Class skills are determined by classes.2da skill columns
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Class skills are determined by classes.2da skill columns
         /// - Original implementation: Checks if skill is listed in class's skill columns in classes.2da
         /// - Class skills cost 1 point per rank, cross-class skills cost 2 points per rank
         /// - Class skills can be raised to rank 4 at level 1, cross-class skills can be raised to rank 2
@@ -1169,7 +1169,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         /// <returns>Portrait data if found, null otherwise.</returns>
         /// <remarks>
         /// Portrait Data Access:
-        /// - Based on swkotor.exe and swkotor2.exe: Portrait loading from portraits.2da
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Portrait loading from portraits.2da
         /// - Located via string references: "portraits.2da" in resource loading
         /// - Original implementation: Loads portrait ResRef from portraits.2da table
         /// - Portrait ID is row index in portraits.2da (0-based)

@@ -18,8 +18,8 @@ namespace Andastra.Game.Games.Odyssey.Scene
     /// </summary>
     /// <remarks>
     /// Odyssey Scene Builder:
-    /// - Based on swkotor.exe, swkotor2.exe area/room loading system
-    /// - Located via string references: "Rooms" @ 0x007bd490 (swkotor2.exe), "RoomName" @ 0x007bd484, "roomcount" @ 0x007b96c0
+    /// - Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe area/room loading system
+    /// - Located via string references: "Rooms" @ 0x007bd490 (k2_win_gog_aspyr_swkotor2.exe), "RoomName" @ 0x007bd484, "roomcount" @ 0x007b96c0
     /// - Original implementation: Builds rendering structures from LYT (layout) and VIS (visibility) files
     /// - LYT file format: Binary format containing room layout, doorhooks, and room connections
     /// - VIS file format: Binary format containing room visibility data ("%s/%s.VIS" @ 0x007b972c)
@@ -53,7 +53,7 @@ namespace Andastra.Game.Games.Odyssey.Scene
         /// <param name="vis">VIS visibility data containing room visibility graph (can be null).</param>
         /// <returns>Scene data structure.</returns>
         /// <remarks>
-        /// Scene Building Process (swkotor2.exe):
+        /// Scene Building Process (k2_win_gog_aspyr_swkotor2.exe):
         /// - Based on area/room loading system
         /// - Located via string references: "Rooms" @ 0x007bd490, "RoomName" @ 0x007bd484
         /// - Original implementation: Builds rendering structures from LYT room positions and VIS visibility
@@ -168,7 +168,7 @@ namespace Andastra.Game.Games.Odyssey.Scene
     }
 
     /// <summary>
-    /// Scene data for Odyssey engine (swkotor.exe, swkotor2.exe).
+    /// Scene data for Odyssey engine (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe).
     /// Contains rooms, visibility graph, and current room tracking.
     /// Graphics-backend agnostic.
     /// </summary>

@@ -8,57 +8,57 @@ namespace BioWare.Resource.Formats.GFF.Generics
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/jrl.py:91-112
     // Original: def construct_jrl(gff: GFF) -> JRL:
-    // Engine references: swkotor2.exe:0x00600dd0, swkotor.exe:0x005c5a40
+    // Engine references: k2_win_gog_aspyr_swkotor2.exe:0x00600dd0, k1_win_gog_swkotor.exe:0x005c5a40
     public static class JRLHelpers
     {
         public static JRL ConstructJrl(GFF gff)
         {
             var jrl = new JRL();
 
-            // Engine reference: swkotor2.exe:0x00600dd0 line 130, swkotor.exe:0x005c5a40 line 130
+            // Engine reference: k2_win_gog_aspyr_swkotor2.exe:0x00600dd0 line 130, k1_win_gog_swkotor.exe:0x005c5a40 line 130
             GFFList categories = gff.Root.Acquire("Categories", new GFFList());
             foreach (GFFStruct categoryStruct in categories)
             {
                 var quest = new JRLQuest();
                 jrl.Quests.Add(quest);
 
-                // Engine default: "" (swkotor2.exe:0x00600dd0 line 138, swkotor.exe:0x005c5a40 line 138)
+                // Engine default: "" (k2_win_gog_aspyr_swkotor2.exe:0x00600dd0 line 138, k1_win_gog_swkotor.exe:0x005c5a40 line 138)
                 // Note: Comment field is written but not read in engine loading function - optional field
                 quest.Comment = categoryStruct.Acquire("Comment", string.Empty);
 
-                // Engine default: LocalizedString (swkotor2.exe:0x00600dd0 line 151, swkotor.exe:0x005c5a40 line 151)
+                // Engine default: LocalizedString (k2_win_gog_aspyr_swkotor2.exe:0x00600dd0 line 151, k1_win_gog_swkotor.exe:0x005c5a40 line 151)
                 quest.Name = categoryStruct.Acquire("Name", LocalizedString.FromInvalid());
 
-                // Engine default: 0 (swkotor2.exe:0x00600dd0 line 186, swkotor.exe:0x005c5a40 line 186)
+                // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x00600dd0 line 186, k1_win_gog_swkotor.exe:0x005c5a40 line 186)
                 quest.PlanetId = categoryStruct.Acquire("PlanetID", 0);
 
-                // Engine default: 0 (swkotor2.exe:0x00600dd0 line 180, swkotor.exe:0x005c5a40 line 180)
+                // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x00600dd0 line 180, k1_win_gog_swkotor.exe:0x005c5a40 line 180)
                 quest.PlotIndex = categoryStruct.Acquire("PlotIndex", 0);
 
-                // Engine default: 0 (swkotor2.exe:0x00600dd0 line 165, swkotor.exe:0x005c5a40 line 165)
+                // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x00600dd0 line 165, k1_win_gog_swkotor.exe:0x005c5a40 line 165)
                 int priorityValue = categoryStruct.Acquire("Priority", 0);
                 quest.Priority = (JRLQuestPriority)priorityValue;
 
-                // Engine default: "" (swkotor2.exe:0x00600dd0 line 138, swkotor.exe:0x005c5a40 line 138)
+                // Engine default: "" (k2_win_gog_aspyr_swkotor2.exe:0x00600dd0 line 138, k1_win_gog_swkotor.exe:0x005c5a40 line 138)
                 quest.Tag = categoryStruct.Acquire("Tag", string.Empty);
 
-                // Engine reference: swkotor2.exe:0x00600dd0 line 192, swkotor.exe:0x005c5a40 line 192
+                // Engine reference: k2_win_gog_aspyr_swkotor2.exe:0x00600dd0 line 192, k1_win_gog_swkotor.exe:0x005c5a40 line 192
                 GFFList entryList = categoryStruct.Acquire("EntryList", new GFFList());
                 foreach (GFFStruct entryStruct in entryList)
                 {
                     var entry = new JRLQuestEntry();
                     quest.Entries.Add(entry);
 
-                    // Engine default: 0 (swkotor2.exe:0x00600dd0 line 237, swkotor.exe:0x005c5a40 line 237)
+                    // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x00600dd0 line 237, k1_win_gog_swkotor.exe:0x005c5a40 line 237)
                     entry.End = entryStruct.Acquire("End", (ushort)0) != 0;
 
-                    // Engine default: 0 (swkotor2.exe:0x00600dd0 line 205, swkotor.exe:0x005c5a40 line 205)
+                    // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x00600dd0 line 205, k1_win_gog_swkotor.exe:0x005c5a40 line 205)
                     entry.EntryId = (int)entryStruct.Acquire("ID", (uint)0);
 
-                    // Engine default: LocalizedString (swkotor2.exe:0x00600dd0 line 209, swkotor.exe:0x005c5a40 line 209)
+                    // Engine default: LocalizedString (k2_win_gog_aspyr_swkotor2.exe:0x00600dd0 line 209, k1_win_gog_swkotor.exe:0x005c5a40 line 209)
                     entry.Text = entryStruct.Acquire("Text", LocalizedString.FromInvalid());
 
-                    // Engine default: 0.0 (swkotor2.exe:0x00600dd0 line 222, swkotor.exe:0x005c5a40 line 222)
+                    // Engine default: 0.0 (k2_win_gog_aspyr_swkotor2.exe:0x00600dd0 line 222, k1_win_gog_swkotor.exe:0x005c5a40 line 222)
                     entry.XpPercentage = entryStruct.Acquire("XP_Percentage", 0.0f);
                 }
             }

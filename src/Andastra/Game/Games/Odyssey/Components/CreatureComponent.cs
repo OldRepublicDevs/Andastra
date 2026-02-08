@@ -259,7 +259,7 @@ namespace Andastra.Game.Games.Odyssey.Components
 
         /// <summary>
         /// Gets base attack bonus using classes.2da for accurate calculation.
-        /// Based on verified components of swkotor.exe, swkotor2.exe:
+        /// Based on verified components of k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe:
         /// - Each class has an attackbonustable column in classes.2da that references a BAB progression table
         /// - BAB progression tables (e.g., cls_atk_jedi_guardian.2da) contain BAB values per level
         /// - For multi-class characters, BAB from all classes is summed together
@@ -268,8 +268,8 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// <param name="gameDataManager">GameDataManager to look up class data and attack bonus tables.</param>
         /// <returns>Total base attack bonus from all class levels, or simplified calculation if game data unavailable.</returns>
         /// <remarks>
-        /// Based on verified components of swkotor.exe, swkotor2.exe:
-        /// - swkotor2.exe: 0x005d63d0 @ 0x005d63d0 reads "attackbonustable" column from classes.2da
+        /// Based on verified components of k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe:
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x005d63d0 @ 0x005d63d0 reads "attackbonustable" column from classes.2da
         /// - Attack bonus tables are named like "cls_atk_jedi_guardian" (referenced in classes.2da)
         /// - Each attack bonus table has rows for each level (row 0 = level 1, row 1 = level 2, etc.)
         /// - Table columns typically include "BAB" or "Value" column with the BAB value for that level
@@ -399,7 +399,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// <param name="gameDataManager">GameDataManager to look up class data.</param>
         /// <returns>Sum of levels in all Force-using classes.</returns>
         /// <remarks>
-        /// Based on swkotor.exe, swkotor2.exe: Caster level for Force powers is the sum of levels in Force-using classes
+        /// Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe: Caster level for Force powers is the sum of levels in Force-using classes
         /// Force-using classes are determined by the "forcedie" column in classes.2da (if forcedie > 0, class is Force-using)
         /// Force-using classes include: Jedi Guardian (3), Jedi Consular (4), Jedi Sentinel (5),
         /// Jedi Master (12), Jedi Watchman (13), Jedi Weapon Master (11),
@@ -445,7 +445,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// Key: Feat ID, Value: Remaining uses today
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe, swkotor2.exe: Feat daily usage tracking system
+        /// Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe: Feat daily usage tracking system
         /// Located via string references: Feat usage tracking in creature data structure
         /// Original implementation: Tracks remaining uses per day for feats with daily limits
         /// Daily uses reset when creature rests or new day begins
@@ -467,7 +467,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// <param name="gameDataManager">GameDataManager to look up feat data.</param>
         /// <returns>True if the feat is usable, false if exhausted or restricted.</returns>
         /// <remarks>
-        /// Based on swkotor.exe, swkotor2.exe: GetHasFeat usability checking
+        /// Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe: GetHasFeat usability checking
         /// Located via string references: Feat usability checking in GetHasFeat function
         /// Original implementation: Checks if feat has remaining daily uses
         /// - If feat has UsesPerDay = -1: Always usable (unlimited or special handling)
@@ -531,7 +531,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// <param name="gameDataProvider">GameDataProvider to look up feat data.</param>
         /// <returns>The class ID associated with the feat, or -1 if not class-specific.</returns>
         /// <remarks>
-        /// Based on swkotor.exe, swkotor2.exe: Feat-to-class mapping for special feat usage calculation
+        /// Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe: Feat-to-class mapping for special feat usage calculation
         /// Located via string references: "classfeat" @ classes.2da column, featgain.2da class-specific columns
         /// Original implementation: Determines which class a feat is associated with for calculating uses per day
         ///
@@ -819,7 +819,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// <param name="gameDataManager">GameDataManager to look up feat data.</param>
         /// <returns>True if the feat was successfully used, false if it couldn't be used.</returns>
         /// <remarks>
-        /// Based on swkotor.exe, swkotor2.exe: Feat usage tracking
+        /// Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe: Feat usage tracking
         /// Located via string references: Feat usage decrement in creature data
         /// Original implementation: Decrements remaining uses when feat is used
         /// </remarks>
@@ -867,7 +867,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// </summary>
         /// <param name="gameDataManager">GameDataManager to look up feat data.</param>
         /// <remarks>
-        /// Based on swkotor.exe, swkotor2.exe: Daily feat use reset on rest
+        /// Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe: Daily feat use reset on rest
         /// Located via string references: Feat usage reset in rest system
         /// Original implementation: Resets all feat daily uses to maximum when creature rests
         /// </remarks>
@@ -921,7 +921,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// Whether creature is currently in stealth mode.
         /// </summary>
         /// <remarks>
-        /// swkotor2.exe: StealthMode stored at offset +0x511 as byte (boolean)
+        /// k2_win_gog_aspyr_swkotor2.exe: StealthMode stored at offset +0x511 as byte (boolean)
         /// - 0x00542bf0 @ 0x00542bf0 sets StealthMode: *(char *)((int)this + 0x511) = param_1
         /// - 0x005143a0 @ 0x005143a0 checks StealthMode: if (*(char *)((int)this + 0x511) == '\x01')
         /// - 0x005226d0 @ 0x005226d0 (SerializeCreature_K2) saves StealthMode to GFF as byte field "StealthMode"
@@ -935,7 +935,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// Whether creature is currently in detect mode.
         /// </summary>
         /// <remarks>
-        /// swkotor2.exe: DetectMode stored at offset +0x510 as byte (boolean)
+        /// k2_win_gog_aspyr_swkotor2.exe: DetectMode stored at offset +0x510 as byte (boolean)
         /// - 0x00542bd0 @ 0x00542bd0 sets DetectMode: *(char *)((int)this + 0x510) = param_1
         /// - 0x005226d0 @ 0x005226d0 (SerializeCreature_K2) saves DetectMode to GFF as byte field "DetectMode"
         /// - 0x005223a0 @ 0x005223a0 loads DetectMode from GFF field "DetectMode" and sets at offset +0x510

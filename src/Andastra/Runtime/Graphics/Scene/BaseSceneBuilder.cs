@@ -29,7 +29,7 @@ namespace Andastra.Runtime.Graphics.Common.Scene
     ///
     /// Inheritance Structure (Graphics-Backend Agnostic):
     /// - BaseSceneBuilder (this class) - Common functionality only
-    ///   - OdysseySceneBuilder : BaseSceneBuilder (Runtime.Games.Odyssey.Scene) - LYT/VIS files (swkotor.exe, swkotor2.exe)
+    ///   - OdysseySceneBuilder : BaseSceneBuilder (Runtime.Games.Odyssey.Scene) - LYT/VIS files (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
     ///   - AuroraSceneBuilder : BaseSceneBuilder (Runtime.Games.Aurora.Scene) - ARE tile-based layout (nwmain.exe)
     ///   - EclipseSceneBuilder : BaseSceneBuilder (Runtime.Games.Eclipse.Scene) - Advanced ARE features (daorigins.exe, DragonAge2.exe)
     ///

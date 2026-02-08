@@ -10,8 +10,8 @@ namespace Andastra.Game.Games.Odyssey.Data
     /// </summary>
     /// <remarks>
     /// Odyssey Game Data Provider:
-    /// - Based on swkotor.exe, swkotor2.exe: 0x0041d2c0 @ 0x0041d2c0 (2DA table lookup), 0x0065a380 @ 0x0065a380 (GetCreatureRadius)
-    /// - Located via string references: "GetCreatureRadius" @ 0x007bb128 (swkotor2.exe), @ 0x00742f1c (swkotor.exe)
+    /// - Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe: 0x0041d2c0 @ 0x0041d2c0 (2DA table lookup), 0x0065a380 @ 0x0065a380 (GetCreatureRadius)
+    /// - Located via string references: "GetCreatureRadius" @ 0x007bb128 (k2_win_gog_aspyr_swkotor2.exe), @ 0x00742f1c (k1_win_gog_swkotor.exe)
     /// - Original implementation: Looks up creature properties from appearance.2da using GameDataManager
     /// - Uses GameDataManager to access 2DA tables (appearance.2da, baseitems.2da, etc.)
     /// - Wraps GameDataManager to provide engine-agnostic interface

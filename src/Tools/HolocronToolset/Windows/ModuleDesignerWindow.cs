@@ -169,11 +169,11 @@ namespace HolocronToolset.Windows
             try
             {
                 // Matching Python: mod_root: str = self._installation.get_module_root(mod_filepath)
-                // swkotor.exe: FUN_004094a0 - Module root extraction logic
+                // k1_win_gog_swkotor.exe: FUN_004094a0 - Module root extraction logic
                 string modRoot = Installation.GetModuleRoot(modFilepath);
 
                 // Matching Python: combined_module = Module(mod_root, self._installation, use_dot_mod=is_mod_file(mod_filepath))
-                // swkotor.exe: FUN_004094a0 - Module loading with .mod override detection
+                // k1_win_gog_swkotor.exe: FUN_004094a0 - Module loading with .mod override detection
                 bool useDotMod = FileHelpers.IsModFile(modFilepath);
                 _module = new ModuleClass(modRoot, _installation.Installation, useDotMod);
 

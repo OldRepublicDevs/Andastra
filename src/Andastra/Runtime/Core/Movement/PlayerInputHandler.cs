@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Core.Movement
     /// <remarks>
     /// Player Input Handler:
     /// - Base class for player input handling across all engines
-    /// - Odyssey-specific implementations: K1PlayerInputHandler (swkotor.exe) and K2PlayerInputHandler (swkotor2.exe) in Runtime.Games.Odyssey.Input
+    /// - Odyssey-specific implementations: K1PlayerInputHandler (k1_win_gog_swkotor.exe) and K2PlayerInputHandler (k2_win_gog_aspyr_swkotor2.exe) in Runtime.Games.Odyssey.Input
     /// - Located via string references: "Mouse Sensitivity" @ 0x007c85cc, "Mouse Look" @ 0x007c8608, "Reverse Mouse Buttons" @ 0x007c8628
     /// - "EnableHardwareMouse" @ 0x007c71c8, "Enable Mouse Teleporting To Buttons" @ 0x007c85a8
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc704, "OnClick" @ 0x007c1a20

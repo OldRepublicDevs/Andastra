@@ -15,7 +15,7 @@ namespace Andastra.Runtime.Graphics.Common.Rendering
     /// - Located via string references: "Render Window" @ 0x007b5680, "Graphics Options" @ 0x007b56a8, "2D3DBias" @ 0x007c612c
     /// - Original game settings: Read from swkotor2.ini @ 0x007b5740, configuration file for graphics options
     /// - Original game did not support modern features like raytracing, DLSS, FSR, or advanced post-processing
-    /// - This class: Provides modern rendering settings for advanced graphics features, not directly mapped to swkotor2.exe functions
+    /// - This class: Provides modern rendering settings for advanced graphics features, not directly mapped to k2_win_gog_aspyr_swkotor2.exe functions
     /// </remarks>
     public class RenderSettings
     {

@@ -17,9 +17,9 @@ namespace Andastra.Game.Stride.Converters
     /// <remarks>
     /// MDL to Stride Model Converter:
     /// - Cross-Engine Analysis (Reverse Engineered ):
-    ///   - Odyssey (swkotor.exe, swkotor2.exe):
-    ///     - Model loading: 0x005261b0 @ 0x005261b0 (swkotor2.exe) loads creature models
-    ///     - String references: "Model" @ 0x007c1ca8, "ModelName" @ 0x007c1c8c (swkotor2.exe)
+    ///   - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe):
+    ///     - Model loading: 0x005261b0 @ 0x005261b0 (k2_win_gog_aspyr_swkotor2.exe) loads creature models
+    ///     - String references: "Model" @ 0x007c1ca8, "ModelName" @ 0x007c1c8c (k2_win_gog_aspyr_swkotor2.exe)
     ///     - "ModelType" @ 0x007c4568, "MODELTYPE" @ 0x007c036c, "ModelVariation" @ 0x007c0990
     ///     - "ModelPart" @ 0x007bd42c, "ModelPart1" @ 0x007c0acc, "refModel" @ 0x007babe8
     ///     - "DefaultModel" @ 0x007c4530, "VisibleModel" @ 0x007c1c98
@@ -29,8 +29,8 @@ namespace Andastra.Game.Stride.Converters
     ///     - Model directories: "SUPERMODELS" @ 0x007c69b0, ".\supermodels" @ 0x007c69bc
     ///     - Special models: "ProjModel" @ 0x007c31c0, "StuntModel" @ 0x007c37e0, "CameraModel" @ 0x007c3908
     ///     - Error messages:
-    ///       - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (swkotor2.exe)
-    ///       - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x0074f85c (swkotor.exe)
+    ///       - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (k2_win_gog_aspyr_swkotor2.exe)
+    ///       - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x0074f85c (k1_win_gog_swkotor.exe)
     ///       - "Model %s nor the default model %s could be loaded." @ 0x007cad14
     ///       - "CSWCAnimBase::LoadModel(): The headconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce278
     ///       - "CSWCAnimBase::LoadModel(): The handconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce320
@@ -227,7 +227,7 @@ namespace Andastra.Game.Stride.Converters
                 {
                     // Force identity orientation for spell visual attachment points
                     // These dummy nodes should not have any rotation - they're just attachment points
-                    // swkotor2.exe: 0x006f8590 validates that these nodes have identity quaternion (0,0,0,1)
+                    // k2_win_gog_aspyr_swkotor2.exe: 0x006f8590 validates that these nodes have identity quaternion (0,0,0,1)
                     rotation = System.Numerics.Quaternion.Identity;
                 }
                 else

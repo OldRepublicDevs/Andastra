@@ -14,10 +14,10 @@ using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
 using ResourceType = BioWare.Common.ResourceType;
 
-namespace Andastra.Game.Graphics.Common.Backends.Odyssey
+namespace Andastra.Game.Graphics.Common.Backends
 {
     /// <summary>
-    /// Graphics backend for Star Wars: Knights of the Old Republic, matching swkotor.exe rendering exactly 1:1.
+    /// KOTOR1-specific implementation (partial). Graphics backend for Star Wars: Knights of the Old Republic, matching swkotor.exe rendering exactly 1:1.
     ///
     /// This backend implements the exact rendering code from swkotor.exe,
     /// including OpenGL initialization, texture loading, and rendering pipeline.
@@ -42,15 +42,11 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// - Helper functions: 0x0045f820, 0x006fae8c (different addresses than KOTOR2)
     /// - Texture setup: Similar pattern but with KOTOR1-specific global variable addresses
     /// </remarks>
-    public class Kotor1GraphicsBackend : OdysseyGraphicsBackend
+    public partial class OdysseyGraphicsBackend
     {
-        // Delegate for window procedure
+        // Delegate for window procedure (K1)
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate IntPtr WndProcDelegate(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
-
-        // Resource provider for loading texture data
-        // Matches swkotor.exe resource loading system (CExoResMan, CExoKeyTable)
-        private IGameResourceProvider _resourceProvider;
+        private delegate IntPtr WndProcDelegateK1(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
 
         #region KOTOR1 Global Variables (matching swkotor.exe addresses)
 
@@ -474,46 +470,6 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         #endregion
 
-        // BackendType is inherited from OdysseyGraphicsBackend and returns GraphicsBackendType.OdysseyEngine
-
-        /// <summary>
-        /// Sets the resource provider for loading texture data.
-        /// Matches swkotor.exe resource loading system (CExoResMan, CExoKeyTable).
-        /// </summary>
-        public void SetResourceProvider(IGameResourceProvider resourceProvider)
-        {
-            _resourceProvider = resourceProvider;
-        }
-
-        protected override string GetGameName() => "Star Wars: Knights of the Old Republic";
-
-        protected override bool DetermineGraphicsApi()
-        {
-            // KOTOR 1 uses OpenGL (not DirectX)
-            // Based on reverse engineering: swkotor.exe uses OPENGL32.DLL and wglCreateContext
-            // swkotor.exe: 0x0044dab0 @ 0x0044dab0 uses wglCreateContext
-            _useDirectX9 = false;
-            _useOpenGL = true;
-            _adapterIndex = 0;
-            _fullscreen = true; // Default to fullscreen (swkotor.exe: 0x0044dab0 @ 0x0044dab0, param_7 != 0 = fullscreen)
-            _refreshRate = 60; // Default refresh rate
-
-            return true;
-        }
-
-        protected override D3DPRESENT_PARAMETERS CreatePresentParameters(D3DDISPLAYMODE displayMode)
-        {
-            // KOTOR 1 specific present parameters
-            // Matches swkotor.exe present parameters exactly
-            var presentParams = base.CreatePresentParameters(displayMode);
-
-            // KOTOR 1 specific settings
-            presentParams.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
-            presentParams.SwapEffect = D3DSWAPEFFECT_DISCARD;
-
-            return presentParams;
-        }
-
         #region KOTOR 1-Specific Implementation
 
         /// <summary>
@@ -528,7 +484,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// - Secondary context: 0x00426cc0 @ 0x00426cc0 (uses 0x00426560 for window creation)
         /// - Global texture IDs: DAT_007a687c, DAT_007a6870, DAT_007a6874, DAT_007a6878
         /// </remarks>
-        protected override bool CreateOdysseyOpenGLContext(IntPtr windowHandle, int width, int height, bool fullscreen, int refreshRate)
+        private bool CreateOdysseyOpenGLContextK1(IntPtr windowHandle, int width, int height, bool fullscreen, int refreshRate)
         {
             // KOTOR1-specific OpenGL context creation
             // Matches swkotor.exe: 0x0044dab0 @ 0x0044dab0 exactly
@@ -774,6 +730,8 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
                 // Stencil test setup (matching swkotor.exe line 372)
                 _kotor1GlEnableDisable?.Invoke(_kotor1StencilTestFlag != 0);
 
+                _glContext = _kotor1PrimaryContext;
+                _glDevice = _kotor1PrimaryDC;
                 return true;
             }
             else
@@ -2004,7 +1962,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
                 try
                 {
                     // Load texture using resource system (matching swkotor.exe: CExoResMan::GetResObject pattern)
-                    IntPtr textureIdPtr = LoadOdysseyTexture(textureName);
+                    IntPtr textureIdPtr = LoadOdysseyTextureK1(textureName);
 
                     if (textureIdPtr == IntPtr.Zero)
                     {
@@ -2777,7 +2735,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             // The window is used to get a device context for creating secondary contexts
 
             // Register window class (matching swkotor.exe pattern)
-            WndProcDelegate wndProcDelegate = DefWindowProcA;
+            WndProcDelegateK1 wndProcDelegate = DefWindowProcA;
             WNDCLASSA wndClass = new WNDCLASSA
             {
                 style = 0,
@@ -3170,7 +3128,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// all scene rendering including rooms, entities, effects, lighting, and fog.
         /// This method is a wrapper that ensures the OpenGL context is current before rendering.
         /// </remarks>
-        protected override void RenderOdysseyScene()
+        private void RenderOdysseySceneK1()
         {
             // KOTOR 1 scene rendering
             // Matches swkotor.exe rendering code exactly
@@ -3212,7 +3170,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// - Mipmap handling: All mipmap levels uploaded sequentially
         /// - Cube map support: GL_TEXTURE_CUBE_MAP for environment maps
         /// </remarks>
-        protected override IntPtr LoadOdysseyTexture(string path)
+        private IntPtr LoadOdysseyTextureK1(string path)
         {
             // KOTOR 1 texture loading
             // Matches swkotor.exe texture loading code exactly (0x00427c90 @ 0x00427c90)

@@ -11,7 +11,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Input Manager:
-    /// - Based on verified components of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe
     /// - Original game input system: DirectInput8 (DINPUT8.dll @ 0x0080a6c0)
     /// - DirectInput8Create @ 0x0080a6ac for device enumeration
     /// - Located via string references: "CExoInputInternal" (exoinputinternal.cpp @ 0x007c64dc)
@@ -58,7 +58,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         
         /// <summary>
         /// Updates input state (call each frame).
-        /// Based on swkotor.exe/swkotor2.exe: DirectInput device polling
+        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: DirectInput device polling
         /// </summary>
         public void Update()
         {

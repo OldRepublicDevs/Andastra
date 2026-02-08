@@ -36,10 +36,10 @@ namespace BioWare.Resource.Formats.GFF.Generics.ARE
         // Basic fields
         public string Tag { get; set; } = string.Empty;
         public LocalizedString Name { get; set; } = LocalizedString.FromInvalid();
-        // Engine reads and stores AlphaTest as float (swkotor.exe: 0x00508c50 line 303-304, swkotor2.exe: 0x004e3ff0 line 307-308)
+        // Engine reads and stores AlphaTest as float (k1_win_gog_swkotor.exe: 0x00508c50 line 303-304, k2_win_gog_aspyr_swkotor2.exe: 0x004e3ff0 line 307-308)
         // Default value: 0.2 (verified from engine behavior)
-        // Line 303-304 in swkotor.exe: fVar14 = FUN_00411d00(..., "AlphaTest", ..., 0.2); *(float *)((int)this + 0xfc) = (float)fVar14;
-        // Line 307-308 in swkotor2.exe: fVar14 = FUN_00412e20(..., "AlphaTest", ..., 0.2); *(float *)((int)this + 0x100) = (float)fVar14;
+        // Line 303-304 in k1_win_gog_swkotor.exe: fVar14 = FUN_00411d00(..., "AlphaTest", ..., 0.2); *(float *)((int)this + 0xfc) = (float)fVar14;
+        // Line 307-308 in k2_win_gog_aspyr_swkotor2.exe: fVar14 = FUN_00412e20(..., "AlphaTest", ..., 0.2); *(float *)((int)this + 0x100) = (float)fVar14;
         public float AlphaTest { get; set; } = 0.2f;
         public int CameraStyle { get; set; }
         public ResRef DefaultEnvMap { get; set; } = ResRef.FromBlank();
@@ -64,7 +64,7 @@ namespace BioWare.Resource.Formats.GFF.Generics.ARE
         public float FogFar { get; set; }
         public int WindPower { get; set; }
         // Shadow opacity: 0-255 (0 = no shadows, 255 = fully opaque shadows)
-        // Engine reads as UInt8 from GFF (swkotor.exe: 0x00508c50, swkotor2.exe: 0x004e3ff0)
+        // Engine reads as UInt8 from GFF (k1_win_gog_swkotor.exe: 0x00508c50, k2_win_gog_aspyr_swkotor2.exe: 0x004e3ff0)
         // Aurora uses 0-100 range, Eclipse uses 0-255 range
         public byte ShadowOpacity { get; set; } = 0;
 

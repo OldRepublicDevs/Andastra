@@ -8,7 +8,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Movie Graphics Device Interface:
-    /// - Based on swkotor.exe/swkotor2.exe: Movie rendering system
+    /// - Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Movie rendering system
     /// - Movie playback function: 0x00404c80 @ 0x00404c80 (main playback loop)
     /// - Movie initialization: 0x004053e0 @ 0x004053e0 (creates movie window, opens BIK file)
     /// - Bink API usage: BinkBufferBlit @ 0x00404cc5 (blits buffer to screen)

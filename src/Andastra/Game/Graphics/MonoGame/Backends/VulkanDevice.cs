@@ -11122,7 +11122,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             ///
             /// Based on Vulkan API: vkCmdSetStencilReference
             /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetStencilReference.html
-            /// swkotor2.exe: N/A - Original game used DirectX 9, not Vulkan
+            /// k2_win_gog_aspyr_swkotor2.exe: N/A - Original game used DirectX 9, not Vulkan
             /// </summary>
             /// <param name="reference">Stencil reference value (0-255).</param>
             public void SetStencilRef(uint reference)

@@ -18,12 +18,12 @@ namespace Andastra.Game.Games.Odyssey.Loading
     /// Entity Factory System:
     /// - LoadCreaturesFromGIT @ (K1: CSWSArea::LoadCreatures @ 0x00504a70, TSL: LoadCreaturesFromGIT @ 0x004dfbb0) - Main entity creation system that loads creatures from GIT "Creature List"
     /// - CreateCreatureFromTemplate: Creates creature entities from UTC template ResRefs
-    ///   - K1 (swkotor.exe): CSWSCreature::LoadCreature @ 0x00500350 - Main UTC GFF parser entry point
+    ///   - K1 (k1_win_gog_swkotor.exe): CSWSCreature::LoadCreature @ 0x00500350 - Main UTC GFF parser entry point
     ///     - Function signature: LoadCreature(CSWSCreature* this, CResGFF* param_1, CResStruct* param_2, int param_3)
     ///     - Called from LoadCreatures @ 0x00504a70 and LoadLimboCreatures @ 0x004c8c70
     ///     - CSWSCreatureStats::ReadStatsFromGff @ 0x00560e60 - Reads creature stats from GFF (called by LoadCreature)
     ///     - CSWSCreature::ReadItemsFromGff @ 0x004ffda0 - Reads creature inventory items from GFF
-    ///   - TSL (swkotor2.exe): LoadCreatureFromTemplate @ 0x005261b0 - Loads creature template from UTC file
+    ///   - TSL (k2_win_gog_aspyr_swkotor2.exe): LoadCreatureFromTemplate @ 0x005261b0 - Loads creature template from UTC file
     ///     - Calls LoadCreatureTemplateData @ 0x005fb0f0 to load creature data from GFF structure
     ///     - Located via string references: "TemplateResRef" @ 0x007bd00c
     /// - Located via string references: "TemplateResRef" @ 0x007bd00c (TSL), "TemplateResRef" @ 0x00747494 (K1)
@@ -100,7 +100,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// Creates a creature from GIT instance struct.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: 0x005223a0 @ 0x005223a0 loads creature instance data from GIT struct.
+        /// Based on k2_win_gog_aspyr_swkotor2.exe: 0x005223a0 @ 0x005223a0 loads creature instance data from GIT struct.
         /// Loads AreaId from GFF at offset 0x90 (via 0x00412d40 with "AreaId" field name).
         /// Located via string reference: "AreaId" @ 0x007bef48
         /// </remarks>
@@ -117,7 +117,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             // Basic properties
             entity.Tag = GetResRefField(gitStruct, "Tag");
 
-            // Load AreaId from GIT struct (swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
+            // Load AreaId from GIT struct (k2_win_gog_aspyr_swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
             // Based on FUN_00412d40 call with "AreaId" field name in FUN_005223a0
             uint areaId = (uint)GetIntField(gitStruct, "AreaId", 0);
             entity.AreaId = areaId;
@@ -241,11 +241,11 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// </summary>
         /// <remarks>
         /// Based on original engine implementations:
-        /// - K1 (swkotor.exe): CSWSCreature::LoadCreature @ 0x00500350 - Main UTC GFF parser entry point
+        /// - K1 (k1_win_gog_swkotor.exe): CSWSCreature::LoadCreature @ 0x00500350 - Main UTC GFF parser entry point
         ///   - Function signature: LoadCreature(CSWSCreature* this, CResGFF* param_1, CResStruct* param_2, int param_3)
         ///   - Called from LoadCreatures @ 0x00504a70 and LoadLimboCreatures @ 0x004c8c70
         ///   - CSWSCreatureStats::ReadStatsFromGff @ 0x00560e60 - Reads creature stats from GFF (called by LoadCreature)
-        /// - TSL (swkotor2.exe): LoadCreatureFromTemplate @ 0x005261b0 - Loads creature template from UTC file
+        /// - TSL (k2_win_gog_aspyr_swkotor2.exe): LoadCreatureFromTemplate @ 0x005261b0 - Loads creature template from UTC file
         ///   - Calls LoadCreatureTemplateData @ 0x005fb0f0 to load creature data from GFF structure
         ///   - Located via string references: "TemplateResRef" @ 0x007bd00c
         /// 
@@ -269,7 +269,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// </remarks>
         private void LoadCreatureTemplate(Entity entity, Module module, string templateResRef)
         {
-            // swkotor.exe: 0x00500350 @ 0x00500350, swkotor2.exe: 0x005261b0 @ 0x005261b0
+            // k1_win_gog_swkotor.exe: 0x00500350 @ 0x00500350, k2_win_gog_aspyr_swkotor2.exe: 0x005261b0 @ 0x005261b0
             ModuleResource utcResource = module.Creature(templateResRef);
             if (utcResource == null)
             {
@@ -291,7 +291,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             GFFStruct root = utcGff.Root;
 
             // Core Identity fields
-            // swkotor.exe: 0x00500350 loads Tag field from UTC template
+            // k1_win_gog_swkotor.exe: 0x00500350 loads Tag field from UTC template
             if (string.IsNullOrEmpty(entity.Tag))
             {
                 entity.Tag = GetStringField(root, "Tag");
@@ -304,7 +304,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             entity.SetData("Description", GetLocStringField(root, "Description"));
 
             // Conversation field (dialogue ResRef for BeginConversation)
-            // swkotor.exe: 0x0050c510 @ 0x0050c510 loads ScriptDialogue field from UTC template
+            // k1_win_gog_swkotor.exe: 0x0050c510 @ 0x0050c510 loads ScriptDialogue field from UTC template
             string conversation = GetResRefField(root, "Conversation");
             if (!string.IsNullOrEmpty(conversation))
             {
@@ -312,7 +312,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             }
 
             // Appearance & Visuals
-            // swkotor.exe: 0x00560e60 (ReadStatsFromGff) loads appearance fields
+            // k1_win_gog_swkotor.exe: 0x00560e60 (ReadStatsFromGff) loads appearance fields
             entity.SetData("Appearance_Type", GetIntField(root, "Appearance_Type", 0));
             entity.SetData("PortraitId", GetIntField(root, "PortraitId", 0));
             entity.SetData("Gender", GetIntField(root, "Gender", 0));
@@ -325,7 +325,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             entity.SetData("BodyBag", GetIntField(root, "BodyBag", 0));
 
             // Core Stats & Attributes
-            // swkotor.exe: 0x00560e60 (ReadStatsFromGff) loads ability scores
+            // k1_win_gog_swkotor.exe: 0x00560e60 (ReadStatsFromGff) loads ability scores
             entity.SetData("Str", GetIntField(root, "Str", 10));
             entity.SetData("Dex", GetIntField(root, "Dex", 10));
             entity.SetData("Con", GetIntField(root, "Con", 10));
@@ -346,7 +346,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             entity.SetData("CurrentForce", GetIntField(root, "CurrentForce", 0));
 
             // Class List
-            // swkotor.exe: 0x00500350 loads ClassList from UTC template
+            // k1_win_gog_swkotor.exe: 0x00500350 loads ClassList from UTC template
             if (root.Exists("ClassList"))
             {
                 GFFList classList = root.GetList("ClassList");
@@ -467,7 +467,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             entity.SetData("PlayerCreated", GetIntField(root, "PlayerCreated", 0) != 0);
 
             // Scripts
-            // swkotor.exe: 0x0050c510 @ 0x0050c510 loads script hooks from UTC template
+            // k1_win_gog_swkotor.exe: 0x0050c510 @ 0x0050c510 loads script hooks from UTC template
             SetEntityScripts(entity, root, new Dictionary<string, ScriptEvent>
             {
                 { "ScriptAttacked", ScriptEvent.OnPhysicalAttacked },
@@ -499,7 +499,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             }
 
             // Inventory Items (ItemList)
-            // swkotor.exe: 0x004ffda0 @ 0x004ffda0 (ReadItemsFromGff) reads creature inventory items from GFF
+            // k1_win_gog_swkotor.exe: 0x004ffda0 @ 0x004ffda0 (ReadItemsFromGff) reads creature inventory items from GFF
             if (root.Exists("ItemList"))
             {
                 GFFList itemList = root.GetList("ItemList");
@@ -523,7 +523,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             }
 
             // Equipped Items (Equip_ItemList)
-            // swkotor.exe: 0x004ffda0 @ 0x004ffda0 (ReadItemsFromGff) reads equipped items from Equip_ItemList
+            // k1_win_gog_swkotor.exe: 0x004ffda0 @ 0x004ffda0 (ReadItemsFromGff) reads equipped items from Equip_ItemList
             if (root.Exists("Equip_ItemList"))
             {
                 GFFList equipItemList = root.GetList("Equip_ItemList");
@@ -560,7 +560,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// Creates a door from GIT instance struct.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90.
+        /// Based on k2_win_gog_aspyr_swkotor2.exe: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90.
         /// Located via string reference: "AreaId" @ 0x007bef48
         /// </remarks>
         [CanBeNull]
@@ -574,7 +574,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
 
             entity.Tag = GetResRefField(gitStruct, "Tag");
             
-            // Load AreaId from GIT struct (swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
+            // Load AreaId from GIT struct (k2_win_gog_aspyr_swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
             uint areaId = (uint)GetIntField(gitStruct, "AreaId", 0);
             entity.AreaId = areaId;
             
@@ -642,7 +642,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             // Load TSL-specific fields (KotOR2 only)
             // Based on FUN_00584f40 @ 0x00584f40 (TSL) which loads Min1HP and NotBlastable from UTD template
             // Located via UTD field: "Min1HP" (UInt8/Byte, KotOR2 only), "NotBlastable" (UInt8/Byte, KotOR2 only)
-            // Original implementation: These fields do not exist in swkotor.exe (KotOR1)
+            // Original implementation: These fields do not exist in k1_win_gog_swkotor.exe (KotOR1)
             entity.SetData("Min1HP", GetIntField(root, "Min1HP", 0) != 0);
             entity.SetData("NotBlastable", GetIntField(root, "NotBlastable", 0) != 0);
 
@@ -684,8 +684,8 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// Creates a placeable from GIT instance struct.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: LoadPlaceablesFromGIT @ (K1: CSWSArea::LoadPlaceables @ 0x0050a7b0, TSL: LoadPlaceablesFromGIT @ 0x004e5d80) - load placeable instances from GIT "Placeable List"
-        /// - Located via string reference: "Placeable List" @ (K1: TODO: Find this address via string search in swkotor.exe, TSL: 0x007bd260)
+        /// Based on k2_win_gog_aspyr_swkotor2.exe: LoadPlaceablesFromGIT @ (K1: CSWSArea::LoadPlaceables @ 0x0050a7b0, TSL: LoadPlaceablesFromGIT @ 0x004e5d80) - load placeable instances from GIT "Placeable List"
+        /// - Located via string reference: "Placeable List" @ (K1: TODO: Find this address via string search in k1_win_gog_swkotor.exe, TSL: 0x007bd260)
         /// - Function signature: `undefined4 __thiscall LoadPlaceablesFromGIT(void *this, void *param_1, uint *param_2, void *param_3, int param_4)`
         /// - Original implementation (from decompiled 0x004e5d80):
         ///   - Iterates through "Placeable List" GFF list field
@@ -723,7 +723,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
 
             entity.Tag = GetResRefField(gitStruct, "Tag");
             
-            // Load AreaId from GIT struct (swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
+            // Load AreaId from GIT struct (k2_win_gog_aspyr_swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
             uint areaId = (uint)GetIntField(gitStruct, "AreaId", 0);
             entity.AreaId = areaId;
             
@@ -760,7 +760,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// Loads placeable instance data directly from GIT struct (when no template is used).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_00588010 @ 0x00588010 (LoadPlaceableFromGFF) loads placeable data from GIT struct
+        /// Based on k2_win_gog_aspyr_swkotor2.exe: FUN_00588010 @ 0x00588010 (LoadPlaceableFromGFF) loads placeable data from GIT struct
         /// - Called when param_4 == 0 in LoadPlaceablesFromGIT (0x004e5d80)
         /// - Loads all placeable properties from GIT struct instead of from UTP template
         /// - This is used for placeables that don't have a TemplateResRef or when loading from saved state
@@ -973,7 +973,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// Creates a trigger from GIT instance struct.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90.
+        /// Based on k2_win_gog_aspyr_swkotor2.exe: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90.
         /// Located via string reference: "AreaId" @ 0x007bef48
         /// </remarks>
         [CanBeNull]
@@ -986,7 +986,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
 
             entity.Tag = GetResRefField(gitStruct, "Tag");
             
-            // Load AreaId from GIT struct (swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
+            // Load AreaId from GIT struct (k2_win_gog_aspyr_swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
             uint areaId = (uint)GetIntField(gitStruct, "AreaId", 0);
             entity.AreaId = areaId;
             
@@ -1048,7 +1048,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// Creates a waypoint from GIT instance struct.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90.
+        /// Based on k2_win_gog_aspyr_swkotor2.exe: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90.
         /// Located via string reference: "AreaId" @ 0x007bef48
         /// </remarks>
         [CanBeNull]
@@ -1062,7 +1062,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
 
             entity.Tag = GetResRefField(gitStruct, "Tag");
             
-            // Load AreaId from GIT struct (swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
+            // Load AreaId from GIT struct (k2_win_gog_aspyr_swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
             uint areaId = (uint)GetIntField(gitStruct, "AreaId", 0);
             entity.AreaId = areaId;
             
@@ -1083,7 +1083,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// Creates a sound from GIT instance struct.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90.
+        /// Based on k2_win_gog_aspyr_swkotor2.exe: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90.
         /// Located via string reference: "AreaId" @ 0x007bef48
         /// </remarks>
         [CanBeNull]
@@ -1096,7 +1096,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
 
             entity.Tag = GetResRefField(gitStruct, "Tag");
             
-            // Load AreaId from GIT struct (swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
+            // Load AreaId from GIT struct (k2_win_gog_aspyr_swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
             uint areaId = (uint)GetIntField(gitStruct, "AreaId", 0);
             entity.AreaId = areaId;
             
@@ -1140,7 +1140,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// Creates a store from GIT instance struct.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90.
+        /// Based on k2_win_gog_aspyr_swkotor2.exe: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90.
         /// Located via string reference: "AreaId" @ 0x007bef48
         /// </remarks>
         [CanBeNull]
@@ -1153,7 +1153,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
 
             entity.Tag = GetResRefField(gitStruct, "Tag");
             
-            // Load AreaId from GIT struct (swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
+            // Load AreaId from GIT struct (k2_win_gog_aspyr_swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
             uint areaId = (uint)GetIntField(gitStruct, "AreaId", 0);
             entity.AreaId = areaId;
             
@@ -1223,7 +1223,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// Creates an encounter from GIT instance struct.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90.
+        /// Based on k2_win_gog_aspyr_swkotor2.exe: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90.
         /// Located via string reference: "AreaId" @ 0x007bef48
         /// </remarks>
         [CanBeNull]
@@ -1236,7 +1236,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
 
             entity.Tag = GetResRefField(gitStruct, "Tag");
             
-            // Load AreaId from GIT struct (swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
+            // Load AreaId from GIT struct (k2_win_gog_aspyr_swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
             uint areaId = (uint)GetIntField(gitStruct, "AreaId", 0);
             entity.AreaId = areaId;
             

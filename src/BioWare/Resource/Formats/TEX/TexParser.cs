@@ -239,7 +239,7 @@ namespace BioWare.Resource.Formats.TEX
 
         /// <summary>
         /// Parses BioWare-style TEX header format.
-        /// Based on BioWare DDS variant format (daorigins.exe, DragonAge2.exe, swkotor.exe, swkotor2.exe).
+        /// Based on BioWare DDS variant format (daorigins.exe, DragonAge2.exe, k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe).
         /// BioWare DDS header structure:
         /// - uint32: width (must be power-of-two)
         /// - uint32: height (must be power-of-two)

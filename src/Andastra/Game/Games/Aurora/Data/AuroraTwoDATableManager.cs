@@ -14,7 +14,7 @@ namespace Andastra.Game.Games.Aurora.Data
     /// - Located via string references: "2DA has no rows: '%s.2da'" @ 0x140da5e80, "C2DA::Load2DArray(): No row label: %s.2da; Row: %d" @ 0x140da5ea0
     /// - Error messages: "Already loaded Appearance.TwoDA!" @ 0x140dc5dd8, "Failed to load Appearance.TwoDA!" @ 0x140dc5e08
     /// - Cross-engine analysis:
-    ///   - Odyssey (swkotor.exe, swkotor2.exe): Similar 2DA loading via resource system
+    ///   - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): Similar 2DA loading via resource system
     ///   - Eclipse (daorigins.exe, DragonAge2.exe, ): 2DA system is UnrealScript-based (different architecture)
     /// - Original implementation: Loads 2DA files from installation archives (hak files, module files, etc.) via resource system
     /// - Resource precedence: override → module → hak → base game archives

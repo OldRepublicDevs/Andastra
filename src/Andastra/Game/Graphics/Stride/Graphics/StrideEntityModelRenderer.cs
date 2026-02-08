@@ -23,7 +23,7 @@ namespace Andastra.Game.Stride.Graphics
     /// <remarks>
     /// Entity Model Renderer:
     /// - Cross-Engine Analysis (Reverse Engineered ):
-    ///   - Odyssey (swkotor.exe, swkotor2.exe):
+    ///   - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe):
     ///     - [CSWCCreature::LoadModel()] @ (K1: 0x0074f85c, TSL: 0x005261b0) - loads creature model from appearance.2da
     ///     - CSWCCreature::LoadModel @ (K1: TODO: Find this address, TSL: 0x007c82fc) - "Failed to load creature model '%s'." error string
     ///     - Model loading: Loads UTC (creature template) from resources, resolves model from appearance.2da
@@ -42,7 +42,7 @@ namespace Andastra.Game.Stride.Graphics
     ///   - Transform application (position, orientation, scale)
     ///   - Material/texture resolution from resource files
     /// - This Implementation:
-    ///   - Based on Odyssey engine patterns (swkotor.exe, swkotor2.exe)
+    ///   - Based on Odyssey engine patterns (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
     ///   - Models resolved from appearance.2da (creatures), placeables.2da (placeables), genericdoors.2da (doors)
     ///   - Caches loaded models to avoid reloading (model cache dictionary by ResRef)
     ///   - Model conversion: MDL format (KOTOR native) converted to Stride Buffer format for rendering

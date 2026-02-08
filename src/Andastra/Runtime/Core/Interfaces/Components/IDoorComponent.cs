@@ -8,7 +8,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// - Common interface for door functionality across all BioWare engines
     /// - Base implementation: BaseDoorComponent in Runtime.Games.Common.Components
     /// - Engine-specific implementations:
-    ///   - Odyssey: OdysseyDoorComponent (swkotor.exe, swkotor2.exe)
+    ///   - Odyssey: OdysseyDoorComponent (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
     ///   - Aurora: AuroraDoorComponent (nwmain.exe)
     ///   - Eclipse: EclipseDoorComponent (daorigins.exe, DragonAge2.exe) - if doors are supported
     ///   - Infinity: InfinityDoorComponent (, ) - if doors are supported
@@ -94,7 +94,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
         /// - Common across all engines that support door transitions
         /// - Based on nwmain.exe: CNWSDoor::LoadDoor loads TransitionDestin field from GIT
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005838d0 @ 0x005838d0 reads TransitionDestination from UTD template
-        /// - Located via string references: "TransitionDestin" @ 0x007bd7a4 (swkotor2.exe), "TransitionDestin" in GIT format
+        /// - Located via string references: "TransitionDestin" @ 0x007bd7a4 (k2_win_gog_aspyr_swkotor2.exe), "TransitionDestin" in GIT format
         /// - Original implementation: TransitionDestin/TransitionDestination specifies waypoint tag where party spawns after transition
         /// - For module transitions: Waypoint tag in destination module where party spawns
         /// - For area transitions: Waypoint tag in destination area where party spawns

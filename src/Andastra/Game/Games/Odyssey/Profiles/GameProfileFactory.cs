@@ -15,7 +15,7 @@ namespace Andastra.Game.Games.Odyssey.Profiles
     /// - Located via string references: Game version detection determines which profile to use (K1 vs K2)
     /// - Resource setup: 0x00633270 @ 0x00633270 sets up resource directories and precedence (related to game profile configuration)
     /// - Original implementation: Factory pattern for creating game-specific profiles
-    /// - Game detection: Determines game type from installation directory (checks for swkotor.exe vs swkotor2.exe)
+    /// - Game detection: Determines game type from installation directory (checks for k1_win_gog_swkotor.exe vs k2_win_gog_aspyr_swkotor2.exe)
     /// - Profile creation: Returns K1GameProfile for KOTOR 1, K2GameProfile for KOTOR 2
     /// - Note: This is a factory pattern abstraction, but relates to game profile system initialized by 0x00633270
     /// </remarks>

@@ -24,7 +24,7 @@ namespace Andastra.Runtime.Core.Interfaces
     ///
     /// Base implementation: BaseGameServicesContext (Runtime.Games.Common) provides common functionality
     /// Engine-specific implementations:
-    /// - Odyssey: OdysseyGameServicesContext (swkotor.exe, swkotor2.exe)
+    /// - Odyssey: OdysseyGameServicesContext (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
     /// - Aurora: AuroraGameServicesContext (nwmain.exe)
     /// - Eclipse: EclipseGameServicesContext (daorigins.exe, DragonAge2.exe)
     /// </remarks>

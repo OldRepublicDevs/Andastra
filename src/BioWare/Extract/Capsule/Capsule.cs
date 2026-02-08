@@ -138,7 +138,7 @@ namespace BioWare.Extract.Capsule
             }
         }
 
-        // verified components NOTES (swkotor.exe / swkotor2.exe):
+        // verified components NOTES (k1_win_gog_swkotor.exe / k2_win_gog_aspyr_swkotor2.exe):
         // RIM container format structure (matches engine behavior):
         // - Header: "RIM V1.0" (8 bytes)
         // - Reserved: uint32 (4 bytes)
@@ -186,7 +186,7 @@ namespace BioWare.Extract.Capsule
             }
         }
 
-        // verified components NOTES (swkotor.exe / swkotor2.exe):
+        // verified components NOTES (k1_win_gog_swkotor.exe / k2_win_gog_aspyr_swkotor2.exe):
         // ERF/MOD container format structure (matches engine behavior):
         // - Header: "ERF V1.0" or "MOD V1.0" (8 bytes)
         // - Language count: uint32 (4 bytes)

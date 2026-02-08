@@ -706,10 +706,9 @@ namespace Andastra.Game.Graphics.Common.Backends.Aurora
         /// <param name="txi">Parsed TXI object containing texture parameters.</param>
         /// <param name="textureTarget">OpenGL texture target (GL_TEXTURE_2D or GL_TEXTURE_CUBE_MAP).</param>
         /// <remarks>
-        /// Reference implementations:
-        /// - vendor/reone/src/libs/graphics/texture.cpp:156-191 (OpenGL texture parameter application)
-        /// - vendor/reone/src/libs/graphics/textureutil.cpp:123-143 (TXI to OpenGL parameter mapping)
-        /// - vendor/xoreos/src/graphics/images/txi.cpp:105-106,143-144,172-173 (TXI clamp, filter, mipmap parsing)
+        /// Reva (k1_win_gog_swkotor.exe): Material::Init @ 0x0047b110, CAurTextureBasic::Init @ 0x00422af0 load TXI via
+        /// AurResGet(ResRef, ".txi", ...), parse line-by-line and ParseField. String "clamp" @ 0x0073efb8. TXI clamp/filter/mipmap
+        /// mapping to OpenGL follows engine behavior. nwmain.exe not in Reva project (import timeout); same TXI format for Aurora.
         /// </remarks>
         private void ApplyTxiParameters(BioWare.Resource.Formats.TXI.TXI txi, uint textureTarget)
         {
@@ -729,8 +728,8 @@ namespace Andastra.Game.Graphics.Common.Backends.Aurora
 
             // Apply clamp parameter (texture wrapping)
             // clamp 0 = repeat (GL_REPEAT), clamp 1 = clamp to edge (GL_CLAMP_TO_EDGE)
-            // Based on vendor/reone/src/libs/graphics/textureutil.cpp:124,133,138,142
-            // Based on vendor/xoreos/src/graphics/images/txi.cpp:105-106
+            // TXI clamp (Reva: same TXI in K1/K2)
+            // Reva: K1 TXI clamp parsed in Material::Init, CAurTextureBasic::Init
             if (features.Clamp.HasValue)
             {
                 uint wrapMode = features.Clamp.Value ? GL_CLAMP_TO_EDGE : GL_REPEAT;
@@ -740,21 +739,18 @@ namespace Andastra.Game.Graphics.Common.Backends.Aurora
 
             // Apply filter parameter (texture filtering)
             // filter 0 = nearest (GL_NEAREST), filter 1 = linear (GL_LINEAR)
-            // Based on vendor/reone/src/libs/graphics/textureutil.cpp:127-128,138-139
-            // Based on vendor/xoreos/src/graphics/images/txi.cpp:143-144
+            // TXI filter 0=nearest, 1=linear
+            // Reva: K1 TXI filter parsed in ParseField
             bool useLinearFilter = features.Filter.HasValue && features.Filter.Value;
 
             // Apply mipmap parameter
             // mipmap 0 = disable mipmaps (use highest resolution), mipmap 1 = enable mipmaps
-            // Based on vendor/reone/src/libs/graphics/textureutil.cpp:123,138
-            // Based on vendor/xoreos/src/graphics/images/txi.cpp:172-173
-            // When mipmap is disabled (0), engine uses highest resolution (mip 0) only
+            // Reva: K1 TXI mipmap field; when disabled use highest resolution only.
             // When mipmap is enabled (1), engine uses mipmap chain with appropriate filtering
             bool useMipmaps = features.Mipmap.HasValue && features.Mipmap.Value;
 
             // Set minification filter based on filter and mipmap parameters
-            // Based on vendor/reone/src/libs/graphics/texture.cpp:156-157
-            // Based on vendor/reone/src/libs/graphics/textureutil.cpp:123-143
+            // Min/mag filter from TXI (Reva: K1/K2 texture params)
             uint minFilter;
             if (useMipmaps)
             {
@@ -786,7 +782,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Aurora
             }
 
             // Set magnification filter (never uses mipmaps, only GL_NEAREST or GL_LINEAR)
-            // Based on vendor/reone/src/libs/graphics/texture.cpp:157
+            // Mag filter (no mipmaps)
             uint magFilter = useLinearFilter ? GL_LINEAR : GL_NEAREST;
 
             // Apply filters to texture
@@ -795,7 +791,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Aurora
 
             // Note: Anisotropic filtering is not directly controlled by TXI parameters
             // It would be set separately if supported by the graphics API
-            // Based on vendor/reone/src/libs/graphics/texture.cpp:216 (anisotropic filtering)
+            // Anisotropic filtering if supported (Reva: engine may set separately)
         }
 
         #region Format Conversion Helpers
@@ -1514,9 +1510,8 @@ namespace Andastra.Game.Graphics.Common.Backends.Aurora
         /// <remarks>
         /// Reference implementations:
         /// - DirectX 9 API: IDirect3DDevice9::SetSamplerState for texture parameters
-        /// - vendor/reone/src/libs/graphics/textureutil.cpp:123-143 (TXI to texture parameter mapping)
-        /// - vendor/xoreos/src/graphics/images/txi.cpp:105-106,143-144,172-173 (TXI clamp, filter, mipmap parsing)
-        /// - nwmain.exe: DirectX 9 texture parameter storage and application (SetTextureParameters during texture creation)
+        /// Reva (k1_win_gog_swkotor.exe): TXI loaded and parsed in Material::Init @ 0x0047b110, CAurTextureBasic::Init @ 0x00422af0;
+        /// clamp/filter/mipmap fields drive texture params. nwmain.exe not in Reva project; same TXI format.
         /// </remarks>
         private void StoreDirectX9TxiParameters(IntPtr texture, BioWare.Resource.Formats.TXI.TXI txi)
         {
@@ -1530,8 +1525,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Aurora
 
             // Extract clamp parameter (texture address mode)
             // clamp 0 = wrap (D3DTADDRESS_WRAP), clamp 1 = clamp (D3DTADDRESS_CLAMP)
-            // Based on vendor/reone/src/libs/graphics/textureutil.cpp:124,133,138,142
-            // Based on vendor/xoreos/src/graphics/images/txi.cpp:105-106
+            // Reva: K1 TXI clamp field -> D3D address mode.
             if (features.Clamp.HasValue)
             {
                 uint addressMode = features.Clamp.Value ? D3DTADDRESS_CLAMP : D3DTADDRESS_WRAP;
@@ -1541,15 +1535,13 @@ namespace Andastra.Game.Graphics.Common.Backends.Aurora
 
             // Extract filter parameter (texture filtering)
             // filter 0 = point (D3DTEXF_POINT), filter 1 = linear (D3DTEXF_LINEAR)
-            // Based on vendor/reone/src/libs/graphics/textureutil.cpp:127-128,138-139
-            // Based on vendor/xoreos/src/graphics/images/txi.cpp:143-144
+            // TXI filter 0=nearest, 1=linear
+            // Reva: K1 TXI filter parsed in ParseField
             bool useLinearFilter = features.Filter.HasValue && features.Filter.Value;
 
             // Extract mipmap parameter
             // mipmap 0 = disable mipmaps (use highest resolution), mipmap 1 = enable mipmaps
-            // Based on vendor/reone/src/libs/graphics/textureutil.cpp:123,138
-            // Based on vendor/xoreos/src/graphics/images/txi.cpp:172-173
-            // When mipmap is disabled (0), engine uses highest resolution (mip 0) only
+            // Reva: K1 TXI mipmap field; when disabled use highest resolution only.
             // When mipmap is enabled (1), engine uses mipmap chain with appropriate filtering
             bool useMipmaps = features.Mipmap.HasValue && features.Mipmap.Value;
 

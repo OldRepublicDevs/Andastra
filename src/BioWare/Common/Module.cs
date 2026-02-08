@@ -594,7 +594,7 @@ namespace BioWare.Common
             _cachedModId = null;
 
             // Build all capsules relevant to this root in the provided installation
-            // Use ModuleFileDiscovery to match exact swkotor.exe/swkotor2.exe behavior
+            // Use ModuleFileDiscovery to match exact k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe behavior
             string modulesPath = Installation.GetModulesPath(_installation.Path);
             ModuleFileGroup fileGroup =
                 ModuleFileDiscovery.DiscoverModuleFiles(modulesPath, _root, _installation.Game);
@@ -609,7 +609,7 @@ namespace BioWare.Common
             if (fileGroup.UsesModOverride)
             {
                 // .mod file overrides all rim-like files
-                // swkotor.exe: FUN_004094a0 line 136: Loads .mod, skips _s.rim
+                // k1_win_gog_swkotor.exe: FUN_004094a0 line 136: Loads .mod, skips _s.rim
                 _dotMod = true;
                 if (fileGroup.ModFile != null && File.Exists(fileGroup.ModFile))
                 {
@@ -619,31 +619,31 @@ namespace BioWare.Common
             else if (fileGroup.UseComplexMode)
             {
                 // Complex mode: Load _a.rim or _adx.rim (replaces .rim), then _s.rim and _dlg.erf
-                // swkotor.exe: FUN_004094a0 line 49-216
+                // k1_win_gog_swkotor.exe: FUN_004094a0 line 49-216
                 _dotMod = false;
 
                 // Step 1: Load _a.rim if exists (REPLACES .rim)
-                // swkotor.exe: FUN_004094a0 line 159
+                // k1_win_gog_swkotor.exe: FUN_004094a0 line 159
                 if (fileGroup.AreaRimFile != null && File.Exists(fileGroup.AreaRimFile))
                 {
                     _capsules[KModuleType.AREA.ToString()] = new ModuleLinkPiece(fileGroup.AreaRimFile);
                 }
                 // Step 2: Load _adx.rim if _a.rim not found (REPLACES .rim)
-                // swkotor.exe: FUN_004094a0 line 85
+                // k1_win_gog_swkotor.exe: FUN_004094a0 line 85
                 else if (fileGroup.AreaExtendedRimFile != null && File.Exists(fileGroup.AreaExtendedRimFile))
                 {
                     _capsules[KModuleType.AREA_EXTENDED.ToString()] = new ModuleLinkPiece(fileGroup.AreaExtendedRimFile);
                 }
 
                 // Step 3: Load _s.rim if exists (ADDS to base)
-                // swkotor.exe: FUN_004094a0 line 118 (only if .mod not found)
+                // k1_win_gog_swkotor.exe: FUN_004094a0 line 118 (only if .mod not found)
                 if (fileGroup.DataRimFile != null && File.Exists(fileGroup.DataRimFile))
                 {
                     _capsules[KModuleType.DATA.ToString()] = new ModuleDataPiece(fileGroup.DataRimFile);
                 }
 
                 // Step 4: Load _dlg.erf if exists (K2 only, ADDS to base)
-                // swkotor2.exe: FUN_004096b0 line 147 (only if .mod not found)
+                // k2_win_gog_aspyr_swkotor2.exe: FUN_004096b0 line 147 (only if .mod not found)
                 if (fileGroup.DlgErfFile != null && File.Exists(fileGroup.DlgErfFile))
                 {
                     _capsules[KModuleType.K2_DLG.ToString()] = new ModuleDLGPiece(fileGroup.DlgErfFile);
@@ -652,7 +652,7 @@ namespace BioWare.Common
             else
             {
                 // Simple mode: Just load .rim file directly
-                // swkotor.exe: FUN_004094a0 line 32-42
+                // k1_win_gog_swkotor.exe: FUN_004094a0 line 32-42
                 _dotMod = false;
                 if (fileGroup.MainRimFile != null && File.Exists(fileGroup.MainRimFile))
                 {

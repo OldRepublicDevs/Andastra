@@ -676,7 +676,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// 3. FindWindow() - searches for a window by class name or title
         ///
         /// Based on original game window management system:
-        /// - swkotor2.exe: Uses Windows API functions GetActiveWindow @ 0x007d963c
+        /// - k2_win_gog_aspyr_swkotor2.exe: Uses Windows API functions GetActiveWindow @ 0x007d963c
         /// - "Render Window" @ 0x007b5680 - main game window
         /// - "Exo Base Window" @ 0x007b74a0 - base window class
         ///
@@ -721,7 +721,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             {
                 "WindowsForms10.Window.8.app.0.141b42a_r6_ad1", // Common Windows Forms window class
                 "MonoGameGameWindow", // Potential MonoGame window class
-                "Render Window", // Original game window class name (from swkotor2.exe)
+                "Render Window", // Original game window class name (from k2_win_gog_aspyr_swkotor2.exe)
                 null // Will try FindWindow by title if class is null
             };
 

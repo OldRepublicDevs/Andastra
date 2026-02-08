@@ -30,7 +30,7 @@ namespace Andastra.Game.Stride.PostProcessing
     /// Based on Stride rendering pipeline: https://doc.stride3d.net/latest/en/manual/graphics/
     /// Motion blur enhances realism by simulating camera/object motion during frame exposure.
     ///
-    /// Algorithm based on swkotor2.exe: Frame buffer post-processing @ 0x007c8408
+    /// Algorithm based on k2_win_gog_aspyr_swkotor2.exe: Frame buffer post-processing @ 0x007c8408
     /// Original implementation: Uses frame buffers for rendering and effects
     /// This implementation: Full motion blur pipeline with velocity-based sampling
     /// </summary>
@@ -99,7 +99,7 @@ namespace Andastra.Game.Stride.PostProcessing
         /// - Game.Services provides access to engine services including EffectSystem, ContentManager, EffectCompiler
         /// - GraphicsDevice may have a Game property or Services() method depending on Stride version
         /// - Multiple strategies are used to ensure compatibility across Stride versions
-        /// - Original game: DirectX 8/9 fixed-function pipeline (swkotor2.exe: Frame buffer post-processing @ 0x007c8408)
+        /// - Original game: DirectX 8/9 fixed-function pipeline (k2_win_gog_aspyr_swkotor2.exe: Frame buffer post-processing @ 0x007c8408)
         /// - Modern implementation: Uses Stride's service registry for dependency injection
         /// </remarks>
         private void InitializeGameServices()
@@ -368,7 +368,7 @@ namespace Andastra.Game.Stride.PostProcessing
         /// and compiles it at runtime using EffectSystem.
         /// Motion blur shader samples along velocity vectors with Gaussian weighting.
         ///
-        /// swkotor2.exe: Frame buffer post-processing for visual effects
+        /// k2_win_gog_aspyr_swkotor2.exe: Frame buffer post-processing for visual effects
         /// Original implementation: Uses frame buffers for rendering and effects
         /// This implementation: Full motion blur pipeline with velocity-based temporal sampling
         /// </remarks>
@@ -520,7 +520,7 @@ shader MotionBlurEffect : ShaderBase
         /// - EffectSystem provides the proper compilation environment
         /// - Uses EffectCompiler internally for shader compilation
         /// - Ensures proper shader bytecode generation for the target platform
-        /// - Original game: DirectX 8/9 fixed-function pipeline (swkotor2.exe: Frame buffer post-processing @ 0x007c8408)
+        /// - Original game: DirectX 8/9 fixed-function pipeline (k2_win_gog_aspyr_swkotor2.exe: Frame buffer post-processing @ 0x007c8408)
         /// - Modern implementation: Uses programmable shaders with runtime compilation
         /// </remarks>
         private StrideGraphics.Effect CreateMotionBlurEffectWithEffectSystem(EffectSystem effectSystem)
@@ -719,7 +719,7 @@ shader MotionBlurEffect : ShaderBase
         /// - EffectCompiler compiles shader source code to Effect bytecode
         /// - EffectCompiler can be accessed from GraphicsDevice services (EffectSystem)
         /// - Compilation requires proper SDSL syntax and shader structure
-        /// - Original game: DirectX 8/9 fixed-function pipeline (swkotor2.exe: Frame buffer post-processing @ 0x007c8408, Motion_Blur @ 0x007bb610)
+        /// - Original game: DirectX 8/9 fixed-function pipeline (k2_win_gog_aspyr_swkotor2.exe: Frame buffer post-processing @ 0x007c8408, Motion_Blur @ 0x007bb610)
         /// - Modern implementation: Uses programmable shaders with runtime compilation
         /// </remarks>
         private StrideGraphics.Effect CompileShaderFromSource(string shaderSource, string shaderName)

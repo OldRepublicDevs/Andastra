@@ -18,8 +18,8 @@ namespace Andastra.Runtime.Games.Common.Components
     /// - Engine-specific: File format details, upgrade systems, property calculations, event handling
     ///
     /// Based on verified components of:
-    /// - swkotor.exe: Item component system with UTI template loading
-    /// - swkotor2.exe: Enhanced item system with upgrade support (0x005fb0f0 @ 0x005fb0f0 loads item templates)
+    /// - k1_win_gog_swkotor.exe: Item component system with UTI template loading
+    /// - k2_win_gog_aspyr_swkotor2.exe: Enhanced item system with upgrade support (0x005fb0f0 @ 0x005fb0f0 loads item templates)
     /// - nwmain.exe: Aurora item system using identical UTI format to Odyssey
     /// - daorigins.exe: Eclipse item system with enhanced property system
     /// - DragonAge2.exe: Enhanced Eclipse item system

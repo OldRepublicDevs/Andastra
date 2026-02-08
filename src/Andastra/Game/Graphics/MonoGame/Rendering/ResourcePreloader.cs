@@ -154,8 +154,8 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
         /// - Handles all entity types (Creatures, Placeables, Doors, etc.)
         ///
         /// Based on original engine resource loading behavior (reverse engineered ):
-        /// - swkotor2.exe: CSWCCreature::LoadModel() @ 0x007c82fc loads models on-demand when entities are created/rendered
-        /// - swkotor2.exe: Model loading occurs via LoadModel functions (CSWCCreature::LoadModel, CSWCVisualEffect::LoadModel, etc.)
+        /// - k2_win_gog_aspyr_swkotor2.exe: CSWCCreature::LoadModel() @ 0x007c82fc loads models on-demand when entities are created/rendered
+        /// - k2_win_gog_aspyr_swkotor2.exe: Model loading occurs via LoadModel functions (CSWCCreature::LoadModel, CSWCVisualEffect::LoadModel, etc.)
         /// - nwmain.exe: CExoEncapsulatedFile::ReadResource() @ 0x14018ca10 reads resources from encapsulated files on-demand
         /// - Original engines load resources synchronously when needed (no explicit preloading system)
         ///
@@ -299,7 +299,7 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
             // AnimationComponent doesn't store separate resource references, animations are in MDL files
 
             // Extract sound resources from sound component (if exists)
-            // Based on swkotor.exe, swkotor2.exe, nwmain.exe, daorigins.exe, DragonAge2.exe: Sound components store sound file references
+            // Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe, nwmain.exe, daorigins.exe, DragonAge2.exe: Sound components store sound file references
             // Sound components are engine-agnostic via ISoundComponent interface
             ISoundComponent soundComponent = entity.GetComponent<ISoundComponent>();
             if (soundComponent != null)
@@ -325,7 +325,7 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
                 // Extract UTS template resource reference if available
                 // UTS templates define sound properties and contain references to actual sound files
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UTS templates loaded from TemplateResRef field
-                // swkotor2.exe: LoadSoundTemplate @ 0x005706b0 loads UTS templates and extracts sound files
+                // k2_win_gog_aspyr_swkotor2.exe: LoadSoundTemplate @ 0x005706b0 loads UTS templates and extracts sound files
                 // The UTS template contains a "Sounds" list (GFFList) with ResRef entries for WAV sound files
                 // We preload the UTS template itself, then parse it to extract and preload referenced sound files
                 if (!string.IsNullOrEmpty(soundComponent.TemplateResRef))

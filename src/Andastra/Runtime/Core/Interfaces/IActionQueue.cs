@@ -16,7 +16,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Action types: Move, Attack, UseObject, SpeakString, PlayAnimation, etc.
     /// 
     /// Engine-specific implementations:
-    /// - Odyssey (swkotor.exe, swkotor2.exe): Uses GFF-based action serialization (ActionList field)
+    /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): Uses GFF-based action serialization (ActionList field)
     /// - Aurora (nwmain.exe, nwn2main.exe): Uses GFF-based action serialization (ActionList field, CNWSObject methods)
     /// - Eclipse (daorigins.exe, DragonAge2.exe, ): Uses ActionFramework (different architecture)
     /// - Infinity (, ): May use different system (needs investigation)

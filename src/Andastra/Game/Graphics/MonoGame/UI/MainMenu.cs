@@ -22,7 +22,7 @@ namespace Andastra.Game.Graphics.MonoGame.UI
     /// - Main menu uses GUI system with panel files (mainmenu_p.gui)
     /// - Based on KOTOR main menu conventions from vendor/PyKotor/wiki/
     /// </remarks>
-    public class MainMenu
+    public class LegacyMainMenu
     {
         private SpriteBatch _spriteBatch;
         private SpriteFont _font;
@@ -51,7 +51,7 @@ namespace Andastra.Game.Graphics.MonoGame.UI
             }
         }
 
-        public MainMenu(GraphicsDevice device, SpriteFont font)
+        public LegacyMainMenu(GraphicsDevice device, SpriteFont font)
         {
             _spriteBatch = new SpriteBatch(device);
             _font = font ?? throw new System.ArgumentNullException("font");

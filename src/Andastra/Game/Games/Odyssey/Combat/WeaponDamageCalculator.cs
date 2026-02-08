@@ -15,10 +15,10 @@ namespace Andastra.Game.Games.Odyssey.Combat
     /// <remarks>
     /// Odyssey Weapon Damage Calculator:
     /// - Based on common weapon damage calculation logic
-    /// - Located via string references in swkotor2.exe: ["damagedice"] @ (K1: TODO: Find this address, TSL: 0x007c2e60), ["damagedie"] @ (K1: TODO: Find this address, TSL: 0x007c2e70), ["damagebonus"] @ (K1: TODO: Find this address, TSL: 0x007c2e80)
+    /// - Located via string references in k2_win_gog_aspyr_swkotor2.exe: ["damagedice"] @ (K1: TODO: Find this address, TSL: 0x007c2e60), ["damagedie"] @ (K1: TODO: Find this address, TSL: 0x007c2e70), ["damagebonus"] @ (K1: TODO: Find this address, TSL: 0x007c2e80)
     /// - ["DamageDice"] @ (K1: TODO: Find this address, TSL: 0x007c2d3c), ["DamageDie"] @ (K1: TODO: Find this address, TSL: 0x007c2d30) - damage dice fields
     /// - ["BaseItem"] @ (K1: TODO: Find this address, TSL: 0x007c2e90) (base item ID in item GFF), ["weapontype"] @ (K1: TODO: Find this address, TSL: 0x007c2ea0)
-    /// - ["OnHandDamageMod"] @ (K1: TODO: Find this address, TSL: 0x007c2e40), ["OffHandDamageMod"] @ (K1: TODO: Find this address, TSL: 0x007c2e18) (damage modifiers in swkotor2.exe)
+    /// - ["OnHandDamageMod"] @ (K1: TODO: Find this address, TSL: 0x007c2e40), ["OffHandDamageMod"] @ (K1: TODO: Find this address, TSL: 0x007c2e18) (damage modifiers in k2_win_gog_aspyr_swkotor2.exe)
     /// - Cross-engine: nwmain.exe (Aurora uses different 2DA tables), daorigins.exe (Eclipse uses different damage system)
     /// - Inheritance: BaseWeaponDamageCalculator (Runtime.Games.Common.Combat) implements common damage calculation logic
     ///   - Odyssey: WeaponDamageCalculator : BaseWeaponDamageCalculator (Runtime.Games.Odyssey) - Odyssey-specific baseitems.2da lookup
@@ -169,13 +169,13 @@ namespace Andastra.Game.Games.Odyssey.Combat
         /// <returns>True if the item is a lightsaber, false otherwise.</returns>
         /// <remarks>
         /// Lightsaber Detection:
-        /// - Based on common lightsaber detection logic shared between swkotor.exe (K1) and swkotor2.exe (K2)
+        /// - Based on common lightsaber detection logic shared between k1_win_gog_swkotor.exe (K1) and k2_win_gog_aspyr_swkotor2.exe (K2)
         /// - Located via string references: Lightsaber detection in baseitems.2da lookup (identical in both executables)
-        /// - Original implementation: Both swkotor.exe and swkotor2.exe use identical lightsaber detection logic
+        /// - Original implementation: Both k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe use identical lightsaber detection logic
         ///   - Checks baseitems.2da "itemclass" or "weapontype" column
         ///   - Lightsabers have specific item class values (typically itemclass = 15 for lightsabers)
         ///   - Alternative: Check "weapontype" column for lightsaber weapon type (weapontype = 4)
-        /// - Cross-engine: Identical detection in swkotor.exe (K1) and swkotor2.exe (K2), different in nwmain.exe (Aurora)
+        /// - Cross-engine: Identical detection in k1_win_gog_swkotor.exe (K1) and k2_win_gog_aspyr_swkotor2.exe (K2), different in nwmain.exe (Aurora)
         /// </remarks>
         private bool IsLightsaber(int baseItemId)
         {
@@ -284,8 +284,8 @@ namespace Andastra.Game.Games.Odyssey.Combat
 
             // Get CreatureComponent to access feat list
             // Note: Using runtime component type directly for Odyssey-specific implementation
-            // swkotor.exe (K1): 0x004ede10 - native feat check function accesses creature's feat list
-            // swkotor2.exe (TSL): 0x0050e980 - native feat check function accesses creature's feat list
+            // k1_win_gog_swkotor.exe (K1): 0x004ede10 - native feat check function accesses creature's feat list
+            // k2_win_gog_aspyr_swkotor2.exe (TSL): 0x0050e980 - native feat check function accesses creature's feat list
             var creatureComp = creature.GetComponent<CreatureComponent>();
             if (creatureComp == null || creatureComp.FeatList == null)
             {
@@ -296,8 +296,8 @@ namespace Andastra.Game.Games.Odyssey.Combat
             // Native implementation: Checks feat list structure at creature + offset (feat list pointer)
             // Iterates through feat entries and compares feat ID with requested feat ID
             // Returns true if match found, false if list exhausted without match
-            // swkotor.exe (K1): 0x004ede10 - compares feat ID against list entries
-            // swkotor2.exe (TSL): 0x0050e980 - compares feat ID against list entries
+            // k1_win_gog_swkotor.exe (K1): 0x004ede10 - compares feat ID against list entries
+            // k2_win_gog_aspyr_swkotor2.exe (TSL): 0x0050e980 - compares feat ID against list entries
             return creatureComp.FeatList.Contains(featId);
         }
 

@@ -8,7 +8,7 @@ namespace Andastra.Runtime.Core.Journal
     /// Manages the quest/journal system (Odyssey-specific implementation).
     /// </summary>
     /// <remarks>
-    /// Odyssey Journal System (swkotor.exe, swkotor2.exe):
+    /// Odyssey Journal System (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe):
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) journal/quest system
     /// - Located via string references: "JOURNAL" @ 0x007bdf44, "NW_JOURNAL" @ 0x007c20e8, "Journal" @ 0x007c2490
     /// - "journal_p" @ 0x007ca9c4, "LBL_JOURNAL" @ 0x007c8c60, "LBL_JOURNAL_DESC" @ 0x007c8c4c

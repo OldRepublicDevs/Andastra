@@ -7,7 +7,7 @@ namespace Andastra.Runtime.Core.Game
     /// </summary>
     /// <remarks>
     /// Character Creation Data:
-    /// - Based on swkotor.exe and swkotor2.exe character creation system
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe character creation system
     /// - Used during new game initialization to create player entity
     /// - Contains: Class, Gender, Appearance, Portrait, Name, Attributes, Skills
     /// </remarks>
@@ -70,7 +70,7 @@ namespace Andastra.Runtime.Core.Game
 
         /// <summary>
         /// Skill ranks allocated during character creation.
-        /// Based on swkotor.exe and swkotor2.exe: Character creation stores skill ranks in character data
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Character creation stores skill ranks in character data
         /// - Original implementation: Skill ranks are stored as dictionary mapping skill ID (0-7) to rank value
         /// - Skills are set on creature's StatsComponent when character is created
         /// - Skill ranks: 0 = untrained, 1-4 for class skills, 1-2 for cross-class skills at level 1
@@ -84,7 +84,7 @@ namespace Andastra.Runtime.Core.Game
     /// </summary>
     /// <remarks>
     /// Character Class Enum:
-    /// - Based on swkotor.exe and swkotor2.exe classes.2da
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe classes.2da
     /// - Class IDs: Soldier=0, Scout=1, Scoundrel=2, JediGuardian=3, JediConsular=4, JediSentinel=5
     /// </remarks>
     public enum CharacterClass
@@ -102,7 +102,7 @@ namespace Andastra.Runtime.Core.Game
     /// </summary>
     /// <remarks>
     /// Gender Enum:
-    /// - Based on swkotor.exe and swkotor2.exe gender system
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe gender system
     /// - Gender values: Male=0, Female=1
     /// </remarks>
     public enum Gender

@@ -7,12 +7,12 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Loading Screen Interface:
-    /// - Based on swkotor.exe and swkotor2.exe loading screen system
-    /// - Located via string references: "loadscreen_p" @ 0x007cbe40 (swkotor2.exe), "loadscreen" @ 0x00752db0 (swkotor.exe)
-    /// - "LoadScreenID" @ 0x007bd54c (swkotor2.exe), "LoadScreenID" @ 0x00747880 (swkotor.exe)
-    /// - "LBL_LOADING" @ 0x007cbe10 (swkotor2.exe), "Loading" @ 0x007c7e40 (swkotor2.exe)
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe loading screen system
+    /// - Located via string references: "loadscreen_p" @ 0x007cbe40 (k2_win_gog_aspyr_swkotor2.exe), "loadscreen" @ 0x00752db0 (k1_win_gog_swkotor.exe)
+    /// - "LoadScreenID" @ 0x007bd54c (k2_win_gog_aspyr_swkotor2.exe), "LoadScreenID" @ 0x00747880 (k1_win_gog_swkotor.exe)
+    /// - "LBL_LOADING" @ 0x007cbe10 (k2_win_gog_aspyr_swkotor2.exe), "Loading" @ 0x007c7e40 (k2_win_gog_aspyr_swkotor2.exe)
     /// - "PB_PROGRESS" @ 0x007cb33c (progress bar), "LBL_HINT" (loading hints), "LBL_LOGO" (logo label)
-    /// - Original implementation: 0x006cff90 @ 0x006cff90 (swkotor2.exe) initializes loading screen GUI panel
+    /// - Original implementation: 0x006cff90 @ 0x006cff90 (k2_win_gog_aspyr_swkotor2.exe) initializes loading screen GUI panel
     /// - Loading screen GUI: "loadscreen_p" GUI file contains panel with progress bar, hints, logo, and loading image
     /// - Loading screen image: Set via LoadScreenResRef from module IFO file (TPC format texture)
     /// - Loading screen display: Shown during module transitions, hidden after module load completes
@@ -21,7 +21,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Engine-specific implementations provide concrete functionality for their respective engines
     ///
     /// Based on verified components of loading screen systems:
-    /// - Odyssey (swkotor.exe, swkotor2.exe): GUI panel-based loading screen with progress bar and hints
+    /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): GUI panel-based loading screen with progress bar and hints
     /// - Aurora (nwmain.exe): Similar GUI panel-based loading screen system
     /// - Eclipse (daorigins.exe, DragonAge2.exe): Advanced loading screen with animated backgrounds
     /// - Infinity (, ): Modern loading screen with cinematic transitions

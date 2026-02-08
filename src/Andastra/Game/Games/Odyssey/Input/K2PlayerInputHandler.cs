@@ -12,11 +12,11 @@ using Andastra.Game.Games.Odyssey.Systems;
 namespace Andastra.Game.Games.Odyssey.Input
 {
     /// <summary>
-    /// KOTOR 2: The Sith Lords (swkotor2.exe) specific player input handler.
+    /// KOTOR 2: The Sith Lords (k2_win_gog_aspyr_swkotor2.exe) specific player input handler.
     /// </summary>
     /// <remarks>
     /// K2 Player Input Handler:
-    /// - Input processing system (swkotor2.exe): Cursor mode determination and input handling
+    /// - Input processing system (k2_win_gog_aspyr_swkotor2.exe): Cursor mode determination and input handling
     /// - UpdateCreatureMovement @ 0x0054be70: Handles movement updates during input processing
     /// - SerializeCreature_K2 @ 0x005226d0: NOT related to input (saves creature data to GFF)
     /// - Located via string references: "Mouse Sensitivity" @ 0x007c85cc, "Mouse Look" @ 0x007c8608, "Reverse Mouse Buttons" @ 0x007c8628
@@ -36,17 +36,17 @@ namespace Andastra.Game.Games.Odyssey.Input
     ///   - Combat forms (affects combat cursor modes)
     ///   - Item crafting system (workbench/lab station interaction)
     /// - Reverse engineered functions:
-    ///   - 0x005226d0 @ 0x005226d0 (swkotor2.exe: player input handling and movement)
+    ///   - 0x005226d0 @ 0x005226d0 (k2_win_gog_aspyr_swkotor2.exe: player input handling and movement)
     ///   - UpdateCreatureMovement @ 0x0054be70 (movement handling)
     ///   - Input processing functions in CExoInputInternal class
     /// - Cross-engine comparison:
-    ///   - K1 (swkotor.exe): Similar input system, but lacks K2-specific features (Influence, Prestige Classes, Combat Forms)
-    ///   - K2 (swkotor2.exe): Enhanced input system with additional features
+    ///   - K1 (k1_win_gog_swkotor.exe): Similar input system, but lacks K2-specific features (Influence, Prestige Classes, Combat Forms)
+    ///   - K2 (k2_win_gog_aspyr_swkotor2.exe): Enhanced input system with additional features
     ///   - Common: Both use DirectInput8, similar click-to-move system, same basic input model
     /// - Inheritance structure:
     ///   - PlayerInputHandler (Runtime.Core.Movement): Core input handling interface
     ///   - OdysseyPlayerInputHandler (Runtime.Games.Odyssey.Input): Common Odyssey logic
-    ///   - K2PlayerInputHandler (Runtime.Games.Odyssey.Input): K2-specific (swkotor2.exe: 0x005226d0, 0x0054be70)
+    ///   - K2PlayerInputHandler (Runtime.Games.Odyssey.Input): K2-specific (k2_win_gog_aspyr_swkotor2.exe: 0x005226d0, 0x0054be70)
     /// </remarks>
     public class K2PlayerInputHandler : OdysseyPlayerInputHandler
     {
@@ -67,7 +67,7 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// <param name="hoveredEntity">The entity under the cursor.</param>
         /// <returns>The appropriate cursor mode.</returns>
         /// <remarks>
-        /// Cursor mode determination with combat form support (swkotor2.exe):
+        /// Cursor mode determination with combat form support (k2_win_gog_aspyr_swkotor2.exe):
         /// - K2 has Combat Forms which can affect cursor display (attack cursor variations)
         /// - Cursor mode determination is part of the input processing system (exact function address TBD)
         /// - UpdateCreatureMovement @ 0x0054be70 handles movement updates during input processing
@@ -77,7 +77,7 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// - Lightsaber forms (258-264) affect attack cursor display
         /// - Force forms (265-268) do not affect cursor display (use standard Attack cursor)
         /// - Combat forms are tracked in entity stats/combat state
-        /// - Original implementation: swkotor2.exe checks active combat form when determining attack cursor
+        /// - Original implementation: k2_win_gog_aspyr_swkotor2.exe checks active combat form when determining attack cursor
         /// - Further reverse engineering needed: Exact function address for cursor mode determination in input processing system
         /// </remarks>
         protected override CursorMode DetermineCursorMode(IEntity hoveredEntity)
@@ -134,11 +134,11 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// </summary>
         /// <returns>The active combat form, or None if no form is active or leader is not available.</returns>
         /// <remarks>
-        /// Active combat form retrieval (swkotor2.exe):
+        /// Active combat form retrieval (k2_win_gog_aspyr_swkotor2.exe):
         /// - Combat forms are stored as "ActiveCombatForm" in entity data
         /// - GetIsFormActive NWScript function checks if specific form is active
         /// - Form values match CombatForm enum constants (258-268 for lightsaber/force forms)
-        /// - Original implementation: swkotor2.exe stores active form in creature data structure
+        /// - Original implementation: k2_win_gog_aspyr_swkotor2.exe stores active form in creature data structure
         /// - Form activation: Set via SetIsFormActive NWScript function or combat form selection UI
         /// - Further reverse engineering needed: Exact function address for GetIsFormActive NWScript implementation
         /// </remarks>
@@ -152,7 +152,7 @@ namespace Andastra.Game.Games.Odyssey.Input
             }
 
             // Get active combat form from entity data (stored as "ActiveCombatForm")
-            // ActiveCombatForm is stored as int in entity data (swkotor2.exe)
+            // ActiveCombatForm is stored as int in entity data (k2_win_gog_aspyr_swkotor2.exe)
             // Located via string references: GetIsFormActive function checks "ActiveCombatForm" data
             // Further reverse engineering needed: Exact function address for GetIsFormActive NWScript implementation
             if (leader.HasData("ActiveCombatForm"))
@@ -176,7 +176,7 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// </summary>
         /// <returns>The attack range for the current weapon.</returns>
         /// <remarks>
-        /// Attack range calculation with K2-specific features (swkotor2.exe):
+        /// Attack range calculation with K2-specific features (k2_win_gog_aspyr_swkotor2.exe):
         /// - K2 has prestige classes which can affect weapon proficiency and range
         /// - Combat forms can affect attack range in some cases
         /// - Base weapon range calculation is similar to K1, but with K2-specific modifiers
@@ -194,7 +194,7 @@ namespace Andastra.Game.Games.Odyssey.Input
             }
 
             // Get equipped weapon from main hand (slot 4)
-            // INVENTORY_SLOT_RIGHTWEAPON = 4 (swkotor2.exe)
+            // INVENTORY_SLOT_RIGHTWEAPON = 4 (k2_win_gog_aspyr_swkotor2.exe)
             // Located via string references: "INVENTORY_SLOT_RIGHTWEAPON" = 4
             // Original implementation: Gets equipped weapon from right hand slot
             // Further reverse engineering needed: Exact function address for inventory slot access
@@ -222,7 +222,7 @@ namespace Andastra.Game.Games.Odyssey.Input
             }
 
             // Get base item ID from weapon component and look up attack range from baseitems.2da
-            // Weapon system (swkotor2.exe): Reads maxattackrange from baseitems.2da using BaseItem ID
+            // Weapon system (k2_win_gog_aspyr_swkotor2.exe): Reads maxattackrange from baseitems.2da using BaseItem ID
             // Located via string references: "WeaponType" in baseitems.2da, "maxattackrange" column
             // Original implementation: Reads maxattackrange from baseitems.2da using BaseItem ID
             // xoreos implementation: Item::getMaxAttackRange() @ vendor/xoreos/src/engines/kotorbase/item.cpp:74
@@ -236,7 +236,7 @@ namespace Andastra.Game.Games.Odyssey.Input
                 if (baseItemId >= 0)
                 {
                     // Read maxattackrange from baseitems.2da using GameDataProvider
-                    // Reads maxattackrange column from baseitems.2da row indexed by BaseItem ID (swkotor2.exe)
+                    // Reads maxattackrange column from baseitems.2da row indexed by BaseItem ID (k2_win_gog_aspyr_swkotor2.exe)
                     float maxAttackRange = World.GameDataProvider.GetTableFloat("baseitems", baseItemId, "maxattackrange", 0.0f);
                     if (maxAttackRange > 0.0f)
                     {
@@ -247,7 +247,7 @@ namespace Andastra.Game.Games.Odyssey.Input
                     }
 
                     // Fallback: Check if ranged weapon to use default ranged range
-                    // Ranged weapons have longer default range than melee (swkotor2.exe)
+                    // Ranged weapons have longer default range than melee (k2_win_gog_aspyr_swkotor2.exe)
                     // Read rangedweapon flag from baseitems.2da to determine if ranged
                     int rangedWeapon = (int)World.GameDataProvider.GetTableFloat("baseitems", baseItemId, "rangedweapon", 0.0f);
                     if (rangedWeapon != 0)
@@ -269,7 +269,7 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// <param name="entity">The entity to check.</param>
         /// <returns>True if the entity is hostile.</returns>
         /// <remarks>
-        /// Hostility check with K2 Influence system (swkotor2.exe):
+        /// Hostility check with K2 Influence system (k2_win_gog_aspyr_swkotor2.exe):
         /// - K2 has an Influence system that can affect faction relationships
         /// - Party member influence can change how NPCs react (hostile/friendly)
         /// - Base hostility check is similar to K1, but with K2-specific influence modifiers
@@ -278,7 +278,7 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// - High influence (80-100) with certain party members can make NPCs more friendly
         /// - Low influence (0-20) can make NPCs more hostile
         /// - Influence affects personal reputation, which overrides faction-based reputation
-        /// - Original implementation: swkotor2.exe checks active party members' influence when determining hostility
+        /// - Original implementation: k2_win_gog_aspyr_swkotor2.exe checks active party members' influence when determining hostility
         /// - Influence modifier calculation:
         ///   - For each active party member with influence != 50 (neutral):
         ///     - High influence (80-100): +1 to +20 reputation modifier (more friendly)
@@ -343,7 +343,7 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// </summary>
         /// <returns>The FactionManager instance, or null if not available.</returns>
         /// <remarks>
-        /// FactionManager access (swkotor2.exe):
+        /// FactionManager access (k2_win_gog_aspyr_swkotor2.exe):
         /// - FactionManager is accessible through entity components or world context
         /// - FactionComponent has reference to FactionManager for reputation lookups
         /// - Original implementation: FactionManager is stored in GameSession and accessible through components
@@ -383,7 +383,7 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// <param name="targetEntity">The target entity to check influence effects for.</param>
         /// <returns>The reputation modifier (-20 to +20) based on party influence.</returns>
         /// <remarks>
-        /// Influence-based reputation modifier calculation (swkotor2.exe):
+        /// Influence-based reputation modifier calculation (k2_win_gog_aspyr_swkotor2.exe):
         /// - Influence system affects how NPCs react to the party
         /// - Each active party member's influence (0-100, 50 = neutral) contributes to reputation modifier
         /// - High influence (80-100): Positive modifier (makes NPCs more friendly)
@@ -394,7 +394,7 @@ namespace Andastra.Game.Games.Odyssey.Input
         ///     - If influence > 50: modifier = (influence - 50) / 2.5 (max +20 at 100)
         ///     - If influence < 50: modifier = (influence - 50) / 2.5 (min -20 at 0)
         ///   - Average modifier across all active party members
-        /// - Original implementation: swkotor2.exe calculates influence modifier when determining hostility
+        /// - Original implementation: k2_win_gog_aspyr_swkotor2.exe calculates influence modifier when determining hostility
         /// - Some NPCs may have specific relationships with certain party members (not implemented here, would require NPC-specific data)
         /// - Further reverse engineering needed: Exact function address for influence modifier calculation
         /// </remarks>

@@ -36,15 +36,15 @@ namespace BioWare.Resource.Formats.GFF.Generics
     [PublicAPI]
     public sealed class FACFaction
     {
-        // Engine references: swkotor2.exe:0x005acf30 line 40, swkotor.exe:0x0052b5c0 line 40
-        // Engine default: "" (swkotor2.exe:0x005acf30 line 38, swkotor.exe:0x0052b5c0 line 38)
+        // Engine references: k2_win_gog_aspyr_swkotor2.exe:0x005acf30 line 40, k1_win_gog_swkotor.exe:0x0052b5c0 line 40
+        // Engine default: "" (k2_win_gog_aspyr_swkotor2.exe:0x005acf30 line 38, k1_win_gog_swkotor.exe:0x0052b5c0 line 38)
         public string Name { get; set; } = string.Empty;
 
-        // Engine default: 0 (swkotor2.exe:0x005acf30 line 47, swkotor.exe:0x0052b5c0 line 47)
+        // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x005acf30 line 47, k1_win_gog_swkotor.exe:0x0052b5c0 line 47)
         // Standard factions use 0xFFFFFFFF (-1) for no parent
         public int ParentId { get; set; } = unchecked((int)0xFFFFFFFF);
 
-        // Engine default: 0, but if field missing defaults to 1 (swkotor2.exe:0x005acf30 lines 48-52, swkotor.exe:0x0052b5c0 lines 48-52)
+        // Engine default: 0, but if field missing defaults to 1 (k2_win_gog_aspyr_swkotor2.exe:0x005acf30 lines 48-52, k1_win_gog_swkotor.exe:0x0052b5c0 lines 48-52)
         public bool IsGlobal { get; set; }
 
         public FACFaction()
@@ -58,13 +58,13 @@ namespace BioWare.Resource.Formats.GFF.Generics
     [PublicAPI]
     public sealed class FACReputation
     {
-        // Engine reference: swkotor2.exe:0x005ad1a0 line 23, swkotor.exe:0x0052b830 line 23
+        // Engine reference: k2_win_gog_aspyr_swkotor2.exe:0x005ad1a0 line 23, k1_win_gog_swkotor.exe:0x0052b830 line 23
         public int FactionId1 { get; set; }
 
-        // Engine reference: swkotor2.exe:0x005ad1a0 line 24, swkotor.exe:0x0052b830 line 24
+        // Engine reference: k2_win_gog_aspyr_swkotor2.exe:0x005ad1a0 line 24, k1_win_gog_swkotor.exe:0x0052b830 line 24
         public int FactionId2 { get; set; }
 
-        // Engine default: 100 (swkotor2.exe:0x005ad1a0 line 21, swkotor.exe:0x0052b830 line 20)
+        // Engine default: 100 (k2_win_gog_aspyr_swkotor2.exe:0x005ad1a0 line 21, k1_win_gog_swkotor.exe:0x0052b830 line 20)
         // Note: Only written if != 100, so default is 100
         public int Reputation { get; set; } = 100;
 

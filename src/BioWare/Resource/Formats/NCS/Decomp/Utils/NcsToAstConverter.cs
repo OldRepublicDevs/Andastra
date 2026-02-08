@@ -239,7 +239,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
             // 3. File has multiple SAVEBP instructions and NO entry stub pattern
             // 4. File has SAVEBP count > 1 and the entry pattern (JSR+RETN) is missing
             // 5. File has no SAVEBP but has multiple function-like structures (SAVEBP-RETN patterns)
-            // swkotor2.exe: Include file detection verified in original engine bytecode
+            // k2_win_gog_aspyr_swkotor2.exe: Include file detection verified in original engine bytecode
             bool isIncludeFile = false;
 
             // Heuristic 1: File starts with SAVEBP - likely an include file with multiple functions
@@ -270,7 +270,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
                 // Check for entry stub pattern AFTER the last SAVEBP
                 // Normal scripts have: [globals up to SAVEBP] [JSR] [RETN] [main code]
                 // Include files have: [globals up to SAVEBP] [function1 code] [SAVEBP] [function2 code] ...
-                // swkotor2.exe: Entry stub pattern detection verified in original engine bytecode
+                // k2_win_gog_aspyr_swkotor2.exe: Entry stub pattern detection verified in original engine bytecode
                 int entryStubCheck = savebpIndex + 1;
                 bool hasEntryStub = HasEntryStubPattern(instructions, entryStubCheck, ncs);
 
@@ -422,7 +422,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
             // - int StartingConditional(): RSADDI, JSR, RETN
             // - float SomeFunc(): RSADDF, JSR, RETN
             // etc.
-            // Based on swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
+            // Based on k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
             int entryJsrTarget = -1;
             int entryStubStart = (savebpIndex >= 0) ? savebpIndex + 1 : 0;
             int entryReturnType = 0; // 0=void, 3=int, 4=float, 5=string, 6=object
@@ -604,7 +604,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
             // - [RSADD*], JSR, RESTOREBP (external compiler pattern with return values)
             // - JSR, RETN (void functions without RSADD*)
             // - JSR, RESTOREBP (external compiler pattern without RSADD*)
-            // swkotor2.exe: Entry stub patterns verified in original engine bytecode
+            // k2_win_gog_aspyr_swkotor2.exe: Entry stub patterns verified in original engine bytecode
             bool HasEntryStubPattern(List<NCSInstruction> instList, int startIndex, NCS ncsFile)
             {
                 if (instList == null || startIndex < 0 || startIndex >= instList.Count)
@@ -644,7 +644,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
                 }
 
                 // Pattern 2: [RSADD*], JSR, RESTOREBP (entry stub with RESTOREBP, used by external compiler)
-                // swkotor2.exe: 0x004eb750 - If RESTOREBP is followed by MOVSP+RETN+RETN at the end, it's cleanup code, not entry stub
+                // k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 - If RESTOREBP is followed by MOVSP+RETN+RETN at the end, it's cleanup code, not entry stub
                 if (instList.Count > jsrIdx + 1 &&
                     instList[jsrIdx].InsType == NCSInstructionType.JSR &&
                     instList[jsrIdx].Jump != null &&
@@ -677,7 +677,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
 
             // CRITICAL: Skip entry stub detection for include files
             // Include files have NO entry stub (JSR+RETN) - they're collections of functions
-            // swkotor2.exe: Include files verified to have no entry stub in original engine bytecode
+            // k2_win_gog_aspyr_swkotor2.exe: Include files verified to have no entry stub in original engine bytecode
             if (!isIncludeFile && instructions.Count >= entryStubStart + 2)
             {
                 Debug($"DEBUG NcsToAstConverter: Checking entry stub at {entryStubStart}: {instructions[entryStubStart].InsType}, next: {instructions[entryStubStart + 1].InsType}");
@@ -713,7 +713,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
                 }
                 // Pattern 2: [RSADD*], JSR, RESTOREBP (entry stub with RESTOREBP, used by external compiler)
                 // Based on CalculateEntryStubEnd: Entry stub ends after RESTOREBP (exclusive index)
-                // swkotor2.exe: 0x004eb750 - If RESTOREBP is followed by MOVSP+RETN+RETN at the end, it's cleanup code, not entry stub
+                // k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 - If RESTOREBP is followed by MOVSP+RETN+RETN at the end, it's cleanup code, not entry stub
                 else if (instructions.Count > jsrIdx + 1 &&
                          instructions[jsrIdx].InsType == NCSInstructionType.JSR &&
                          instructions[jsrIdx].Jump != null &&
@@ -776,7 +776,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
                         int jumpIdx = ncs.GetInstructionIndex(inst.Jump);
                         // Exclude entry JSR target (main) and position 0 from subroutine starts
                         // Also exclude positions within globals range (0 to savebpIndex+1) and entry stub
-                        // swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
+                        // k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
                         // CRITICAL: Include files have NO entry stub, so skip entry stub calculation
                         int globalsAndStubEnd = (savebpIndex >= 0) ? savebpIndex + 1 : 0;
                         if (savebpIndex >= 0 && !isIncludeFile)
@@ -797,7 +797,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
                         // 3. jumpIdx is within valid instruction range (0 to instructions.Count-1)
                         //    - Prevents out-of-bounds access
                         //    - A subroutine start at instructions.Count would be invalid
-                        // swkotor2.exe: 0x004eb750 - Subroutine detection verified in original engine bytecode
+                        // k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 - Subroutine detection verified in original engine bytecode
                         // Based on original engine: Subroutines are identified by JSR targets that are:
                         // - After globals initialization (savebpIndex+1 or 0 if no SAVEBP)
                         // - After entry stub (JSR+RETN pattern) if present
@@ -920,7 +920,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
                 }
 
                 // Calculate where globals and entry stub end
-                // swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
+                // k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
                 int globalsEnd = savebpIndex + 1;
                 int calculatedEntryStubEnd = CalculateEntryStubEnd(instructions, globalsEnd, ncs);
                 if (calculatedEntryStubEnd > globalsEnd)
@@ -969,7 +969,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
                 if (entryJsrTarget >= 0 && entryJsrTarget > calculatedEntryStubEnd && !entryJsrTargetIsLastRetn2)
                 {
                     // entryJsrTarget is valid and after entry stub and not the last RETN - use it
-                    // swkotor2.exe: 0x004eb750 - Entry JSR target points to main function start
+                    // k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 - Entry JSR target points to main function start
                     // This is the normal case: entry stub (JSR+RETN) calls main function at entryJsrTarget
                     // Validation: Ensure entryJsrTarget is within valid instruction range
                     if (entryJsrTarget < instructions.Count)
@@ -1029,7 +1029,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
                 else if (entryJsrTargetIsLastRetn2 && entryJsrTarget >= 0 && entryJsrTarget >= calculatedEntryStubEnd)
                 {
                     // CRITICAL FIX: If entry JSR targets last RETN, determine where main code actually starts
-                    // swkotor2.exe: 0x004eb750 - Entry stub (JSR+RETN) is just a wrapper - actual main code is after globals initialization
+                    // k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 - Entry stub (JSR+RETN) is just a wrapper - actual main code is after globals initialization
                     // The entry stub wraps the main function call, but the actual main code is after globals (SAVEBP+1)
                     // If there's only cleanup code after entry stub (MOVSP+RETN+RETN), main code is before entry stub
                     // If there's real code after entry stub, that's the main code
@@ -1104,7 +1104,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
             {
                 // No SAVEBP - no globals, main starts at 0 or after entry stub
                 // CRITICAL: When there's no SAVEBP, entry stub is at position 0 (if present)
-                // Based on swkotor2.exe: 0x004eb750 - Entry stub at position 0 when no SAVEBP
+                // Based on k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 - Entry stub at position 0 when no SAVEBP
                 // We need to detect entry stub at position 0 and skip it when setting mainStart
                 // CRITICAL: Include files have NO entry stub, so skip detection for include files
 
@@ -1164,7 +1164,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
             if (savebpIndex >= 0 && !isIncludeFile)
             {
                 // Check for entry stub and adjust globalsEndForMain using comprehensive pattern detection
-                // swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
+                // k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
                 // Skip for include files - they have no entry stub
                 globalsEndForMain = CalculateEntryStubEnd(instructions, globalsEndForMain, ncs);
             }
@@ -1263,7 +1263,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
             if (savebpIndex >= 0 && !isIncludeFile)
             {
                 // Calculate entryStubEndInner using comprehensive entry stub pattern detection
-                // swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
+                // k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
                 // Skip for include files - they have no entry stub
                 int globalsEnd = savebpIndex + 1;
                 int entryStubEndInner = CalculateEntryStubEnd(instructions, globalsEnd, ncs);
@@ -1478,7 +1478,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
                     // This happens when entry JSR targets last RETN and there's no actual code between entryStubEnd and last RETN
                     // Check if there's actual meaningful code between entryStubEnd and the last RETN
                     // If not (just entry stub + cleanup patterns like MOVSP/RETN), the main code is in globals and we need to split
-                    // swkotor2.exe: 0x004eb750 - Entry stub pattern detection and main code location verified in original engine bytecode
+                    // k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 - Entry stub pattern detection and main code location verified in original engine bytecode
                     bool mainCodeInGlobalsInner = false;
                     bool entryJsrTargetIsLastRetnCheckInner = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
                     Debug($"DEBUG NcsToAstConverter: Checking if main code is in globals - entryJsrTarget={entryJsrTarget}, instructions.Count-1={instructions.Count - 1}, entryJsrTargetIsLastRetnCheck={entryJsrTargetIsLastRetnCheckInner}, mainStart={mainStart}, entryStubEnd={entryStubEnd}, globalsEndForMain={globalsEndForMain}, savebpIndex={savebpIndex}, mainStartBeforeAdjustment={mainStartBeforeAdjustment}");
@@ -1715,7 +1715,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
                         // Main start is after globals - create normal globals subroutine
                         // Globals subroutine ends at SAVEBP+1 (includes SAVEBP and entry stub up to but not including main)
                         // For files like asd.nss where main is at the last RETN, globals includes everything up to entry stub end
-                        // swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
+                        // k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
                         int globalsSubEnd = savebpIndex + 1;
                         // If entry stub exists, extend globals to include it (but not main) using comprehensive pattern detection
                         int calculatedEntryStubEnd = CalculateEntryStubEnd(instructions, globalsSubEnd, ncs);
@@ -1757,7 +1757,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
             // CRITICAL FIX: Check if RESTOREBP right before mainStart is actually cleanup code at the end of main
             // If RESTOREBP is followed by MOVSP+RETN+RETN at the end of the file, it's cleanup code, not entry stub
             // In that case, include it in the main function by adjusting mainStart backward
-            // Based on swkotor2.exe: 0x004eb750 - Cleanup code pattern detection for proper function boundary identification
+            // Based on k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 - Cleanup code pattern detection for proper function boundary identification
             if (mainStart > 0 && mainStart < instructions.Count)
             {
                 int prevIdx = mainStart - 1;
@@ -1937,7 +1937,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
 
             // CRITICAL: Ensure we always have at least one subroutine (main)
             // Comprehensive edge case handling for files where entry stub detection fails or files have unusual structure
-            // Based on nwnnsscomp.exe and swkotor2.exe: Original engine handles malformed NCS files gracefully
+            // Based on nwnnsscomp.exe and k2_win_gog_aspyr_swkotor2.exe: Original engine handles malformed NCS files gracefully
             // Edge cases handled:
             // 1. Files with no SAVEBP and no entry stub pattern
             // 2. Files where entry stub detection partially succeeds but end calculation fails
@@ -1960,7 +1960,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
                     fallbackMainStart = savebpIndex + 1;
 
                     // EDGE CASE 2: Try to detect and skip entry stub using comprehensive detection
-                    // swkotor2.exe: 0x004eb750 - Entry stub patterns: [RSADD*], JSR, RETN or [RSADD*], JSR, RESTOREBP
+                    // k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 - Entry stub patterns: [RSADD*], JSR, RETN or [RSADD*], JSR, RESTOREBP
                     if (HasEntryStubPattern(instructions, fallbackMainStart, ncs))
                     {
                         int fallbackEntryStubStart = fallbackMainStart;
@@ -3169,7 +3169,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
             return defaultValue;
         }
 
-        // swkotor2.exe: 0x004eb750 - Calculate the end position (exclusive) of an entry stub pattern starting at the given index
+        // k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 - Calculate the end position (exclusive) of an entry stub pattern starting at the given index
         // Entry stub patterns include:
         // - [RSADD*], JSR, RETN (functions with return values)
         // - [RSADD*], JSR, RESTOREBP (external compiler pattern with return values)
@@ -3232,7 +3232,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
             }
 
             // Pattern 2: [RSADD*], JSR, RESTOREBP (entry stub with RESTOREBP, used by external compiler)
-            // swkotor2.exe: 0x004eb750 - If RESTOREBP is followed by MOVSP+RETN+RETN at the end, it's cleanup code, not entry stub
+            // k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 - If RESTOREBP is followed by MOVSP+RETN+RETN at the end, it's cleanup code, not entry stub
             if (instructions.Count > jsrIdx + 1 &&
                 instructions[jsrIdx].InsType == NCSInstructionType.JSR &&
                 instructions[jsrIdx].Jump != null &&
@@ -3264,7 +3264,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
             return startIndex;
         }
 
-        // swkotor2.exe: 0x004eb750 - Check if RESTOREBP is followed by cleanup code pattern (MOVSP+RETN+RETN) at the end of the file
+        // k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 - Check if RESTOREBP is followed by cleanup code pattern (MOVSP+RETN+RETN) at the end of the file
         // If RESTOREBP is followed by MOVSP+RETN+RETN at the end, it's cleanup code, not an entry stub
         // This distinguishes between:
         // - Entry stub: JSR + RESTOREBP (followed by main code)
@@ -3308,7 +3308,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
             return patternStart + 2 == instructions.Count - 1;
         }
 
-        // swkotor2.exe: 0x004eb750 - Detect if code after entry stub is cleanup code or real main code
+        // k2_win_gog_aspyr_swkotor2.exe: 0x004eb750 - Detect if code after entry stub is cleanup code or real main code
         // Entry stub (JSR+RETN) is just a wrapper - actual main code is after globals initialization
         // This method determines if code after entry stub is:
         // - Cleanup code: MOVSP+RETN+RETN pattern (or similar cleanup patterns)

@@ -15,8 +15,8 @@ namespace Andastra.Game.Games.Common
     /// - Provides engine-agnostic resource management
     ///
     /// Based on verified components of:
-    /// - swkotor.exe: Basic resource loading from BIF files
-    /// - swkotor2.exe: Enhanced loading with ERF support
+    /// - k1_win_gog_swkotor.exe: Basic resource loading from BIF files
+    /// - k2_win_gog_aspyr_swkotor2.exe: Enhanced loading with ERF support
     /// - nwmain.exe: Aurora resource system (Neverwinter Nights)
     /// - daorigins.exe: Eclipse resource management (Dragon Age: Origins)
     /// - DragonAge2.exe: Eclipse resource management (Dragon Age 2) - Enhanced ERF/DAZIP support, RIM file handling

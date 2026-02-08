@@ -1,10 +1,8 @@
 // ---------------------------------------------------------------------------
 // MainMenuBackgroundLayer.cs
 // Void fill and background texture layer for main menu.
-// References:
-// - KotOR.js GameMenu.ts loadBackground (lines 147-188): voidFill, background, void-gui shader, background-gui shader
-// - reone mainmenu.cpp loadBackground(BackgroundType::Menu) (line 64)
-// - reone GameGUI preload/background loading
+// Reva (k1_win_gog_swkotor.exe): CSWGuiPanel::GetFullScreenBG @ 0x0040a900 (resolution+"back", e.g. 1600x1200back);
+// LBL_MENUBG bound in CSWGuiMainMenu::LoadFromLayout @ 0x0067ace0.
 // ---------------------------------------------------------------------------
 
 using System;
@@ -16,7 +14,7 @@ namespace Andastra.Game.Graphics.MonoGame.UI.MainMenu
 {
     /// <summary>
     /// Renders the main menu background: void fill (solid/animated color) and optional
-    /// background texture (K1: 1600x1200back). KotOR.js: voidFill + background sprite.
+    /// background texture (K1: 1600x1200back). Reva: GetFullScreenBG @ 0x0040a900, LBL_MENUBG in LoadFromLayout.
     /// </summary>
     public sealed class MainMenuBackgroundLayer
     {
@@ -38,8 +36,8 @@ namespace Andastra.Game.Graphics.MonoGame.UI.MainMenu
         }
 
         /// <summary>
-        /// Load background texture from installation. K1: 1600x1200back (KotOR.js line 43).
-        /// TSL: no background texture (KotOR.js TSL line 40: this.background = '').
+        /// Load background texture from installation. K1: 1600x1200back (Reva GetFullScreenBG @ 0x0040a900).
+        /// TSL: no background texture.
         /// </summary>
         public void LoadBackgroundTexture(Installation installation)
         {
@@ -64,7 +62,7 @@ namespace Andastra.Game.Graphics.MonoGame.UI.MainMenu
 
         /// <summary>
         /// Draw void fill and optional background texture. Call from MainMenuScreen.
-        /// KotOR.js: voidFill scale set from viewport (line 253), background 1600x1200 (line 211).
+        /// Reva: full-screen background from GetFullScreenBG; viewport from CSWGuiManager resolution.
         /// </summary>
         public void Draw(int viewportWidth, int viewportHeight, float deltaTime)
         {

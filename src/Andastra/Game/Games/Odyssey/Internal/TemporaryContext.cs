@@ -5,10 +5,10 @@ namespace Andastra.Game.Games.Odyssey.Internal
 {
     /// <summary>
     /// Temporary context object management for exception-safe resource handling.
-    /// Implements RAII pattern equivalent to swkotor2.exe @ 0x00631f70 (constructor) and @ 0x00632000 (destructor).
+    /// Implements RAII pattern equivalent to k2_win_gog_aspyr_swkotor2.exe @ 0x00631f70 (constructor) and @ 0x00632000 (destructor).
     /// </summary>
     /// <remarks>
-    /// Temporary Object Management (swkotor2.exe):
+    /// Temporary Object Management (k2_win_gog_aspyr_swkotor2.exe):
     /// - Constructor: 0x00631f70 @ 0x00631f70 - Allocates 0xc (12) bytes via operator_new, calls 0x00635e30() to initialize context object, stores pointer in output parameter
     /// - Destructor: 0x00632000 @ 0x00632000 - Cleans up the 12-byte context object allocated by constructor
     /// - swkotor2_aspyr.exe equivalent: 0x00736240 (constructor), 0x007362c0 (destructor)
@@ -24,11 +24,11 @@ namespace Andastra.Game.Games.Odyssey.Internal
 
         /// <summary>
         /// Initializes a new instance of the TemporaryContext class.
-        /// Equivalent to swkotor2.exe @ 0x00631f70 @ 0x00631f70.
+        /// Equivalent to k2_win_gog_aspyr_swkotor2.exe @ 0x00631f70 @ 0x00631f70.
         /// </summary>
         /// <param name="contextPtr">Output parameter that receives the allocated context pointer.</param>
         /// <remarks>
-        /// Constructor behavior (swkotor2.exe @ 0x00631f70):
+        /// Constructor behavior (k2_win_gog_aspyr_swkotor2.exe @ 0x00631f70):
         /// - Allocates 0xc (12) bytes via operator_new
         /// - Calls 0x00635e30() to initialize context object
         /// - Stores pointer in output parameter (local_44 in original code)
@@ -52,11 +52,11 @@ namespace Andastra.Game.Games.Odyssey.Internal
 
         /// <summary>
         /// Initializes the context object at the specified pointer.
-        /// Equivalent to swkotor2.exe @ 0x00635e30 @ 0x00635e30.
+        /// Equivalent to k2_win_gog_aspyr_swkotor2.exe @ 0x00635e30 @ 0x00635e30.
         /// </summary>
         /// <param name="contextPtr">Pointer to the 12-byte context object to initialize.</param>
         /// <remarks>
-        /// Initialization function (swkotor2.exe @ 0x00635e30):
+        /// Initialization function (k2_win_gog_aspyr_swkotor2.exe @ 0x00635e30):
         /// - Initializes the 12-byte context structure
         /// - Sets up context state for exception-safe resource management
         /// - Original implementation: Zero-initializes structure and sets up exception handling context
@@ -83,10 +83,10 @@ namespace Andastra.Game.Games.Odyssey.Internal
 
         /// <summary>
         /// Disposes of the temporary context object.
-        /// Equivalent to swkotor2.exe @ 0x00632000 @ 0x00632000.
+        /// Equivalent to k2_win_gog_aspyr_swkotor2.exe @ 0x00632000 @ 0x00632000.
         /// </summary>
         /// <remarks>
-        /// Destructor behavior (swkotor2.exe @ 0x00632000):
+        /// Destructor behavior (k2_win_gog_aspyr_swkotor2.exe @ 0x00632000):
         /// - Cleans up the 12-byte context object allocated by constructor
         /// - Frees memory allocated via operator_new
         /// - Original implementation: Exception-safe cleanup in destructor

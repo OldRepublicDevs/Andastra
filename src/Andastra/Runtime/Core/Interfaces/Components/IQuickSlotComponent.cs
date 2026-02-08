@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// - Common interface for quick slot components across all BioWare engines
     /// - Base implementation: BaseQuickSlotComponent (Runtime.Games.Common.Components)
     /// - Engine-specific implementations:
-    ///   - Odyssey: QuickSlotComponent → OdysseyQuickSlotComponent (swkotor.exe, swkotor2.exe)
+    ///   - Odyssey: QuickSlotComponent → OdysseyQuickSlotComponent (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
     ///   - Single implementation: BaseQuickSlotComponent (Andastra.Game.Games.Common.Components) handles all engines
     ///     - Engine-specific quick slot component classes (OdysseyQuickSlotComponent, AuroraQuickSlotComponent, EclipseQuickSlotComponent) have been merged
     ///     - Aurora: Based on nwmain.exe, nwn2main.exe (36 slots)
@@ -20,9 +20,9 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// - Engine-specific details are in subclasses (number of slots, GFF field names, serialization formats, function addresses, ability ID formats)
     ///
     /// Cross-engine analysis:
-    /// - Odyssey (swkotor.exe, swkotor2.exe): 12 slots (0-11), QuickSlot_* fields in UTC GFF, types: 0=item, 1=ability
-    ///   - swkotor.exe: Quick slot system (function addresses to be determined )
-    ///   - swkotor2.exe: 0x005226d0 @ 0x005226d0 saves QuickSlot_* fields, 0x005223a0 @ 0x005223a0 loads QuickSlot_* fields
+    /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): 12 slots (0-11), QuickSlot_* fields in UTC GFF, types: 0=item, 1=ability
+    ///   - k1_win_gog_swkotor.exe: Quick slot system (function addresses to be determined )
+    ///   - k2_win_gog_aspyr_swkotor2.exe: 0x005226d0 @ 0x005226d0 saves QuickSlot_* fields, 0x005223a0 @ 0x005223a0 loads QuickSlot_* fields
     /// - Aurora (nwmain.exe, nwn2main.exe): 36 slots, QuickBar list in UTC GFF, QBObjectType field (0=empty, 1=item, 2=spell, 4=feat, etc.)
     ///   - nwmain.exe: CNWSCreature::SaveQuickBar, CNWSCreature::LoadQuickBar (function addresses to be determined )
     ///   - nwn2main.exe: Enhanced quick bar system (function addresses to be determined )

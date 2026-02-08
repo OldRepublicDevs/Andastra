@@ -388,7 +388,7 @@ namespace Andastra.Runtime.Core.Movement
             var normalizedDir = Vector3.Normalize(direction);
             Vector3 newPosition = currentPos + normalizedDir * moveDistance;
 
-            // Project position to walkmesh surface (matches 0x004f5070 in swkotor2.exe)
+            // Project position to walkmesh surface (matches 0x004f5070 in k2_win_gog_aspyr_swkotor2.exe)
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
             // Located via string references: "WalkCheck" @ 0x007c1514, "Walking" @ 0x007c4dcc
             // Error messages: "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0

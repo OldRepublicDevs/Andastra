@@ -21,7 +21,7 @@ namespace Andastra.Game.Games.Odyssey.Fonts
     /// Loads texture-based fonts from TPC/TGA files with TXI metrics.
     /// </summary>
     /// <remarks>
-    /// Odyssey Bitmap Font (swkotor.exe, swkotor2.exe):
+    /// Odyssey Bitmap Font (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe):
     /// - Font textures: TPC/TGA files containing character glyphs in a fixed grid
     /// - Font metrics: TXI files containing character coordinates, spacing, and baseline information
     /// - Character rendering: Uses texture sampling with normalized UV coordinates from TXI
@@ -30,8 +30,8 @@ namespace Andastra.Game.Games.Odyssey.Fonts
     /// - Character mapping: Maps ASCII characters to texture coordinates using TXI upperleftcoords/lowerrightcoords
     ///
     /// Ghidra verified components Analysis:
-    /// - swkotor.exe: Font loading functions (needs Ghidra address verification)
-    /// - swkotor2.exe: Font rendering functions (needs Ghidra address verification)
+    /// - k1_win_gog_swkotor.exe: Font loading functions (needs Ghidra address verification)
+    /// - k2_win_gog_aspyr_swkotor2.exe: Font rendering functions (needs Ghidra address verification)
     ///
     /// Original implementation: Uses DirectX sprite rendering for text, this uses MonoGame SpriteBatch
     /// </remarks>

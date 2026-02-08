@@ -13,15 +13,15 @@ namespace Andastra.Game.Games.Odyssey.UI
     /// <remarks>
     /// UI System Implementation:
     /// - Odyssey-specific UI system implementation inheriting from BaseUISystem
-    /// - Based on swkotor.exe and swkotor2.exe UI systems
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe UI systems
     /// - Located via string references: GUI panels, UI screens, upgrade screens
     /// - Original implementation: Manages UI screen state, screen transitions, modal dialogs
     /// - UI screens: Upgrade screen, inventory screen, character screen, dialogue screen, etc.
     /// - Screen management: Push/pop screen stack, modal overlays, screen transitions
     ///
     /// Based on reverse engineering:
-    /// - swkotor2.exe: ShowUpgradeScreen @ 0x00680cb0 creates upgrade selection screen ("upgradesel_p") and upgrade items screen ("upgradeitems_p")
-    /// - swkotor.exe: Similar upgrade screen functionality with K1-specific GUI panels
+    /// - k2_win_gog_aspyr_swkotor2.exe: ShowUpgradeScreen @ 0x00680cb0 creates upgrade selection screen ("upgradesel_p") and upgrade items screen ("upgradeitems_p")
+    /// - k1_win_gog_swkotor.exe: Similar upgrade screen functionality with K1-specific GUI panels
     /// - Original creates two GUI panels: upgrade selection screen for item type filtering, upgrade items screen for item modification
     /// - GUI manager functions: 0x0040bf90 adds to GUI manager, 0x00638bb0 sets screen mode
     /// </remarks>
@@ -43,7 +43,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Create appropriate upgrade screen based on game type
-            // K1 uses K1UpgradeScreen (swkotor.exe), K2 uses K2UpgradeScreen (swkotor2.exe)
+            // K1 uses K1UpgradeScreen (k1_win_gog_swkotor.exe), K2 uses K2UpgradeScreen (k2_win_gog_aspyr_swkotor2.exe)
             if (installation.Game == BioWare.Common.BioWareGame.K1)
             {
                 _upgradeScreen = new K1UpgradeScreen(installation, world);

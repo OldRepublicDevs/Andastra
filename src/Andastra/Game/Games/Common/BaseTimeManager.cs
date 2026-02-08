@@ -16,8 +16,8 @@ namespace Andastra.Game.Games.Common
     /// Engine-Specific Details (Documented, Not Implemented):
     /// - Odyssey: Game time stored in module IFO file (Mod_StartMinute/Second/MiliSec, Mod_PauseDay/PauseTime)
     ///   - Time played tracked in save game NFO.res file (TIMEPLAYED field)
-    ///   - Frame update: 0x00401c30 @ 0x00401c30 (swkotor2.exe), 0x00401c10 @ 0x00401c10 (swkotor.exe)
-    ///   - Time update: 0x0040d4e0 @ 0x0040d4e0 (swkotor2.exe), 0x0040cc50 @ 0x0040cc50 (swkotor.exe)
+    ///   - Frame update: 0x00401c30 @ 0x00401c30 (k2_win_gog_aspyr_swkotor2.exe), 0x00401c10 @ 0x00401c10 (k1_win_gog_swkotor.exe)
+    ///   - Time update: 0x0040d4e0 @ 0x0040d4e0 (k2_win_gog_aspyr_swkotor2.exe), 0x0040cc50 @ 0x0040cc50 (k1_win_gog_swkotor.exe)
     /// - Aurora: Game time stored in Module.ifo GFF structure
     ///   - Time played tracked in save game GAM file
     ///   - CWorldTimer system: CServerExoApp::GetWorldTimer @ 0x14055ba10 (nwmain.exe)
@@ -54,7 +54,7 @@ namespace Andastra.Game.Games.Common
     ///
     /// Inheritance Structure:
     /// - BaseTimeManager (this class) - Common functionality only
-    ///   - OdysseyTimeManager : BaseTimeManager (swkotor.exe, swkotor2.exe)
+    ///   - OdysseyTimeManager : BaseTimeManager (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
     ///   - AuroraTimeManager : BaseTimeManager (nwmain.exe, nwn2main.exe)
     ///   - EclipseTimeManager : BaseTimeManager (daorigins.exe, DragonAge2.exe, , )
     ///   - InfinityTimeManager : BaseTimeManager (.exe, .exe, .exe)
@@ -144,7 +144,7 @@ namespace Andastra.Game.Games.Common
         /// <remarks>
         /// Common across all engines: 1/60 second (60 Hz).
         /// All engines (Odyssey, Aurora, Eclipse) use 60 Hz fixed timestep verified in executables.
-        /// - Odyssey: 60 Hz verified in swkotor.exe/swkotor2.exe
+        /// - Odyssey: 60 Hz verified in k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe
         /// - Aurora: 60 Hz verified via behavioral analysis in nwmain.exe/nwn2main.exe
         /// - Eclipse: 60 Hz (Unreal Engine 3 uses 60 Hz for physics, matches common pattern)
         /// </remarks>
@@ -381,7 +381,7 @@ namespace Andastra.Game.Games.Common
         /// Common across all engines: Clamp values to valid ranges and set game time.
         ///
         /// Engine-Specific Game Time Persistence:
-        /// - Odyssey: Game time stored in module IFO file (swkotor2.exe: 0x00500290 @ 0x00500290)
+        /// - Odyssey: Game time stored in module IFO file (k2_win_gog_aspyr_swkotor2.exe: 0x00500290 @ 0x00500290)
         ///   - Mod_StartMinute, Mod_StartSecond, Mod_StartMiliSec (current game time)
         ///   - Mod_PauseDay, Mod_PauseTime (pause time from time system object)
         ///   - Module system must populate IFO fields when saving

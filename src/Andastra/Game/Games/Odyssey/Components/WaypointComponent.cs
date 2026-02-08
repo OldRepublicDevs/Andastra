@@ -9,7 +9,7 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// </summary>
     /// <remarks>
     /// Odyssey Waypoint Component:
-    /// - Based on swkotor.exe, swkotor2.exe waypoint system
+    /// - Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe waypoint system
     /// - Located via string references: "WaypointList" @ 0x007bd288 (GIT waypoint list), "Waypoint" @ 0x007bc510 (waypoint entity type)
     /// - "WaypointList" @ 0x007bd060 (waypoint list variant), "STARTWAYPOINT" @ 0x007be034 (start waypoint constant)
     /// - "MapNote" @ 0x007bd10c (map note text field), "MapNoteEnabled" @ 0x007bd118 (map note enabled flag)

@@ -18,7 +18,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
     /// </summary>
     /// <remarks>
     /// Room Mesh Renderer:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) room rendering system (swkotor2.exe: 0x004e3ff0)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) room rendering system (k2_win_gog_aspyr_swkotor2.exe: 0x004e3ff0)
     /// - Located via string references: "Rooms" @ 0x007bd490 (room list), "RoomName" @ 0x007bd484 (room name field)
     /// - "roomcount" @ 0x007b96c0 (room count field), "gui3D_room" @ 0x007cc144 (room GUI)
     /// - Original implementation: Renders room MDL models positioned according to LYT layout
@@ -454,7 +454,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
 
         /// <summary>
         /// Extracts geometry from a referenced external MDL model.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) reference node handling (swkotor2.exe: 0x004e3ff0)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) reference node handling (k2_win_gog_aspyr_swkotor2.exe: 0x004e3ff0)
         /// Reference: vendor/reone/src/libs/scene/node/model.cpp:84-94 - Reference model loading
         /// Reference: vendor/KotOR.js/src/three/odyssey/OdysseyModel3D.ts:1012-1026 - Child model loading
         /// </summary>
@@ -526,7 +526,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
 
         /// <summary>
         /// Loads a referenced MDL model from the installation.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) model loading (swkotor2.exe: 0x005261b0 @ 0x005261b0)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) model loading (k2_win_gog_aspyr_swkotor2.exe: 0x005261b0 @ 0x005261b0)
         /// Reference: vendor/reone/src/libs/resource/provider/models.cpp:38-76 - Model loading
         /// </summary>
         private MDL LoadReferencedMDL(string modelResRef)

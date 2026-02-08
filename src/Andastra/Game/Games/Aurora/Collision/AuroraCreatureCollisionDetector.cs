@@ -25,8 +25,8 @@ namespace Andastra.Game.Games.Aurora.Collision
     ///   - "HandleNotifyCollision" @ 0x140d93d48 (nwmain.exe: collision notification handler)
     ///   - "Tile Has No Axis-Aligned Bounding Box!" @ 0x140dc8368 (nwmain.exe: tile bounding box error)
     /// - Cross-engine analysis:
-    ///   - Odyssey K1 (swkotor.exe): 0x004ed6e0 @ 0x004ed6e0 (updates bounding box), 0x004f1310 @ 0x004f1310 (collision distance), 0x00413350 @ 0x00413350 (2DA lookup), 0x0060e170 @ 0x0060e170 (GetCreatureRadius wrapper), bounding box at offset 0x340
-    ///   - Odyssey K2 (swkotor2.exe): 0x005479f0 @ 0x005479f0 (creature bounding box), 0x004e17a0 @ 0x004e17a0 (spatial query), 0x004f5290 @ 0x004f5290 (detailed collision), 0x0041d2c0 @ 0x0041d2c0 (2DA lookup), 0x0065a380 @ 0x0065a380 (GetCreatureRadius wrapper), bounding box at offset 0x380
+    ///   - Odyssey K1 (k1_win_gog_swkotor.exe): 0x004ed6e0 @ 0x004ed6e0 (updates bounding box), 0x004f1310 @ 0x004f1310 (collision distance), 0x00413350 @ 0x00413350 (2DA lookup), 0x0060e170 @ 0x0060e170 (GetCreatureRadius wrapper), bounding box at offset 0x340
+    ///   - Odyssey K2 (k2_win_gog_aspyr_swkotor2.exe): 0x005479f0 @ 0x005479f0 (creature bounding box), 0x004e17a0 @ 0x004e17a0 (spatial query), 0x004f5290 @ 0x004f5290 (detailed collision), 0x0041d2c0 @ 0x0041d2c0 (2DA lookup), 0x0065a380 @ 0x0065a380 (GetCreatureRadius wrapper), bounding box at offset 0x380
     ///   - Aurora (nwmain.exe, nwn2main.exe): CNWSArea::NoCreaturesOnLine @ 0x14036ec90, CNWSCreature::GetIsCreatureBumpable @ 0x140391100, CNWSCreature::BumpFriends @ 0x140385130, C2DA::GetFloatingPoint (appearance.2da lookup), bounding box at offset 0x530
     ///   - Eclipse DAO (daorigins.exe): PhysX-based collision, collision masks (TAG_COLLISIONMASK_CREATURES @ 0x00b14c40), appearance.2da hitradius, "BoundingBox" @ 0x00b13674, "CollisionGroup" @ 0x00b13aa8
     ///   - Eclipse DA2 (DragonAge2.exe): PhysX-based collision, similar collision masks, appearance.2da hitradius, "Appearance_Type" @ 0x00bf0b9c, "TargetRadius" @ 0x00be1314
@@ -41,8 +41,8 @@ namespace Andastra.Game.Games.Aurora.Collision
     ///   - AuroraCreatureCollisionDetector (Runtime.Games.Aurora.Collision): Common Aurora logic (defaults to NWN:EE)
     ///   - NWNEECreatureCollisionDetector (Runtime.Games.Aurora.Collision): NWN:EE-specific (nwmain.exe: offset 0x530)
     ///   - OdysseyCreatureCollisionDetector (Runtime.Games.Odyssey.Collision): Common Odyssey logic (defaults to K2)
-    ///   - K1CreatureCollisionDetector (Runtime.Games.Odyssey.Collision): K1-specific (swkotor.exe: offset 0x340)
-    ///   - K2CreatureCollisionDetector (Runtime.Games.Odyssey.Collision): K2-specific (swkotor2.exe: offset 0x380)
+    ///   - K1CreatureCollisionDetector (Runtime.Games.Odyssey.Collision): K1-specific (k1_win_gog_swkotor.exe: offset 0x340)
+    ///   - K2CreatureCollisionDetector (Runtime.Games.Odyssey.Collision): K2-specific (k2_win_gog_aspyr_swkotor2.exe: offset 0x380)
     ///   - EclipseCreatureCollisionDetector (Runtime.Games.Eclipse.Collision): Common Eclipse logic (defaults to DA2)
     ///   - DAOCreatureCollisionDetector (Runtime.Games.Eclipse.Collision): DAO-specific (daorigins.exe: PhysX-based)
     ///   - DA2CreatureCollisionDetector (Runtime.Games.Eclipse.Collision): DA2-specific (DragonAge2.exe: PhysX-based)
@@ -75,7 +75,7 @@ namespace Andastra.Game.Games.Aurora.Collision
         ///   - Size 3 (Huge): 1.0f
         ///   - Size 4 (Gargantuan): 1.5f
         /// - Cross-engine comparison:
-        ///   - Odyssey (swkotor2.exe): 0x005479f0 @ 0x005479f0 gets width/height from entity structure (0x380+0x14, 0x380+0xbc), uses hitradius as fallback via 0x0065a380 @ 0x0065a380 which calls 0x0041d2c0 @ 0x0041d2c0 for 2DA lookup
+        ///   - Odyssey (k2_win_gog_aspyr_swkotor2.exe): 0x005479f0 @ 0x005479f0 gets width/height from entity structure (0x380+0x14, 0x380+0xbc), uses hitradius as fallback via 0x0065a380 @ 0x0065a380 which calls 0x0041d2c0 @ 0x0041d2c0 for 2DA lookup
         ///   - Aurora (nwmain.exe): Uses hitradius directly from appearance.2da via C2DA::GetFloatingPoint, stored in CNWSCreature bounding box structure at offset 0x530+8
         ///   - Common: Both use appearance.2da hitradius, Aurora stores it in creature structure, Odyssey looks it up on-demand
         /// </remarks>
@@ -135,7 +135,7 @@ namespace Andastra.Game.Games.Aurora.Collision
             {
                 // Based on nwmain.exe: C2DA::GetFloatingPoint accesses "hitradius" column from appearance.2da
                 // AuroraGameDataProvider.GetCreatureRadius uses AuroraTwoDATableManager to lookup hitradius
-                // This matches the pattern in swkotor2.exe: 0x0065a380 @ 0x0065a380 calls 0x0041d2c0 @ 0x0041d2c0 for 2DA lookup
+                // This matches the pattern in k2_win_gog_aspyr_swkotor2.exe: 0x0065a380 @ 0x0065a380 calls 0x0041d2c0 @ 0x0041d2c0 for 2DA lookup
                 radius = entity.World.GameDataProvider.GetCreatureRadius(appearanceType, 0.5f);
             }
 

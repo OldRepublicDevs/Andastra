@@ -169,7 +169,7 @@ namespace Andastra.Game.Stride.Graphics
             // Update the CommandList registry with the current frame's CommandList
             // Stride creates a new CommandList per frame for thread safety and proper resource management
             // Based on Stride Graphics API: Game.GraphicsContext.CommandList should be used per-frame
-            // swkotor2.exe: Graphics device command list management @ 0x004eb750 (original engine behavior)
+            // k2_win_gog_aspyr_swkotor2.exe: Graphics device command list management @ 0x004eb750 (original engine behavior)
             if (_game != null && _game.GraphicsContext != null && _game.GraphicsDevice != null)
             {
                 var commandList = _game.GraphicsContext.CommandList;
@@ -255,7 +255,7 @@ namespace Andastra.Game.Stride.Graphics
         /// <remarks>
         /// VSync Implementation:
         /// - Based on Stride GraphicsDevice.Presenter.VSyncMode
-        /// - Original game: VSync controlled via DirectX Present parameters (swkotor2.exe: DirectX device presentation)
+        /// - Original game: VSync controlled via DirectX Present parameters (k2_win_gog_aspyr_swkotor2.exe: DirectX device presentation)
         ///   - VSync enabled: D3DPRESENT_INTERVAL_ONE (0x00000001) - synchronize with vertical refresh
         ///   - VSync disabled: D3DPRESENT_INTERVAL_IMMEDIATE (0x80000000) - present immediately
         /// - Stride uses GraphicsDevice.Presenter to control VSync
@@ -321,7 +321,7 @@ namespace Andastra.Game.Stride.Graphics
 
                 // Apply VSync via GraphicsDevice.Presenter
                 // Based on Stride 4.2 API: GraphicsPresenter controls VSync through PresentMode or VSyncMode property
-                // Original game equivalent (swkotor2.exe DirectX Present parameters):
+                // Original game equivalent (k2_win_gog_aspyr_swkotor2.exe DirectX Present parameters):
                 //   - VSync enabled: D3DPRESENT_INTERVAL_ONE (0x00000001) - synchronize with vertical refresh
                 //   - VSync disabled: D3DPRESENT_INTERVAL_IMMEDIATE (0x80000000) - present immediately
 

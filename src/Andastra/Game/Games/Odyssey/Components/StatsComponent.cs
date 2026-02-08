@@ -830,7 +830,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// <param name="baseSpeed">Base movement speed before modifiers</param>
         /// <returns>Final movement speed with all effects applied</returns>
         /// <remarks>
-        /// Movement Speed Calculation (swkotor2.exe, nwmain.exe):
+        /// Movement Speed Calculation (k2_win_gog_aspyr_swkotor2.exe, nwmain.exe):
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Haste/Slow effects modify movement speed
         ///   Located via string references: "Haste" @ routine 119, "Slow" @ routine 120
         ///   Original implementation: Haste doubles speed (2.0x), Slow halves speed (0.5x)

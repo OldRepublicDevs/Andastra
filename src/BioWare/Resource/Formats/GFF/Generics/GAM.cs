@@ -18,7 +18,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
     /// GAM File Format:
     /// - GFF format with "GAM " signature
     /// - Used by Aurora (nwmain.exe, nwn2main.exe)
-    /// - NOT used by Odyssey (swkotor.exe, swkotor2.exe) - Odyssey uses NFO format
+    /// - NOT used by Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe) - Odyssey uses NFO format
     /// - Contains game state: party members, global variables, BioWareGame time time played
     /// </remarks>
     [PublicAPI]

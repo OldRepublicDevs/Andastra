@@ -94,7 +94,7 @@ namespace Andastra.Game.Games.Aurora
     ///   - Similar patterns to nwmain.exe but may have NWN2-specific enhancements
     ///
     /// Cross-Engine Comparison:
-    /// - Odyssey (swkotor.exe/swkotor2.exe): 0x00404250 @ 0x00404250 (WinMain equivalent, VERIFIED)
+    /// - Odyssey (k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe): 0x00404250 @ 0x00404250 (WinMain equivalent, VERIFIED)
     ///   - Similar initialization pattern: Entry point -> Engine initialization -> Resource provider -> Module loading
     /// - Aurora (nwmain.exe/nwn2main.exe): Uses CExoResMan instead of CExoKeyTable (similar pattern, different resource system)
     ///   - HAK file support distinguishes Aurora from Odyssey resource system
@@ -169,7 +169,7 @@ namespace Andastra.Game.Games.Aurora
         /// - Neverwinter Nights: Checks for "nwmain.exe" or "NWMAIN.EXE"
         /// - Neverwinter Nights 2: Checks for "nwn2main.exe" or "NWN2MAIN.EXE"
         /// - Fallback: Checks for module directory structure and HAK files
-        /// - Similar to Odyssey Engine detection pattern (swkotor.exe/swkotor2.exe detection)
+        /// - Similar to Odyssey Engine detection pattern (k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe detection)
         /// - Original implementation: Aurora Engine executables identify themselves via executable name
         /// - Cross-engine: Similar detection pattern across all BioWare engines (executable name + fallback file checks)
         /// </remarks>

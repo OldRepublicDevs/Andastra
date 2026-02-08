@@ -30,8 +30,8 @@ namespace Andastra.Game.Games.Common
     /// - Engine-specific: 2DA file names, upgrade slot counts, UI implementation details
     ///
     /// Based on verified components of:
-    /// - swkotor.exe: 0x006c7630 (constructor), 0x006c6500 (button handler), 0x006c59a0 (ApplyUpgrade)
-    /// - swkotor2.exe: 0x00731a00 (constructor), 0x0072e260 (button handler), 0x00729640 (ApplyUpgrade)
+    /// - k1_win_gog_swkotor.exe: 0x006c7630 (constructor), 0x006c6500 (button handler), 0x006c59a0 (ApplyUpgrade)
+    /// - k2_win_gog_aspyr_swkotor2.exe: 0x00731a00 (constructor), 0x0072e260 (button handler), 0x00729640 (ApplyUpgrade)
     /// - daorigins.exe: ItemUpgrade, GUIItemUpgrade, COMMAND_OPENITEMUPGRADEGUI
     /// - DragonAge2.exe: ItemUpgrade, GUIItemUpgrade, UpgradePrereqType, GetAbilityUpgradedValue
     ///
@@ -485,7 +485,7 @@ namespace Andastra.Game.Games.Common
 
             // Get base item stats from baseitems.2da
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Base item stats columns: numdice, dietoroll, damagebonus, ac, critthreat, critmultiplier
-            // Located via string references: Base item data structure in swkotor2.exe
+            // Located via string references: Base item data structure in k2_win_gog_aspyr_swkotor2.exe
             int baseDamageBonus = 0;
             int baseAC = 0;
             int baseCriticalThreat = 20;
@@ -587,7 +587,7 @@ namespace Andastra.Game.Games.Common
                 // Calculate property bonuses based on property type
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property types map to stat modifications via itempropdef.2da
                 // Located via string references: Property type constants in nwscript.nss
-                // Property type mappings based on Aurora engine standard (swkotor2.exe uses same system)
+                // Property type mappings based on Aurora engine standard (k2_win_gog_aspyr_swkotor2.exe uses same system)
 
                 // ITEM_PROPERTY_ABILITY_BONUS (0): Ability score bonus
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property type 0 = ability bonus, subtype = ability ID (0-5: STR, DEX, CON, INT, WIS, CHA)

@@ -173,7 +173,7 @@ namespace Andastra.Game.Graphics.MonoGame.PostProcessing
                 // 1. Extract bright areas (threshold pass) - pixels above threshold
                 // 2. Blur the bright areas (multiple passes) - separable Gaussian blur
                 // 3. Combine with original image - additive blending
-                // swkotor2.exe: Frame buffer post-processing @ 0x007c8408, frame buffer option @ 0x007d1d84
+                // k2_win_gog_aspyr_swkotor2.exe: Frame buffer post-processing @ 0x007c8408, frame buffer option @ 0x007d1d84
                 // Original implementation: Uses frame buffers for rendering and effects
                 // This implementation: Full bloom pipeline with bright pass, blur, and compositing
 
@@ -309,7 +309,7 @@ namespace Andastra.Game.Graphics.MonoGame.PostProcessing
 
                 // Step 3: Combine with original image (additive blending)
                 // Composite the blurred bloom with the original HDR input for final glow effect
-                // swkotor2.exe: Frame buffer compositing for post-processing effects
+                // k2_win_gog_aspyr_swkotor2.exe: Frame buffer compositing for post-processing effects
                 _graphicsDevice.SetRenderTarget(_finalOutput);
                 _graphicsDevice.Clear(Color.Black);
 

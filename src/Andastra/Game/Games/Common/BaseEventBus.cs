@@ -16,8 +16,8 @@ namespace Andastra.Game.Games.Common
     /// - Supports both immediate and queued event processing
     ///
     /// Based on verified components of:
-    /// - swkotor.exe: Event dispatching systems
-    /// - swkotor2.exe: Event routing and script event handling
+    /// - k1_win_gog_swkotor.exe: Event dispatching systems
+    /// - k2_win_gog_aspyr_swkotor2.exe: Event routing and script event handling
     /// - nwmain.exe: Aurora event systems
     /// - daorigins.exe: Eclipse event management
     /// - Common event patterns: Script events, combat events, interaction events
@@ -30,7 +30,7 @@ namespace Andastra.Game.Games.Common
     /// - Performance considerations (avoid recursion, handle large numbers of events)
     ///
     /// Engine-Specific Implementations (Merged):
-    /// - Odyssey Engine: Based on swkotor.exe/swkotor2.exe event dispatching (0x004dcfb0)
+    /// - Odyssey Engine: Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe event dispatching (0x004dcfb0)
     /// - Aurora Engine: Based on nwmain.exe/nwn2main.exe event systems (CServerAIMaster::AddEventDeltaTime)
     /// - Eclipse Engine: Based on daorigins.exe/DragonAge2.exe event systems (UnrealScript BioEventDispatcher)
     ///
@@ -359,8 +359,8 @@ namespace Andastra.Game.Games.Common
         /// Fires script events that trigger script hooks on entities.
         /// Common implementation across all engines: Events are queued and processed at frame boundaries.
         ///
-        /// Odyssey Engine Implementation (swkotor.exe, swkotor2.exe):
-        /// - Event dispatching: 0x004dcfb0 @ 0x004dcfb0 (swkotor2.exe) handles all object event dispatching
+        /// Odyssey Engine Implementation (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe):
+        /// - Event dispatching: 0x004dcfb0 @ 0x004dcfb0 (k2_win_gog_aspyr_swkotor2.exe) handles all object event dispatching
         /// - Located via string references: "EventQueue" @ 0x007bce74, "EventId" @ 0x007bce48, "EventData" @ 0x007bce3c
         /// - Debug output: "DRF Event Added: %s(%s) %s(%s) %s %s\n" @ 0x007bc55c (event logging format)
         /// - Original implementation: 0x004dcfb0 formats event name from type, constructs event data structure,

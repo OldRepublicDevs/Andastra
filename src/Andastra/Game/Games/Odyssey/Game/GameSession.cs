@@ -331,11 +331,11 @@ namespace Andastra.Game.Games.Odyssey.Game
             );
 
             // Initialize input handler for player control
-            // Based on swkotor.exe (K1) vs swkotor2.exe (K2) input system differences
+            // Based on k1_win_gog_swkotor.exe (K1) vs k2_win_gog_aspyr_swkotor2.exe (K2) input system differences
             // Located via string references: "Input" @ 0x007c2520, "Mouse" @ 0x007cb908, "OnClick" @ 0x007c1a20
             // Original implementation: DirectInput8-based input system with click-to-move, object selection, party control
-            // K1 (swkotor.exe): Simpler input system without K2-specific features (Influence, Prestige Classes, Combat Forms)
-            // K2 (swkotor2.exe): Enhanced input system with additional features
+            // K1 (k1_win_gog_swkotor.exe): Simpler input system without K2-specific features (Influence, Prestige Classes, Combat Forms)
+            // K2 (k2_win_gog_aspyr_swkotor2.exe): Enhanced input system with additional features
             _inputHandler = _settings.Game == KotorGame.K1
                 ? (PlayerInputHandler)new K1PlayerInputHandler(_world, _partySystem)
                 : (PlayerInputHandler)new K2PlayerInputHandler(_world, _partySystem);
@@ -355,7 +355,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             // Initialize fixed-timestep game loop
             _gameLoop = new FixedTimestepGameLoop(_world);
 
-            // Initialize module state manager (swkotor2.exe: 0x006caab0 @ 0x006caab0)
+            // Initialize module state manager (k2_win_gog_aspyr_swkotor2.exe: 0x006caab0 @ 0x006caab0)
             _moduleStateManager = new ModuleStateManager();
             _moduleStateManager.SetModuleState(ModuleState.Idle);
 
@@ -530,81 +530,81 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// <param name="characterData">Optional character creation data. If provided, player entity will be created from this data. If null, a default player entity will be created.</param>
         /// <remarks>
         /// Low-level implementation documentation for New Game button handler across all executables.
-        /// All addresses documented for swkotor.exe, swkotor2.exe, and swkotor2_aspyr.exe.
+        /// All addresses documented for k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe, and swkotor2_aspyr.exe.
         ///
         /// ENTRY POINT FUNCTIONS:
-        /// - swkotor.exe: CSWGuiMainMenu::OnNewGamePicked @ 0x0067afb0 (member function of CSWGuiMainMenu class, called directly from GUI event system)
-        /// - swkotor2.exe: OnNewGameButtonClicked @ 0x006d0b00 (registered by  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x006d2350 @ 0x006d2350 via  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0041a340 @ 0x0041a340 with event type 0x27 at line 89, also registered with event type 0x2d at line 96)
+        /// - k1_win_gog_swkotor.exe: CSWGuiMainMenu::OnNewGamePicked @ 0x0067afb0 (member function of CSWGuiMainMenu class, called directly from GUI event system)
+        /// - k2_win_gog_aspyr_swkotor2.exe: OnNewGameButtonClicked @ 0x006d0b00 (registered by  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x006d2350 @ 0x006d2350 via  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0041a340 @ 0x0041a340 with event type 0x27 at line 89, also registered with event type 0x2d at line 96)
         /// - swkotor2_aspyr.exe:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00882230 @ 0x00882230 (equivalent entry point function, called from GUI event system)
         ///
         /// EVENT HANDLER REGISTRATION:
-        /// - swkotor.exe: Direct function call from GUI system (no explicit event registration function used)
-        /// - swkotor2.exe: Main menu handler  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x006d2350 @ 0x006d2350 (constructor/initializer) registers handlers via  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0041a340 @ 0x0041a340 (event registration function that manages event handler table, searches existing handlers by event type, adds new handlers or updates existing ones). New Game button hover event (0x27): Registered at  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x006d2350 line 89, callback @ 0x006d0b00. New Game button click event (0x2d): Registered at  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x006d2350 line 96, callback @ 0x006d0b00
+        /// - k1_win_gog_swkotor.exe: Direct function call from GUI system (no explicit event registration function used)
+        /// - k2_win_gog_aspyr_swkotor2.exe: Main menu handler  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x006d2350 @ 0x006d2350 (constructor/initializer) registers handlers via  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0041a340 @ 0x0041a340 (event registration function that manages event handler table, searches existing handlers by event type, adds new handlers or updates existing ones). New Game button hover event (0x27): Registered at  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x006d2350 line 89, callback @ 0x006d0b00. New Game button click event (0x2d): Registered at  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x006d2350 line 96, callback @ 0x006d0b00
         /// - swkotor2_aspyr.exe: Event registration handled through equivalent GUI system (no explicit registration function address available in this context)
         ///
         /// STRING REFERENCES:
-        /// - Module name "END_M01AA": swkotor.exe @ 0x00752f58 (referenced at 0x0067b01b in CExoString::CExoString constructor call, referenced at 0x0067b0b9 in CExoString::operator= fallback assignment). swkotor2.exe: Not used (uses "001ebo" instead). swkotor2_aspyr.exe: Not used (uses "001ebo" instead).
-        /// - Module name "001ebo": swkotor.exe: Not used (uses "END_M01AA" instead). swkotor2.exe @ 0x007cc028 (referenced at 0x006d0b7d in CExoString::CExoString constructor call with "001ebo", referenced at 0x006d0c5e in CExoString::operator= @ 0x00630d10 (swkotor2.exe) fallback assignment). swkotor2_aspyr.exe @ 0x009a5ab0 (referenced at 0x008822ba in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00733570 constructor call with "001ebo", referenced at 0x00882385 in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x007338d0 fallback assignment)
-        /// - Resource directory "MODULES:": swkotor.exe @ 0x0073d90c (referenced at 0x0067b033 in CExoString::CExoString constructor for AddResourceDirectory call, referenced at 0x0067b0c7 in CExoString::CExoString constructor for RemoveResourceDirectory call). swkotor2.exe @ 0x007b58b4 (referenced at 0x006d0bdc in CExoString::CExoString constructor for  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408a30 call, referenced at 0x006d0c6c in CExoString::CExoString constructor for  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408b00 call). swkotor2_aspyr.exe @ 0x00993e50 (referenced in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00733570 constructor calls for  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711690 and  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711710 operations)
-        /// - Resource directory "HD0:effects": swkotor.exe: Not used. swkotor2.exe @ 0x007cc01c (referenced at 0x006d0b95 in CExoString::CExoString constructor call, used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x004087d0 for resource directory addition). swkotor2_aspyr.exe @ 0x009a5aa4 (referenced at 0x008822cb in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00733570 constructor call, used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00716da0 for resource directory addition)
+        /// - Module name "END_M01AA": k1_win_gog_swkotor.exe @ 0x00752f58 (referenced at 0x0067b01b in CExoString::CExoString constructor call, referenced at 0x0067b0b9 in CExoString::operator= fallback assignment). k2_win_gog_aspyr_swkotor2.exe: Not used (uses "001ebo" instead). swkotor2_aspyr.exe: Not used (uses "001ebo" instead).
+        /// - Module name "001ebo": k1_win_gog_swkotor.exe: Not used (uses "END_M01AA" instead). k2_win_gog_aspyr_swkotor2.exe @ 0x007cc028 (referenced at 0x006d0b7d in CExoString::CExoString constructor call with "001ebo", referenced at 0x006d0c5e in CExoString::operator= @ 0x00630d10 (k2_win_gog_aspyr_swkotor2.exe) fallback assignment). swkotor2_aspyr.exe @ 0x009a5ab0 (referenced at 0x008822ba in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00733570 constructor call with "001ebo", referenced at 0x00882385 in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x007338d0 fallback assignment)
+        /// - Resource directory "MODULES:": k1_win_gog_swkotor.exe @ 0x0073d90c (referenced at 0x0067b033 in CExoString::CExoString constructor for AddResourceDirectory call, referenced at 0x0067b0c7 in CExoString::CExoString constructor for RemoveResourceDirectory call). k2_win_gog_aspyr_swkotor2.exe @ 0x007b58b4 (referenced at 0x006d0bdc in CExoString::CExoString constructor for  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408a30 call, referenced at 0x006d0c6c in CExoString::CExoString constructor for  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408b00 call). swkotor2_aspyr.exe @ 0x00993e50 (referenced in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00733570 constructor calls for  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711690 and  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711710 operations)
+        /// - Resource directory "HD0:effects": k1_win_gog_swkotor.exe: Not used. k2_win_gog_aspyr_swkotor2.exe @ 0x007cc01c (referenced at 0x006d0b95 in CExoString::CExoString constructor call, used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x004087d0 for resource directory addition). swkotor2_aspyr.exe @ 0x009a5aa4 (referenced at 0x008822cb in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00733570 constructor call, used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00716da0 for resource directory addition)
         ///
         /// GLOBAL DATA REFERENCES:
-        /// - ExoResMan (CExoResMan*): swkotor.exe @ 0x007a39e8 (used in CExoResMan::AddResourceDirectory @ 0x00408800, CExoResMan::Exists @ 0x00408bc0, CExoResMan::RemoveResourceDirectory @ 0x004088d0). swkotor2.exe: Equivalent global at DAT_008283c0 @ 0x008283c0. swkotor2_aspyr.exe: Equivalent global at DAT_00a1b490 @ 0x00a1b490
-        /// - ExoSound (CExoSound*): swkotor.exe @ 0x007a39ec (used in CExoSoundInternal::SetSoundMode @ 0x005d5e80). swkotor2.exe: Equivalent global at DAT_008283c4 @ 0x008283c4. swkotor2_aspyr.exe: Equivalent global at DAT_00a1b494 @ 0x00a1b494
-        /// - CAppManager* global: swkotor.exe: Not used in New Game handler context. swkotor2.exe @ DAT_008283d4 @ 0x008283d4 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401380 @ 0x00401380 for module loading system initialization, used in CServerExoApp::ResetServerStateField @ 0x006394b0 @ 0x006394b0 for server state reset). swkotor2_aspyr.exe @ DAT_00a1b4a4 @ 0x00a1b4a4 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401bc0 @ 0x00401bc0 for module loading system initialization, used in CServerExoApp::ResetServerStateField @ 0x00741360 @ 0x00741360 for server state reset)
-        /// - CExoResMan* global (swkotor2/swkotor2_aspyr): swkotor.exe: Uses ExoResMan @ 0x007a39e8 instead. swkotor2.exe @ DAT_008283c0 @ 0x008283c0 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408a30 @ 0x00408a30 for AddResourceDirectory equivalent, used in CExoResMan::Exists() @ 0x00408df0 (swkotor2.exe) for Exists equivalent, used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408b00 @ 0x00408b00 for RemoveResourceDirectory equivalent). swkotor2_aspyr.exe @ DAT_00a1b490 @ 0x00a1b490 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711690 @ 0x00711690 for AddResourceDirectory equivalent, used in  CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe) for Exists equivalent, used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711710 @ 0x00711710 for RemoveResourceDirectory equivalent)
-        /// - Sound system global (swkotor2/swkotor2_aspyr): swkotor.exe: Uses ExoSound @ 0x007a39ec instead. swkotor2.exe @ DAT_008283c4 @ 0x008283c4 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00621ab0 @ 0x00621ab0 for SetSoundMode equivalent). swkotor2_aspyr.exe @ DAT_00a1b494 @ 0x00a1b494 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0070bc60 @ 0x0070bc60 for SetSoundMode equivalent)
-        /// - Sound mode constant: swkotor.exe @ DAT_0074c5ec @ 0x0074c5ec (used in CExoSoundInternal::SetSoundMode @ 0x005d5e80). swkotor2.exe @ DAT_007c5474 @ 0x007c5474 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00621ab0 @ 0x00621ab0). swkotor2_aspyr.exe @ DAT_0099c2a8 @ 0x0099c2a8 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0070bc60 @ 0x0070bc60)
+        /// - ExoResMan (CExoResMan*): k1_win_gog_swkotor.exe @ 0x007a39e8 (used in CExoResMan::AddResourceDirectory @ 0x00408800, CExoResMan::Exists @ 0x00408bc0, CExoResMan::RemoveResourceDirectory @ 0x004088d0). k2_win_gog_aspyr_swkotor2.exe: Equivalent global at DAT_008283c0 @ 0x008283c0. swkotor2_aspyr.exe: Equivalent global at DAT_00a1b490 @ 0x00a1b490
+        /// - ExoSound (CExoSound*): k1_win_gog_swkotor.exe @ 0x007a39ec (used in CExoSoundInternal::SetSoundMode @ 0x005d5e80). k2_win_gog_aspyr_swkotor2.exe: Equivalent global at DAT_008283c4 @ 0x008283c4. swkotor2_aspyr.exe: Equivalent global at DAT_00a1b494 @ 0x00a1b494
+        /// - CAppManager* global: k1_win_gog_swkotor.exe: Not used in New Game handler context. k2_win_gog_aspyr_swkotor2.exe @ DAT_008283d4 @ 0x008283d4 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401380 @ 0x00401380 for module loading system initialization, used in CServerExoApp::ResetServerStateField @ 0x006394b0 @ 0x006394b0 for server state reset). swkotor2_aspyr.exe @ DAT_00a1b4a4 @ 0x00a1b4a4 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401bc0 @ 0x00401bc0 for module loading system initialization, used in CServerExoApp::ResetServerStateField @ 0x00741360 @ 0x00741360 for server state reset)
+        /// - CExoResMan* global (swkotor2/swkotor2_aspyr): k1_win_gog_swkotor.exe: Uses ExoResMan @ 0x007a39e8 instead. k2_win_gog_aspyr_swkotor2.exe @ DAT_008283c0 @ 0x008283c0 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408a30 @ 0x00408a30 for AddResourceDirectory equivalent, used in CExoResMan::Exists() @ 0x00408df0 (k2_win_gog_aspyr_swkotor2.exe) for Exists equivalent, used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408b00 @ 0x00408b00 for RemoveResourceDirectory equivalent). swkotor2_aspyr.exe @ DAT_00a1b490 @ 0x00a1b490 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711690 @ 0x00711690 for AddResourceDirectory equivalent, used in  CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe) for Exists equivalent, used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711710 @ 0x00711710 for RemoveResourceDirectory equivalent)
+        /// - Sound system global (swkotor2/swkotor2_aspyr): k1_win_gog_swkotor.exe: Uses ExoSound @ 0x007a39ec instead. k2_win_gog_aspyr_swkotor2.exe @ DAT_008283c4 @ 0x008283c4 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00621ab0 @ 0x00621ab0 for SetSoundMode equivalent). swkotor2_aspyr.exe @ DAT_00a1b494 @ 0x00a1b494 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0070bc60 @ 0x0070bc60 for SetSoundMode equivalent)
+        /// - Sound mode constant: k1_win_gog_swkotor.exe @ DAT_0074c5ec @ 0x0074c5ec (used in CExoSoundInternal::SetSoundMode @ 0x005d5e80). k2_win_gog_aspyr_swkotor2.exe @ DAT_007c5474 @ 0x007c5474 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00621ab0 @ 0x00621ab0). swkotor2_aspyr.exe @ DAT_0099c2a8 @ 0x0099c2a8 (used in  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0070bc60 @ 0x0070bc60)
         ///
         /// RESOURCE TYPE CONSTANTS:
-        /// - MOD (Module): 0x7db (2011 decimal) - swkotor.exe: Uses MOD type constant via CExoResMan::Exists() @ 0x00408bc0 with MOD parameter (no explicit constant value, uses ResourceType enum, referenced at 0x0067b0a5 in first Exists call, referenced at 0x0067b0b3 in second Exists call with RIM fallback). swkotor2.exe @ 0x006d0c22 ( CExoResMan::Exists() @ 0x00408df0 (swkotor2.exe) call with 0x7db constant, checks if module resource exists as MOD type before fallback to RIM). swkotor2_aspyr.exe @ 0x008822d1 ( CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe) call with 0x7db constant, checks if module resource exists as MOD type before fallback to RIM)
-        /// - RIM (Resource Information Module): 0xbba (3002 decimal) - swkotor.exe: Uses RIM type constant via CExoResMan::Exists() @ 0x00408bc0 with RIM parameter (no explicit constant value, uses ResourceType enum, referenced at 0x0067b0b3 as fallback when MOD check fails). swkotor2.exe @ 0x006d0c4b ( CExoResMan::Exists() @ 0x00408df0 (swkotor2.exe) call with 0xbba constant, fallback check when MOD type (0x7db) resource not found). swkotor2_aspyr.exe @ 0x008822e4 (CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe) call with 0xbba constant, fallback check when MOD type (0x7db) resource not found)
-        /// - DIRECTORY: 2 (directory resource type constant) - swkotor.exe @ 0x00408800 (CExoResMan::AddResourceDirectory calls AddKeyTable with DIRECTORY parameter value 2, referenced at 0x0067b03a). swkotor.exe @ 0x004088d0 (CExoResMan::RemoveResourceDirectory calls RemoveKeyTable with DIRECTORY parameter value 2, referenced at 0x0067b0c7). swkotor2.exe @ 0x00408a30 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408a30 calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00406ef0 with DIRECTORY parameter 2, referenced at 0x006d0bfa). swkotor2.exe @ 0x00408b00 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408b00 calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00407900 with DIRECTORY parameter 2, referenced at 0x006d0c8a). swkotor2_aspyr.exe @ 0x00711690 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711690 calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711750 with DIRECTORY parameter 2, referenced at 0x0088230f). swkotor2_aspyr.exe @ 0x00711710 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711710 calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x007131d0 with DIRECTORY parameter 2, referenced at 0x008823a3)
+        /// - MOD (Module): 0x7db (2011 decimal) - k1_win_gog_swkotor.exe: Uses MOD type constant via CExoResMan::Exists() @ 0x00408bc0 with MOD parameter (no explicit constant value, uses ResourceType enum, referenced at 0x0067b0a5 in first Exists call, referenced at 0x0067b0b3 in second Exists call with RIM fallback). k2_win_gog_aspyr_swkotor2.exe @ 0x006d0c22 ( CExoResMan::Exists() @ 0x00408df0 (k2_win_gog_aspyr_swkotor2.exe) call with 0x7db constant, checks if module resource exists as MOD type before fallback to RIM). swkotor2_aspyr.exe @ 0x008822d1 ( CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe) call with 0x7db constant, checks if module resource exists as MOD type before fallback to RIM)
+        /// - RIM (Resource Information Module): 0xbba (3002 decimal) - k1_win_gog_swkotor.exe: Uses RIM type constant via CExoResMan::Exists() @ 0x00408bc0 with RIM parameter (no explicit constant value, uses ResourceType enum, referenced at 0x0067b0b3 as fallback when MOD check fails). k2_win_gog_aspyr_swkotor2.exe @ 0x006d0c4b ( CExoResMan::Exists() @ 0x00408df0 (k2_win_gog_aspyr_swkotor2.exe) call with 0xbba constant, fallback check when MOD type (0x7db) resource not found). swkotor2_aspyr.exe @ 0x008822e4 (CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe) call with 0xbba constant, fallback check when MOD type (0x7db) resource not found)
+        /// - DIRECTORY: 2 (directory resource type constant) - k1_win_gog_swkotor.exe @ 0x00408800 (CExoResMan::AddResourceDirectory calls AddKeyTable with DIRECTORY parameter value 2, referenced at 0x0067b03a). k1_win_gog_swkotor.exe @ 0x004088d0 (CExoResMan::RemoveResourceDirectory calls RemoveKeyTable with DIRECTORY parameter value 2, referenced at 0x0067b0c7). k2_win_gog_aspyr_swkotor2.exe @ 0x00408a30 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408a30 calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00406ef0 with DIRECTORY parameter 2, referenced at 0x006d0bfa). k2_win_gog_aspyr_swkotor2.exe @ 0x00408b00 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408b00 calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00407900 with DIRECTORY parameter 2, referenced at 0x006d0c8a). swkotor2_aspyr.exe @ 0x00711690 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711690 calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711750 with DIRECTORY parameter 2, referenced at 0x0088230f). swkotor2_aspyr.exe @ 0x00711710 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711710 calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x007131d0 with DIRECTORY parameter 2, referenced at 0x008823a3)
         ///
         /// UTILITY FUNCTIONS:
-        /// - CExoString constructors: swkotor.exe @ 0x005b3190 (empty), @ 0x005e5a90 (from char*), swkotor2.exe @ 0x005ff130 (empty), @ 0x00630a90 (from char*), swkotor2_aspyr.exe @ 0x00733540 (empty), @ 0x00733570 (from uint*)
-        /// - CExoString destructors: swkotor.exe @ 0x005e5c20, swkotor2.exe @ 0x00630c20, swkotor2_aspyr.exe @ 0x00733780
-        /// - CExoString assignment: swkotor.exe @ 0x005e5140 (operator= from char*), swkotor2.exe @ 0x00630d10 (operator= from const char*), swkotor2_aspyr.exe @ 0x007338d0 (operator= from const char*)
-        /// - CResRef constructors: swkotor.exe @ 0x00406d60 (from CExoString*), swkotor2.exe @ 0x00406e70 (from undefined4*), swkotor2_aspyr.exe @ 0x00710810 (from int*)
-        /// - Memory allocation: swkotor.exe @ 0x006fa7e6 (operator_new), swkotor2.exe @ 0x0076d9f6 (operator_new), swkotor2_aspyr.exe @ 0x00919723 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00919723 via _malloc)
-        /// - CExoIni constructors/destructors: swkotor.exe @ 0x005e6750 (constructor), @ 0x005e67e0 (destructor)
-        /// - Temporary object management: swkotor2.exe @ 0x00631f70 (TemporaryContext constructor), @ 0x00632000 (TemporaryContext destructor), swkotor2_aspyr.exe @ 0x00736240 (TemporaryContext constructor), @ 0x007362c0 (TemporaryContext destructor)
-        /// - Resource directory operations: swkotor2.exe @ 0x004087d0 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x004087d0 copy assignment), swkotor2_aspyr.exe @ 0x00716da0 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00716da0 copy assignment)
-        /// - Module resource existence checks: swkotor2.exe @ 0x00408df0 (CExoResMan::Exists() @ 0x00408df0 (swkotor2.exe)), swkotor2_aspyr.exe @ 0x00711ed0 (CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe))
-        /// - Panel management: swkotor2.exe @ 0x0040bf90 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0040bf90 AddPanel equivalent), swkotor2_aspyr.exe @ 0x00410530 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00410530 AddPanel equivalent)
-        /// - Sound mode setting: swkotor2.exe @ 0x00621ab0 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00621ab0), swkotor2_aspyr.exe @ 0x0070bc60 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0070bc60)
-        /// - Game time/system initialization: swkotor2.exe @ 0x0057a400 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0057a400), swkotor2_aspyr.exe @ 0x005ff000 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff000)
-        /// - Module loading system initialization: swkotor2.exe @ 0x00401380 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401380), swkotor2_aspyr.exe @ 0x00401bc0 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401bc0)
-        /// - Post-cleanup checks: swkotor2.exe @ 0x006387d0 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x006387d0), @ 0x00682b40 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00682b40), swkotor2_aspyr.exe @ 0x0073f750 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0073f750), @ 0x007d21e0 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x007d21e0)
+        /// - CExoString constructors: k1_win_gog_swkotor.exe @ 0x005b3190 (empty), @ 0x005e5a90 (from char*), k2_win_gog_aspyr_swkotor2.exe @ 0x005ff130 (empty), @ 0x00630a90 (from char*), swkotor2_aspyr.exe @ 0x00733540 (empty), @ 0x00733570 (from uint*)
+        /// - CExoString destructors: k1_win_gog_swkotor.exe @ 0x005e5c20, k2_win_gog_aspyr_swkotor2.exe @ 0x00630c20, swkotor2_aspyr.exe @ 0x00733780
+        /// - CExoString assignment: k1_win_gog_swkotor.exe @ 0x005e5140 (operator= from char*), k2_win_gog_aspyr_swkotor2.exe @ 0x00630d10 (operator= from const char*), swkotor2_aspyr.exe @ 0x007338d0 (operator= from const char*)
+        /// - CResRef constructors: k1_win_gog_swkotor.exe @ 0x00406d60 (from CExoString*), k2_win_gog_aspyr_swkotor2.exe @ 0x00406e70 (from undefined4*), swkotor2_aspyr.exe @ 0x00710810 (from int*)
+        /// - Memory allocation: k1_win_gog_swkotor.exe @ 0x006fa7e6 (operator_new), k2_win_gog_aspyr_swkotor2.exe @ 0x0076d9f6 (operator_new), swkotor2_aspyr.exe @ 0x00919723 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00919723 via _malloc)
+        /// - CExoIni constructors/destructors: k1_win_gog_swkotor.exe @ 0x005e6750 (constructor), @ 0x005e67e0 (destructor)
+        /// - Temporary object management: k2_win_gog_aspyr_swkotor2.exe @ 0x00631f70 (TemporaryContext constructor), @ 0x00632000 (TemporaryContext destructor), swkotor2_aspyr.exe @ 0x00736240 (TemporaryContext constructor), @ 0x007362c0 (TemporaryContext destructor)
+        /// - Resource directory operations: k2_win_gog_aspyr_swkotor2.exe @ 0x004087d0 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x004087d0 copy assignment), swkotor2_aspyr.exe @ 0x00716da0 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00716da0 copy assignment)
+        /// - Module resource existence checks: k2_win_gog_aspyr_swkotor2.exe @ 0x00408df0 (CExoResMan::Exists() @ 0x00408df0 (k2_win_gog_aspyr_swkotor2.exe)), swkotor2_aspyr.exe @ 0x00711ed0 (CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe))
+        /// - Panel management: k2_win_gog_aspyr_swkotor2.exe @ 0x0040bf90 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0040bf90 AddPanel equivalent), swkotor2_aspyr.exe @ 0x00410530 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00410530 AddPanel equivalent)
+        /// - Sound mode setting: k2_win_gog_aspyr_swkotor2.exe @ 0x00621ab0 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00621ab0), swkotor2_aspyr.exe @ 0x0070bc60 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0070bc60)
+        /// - Game time/system initialization: k2_win_gog_aspyr_swkotor2.exe @ 0x0057a400 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0057a400), swkotor2_aspyr.exe @ 0x005ff000 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff000)
+        /// - Module loading system initialization: k2_win_gog_aspyr_swkotor2.exe @ 0x00401380 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401380), swkotor2_aspyr.exe @ 0x00401bc0 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401bc0)
+        /// - Post-cleanup checks: k2_win_gog_aspyr_swkotor2.exe @ 0x006387d0 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x006387d0), @ 0x00682b40 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00682b40), swkotor2_aspyr.exe @ 0x0073f750 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0073f750), @ 0x007d21e0 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x007d21e0)
         /// - Module directory setup: swkotor2_aspyr.exe @ 0x005564b0 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005564b0 adds module directories), @ 0x00556590 ( [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00556590 removes module directories)
         ///
         /// KEY EXECUTION FLOW FUNCTIONS (New Game Handler):
-        /// - Session time reset: swkotor.exe @ CSWPartyTable::ResetCurrentSessionStartTim() @ 0x00563cf0 (calls GetSystemTimeAsFileTime, stores to PTR__g_nCurrentSessionStartFILETIME_007a3a20 @ 0x007a3a20 and DAT_007a3a24 @ 0x007a3a24). swkotor2.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0057a400 @ 0x0057a400 (calls GetSystemTimeAsFileTime, stores to DAT_00828400 @ 0x00828400 and DAT_00828404 @ 0x00828404). swkotor2_aspyr.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff000 @ 0x005ff000 (equivalent game time initialization)
-        /// - Module loading system init: swkotor.exe: Not used (no explicit module loading system initialization in New Game handler). swkotor2.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401380 @ 0x00401380 (initializes module loading system, parameter DAT_008283d4 @ 0x008283d4). swkotor2_aspyr.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401bc0 @ 0x00401bc0 (initializes module loading system, parameter DAT_00a1b4a4 @ 0x00a1b4a4)
-        /// - Resource directory add: swkotor.exe @ CExoResMan::AddResourceDirectory() @ 0x00408800 (ExoResMan @ 0x007a39e8, calls AddKeyTable with DIRECTORY parameter 2). swkotor2.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408a30 @ 0x00408a30 (DAT_008283c0 @ 0x008283c0, calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00406ef0 with DIRECTORY parameter 2). swkotor2_aspyr.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711690 @ 0x00711690 (DAT_00a1b490 @ 0x00a1b490, calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711750 with DIRECTORY parameter 2)
-        /// - Resource existence check: swkotor.exe @ CExoResMan::Exists() @ 0x00408bc0 (ExoResMan @ 0x007a39e8, checks MOD then RIM types, calls GetKeyEntry internally). swkotor2.exe @ CExoResMan::Exists() @ 0x00408df0 (swkotor2.exe) (DAT_008283c0 @ 0x008283c0, checks MOD type 0x7db then RIM type 0xbba). swkotor2_aspyr.exe @ CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe) (DAT_00a1b490 @ 0x00a1b490, checks MOD type 0x7db then RIM type 0xbba)
-        /// - Resource directory remove: swkotor.exe @ CExoResMan::RemoveResourceDirectory() @ 0x004088d0 (ExoResMan @ 0x007a39e8, calls RemoveKeyTable with DIRECTORY parameter 2). swkotor2.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408b00 @ 0x00408b00 (DAT_008283c0 @ 0x008283c0, calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00407900 with DIRECTORY parameter 2). swkotor2_aspyr.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711710 @ 0x00711710 (DAT_00a1b490 @ 0x00a1b490, calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x007131d0 with DIRECTORY parameter 2)
-        /// - GUI panel constructor: swkotor.exe @ CSWGuiClassSelection::CSWGuiClassSelection() @ 0x006dc3c0 (allocates 0x1560 bytes via operator_new @ 0x006fa7e6, parameters: allocated memory, panel manager, module name CExoString). swkotor2.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0074a700 @ 0x0074a700 (allocates 0x15f0 bytes via operator_new @ 0x0076d9f6, parameters: allocated memory, panel manager, module name CExoString). swkotor2_aspyr.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x008f92b0 @ 0x008f92b0 (allocates 0x15f0 bytes via  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00919723 @ 0x00919723, parameters: allocated memory, panel manager, module name CExoString)
-        /// - Panel registration: swkotor.exe @ CSWGuiManager::AddPanel() @ 0x0040bc70 (panel manager, panel pointer, flag 2, flag 1). swkotor2.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0040bf90 @ 0x0040bf90 (panel manager, panel pointer, flag 2, flag 1). swkotor2_aspyr.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00410530 @ 0x00410530 (panel manager, panel pointer, flag 2, flag 1)
-        /// - Sound mode set: swkotor.exe @ CExoSoundInternal::SetSoundMode() @ 0x005d5e80 (ExoSound @ 0x007a39ec, DAT_0074c5ec @ 0x0074c5ec). swkotor2.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00621ab0 @ 0x00621ab0 (DAT_008283c4 @ 0x008283c4, DAT_007c5474 @ 0x007c5474, parameter 0). swkotor2_aspyr.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0070bc60 @ 0x0070bc60 (DAT_00a1b494 @ 0x00a1b494, DAT_0099c2a8 @ 0x0099c2a8, parameter 0)
-        /// - Server state reset: swkotor.exe: Not used. swkotor2.exe @ CServerExoApp::ResetServerStateField @ 0x006394b0 @ 0x006394b0 (parameter: *(int *)(DAT_008283d4 + 4), resets server state field at offset 0x280 to 0). swkotor2_aspyr.exe @ CServerExoApp::ResetServerStateField @ 0x00741360 @ 0x00741360 (parameter: *(int *)(DAT_00a1b4a4 + 4), equivalent to swkotor2.exe version)
-        /// - Post-cleanup checks: swkotor.exe: Not used. swkotor2.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x006387d0 @ 0x006387d0 (returns *(undefined4 *)(*(int *)(DAT_008283d4 + 4) + 0x40)), @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00682b40 @ 0x00682b40 (clears memory at offset 0xf88, 33 bytes). swkotor2_aspyr.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0073f750 @ 0x0073f750 (returns *(undefined4 *)(*(int *)(DAT_00a1b4a4 + 4) + 0x40)), @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x007d21e0 @ 0x007d21e0 (clears memory at offset 0xf88, 33 bytes)
+        /// - Session time reset: k1_win_gog_swkotor.exe @ CSWPartyTable::ResetCurrentSessionStartTim() @ 0x00563cf0 (calls GetSystemTimeAsFileTime, stores to PTR__g_nCurrentSessionStartFILETIME_007a3a20 @ 0x007a3a20 and DAT_007a3a24 @ 0x007a3a24). k2_win_gog_aspyr_swkotor2.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0057a400 @ 0x0057a400 (calls GetSystemTimeAsFileTime, stores to DAT_00828400 @ 0x00828400 and DAT_00828404 @ 0x00828404). swkotor2_aspyr.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff000 @ 0x005ff000 (equivalent game time initialization)
+        /// - Module loading system init: k1_win_gog_swkotor.exe: Not used (no explicit module loading system initialization in New Game handler). k2_win_gog_aspyr_swkotor2.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401380 @ 0x00401380 (initializes module loading system, parameter DAT_008283d4 @ 0x008283d4). swkotor2_aspyr.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401bc0 @ 0x00401bc0 (initializes module loading system, parameter DAT_00a1b4a4 @ 0x00a1b4a4)
+        /// - Resource directory add: k1_win_gog_swkotor.exe @ CExoResMan::AddResourceDirectory() @ 0x00408800 (ExoResMan @ 0x007a39e8, calls AddKeyTable with DIRECTORY parameter 2). k2_win_gog_aspyr_swkotor2.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408a30 @ 0x00408a30 (DAT_008283c0 @ 0x008283c0, calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00406ef0 with DIRECTORY parameter 2). swkotor2_aspyr.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711690 @ 0x00711690 (DAT_00a1b490 @ 0x00a1b490, calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711750 with DIRECTORY parameter 2)
+        /// - Resource existence check: k1_win_gog_swkotor.exe @ CExoResMan::Exists() @ 0x00408bc0 (ExoResMan @ 0x007a39e8, checks MOD then RIM types, calls GetKeyEntry internally). k2_win_gog_aspyr_swkotor2.exe @ CExoResMan::Exists() @ 0x00408df0 (k2_win_gog_aspyr_swkotor2.exe) (DAT_008283c0 @ 0x008283c0, checks MOD type 0x7db then RIM type 0xbba). swkotor2_aspyr.exe @ CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe) (DAT_00a1b490 @ 0x00a1b490, checks MOD type 0x7db then RIM type 0xbba)
+        /// - Resource directory remove: k1_win_gog_swkotor.exe @ CExoResMan::RemoveResourceDirectory() @ 0x004088d0 (ExoResMan @ 0x007a39e8, calls RemoveKeyTable with DIRECTORY parameter 2). k2_win_gog_aspyr_swkotor2.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408b00 @ 0x00408b00 (DAT_008283c0 @ 0x008283c0, calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00407900 with DIRECTORY parameter 2). swkotor2_aspyr.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711710 @ 0x00711710 (DAT_00a1b490 @ 0x00a1b490, calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x007131d0 with DIRECTORY parameter 2)
+        /// - GUI panel constructor: k1_win_gog_swkotor.exe @ CSWGuiClassSelection::CSWGuiClassSelection() @ 0x006dc3c0 (allocates 0x1560 bytes via operator_new @ 0x006fa7e6, parameters: allocated memory, panel manager, module name CExoString). k2_win_gog_aspyr_swkotor2.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0074a700 @ 0x0074a700 (allocates 0x15f0 bytes via operator_new @ 0x0076d9f6, parameters: allocated memory, panel manager, module name CExoString). swkotor2_aspyr.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x008f92b0 @ 0x008f92b0 (allocates 0x15f0 bytes via  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00919723 @ 0x00919723, parameters: allocated memory, panel manager, module name CExoString)
+        /// - Panel registration: k1_win_gog_swkotor.exe @ CSWGuiManager::AddPanel() @ 0x0040bc70 (panel manager, panel pointer, flag 2, flag 1). k2_win_gog_aspyr_swkotor2.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0040bf90 @ 0x0040bf90 (panel manager, panel pointer, flag 2, flag 1). swkotor2_aspyr.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00410530 @ 0x00410530 (panel manager, panel pointer, flag 2, flag 1)
+        /// - Sound mode set: k1_win_gog_swkotor.exe @ CExoSoundInternal::SetSoundMode() @ 0x005d5e80 (ExoSound @ 0x007a39ec, DAT_0074c5ec @ 0x0074c5ec). k2_win_gog_aspyr_swkotor2.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00621ab0 @ 0x00621ab0 (DAT_008283c4 @ 0x008283c4, DAT_007c5474 @ 0x007c5474, parameter 0). swkotor2_aspyr.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0070bc60 @ 0x0070bc60 (DAT_00a1b494 @ 0x00a1b494, DAT_0099c2a8 @ 0x0099c2a8, parameter 0)
+        /// - Server state reset: k1_win_gog_swkotor.exe: Not used. k2_win_gog_aspyr_swkotor2.exe @ CServerExoApp::ResetServerStateField @ 0x006394b0 @ 0x006394b0 (parameter: *(int *)(DAT_008283d4 + 4), resets server state field at offset 0x280 to 0). swkotor2_aspyr.exe @ CServerExoApp::ResetServerStateField @ 0x00741360 @ 0x00741360 (parameter: *(int *)(DAT_00a1b4a4 + 4), equivalent to k2_win_gog_aspyr_swkotor2.exe version)
+        /// - Post-cleanup checks: k1_win_gog_swkotor.exe: Not used. k2_win_gog_aspyr_swkotor2.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x006387d0 @ 0x006387d0 (returns *(undefined4 *)(*(int *)(DAT_008283d4 + 4) + 0x40)), @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00682b40 @ 0x00682b40 (clears memory at offset 0xf88, 33 bytes). swkotor2_aspyr.exe @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0073f750 @ 0x0073f750 (returns *(undefined4 *)(*(int *)(DAT_00a1b4a4 + 4) + 0x40)), @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x007d21e0 @ 0x007d21e0 (clears memory at offset 0xf88, 33 bytes)
         ///
         /// DATA STRUCTURES AND MEMORY LAYOUTS:
-        /// - CExoString structure: swkotor.exe/swkotor2.exe/swkotor2_aspyr.exe: Contains c_string pointer (char*) and length field (size_t), used for module names and resource directory paths
-        /// - CResRef structure: swkotor.exe/swkotor2.exe/swkotor2_aspyr.exe: Resource reference structure (16 bytes), constructed from CExoString for resource existence checks
-        /// - CSWGuiClassSelection structure: swkotor.exe: Allocated size 0x1560 (5472 bytes) @ operator_new @ 0x006fa7e6. swkotor2.exe: Allocated size 0x15f0 (5616 bytes) @ operator_new @ 0x0076d9f6. swkotor2_aspyr.exe: Allocated size 0x15f0 (5616 bytes) @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00919723 @ 0x00919723
-        /// - Exception handling structures: swkotor.exe: FrameHandler_0072e2f3 @ 0x0072e2f3, ExceptionList saved/restored. swkotor2.exe: LAB_007a3adb @ 0x007a3adb, ExceptionList saved/restored. swkotor2_aspyr.exe: LAB_00974a8b @ 0x00974a8b, ExceptionList saved/restored
-        /// - Panel state structure offsets: swkotor.exe: panel.bit_flags checked at offset 0x0, field20_0x140c at offset 0x140c. swkotor2.exe: bit_flags at offset 0x48, field at offset 0x18f4. swkotor2_aspyr.exe: bit_flags at offset 0x48, field at offset 0x1c98
-        /// - FILETIME storage: swkotor.exe: PTR__g_nCurrentSessionStartFILETIME_007a3a20 @ 0x007a3a20 (dwLowDateTime), DAT_007a3a24 @ 0x007a3a24 (dwHighDateTime). swkotor2.exe: DAT_00828400 @ 0x00828400 (dwLowDateTime), DAT_00828404 @ 0x00828404 (dwHighDateTime). swkotor2_aspyr.exe: Equivalent FILETIME storage locations (addresses not explicitly documented in execution flow)
+        /// - CExoString structure: k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe/swkotor2_aspyr.exe: Contains c_string pointer (char*) and length field (size_t), used for module names and resource directory paths
+        /// - CResRef structure: k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe/swkotor2_aspyr.exe: Resource reference structure (16 bytes), constructed from CExoString for resource existence checks
+        /// - CSWGuiClassSelection structure: k1_win_gog_swkotor.exe: Allocated size 0x1560 (5472 bytes) @ operator_new @ 0x006fa7e6. k2_win_gog_aspyr_swkotor2.exe: Allocated size 0x15f0 (5616 bytes) @ operator_new @ 0x0076d9f6. swkotor2_aspyr.exe: Allocated size 0x15f0 (5616 bytes) @  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00919723 @ 0x00919723
+        /// - Exception handling structures: k1_win_gog_swkotor.exe: FrameHandler_0072e2f3 @ 0x0072e2f3, ExceptionList saved/restored. k2_win_gog_aspyr_swkotor2.exe: LAB_007a3adb @ 0x007a3adb, ExceptionList saved/restored. swkotor2_aspyr.exe: LAB_00974a8b @ 0x00974a8b, ExceptionList saved/restored
+        /// - Panel state structure offsets: k1_win_gog_swkotor.exe: panel.bit_flags checked at offset 0x0, field20_0x140c at offset 0x140c. k2_win_gog_aspyr_swkotor2.exe: bit_flags at offset 0x48, field at offset 0x18f4. swkotor2_aspyr.exe: bit_flags at offset 0x48, field at offset 0x1c98
+        /// - FILETIME storage: k1_win_gog_swkotor.exe: PTR__g_nCurrentSessionStartFILETIME_007a3a20 @ 0x007a3a20 (dwLowDateTime), DAT_007a3a24 @ 0x007a3a24 (dwHighDateTime). k2_win_gog_aspyr_swkotor2.exe: DAT_00828400 @ 0x00828400 (dwLowDateTime), DAT_00828404 @ 0x00828404 (dwHighDateTime). swkotor2_aspyr.exe: Equivalent FILETIME storage locations (addresses not explicitly documented in execution flow)
         ///
         /// PANEL FLAG CONSTANTS:
-        /// - 0x600 (1536): Bit mask for panel state flags (swkotor.exe @ 0x0067afce)
-        /// - 0x400 (1024): Panel active/visible flag (swkotor.exe @ 0x0067afd3, 0x0067b14f)
-        /// - 0x300 (768): Bit mask for panel state flags (swkotor2.exe @ 0x006d0b1a, swkotor2_aspyr.exe @ 0x0088224a)
-        /// - 0x200 (512): Panel active/visible flag (swkotor2.exe @ 0x006d0b1a, 0x006d0d0a, swkotor2_aspyr.exe @ 0x0088224a, 0x008822d8)
+        /// - 0x600 (1536): Bit mask for panel state flags (k1_win_gog_swkotor.exe @ 0x0067afce)
+        /// - 0x400 (1024): Panel active/visible flag (k1_win_gog_swkotor.exe @ 0x0067afd3, 0x0067b14f)
+        /// - 0x300 (768): Bit mask for panel state flags (k2_win_gog_aspyr_swkotor2.exe @ 0x006d0b1a, swkotor2_aspyr.exe @ 0x0088224a)
+        /// - 0x200 (512): Panel active/visible flag (k2_win_gog_aspyr_swkotor2.exe @ 0x006d0b1a, 0x006d0d0a, swkotor2_aspyr.exe @ 0x0088224a, 0x008822d8)
         ///
-        /// EXECUTION FLOW - swkotor.exe @ 0x0067afb0 (CSWGuiMainMenu::OnNewGamePicked):
+        /// EXECUTION FLOW - k1_win_gog_swkotor.exe @ 0x0067afb0 (CSWGuiMainMenu::OnNewGamePicked):
         /// 1. Structured exception handling setup:
         ///    - FrameHandler_0072e2f3 @ 0x0072e2f3 stored in pcStack_8
         ///    - ExceptionList saved to local_c
@@ -675,7 +675,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         ///     - CExoIni::~CExoIni() @ 0x005e67e0 destroys temporary INI object
         /// 15. Exception handler restoration: ExceptionList = local_c
         ///
-        /// EXECUTION FLOW - swkotor2.exe @ 0x006d0b00 (OnNewGameButtonClicked):
+        /// EXECUTION FLOW - k2_win_gog_aspyr_swkotor2.exe @ 0x006d0b00 (OnNewGameButtonClicked):
         /// 1. Structured exception handling setup:
         ///    - LAB_007a3adb @ 0x007a3adb stored in puStack_10
         ///    - ExceptionList saved to local_14
@@ -726,14 +726,14 @@ namespace Andastra.Game.Games.Odyssey.Game
         ///    - CExoString___CExoString() destroys local_40
         /// 10. Module resource existence check:
         ///     -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00406e70() @ 0x00406e70 (local_30, local_38) converts CExoString to CResRef
-        ///     - CExoResMan::Exists() @ 0x00408df0 (swkotor2.exe) (DAT_008283c0, local_30, 0x7db, null) checks for MOD type
+        ///     - CExoResMan::Exists() @ 0x00408df0 (k2_win_gog_aspyr_swkotor2.exe) (DAT_008283c0, local_30, 0x7db, null) checks for MOD type
         ///       - Calls CExoResMan__GetKeyEntry() internally
         ///       - 0x7db = MOD resource type constant
         ///     - If MOD not found (iVar1 == 0):
         ///       -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00406e70() reconstructs CResRef from local_38
-        ///       - CExoResMan::Exists() @ 0x00408df0 (swkotor2.exe) (DAT_008283c0, local_30, 0xbba, null) checks for RIM type
+        ///       - CExoResMan::Exists() @ 0x00408df0 (k2_win_gog_aspyr_swkotor2.exe) (DAT_008283c0, local_30, 0xbba, null) checks for RIM type
         ///         - 0xbba = RIM resource type constant
-        ///       - If RIM also not found: CExoString::operator= @ 0x00630d10 (swkotor2.exe) (local_38, "001ebo") reassigns default module
+        ///       - If RIM also not found: CExoString::operator= @ 0x00630d10 (k2_win_gog_aspyr_swkotor2.exe) (local_38, "001ebo") reassigns default module
         /// 11. Resource directory cleanup:
         ///     - CExoString__CExoString() creates string from "MODULES:" in local_30
         ///     - local_c._0_1_ set to 5 (exception state tracking)
@@ -757,7 +757,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         ///     - Calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00624380() internally if first parameter is not null
         /// 15. Panel flags update: *(uint *)((int)this + 0x48) = *(uint *)((int)this + 0x48) &amp; 0xfffffe7f | 0x200
         ///     - Clears bit 0x80, sets bit 0x200 (panel active flag)
-        /// 16. Server state reset: CServerExoApp::ResetServerStateField @ 0x006394b0() @ 0x006394b0 (swkotor2.exe)
+        /// 16. Server state reset: CServerExoApp::ResetServerStateField @ 0x006394b0() @ 0x006394b0 (k2_win_gog_aspyr_swkotor2.exe)
         ///     - Parameter: *(int *)(DAT_008283d4 + 4) (server pointer)
         ///     - Sets *(undefined4 *)(*(int *)(param_1 + 4) + 0x280) = 0
         /// 17. Cleanup:
@@ -783,14 +783,14 @@ namespace Andastra.Game.Games.Odyssey.Game
         ///    - Check *(int *)(param_1 + 0x50) != 0 (control is active)
         /// 3. Exception handler activation: ExceptionList = &amp;local_10
         /// 4. Game time initialization:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff000() @ 0x005ff000
-        ///    - Equivalent to  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0057a400() in swkotor2.exe
+        ///    - Equivalent to  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0057a400() in k2_win_gog_aspyr_swkotor2.exe
         ///    - Calls GetSystemTimeAsFileTime() to capture current system time
         /// 5. Module loading system initialization:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401bc0() @ 0x00401bc0
         ///    - Parameter: DAT_00a1b4a4 @ 0x00a1b4a4 (CAppManager*)
-        ///    - Equivalent to  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401380() in swkotor2.exe
+        ///    - Equivalent to  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401380() in k2_win_gog_aspyr_swkotor2.exe
         /// 6. Context initialization: TemporaryContext constructor @ 0x00736240 @ 0x00736240
         ///    - Parameter: &amp;local_28
-        ///    - Equivalent to TemporaryContext constructor @ 0x00631f70() in swkotor2.exe
+        ///    - Equivalent to TemporaryContext constructor @ 0x00631f70() in k2_win_gog_aspyr_swkotor2.exe
         /// 7. String construction:
         ///    - local_8 set to 0 (exception state tracking)
         ///    -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00733540() creates empty string in local_20
@@ -832,8 +832,8 @@ namespace Andastra.Game.Games.Odyssey.Game
         ///     - local_8._0_1_ set to 6 (exception state tracking)
         ///     - If allocation succeeds (this_00 != null):
         ///       -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x008f92b0() @ 0x008f92b0 (this_00, *(undefined4 *)((int)this + 0x1c), local_18)
-        ///         - Equivalent to  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0074a700() in swkotor2.exe
-        ///         - TSL/swkotor2.exe: Creates and initializes module loader with module name "001ebo"
+        ///         - Equivalent to  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0074a700() in k2_win_gog_aspyr_swkotor2.exe
+        ///         - TSL/k2_win_gog_aspyr_swkotor2.exe: Creates and initializes module loader with module name "001ebo"
         ///       - local_88 set to return value
         ///     - Else: local_88 set to null
         /// 13. Panel registration:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00410530() @ 0x00410530
@@ -841,13 +841,13 @@ namespace Andastra.Game.Games.Odyssey.Game
         ///     - local_8._0_1_ set to 2 (exception state tracking)
         /// 14. Sound/music initialization:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0070bc60() @ 0x0070bc60
         ///     - Parameters: DAT_00a1b494 @ 0x00a1b494, DAT_0099c2a8 @ 0x0099c2a8, 0
-        ///     - Equivalent to  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00621ab0() in swkotor2.exe
+        ///     - Equivalent to  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00621ab0() in k2_win_gog_aspyr_swkotor2.exe
         /// 15. Panel flags update:
         ///     - *(uint *)((int)this + 0x48) = *(uint *)((int)this + 0x48) &amp; 0xffffff7f (clears bit 0x80)
         ///     - *(uint *)((int)this + 0x48) = *(uint *)((int)this + 0x48) &amp; 0xfffffcff | 0x200 (sets bit 0x200)
         /// 16. Server state reset: CServerExoApp::ResetServerStateField @ 0x00741360() @ 0x00741360 (swkotor2_aspyr.exe)
         ///     - Parameter: *(int *)(DAT_00a1b4a4 + 4) (server pointer)
-        ///     - Equivalent to CServerExoApp::ResetServerStateField @ 0x006394b0() in swkotor2.exe
+        ///     - Equivalent to CServerExoApp::ResetServerStateField @ 0x006394b0() in k2_win_gog_aspyr_swkotor2.exe
         ///     - Resets server state field at offset 0x280 to 0
         /// 17. Cleanup:
         ///     - local_8._0_1_ set to 1 (exception state tracking)
@@ -862,85 +862,85 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// 19. Exception handler restoration: ExceptionList = local_10
         ///
         /// KEY FUNCTION DETAILS:
-        /// - CSWPartyTable::ResetCurrentSessionStartTim() @ 0x00563cf0 (swkotor.exe):
+        /// - CSWPartyTable::ResetCurrentSessionStartTim() @ 0x00563cf0 (k1_win_gog_swkotor.exe):
         ///   Captures system time via GetSystemTimeAsFileTime() and stores in global session start time variables.
-        /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0057a400() @ 0x0057a400 (swkotor2.exe):
+        /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0057a400() @ 0x0057a400 (k2_win_gog_aspyr_swkotor2.exe):
         ///   Captures system time via GetSystemTimeAsFileTime() and stores in DAT_00828400/DAT_00828404.
         /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x005ff000() @ 0x005ff000 (swkotor2_aspyr.exe):
         ///   Equivalent to  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0057a400(), captures system time for game session tracking.
-        /// - CAppManager::CreateServer() @ 0x00401380 (swkotor.exe):
+        /// - CAppManager::CreateServer() @ 0x00401380 (k1_win_gog_swkotor.exe):
         ///   Creates and initializes CServerExoApp instance, calls StartServices() and Initialize().
-        /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401380() @ 0x00401380 (swkotor2.exe):
+        /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401380() @ 0x00401380 (k2_win_gog_aspyr_swkotor2.exe):
         ///   Creates and initializes server instance, equivalent functionality to CAppManager::CreateServer().
         /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401bc0() @ 0x00401bc0 (swkotor2_aspyr.exe):
         ///   Equivalent to  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401380(), creates and initializes server instance.
-        /// - CExoResMan::AddResourceDirectory() @ 0x00408800 (swkotor.exe):
+        /// - CExoResMan::AddResourceDirectory() @ 0x00408800 (k1_win_gog_swkotor.exe):
         ///   Adds resource directory to resource manager via AddKeyTable(this, param_1, DIRECTORY, 0).
-        /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408a30() @ 0x00408a30 (swkotor2.exe):
+        /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408a30() @ 0x00408a30 (k2_win_gog_aspyr_swkotor2.exe):
         ///   Equivalent to CExoResMan::AddResourceDirectory(), adds MODULES directory to resource manager.
         /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00711690() @ 0x00711690 (swkotor2_aspyr.exe):
         ///   Equivalent to  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408a30(), adds MODULES directory to resource manager.
-        /// - CExoResMan::Exists() @ 0x00408bc0 (swkotor.exe):
+        /// - CExoResMan::Exists() @ 0x00408bc0 (k1_win_gog_swkotor.exe):
         ///   Checks if resource exists via GetKeyEntry(), returns non-zero if found.
- /// - CExoResMan::Exists() @ 0x00408df0 (swkotor2.exe):
+ /// - CExoResMan::Exists() @ 0x00408df0 (k2_win_gog_aspyr_swkotor2.exe):
  ///   Checks if resource exists via CExoResMan__GetKeyEntry(), takes resource type constant (0x7db for MOD, 0xbba for RIM).
  /// - CExoResMan::Exists() @ 0x00711ed0 (swkotor2_aspyr.exe):
- ///   Equivalent to CExoResMan::Exists() @ 0x00408df0 (swkotor2.exe), checks resource existence with type constants.
-        /// - CSWGuiClassSelection::CSWGuiClassSelection() @ 0x006dc3c0 (swkotor.exe):
+ ///   Equivalent to CExoResMan::Exists() @ 0x00408df0 (k2_win_gog_aspyr_swkotor2.exe), checks resource existence with type constants.
+        /// - CSWGuiClassSelection::CSWGuiClassSelection() @ 0x006dc3c0 (k1_win_gog_swkotor.exe):
         ///   Constructs class selection GUI panel with starting module name, allocates 0x1560 bytes.
-        /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0074a700() @ 0x0074a700 (swkotor2.exe):
+        /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0074a700() @ 0x0074a700 (k2_win_gog_aspyr_swkotor2.exe):
         ///   Creates and initializes module loader, allocates 0x15f0 bytes, takes GUI manager and module name.
         /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x008f92b0() @ 0x008f92b0 (swkotor2_aspyr.exe):
         ///   Equivalent to  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0074a700(), creates module loader with 0x15f0 byte allocation.
-        /// - CSWGuiManager::AddPanel() @ 0x0040bc70 (swkotor.exe):
+        /// - CSWGuiManager::AddPanel() @ 0x0040bc70 (k1_win_gog_swkotor.exe):
         ///   Adds panel to GUI manager, plays sound if requested, updates panel flags, calls OnPanelAdded callback.
-        /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0040bf90() @ 0x0040bf90 (swkotor2.exe):
+        /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0040bf90() @ 0x0040bf90 (k2_win_gog_aspyr_swkotor2.exe):
         ///   Equivalent to CSWGuiManager::AddPanel(), adds panel to GUI manager.
         /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00410530() @ 0x00410530 (swkotor2_aspyr.exe):
         ///   Equivalent to  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0040bf90(), adds panel to GUI manager.
-        /// - CExoSoundInternal::SetSoundMode() @ 0x005d5e80 (swkotor.exe):
+        /// - CExoSoundInternal::SetSoundMode() @ 0x005d5e80 (k1_win_gog_swkotor.exe):
         ///   Manages sound system state transitions, handles pause/resume, mute/unmute operations.
-        /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00621ab0() @ 0x00621ab0 (swkotor2.exe):
+        /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00621ab0() @ 0x00621ab0 (k2_win_gog_aspyr_swkotor2.exe):
         ///   Calls  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00624380() if first parameter is not null, handles sound/music initialization.
         /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0070bc60() @ 0x0070bc60 (swkotor2_aspyr.exe):
         ///   Equivalent to  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00621ab0(), handles sound/music initialization.
-        /// - CExoString::operator= @ 0x00630d10 (swkotor2.exe):
+        /// - CExoString::operator= @ 0x00630d10 (k2_win_gog_aspyr_swkotor2.exe):
         ///   CExoString assignment operator from const char*, reassigns string value, handles memory allocation if needed.
         /// -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x007338d0() @ 0x007338d0 (swkotor2_aspyr.exe):
-        ///   Equivalent to CExoString::operator= @ 0x00630d10 (swkotor2.exe), reassigns string value.
-        /// - CServerExoApp::ResetServerStateField @ 0x006394b0() @ 0x006394b0 (swkotor2.exe):
+        ///   Equivalent to CExoString::operator= @ 0x00630d10 (k2_win_gog_aspyr_swkotor2.exe), reassigns string value.
+        /// - CServerExoApp::ResetServerStateField @ 0x006394b0() @ 0x006394b0 (k2_win_gog_aspyr_swkotor2.exe):
         ///   Resets server state field at offset 0x280 to 0. Takes server pointer as parameter.
         ///   Function signature: void CServerExoApp::ResetServerStateField(CServerExoApp* this)
         ///   Implementation: Sets *(int*)(this + 0x280) = 0 to clear server state flags before module initialization.
         ///   Called during New Game handler initialization sequence (step 15/16) to ensure clean server state.
-        ///   Reverse engineered from swkotor2.exe decompilation analysis.
+        ///   Reverse engineered from k2_win_gog_aspyr_swkotor2.exe decompilation analysis.
         /// - CServerExoApp::ResetServerStateField @ 0x00741360() @ 0x00741360 (swkotor2_aspyr.exe):
         ///   Equivalent to CServerExoApp::ResetServerStateField @ 0x006394b0(), resets server state field at offset 0x280 to 0.
         ///   Function signature: void CServerExoApp::ResetServerStateField(CServerExoApp* this)
         ///   Implementation: Sets *(int*)(this + 0x280) = 0 to clear server state flags before module initialization.
         ///   Called during New Game handler initialization sequence (step 15/16) to ensure clean server state.
         ///   Reverse engineered from swkotor2_aspyr.exe decompilation analysis.
-        ///   Note: Address differs from swkotor2.exe due to different executable base address and code layout.
+        ///   Note: Address differs from k2_win_gog_aspyr_swkotor2.exe due to different executable base address and code layout.
         ///
         /// STRUCTURE OFFSETS:
-        /// - CSWGuiMainMenu panel offset: this->panel (swkotor.exe)
-        /// - Panel bit_flags offset: (this->panel).bit_flags (swkotor.exe), *(uint *)((int)this + 0x48) (swkotor2.exe, swkotor2_aspyr.exe)
-        /// - Panel manager offset: (this->panel).manager (swkotor.exe), *(undefined4 *)((int)this + 0x1c) (swkotor2.exe, swkotor2_aspyr.exe)
-        /// - Panel field validation: this->field20_0x140c (swkotor.exe), *(int *)((int)this + 0x18f4) (swkotor2.exe), *(int *)((int)this + 0x1c98) (swkotor2_aspyr.exe)
-        /// - Control is_active offset: param_1->is_active (swkotor.exe), *(int *)(param_1 + 0x50) (swkotor2.exe, swkotor2_aspyr.exe)
+        /// - CSWGuiMainMenu panel offset: this->panel (k1_win_gog_swkotor.exe)
+        /// - Panel bit_flags offset: (this->panel).bit_flags (k1_win_gog_swkotor.exe), *(uint *)((int)this + 0x48) (k2_win_gog_aspyr_swkotor2.exe, swkotor2_aspyr.exe)
+        /// - Panel manager offset: (this->panel).manager (k1_win_gog_swkotor.exe), *(undefined4 *)((int)this + 0x1c) (k2_win_gog_aspyr_swkotor2.exe, swkotor2_aspyr.exe)
+        /// - Panel field validation: this->field20_0x140c (k1_win_gog_swkotor.exe), *(int *)((int)this + 0x18f4) (k2_win_gog_aspyr_swkotor2.exe), *(int *)((int)this + 0x1c98) (swkotor2_aspyr.exe)
+        /// - Control is_active offset: param_1->is_active (k1_win_gog_swkotor.exe), *(int *)(param_1 + 0x50) (k2_win_gog_aspyr_swkotor2.exe, swkotor2_aspyr.exe)
         ///
         /// MEMORY ALLOCATION SIZES:
-        /// - CSWGuiClassSelection: 0x1560 (5472) bytes (swkotor.exe)
-        /// - Module loader: 0x15f0 (5616) bytes (swkotor2.exe, swkotor2_aspyr.exe)
+        /// - CSWGuiClassSelection: 0x1560 (5472) bytes (k1_win_gog_swkotor.exe)
+        /// - Module loader: 0x15f0 (5616) bytes (k2_win_gog_aspyr_swkotor2.exe, swkotor2_aspyr.exe)
         ///
         /// EXECUTABLE-SPECIFIC DIFFERENCES:
-        /// - swkotor.exe uses "END_M01AA" as default starting module, swkotor2.exe and swkotor2_aspyr.exe use "001ebo"
-        /// - swkotor.exe creates CSWGuiClassSelection panel, swkotor2.exe and swkotor2_aspyr.exe create module loader directly
-        /// - swkotor.exe includes INI initialization step, swkotor2.exe and swkotor2_aspyr.exe do not
-        /// - swkotor.exe includes explicit sound mode setting, swkotor2.exe and swkotor2_aspyr.exe use different sound initialization
-        /// - swkotor2.exe and swkotor2_aspyr.exe include effects resource directory loading step, swkotor.exe does not
-        /// - Panel state validation bit masks differ: 0x600/0x400 (swkotor.exe) vs 0x300/0x200 (swkotor2.exe, swkotor2_aspyr.exe)
-        /// - swkotor2_aspyr.exe uses different function names but equivalent functionality to swkotor2.exe
+        /// - k1_win_gog_swkotor.exe uses "END_M01AA" as default starting module, k2_win_gog_aspyr_swkotor2.exe and swkotor2_aspyr.exe use "001ebo"
+        /// - k1_win_gog_swkotor.exe creates CSWGuiClassSelection panel, k2_win_gog_aspyr_swkotor2.exe and swkotor2_aspyr.exe create module loader directly
+        /// - k1_win_gog_swkotor.exe includes INI initialization step, k2_win_gog_aspyr_swkotor2.exe and swkotor2_aspyr.exe do not
+        /// - k1_win_gog_swkotor.exe includes explicit sound mode setting, k2_win_gog_aspyr_swkotor2.exe and swkotor2_aspyr.exe use different sound initialization
+        /// - k2_win_gog_aspyr_swkotor2.exe and swkotor2_aspyr.exe include effects resource directory loading step, k1_win_gog_swkotor.exe does not
+        /// - Panel state validation bit masks differ: 0x600/0x400 (k1_win_gog_swkotor.exe) vs 0x300/0x200 (k2_win_gog_aspyr_swkotor2.exe, swkotor2_aspyr.exe)
+        /// - swkotor2_aspyr.exe uses different function names but equivalent functionality to k2_win_gog_aspyr_swkotor2.exe
         /// - swkotor2_aspyr.exe panel state check uses bit shift: *(uint *)((int)this + 0x48) &gt;&gt; 8 &amp; 3 != 2
         /// - swkotor2_aspyr.exe panel flags update includes two-step operation: first clears 0x80, then sets 0x200
         /// 4. Module loading system initialization:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00401380() @ 0x00401380 (DAT_008283d4 @ 0x008283d4)
@@ -958,9 +958,9 @@ namespace Andastra.Game.Games.Odyssey.Game
         ///    - CExoString::~CExoString() @ 0x00630c20 (local_40)
         /// 9. Module resource existence check with alternative codes:
         ///    -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00406e70() @ 0x00406e70 (local_30, local_38 "001ebo")
-        ///    - CExoResMan::Exists() @ 0x00408df0 (swkotor2.exe) (DAT_008283c0, local_30, 0x7db (2011), null)
-        ///    - If 0x7db fails:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00406e70() @ 0x00406e70, CExoResMan::Exists() @ 0x00408df0 (swkotor2.exe) (0xbba (3002))
-        ///    - If both fail: CExoString::operator= @ 0x00630d10 (swkotor2.exe) (local_38, "001ebo" @ 0x007cc028)
+        ///    - CExoResMan::Exists() @ 0x00408df0 (k2_win_gog_aspyr_swkotor2.exe) (DAT_008283c0, local_30, 0x7db (2011), null)
+        ///    - If 0x7db fails:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00406e70() @ 0x00406e70, CExoResMan::Exists() @ 0x00408df0 (k2_win_gog_aspyr_swkotor2.exe) (0xbba (3002))
+        ///    - If both fail: CExoString::operator= @ 0x00630d10 (k2_win_gog_aspyr_swkotor2.exe) (local_38, "001ebo" @ 0x007cc028)
         /// 10. MODULES: resource directory cleanup:
         ///     - CExoString::CExoString() @ 0x00630a90 (local_30, "MODULES:" @ 0x007b58b4)
         ///     -  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00408b00() @ 0x00408b00 (DAT_008283c0, local_30)
@@ -971,7 +971,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// 12. Panel registration:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x0040bf90() @ 0x0040bf90 (*(void **)((int)this + 0x1c), module object, 2, 1)
         /// 13. Sound system:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00621ab0() @ 0x00621ab0 (DAT_008283c4 @ 0x008283c4, DAT_007c5474 @ 0x007c5474, 0)
         /// 14. Panel flags: *(uint *)((int)this + 0x48) = *(uint *)((int)this + 0x48) &amp; 0xfffffe7f | 0x200
-        /// 15. Module system: CServerExoApp::ResetServerStateField @ 0x006394b0() @ 0x006394b0 (swkotor2.exe, parameter: *(int *)(DAT_008283d4 + 4), resets server state field at offset 0x280 to 0)
+        /// 15. Module system: CServerExoApp::ResetServerStateField @ 0x006394b0() @ 0x006394b0 (k2_win_gog_aspyr_swkotor2.exe, parameter: *(int *)(DAT_008283d4 + 4), resets server state field at offset 0x280 to 0)
         /// 16. Cleanup: CExoString destructors, TemporaryContext destructor @ 0x00632000() @ 0x00632000 (local_44), ExceptionList restoration
         /// 17. Post-execution check:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x006387d0() @ 0x006387d0 (*(int *)(DAT_008283d4 + 4)), if non-zero:  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00682b40() @ 0x00682b40
         ///
@@ -1015,27 +1015,27 @@ namespace Andastra.Game.Games.Odyssey.Game
         ///
         /// Constants:
         /// - Module resource type code 0x7db (2011): Used in all three executables for MOD resource type checks
-        ///   - swkotor.exe: Referenced at 0x0067b077 within OnNewGamePicked
-        ///   - swkotor2.exe: Referenced at 0x006d0c22 within OnNewGameButtonClicked
+        ///   - k1_win_gog_swkotor.exe: Referenced at 0x0067b077 within OnNewGamePicked
+        ///   - k2_win_gog_aspyr_swkotor2.exe: Referenced at 0x006d0c22 within OnNewGameButtonClicked
         ///   - swkotor2_aspyr.exe: Referenced at 0x00882347 within  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00882230
-        /// - Module resource type code 0xbba (3002): Used in swkotor2.exe and swkotor2_aspyr.exe for RIM resource type checks
-        ///   - swkotor2.exe: Referenced at 0x006d0c4b within OnNewGameButtonClicked
+        /// - Module resource type code 0xbba (3002): Used in k2_win_gog_aspyr_swkotor2.exe and swkotor2_aspyr.exe for RIM resource type checks
+        ///   - k2_win_gog_aspyr_swkotor2.exe: Referenced at 0x006d0c4b within OnNewGameButtonClicked
         ///   - swkotor2_aspyr.exe: Referenced at 0x0088236d within  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00882230
-        /// - Allocation sizes: swkotor.exe uses 0x1560 bytes, swkotor2.exe and swkotor2_aspyr.exe use 0x15f0 bytes
+        /// - Allocation sizes: k1_win_gog_swkotor.exe uses 0x1560 bytes, k2_win_gog_aspyr_swkotor2.exe and swkotor2_aspyr.exe use 0x15f0 bytes
         ///
         /// Data References:
-        /// - swkotor.exe: ExoResMan @ 0x007a39e8, ExoSound @ 0x007a39ec, DAT_0074c5ec @ 0x0074c5ec
-        /// - swkotor2.exe: DAT_008283c0 @ 0x008283c0, DAT_008283c4 @ 0x008283c4, DAT_008283d4 @ 0x008283d4, DAT_007c5474 @ 0x007c5474
+        /// - k1_win_gog_swkotor.exe: ExoResMan @ 0x007a39e8, ExoSound @ 0x007a39ec, DAT_0074c5ec @ 0x0074c5ec
+        /// - k2_win_gog_aspyr_swkotor2.exe: DAT_008283c0 @ 0x008283c0, DAT_008283c4 @ 0x008283c4, DAT_008283d4 @ 0x008283d4, DAT_007c5474 @ 0x007c5474
         /// - swkotor2_aspyr.exe: DAT_00a1b490 @ 0x00a1b490, DAT_00a1b494 @ 0x00a1b494, DAT_00a1b4a4 @ 0x00a1b4a4, DAT_0099c2a8 @ 0x0099c2a8
         ///
         /// Function Call Chains:
-        /// - swkotor.exe: Referenced from CSWGuiMainMenu constructor/initialization @ 0x0067c682, 0x0067c6f0
-        /// - swkotor2.exe: Referenced from  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x006d2350 (main menu handler) @ 0x006d258b, 0x006d260c
+        /// - k1_win_gog_swkotor.exe: Referenced from CSWGuiMainMenu constructor/initialization @ 0x0067c682, 0x0067c6f0
+        /// - k2_win_gog_aspyr_swkotor2.exe: Referenced from  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x006d2350 (main menu handler) @ 0x006d258b, 0x006d260c
         /// - swkotor2_aspyr.exe: Referenced from  [TODO: Name this function] @ (TODO: Determine which game EXE this is from: 0x00880740 (main menu handler) @ 0x00880b45, 0x00880c3d
         ///
         /// Module Selection Logic:
-        /// - swkotor.exe: Default module "END_M01AA", checks MOD then RIM resource types, no alternative codes
-        /// - swkotor2.exe: Default module "001ebo", checks 0x7db (MOD) then 0xbba (RIM) alternative codes, fallback to "001ebo"
+        /// - k1_win_gog_swkotor.exe: Default module "END_M01AA", checks MOD then RIM resource types, no alternative codes
+        /// - k2_win_gog_aspyr_swkotor2.exe: Default module "001ebo", checks 0x7db (MOD) then 0xbba (RIM) alternative codes, fallback to "001ebo"
         /// - swkotor2_aspyr.exe: Default module "001ebo", checks 0x7db (MOD) then 0xbba (RIM) alternative codes, fallback to "001ebo"
         /// 5. Module loads areas, entities, scripts, etc.
         ///
@@ -1061,7 +1061,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             // Store character data for player entity creation after module load
             _pendingCharacterData = characterData;
 
-            // Determine starting module using exact logic from 0x006d0b00 (swkotor2.exe: 0x006d0b00)
+            // Determine starting module using exact logic from 0x006d0b00 (k2_win_gog_aspyr_swkotor2.exe: 0x006d0b00)
             // OnNewGameButtonClicked @ (K1: TODO: Find this address, TSL: 0x006d0b00): Module selection logic
             string startingModule = DetermineStartingModule();
 
@@ -1070,7 +1070,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             InitializeModuleLoading();
 
             // Context initialization: TemporaryContext constructor @ 0x00631f70 @ 0x00631f70
-            // Equivalent to swkotor2.exe @ 0x00631f70: Allocates 0xc (12) bytes, calls InitializeContext @ 0x00635e30(), stores pointer
+            // Equivalent to k2_win_gog_aspyr_swkotor2.exe @ 0x00631f70: Allocates 0xc (12) bytes, calls InitializeContext @ 0x00635e30(), stores pointer
             // Original implementation: Exception-safe context management for game session initialization
             // In C#, we use using statement for automatic disposal (RAII pattern)
             using (new TemporaryContext(out IntPtr contextPtr))
@@ -1235,7 +1235,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         }
 
         /// <summary>
-        /// Determines the starting module name using the exact logic from 0x006d0b00 (swkotor2.exe: 0x006d0b00).
+        /// Determines the starting module name using the exact logic from 0x006d0b00 (k2_win_gog_aspyr_swkotor2.exe: 0x006d0b00).
         /// </summary>
         /// <returns>The starting module name to load.</returns>
         /// <remarks>
@@ -1256,7 +1256,7 @@ namespace Andastra.Game.Games.Odyssey.Game
 
             // Default starting modules based on game version
             // OnNewGameButtonClicked @ (K1: TODO: Find this address, TSL: 0x006d0b00) line 29: "001ebo" (K2 prologue)
-            // Based on swkotor.exe: "END_M01AA" (K1 Endar Spire)
+            // Based on k1_win_gog_swkotor.exe: "END_M01AA" (K1 Endar Spire)
             string defaultModule = _settings.Game == KotorGame.K1 ? "end_m01aa" : "001ebo";
 
             // Check for alternative modules with codes 0x7db (MOD) and 0xbba (RIM) (K2 only)
@@ -1293,13 +1293,13 @@ namespace Andastra.Game.Games.Odyssey.Game
 
         /// <summary>
         /// Checks if a module resource exists with the specified resource type.
-        /// CExoResMan::Exists() @ (K1: 0x00408bc0 (swkotor.exe), TSL: 0x00408df0 (swkotor2.exe), TSL Aspyr: 0x00711ed0 (swkotor2_aspyr.exe)): Resource existence check
+        /// CExoResMan::Exists() @ (K1: 0x00408bc0 (k1_win_gog_swkotor.exe), TSL: 0x00408df0 (k2_win_gog_aspyr_swkotor2.exe), TSL Aspyr: 0x00711ed0 (swkotor2_aspyr.exe)): Resource existence check
         /// </summary>
         /// <param name="moduleName">The module name to check.</param>
         /// <param name="resourceType">The resource type to check (MOD = 0x7db, RIM = 0xbba).</param>
         /// <returns>True if the module resource exists, false otherwise.</returns>
         /// <remarks>
-        /// CExoResMan::Exists() @ (K1: 0x00408bc0 (swkotor.exe), TSL: 0x00408df0 (swkotor2.exe), TSL Aspyr: 0x00711ed0 (swkotor2_aspyr.exe)):
+        /// CExoResMan::Exists() @ (K1: 0x00408bc0 (k1_win_gog_swkotor.exe), TSL: 0x00408df0 (k2_win_gog_aspyr_swkotor2.exe), TSL Aspyr: 0x00711ed0 (swkotor2_aspyr.exe)):
         /// - Calls 0x00407300 to search for resources with the specified name and type
         /// - Returns non-zero if resource exists, zero if not found
         /// - Resource type 0x7db (MOD) checks for .mod files
@@ -1374,7 +1374,7 @@ namespace Andastra.Game.Games.Odyssey.Game
                 _currentModuleName = null;
             }
 
-            // Set module state to Idle (swkotor2.exe: 0x006caab0 @ 0x006caab0)
+            // Set module state to Idle (k2_win_gog_aspyr_swkotor2.exe: 0x006caab0 @ 0x006caab0)
             // Module unloading clears state back to Idle
             _moduleStateManager?.SetModuleState(ModuleState.Idle);
 
@@ -1434,7 +1434,7 @@ namespace Andastra.Game.Games.Odyssey.Game
                 _world.SetCurrentModule(module);
                 _moduleTransitionSystem?.SetCurrentModule(moduleName);
 
-                // Set module state to ModuleLoaded (swkotor2.exe: 0x006caab0 @ 0x006caab0)
+                // Set module state to ModuleLoaded (k2_win_gog_aspyr_swkotor2.exe: 0x006caab0 @ 0x006caab0)
                 // Module is loaded but OnModuleStart has not been called yet
                 _moduleStateManager?.SetModuleState(ModuleState.ModuleLoaded);
 
@@ -1479,7 +1479,7 @@ namespace Andastra.Game.Games.Odyssey.Game
                     }
                 }
 
-                // Fire OnModuleLoad script (swkotor2.exe: Mod_OnModLoad script execution)
+                // Fire OnModuleLoad script (k2_win_gog_aspyr_swkotor2.exe: Mod_OnModLoad script execution)
                 // OnModuleLoad fires when module finishes loading, before player spawn
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): OnModuleLoad script execution
                 // Located via string references: "Mod_OnModLoad" @ IFO file, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c
@@ -1501,14 +1501,14 @@ namespace Andastra.Game.Games.Odyssey.Game
                     PositionPlayerAtEntry();
                 }
 
-                // Fire OnModuleStart script (swkotor2.exe: Mod_OnModStart script execution)
+                // Fire OnModuleStart script (k2_win_gog_aspyr_swkotor2.exe: Mod_OnModStart script execution)
                 // OnModuleStart fires after player is spawned, before gameplay begins
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): OnModuleStart script execution
                 // Located via string references: "Mod_OnModStart" @ IFO file, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948
                 // Original implementation: OnModuleStart script executes after player spawn, before gameplay begins
                 FireModuleScript(ScriptEvent.OnModuleStart);
 
-                // Set module state to ModuleRunning (swkotor2.exe: 0x006caab0 @ 0x006caab0)
+                // Set module state to ModuleRunning (k2_win_gog_aspyr_swkotor2.exe: 0x006caab0 @ 0x006caab0)
                 // Module is fully loaded, OnModuleStart has been called, gameplay is active
                 _moduleStateManager?.SetModuleState(ModuleState.ModuleRunning);
 
@@ -1544,7 +1544,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// Spawns the player entity at the module entry point.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe: Player entity creation
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Player entity creation
         /// - Located via string references: "Player" tag @ creature creation, player entity initialization
         /// - Original implementation: Player entity created with Tag "Player", IsPlayer flag, Faction Friendly1, Immortal flag
         /// - If character creation data is provided, player entity is created from character data with proper attributes, skills, feats, appearance, class
@@ -1591,7 +1591,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// <param name="facing">Facing angle in radians for the player entity.</param>
         /// <returns>The created player entity, or null if creation failed.</returns>
         /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe: Player entity creation from character generation
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Player entity creation from character generation
         /// - Located via string references: Character generation finish() function, player entity creation
         /// - Original implementation: 0x005261b0 @ 0x005261b0 (load creature from UTC template), character generation creates player entity
         /// - Character creation flow:
@@ -1633,7 +1633,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             playerEntity.SetData("IsPlayer", true);
 
             // Map CharacterClass enum to class ID
-            // Based on swkotor.exe and swkotor2.exe: Class IDs in classes.2da
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Class IDs in classes.2da
             // CLASS_TYPE_SOLDIER=0, CLASS_TYPE_SCOUT=1, CLASS_TYPE_SCOUNDREL=2
             // CLASS_TYPE_JEDIGUARDIAN=3, CLASS_TYPE_JEDICONSULAR=4, CLASS_TYPE_JEDISENTINEL=5
             int classId;
@@ -1764,7 +1764,7 @@ namespace Andastra.Game.Games.Odyssey.Game
 
                 // Calculate and set skills
                 // KOTOR has 8 skills: COMPUTER_USE=0, DEMOLITIONS=1, STEALTH=2, AWARENESS=3, PERSUADE=4, REPAIR=5, SECURITY=6, TREAT_INJURY=7
-                // Based on swkotor.exe and swkotor2.exe: Skill calculation during character creation
+                // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Skill calculation during character creation
                 // Located via string references: Skill allocation system in character creation
                 // Original implementation: 0x005261b0 @ 0x005261b0 (load creature from UTC template)
                 // Skill ranks = INT modifier + allocated skill points from character creation
@@ -1794,7 +1794,7 @@ namespace Andastra.Game.Games.Odyssey.Game
                     }
 
                     // Final skill rank = INT modifier + allocated skill points
-                    // Based on swkotor.exe and swkotor2.exe: Skill rank calculation
+                    // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Skill rank calculation
                     // Original implementation: Skill rank = ability modifier + skill ranks
                     // Level 1 characters have no class-based skill ranks yet, only INT modifier and allocated points
                     int finalSkillRank = intModifier + allocatedPoints;
@@ -1835,8 +1835,8 @@ namespace Andastra.Game.Games.Odyssey.Game
             }
 
             // Add starting feats from class
-            // Based on swkotor.exe and swkotor2.exe: Starting feats come from class featgain.2da
-            // Located via string references: "CSWClass::LoadFeatGain: can't load featgain.2da" @ swkotor.exe: 0x0074b370, swkotor2.exe: 0x007c46bc
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Starting feats come from class featgain.2da
+            // Located via string references: "CSWClass::LoadFeatGain: can't load featgain.2da" @ k1_win_gog_swkotor.exe: 0x0074b370, k2_win_gog_aspyr_swkotor2.exe: 0x007c46bc
             // Original implementation:
             // - ["CSWClass::LoadFeatGain"] @ (K1: 0x005bcf70, TSL: 0x0060d1d0)
             // - 0x005d63d0 reads "FeatGain" column from classes.2da for each class, then calls 0x0060d1d0 (LoadFeatGain)
@@ -2047,7 +2047,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// </summary>
         /// <param name="scriptEvent">The script event to fire.</param>
         /// <remarks>
-        /// swkotor2.exe: Module script execution system
+        /// k2_win_gog_aspyr_swkotor2.exe: Module script execution system
         /// - Module scripts are executed with module entity as owner (OBJECT_SELF in script context)
         /// - Module entity has fixed ObjectId 0x7F000002 (World.ModuleObjectId)
         /// - Scripts are stored in module entity's IScriptHooksComponent
@@ -2408,7 +2408,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// <param name="gameDataManager">GameDataManager to look up the table.</param>
         /// <returns>The base attack bonus for the level, or 0 if table not found.</returns>
         /// <remarks>
-        /// Based on swkotor.exe, swkotor2.exe: Attack bonus table lookup
+        /// Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe: Attack bonus table lookup
         /// Attack bonus tables (e.g., BAB_FAST.2da, BAB_SLOW.2da) contain BAB progression
         /// Table structure: Row 0 = level 1, Row 1 = level 2, etc.
         /// Columns typically: Level, BAB value
@@ -2488,7 +2488,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// <param name="reflexSave">Output: Reflex save value.</param>
         /// <param name="willSave">Output: Will save value.</param>
         /// <remarks>
-        /// Based on swkotor.exe, swkotor2.exe: Saving throw table lookup
+        /// Based on k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe: Saving throw table lookup
         /// Saving throw tables (e.g., SAVE_GOOD.2da, SAVE_BAD.2da) contain save progression
         /// Table structure: Row 0 = level 1, Row 1 = level 2, etc.
         /// Columns typically: Level, Fort, Reflex, Will

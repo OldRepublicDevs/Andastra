@@ -127,7 +127,7 @@ namespace Andastra.Game.Graphics.MonoGame.PostProcessing
                 // 1. Sample along velocity vectors from velocity buffer
                 // 2. Accumulate color samples with proper weights
                 // 3. Normalize accumulated samples and output
-                // swkotor2.exe: Frame buffer post-processing for visual effects
+                // k2_win_gog_aspyr_swkotor2.exe: Frame buffer post-processing for visual effects
                 // Original implementation: Uses frame buffers for rendering and effects
                 // This implementation: Full motion blur pipeline with velocity-based temporal sampling
 

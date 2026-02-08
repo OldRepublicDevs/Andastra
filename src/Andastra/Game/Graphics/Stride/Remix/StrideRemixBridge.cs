@@ -232,7 +232,7 @@ namespace Andastra.Game.Stride.Remix
             // Convert geometry to D3D9 draw calls
             // Remix intercepts and builds acceleration structures
             // Based on DirectX 9 SDK: IDirect3DDevice9 interface methods
-            // swkotor2.exe: Geometry submission pattern (verified via DirectX 9 SDK documentation)
+            // k2_win_gog_aspyr_swkotor2.exe: Geometry submission pattern (verified via DirectX 9 SDK documentation)
 
             if (_deviceHandle == IntPtr.Zero)
             {
@@ -571,7 +571,7 @@ namespace Andastra.Game.Stride.Remix
         /// Sets the vertex buffer data stream source using DirectX 9 COM vtable.
         /// Based on DirectX 9 SDK: IDirect3DDevice9::SetStreamSource
         /// Vtable index 34: SetStreamSource method
-        /// swkotor2.exe: Vertex buffer binding pattern (verified via DirectX 9 SDK documentation)
+        /// k2_win_gog_aspyr_swkotor2.exe: Vertex buffer binding pattern (verified via DirectX 9 SDK documentation)
         /// </summary>
         private unsafe int SetStreamSource(IntPtr device, uint streamNumber, IntPtr vertexBuffer, uint offsetInBytes, uint stride)
         {
@@ -593,7 +593,7 @@ namespace Andastra.Game.Stride.Remix
         /// Sets the index buffer using DirectX 9 COM vtable.
         /// Based on DirectX 9 SDK: IDirect3DDevice9::SetIndices
         /// Vtable index 33: SetIndices method
-        /// swkotor2.exe: Index buffer binding pattern (verified via DirectX 9 SDK documentation)
+        /// k2_win_gog_aspyr_swkotor2.exe: Index buffer binding pattern (verified via DirectX 9 SDK documentation)
         /// </summary>
         private unsafe int SetIndices(IntPtr device, IntPtr indexBuffer)
         {
@@ -615,7 +615,7 @@ namespace Andastra.Game.Stride.Remix
         /// Sets a single device transformation-related state using DirectX 9 COM vtable.
         /// Based on DirectX 9 SDK: IDirect3DDevice9::SetTransform
         /// Vtable index 44: SetTransform method
-        /// swkotor2.exe: Transform matrix setting pattern (verified via DirectX 9 SDK documentation)
+        /// k2_win_gog_aspyr_swkotor2.exe: Transform matrix setting pattern (verified via DirectX 9 SDK documentation)
         /// </summary>
         private unsafe int SetTransform(IntPtr device, uint state, ref D3DMATRIX matrix)
         {
@@ -637,7 +637,7 @@ namespace Andastra.Game.Stride.Remix
         /// Renders a sequence of indexed geometric primitives using DirectX 9 COM vtable.
         /// Based on DirectX 9 SDK: IDirect3DDevice9::DrawIndexedPrimitive
         /// Vtable index 82: DrawIndexedPrimitive method
-        /// swkotor2.exe: Indexed primitive drawing pattern (verified via DirectX 9 SDK documentation)
+        /// k2_win_gog_aspyr_swkotor2.exe: Indexed primitive drawing pattern (verified via DirectX 9 SDK documentation)
         /// </summary>
         private unsafe int DrawIndexedPrimitive(IntPtr device, uint primitiveType, int minIndex, int numVertices, int startIndex, int primitiveCount)
         {

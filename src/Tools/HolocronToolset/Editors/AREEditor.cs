@@ -217,7 +217,7 @@ namespace HolocronToolset.Editors
             panel.Children.Add(_unescapableCheck);
 
             // Alpha Test spin - matching Python: self.ui.alphaTestSpin
-            // Engine uses float for AlphaTest (swkotor.exe: 0x00508c50 line 303-304, swkotor2.exe: 0x004e3ff0 line 307-308)
+            // Engine uses float for AlphaTest (k1_win_gog_swkotor.exe: 0x00508c50 line 303-304, k2_win_gog_aspyr_swkotor2.exe: 0x004e3ff0 line 307-308)
             // Default value: 0.2, range typically 0.0-1.0 but allowing up to 255 for compatibility
             var alphaTestLabel = new TextBlock { Text = "Alpha Test:" };
             _alphaTestSpin = new NumericUpDown { Minimum = 0, Maximum = 255, Value = 0, Increment = 0.1m };
@@ -1036,7 +1036,7 @@ namespace HolocronToolset.Editors
                 are.Unescapable = _unescapableCheck.IsChecked == true;
             }
             // Matching Python: are.alpha_test = float(self.ui.alphaTestSpin.value()) (line 289)
-            // Engine uses float for AlphaTest (swkotor.exe: 0x00508c50 line 303-304, swkotor2.exe: 0x004e3ff0 line 307-308)
+            // Engine uses float for AlphaTest (k1_win_gog_swkotor.exe: 0x00508c50 line 303-304, k2_win_gog_aspyr_swkotor2.exe: 0x004e3ff0 line 307-308)
             if (_alphaTestSpin != null && _alphaTestSpin.Value.HasValue)
             {
                 are.AlphaTest = (float)_alphaTestSpin.Value.Value;
@@ -1418,7 +1418,7 @@ namespace HolocronToolset.Editors
                     }
                 }
 
-                // Preserve original AlphaTest (engine uses float: swkotor.exe: 0x00508c50 line 303-304, swkotor2.exe: 0x004e3ff0 line 307-308)
+                // Preserve original AlphaTest (engine uses float: k1_win_gog_swkotor.exe: 0x00508c50 line 303-304, k2_win_gog_aspyr_swkotor2.exe: 0x004e3ff0 line 307-308)
                 if (originalRoot.Exists("AlphaTest"))
                 {
                     var originalAlphaType = originalRoot.GetFieldType("AlphaTest");

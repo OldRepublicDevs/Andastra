@@ -720,7 +720,7 @@ namespace HolocronToolset.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:249-269
         // Original: def load(self, filepath, resref, restype, data):
-        // swkotor2.exe: PTH loading requires LYT file for context (room layout and walkmesh information)
+        // k2_win_gog_aspyr_swkotor2.exe: PTH loading requires LYT file for context (room layout and walkmesh information)
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
@@ -812,7 +812,7 @@ namespace HolocronToolset.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:288-304
         // Original: @status_bar_decorator def loadLayout(self, layout: LYT):
-        // swkotor2.exe: LoadLayout loads walkmeshes for each room in the layout to provide visual context
+        // k2_win_gog_aspyr_swkotor2.exe: LoadLayout loads walkmeshes for each room in the layout to provide visual context
         private void LoadLayout(BioWare.Resource.Formats.LYT.LYT layout)
         {
             if (_installation == null || layout == null)

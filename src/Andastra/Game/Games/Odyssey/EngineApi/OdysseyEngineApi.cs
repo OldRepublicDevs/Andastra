@@ -43,7 +43,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
     /// </summary>
     /// <remarks>
     /// Engine API (NWScript Functions):
-    /// - Based on swkotor.exe and swkotor2.exe NWScript engine API implementations
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe NWScript engine API implementations
     /// - Located via string references: Script function dispatch system handles ACTION opcodes in NCS VM
     /// - Original implementation: NCS VM executes ACTION opcode (0x2A) with routine ID, calls engine function handlers
     /// - Function IDs match nwscript.nss definitions (ScriptDefs.KOTOR_FUNCTIONS for K1, ScriptDefs.TSL_FUNCTIONS for TSL)
@@ -170,7 +170,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// AssignCommand(object oActionSubject, action aActionToAssign) - Assigns an action to an object
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Action system
+        /// Based on k1_win_gog_swkotor.exe: Action system
         /// Original implementation: Pushes action onto target's action queue
         /// </remarks>
         protected new Variable Func_AssignCommand(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -195,7 +195,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// DelayCommand(float fSeconds, action aActionToDelay) - Delays execution of an action
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: DelayCommand implementation in NCS VM
+        /// Based on k1_win_gog_swkotor.exe: DelayCommand implementation in NCS VM
         /// Original implementation: NCS VM uses STORE_STATE opcode to save stack/local state, then schedules
         /// action execution after delay. Delay wheel processes delayed commands each frame.
         /// </remarks>
@@ -216,7 +216,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// ClearAllActions() - Clears all actions from the caller
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Action queue system
+        /// Based on k1_win_gog_swkotor.exe: Action queue system
         /// Original implementation: Clears action queue for caller entity
         /// </remarks>
         protected new Variable Func_ClearAllActions(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -237,7 +237,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// SetFacing(float fDirection) - Sets the facing direction of the caller
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Transform system
+        /// Based on k1_win_gog_swkotor.exe: Transform system
         /// Original implementation: Sets entity facing angle (degrees, anticlockwise from East)
         /// </remarks>
         protected new Variable Func_SetFacing(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -258,7 +258,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetObjectType(object oObject) - Gets the object type
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Object type system
+        /// Based on k1_win_gog_swkotor.exe: Object type system
         /// Original implementation: Returns ObjectType enum value
         /// </remarks>
         protected Variable Func_GetObjectType(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -743,7 +743,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                     IExecutionContext scriptCtx = ctx.WithCaller(target);
 
                     // Execute script and track instruction count
-                    // Based on swkotor.exe: Script execution with instruction budget tracking
+                    // Based on k1_win_gog_swkotor.exe: Script execution with instruction budget tracking
                     // Located via string references: Script execution budget limits per frame
                     // Original implementation: Tracks instruction count per entity for budget enforcement
                     int result = _vm.ExecuteScript(scriptName, scriptCtx);
@@ -792,7 +792,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         private Variable Func_ActionMoveToLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // ActionMoveToLocation(location lDestination, int bRun=FALSE) - queues move action to location
-            // Based on swkotor.exe: Action system and movement implementation
+            // Based on k1_win_gog_swkotor.exe: Action system and movement implementation
             // Original implementation: Creates ActionMoveToLocation action, queues in entity's action queue
             // Movement: Uses walkmesh pathfinding (BWM format) to find path from current position to destination
             // Run flag: If TRUE, uses run animation speed; if FALSE, uses walk animation speed
@@ -889,7 +889,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// ActionSpeakString(string sStringToSpeak, int nTalkVolume=TALKVOLUME_TALK) - action to speak a string
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Speak string action system
+        /// Based on k1_win_gog_swkotor.exe: Speak string action system
         /// Original implementation: Creates ActionSpeakString action, adds to entity's action queue
         /// Talk volume: TALKVOLUME_TALK (0) = normal, TALKVOLUME_WHISPER (1) = quiet, TALKVOLUME_SHOUT (2) = loud
         /// Execution: Action executes when reached in action queue, plays voice-over if available
@@ -998,7 +998,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetEnteringObject() - Get the object that last entered/triggered the caller
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: GetEnteringObject implementation (routine ID 25)
+        /// Based on k1_win_gog_swkotor.exe: GetEnteringObject implementation (routine ID 25)
         /// Located via string references: "EVENT_ENTERED_TRIGGER" @ 0x007bce08 (case 2 in 0x004dcfb0), "OnEnter" @ 0x007bd708
         /// Event dispatching: 0x004dcfb0 @ 0x004dcfb0 handles EVENT_ENTERED_TRIGGER (case 2)
         /// Original implementation: Returns last entity that entered trigger/door/placeable
@@ -1033,7 +1033,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetExitingObject() - Get the object that last exited the caller
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: GetExitingObject implementation (routine ID 26)
+        /// Based on k1_win_gog_swkotor.exe: GetExitingObject implementation (routine ID 26)
         /// Located via string references: "EVENT_LEFT_TRIGGER" @ 0x007bcdf4 (case 3 in 0x004dcfb0), "OnExit" @ 0x007bd700
         /// Event dispatching: 0x004dcfb0 @ 0x004dcfb0 handles EVENT_LEFT_TRIGGER (case 3)
         /// Original implementation: Returns last entity that exited trigger/door/placeable
@@ -1156,7 +1156,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// Returns the nearest creature to a location matching the specified criteria
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Creature search system with criteria filtering
+        /// Based on k1_win_gog_swkotor.exe: Creature search system with criteria filtering
         /// Original implementation: Searches creatures within radius (100m default), filters by multiple criteria, sorts by distance
         /// Criteria types: CREATURE_TYPE_RACIAL_TYPE (0), CREATURE_TYPE_PLAYER_CHAR (1), CREATURE_TYPE_CLASS (2),
         ///   CREATURE_TYPE_REPUTATION (3), CREATURE_TYPE_IS_ALIVE (4), CREATURE_TYPE_HAS_SPELL_EFFECT (5),
@@ -1381,7 +1381,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
                 case 3: // CREATURE_TYPE_REPUTATION
                     // REPUTATION_TYPE_FRIEND = 0, REPUTATION_TYPE_ENEMY = 1, REPUTATION_TYPE_NEUTRAL = 2
-                    // Based on swkotor.exe: GetNearestCreature reputation filtering
+                    // Based on k1_win_gog_swkotor.exe: GetNearestCreature reputation filtering
                     // Located via string references: GetNearestCreature NWScript function filters by reputation
                     // Original implementation: Checks faction reputation between caller and creature
                     if (ctx is VMExecutionContext execCtxRep && execCtxRep.AdditionalContext is IGameServicesContext servicesRep)
@@ -1463,7 +1463,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
                 case 7: // CREATURE_TYPE_PERCEPTION
                     // Check perception type
-                    // Based on swkotor.exe: GetIsObjectValid perception type check
+                    // Based on k1_win_gog_swkotor.exe: GetIsObjectValid perception type check
                     // Located via string references: "PerceptionData" @ 0x007bf6c4, "PerceptionList" @ 0x007bf6d4
                     // Original implementation: Checks if creature matches perception type from perceiver's perspective
                     // Perception type constants: PERCEPTION_SEEN, PERCEPTION_HEARD, PERCEPTION_SEEN_AND_HEARD, etc.
@@ -1526,7 +1526,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetGlobalNumber(string sVarName) - gets global integer variable
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Global variable system
+        /// Based on k1_win_gog_swkotor.exe: Global variable system
         /// Located via string references: "GLOBALVARS" @ 0x007c27bc
         /// Original implementation: Global variables stored in GFF file (GLOBALVARS.res), persisted across saves
         /// Variable storage: GFF structure with variable name as field name, integer as value
@@ -1542,7 +1542,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// SetGlobalNumber(string sVarName, int nValue) - sets global integer variable
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Global variable system
+        /// Based on k1_win_gog_swkotor.exe: Global variable system
         /// Located via string references: "GLOBALVARS" @ 0x007c27bc
         /// Original implementation: Sets global variable value in GFF structure, persists to save file
         /// Variable storage: Updates GFF field with variable name, writes to GLOBALVARS.res on save
@@ -1560,7 +1560,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetGlobalBoolean(string sVarName) - gets global boolean variable
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Global variable system
+        /// Based on k1_win_gog_swkotor.exe: Global variable system
         /// Located via string references: "GLOBALVARS" @ 0x007c27bc
         /// Original implementation: Global boolean stored as integer (0 = FALSE, non-zero = TRUE) in GFF
         /// Variable storage: GFF structure with variable name as field name, integer (0/1) as value
@@ -1576,7 +1576,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// SetGlobalBoolean(string sVarName, int nValue) - sets global boolean variable
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Global variable system
+        /// Based on k1_win_gog_swkotor.exe: Global variable system
         /// Located via string references: "GLOBALVARS" @ 0x007c27bc
         /// Original implementation: Sets global boolean as integer (0 = FALSE, non-zero = TRUE) in GFF
         /// Variable storage: Updates GFF field with variable name, stores 0 or 1 based on nValue
@@ -1594,7 +1594,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetGlobalString(string sVarName) - gets global string variable
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Global variable system
+        /// Based on k1_win_gog_swkotor.exe: Global variable system
         /// Located via string references: "GLOBALVARS" @ 0x007c27bc
         /// Original implementation: Global string stored in GFF structure as CExoString field
         /// Variable storage: GFF structure with variable name as field name, string as value
@@ -1610,7 +1610,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// SetGlobalString(string sVarName, string sValue) - sets global string variable
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Global variable system
+        /// Based on k1_win_gog_swkotor.exe: Global variable system
         /// Located via string references: "GLOBALVARS" @ 0x007c27bc
         /// Original implementation: Sets global string value in GFF structure, persists to save file
         /// Variable storage: Updates GFF field with variable name, writes to GLOBALVARS.res on save
@@ -1642,7 +1642,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetLocalBoolean(object oObject, int nIndex) - gets local boolean variable by index
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Local variable system (index-based, not name-based like NWN)
+        /// Based on k1_win_gog_swkotor.exe: Local variable system (index-based, not name-based like NWN)
         /// Original implementation: KOTOR uses index-based local variables instead of name-based
         /// Index range: 0-63 (64 boolean slots per entity)
         /// Storage: Stored in entity's local variable component, persisted per-entity
@@ -1669,7 +1669,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// SetLocalBoolean(object oObject, int nIndex, int nValue) - sets local boolean variable by index
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Local variable system (index-based, not name-based like NWN)
+        /// Based on k1_win_gog_swkotor.exe: Local variable system (index-based, not name-based like NWN)
         /// Original implementation: KOTOR uses index-based local variables instead of name-based
         /// Index range: 0-63 (64 boolean slots per entity)
         /// Storage: Stored in entity's local variable component, persisted per-entity
@@ -1695,7 +1695,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetLocalNumber(object oObject, int nIndex) - gets local number variable by index
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Local variable system (index-based, not name-based like NWN)
+        /// Based on k1_win_gog_swkotor.exe: Local variable system (index-based, not name-based like NWN)
         /// Original implementation: KOTOR uses index-based local variables, number type limited to index 0
         /// Index range: 0 only (single number slot per entity)
         /// Value range: -128 to +127 (signed byte)
@@ -1721,7 +1721,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// SetLocalNumber(object oObject, int nIndex, int nValue) - sets local number variable by index
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Local variable system (index-based, not name-based like NWN)
+        /// Based on k1_win_gog_swkotor.exe: Local variable system (index-based, not name-based like NWN)
         /// Original implementation: KOTOR uses index-based local variables, number type limited to index 0
         /// Index range: 0 only (single number slot per entity)
         /// Value range: -128 to +127 (signed byte), values outside range are clamped
@@ -1976,7 +1976,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// SwitchPlayerCharacter(int nNPC) - Switches the main character to a specified NPC
-        /// Based on swkotor.exe: SwitchPlayerCharacter implementation (routine ID 11)
+        /// Based on k1_win_gog_swkotor.exe: SwitchPlayerCharacter implementation (routine ID 11)
         /// Located via string references: Party leader switching system
         /// Original implementation: Switches controlled character to NPC (-1 = switch back to original PC)
         /// </summary>
@@ -2011,7 +2011,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// SetTime(int nHour, int nMinute, int nSecond, int nMillisecond) - Sets the game time
-        /// Based on swkotor.exe: Sets the in-game time (not real time)
+        /// Based on k1_win_gog_swkotor.exe: Sets the in-game time (not real time)
         /// </summary>
         private Variable Func_SetTime(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -2022,7 +2022,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                // Based on swkotor.exe: SetGameTime implementation
+                // Based on k1_win_gog_swkotor.exe: SetGameTime implementation
                 // Located via string references: "GameTime" @ 0x007c1a78
                 // Original implementation: Sets game time in module IFO, affects time-of-day checks
                 if (ctx.World != null && ctx.World.TimeManager != null)
@@ -2171,7 +2171,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// SetAreaUnescapable(int bUnescapable) - Sets whether the current area is escapable or not
-        /// Based on swkotor.exe: Controls whether players can leave the area
+        /// Based on k1_win_gog_swkotor.exe: Controls whether players can leave the area
         /// TRUE means you can not escape the area, FALSE means you can escape the area
         /// </summary>
         private Variable Func_SetAreaUnescapable(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -2188,7 +2188,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// GetAreaUnescapable() - Returns whether the current area is escapable or not
-        /// Based on swkotor.exe: Returns the unescapable flag for the current area
+        /// Based on k1_win_gog_swkotor.exe: Returns the unescapable flag for the current area
         /// TRUE means you can not escape the area, FALSE means you can escape the area
         /// </summary>
         private Variable Func_GetAreaUnescapable(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -2207,7 +2207,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         {
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                // Based on swkotor.exe: GetTimeHour implementation
+                // Based on k1_win_gog_swkotor.exe: GetTimeHour implementation
                 // Located via string references: "GameTime" @ 0x007c1a78
                 // Original implementation: Returns current game time hour (0-23) from module IFO
                 if (ctx.World != null && ctx.World.TimeManager != null)
@@ -2225,7 +2225,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         {
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                // Based on swkotor.exe: GetTimeMinute implementation
+                // Based on k1_win_gog_swkotor.exe: GetTimeMinute implementation
                 // Located via string references: "GameTime" @ 0x007c1a78
                 // Original implementation: Returns current game time minute (0-59) from module IFO
                 if (ctx.World != null && ctx.World.TimeManager != null)
@@ -2243,7 +2243,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         {
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                // Based on swkotor.exe: GetTimeSecond implementation
+                // Based on k1_win_gog_swkotor.exe: GetTimeSecond implementation
                 // Located via string references: "GameTime" @ 0x007c1a78
                 // Original implementation: Returns current game time second (0-59) from module IFO
                 if (ctx.World != null && ctx.World.TimeManager != null)
@@ -2261,7 +2261,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         {
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                // Based on swkotor.exe: GetTimeMillisecond implementation
+                // Based on k1_win_gog_swkotor.exe: GetTimeMillisecond implementation
                 // Located via string references: "GameTime" @ 0x007c1a78
                 // Original implementation: Returns current game time millisecond (0-999) from module IFO
                 if (ctx.World != null && ctx.World.TimeManager != null)
@@ -2274,7 +2274,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// GetIsDay() - Returns TRUE if it is currently day time (6:00 AM to 8:00 PM)
-        /// Based on swkotor.exe: Time of day check for day period
+        /// Based on k1_win_gog_swkotor.exe: Time of day check for day period
         /// </summary>
         private Variable Func_GetIsDay(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -2285,7 +2285,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// GetIsNight() - Returns TRUE if it is currently night time (8:00 PM to 6:00 AM)
-        /// Based on swkotor.exe: Time of day check for night period
+        /// Based on k1_win_gog_swkotor.exe: Time of day check for night period
         /// </summary>
         private Variable Func_GetIsNight(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -2296,7 +2296,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// GetIsDawn() - Returns TRUE if it is currently dawn (5:00 AM to 7:00 AM)
-        /// Based on swkotor.exe: Time of day check for dawn period
+        /// Based on k1_win_gog_swkotor.exe: Time of day check for dawn period
         /// </summary>
         private Variable Func_GetIsDawn(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -2307,7 +2307,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// GetIsDusk() - Returns TRUE if it is currently dusk (7:00 PM to 9:00 PM)
-        /// Based on swkotor.exe: Time of day check for dusk period
+        /// Based on k1_win_gog_swkotor.exe: Time of day check for dusk period
         /// </summary>
         private Variable Func_GetIsDusk(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -2322,7 +2322,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// GetLastUsedBy() - Returns the object that last used the object that called this function
-        /// Based on swkotor.exe: Tracks last entity that used an object
+        /// Based on k1_win_gog_swkotor.exe: Tracks last entity that used an object
         /// </summary>
         private Variable Func_GetLastUsedBy(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -2346,7 +2346,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// GetLastOpenedBy() - Returns the object that last opened the object that called this function
-        /// Based on swkotor.exe: Tracks last entity that opened a door/placeable
+        /// Based on k1_win_gog_swkotor.exe: Tracks last entity that opened a door/placeable
         /// </summary>
         private Variable Func_GetLastOpenedBy(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -2370,7 +2370,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// GetLastClosedBy() - Returns the object that last closed the object that called this function
-        /// Based on swkotor.exe: Tracks last entity that closed a door/placeable
+        /// Based on k1_win_gog_swkotor.exe: Tracks last entity that closed a door/placeable
         /// </summary>
         private Variable Func_GetLastClosedBy(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -2394,7 +2394,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// GetLastLocked() - Returns the object that last locked the object that called this function
-        /// Based on swkotor.exe: Tracks last entity that locked a door/placeable
+        /// Based on k1_win_gog_swkotor.exe: Tracks last entity that locked a door/placeable
         /// </summary>
         private Variable Func_GetLastLocked(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -2418,7 +2418,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// GetLastUnlocked() - Returns the object that last unlocked the object that called this function
-        /// Based on swkotor.exe: Tracks last entity that unlocked a door/placeable
+        /// Based on k1_win_gog_swkotor.exe: Tracks last entity that unlocked a door/placeable
         /// </summary>
         private Variable Func_GetLastUnlocked(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -2446,7 +2446,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// GetPlotFlag(object oTarget) - Returns TRUE if oTarget has the plot flag set
-        /// Based on swkotor.exe: Plot flag prevents objects from being removed or modified
+        /// Based on k1_win_gog_swkotor.exe: Plot flag prevents objects from being removed or modified
         /// </summary>
         private Variable Func_GetPlotFlag(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -2470,7 +2470,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// SetPlotFlag(object oTarget, int nPlotFlag) - Sets the plot flag on oTarget
-        /// Based on swkotor.exe: Plot flag prevents objects from being removed or modified
+        /// Based on k1_win_gog_swkotor.exe: Plot flag prevents objects from being removed or modified
         /// </summary>
         private Variable Func_SetPlotFlag(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -2710,7 +2710,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// ActionEquipItem(object oItem, int nInventorySlot) - Queues action to equip an item
-        /// Based on swkotor.exe: Equips item from inventory to specified equipment slot
+        /// Based on k1_win_gog_swkotor.exe: Equips item from inventory to specified equipment slot
         /// Tracks equipped item for GetLastItemEquipped
         /// </summary>
         private Variable Func_ActionEquipItem(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -2953,7 +2953,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// SetCameraFacing(float fDirection) - Sets the camera facing direction
-        /// Based on swkotor.exe: Camera facing controls camera yaw rotation in chase mode
+        /// Based on k1_win_gog_swkotor.exe: Camera facing controls camera yaw rotation in chase mode
         /// The direction is in radians (0 = east, PI/2 = north, PI = west, 3*PI/2 = south)
         /// </summary>
         private Variable Func_SetCameraFacing(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -2975,7 +2975,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// PlaySound(string sSoundName) - Plays a sound effect
-        /// Based on swkotor.exe: PlaySound plays WAV files as sound effects
+        /// Based on k1_win_gog_swkotor.exe: PlaySound plays WAV files as sound effects
         /// Sound is played at the caller's position for 3D spatial audio, or as 2D sound if no position
         /// </summary>
         private Variable Func_PlaySound(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -3012,7 +3012,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// GetSpellTargetObject() - Returns the target of the last spell cast
-        /// Based on swkotor.exe: Returns the target object ID of the last spell cast by the caller
+        /// Based on k1_win_gog_swkotor.exe: Returns the target object ID of the last spell cast by the caller
         /// </summary>
         private Variable Func_GetSpellTargetObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -3045,7 +3045,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// ActionCastSpellAtObject(int nSpell, object oTarget, int nMetaMagic=0, ...) - Casts a spell at a target object
-        /// Based on swkotor.exe: Queues spell casting action, tracks target and metamagic type
+        /// Based on k1_win_gog_swkotor.exe: Queues spell casting action, tracks target and metamagic type
         /// </summary>
         private Variable Func_ActionCastSpellAtObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -3059,7 +3059,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Track spell target for GetSpellTargetObject
-            // Based on swkotor.exe: GetSpellTargetObject returns last target of spell cast by caller
+            // Based on k1_win_gog_swkotor.exe: GetSpellTargetObject returns last target of spell cast by caller
             // Located via string references: Spell target tracking for script queries
             // Original implementation: Stores target entity ID when spell is cast
             if (targetId != ObjectInvalid)
@@ -3067,13 +3067,13 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                 _lastSpellTargets[ctx.Caller.ObjectId] = targetId;
 
                 // Track spell caster for GetLastSpellCaster (target can query who cast spell on them)
-                // Based on swkotor.exe: GetLastSpellCaster returns caster entity that last cast spell on caller
+                // Based on k1_win_gog_swkotor.exe: GetLastSpellCaster returns caster entity that last cast spell on caller
                 // Original implementation: Stores caster entity ID on target when spell is cast
                 _lastSpellCasters[targetId] = ctx.Caller.ObjectId;
             }
 
             // Track spell ID for GetSpellId
-            // Based on swkotor.exe: GetSpellId returns last spell ID cast by caller
+            // Based on k1_win_gog_swkotor.exe: GetSpellId returns last spell ID cast by caller
             // Original implementation: Stores spell ID when spell is cast
             _lastSpellIds[ctx.Caller.ObjectId] = spellId;
 
@@ -3100,7 +3100,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// ActionCastSpellAtLocation(int nSpell, location lTarget, int nMetaMagic=0, ...) - Casts a spell at a target location
-        /// Based on swkotor.exe: Queues spell casting action at location, tracks target location
+        /// Based on k1_win_gog_swkotor.exe: Queues spell casting action at location, tracks target location
         /// </summary>
         private Variable Func_ActionCastSpellAtLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -3114,7 +3114,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Track spell target location for GetSpellTargetLocation
-            // Based on swkotor.exe: GetSpellTargetLocation returns last target location of spell cast by caller
+            // Based on k1_win_gog_swkotor.exe: GetSpellTargetLocation returns last target location of spell cast by caller
             // Located via string references: Spell target location tracking for script queries
             // Original implementation: Stores target location when spell is cast at location
             _lastSpellTargetLocations[ctx.Caller.ObjectId] = location;
@@ -3147,7 +3147,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetCurrentHitPoints(object oCreature=OBJECT_SELF) - returns current hit points
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Hit point system
+        /// Based on k1_win_gog_swkotor.exe: Hit point system
         /// Located via string references: "CurrentHP" @ 0x007c1b40, "CurrentHP: " @ 0x007cb168
         /// Original implementation: Returns current HP from creature's stats component
         /// HP tracking: CurrentHP decreases when damage is taken, increases when healed
@@ -3172,7 +3172,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetMaxHitPoints(object oCreature=OBJECT_SELF) - returns maximum hit points
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Maximum hit point system
+        /// Based on k1_win_gog_swkotor.exe: Maximum hit point system
         /// Located via string references: "Max_HPs" @ 0x007cb714
         /// Original implementation: Returns maximum HP from creature's stats component
         /// Max HP calculation: Based on class levels, Constitution modifier, feats, effects
@@ -3256,7 +3256,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetStringByStrRef(int nStrRef) - gets string from talk table (TLK) using string reference
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: TLK (talk table) string lookup system
+        /// Based on k1_win_gog_swkotor.exe: TLK (talk table) string lookup system
         /// Located via string references: "STRREF" @ 0x007b6368, "StrRef" @ 0x007c1fe8, "NameStrRef" @ 0x007c0274
         /// - "KeyNameStrRef" @ 0x007b641c, "NAME_STRREF" @ 0x007c8200, "DescStrRef" @ 0x007d2e40
         /// - Error: "Invalid STRREF %d passed to Fetch" @ 0x007b6ccc, "BAD STRREF" @ 0x007c2968
@@ -3490,9 +3490,9 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// Sets the transition bitmap for area transitions
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Area transition bitmap setting (routine 203)
+        /// Based on k1_win_gog_swkotor.exe: Area transition bitmap setting (routine 203)
         /// Original implementation: Sets transition bitmap for area loading screens
-        /// Located via string references: "areatransition" @ 0x007574f4 (swkotor.exe)
+        /// Located via string references: "areatransition" @ 0x007574f4 (k1_win_gog_swkotor.exe)
         /// Original implementation: Stores transition bitmap on player entity for use during area transitions
         /// - nPredefinedAreaTransition: AREA_TRANSITION_* constant or AREA_TRANSITION_USER_DEFINED (1) for custom
         /// - sCustomAreaTransitionBMP: Custom bitmap filename (required if AREA_TRANSITION_USER_DEFINED is used)
@@ -3569,7 +3569,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// Maps predefined area transition constants to bitmap ResRefs.
-        /// Based on swkotor.exe: Area transition bitmap naming convention
+        /// Based on k1_win_gog_swkotor.exe: Area transition bitmap naming convention
         /// Original implementation: Bitmaps follow pattern "areatrans_[category][number]" (e.g., "areatrans_city01")
         /// </summary>
         /// <param name="transitionConstant">AREA_TRANSITION_* constant value</param>
@@ -3671,7 +3671,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// Selects a random predefined area transition bitmap.
-        /// Based on swkotor.exe: AREA_TRANSITION_RANDOM behavior
+        /// Based on k1_win_gog_swkotor.exe: AREA_TRANSITION_RANDOM behavior
         /// Original implementation: Randomly selects from available predefined bitmaps
         /// </summary>
         /// <returns>Random bitmap ResRef</returns>
@@ -3699,7 +3699,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// ActionStartConversation - Starts a conversation with an object
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: ActionStartConversation implementation
+        /// Based on k1_win_gog_swkotor.exe: ActionStartConversation implementation
         /// Located via string references: "ActionStartConversation" @ routine 204
         /// Original implementation: Queues action to start conversation with target object
         /// </remarks>
@@ -3753,7 +3753,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// ActionPauseConversation - Pauses the current conversation
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: ActionPauseConversation implementation
+        /// Based on k1_win_gog_swkotor.exe: ActionPauseConversation implementation
         /// Located via string references: "ActionPauseConversation" @ routine 205
         /// Original implementation: Pauses active conversation (used during cutscenes)
         /// </remarks>
@@ -3775,7 +3775,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// ActionResumeConversation - Resumes a paused conversation
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: ActionResumeConversation implementation
+        /// Based on k1_win_gog_swkotor.exe: ActionResumeConversation implementation
         /// Located via string references: "ActionResumeConversation" @ routine 206
         /// Original implementation: Resumes conversation that was paused
         /// </remarks>
@@ -4033,7 +4033,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetAbility(object oCreature=OBJECT_SELF, int nAbilityType) - returns ability score
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: D20 ability score system
+        /// Based on k1_win_gog_swkotor.exe: D20 ability score system
         /// Located via string references: "KeyAbility" @ 0x007c2cbc, "LvlStatAbility" @ 0x007c3f48, "SpecAbilityList" @ 0x007c3ed4
         /// Original implementation: Returns base ability score + modifiers from effects, equipment, etc.
         /// Ability types: ABILITY_STRENGTH (0), ABILITY_DEXTERITY (1), ABILITY_CONSTITUTION (2),
@@ -4096,7 +4096,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetItemInSlot(int nInventorySlot, object oCreature=OBJECT_SELF) - returns item in specified inventory slot
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Inventory slot system
+        /// Based on k1_win_gog_swkotor.exe: Inventory slot system
         /// Located via string references: "InventorySlot" @ 0x007bf7d0
         /// Original implementation: KOTOR uses numbered inventory slots (0-17 for equipment, higher for inventory)
         /// Inventory slots: Equipment slots (0-17) for armor, weapons, etc., inventory slots (18+) for items
@@ -4148,7 +4148,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// <summary>
         /// Extracts an Effect object from various container types.
         /// Handles direct Effect objects, Variable wrappers, nested Variables, and other containers.
-        /// Based on swkotor.exe and swkotor2.exe: Effect extraction from Variable type system
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Effect extraction from Variable type system
         /// </summary>
         /// <param name="effectObj">The object that may contain an Effect (can be Effect, Variable, or other container)</param>
         /// <returns>The extracted Effect object, or null if extraction fails</returns>
@@ -4240,7 +4240,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         {
             // ApplyEffectToObject(int nDurationType, effect eEffect, object oTarget, float fDuration=0.0f)
             // nDurationType: DURATION_TYPE_INSTANT (0), DURATION_TYPE_TEMPORARY (1), DURATION_TYPE_PERMANENT (2)
-            // Based on swkotor.exe: ApplyEffectToObject function implementation
+            // Based on k1_win_gog_swkotor.exe: ApplyEffectToObject function implementation
             // Located via string references: "ApplyEffectToObject" in NWScript function dispatch
             // Original implementation: Extracts effect from Variable wrapper, validates duration type, applies to target entity
             int durationType = args.Count > 0 ? args[0].AsInt() : 0;
@@ -4308,7 +4308,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// EffectAssuredHit() - Creates an effect that guarantees attacks will hit
-        /// Based on swkotor.exe: EffectAssuredHit @ routine 51
+        /// Based on k1_win_gog_swkotor.exe: EffectAssuredHit @ routine 51
         /// Located via string references: EffectAssuredHit function in NWScript
         /// Original implementation: Creates an effect that forces attacks to automatically hit (bypasses AC check)
         /// Natural 1 still misses (automatic miss rule takes precedence)
@@ -4333,7 +4333,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// GetLastItemEquipped() - Returns the last item that was equipped by the caller
-        /// Based on swkotor.exe: Tracks the last item equipped via ActionEquipItem
+        /// Based on k1_win_gog_swkotor.exe: Tracks the last item equipped via ActionEquipItem
         /// Returns OBJECT_INVALID if no item has been equipped or caller is invalid
         /// </summary>
         private Variable Func_GetLastItemEquipped(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -4409,7 +4409,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// PauseGame(int bPause) - Pauses or unpauses the game
-        /// Based on swkotor.exe: PauseGame pauses all game systems except UI
+        /// Based on k1_win_gog_swkotor.exe: PauseGame pauses all game systems except UI
         /// When paused, combat, movement, scripts, and other game logic are suspended
         /// </summary>
         private Variable Func_PauseGame(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -4422,7 +4422,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             {
                 if (services.GameSession != null)
                 {
-                    // Based on swkotor.exe: PauseGame implementation
+                    // Based on k1_win_gog_swkotor.exe: PauseGame implementation
                     // Located via string references: Game pause system
                     // Original implementation: Pauses/unpauses all game systems except UI
                     if (services.GameSession is Andastra.Game.Games.Odyssey.Game.GameSession gameSession)
@@ -4474,17 +4474,17 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         private Variable Func_GetPlayerRestrictMode(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // Player restriction state is tracked by _playerRestricted field
-            // Based on swkotor.exe: Player restriction mode prevents player movement/actions
+            // Based on k1_win_gog_swkotor.exe: Player restriction mode prevents player movement/actions
             return Variable.FromInt(_playerRestricted ? 1 : 0);
         }
 
         /// <summary>
         /// GetCasterLevel(object oCreature=OBJECT_SELF) - Returns the caster level of a creature
-        /// Based on swkotor.exe: Caster level is typically the total character level or Force user class levels
+        /// Based on k1_win_gog_swkotor.exe: Caster level is typically the total character level or Force user class levels
         /// For Force powers, caster level = total level of Force-using classes (Jedi Consular, Guardian, Sentinel, Master, Lord)
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: GetCasterLevel returns the sum of levels in Force-using classes
+        /// Based on k1_win_gog_swkotor.exe: GetCasterLevel returns the sum of levels in Force-using classes
         /// Force-using classes are determined by the "forcedie" column in classes.2da (if forcedie > 0, class is Force-using)
         /// This matches the original engine behavior where caster level for Force powers is based on Force-using class levels only
         /// </remarks>
@@ -4672,7 +4672,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetEffectDurationType(effect eEffect) - returns duration type of effect
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Effect duration type system
+        /// Based on k1_win_gog_swkotor.exe: Effect duration type system
         /// Original implementation: Effects have duration types (Instant, Temporary, Permanent)
         /// DURATION_TYPE_INSTANT = 0: Effect applies once and ends
         /// DURATION_TYPE_TEMPORARY = 1: Effect has duration and expires after time
@@ -4723,7 +4723,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetEffectCreator(effect eEffect) - returns creator of effect
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Effect creator tracking system
+        /// Based on k1_win_gog_swkotor.exe: Effect creator tracking system
         /// Original implementation: Effects store creator entity ID (who cast the spell/applied the effect)
         /// Creator tracking: Used for ownership checks, caster level calculations, spell targeting
         /// Returns: Creator entity object ID or OBJECT_INVALID if effect has no creator
@@ -4770,7 +4770,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetFirstObjectInArea(object oArea=OBJECT_INVALID, int nObjectType=OBJECT_TYPE_ALL) - starts iteration over objects in area
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Object iteration system for area entities
+        /// Based on k1_win_gog_swkotor.exe: Object iteration system for area entities
         /// Located via string references: Object iteration maintains state per calling script context
         /// Original implementation: Iterates through area's entity lists (Creatures, Doors, Placeables, etc.)
         /// Object type filtering: OBJECT_TYPE_ALL (-1) returns all types, specific types filter by entity type
@@ -4977,7 +4977,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// GetRacialType(object oCreature=OBJECT_SELF) - Returns the racial type of a creature
-        /// Based on swkotor.exe: 0x005261b0 @ 0x005261b0 (load creature from UTC template)
+        /// Based on k1_win_gog_swkotor.exe: 0x005261b0 @ 0x005261b0 (load creature from UTC template)
         /// Racial type is stored in CreatureComponent.RaceId (from UTC template)
         /// </summary>
         private Variable Func_GetRacialType(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -5078,7 +5078,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// MagicalEffect(effect eEffect) - Wraps an effect as a magical effect (can be dispelled)
-        /// Based on swkotor.exe: Sets effect subtype to SUBTYPE_MAGICAL (8)
+        /// Based on k1_win_gog_swkotor.exe: Sets effect subtype to SUBTYPE_MAGICAL (8)
         /// Magical effects can be dispelled by DispelMagic
         /// </summary>
         private Variable Func_MagicalEffect(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -5109,7 +5109,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// SupernaturalEffect(effect eEffect) - Wraps an effect as a supernatural effect (cannot be dispelled)
-        /// Based on swkotor.exe: Sets effect subtype to SUBTYPE_SUPERNATURAL (16)
+        /// Based on k1_win_gog_swkotor.exe: Sets effect subtype to SUBTYPE_SUPERNATURAL (16)
         /// Supernatural effects cannot be dispelled
         /// </summary>
         private Variable Func_SupernaturalEffect(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -5198,7 +5198,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetAC(object oCreature=OBJECT_SELF) - returns armor class
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: D20 armor class system
+        /// Based on k1_win_gog_swkotor.exe: D20 armor class system
         /// Located via string references: "ArmorClass" @ 0x007c42a8, "ArmorClassColumn" @ 0x007c2ae8
         /// Original implementation: Returns total AC from base (10) + Dexterity modifier + armor + shield + effects
         /// AC calculation: Base 10 + Dex modifier + armor bonus + shield bonus + deflection + natural + dodge + other modifiers
@@ -5500,7 +5500,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetFirstFactionMember(int nFactionId, int bPlayerOnly=FALSE) - starts iteration over faction members
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Faction member iteration system
+        /// Based on k1_win_gog_swkotor.exe: Faction member iteration system
         /// Located via string references: "FactionID" @ 0x007c40b4, "FactionID1" @ 0x007c2924, "FactionID2" @ 0x007c2918
         /// Original implementation: Iterates over all entities with matching faction ID
         /// Faction matching: Checks IFactionComponent.FactionId against provided faction ID
@@ -5668,7 +5668,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetIsNeutral(object oTarget, object oSource=OBJECT_SELF) - Returns TRUE if oTarget is neutral to oSource
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Faction relationship system
+        /// Based on k1_win_gog_swkotor.exe: Faction relationship system
         /// Located via string reference: "neutral" @ 0x007c28a0
         /// Original implementation: 0x005acc10 @ 0x005acc10 sets faction reputation values including "neutral" (50)
         /// Neutral determination: Reputation value between HostileThreshold (10) and FriendlyThreshold (90)
@@ -5679,7 +5679,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         private Variable Func_GetIsNeutral(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetIsNeutral(object oTarget, object oSource=OBJECT_SELF) - returns TRUE if target is neutral to source
-            // Based on swkotor.exe: Faction relationship system
+            // Based on k1_win_gog_swkotor.exe: Faction relationship system
             // Located via string reference: "neutral" @ 0x007c28a0
             // Original implementation: Checks faction reputation, returns TRUE if reputation is between 11-89 (neutral range)
             // Neutral range: HostileThreshold (10) < reputation < FriendlyThreshold (90)
@@ -5723,7 +5723,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetWaypointByTag(string sWaypointTag) - returns waypoint with specified tag
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Waypoint lookup system
+        /// Based on k1_win_gog_swkotor.exe: Waypoint lookup system
         /// Original implementation: Searches for waypoint entity with matching tag string
         /// Search order: First searches current area's waypoints, then world-wide search
         /// Waypoint type: Only returns entities with ObjectType.Waypoint
@@ -5838,7 +5838,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                 // Create faction component if it doesn't exist
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Faction component creation during entity faction change
                 // Original implementation: Creates new faction component and assigns it to entity
-                // Located via string references: "FactionID" @ 0x007c40b4 (swkotor2.exe)
+                // Located via string references: "FactionID" @ 0x007c40b4 (k2_win_gog_aspyr_swkotor2.exe)
                 // Function: 0x005fb0f0 @ 0x005fb0f0 loads FactionID from creature template
                 // Component initialization: Faction component should be initialized with FactionManager for proper reputation lookups
                 if (objectToChange is Runtime.Core.Entities.Entity concreteEntity)
@@ -5946,7 +5946,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetSpellTargetLocation() - Get the location of the caller's last spell target
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: GetSpellTargetLocation implementation
+        /// Based on k1_win_gog_swkotor.exe: GetSpellTargetLocation implementation
         /// Routine 222: Returns the location of the caller's last spell target
         /// Original implementation: Tracks spell target locations when spells are cast
         /// </remarks>
@@ -5970,7 +5970,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// ActionJumpToObject(object oToJumpTo, int bWalkStraightLineToPoint=TRUE) - Jump to an object ID
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: ActionJumpToObject implementation
+        /// Based on k1_win_gog_swkotor.exe: ActionJumpToObject implementation
         /// Located via string references: "JumpToObject" action type
         /// Original implementation: Instantly teleports entity to target object's position
         /// </remarks>
@@ -5998,7 +5998,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetTransitionTarget(object oTransition) - Get the destination (waypoint or door) for a trigger or door
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: GetTransitionTarget implementation
+        /// Based on k1_win_gog_swkotor.exe: GetTransitionTarget implementation
         /// Located via string references: "LinkedTo" @ 0x007c13a0, "LinkedToModule" @ 0x007bd7bc
         /// Original implementation: Returns destination waypoint or door from trigger/door's LinkedTo field
         /// </remarks>
@@ -6051,21 +6051,21 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// StartNewModule(string sModuleName, string sWayPoint="", string sMovie1="", string sMovie2="", string sMovie3="", string sMovie4="", string sMovie5="", string sMovie6="") - Start a new module
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: StartNewModule implementation
+        /// Based on k1_win_gog_swkotor.exe: StartNewModule implementation
         /// Located via string references: "Module" @ 0x007c1a70, "ModuleName" @ 0x007bde2c
         /// Original implementation: Shuts down current module and loads new one, positions party at waypoint
         ///
         /// Function ID: 509 (NWScript routine ID, 0x1fd)
         ///
         /// Ghidra verified components Findings:
-        /// - swkotor.exe: Function ID 509 referenced at 0x0041c54a and 0x0041c554 (function registration/dispatch setup)
-        /// - swkotor2.exe: Function ID 509 referenced at 0x0041bf2a and 0x0041bf34 (identical pattern)
-        /// - Module transition script: "Mod_Transition" @ 0x00745b68 (swkotor.exe), @ 0x007be8f0 (swkotor2.exe)
-        /// - Module transition handlers: 0x00501fa0 @ 0x00501fa0 (swkotor2.exe) handles module loading and transition scripts
-        /// - Module state management: "ModuleLoaded" @ 0x00745078, "ModuleRunning" @ 0x00745060 (swkotor.exe)
-        /// - Module save system: 0x004b2380 @ 0x004b2380 (swkotor.exe), 0x004ea910 @ 0x004ea910 (swkotor2.exe) handle module name in save games
+        /// - k1_win_gog_swkotor.exe: Function ID 509 referenced at 0x0041c54a and 0x0041c554 (function registration/dispatch setup)
+        /// - k2_win_gog_aspyr_swkotor2.exe: Function ID 509 referenced at 0x0041bf2a and 0x0041bf34 (identical pattern)
+        /// - Module transition script: "Mod_Transition" @ 0x00745b68 (k1_win_gog_swkotor.exe), @ 0x007be8f0 (k2_win_gog_aspyr_swkotor2.exe)
+        /// - Module transition handlers: 0x00501fa0 @ 0x00501fa0 (k2_win_gog_aspyr_swkotor2.exe) handles module loading and transition scripts
+        /// - Module state management: "ModuleLoaded" @ 0x00745078, "ModuleRunning" @ 0x00745060 (k1_win_gog_swkotor.exe)
+        /// - Module save system: 0x004b2380 @ 0x004b2380 (k1_win_gog_swkotor.exe), 0x004ea910 @ 0x004ea910 (k2_win_gog_aspyr_swkotor2.exe) handle module name in save games
         ///
-        /// Original Engine Behavior (swkotor.exe/swkotor2.exe):
+        /// Original Engine Behavior (k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe):
         /// - Validates module name parameter (returns immediately if empty)
         /// - Plays movie files (sMovie1-sMovie6) sequentially if provided (before module transition)
         /// - Calls module transition system to unload current module and load new module
@@ -6103,7 +6103,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 positions all party members at waypoint with spacing
         ///
         /// Cross-Engine Equivalents:
-        /// - swkotor2.exe: Same function ID (509), identical implementation pattern
+        /// - k2_win_gog_aspyr_swkotor2.exe: Same function ID (509), identical implementation pattern
         ///   - Module transition: 0x00501fa0 @ 0x00501fa0 handles module loading and "Mod_Transition" script execution
         ///   - Module state: "Mod_Transition" @ 0x007be8f0, "ModuleName" @ 0x007bde2c
         /// - nwmain.exe (Aurora): Similar function but different function ID, uses Module.ifo format
@@ -6136,7 +6136,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Access ModuleTransitionSystem from World
-            // Based on swkotor.exe: StartNewModule implementation
+            // Based on k1_win_gog_swkotor.exe: StartNewModule implementation
             // Located via string references: "Module" @ 0x007c1a70, "ModuleName" @ 0x007bde2c
             // Original implementation: Calls module transition system to load new module
             // Function signature supports up to 6 movie parameters (sMovie1-sMovie6) for cinematic transitions
@@ -6200,7 +6200,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetModuleFileName() - Get the actual file name of the current module
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: GetModuleFileName implementation
+        /// Based on k1_win_gog_swkotor.exe: GetModuleFileName implementation
         /// Original implementation: Returns the module ResRef (filename without extension)
         /// </remarks>
         private Variable Func_GetModuleFileName(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -6224,7 +6224,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// ActionSpeakStringByStrRef(int nStrRef, int nTalkVolume=TALKVOLUME_TALK) - action to speak string from TLK
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Speak string by StrRef action system
+        /// Based on k1_win_gog_swkotor.exe: Speak string by StrRef action system
         /// Located via string references: "STRREF" @ 0x007b6368, "StrRef" @ 0x007c1fe8
         /// Original implementation: Looks up string from TLK using StrRef, creates ActionSpeakString action
         /// TLK lookup: Uses DialogueManager.LookupString to get text from talk table
@@ -6376,18 +6376,18 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// CreateObject(int nObjectType, string sTemplate, location lLocation, int bUseAppearAnimation=FALSE) - Create an object of the specified type at lLocation
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Runtime object creation system
+        /// Based on k1_win_gog_swkotor.exe: Runtime object creation system
         /// Located via string references: Object creation functions handle template loading and entity spawning
         /// Original implementation: Creates runtime entities from GFF templates at specified location
         /// Object types: OBJECT_TYPE_CREATURE (1), OBJECT_TYPE_ITEM (2), OBJECT_TYPE_PLACEABLE (4),
         ///   OBJECT_TYPE_STORE (5), OBJECT_TYPE_WAYPOINT (6)
         /// Template loading: Loads UTC/UTI/UTP/UTM/UTW templates from installation, applies to entity
         /// Location: Extracts position and facing from location object
-        /// Appear animation: bUseAppearAnimation flag controls fade-in effect and spawn animation (swkotor.exe, swkotor2.exe)
+        /// Appear animation: bUseAppearAnimation flag controls fade-in effect and spawn animation (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
         ///   - Sets "AppearAnimation" flag for rendering system to handle alpha fade-in (0.0 to 1.0 over 0.75 seconds)
         ///   - For creatures: Plays spawn animation (animation ID 0) while fading in
         ///   - Rendering system applies alpha/opacity based on "AppearAnimationAlpha" interpolated over duration
-        ///   - Located via string references: "spawn" @ 0x007c21d8 (swkotor2.exe), "spawntype" @ 0x007bab44 (swkotor2.exe)
+        ///   - Located via string references: "spawn" @ 0x007c21d8 (k2_win_gog_aspyr_swkotor2.exe), "spawntype" @ 0x007bab44 (k2_win_gog_aspyr_swkotor2.exe)
         /// Returns: Created object ID or OBJECT_INVALID if creation fails
         /// </remarks>
         private Variable Func_CreateObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -6527,8 +6527,8 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Implement appear animation if bUseAppearAnimation is TRUE
-            // Based on swkotor.exe and swkotor2.exe: Objects created with appear animation play a fade-in effect
-            // Located via string references: "spawn" @ 0x007c21d8 (swkotor2.exe), "spawntype" @ 0x007bab44 (swkotor2.exe)
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Objects created with appear animation play a fade-in effect
+            // Located via string references: "spawn" @ 0x007c21d8 (k2_win_gog_aspyr_swkotor2.exe), "spawntype" @ 0x007bab44 (k2_win_gog_aspyr_swkotor2.exe)
             // Original implementation: Objects fade in from opacity 0.0 to 1.0 over a duration (typically 0.5-1.0 seconds)
             // For creatures: May also play a spawn animation (typically animation ID 0 or a specific spawn animation)
             // Fade-in duration: 0.75 seconds for smooth visual transition (matches original engine behavior and ActionDestroyObject fade-out)
@@ -6563,7 +6563,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                     }
 
                     // For creatures, play spawn animation if animation component is available
-                    // Based on swkotor.exe and swkotor2.exe: Creatures may play a spawn animation when appearing
+                    // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Creatures may play a spawn animation when appearing
                     // Spawn animation is typically animation ID 0 (first animation in model's animation array)
                     // Animation component should be attached by ComponentInitializer for creatures
                     if (objectType == 1) // OBJECT_TYPE_CREATURE
@@ -6593,7 +6593,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                             // Animation ID 0 is typically the first animation in the model's animation array
                             // If animation ID 0 doesn't exist, entity will just fade in without animation
                             // Animation plays once (not looping) and completes as fade-in finishes
-                            // swkotor2.exe: Placeable appear animation behavior matches creature spawn animation pattern
+                            // k2_win_gog_aspyr_swkotor2.exe: Placeable appear animation behavior matches creature spawn animation pattern
                             animationComponent.PlayAnimation(0, 1.0f, false); // Animation ID 0, normal speed, no loop
                         }
                     }
@@ -6702,7 +6702,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetHitDice(object oCreature=OBJECT_SELF) - Get the number of hit dice for a creature
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Hit dice calculation from classes.2da
+        /// Based on k1_win_gog_swkotor.exe: Hit dice calculation from classes.2da
         /// Located via string references: "HitDice" @ 0x007c2f80, "HitDie" @ 0x007c2f84
         /// Original implementation: Hit dice = total character level (sum of all class levels)
         /// Hit dice represent the creature's total character levels across all classes
@@ -6721,7 +6721,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             if (stats != null)
             {
                 // Hit dice = total character level
-                // Based on swkotor.exe: GetHitDice implementation
+                // Based on k1_win_gog_swkotor.exe: GetHitDice implementation
                 // Located via string references: Hit dice calculation from character level
                 // Original implementation: Hit dice equals total character level (sum of all class levels)
                 return Variable.FromInt(stats.Level);
@@ -6734,7 +6734,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetHasFeat(int nFeat, object oCreature=OBJECT_SELF) - Determine whether creature has a feat and it is usable
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Feat checking system
+        /// Based on k1_win_gog_swkotor.exe: Feat checking system
         /// Located via string references: "FeatList" @ 0x007c2f88, "FeatID" @ 0x007c2f8c
         /// Original implementation: Checks if creature has the feat in their feat list AND it is currently usable
         /// Returns TRUE if creature has the feat and it is currently usable (not exhausted, not restricted)
@@ -6784,7 +6784,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetClassByPosition(int nClassPosition, object oCreature=OBJECT_SELF) - Get class at position (1, 2, or 3)
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Multi-class system
+        /// Based on k1_win_gog_swkotor.exe: Multi-class system
         /// Located via string references: "ClassList" @ 0x007c2f90, "ClassID" @ 0x007c2f94
         /// Original implementation: Creatures can have up to 3 classes
         /// nClassPosition: 1 = first class, 2 = second class, 3 = third class
@@ -6824,7 +6824,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetLevelByPosition(int nClassPosition, object oCreature=OBJECT_SELF) - Get level at class position (1, 2, or 3)
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Multi-class level system
+        /// Based on k1_win_gog_swkotor.exe: Multi-class level system
         /// Original implementation: Returns the level in the class at the specified position
         /// nClassPosition: 1 = first class, 2 = second class, 3 = third class
         /// Returns 0 if creature doesn't have a class at that position
@@ -6863,7 +6863,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetLevelByClass(int nClassType, object oCreature=OBJECT_SELF) - Get total levels in a specific class
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: Class level lookup
+        /// Based on k1_win_gog_swkotor.exe: Class level lookup
         /// Original implementation: Sums up all levels the creature has in the specified class type
         /// Returns total levels in nClassType across all class positions
         /// </remarks>
@@ -6903,7 +6903,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetFirstItemInInventory(object oTarget=OBJECT_SELF) - Get the first item in oTarget's inventory
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: GetFirstItemInInventory implementation
+        /// Based on k1_win_gog_swkotor.exe: GetFirstItemInInventory implementation
         /// Located via string references: "Inventory" @ 0x007c2504, "ItemList" @ 0x007c2f28
         /// Original implementation: Starts iteration over inventory items (equipped + inventory bag)
         /// Returns first item or OBJECT_INVALID if no items
@@ -6948,7 +6948,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetNextItemInInventory(object oTarget=OBJECT_SELF) - Get the next item in oTarget's inventory
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: GetNextItemInInventory implementation
+        /// Based on k1_win_gog_swkotor.exe: GetNextItemInInventory implementation
         /// Original implementation: Continues iteration over inventory items
         /// Returns next item or OBJECT_INVALID if no more items
         /// </remarks>
@@ -6989,7 +6989,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetItemHasItemProperty(object oItem, int nProperty) - Determines whether oItem has nProperty
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: GetItemHasItemProperty implementation (routine ID 398)
+        /// Based on k1_win_gog_swkotor.exe: GetItemHasItemProperty implementation (routine ID 398)
         /// Located via string references: "ItemProperty" @ 0x007beb58, "PropertiesList" @ 0x007c2f3c
         /// Original implementation: Checks if item has the specified property type in its PropertiesList
         /// Returns: TRUE (1) if item has the property, FALSE (0) if not or if item is invalid
@@ -7014,7 +7014,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Check if item has the specified property type
-            // Based on swkotor.exe: Property type matching
+            // Based on k1_win_gog_swkotor.exe: Property type matching
             // Located via string references: Item properties stored in PropertiesList array
             // Original implementation: Iterates through PropertiesList, checks PropertyName field against nProperty
             foreach (ItemProperty property in itemComponent.Properties)
@@ -7036,7 +7036,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetClickingObject() - Get the object that last clicked on the caller
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: GetClickingObject implementation (routine ID 326)
+        /// Based on k1_win_gog_swkotor.exe: GetClickingObject implementation (routine ID 326)
         /// Located via string references: "OnClick" @ 0x007c1a20, "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc704 (case 0x1e in 0x004dcfb0)
         /// Event dispatching: 0x004dcfb0 @ 0x004dcfb0 handles CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED (case 0x1e)
         /// Original implementation: Returns last entity that clicked trigger/door/placeable
@@ -7068,7 +7068,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// GetLastSpellCaster() - Returns the entity that last cast a spell on the caller
-        /// Based on swkotor.exe: GetLastSpellCaster implementation (routine ID 245)
+        /// Based on k1_win_gog_swkotor.exe: GetLastSpellCaster implementation (routine ID 245)
         /// Located via string references: "GetLastSpellCaster" NWScript function
         /// Original implementation: Returns caster entity ID from _lastSpellCasters dictionary
         /// Used in OnSpellCastAt scripts to determine who cast the spell
@@ -7104,7 +7104,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// GetSpellId() - Returns the ID of the last spell cast by the caller
-        /// Based on swkotor.exe: GetSpellId implementation (routine ID 248)
+        /// Based on k1_win_gog_swkotor.exe: GetSpellId implementation (routine ID 248)
         /// Located via string references: "GetSpellId" NWScript function
         /// Original implementation: Returns spell ID from _lastSpellIds dictionary
         /// Used in spell scripts to determine which spell is being cast
@@ -7133,7 +7133,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// SetItemStackSize(object oItem, int nStackSize) - Set the stack size of an item
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: SetItemStackSize implementation (routine ID 150)
+        /// Based on k1_win_gog_swkotor.exe: SetItemStackSize implementation (routine ID 150)
         /// Located via string references: "StackSize" @ 0x007c0a34 (item stack size GFF field)
         /// Item loading: 0x0056a820 @ 0x0056a820 loads StackSize from GFF (reads uint16 from "StackSize" field)
         /// Item saving: 0x006203c0 @ 0x006203c0 saves StackSize to GFF (writes uint16 to "StackSize" field)
@@ -7160,7 +7160,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             if (itemComponent != null)
             {
                 // Clamp stack size between 1 and max (from baseitems.2da)
-                // Based on swkotor.exe: SetItemStackSize implementation
+                // Based on k1_win_gog_swkotor.exe: SetItemStackSize implementation
                 // Located via string references: "StackSize" @ 0x007c0a34, "stacking" column in baseitems.2da
                 // Original implementation: Looks up max stack size from baseitems.2da "stacking" column using BaseItem ID
                 int maxStackSize = 100; // Default max
@@ -7212,7 +7212,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetDistanceBetween(object oObjectA, object oObjectB) - Get the distance in metres between two objects
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: GetDistanceBetween implementation (routine ID 151)
+        /// Based on k1_win_gog_swkotor.exe: GetDistanceBetween implementation (routine ID 151)
         /// Located via string references: Distance calculation uses object positions from transform components
         /// Original implementation: Calculates 3D Euclidean distance between object positions (Vector3.Distance)
         /// Returns 0.0f if either object is invalid or missing transform component
@@ -7249,7 +7249,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// GetDistanceBetweenLocations(location lLocationA, location lLocationB) - Get the distance between two locations
-        /// Based on swkotor.exe: Distance calculation between location objects
+        /// Based on k1_win_gog_swkotor.exe: Distance calculation between location objects
         /// Returns the 3D distance in meters between two locations
         /// </summary>
         private Variable Func_GetDistanceBetweenLocations(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -7268,7 +7268,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Location objects should have Position property
-            // Based on swkotor.exe: Location structure contains Position (Vector3) and Facing (float)
+            // Based on k1_win_gog_swkotor.exe: Location structure contains Position (Vector3) and Facing (float)
             // Located via string references: Location structure used for position/orientation storage
             // Original implementation: Calculates 3D distance between two location positions
             if (locAObj is Location locA && locBObj is Location locB)
@@ -7288,7 +7288,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetIsDoorActionPossible(object oTargetDoor, int nDoorAction) - Check if a door action can be performed
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: GetIsDoorActionPossible implementation (routine ID 337)
+        /// Based on k1_win_gog_swkotor.exe: GetIsDoorActionPossible implementation (routine ID 337)
         /// Located via string references: Door action checking system
         /// Door actions: DOOR_ACTION_OPEN (0), DOOR_ACTION_UNLOCK (1), DOOR_ACTION_BASH (2), DOOR_ACTION_IGNORE (3), DOOR_ACTION_KNOCK (4)
         /// Original implementation: Checks if specified door action is valid for the door's current state
@@ -7353,7 +7353,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetIsPlaceableObjectActionPossible(object oPlaceable, int nPlaceableAction) - Check if a placeable action can be performed
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: GetIsPlaceableObjectActionPossible implementation
+        /// Based on k1_win_gog_swkotor.exe: GetIsPlaceableObjectActionPossible implementation
         /// Located via string references: Placeable action checking system (similar to door action system)
         /// Placeable actions: PLACEABLE_ACTION_USE (0), PLACEABLE_ACTION_UNLOCK (1), PLACEABLE_ACTION_BASH (2), PLACEABLE_ACTION_KNOCK (4)
         /// Original implementation: Checks if specified placeable action is valid for the placeable's current state
@@ -7391,7 +7391,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             {
                 case 0: // PLACEABLE_ACTION_USE
                     // Can use if placeable is usable (Useable flag from UTP template)
-                    // Based on swkotor.exe: GetIsPlaceableObjectActionPossible implementation
+                    // Based on k1_win_gog_swkotor.exe: GetIsPlaceableObjectActionPossible implementation
                     // Located via string references: Placeable action checking system
                     // Original implementation: Checks IsUseable flag from placeable component
                     return Variable.FromInt(placeableComponent.IsUseable ? 1 : 0);
@@ -7417,7 +7417,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// DoDoorAction(object oTargetDoor, int nDoorAction) - Perform a door action on a door
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: DoDoorAction implementation (routine ID 338)
+        /// Based on k1_win_gog_swkotor.exe: DoDoorAction implementation (routine ID 338)
         /// Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844 (case 7 in 0x004dcfb0), "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ 0x007bc72c
         /// Event dispatching: 0x004dcfb0 @ 0x004dcfb0 handles door events (case 7 for EVENT_OPEN_OBJECT, case 0xd for EVENT_UNLOCK_OBJECT)
         /// Door actions: DOOR_ACTION_OPEN (0), DOOR_ACTION_UNLOCK (1), DOOR_ACTION_BASH (2), DOOR_ACTION_IGNORE (3), DOOR_ACTION_KNOCK (4)
@@ -7473,7 +7473,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
                 case 2: // DOOR_ACTION_BASH
                     // Bash door: Attempt to break lock via strength check
-                    // Based on swkotor.exe: Door bashing system
+                    // Based on k1_win_gog_swkotor.exe: Door bashing system
                     // Original implementation: Performs strength check (d20 + STR modifier vs LockDC), applies damage if successful
                     if (doorComponent.IsLocked && ctx.Caller != null)
                     {
@@ -7506,7 +7506,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                             }
 
                             // Apply damage to door (handles HP reduction, hardness, and destruction)
-                            // Based on swkotor.exe: Door bashing damage application
+                            // Based on k1_win_gog_swkotor.exe: Door bashing damage application
                             // Located via string references: Door bashing system
                             // Original implementation: ApplyDamage handles HP reduction, hardness, and sets bashed state
                             doorComponent.ApplyDamage(bashDamage);
@@ -7527,13 +7527,13 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
                 case 4: // DOOR_ACTION_KNOCK
                     // Knock action: Play knock sound/animation (no state change)
-                    // Based on swkotor.exe: Door knock action plays sound and animation (swkotor.exe: 0x004e08e0, swkotor2.exe: 0x00580ed0)
+                    // Based on k1_win_gog_swkotor.exe: Door knock action plays sound and animation (k1_win_gog_swkotor.exe: 0x004e08e0, k2_win_gog_aspyr_swkotor2.exe: 0x00580ed0)
                     // Original implementation: Plays knock sound at door position, plays interaction animation on caller
                     // Located via string references: Door interaction sounds and animations
                     if (ctx.Caller != null)
                     {
                         // Play knock sound at door position (3D spatial audio)
-                        // Based on swkotor.exe: Door sounds are played at door position for spatial audio
+                        // Based on k1_win_gog_swkotor.exe: Door sounds are played at door position for spatial audio
                         // Sound name: Uses generic door interaction sound (gui_door or door-specific sound)
                         if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
                         {
@@ -7551,14 +7551,14 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                                 // Play knock sound at door position (3D spatial audio)
                                 // Sound name: "gui_door" is a generic door interaction sound used in KOTOR
                                 // Alternative: Could use door-specific sound from door template if available
-                                // Based on swkotor.exe: Door interaction sounds are played at door position
+                                // Based on k1_win_gog_swkotor.exe: Door interaction sounds are played at door position
                                 string knockSoundName = "gui_door";
                                 uint soundInstanceId = services.SoundPlayer.PlaySound(knockSoundName, position, 1.0f, 0.0f, 0.0f);
                             }
                         }
 
                         // Play knock animation on caller (the entity performing the knock)
-                        // Based on swkotor.exe: Knock action plays interaction animation on caller
+                        // Based on k1_win_gog_swkotor.exe: Knock action plays interaction animation on caller
                         // Animation: Uses a simple interaction animation (fire-and-forget, plays once)
                         // Animation ID: ANIMATION_FIREFORGET_ACTIVATE (115) + 10000 offset = 10115
                         // Note: Animation constants require 10000 offset for ActionPlayAnimation
@@ -7569,7 +7569,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                             // Queue knock animation action (fire-and-forget, plays once)
                             // Animation ID: ANIMATION_FIREFORGET_ACTIVATE = 115, with 10000 offset = 10115
                             // Duration 0.0 = fire-and-forget (plays once until animation completes)
-                            // Based on swkotor.exe: Knock uses interaction animation (activate/open gesture)
+                            // Based on k1_win_gog_swkotor.exe: Knock uses interaction animation (activate/open gesture)
                             const int ANIMATION_FIREFORGET_ACTIVATE = 115;
                             int knockAnimationId = 10000 + ANIMATION_FIREFORGET_ACTIVATE; // 10115
                             var knockAnimation = new ActionPlayAnimation(knockAnimationId, 1.0f, 0.0f); // Speed 1.0, duration 0 = play once
@@ -7859,7 +7859,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// IsStealthed(object oTarget) - Returns TRUE if target is stealthed (StealthMode flag is set)
         /// </summary>
         /// <remarks>
-        /// swkotor2.exe: IsStealthed routine ID 834 (TSL only)
+        /// k2_win_gog_aspyr_swkotor2.exe: IsStealthed routine ID 834 (TSL only)
         /// Located via string references: "StealthMode" @ 0x007bf690, "StealthXPEnabled" @ 0x007bd1b4
         /// "StealthXPCurrent" @ 0x007bd1d8, "StealthXPMax" @ 0x007bd1ec, "StealthXPLoss" @ 0x007bd1c8
         /// "STEALTHXP" @ 0x007bdf08, "setstealth" @ 0x007c79fc
@@ -7875,7 +7875,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         private Variable Func_IsStealthed(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // IsStealthed(object oTarget) - returns TRUE if target is stealthed (StealthMode flag is set)
-            // swkotor2.exe: Checks StealthMode byte at offset +0x511 in creature structure
+            // k2_win_gog_aspyr_swkotor2.exe: Checks StealthMode byte at offset +0x511 in creature structure
             // Original implementation: Returns 1 if *(char *)((int)this + 0x511) == '\x01', else 0
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity entity = ResolveObject(objectId, ctx);
@@ -7886,7 +7886,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Check if entity is a creature and has StealthMode flag set
-            // swkotor2.exe: IsStealthed checks StealthMode byte at offset +0x511
+            // k2_win_gog_aspyr_swkotor2.exe: IsStealthed checks StealthMode byte at offset +0x511
             // Returns 0 for non-creatures (per NSS documentation: "This function will return 0 for any non-creature")
             Components.CreatureComponent creatureComp = entity.GetComponent<Components.CreatureComponent>();
             if (creatureComp == null)

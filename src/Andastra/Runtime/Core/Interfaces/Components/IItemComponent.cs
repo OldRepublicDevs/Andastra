@@ -14,9 +14,9 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     ///   - Engine-specific item component classes (OdysseyItemComponent, AuroraItemComponent, EclipseItemComponent) have been merged
     ///
     /// Based on verified components of:
-    /// - Odyssey (swkotor.exe, swkotor2.exe): UTI GFF format
-    ///   - swkotor.exe: Item component system with UTI template loading
-    ///   - swkotor2.exe: Enhanced item system with upgrade support
+    /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): UTI GFF format
+    ///   - k1_win_gog_swkotor.exe: Item component system with UTI template loading
+    ///   - k2_win_gog_aspyr_swkotor2.exe: Enhanced item system with upgrade support
     ///   - Located via string references: "Item" @ 0x007bc550 (item object type), "Item List" @ 0x007bd028 (item list field)
     ///   - "BaseItem" @ 0x007c0a78 (base item ID field), "ItemType" @ 0x007c437c (item type field)
     ///   - "ItemPropertyIndex" @ 0x007beb58 (item property index), "ItemProperty" @ 0x007cb2f8 (item property field)

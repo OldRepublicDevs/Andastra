@@ -9,8 +9,8 @@ namespace Andastra.Runtime.Core.Animation
     /// </summary>
     /// <remarks>
     /// Appear Animation Fade System:
-    /// - Based on swkotor.exe and swkotor2.exe appear animation system
-    /// - Located via string references: "FadeTime" @ 0x007c60ec (fade duration in swkotor2.exe)
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe appear animation system
+    /// - Located via string references: "FadeTime" @ 0x007c60ec (fade duration in k2_win_gog_aspyr_swkotor2.exe)
     /// - Original implementation: Entities with appear animation fade in from opacity 0.0 to 1.0 over fade duration
     /// - Fade duration: Typically 0.75 seconds (matches ActionDestroyObject fade-out duration)
     /// - Updates IRenderableComponent.Opacity property over time for smooth fade-in effect

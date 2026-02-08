@@ -18,7 +18,7 @@ namespace Andastra.Game.Games.Aurora.Data
     /// - Uses AuroraTwoDATableManager to access 2DA tables (appearance.2da, baseitems.2da, etc.)
     /// - Wraps AuroraTwoDATableManager to provide engine-agnostic interface
     /// - Cross-engine analysis:
-    ///   - Odyssey (swkotor.exe, swkotor2.exe): Uses GameDataManager for 2DA access, 0x0041d2c0 @ 0x0041d2c0 (2DA table lookup), 0x0065a380 @ 0x0065a380 (GetCreatureRadius)
+    ///   - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): Uses GameDataManager for 2DA access, 0x0041d2c0 @ 0x0041d2c0 (2DA table lookup), 0x0065a380 @ 0x0065a380 (GetCreatureRadius)
     ///   - Aurora (nwmain.exe): Uses C2DA class for 2DA access, C2DA::Load2DArray @ 0x1401a73a0
     ///   - Eclipse (daorigins.exe, DragonAge2.exe, ): Uses EclipseTwoDATableManager (same pattern as Aurora)
     ///   - Infinity (, ): Uses 2DA tables (similar to Eclipse)
@@ -71,7 +71,7 @@ namespace Andastra.Game.Games.Aurora.Data
         ///   - Size 2 (Large): 0.7
         ///   - Size 3 (Huge): 1.0
         ///   - Size 4 (Gargantuan): 1.5
-        /// - Cross-engine pattern: Same as Odyssey (swkotor2.exe: 0x0065a380 @ 0x0065a380) and Eclipse
+        /// - Cross-engine pattern: Same as Odyssey (k2_win_gog_aspyr_swkotor2.exe: 0x0065a380 @ 0x0065a380) and Eclipse
         /// - Original implementation: C2DA::GetFloatingPoint @ nwmain.exe accesses 2DA cell values
         /// </remarks>
         public float GetCreatureRadius(int appearanceType, float defaultRadius = 0.5f)
@@ -140,7 +140,7 @@ namespace Andastra.Game.Games.Aurora.Data
         /// Based on nwmain.exe: Aurora engine uses C2DA class for 2DA table access
         /// - C2DA::GetFloatingPoint @ nwmain.exe accesses 2DA cell values by row index and column name
         /// - Uses AuroraTwoDATableManager to access 2DA tables
-        /// - Cross-engine pattern: Same as Odyssey (swkotor2.exe: 0x0041d2c0 @ 0x0041d2c0) and Eclipse
+        /// - Cross-engine pattern: Same as Odyssey (k2_win_gog_aspyr_swkotor2.exe: 0x0041d2c0 @ 0x0041d2c0) and Eclipse
         /// - Original implementation: C2DA::Load2DArray @ 0x1401a73a0 loads tables, C2DA::GetFloatingPoint retrieves float values
         /// </remarks>
         public float GetTableFloat(string tableName, int rowIndex, string columnName, float defaultValue = 0.0f)
@@ -207,7 +207,7 @@ namespace Andastra.Game.Games.Aurora.Data
         /// - Located via string references: Feat data in 2DA tables
         /// - Feat data lookup: Accesses feat.2da table using featId as row index
         /// - Column access: Uses C2DA::GetInteger, C2DA::GetString, C2DA::GetFloatingPoint to retrieve feat properties
-        /// - Cross-engine pattern: Same as Odyssey (swkotor.exe, swkotor2.exe) but uses C2DA instead of direct 2DA access
+        /// - Cross-engine pattern: Same as Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe) but uses C2DA instead of direct 2DA access
         /// </remarks>
         [CanBeNull]
         public AuroraFeatData GetFeat(int featId)

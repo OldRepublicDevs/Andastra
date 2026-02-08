@@ -29,19 +29,19 @@ namespace Andastra.Runtime.Core.Interfaces
     ///      - Location: Runtime.Games.Common.BaseNavigationMesh
     ///      - Contains: Common line-of-sight algorithms, AABB helpers, abstract method contracts
     ///   2. Tier 2 (Engine-specific): Common functionality within an engine family
-    ///      - OdysseyNavigationMesh: Common walkmesh functionality for swkotor.exe and swkotor2.exe
+    ///      - OdysseyNavigationMesh: Common walkmesh functionality for k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe
     ///      - EclipseNavigationMesh: Common navigation functionality for daorigins.exe and DragonAge2.exe
     ///      - AuroraNavigationMesh: Common navigation functionality for nwmain.exe and nwn2main.exe
     ///   3. Tier 3 (Game-specific): Game-specific implementations
-    ///      - Kotor1NavigationMesh: swkotor.exe specific function addresses and behavior
-    ///      - Kotor2NavigationMesh: swkotor2.exe specific function addresses and behavior
+    ///      - Kotor1NavigationMesh: k1_win_gog_swkotor.exe specific function addresses and behavior
+    ///      - Kotor2NavigationMesh: k2_win_gog_aspyr_swkotor2.exe specific function addresses and behavior
     ///      - DragonAgeOriginsNavigationMesh: daorigins.exe specific function addresses and behavior
     ///      - DragonAge2NavigationMesh: DragonAge2.exe specific function addresses and behavior
     /// 
     /// Cross-engine navigation system overview:
-    /// - Odyssey Engine (swkotor.exe, swkotor2.exe): BWM walkmesh format
+    /// - Odyssey Engine (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): BWM walkmesh format
     ///   - BWM format: Binary walkmesh format (WOK = area walkmesh, PWK = placeable walkmesh, DWK = door walkmesh)
-    ///   - Located via string references: "BWM V1.0" @ 0x007c061c (swkotor2.exe BWM format signature)
+    ///   - Located via string references: "BWM V1.0" @ 0x007c061c (k2_win_gog_aspyr_swkotor2.exe BWM format signature)
     ///   - Triangle-based mesh for walkable surfaces
     ///   - A* pathfinding algorithm on face adjacency graph
     ///   - Surface material walkability based on surfacemat.2da
@@ -137,8 +137,8 @@ namespace Andastra.Runtime.Core.Interfaces
         /// <remarks>
         /// Obstacle avoidance pathfinding:
         /// - Odyssey Engine: FindPathAroundObstacle function
-        ///   - swkotor.exe: FindPathAroundObstacle @ 0x005d0840 (called from UpdateCreatureMovement @ 0x00516630, line 254)
-        ///   - swkotor2.exe: FindPathAroundObstacle @ 0x0061c390 (called from UpdateCreatureMovement @ 0x0054be70, line 183)
+        ///   - k1_win_gog_swkotor.exe: FindPathAroundObstacle @ 0x005d0840 (called from UpdateCreatureMovement @ 0x00516630, line 254)
+        ///   - k2_win_gog_aspyr_swkotor2.exe: FindPathAroundObstacle @ 0x0061c390 (called from UpdateCreatureMovement @ 0x0054be70, line 183)
         /// - Eclipse Engine: Dynamic obstacle-aware pathfinding with real-time updates
         /// - Aurora Engine: Tile-based obstacle avoidance
         /// </remarks>

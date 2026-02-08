@@ -241,8 +241,8 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
 
             // Initialize lighting system if dynamic lighting is enabled
             // Based on original engine lighting behavior:
-            // - swkotor.exe: Uses OpenGL fixed-function lighting with glLightfv, glEnable(GL_LIGHTING)
-            // - swkotor2.exe: Uses OpenGL fixed-function lighting with glLightfv, glEnable(GL_LIGHTING)
+            // - k1_win_gog_swkotor.exe: Uses OpenGL fixed-function lighting with glLightfv, glEnable(GL_LIGHTING)
+            // - k2_win_gog_aspyr_swkotor2.exe: Uses OpenGL fixed-function lighting with glLightfv, glEnable(GL_LIGHTING)
             // - Original implementation: Supports up to 8 OpenGL lights (GL_MAX_LIGHTS), uses ambient and directional lights
             // - Modern implementation: Uses clustered forward+ lighting for hundreds of dynamic lights
             // - ClusteredLightingSystem: Supports point, spot, directional, and area lights with 3D clustering
@@ -611,13 +611,13 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
         /// the full BackendFactory selection and initialization process.
         /// 
         /// Based on original engine graphics initialization:
-        /// - swkotor.exe: 0x00404250 @ 0x00404250 (main game loop, WinMain equivalent) calls graphics initialization
-        /// - swkotor.exe: 0x0044dab0 @ 0x0044dab0 (OpenGL context creation via wglCreateContext)
-        /// - swkotor2.exe: 0x00404250 @ 0x00404250 (main game loop, WinMain equivalent) calls graphics initialization
-        /// - swkotor2.exe: 0x00461c50 @ 0x00461c50 (OpenGL context creation via wglCreateContext)
+        /// - k1_win_gog_swkotor.exe: 0x00404250 @ 0x00404250 (main game loop, WinMain equivalent) calls graphics initialization
+        /// - k1_win_gog_swkotor.exe: 0x0044dab0 @ 0x0044dab0 (OpenGL context creation via wglCreateContext)
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x00404250 @ 0x00404250 (main game loop, WinMain equivalent) calls graphics initialization
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x00461c50 @ 0x00461c50 (OpenGL context creation via wglCreateContext)
         /// - Original game uses OpenGL for rendering (OPENGL32.DLL, GLU32.DLL) - NOT DirectX
-        /// - Located via string references: "wglCreateContext" @ swkotor.exe:0x0073d2b8, swkotor2.exe:0x007b52cc
-        /// - "wglChoosePixelFormatARB" @ swkotor.exe:0x0073f444, swkotor2.exe:0x007b880c
+        /// - Located via string references: "wglCreateContext" @ k1_win_gog_swkotor.exe:0x0073d2b8, k2_win_gog_aspyr_swkotor2.exe:0x007b52cc
+        /// - "wglChoosePixelFormatARB" @ k1_win_gog_swkotor.exe:0x0073f444, k2_win_gog_aspyr_swkotor2.exe:0x007b880c
         /// - "Graphics Options" @ 0x007b56a8, "BTN_GRAPHICS" @ 0x007d0d8c, "Render Window" @ 0x007b5680
         /// - Original implementation: Creates OpenGL context, sets up pixel format, initializes rendering pipeline
         /// - This implementation: Creates modern graphics backend instances (Vulkan, DirectX 11/12, OpenGL, Metal)

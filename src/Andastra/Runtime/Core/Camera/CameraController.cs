@@ -14,9 +14,9 @@ namespace Andastra.Runtime.Core.Camera
     /// </summary>
     /// <remarks>
     /// KOTOR Camera System:
-    /// - Based on swkotor.exe and swkotor2.exe camera system
-    /// - swkotor.exe (KOTOR 1): Camera system @ 0x004af630 (chase camera update), 0x004b0a20 (camera collision)
-    /// - swkotor2.exe (KOTOR 2): Camera system @ 0x004dcfb0 (chase camera update), 0x004dd1a0 (camera collision)
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe camera system
+    /// - k1_win_gog_swkotor.exe (KOTOR 1): Camera system @ 0x004af630 (chase camera update), 0x004b0a20 (camera collision)
+    /// - k2_win_gog_aspyr_swkotor2.exe (KOTOR 2): Camera system @ 0x004dcfb0 (chase camera update), 0x004dd1a0 (camera collision)
     /// - Located via string references: "camera" @ 0x007b63fc, "CameraID" @ 0x007bd160, "CameraList" @ 0x007bd16c
     /// - "CameraStyle" @ 0x007bd6e0, "CameraAnimation" @ 0x007c3460, "CameraAngle" @ 0x007c3490
     /// - "CameraModel" @ 0x007c3908, "CameraViewAngle" @ 0x007cb940, "Camera" @ 0x007cb350
@@ -145,7 +145,7 @@ namespace Andastra.Runtime.Core.Camera
             _mdlLoader = mdlLoader;
 
             // Default values (KOTOR-style)
-            // Based on swkotor.exe and swkotor2.exe: Y-up coordinate system (Y is vertical axis)
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Y-up coordinate system (Y is vertical axis)
             Mode = CameraMode.Chase;
             Position = new Vector3(0, 5, -10); // Y-up: Y is height, Z is depth
             LookAtPosition = Vector3.Zero;
@@ -173,12 +173,12 @@ namespace Andastra.Runtime.Core.Camera
         /// <summary>
         /// Gets the player entity from the world.
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Player entity lookup for camera reset
-        /// Reverse engineered from swkotor2.exe: When dialogue ends (EndConversation @ 0x007c38e0), camera resets to chase mode following player
+        /// Reverse engineered from k2_win_gog_aspyr_swkotor2.exe: When dialogue ends (EndConversation @ 0x007c38e0), camera resets to chase mode following player
         /// Located via string references: "Player" @ 0x007be628, "PlayerList" @ 0x007bdcf4, "GetPlayerList" @ 0x007bdd00
         /// Original implementation: Returns player entity for camera to follow after dialogue ends
         /// Cross-engine analysis:
-        ///   - swkotor.exe (KOTOR 1): Similar player entity lookup pattern
-        ///   - swkotor2.exe (KOTOR 2): Player entity tagged "Player", stored in module player list
+        ///   - k1_win_gog_swkotor.exe (KOTOR 1): Similar player entity lookup pattern
+        ///   - k2_win_gog_aspyr_swkotor2.exe (KOTOR 2): Player entity tagged "Player", stored in module player list
         ///   - nwmain.exe (Aurora): Player entity via GetFirstPC() NWScript function, similar lookup pattern
         ///   - daorigins.exe/DragonAge2.exe (Eclipse): Player entity tagged "PlayerCharacter" or via GetControlled() function
         ///   - / (Infinity): Player entity via party leader or controlled entity
@@ -746,7 +746,7 @@ namespace Andastra.Runtime.Core.Camera
                 return false;
             }
 
-            // swkotor2.exe: 0x006c6020 (SearchMDLNodeTreeForCameraHook) - Searches MDL node tree for "camerahook" nodes
+            // k2_win_gog_aspyr_swkotor2.exe: 0x006c6020 (SearchMDLNodeTreeForCameraHook) - Searches MDL node tree for "camerahook" nodes
             // Located via string references: "camerahook" @ 0x007c7dac, "camerahook%d" @ 0x007d0448
             // Original implementation:
             //   - Iterates through all nodes in model by index using GetNodeByIndex (0x006c21c0)
@@ -763,7 +763,7 @@ namespace Andastra.Runtime.Core.Camera
             // Implementation: Full MDL node lookup with recursive search, dummy node validation, and world-space transform
 
             // Construct camera hook node name (format: "camerahook{N}")
-            // swkotor2.exe: Format string "camerahook%d" @ 0x007d0448 - Used to construct camera hook node names
+            // k2_win_gog_aspyr_swkotor2.exe: Format string "camerahook%d" @ 0x007d0448 - Used to construct camera hook node names
             string hookNodeName = string.Format("camerahook{0}", hookIndex);
 
             // Try to get MDL model from entity
@@ -907,7 +907,7 @@ namespace Andastra.Runtime.Core.Camera
 
         /// <summary>
         /// Recursively searches for a node by name in the MDL node tree.
-        /// swkotor2.exe: 0x006c6020 (SearchMDLNodeTreeForCameraHook) - Searches MDL node tree recursively
+        /// k2_win_gog_aspyr_swkotor2.exe: 0x006c6020 (SearchMDLNodeTreeForCameraHook) - Searches MDL node tree recursively
         /// Original implementation: Iterates through nodes by index using GetNodeByIndex (0x006c21c0), then calls virtual function at offset 0x10c with node name string to search for child nodes
         /// This implementation uses iterative depth-first search for equivalent behavior with better stack safety
         /// </summary>

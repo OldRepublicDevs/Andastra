@@ -17,7 +17,7 @@ namespace Andastra.Game.Games.Odyssey
     /// Engine Initialization:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00404250 @ 0x00404250 (WinMain equivalent, engine initialization)
     /// - Located via string references: "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58, engine initialization in 0x00404250 @ 0x00404250
-    /// - Cross-engine: Similar functions in swkotor.exe (K1), nwmain.exe (Aurora), daorigins.exe (Eclipse)
+    /// - Cross-engine: Similar functions in k1_win_gog_swkotor.exe (K1), nwmain.exe (Aurora), daorigins.exe (Eclipse)
     /// - Inheritance: BaseEngine (Runtime.Games.Common) implements common engine initialization
     ///   - Odyssey: OdysseyEngine : BaseEngine (Runtime.Games.Odyssey) - Odyssey-specific resource provider (GameResourceProvider wrapping Installation)
     /// - Original implementation: 0x00404250 @ 0x00404250 initializes engine objects, loads configuration (swkotor2.ini), creates game instance

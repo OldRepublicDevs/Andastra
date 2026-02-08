@@ -413,8 +413,8 @@ namespace Andastra.Game.Games.Odyssey.Game
 
 
             // 3. Try bashing: Queue bash door action to repeatedly attack door until destroyed
-            // Based on swkotor.exe and swkotor2.exe: Door bashing system
-            // Located via string references: "gui_mp_bashdp" @ 0x007b5e04, "gui_mp_bashup" @ 0x007b5e14 (swkotor2.exe door bash GUI panels)
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Door bashing system
+            // Located via string references: "gui_mp_bashdp" @ 0x007b5e04, "gui_mp_bashup" @ 0x007b5e14 (k2_win_gog_aspyr_swkotor2.exe door bash GUI panels)
             // Original implementation: If key and lockpicking fail, player can bash door to destroy it
             // Bashing repeatedly applies damage (STR modifier + 1d4) until door HP reaches 0
             // Damage is reduced by door Hardness (minimum 1 damage per hit)

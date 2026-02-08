@@ -278,7 +278,7 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
         /// <param name="shaderSource">HLSL/FX shader source code. Must not be null or empty.</param>
         /// <returns>Compiled shader bytecode, or null if compilation failed.</returns>
         /// <remarks>
-        /// Shader Compilation (swkotor2.exe: 0x0081c228, 0x0081fe20):
+        /// Shader Compilation (k2_win_gog_aspyr_swkotor2.exe: 0x0081c228, 0x0081fe20):
         /// - Original engine: Pre-compiled HLSL/FX shaders embedded in engine, loaded from .fx files
         /// - Original implementation: DirectX 8/9 fixed-function pipeline, minimal programmable shaders
         /// - Vertex program for skinned animations: GPU skinning shader compiled at engine initialization

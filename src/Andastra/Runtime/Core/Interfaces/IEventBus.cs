@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Single implementation: BaseEventBus (Andastra.Game.Games.Common) handles all engines
     ///   - Engine-specific event bus classes (OdysseyEventBus, AuroraEventBus, EclipseEventBus) have been merged
     ///   - All engines use the same BaseEventBus implementation with engine-specific documentation
-    ///   - Odyssey: Based on swkotor.exe/swkotor2.exe event dispatching (0x004dcfb0)
+    ///   - Odyssey: Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe event dispatching (0x004dcfb0)
     ///   - Aurora: Based on nwmain.exe/nwn2main.exe event systems (CServerAIMaster::AddEventDeltaTime)
     ///   - Eclipse: Based on daorigins.exe/DragonAge2.exe event systems (UnrealScript BioEventDispatcher)
     ///   - Infinity: Future implementation will use BaseEventBus
@@ -27,7 +27,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Script events: Heartbeat, OnNotice, Attacked, Damaged, Death, Dialogue, etc.
     /// - Event system decouples components and allows script-driven behavior
     /// - Event routing: Engine-specific implementations route script events to entity handlers
-    ///   - Odyssey: 0x004dcfb0 @ 0x004dcfb0 (swkotor2.exe) routes script events to entity handlers
+    ///   - Odyssey: 0x004dcfb0 @ 0x004dcfb0 (k2_win_gog_aspyr_swkotor2.exe) routes script events to entity handlers
     /// </remarks>
     public interface IEventBus
     {

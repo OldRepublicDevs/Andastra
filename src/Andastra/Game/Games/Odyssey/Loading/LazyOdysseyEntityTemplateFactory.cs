@@ -16,11 +16,11 @@ namespace Andastra.Game.Games.Odyssey.Loading
     ///   but template factory needs module, which isn't loaded until later. This implementation uses lazy-loading to retrieve
     ///   the module from ModuleLoader on-demand when CreateCreatureFromTemplate is called, allowing the factory to be created
     ///   before the module is loaded. This matches the original engine behavior where template creation requires module resources.
-    /// - Based on swkotor.exe and swkotor2.exe entity creation systems
-    /// - Located via string references: "TemplateResRef" @ 0x00747494 (swkotor.exe), "TemplateResRef" @ 0x007bd00c (swkotor2.exe)
-    /// - Template loading: 0x005fb0f0 @ 0x005fb0f0 (swkotor2.exe) loads creature templates from GFF
-    /// - swkotor.exe: 0x0050a350 @ 0x0050a350 loads templates from GIT with TemplateResRef field
-    /// - swkotor2.exe: 0x005261b0 @ 0x005261b0 loads creature templates, 0x005fb0f0 @ 0x005fb0f0 loads template data
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe entity creation systems
+    /// - Located via string references: "TemplateResRef" @ 0x00747494 (k1_win_gog_swkotor.exe), "TemplateResRef" @ 0x007bd00c (k2_win_gog_aspyr_swkotor2.exe)
+    /// - Template loading: 0x005fb0f0 @ 0x005fb0f0 (k2_win_gog_aspyr_swkotor2.exe) loads creature templates from GFF
+    /// - k1_win_gog_swkotor.exe: 0x0050a350 @ 0x0050a350 loads templates from GIT with TemplateResRef field
+    /// - k2_win_gog_aspyr_swkotor2.exe: 0x005261b0 @ 0x005261b0 loads creature templates, 0x005fb0f0 @ 0x005fb0f0 loads template data
     /// - Original implementation: Creates runtime entities from UTC GFF templates
     /// - This implementation wraps EntityFactory to provide Core-compatible interface
     /// - Module is retrieved lazily from ModuleLoader when CreateCreatureFromTemplate is called
@@ -56,8 +56,8 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// - Retrieves current module from ModuleLoader (lazy loading)
         /// - Returns null if module is not loaded
         /// - Uses EntityFactory to load UTC GFF template and create entity
-        /// - Based on swkotor.exe and swkotor2.exe: EntityFactory.CreateCreatureFromTemplate loads UTC GFF and creates entity
-        /// - Located via string references: "TemplateResRef" @ 0x00747494 (swkotor.exe), "TemplateResRef" @ 0x007bd00c (swkotor2.exe)
+        /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: EntityFactory.CreateCreatureFromTemplate loads UTC GFF and creates entity
+        /// - Located via string references: "TemplateResRef" @ 0x00747494 (k1_win_gog_swkotor.exe), "TemplateResRef" @ 0x007bd00c (k2_win_gog_aspyr_swkotor2.exe)
         /// - Original implementation: Loads UTC GFF, reads creature properties, creates entity with components
         /// - Both games use identical template loading mechanism
         /// </remarks>
@@ -81,8 +81,8 @@ namespace Andastra.Game.Games.Odyssey.Loading
             }
 
             // Use EntityFactory to create creature from template
-            // Based on swkotor.exe and swkotor2.exe: EntityFactory.CreateCreatureFromTemplate loads UTC GFF and creates entity
-            // Located via string references: "TemplateResRef" @ 0x00747494 (swkotor.exe), "TemplateResRef" @ 0x007bd00c (swkotor2.exe)
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: EntityFactory.CreateCreatureFromTemplate loads UTC GFF and creates entity
+            // Located via string references: "TemplateResRef" @ 0x00747494 (k1_win_gog_swkotor.exe), "TemplateResRef" @ 0x007bd00c (k2_win_gog_aspyr_swkotor2.exe)
             // Original implementation: Loads UTC GFF, reads creature properties, creates entity with components
             return _entityFactory.CreateCreatureFromTemplate(module, templateResRef, position, facing);
         }

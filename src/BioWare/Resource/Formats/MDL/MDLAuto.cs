@@ -15,7 +15,7 @@ namespace BioWare.Resource.Formats.MDL
     // Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - File Identification section
     public static class MDLAuto
     {
-        // Known function pointers for binary MDL validation (swkotor2.exe: GeometryHeader constants)
+        // Known function pointers for binary MDL validation (k2_win_gog_aspyr_swkotor2.exe: GeometryHeader constants)
         private const uint K1_FUNCTION_POINTER0 = 4273776;
         private const uint K2_FUNCTION_POINTER0 = 4285200;
         private const uint K1_ANIM_FUNCTION_POINTER0 = 4273392;
@@ -120,7 +120,7 @@ namespace BioWare.Resource.Formats.MDL
         /// <summary>
         /// Validates binary MDL file structure.
         /// Checks file header (unused, MDL size, MDX size) and optionally geometry header function pointers.
-        /// Reference: swkotor2.exe: MDLBinaryReader.GeometryHeader constants
+        /// Reference: k2_win_gog_aspyr_swkotor2.exe: MDLBinaryReader.GeometryHeader constants
         /// </summary>
         private static bool ValidateBinaryMdl(object source, int offset)
         {

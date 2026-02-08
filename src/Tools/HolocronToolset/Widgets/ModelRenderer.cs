@@ -123,7 +123,7 @@ namespace HolocronToolset.Widgets
 
         // Create a default material resolver for basic rendering
         // Matching PyKotor implementation: Material resolver creates effects with loaded textures
-        // Original game: swkotor2.exe texture loading and material creation (d3d9.dll @ 0x0080a6c0)
+        // Original game: k2_win_gog_aspyr_swkotor2.exe texture loading and material creation (d3d9.dll @ 0x0080a6c0)
         private Func<string, IBasicEffect> CreateDefaultMaterialResolver()
         {
             return (textureName) =>

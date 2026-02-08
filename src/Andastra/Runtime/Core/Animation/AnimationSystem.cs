@@ -173,8 +173,8 @@ namespace Andastra.Runtime.Core.Animation
         /// <param name="animation">The animation component.</param>
         /// <remarks>
         /// Animation Completion Handler:
-        /// - swkotor.exe: CNWSObject::HandleAnimationComplete @ 0x004eb750 (K1) - Animation completion handler
-        /// - swkotor2.exe: CNWSObject::HandleAnimationComplete @ 0x004eb750 (TSL) - Animation completion handler
+        /// - k1_win_gog_swkotor.exe: CNWSObject::HandleAnimationComplete @ 0x004eb750 (K1) - Animation completion handler
+        /// - k2_win_gog_aspyr_swkotor2.exe: CNWSObject::HandleAnimationComplete @ 0x004eb750 (TSL) - Animation completion handler
         /// - Located via string references: "EVENT_PLAY_ANIMATION" @ 0x007bcd74 (TSL), "EVENT_PLAY_ANIMATION" @ 0x007449bc (K1)
         /// - Original implementation: When non-looping animation completes (AnimationTime >= AnimationDuration):
         ///   1. Fires AnimationCompleteEvent to notify action system (ActionPlayAnimation checks AnimationComplete property)
@@ -207,8 +207,8 @@ namespace Andastra.Runtime.Core.Animation
 
             // Fire animation completion event to notify action system
             // ActionPlayAnimation subscribes to this event or checks AnimationComplete property directly
-            // swkotor.exe: CNWSObject::HandleAnimationComplete @ 0x004eb750 (K1)
-            // swkotor2.exe: CNWSObject::HandleAnimationComplete @ 0x004eb750 (TSL)
+            // k1_win_gog_swkotor.exe: CNWSObject::HandleAnimationComplete @ 0x004eb750 (K1)
+            // k2_win_gog_aspyr_swkotor2.exe: CNWSObject::HandleAnimationComplete @ 0x004eb750 (TSL)
             var animationCompleteEvent = new AnimationCompleteEvent
             {
                 Entity = entity,

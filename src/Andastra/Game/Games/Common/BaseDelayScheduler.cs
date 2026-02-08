@@ -18,8 +18,8 @@ namespace Andastra.Game.Games.Common
     /// have been merged into this base class since their implementations are identical.
     ///
     /// Engine-Specific Details (Documented):
-    /// - Odyssey: Based on swkotor.exe/swkotor2.exe DelayCommand system
-    ///   - "DelayCommand" @ 0x007be900 (swkotor2.exe: NWScript DelayCommand function)
+    /// - Odyssey: Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe DelayCommand system
+    ///   - "DelayCommand" @ 0x007be900 (k2_win_gog_aspyr_swkotor2.exe: NWScript DelayCommand function)
     ///   - Uses game simulation time to track when actions should execute
     ///   - STORE_STATE opcode in NCS VM stores stack/local state for DelayCommand semantics
     /// - Aurora: Based on nwmain.exe DelayCommand system
@@ -68,7 +68,7 @@ namespace Andastra.Game.Games.Common
         /// Common implementation across all engines: Calculate execute time and insert into priority queue.
         ///
         /// Engine-Specific Details:
-        /// - Odyssey: Based on swkotor.exe/swkotor2.exe DelayCommand implementation
+        /// - Odyssey: Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe DelayCommand implementation
         /// - Aurora: Based on nwmain.exe ExecuteCommandDelayCommand @ 0x1405159a0
         ///   - Original converts float seconds to calendar day/time of day, but this implementation uses float time
         /// - Eclipse: Based on daorigins.exe/DragonAge2.exe delay systems (similar to Odyssey)
@@ -100,7 +100,7 @@ namespace Andastra.Game.Games.Common
         /// Common implementation across all engines: Advance time and process due actions.
         ///
         /// Engine-Specific Details:
-        /// - Odyssey: Based on swkotor.exe/swkotor2.exe DelayCommand scheduler implementation
+        /// - Odyssey: Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe DelayCommand scheduler implementation
         ///   - Processes delayed actions in order based on execution time
         ///   - Uses game simulation time to track when actions should execute
         /// - Aurora: Based on nwmain.exe CServerAIMaster event processing

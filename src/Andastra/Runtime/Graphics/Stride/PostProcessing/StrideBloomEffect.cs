@@ -157,7 +157,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Based on Stride shader compilation: Creates shader source code in .sdsl format
         /// and compiles it at runtime using EffectCompiler.
         /// Bright pass shader extracts pixels above threshold for bloom effect.
-        /// Original game: DirectX 8/9 fixed-function pipeline (swkotor2.exe: d3d9.dll @ 0x0080a6c0)
+        /// Original game: DirectX 8/9 fixed-function pipeline (k2_win_gog_aspyr_swkotor2.exe: d3d9.dll @ 0x0080a6c0)
         /// - Original implementation: DirectX fixed-function pipeline, no programmable shaders
         /// - Modern implementation: Uses programmable shaders with Stride's EffectCompiler
         /// </remarks>
@@ -237,7 +237,7 @@ shader BrightPassEffect : ShaderBase
         /// Based on Stride shader compilation: Creates shader source code in .sdsl format
         /// and compiles it at runtime using EffectCompiler.
         /// Blur shader applies separable Gaussian blur in horizontal or vertical direction.
-        /// Original game: DirectX 8/9 fixed-function pipeline (swkotor2.exe: d3d9.dll @ 0x0080a6c0)
+        /// Original game: DirectX 8/9 fixed-function pipeline (k2_win_gog_aspyr_swkotor2.exe: d3d9.dll @ 0x0080a6c0)
         /// - Original implementation: DirectX fixed-function pipeline, no programmable shaders
         /// - Modern implementation: Uses programmable shaders with Stride's EffectCompiler
         /// </remarks>

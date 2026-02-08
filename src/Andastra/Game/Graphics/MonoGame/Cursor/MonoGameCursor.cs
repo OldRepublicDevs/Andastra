@@ -8,7 +8,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics.Cursor
     /// </summary>
     /// <remarks>
     /// MonoGame Cursor Implementation:
-    /// - Based on swkotor.exe and swkotor2.exe cursor system
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe cursor system
     /// - Cursor rendering: Rendered as sprite using SpriteBatch on top of all graphics
     /// - Cursor states: Up (normal) and Down (pressed) textures for visual feedback
     /// - Hotspot: Cursor hotspot determines click point (typically top-left corner or center)

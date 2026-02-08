@@ -27,7 +27,7 @@ namespace Andastra.Game.Graphics.Common.Backends
     /// - Original game graphics system: Primarily DirectX 9 (d3d9.dll @ 0x0080a6c0) or OpenGL (OPENGL32.dll @ 0x00809ce2)
     /// - Located via string references: "Render Window" @ 0x007b5680, "Graphics Options" @ 0x007b56a8
     /// - Original game did not use DirectX 11; this is a modern enhancement for better hardware support
-    /// - This abstraction: Provides DirectX 11 backend for modern Windows systems, not directly mapped to swkotor2.exe functions
+    /// - This abstraction: Provides DirectX 11 backend for modern Windows systems, not directly mapped to k2_win_gog_aspyr_swkotor2.exe functions
     /// </remarks>
     /// <summary>
     /// DirectX 11 backend with optional DXR fallback layer support for software raytracing.

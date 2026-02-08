@@ -14,11 +14,11 @@ namespace Andastra.Game.Games.Odyssey.Game
     /// <remarks>
     /// Odyssey Game Services Context Implementation:
     /// - Inherits from BaseGameServicesContext (Runtime.Games.Common) with Odyssey-specific services
-    /// - Based on swkotor.exe and swkotor2.exe script execution context system
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe script execution context system
     /// - Located via string references: Script execution context provides access to game systems
     /// - Original implementation: NWScript execution context (IExecutionContext) provides access to game services
     /// - Services accessible from scripts: DialogueManager, PlayerEntity, CombatManager, PartyManager, ModuleLoader, UISystem
-    /// - Based on swkotor.exe: Script execution context setup (KOTOR1)
+    /// - Based on k1_win_gog_swkotor.exe: Script execution context setup (KOTOR1)
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 (script execution context setup, KOTOR2)
     /// </remarks>
     internal class GameServicesContext : BaseGameServicesContext

@@ -13,14 +13,14 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
     /// </summary>
     /// <remarks>
     /// Odyssey Dialogue Camera Controller:
-    /// - Based on swkotor.exe and swkotor2.exe dialogue camera system
-    /// - swkotor.exe (KOTOR 1): EndConversation @ 0x0074a7c0, dialogue loading 0x005a2ae0 @ 0x005a2ae0
-    /// - swkotor2.exe (KOTOR 2): EndConversation @ 0x007c38e0, dialogue loading 0x005ea880 @ 0x005ea880
+    /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe dialogue camera system
+    /// - k1_win_gog_swkotor.exe (KOTOR 1): EndConversation @ 0x0074a7c0, dialogue loading 0x005a2ae0 @ 0x005a2ae0
+    /// - k2_win_gog_aspyr_swkotor2.exe (KOTOR 2): EndConversation @ 0x007c38e0, dialogue loading 0x005ea880 @ 0x005ea880
     /// - Located via string references: "CameraAnimation" @ 0x007c3460, "CameraAngle" @ 0x007c3490
     /// - "CameraModel" @ 0x007c3908, "CameraViewAngle" @ 0x007cb940
     /// - Camera hooks: "camerahook" @ 0x007c7dac, "camerahookt" @ 0x007c7da0, "camerahookz" @ 0x007c7db8, "camerahookh" @ 0x007c7dc4
     /// - "CAMERAHOOK" @ 0x007c7f10, "3CCameraHook" @ 0x007ca5ae, "CameraRotate" @ 0x007cb910
-    /// - Reverse engineered functions (swkotor2.exe):
+    /// - Reverse engineered functions (k2_win_gog_aspyr_swkotor2.exe):
     ///   - CGuiInGame::GetCameraAnimationName @ 0x006288f0 - Gets animation name from dialoganimations.2da
     ///   - CGuiInGame::SetDialogAnimations @ 0x006313a0 - Sets camera animations for dialogue
     ///   - CGuiInGame::ResetDialogAnimations @ 0x00631b70 - Resets camera animations
@@ -31,7 +31,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
     /// - Camera animations: Smooth transitions between angles, scripted camera movements
     /// - Camera hooks: Attachment points on models for precise camera positioning
     /// - Camera animation data: Loaded from dialogue entries (CameraAnimation field) and resolved via dialoganimations.2da
-    /// - This implementation matches 1:1 with both swkotor.exe and swkotor2.exe behavior
+    /// - This implementation matches 1:1 with both k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe behavior
     /// </remarks>
     public class OdysseyDialogueCameraController : BaseDialogueCameraController
     {
@@ -50,7 +50,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
 
         /// <summary>
         /// Initializes default camera animations (angles 0-3).
-        /// Based on swkotor.exe and swkotor2.exe: Default camera animation mappings
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Default camera animation mappings
         /// </summary>
         private void InitializeDefaultAnimations()
         {
@@ -97,7 +97,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
 
         /// <summary>
         /// Registers a camera animation with hook support.
-        /// Based on swkotor.exe and swkotor2.exe: Camera animation registration system
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Camera animation registration system
         /// </summary>
         /// <param name="animation">The camera animation to register.</param>
         public void RegisterAnimation(DialogueCameraAnimation animation)
@@ -112,7 +112,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
 
         /// <summary>
         /// Sets the camera to focus on the speaker and listener.
-        /// Based on swkotor.exe and swkotor2.exe: Dialogue camera focus implementation
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Dialogue camera focus implementation
         /// </summary>
         /// <param name="speaker">The speaking entity.</param>
         /// <param name="listener">The listening entity.</param>
@@ -123,7 +123,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
                 return;
             }
 
-            // Based on swkotor.exe and swkotor2.exe: Dialogue camera focus implementation
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Dialogue camera focus implementation
             // Located via string references: "CameraAnimation" @ 0x007c3460, "CameraAngle" @ 0x007c3490
             // Original implementation: Sets camera to dialogue mode with speaker/listener focus
             // Camera defaults to speaker focus angle
@@ -135,12 +135,12 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
 
         /// <summary>
         /// Sets the camera angle.
-        /// Based on swkotor.exe and swkotor2.exe: Camera angle selection
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Camera angle selection
         /// </summary>
         /// <param name="angle">The camera angle index (0 = speaker, 1 = listener, 2 = wide, 3 = over-shoulder).</param>
         public override void SetAngle(int angle)
         {
-            // Based on swkotor.exe and swkotor2.exe: Camera angle selection
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Camera angle selection
             // Located via string references: "CameraAngle" @ 0x007c3490
             // Original implementation: Camera angle index maps to DialogueCameraAngle enum
             DialogueCameraAngle cameraAngle;
@@ -168,7 +168,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
 
         /// <summary>
         /// Sets the camera animation.
-        /// Based on swkotor.exe and swkotor2.exe: Camera animation system with hook support
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Camera animation system with hook support
         /// </summary>
         /// <param name="animId">The camera animation ID.</param>
         public override void SetAnimation(int animId)
@@ -188,7 +188,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
             if (animation.UsesHooks && animation.CameraHookEntity != null)
             {
                 // Use camera hook-based positioning
-                // Based on swkotor.exe and swkotor2.exe: Camera hook positioning for dialogue animations
+                // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Camera hook positioning for dialogue animations
                 // Located via string references: "camerahook" @ 0x007c7dac, "camerahook%d" @ 0x007d0448
                 // Original implementation: Queries MDL model for nodes named "camerahook{N}" and uses their world-space positions
                 IEntity lookAtEntity = animation.LookAtEntity ?? CurrentSpeaker;
@@ -202,7 +202,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
             else
             {
                 // Use fallback angle-based system
-                // Based on swkotor.exe and swkotor2.exe: Fallback to predefined camera angles when hooks are not available
+                // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Fallback to predefined camera angles when hooks are not available
                 // Original implementation: Uses DialogueCameraAngle enum for standard camera positions
                 CameraController.SetDialogueCameraAngle(animation.FallbackAngle);
             }
@@ -210,39 +210,39 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
 
         /// <summary>
         /// Resets the camera to normal gameplay mode.
-        /// Based on swkotor.exe and swkotor2.exe: Camera reset to chase mode after dialogue ends
-        /// Reverse engineered from swkotor.exe:
+        /// Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Camera reset to chase mode after dialogue ends
+        /// Reverse engineered from k1_win_gog_swkotor.exe:
         ///   - EndConversation script execution @ 0x0074a7c0 triggers camera reset
         ///   - Dialogue loading function 0x005a2ae0 @ 0x005a2ae0 loads EndConversation script reference (line 55)
         ///   - Camera reset occurs when dialogue ends (EndConversation script fires)
         ///   - Camera returns to chase mode following player entity
-        /// Reverse engineered from swkotor2.exe:
+        /// Reverse engineered from k2_win_gog_aspyr_swkotor2.exe:
         ///   - EndConversation script execution @ 0x007c38e0 triggers camera reset
         ///   - Dialogue loading function 0x005ea880 @ 0x005ea880 loads EndConversation script reference (line 55)
         ///   - Camera reset occurs when dialogue ends (EndConversation script fires)
         ///   - Camera returns to chase mode following player entity
-        /// Located via string references: "EndConversation" @ 0x0074a7c0 (swkotor.exe), @ 0x007c38e0 (swkotor2.exe)
+        /// Located via string references: "EndConversation" @ 0x0074a7c0 (k1_win_gog_swkotor.exe), @ 0x007c38e0 (k2_win_gog_aspyr_swkotor2.exe)
         /// Original implementation: When dialogue ends, camera resets to chase mode with player as target
-        /// This implementation matches 1:1 with both swkotor.exe and swkotor2.exe behavior
+        /// This implementation matches 1:1 with both k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe behavior
         /// </summary>
         public override void Reset()
         {
             // Get player entity from world via camera controller
-            // Based on swkotor.exe and swkotor2.exe: Player entity lookup for camera reset
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Player entity lookup for camera reset
             // Original implementation: Retrieves player entity and sets camera to chase mode
             IEntity playerEntity = CameraController.GetPlayerEntity();
 
             if (playerEntity != null)
             {
                 // Reset to chase mode following player
-                // Based on swkotor.exe and swkotor2.exe: Camera mode switching to chase mode with player as target
+                // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Camera mode switching to chase mode with player as target
                 // Original implementation: SetChaseMode sets camera to follow player entity
                 CameraController.SetChaseMode(playerEntity);
             }
             else
             {
                 // Fallback to free mode if player entity not found (shouldn't happen in normal gameplay)
-                // Based on swkotor.exe and swkotor2.exe: Fallback behavior when player entity is unavailable
+                // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Fallback behavior when player entity is unavailable
                 // Original implementation: Free mode allows manual camera control if player not found
                 CameraController.SetFreeMode();
             }

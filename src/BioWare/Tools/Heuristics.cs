@@ -48,7 +48,7 @@ namespace BioWare.Tools
             bool[] gaPcChecks = new[]
             {
                 Check("streamwaves"),
-                Check("swkotor.exe"),
+                Check("k1_win_gog_swkotor.exe"),
                 Check("swkotor.ini"),
                 Check("rims"),
                 Check("utils"),
@@ -126,7 +126,7 @@ namespace BioWare.Tools
             bool[] gaK2PcChecks = new[]
             {
                 Check("streamvoice"),
-                Check("swkotor2.exe"),
+                Check("k2_win_gog_aspyr_swkotor2.exe"),
                 Check("swkotor2.ini"),
                 Check("LocalVault"),
                 Check("LocalVault/test.bic"),

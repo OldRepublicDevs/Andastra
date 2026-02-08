@@ -14,7 +14,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Engine-specific implementations provide concrete functionality for their respective engines
     ///
     /// Based on verified components of UI systems across engines:
-    /// - Odyssey (swkotor.exe, swkotor2.exe): GUI panel-based UI system with upgrade screens
+    /// - Odyssey (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe): GUI panel-based UI system with upgrade screens
     /// - Aurora (nwmain.exe): Scene-based GUI system with multiple panel types
     /// - Eclipse (daorigins.exe, DragonAge2.exe): Advanced UI system with crafting and inventory screens
     /// - Infinity (, ): Modern UI system with cinematic overlays

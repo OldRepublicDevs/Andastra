@@ -109,8 +109,8 @@ namespace Andastra.Runtime.Core.Actions
             if (inventory.AddItem(item))
             {
                 // Fire OnAcquireItem script event
-                // swkotor2.exe: DispatchEvent @ 0x004dcfb0 (case 0x19) - EVENT_ACQUIRE_ITEM fires OnAcquireItem script when item is acquired
-                // swkotor.exe: Event dispatching function (case 0x19) - EVENT_ACQUIRE_ITEM fires OnAcquireItem script when item is acquired
+                // k2_win_gog_aspyr_swkotor2.exe: DispatchEvent @ 0x004dcfb0 (case 0x19) - EVENT_ACQUIRE_ITEM fires OnAcquireItem script when item is acquired
+                // k1_win_gog_swkotor.exe: Event dispatching function (case 0x19) - EVENT_ACQUIRE_ITEM fires OnAcquireItem script when item is acquired
                 // Located via string references: "EVENT_ACQUIRE_ITEM" @ 0x007bcbf4 (TSL, case 0x19), "EVENT_ACQUIRE_ITEM" @ 0x007449bc (K1, case 0x19)
                 // "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM" @ 0x007bc8c4 (TSL, 0x13) maps to ScriptEvent.OnAcquireItem
                 // Original implementation: EVENT_ACQUIRE_ITEM (event type 0x19) fires on actor entity when item is successfully picked up

@@ -114,7 +114,7 @@ namespace Andastra.Runtime.Core.Actions
 
                 Vector3 newPosition = transform.Position + direction * moveDistance;
 
-                // Project position to walkmesh surface (matches 0x004f5070 in swkotor2.exe)
+                // Project position to walkmesh surface (matches 0x004f5070 in k2_win_gog_aspyr_swkotor2.exe)
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
                 IArea area = actor.World?.CurrentArea;
                 if (area != null && area.NavigationMesh != null)
@@ -267,8 +267,8 @@ namespace Andastra.Runtime.Core.Actions
         /// - Visual effects (conjhandvfx, conjheadvfx, castgrndvisual) are applied directly from spells.2da
         /// - Full implementation resolves effects through impact scripts and visual effects from spell data
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 (spell casting logic)
-        /// - swkotor2.exe: Spell effect application applies visual effects and executes impact scripts
-        /// - swkotor2.exe: 0x006efe40 handles visual effect loading (castvisual, castgroundvisual)
+        /// - k2_win_gog_aspyr_swkotor2.exe: Spell effect application applies visual effects and executes impact scripts
+        /// - k2_win_gog_aspyr_swkotor2.exe: 0x006efe40 handles visual effect loading (castvisual, castgroundvisual)
         /// - CastGrndVisual @ 0x007c3240, CastSound @ 0x007c3250, CastAnim @ 0x007c32dc
         /// </remarks>
         private void ApplySpellEffects(IEntity caster, IEntity target)
@@ -300,7 +300,7 @@ namespace Andastra.Runtime.Core.Actions
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Visual effects are applied from spells.2da columns
             // Located via string references: "CastHandVisual" @ 0x007c325c, "CastHeadVisual" @ 0x007c326c, "CastGrndVisual" @ 0x007c3240
             // Original implementation: Applies hand, head, and ground visual effects from spells.2da
-            // swkotor2.exe: 0x006efe40 loads castvisual (hand/head) and castgroundvisual effects
+            // k2_win_gog_aspyr_swkotor2.exe: 0x006efe40 loads castvisual (hand/head) and castgroundvisual effects
             if (spell != null)
             {
                 try

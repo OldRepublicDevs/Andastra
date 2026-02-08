@@ -18,7 +18,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Skill requirements: Character skills affect upgrade success (engine-specific)
     ///
     /// Engine-specific implementations:
-    /// - Odyssey (swkotor.exe/swkotor2.exe): Full upgrade screen system with 2DA-based upgrades
+    /// - Odyssey (k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe): Full upgrade screen system with 2DA-based upgrades
     /// - Aurora (nwmain.exe): No upgrade screen system (uses different item modification)
     /// - Eclipse (daorigins.exe/DragonAge2.exe): ItemUpgrade system with GUIItemUpgrade class
     /// - Infinity: No upgrade screen system (uses different item modification)

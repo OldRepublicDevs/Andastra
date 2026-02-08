@@ -819,12 +819,12 @@ namespace Andastra.Runtime.Core.Party
             {
                 // Use template factory to create entity from UTC template
                 // EntityFactory.CreateCreatureFromTemplate loads UTC GFF and creates entity
-                // - K1 (swkotor.exe): CSWSCreature::LoadCreature @ 0x00500350 - Main UTC GFF parser entry point
+                // - K1 (k1_win_gog_swkotor.exe): CSWSCreature::LoadCreature @ 0x00500350 - Main UTC GFF parser entry point
                 //   - Function signature: LoadCreature(CSWSCreature* this, CResGFF* param_1, CResStruct* param_2, int param_3)
                 //   - Called from LoadCreatures @ 0x00504a70 and LoadLimboCreatures @ 0x004c8c70
                 //   - CSWSCreatureStats::ReadStatsFromGff @ 0x00560e60 - Reads creature stats from GFF
                 //   - CSWSCreature::ReadItemsFromGff @ 0x004ffda0 - Reads creature inventory items from GFF
-                // - TSL (swkotor2.exe): LoadCreatureFromTemplate @ 0x005261b0 - Loads creature template from UTC file
+                // - TSL (k2_win_gog_aspyr_swkotor2.exe): LoadCreatureFromTemplate @ 0x005261b0 - Loads creature template from UTC file
                 //   - Calls LoadCreatureTemplateData @ 0x005fb0f0 to load creature data from GFF structure
                 //   - Located via string references: "TemplateResRef" @ 0x007bd00c
                 // Original implementation: Loads UTC GFF, reads creature properties (Tag, FirstName, LastName, Appearance_Type,

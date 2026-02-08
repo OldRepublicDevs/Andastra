@@ -47,13 +47,13 @@ namespace KotorCLI.Commands
             logger.Info("Launch command not yet fully implemented");
             logger.Info("Launch command should:");
             logger.Info("  1. Call install command");
-            logger.Info("  2. Launch KOTOR game executable (swkotor.exe or swkotor2.exe)");
+            logger.Info("  2. Launch KOTOR game executable (k1_win_gog_swkotor.exe or k2_win_gog_aspyr_swkotor2.exe)");
             logger.Info("  3. Pass appropriate command-line arguments to load the module");
 
             // TODO: Implement full launch logic
             // This requires:
             // - Calling install command logic
-            // - Finding game executable (swkotor.exe or swkotor2.exe)
+            // - Finding game executable (k1_win_gog_swkotor.exe or k2_win_gog_aspyr_swkotor2.exe)
             // - Launching game with module parameter
 
             return 0;

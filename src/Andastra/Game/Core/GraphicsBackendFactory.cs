@@ -1,4 +1,5 @@
 using System;
+using Andastra.Game.Graphics.Common.Backends;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Enums;
@@ -19,7 +20,7 @@ namespace Andastra.Game.Core
     /// - This implementation: Factory for creating modern graphics backends (MonoGame, Stride) and original engine backends (OdysseyEngine)
     /// - Note: MonoGame and Stride are modern graphics frameworks, not present in original game
     /// - Original game rendering: DirectX 8/9 fixed-function pipeline
-    /// - OdysseyEngine: Matches original game rendering exactly 1:1 (Kotor1GraphicsBackend for K1, Kotor2GraphicsBackend for K2)
+    /// - OdysseyEngine: Matches original game rendering exactly 1:1 (OdysseyGraphicsBackend with KotorGame.K1 or K2)
     /// </remarks>
     public static class GraphicsBackendFactory
     {
@@ -44,18 +45,7 @@ namespace Andastra.Game.Core
                         {
                             throw new ArgumentException("Game type (K1 or K2) is required when creating OdysseyEngine backend", nameof(gameType));
                         }
-                        if (gameType.Value == KotorGame.K1)
-                        {
-                            return new Kotor1GraphicsBackend();
-                        }
-                        else if (gameType.Value == KotorGame.K2)
-                        {
-                            return new Kotor2GraphicsBackend();
-                        }
-                        else
-                        {
-                            throw new ArgumentException("OdysseyEngine backend only supports K1 or K2 game types", nameof(gameType));
-                        }
+                        return new OdysseyGraphicsBackend(gameType.Value);
                     default:
                         throw new ArgumentException("Unknown graphics backend type: " + backendType, nameof(backendType));
                 }
@@ -68,7 +58,7 @@ namespace Andastra.Game.Core
                 // Fallback to MonoGame
                 try
                 {
-                    return new Graphics.MonoGame.Graphics.MonoGameGraphicsBackend();
+                    return new Andastra.Game.Graphics.MonoGame.Graphics.MonoGameGraphicsBackend();
                 }
                 catch (Exception fallbackEx)
                 {

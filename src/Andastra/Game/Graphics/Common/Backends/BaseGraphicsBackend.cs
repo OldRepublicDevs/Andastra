@@ -20,7 +20,7 @@ namespace Andastra.Game.Graphics.Common.Backends
     /// - Graphics initialization: 0x00404250 @ 0x00404250 (main game loop, WinMain equivalent) handles graphics setup
     /// - Located via string references: "Render Window" @ 0x007b5680, "Graphics Options" @ 0x007b56a8, "2D3DBias" @ 0x007c612c
     /// - Original game graphics device: glClear @ 0x0080a9c0, glViewport @ 0x0080a9d8, glDrawArrays @ 0x0080aab6, glDrawElements @ 0x0080aafe
-    /// - This abstraction: Provides unified interface for modern graphics APIs, not directly mapped to swkotor2.exe functions
+    /// - This abstraction: Provides unified interface for modern graphics APIs, not directly mapped to k2_win_gog_aspyr_swkotor2.exe functions
     /// </remarks>
     public abstract class BaseGraphicsBackend : ILowLevelBackend
     {

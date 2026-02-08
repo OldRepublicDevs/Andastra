@@ -40,7 +40,7 @@ namespace Andastra.Runtime.Games.Common
     /// 
     /// Inheritance Structure:
     /// - BaseTimeManager (this class) - Common functionality only
-    ///   - OdysseyTimeManager : BaseTimeManager (swkotor.exe, swkotor2.exe)
+    ///   - OdysseyTimeManager : BaseTimeManager (k1_win_gog_swkotor.exe, k2_win_gog_aspyr_swkotor2.exe)
     ///   - AuroraTimeManager : BaseTimeManager (nwmain.exe, nwn2main.exe)
     ///   - EclipseTimeManager : BaseTimeManager (daorigins.exe, DragonAge2.exe, , )
     ///   - InfinityTimeManager : BaseTimeManager (.exe, .exe, .exe)
@@ -362,7 +362,7 @@ namespace Andastra.Runtime.Games.Common
         /// <param name="day">Output parameter for the current day number.</param>
         /// <param name="milliseconds">Output parameter for milliseconds since day start (0-86399999).</param>
         /// <remarks>
-        /// Original engine behavior (swkotor2.exe: 0x004db710 @ 0x004db710):
+        /// Original engine behavior (k2_win_gog_aspyr_swkotor2.exe: 0x004db710 @ 0x004db710):
         /// - If paused (offset +0x24 == 1), returns pause day/time from offsets +0x28 and +0x2c
         /// - Otherwise, calculates day and milliseconds from current time system state
         /// - Returns day (int) and milliseconds (uint) since day start
@@ -391,7 +391,7 @@ namespace Andastra.Runtime.Games.Common
         /// <param name="second">Output parameter for second (0-59).</param>
         /// <param name="millisecond">Output parameter for millisecond (0-999).</param>
         /// <remarks>
-        /// Original engine behavior (swkotor2.exe: 0x004db660 @ 0x004db660):
+        /// Original engine behavior (k2_win_gog_aspyr_swkotor2.exe: 0x004db660 @ 0x004db660):
         /// - Line 9: millisecond = totalMilliseconds % 1000
         /// - Line 10: Calculate total seconds = totalMilliseconds / 1000
         /// - Line 11: second = (totalSeconds) % 60
@@ -433,7 +433,7 @@ namespace Andastra.Runtime.Games.Common
         /// <param name="pauseDay">Output parameter for the day when paused.</param>
         /// <param name="pauseTime">Output parameter for the time when paused (milliseconds since day start).</param>
         /// <remarks>
-        /// Original engine behavior (swkotor2.exe: 0x00500290 @ 0x00500290 lines 88-90):
+        /// Original engine behavior (k2_win_gog_aspyr_swkotor2.exe: 0x00500290 @ 0x00500290 lines 88-90):
         /// - Gets pause day from time system object offset +0x28
         /// - Gets pause time from time system object offset +0x2c
         /// 
