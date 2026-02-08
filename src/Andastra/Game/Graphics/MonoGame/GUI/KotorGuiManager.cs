@@ -85,7 +85,31 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         private readonly Runtime.Core.Audio.ISoundPlayer _soundPlayer; // For button click/hover sounds
         private float _guiScale = 1.0f;
         private XnaVector2 _guiOffset = XnaVector2.Zero;
-        private const string ColorFromAlphaOnlyKey = "__color_from_alpha_only__";
+        // Removed: ColorFromAlphaOnlyKey - solid color rendering removed to match observed behavior.
+
+        /// <summary>
+        /// KOTOR native GUI resolution. GUIs are authored at 800x600.
+        /// Reference: reone gui.setResolution(800, 600) in mainmenu.cpp
+        /// Reference: KotOR.js uses 800x600 as base resolution for control positioning.
+        /// </summary>
+        private const int KotorGuiNativeWidth = 800;
+        private const int KotorGuiNativeHeight = 600;
+
+        /// <summary>
+        /// Separate full-screen background texture for the main menu.
+        /// Reference: KotOR.js MainMenu.ts line 44: this.background = '1600x1200back'
+        /// Reference: reone mainmenu.cpp: loadBackground(BackgroundType::Menu)
+        /// </summary>
+        private Texture2D _backgroundTexture;
+
+        /// <summary>
+        /// Tags of controls that represent 3D viewports and should NOT render solid color fallback.
+        /// In the original game, these panels display a live 3D scene.
+        /// </summary>
+        private static readonly HashSet<string> TransparentPanelTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "LBL_3DVIEW", "LBL_3DView", "3DVIEW"
+        };
 
         /// <summary>
         /// Event fired when a GUI checkbox is clicked.
@@ -201,13 +225,28 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                     return false;
                 }
 
-                // Create loaded GUI structure
+                // Detect native GUI resolution from the root control's EXTENT.
+                // KOTOR GUIs are authored at 800x600 (K1) or 800x600 (K2).
+                // Reference: reone gui.setResolution(800, 600) in mainmenu.cpp:60
+                // Reference: KotOR.js uses 800x600 as base resolution
+                int guiNativeWidth = KotorGuiNativeWidth;
+                int guiNativeHeight = KotorGuiNativeHeight;
+                if (gui.Root != null && gui.Root.Size.X > 0 && gui.Root.Size.Y > 0)
+                {
+                    // Some GUIs have root panels smaller than 800x600 - use
+                    // whichever is larger between the root extent and the native res.
+                    guiNativeWidth = Math.Max(KotorGuiNativeWidth, (int)gui.Root.Size.X);
+                    guiNativeHeight = Math.Max(KotorGuiNativeHeight, (int)gui.Root.Size.Y);
+                }
+
+                // Create loaded GUI structure - use the KOTOR native GUI resolution
+                // for proper scaling, NOT the window resolution.
                 var loadedGui = new LoadedGui
                 {
                     Gui = gui,
                     Name = guiName,
-                    Width = width,
-                    Height = height,
+                    Width = guiNativeWidth,
+                    Height = guiNativeHeight,
                     ControlMap = new Dictionary<string, GUIControl>(StringComparer.OrdinalIgnoreCase),
                     ButtonMap = new Dictionary<string, GUIButton>(StringComparer.OrdinalIgnoreCase),
                     CheckBoxMap = new Dictionary<string, GUICheckBox>(StringComparer.OrdinalIgnoreCase)
@@ -229,7 +268,18 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 // Our resource system automatically searches RIM files during resource lookup, so explicit loading is not required
                 // The RIM file contains additional resources (textures, etc.) needed for the menu, which are loaded on-demand
 
-                Console.WriteLine($"[KotorGuiManager] Successfully loaded GUI: {guiName} ({width}x{height}) - {gui.Controls.Count} controls");
+                Console.WriteLine($"[KotorGuiManager] Successfully loaded GUI: {guiName} (native: {guiNativeWidth}x{guiNativeHeight}, window: {width}x{height}) - {gui.Controls.Count} controls");
+
+                // Load separate background texture for main menu.
+                // Reference: KotOR.js MainMenu.ts: this.background = '1600x1200back'
+                // Reference: reone mainmenu.cpp: loadBackground(BackgroundType::Menu)
+                // The original game renders a separate background image behind the GUI controls.
+                if (guiName.IndexOf("MAINMENU", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    guiName.IndexOf("mainmenu", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    LoadMainMenuBackground();
+                }
+
                 return true;
             }
             catch (Exception ex)
@@ -269,6 +319,43 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             _guiOffset = new XnaVector2(offsetX, offsetY);
         }
 
+        /// <summary>
+        /// Loads the main menu background texture.
+        /// Reference: KotOR.js MainMenu.ts: this.background = '1600x1200back'
+        /// Reference: reone mainmenu.cpp: loadBackground(BackgroundType::Menu)
+        /// The original game renders 1600x1200back (K1) behind the GUI.
+        /// </summary>
+        private void LoadMainMenuBackground()
+        {
+            if (_backgroundTexture != null)
+            {
+                return; // Already loaded
+            }
+
+            // Try loading background textures in priority order
+            // K1 uses "1600x1200back", K2 uses different naming
+            string[] backgroundNames = new[]
+            {
+                "1600x1200back",
+                "1024x768back",
+                "800x600back",
+                "load_chargen",
+                "mainmenuback",
+            };
+
+            foreach (string bgName in backgroundNames)
+            {
+                _backgroundTexture = LoadTexture(bgName);
+                if (_backgroundTexture != null)
+                {
+                    Console.WriteLine($"[KotorGuiManager] Loaded main menu background: {bgName} ({_backgroundTexture.Width}x{_backgroundTexture.Height})");
+                    return;
+                }
+            }
+
+            Console.WriteLine("[KotorGuiManager] WARNING: No main menu background texture found");
+        }
+
         private XnaVector2 ToGuiSpace(int mouseX, int mouseY)
         {
             UpdateGuiTransform();
@@ -282,21 +369,9 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             return new XnaVector2(guiX, guiY);
         }
 
-        private bool ShouldRenderSolidColor(GUIControl control, BioWare.Common.Color color)
-        {
-            if (color == null || color.A <= 0)
-            {
-                return false;
-            }
-
-            if (control?.Properties != null && control.Properties.TryGetValue(ColorFromAlphaOnlyKey, out var flag)
-                && flag is bool isAlphaOnly && isAlphaOnly)
-            {
-                return false;
-            }
-
-            return true;
-        }
+        // Removed: ShouldRenderSolidColor - solid color fill rendering removed to match observed game behavior.
+        // In reone, if border.fill texture is missing, nothing is rendered. COLOR is for edge/corner tinting only.
+        // In KotOR.js, borderFillEnabled is set to false when no texture is available.
         /// <summary>
         /// Unloads a GUI from memory.
         /// </summary>
@@ -601,7 +676,10 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         }
 
         /// <summary>
-        /// Renders the current GUI.
+        /// Renders the current GUI with proper background and control layering.
+        /// Rendering order (matching original game):
+        /// 1. Full-screen background texture (e.g., "1600x1200back" for main menu)
+        /// 2. GUI controls from the .gui file (panels, labels, buttons)
         /// </summary>
         /// <param name="gameTime">Current game time.</param>
         public override void Draw(object gameTime)
@@ -612,8 +690,31 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             }
 
             UpdateGuiTransform();
+
+            // Step 1: Render full-screen background texture (if available).
+            // Actual Game behavior: renderBackground: drawImage at (0,0) to (width, height) - NO flipping.
+            // Actual Game behavior: background sprite at z=-5, texture from TextureLoader.tpcLoader.fetch(this.background) - NO flipping.
+            // TPC textures use top-left origin, same as MonoGame/DirectX. No flip needed.
+            if (_backgroundTexture != null)
+            {
+                _spriteBatch.Begin(Microsoft.Xna.Framework.Graphics.SpriteSortMode.Deferred,
+                    Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend,
+                    SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
+                float scaleX = _graphicsDevice.Viewport.Width / (float)_backgroundTexture.Width;
+                float scaleY = _graphicsDevice.Viewport.Height / (float)_backgroundTexture.Height;
+                XnaVector2 bgScale = new XnaVector2(scaleX, scaleY);
+                _spriteBatch.Draw(_backgroundTexture, XnaVector2.Zero, null, XnaColor.White,
+                    0f, XnaVector2.Zero, bgScale, XnaSpriteEffects.None, 0f);
+                _spriteBatch.End();
+            }
+
+            // Step 2: Render GUI controls with scaling transform.
+            // Transform converts from GUI coordinate space (800x600) to viewport pixels.
             Matrix transform = Matrix.CreateScale(_guiScale, _guiScale, 1.0f) * Matrix.CreateTranslation(_guiOffset.X, _guiOffset.Y, 0.0f);
-            _spriteBatch.Begin(Microsoft.Xna.Framework.Graphics.SpriteSortMode.Deferred, Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone, null, transform);
+            _spriteBatch.Begin(Microsoft.Xna.Framework.Graphics.SpriteSortMode.Deferred,
+                Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend,
+                SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone,
+                null, transform);
 
             // Render from Controls list (KOTOR GUIs) or from Root when Controls is empty (some GFF layouts)
             if (_currentGui.Gui.Controls != null && _currentGui.Gui.Controls.Count > 0)
@@ -851,9 +952,12 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             XnaVector2 controlPosition = new XnaVector2(control.Position.X, control.Position.Y) + parentOffset;
             XnaVector2 controlSize = new XnaVector2(control.Size.X, control.Size.Y);
 
-            // Skip rendering if control is outside viewport
+            // Skip rendering if control is outside GUI coordinate space.
+            // Use the GUI native dimensions (e.g., 800x600) for culling, NOT the viewport pixel dimensions.
+            int guiWidth = _currentGui?.Width > 0 ? _currentGui.Width : KotorGuiNativeWidth;
+            int guiHeight = _currentGui?.Height > 0 ? _currentGui.Height : KotorGuiNativeHeight;
             if (controlPosition.X + controlSize.X < 0 || controlPosition.Y + controlSize.Y < 0 ||
-                controlPosition.X > _graphicsDevice.Viewport.Width || controlPosition.Y > _graphicsDevice.Viewport.Height)
+                controlPosition.X > guiWidth || controlPosition.Y > guiHeight)
             {
                 // Still render children in case they're visible
                 if (control.Children != null)
@@ -914,31 +1018,161 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         }
 
         /// <summary>
-        /// Renders a panel control.
+        /// Renders a panel control with proper border rendering (fill, edges, corners).
+        /// Reference: KotOR.js GUIControl.ts buildBorder() - renders fill, 4 edges, 4 corners.
+        /// Reference: reone control.cpp renderBorder() - renders fill with edge/corner transforms.
         /// </summary>
         private void RenderPanel(GUIPanel panel, XnaVector2 position, XnaVector2 size)
         {
-            // Render panel background using border fill texture if available
-            if (panel.Border?.Fill != null && !panel.Border.Fill.IsBlank())
+            // Skip rendering for 3D viewport panels (LBL_3DVIEW) - these show live 3D content.
+            // In original game, these panels render a 3D scene. For now, make them transparent
+            // so the background texture shows through.
+            if (!string.IsNullOrEmpty(panel.Tag) && TransparentPanelTags.Contains(panel.Tag))
+            {
+                return; // Don't render - let background show through
+            }
+
+            float alpha = panel.Alpha;
+            if (alpha <= 0.0f)
+            {
+                return; // Fully transparent panel
+            }
+
+            // When we have a dedicated main-menu background (1600x1200back), do not draw the root panel's fill
+            // so the background texture is not covered by the root's metallic/panel texture (reone setBackground draws first).
+            bool isRootPanel = _currentGui?.Gui?.Root == panel ||
+                               (_currentGui?.Gui?.Controls?.Count > 0 &&
+                                _currentGui.Gui.Controls[0] == panel &&
+                                size.X >= KotorGuiNativeWidth - 10 && size.Y >= KotorGuiNativeHeight - 10);
+            bool skipRootFill = isRootPanel && _backgroundTexture != null;
+
+            // Render panel background using border fill texture if available.
+            // Reference: reone control.cpp renderBorder() - renders fill ONLY when border.fill texture exists.
+            // Reference: KotOR.js GUIControl.ts - sets borderFillEnabled=false when no texture.
+            // CRITICAL: Do NOT render solid color when fill texture is missing. The COLOR field is for
+            // edge/corner tinting only, NOT for solid background fills. Rendering it as solid fill
+            // causes incorrect colored rectangles (e.g., cyan rectangles over the menu).
+            if (!skipRootFill && panel.Border?.Fill != null && !panel.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(panel.Border.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    float alpha = panel.Alpha;
-                    XnaColor tint = Microsoft.Xna.Framework.Color.White * alpha;
-                    _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    XnaColor tint = XnaColor.White * alpha;
+                    int borderDim = panel.Border.Dimension;
+                    // If there's a border dimension, the fill area is inset by that amount
+                    if (borderDim > 0)
+                    {
+                        _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle(
+                            (int)(position.X + borderDim), (int)(position.Y + borderDim),
+                            (int)(size.X - borderDim * 2), (int)(size.Y - borderDim * 2)), tint);
+                    }
+                    else
+                    {
+                        _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle(
+                            (int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    }
                 }
             }
-            else
+            // No solid color fallback - matches reone and KotOR.js behavior.
+
+            // Render border edges and corners
+            RenderBorderEdgesAndCorners(panel.Border, position, size, alpha);
+        }
+
+        /// <summary>
+        /// Renders the edge and corner textures for a border.
+        /// Reference: KotOR.js GUIControl.ts buildBorder() - creates 4 edge + 4 corner planes.
+        /// Reference: reone control.cpp:200-280 renderBorder() - renders fill, edges, corners.
+        ///
+        /// 9-patch layout:
+        /// [TL corner] [Top edge   ] [TR corner]
+        /// [L  edge  ] [Fill       ] [R  edge  ]
+        /// [BL corner] [Bottom edge] [BR corner]
+        /// </summary>
+        private void RenderBorderEdgesAndCorners(GUIBorder border, XnaVector2 position, XnaVector2 size, float alpha)
+        {
+            if (border == null)
             {
-                // Render solid color background if no texture
-                BioWare.Common.Color bgColor = panel.Color;
-                if (ShouldRenderSolidColor(panel, bgColor))
+                return;
+            }
+
+            int dim = border.Dimension;
+            if (dim <= 0)
+            {
+                return; // No border dimension means no edges/corners
+            }
+
+            XnaColor tint = XnaColor.White * alpha;
+
+            // Apply border color tint if specified
+            if (border.Color != null)
+            {
+                tint = new XnaColor(border.Color.R, border.Color.G, border.Color.B, border.Color.A * alpha);
+            }
+
+            // Render corner textures
+            if (border.Corner != null && !border.Corner.IsBlank())
+            {
+                Texture2D cornerTexture = LoadTexture(border.Corner.ToString());
+                if (cornerTexture != null)
                 {
-                    Texture2D pixel = GetPixelTexture();
-                    float alpha = panel.Alpha;
-                    XnaColor tint = new Microsoft.Xna.Framework.Color(bgColor.R, bgColor.G, bgColor.B, (byte)(bgColor.A * alpha));
-                    _spriteBatch.Draw(pixel, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    int cw = dim;
+                    int ch = dim;
+
+                    // Top-left corner (no rotation needed)
+                    _spriteBatch.Draw(cornerTexture,
+                        new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, cw, ch),
+                        null, tint, 0f, XnaVector2.Zero, XnaSpriteEffects.None, 0f);
+
+                    // Top-right corner (flip horizontal)
+                    _spriteBatch.Draw(cornerTexture,
+                        new Microsoft.Xna.Framework.Rectangle((int)(position.X + size.X - cw), (int)position.Y, cw, ch),
+                        null, tint, 0f, XnaVector2.Zero, XnaSpriteEffects.FlipHorizontally, 0f);
+
+                    // Bottom-left corner (flip vertical)
+                    _spriteBatch.Draw(cornerTexture,
+                        new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)(position.Y + size.Y - ch), cw, ch),
+                        null, tint, 0f, XnaVector2.Zero, XnaSpriteEffects.FlipVertically, 0f);
+
+                    // Bottom-right corner (flip both)
+                    _spriteBatch.Draw(cornerTexture,
+                        new Microsoft.Xna.Framework.Rectangle((int)(position.X + size.X - cw), (int)(position.Y + size.Y - ch), cw, ch),
+                        null, tint, 0f, XnaVector2.Zero,
+                        XnaSpriteEffects.FlipHorizontally | XnaSpriteEffects.FlipVertically, 0f);
+                }
+            }
+
+            // Render edge textures
+            if (border.Edge != null && !border.Edge.IsBlank())
+            {
+                Texture2D edgeTexture = LoadTexture(border.Edge.ToString());
+                if (edgeTexture != null)
+                {
+                    int edgeWidth = (int)(size.X - dim * 2);
+                    int edgeHeight = (int)(size.Y - dim * 2);
+                    if (edgeWidth <= 0) edgeWidth = 1;
+                    if (edgeHeight <= 0) edgeHeight = 1;
+
+                    // Top edge (stretched horizontally, at border height)
+                    _spriteBatch.Draw(edgeTexture,
+                        new Microsoft.Xna.Framework.Rectangle((int)(position.X + dim), (int)position.Y, edgeWidth, dim),
+                        tint);
+
+                    // Bottom edge (stretched horizontally, flipped vertically)
+                    _spriteBatch.Draw(edgeTexture,
+                        new Microsoft.Xna.Framework.Rectangle((int)(position.X + dim), (int)(position.Y + size.Y - dim), edgeWidth, dim),
+                        null, tint, 0f, XnaVector2.Zero, XnaSpriteEffects.FlipVertically, 0f);
+
+                    // Left edge - draw the edge texture rotated 90 degrees
+                    // Use source rect and stretch to fill the left edge area
+                    _spriteBatch.Draw(edgeTexture,
+                        new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)(position.Y + dim), dim, edgeHeight),
+                        null, tint, 0f, XnaVector2.Zero, XnaSpriteEffects.None, 0f);
+
+                    // Right edge
+                    _spriteBatch.Draw(edgeTexture,
+                        new Microsoft.Xna.Framework.Rectangle((int)(position.X + size.X - dim), (int)(position.Y + dim), dim, edgeHeight),
+                        null, tint, 0f, XnaVector2.Zero, XnaSpriteEffects.FlipHorizontally, 0f);
                 }
             }
         }
@@ -971,7 +1205,10 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 borderToUse = button.Hilight;
             }
 
-            // Render button background
+            // Render button background fill texture.
+            // Reference: reone control.cpp renderBorder() - only renders fill when texture exists.
+            // Reference: KotOR.js GUIControl.ts - borderFillEnabled=false when no texture.
+            // Do NOT render solid color fallback when no fill texture exists.
             if (borderToUse?.Fill != null && !borderToUse.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(borderToUse.Fill.ToString());
@@ -990,17 +1227,10 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                     _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
-            else
-            {
-                // Render solid color background
-                BioWare.Common.Color bgColor = button.Color;
-                if (ShouldRenderSolidColor(button, bgColor))
-                {
-                    Texture2D pixel = GetPixelTexture();
-                    XnaColor tint = new Microsoft.Xna.Framework.Color(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
-                    _spriteBatch.Draw(pixel, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
-                }
-            }
+            // No solid color fallback - matches reone and KotOR.js behavior.
+
+            // Render border edges and corners for the active border state
+            RenderBorderEdgesAndCorners(borderToUse ?? button.Border, position, size, 1.0f);
 
             // Render button text if available
             if (button.GuiText != null && !string.IsNullOrEmpty(button.GuiText.Text))
@@ -1008,8 +1238,20 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 string text = button.GuiText.Text;
                 BioWare.Common.Color guiTextColor = button.GuiText.Color;
                 XnaColor textColor = guiTextColor != null
-                    ? new Microsoft.Xna.Framework.Color(guiTextColor.R, guiTextColor.G, guiTextColor.B, guiTextColor.A)
-                    : Microsoft.Xna.Framework.Color.White;
+                    ? new XnaColor(guiTextColor.R, guiTextColor.G, guiTextColor.B, guiTextColor.A)
+                    : XnaColor.White;
+
+                // Use highlight text color when button is highlighted
+                if (isHighlighted && button.Hilight != null && button.GuiText.Color != null)
+                {
+                    // Brighten text color on hover for visual feedback
+                    // BioWare Color uses floats 0-1, so brighten by 0.15 in float space
+                    textColor = new XnaColor(
+                        Math.Min(1.0f, guiTextColor.R + 0.15f),
+                        Math.Min(1.0f, guiTextColor.G + 0.15f),
+                        Math.Min(1.0f, guiTextColor.B + 0.15f),
+                        guiTextColor.A);
+                }
 
                 // Load font from button.GuiText.Font ResRef
                 BaseBitmapFont font = button.GuiText.Font != null ? LoadFont(button.GuiText.Font.ToString()) : null;
@@ -1028,20 +1270,44 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         }
 
         /// <summary>
-        /// Renders a label control.
+        /// Renders a label control with border support.
+        /// Labels can have fill textures (for background images like the KOTOR logo),
+        /// border edges/corners, and text.
         /// </summary>
         private void RenderLabel(GUILabel label, XnaVector2 position, XnaVector2 size)
         {
-            // Render label background if it has a border
+            // Skip rendering for 3D viewport labels
+            if (!string.IsNullOrEmpty(label.Tag) && TransparentPanelTags.Contains(label.Tag))
+            {
+                return;
+            }
+
+            float alpha = label.Alpha;
+
+            // Render label background if it has a border fill
             if (label.Border?.Fill != null && !label.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(label.Border.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    XnaColor tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    XnaColor tint = XnaColor.White * alpha;
+                    int borderDim = label.Border.Dimension;
+                    if (borderDim > 0)
+                    {
+                        _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle(
+                            (int)(position.X + borderDim), (int)(position.Y + borderDim),
+                            (int)(size.X - borderDim * 2), (int)(size.Y - borderDim * 2)), tint);
+                    }
+                    else
+                    {
+                        _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle(
+                            (int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    }
                 }
             }
+
+            // Render border edges and corners
+            RenderBorderEdgesAndCorners(label.Border, position, size, alpha);
 
             // Render label text
             if (label.GuiText != null && !string.IsNullOrEmpty(label.GuiText.Text))
@@ -1049,8 +1315,8 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 string text = label.GuiText.Text;
                 BioWare.Common.Color guiTextColor = label.GuiText.Color;
                 XnaColor textColor = guiTextColor != null
-                    ? new Microsoft.Xna.Framework.Color(guiTextColor.R, guiTextColor.G, guiTextColor.B, guiTextColor.A)
-                    : Microsoft.Xna.Framework.Color.White;
+                    ? new XnaColor(guiTextColor.R, guiTextColor.G, guiTextColor.B, guiTextColor.A)
+                    : XnaColor.White;
 
                 // Load font from label.GuiText.Font ResRef
                 BaseBitmapFont font = label.GuiText.Font != null ? LoadFont(label.GuiText.Font.ToString()) : null;
@@ -1335,7 +1601,9 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 borderToUse = protoItem.Hilight;
             }
 
-            // Render proto item background
+            // Render proto item background fill texture.
+            // Reference: reone control.cpp - only renders fill when texture exists.
+            // Do NOT render solid color fallback when no fill texture exists.
             if (borderToUse?.Fill != null && !borderToUse.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(borderToUse.Fill.ToString());
@@ -1354,17 +1622,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                     _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
-            else
-            {
-                // Render solid color background if available
-                BioWare.Common.Color bgColor = protoItem.Color;
-                if (ShouldRenderSolidColor(protoItem, bgColor))
-                {
-                    Texture2D pixel = GetPixelTexture();
-                    XnaColor tint = new XnaColor(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
-                    _spriteBatch.Draw(pixel, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
-                }
-            }
+            // No solid color fallback - matches reone and KotOR.js behavior.
 
             // Render proto item text if available
             if (!string.IsNullOrEmpty(itemText))
@@ -1548,7 +1806,9 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 borderToUse = checkBox.Hilight;
             }
 
-            // Render checkbox background
+            // Render checkbox background fill texture.
+            // Reference: reone control.cpp - only renders fill when texture exists.
+            // Do NOT render solid color fallback when no fill texture exists.
             if (borderToUse?.Fill != null && !borderToUse.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(borderToUse.Fill.ToString());
@@ -1567,17 +1827,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                     _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
-            else
-            {
-                // Render solid color background
-                BioWare.Common.Color bgColor = checkBox.Color;
-                if (ShouldRenderSolidColor(checkBox, bgColor))
-                {
-                    Texture2D pixel = GetPixelTexture();
-                    XnaColor tint = new XnaColor(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
-                    _spriteBatch.Draw(pixel, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
-                }
-            }
+            // No solid color fallback - matches reone and KotOR.js behavior.
 
             // Render checkmark if IsSelected is true
             if (isSelected)
@@ -1988,27 +2238,35 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         }
 
         /// <summary>
-        /// Renders a generic control (fallback).
+        /// Renders a generic control (fallback) with border support.
         /// </summary>
         private void RenderGenericControl(GUIControl control, XnaVector2 position, XnaVector2 size)
         {
-            // Render background if border is available
+            // Skip rendering for 3D viewport controls
+            if (!string.IsNullOrEmpty(control.Tag) && TransparentPanelTags.Contains(control.Tag))
+            {
+                return;
+            }
+
+            float alpha = control.Alpha;
+
+            // Render background if border fill texture is available.
+            // Reference: reone control.cpp - only renders fill when texture exists.
+            // Do NOT render solid color fallback when no fill texture exists.
             if (control.Border?.Fill != null && !control.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(control.Border.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    XnaColor tint = XnaColor.White;
-                    _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    XnaColor tint = XnaColor.White * alpha;
+                    _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle(
+                        (int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
-            else if (control.Color != null && control.Color.A > 0)
-            {
-                // Render solid color background
-                Texture2D pixel = GetPixelTexture();
-                XnaColor tint = new XnaColor(control.Color.R, control.Color.G, control.Color.B, control.Color.A);
-                _spriteBatch.Draw(pixel, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
-            }
+            // No solid color fallback - matches reone and KotOR.js behavior.
+
+            // Render border edges and corners
+            RenderBorderEdgesAndCorners(control.Border, position, size, alpha);
         }
 
         /// <summary>
@@ -2031,23 +2289,27 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
             try
             {
-                // Lookup texture resource (TPC format)
+                // Lookup texture resource (TPC format first, TGA fallback)
+                // Reference: reone textures.cpp - tries TPC first, then TGA
+                // Reference: KotOR.js TextureLoader.ts - tries TPC first, then TGA
                 var resourceResult = _installation.Resources.LookupResource(textureName, ResourceType.TPC, null, null);
                 if (resourceResult == null || resourceResult.Data == null || resourceResult.Data.Length == 0)
                 {
-                    return null;
+                    // TGA fallback - some textures only exist as TGA
+                    resourceResult = _installation.Resources.LookupResource(textureName, ResourceType.TGA, null, null);
+                    if (resourceResult == null || resourceResult.Data == null || resourceResult.Data.Length == 0)
+                    {
+                        return null;
+                    }
                 }
 
-                // Parse TPC from resource data
-                // Based on swkotor.exe and swkotor2.exe: GUI texture loading pattern
-                // Original engine loads TPC textures for GUI elements (buttons, panels, backgrounds)
-                // TPC format: BioWare texture format supporting DXT1/DXT3/DXT5 compression, RGB/RGBA, grayscale
-                // Original implementation: Uses DirectX texture creation APIs (D3DXCreateTextureFromFileInMemory)
-                // This MonoGame implementation: Uses TpcToMonoGameTextureConverter to convert TPC to Texture2D
+                // Parse TPC/TGA from resource data
+                // TPCAuto.ReadTpc handles both TPC and TGA formats
+                // Reference: vendor/reone textures.cpp - loads both TPC and TGA formats
                 TPC tpc = TPCAuto.ReadTpc(resourceResult.Data);
                 if (tpc == null || tpc.Layers.Count == 0 || tpc.Layers[0].Mipmaps.Count == 0)
                 {
-                    Console.WriteLine($"[KotorGuiManager] ERROR: Failed to parse TPC texture: {textureName}");
+                    Console.WriteLine($"[KotorGuiManager] ERROR: Failed to parse texture: {textureName}");
                     return null;
                 }
 
@@ -2055,7 +2317,9 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 // GUI textures are always 2D (not cube maps), so set generateMipmaps to false for better performance
                 // Based on swkotor.exe and swkotor2.exe: GUI textures loaded without mipmaps for immediate rendering
                 // Original engine: DirectX GUI textures created with D3DX_DEFAULT (no mipmap generation for GUI)
-                Texture convertedTexture = TpcToMonoGameTextureConverter.Convert(tpc, _graphicsDevice, false, flipVertical: true, flipHorizontal: true);
+                // Note: Do NOT flip textures - KOTOR uses top-left origin coordinate system (same as MonoGame/DirectX)
+                // Reference: vendor/reone GUI rendering (no texture flipping), vendor/KotOR.js (proper texture orientation)
+                Texture convertedTexture = TpcToMonoGameTextureConverter.Convert(tpc, _graphicsDevice, false, flipVertical: false, flipHorizontal: false);
                 if (convertedTexture is TextureCube)
                 {
                     Console.WriteLine($"[KotorGuiManager] ERROR: GUI texture cannot be a cube map: {textureName}");
@@ -2315,6 +2579,9 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             {
                 _spriteBatch.Dispose();
             }
+
+            // Background texture is in the texture cache, so it will be disposed with the cache
+            _backgroundTexture = null;
 
             // Dispose cached textures
             foreach (var texture in _textureCache.Values)

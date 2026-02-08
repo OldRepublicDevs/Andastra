@@ -569,7 +569,7 @@ namespace Andastra.Game.GUI
             _controlMap["BlendBlendFactorB"] = blendFactorBNumeric;
             var blendFactorANumeric = new NumericUpDown { Value = _settings.BlendBlendFactorA ?? 255, Minimum = 0, Maximum = 255 };
             _controlMap["BlendBlendFactorA"] = blendFactorANumeric;
-            
+
             var rLabel = new TextBlock { Text = "R:" };
             Grid.SetColumn(rLabel, 0);
             blendFactorGrid.Children.Add(rLabel);
@@ -590,7 +590,7 @@ namespace Andastra.Game.GUI
             blendFactorGrid.Children.Add(aLabel);
             Grid.SetColumn(blendFactorANumeric, 14);
             blendFactorGrid.Children.Add(blendFactorANumeric);
-            
+
             stackPanel.Children.Add(CreateLabeledControl("Blend Factor (RGBA):", blendFactorGrid));
 
             // Multi-Sample Mask
@@ -847,7 +847,7 @@ namespace Andastra.Game.GUI
             _controlMap["ContentManagerRootDirectory"] = rootDirTextBox;
             Grid.SetColumn(rootDirTextBox, 0);
             rootDirGrid.Children.Add(rootDirTextBox);
-            
+
             var rootDirBrowseButton = new Button { Content = "Browse..." };
             rootDirBrowseButton.Click += async (sender, e) =>
             {
@@ -860,7 +860,7 @@ namespace Andastra.Game.GUI
             };
             Grid.SetColumn(rootDirBrowseButton, 2);
             rootDirGrid.Children.Add(rootDirBrowseButton);
-            
+
             stackPanel.Children.Add(CreateLabeledControl("Root Directory:", rootDirGrid));
 
             scrollViewer.Content = stackPanel;
@@ -891,7 +891,7 @@ namespace Andastra.Game.GUI
             supportedOrientationsGrid.Children.Add(portraitLabel);
             Grid.SetColumn(portraitCheck, 2);
             supportedOrientationsGrid.Children.Add(portraitCheck);
-            
+
             var landscapeCheck = new CheckBox { IsChecked = _settings.MonoGameSupportedOrientationsLandscape ?? true, Content = "Landscape" };
             _controlMap["MonoGameSupportedOrientationsLandscape"] = landscapeCheck;
             var landscapeLabel = new TextBlock { Text = "Landscape:" };
@@ -899,7 +899,7 @@ namespace Andastra.Game.GUI
             supportedOrientationsGrid.Children.Add(landscapeLabel);
             Grid.SetColumn(landscapeCheck, 6);
             supportedOrientationsGrid.Children.Add(landscapeCheck);
-            
+
             var portraitUpsideDownCheck = new CheckBox { IsChecked = _settings.MonoGameSupportedOrientationsPortraitUpsideDown ?? false, Content = "Portrait Upside Down" };
             _controlMap["MonoGameSupportedOrientationsPortraitUpsideDown"] = portraitUpsideDownCheck;
             var portraitUpsideDownLabel = new TextBlock { Text = "Portrait Upside Down:" };
@@ -907,7 +907,7 @@ namespace Andastra.Game.GUI
             supportedOrientationsGrid.Children.Add(portraitUpsideDownLabel);
             Grid.SetColumn(portraitUpsideDownCheck, 10);
             supportedOrientationsGrid.Children.Add(portraitUpsideDownCheck);
-            
+
             var landscapeLeftCheck = new CheckBox { IsChecked = _settings.MonoGameSupportedOrientationsLandscapeLeft ?? false, Content = "Landscape Left" };
             _controlMap["MonoGameSupportedOrientationsLandscapeLeft"] = landscapeLeftCheck;
             var landscapeLeftLabel = new TextBlock { Text = "Landscape Left:" };
@@ -915,7 +915,7 @@ namespace Andastra.Game.GUI
             supportedOrientationsGrid.Children.Add(landscapeLeftLabel);
             Grid.SetColumn(landscapeLeftCheck, 14);
             supportedOrientationsGrid.Children.Add(landscapeLeftCheck);
-            
+
             var landscapeRightCheck = new CheckBox { IsChecked = _settings.MonoGameSupportedOrientationsLandscapeRight ?? false, Content = "Landscape Right" };
             _controlMap["MonoGameSupportedOrientationsLandscapeRight"] = landscapeRightCheck;
             var landscapeRightLabel = new TextBlock { Text = "Landscape Right:" };
@@ -923,7 +923,7 @@ namespace Andastra.Game.GUI
             supportedOrientationsGrid.Children.Add(landscapeRightLabel);
             Grid.SetColumn(landscapeRightCheck, 18);
             supportedOrientationsGrid.Children.Add(landscapeRightCheck);
-            
+
             stackPanel.Children.Add(CreateLabeledControl("Supported Orientations:", supportedOrientationsGrid));
 
             scrollViewer.Content = stackPanel;
@@ -1019,7 +1019,7 @@ namespace Andastra.Game.GUI
             _controlMap[$"{baseKey}Y"] = yNumeric;
             var zNumeric = new NumericUpDown { Value = (decimal)z, Minimum = 0.0M, Maximum = 1.0M, FormatString = "F3", Increment = 0.001M };
             _controlMap[$"{baseKey}Z"] = zNumeric;
-            
+
             var rLabel = new TextBlock { Text = "R:" };
             Grid.SetColumn(rLabel, 0);
             grid.Children.Add(rLabel);
@@ -1035,7 +1035,7 @@ namespace Andastra.Game.GUI
             grid.Children.Add(bLabel);
             Grid.SetColumn(zNumeric, 10);
             grid.Children.Add(zNumeric);
-            
+
             return grid;
         }
 
@@ -1398,7 +1398,7 @@ namespace Andastra.Game.GUI
             // Do NOT modify _settings - validation should be read-only
             var tempSettings = new GraphicsSettingsData();
             SaveSettingsToObject(tempSettings);
-            
+
             var validationResult = GraphicsSettingsSerializer.Validate(tempSettings);
             if (validationResult.IsValid)
             {
@@ -1427,7 +1427,7 @@ namespace Andastra.Game.GUI
             // Create temporary settings object for validation
             var tempSettings = new GraphicsSettingsData();
             SaveSettingsToObject(tempSettings);
-            
+
             var validationResult = GraphicsSettingsSerializer.Validate(tempSettings);
             if (!validationResult.IsValid)
             {
@@ -1462,19 +1462,19 @@ namespace Andastra.Game.GUI
             };
             var panel = new StackPanel { Margin = new Thickness(20), Spacing = 10 };
             panel.Children.Add(new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap });
-            
+
             var buttonPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Spacing = 10 };
             var yesButton = new Button { Content = "Yes", Width = 80 };
             yesButton.Click += (s, e) => { dialog.Close(true); };
             buttonPanel.Children.Add(yesButton);
-            
+
             var noButton = new Button { Content = "No", Width = 80 };
             noButton.Click += (s, e) => { dialog.Close(false); };
             buttonPanel.Children.Add(noButton);
-            
+
             panel.Children.Add(buttonPanel);
             dialog.Content = panel;
-            
+
             var result = await dialog.ShowDialog<bool>(this);
             return result;
         }
