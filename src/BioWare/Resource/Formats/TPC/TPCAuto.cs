@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Text;
 using BioWare.Common;
-using BioWare.Common;
 using BioWare.Resource;
 
 namespace BioWare.Resource.Formats.TPC
@@ -303,7 +302,7 @@ namespace BioWare.Resource.Formats.TPC
                 {
                     try
                     {
-                        using (var reader = new StreamReader(txiStream, Encoding.ASCII, leaveOpen: true))
+                        using (var reader = new StreamReader(txiStream, Encoding.ASCII, false, 1024, true))
                         {
                             string txiContent = reader.ReadToEnd();
                             loadedTpc.Txi = txiContent;

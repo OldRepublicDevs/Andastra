@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using BioWare.Common;
 using BioWare.Resource.Formats.GFF;
-using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.GFF.Generics;
 using Andastra.Runtime.Content.Interfaces;

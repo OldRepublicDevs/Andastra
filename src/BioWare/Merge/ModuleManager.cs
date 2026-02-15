@@ -7,8 +7,6 @@ using System.Text;
 using BioWare.Common;
 using BioWare.Extract;
 using BioWare.Resource.Formats.GFF;
-using BioWare.Extract;
-using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Tools;
 using JetBrains.Annotations;

@@ -109,8 +109,8 @@ Throughout all transformations (flip, rotate, translate, deep copy), the `Materi
 
 ## Files Involved
 
-- `src/Tools/HolocronToolset/Data/IndoorMap.cs`: Contains `ProcessBwm` method that applies the fix
-- `src/Tools/HolocronToolset/Data/IndoorMap.cs`: Contains `DeepCopyBwm` method that copies walkmesh properties
+- `src/Tools/OdyTools/Data/IndoorMap.cs`: Contains `ProcessBwm` method that applies the fix
+- `src/Tools/OdyTools/Data/IndoorMap.cs`: Contains `DeepCopyBwm` method that copies walkmesh properties
 - `src/Andastra/Runtime/Content/Converters/BwmToNavigationMeshConverter.cs`: Converts BWM to NavigationMesh, checks WalkmeshType to build AABB tree
 - `src/Andastra/Runtime/Core/Navigation/NavigationMesh.cs`: Uses AABB tree for spatial queries
 

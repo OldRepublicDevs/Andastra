@@ -10,7 +10,6 @@ using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Core.Navigation;
 using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
-using Andastra.Game.Games.Common;
 
 namespace Andastra.Game.Games.Odyssey
 {

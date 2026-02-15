@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Andastra\Andastra.csproj" />
+    <ProjectReference Include="..\..\src\BioWare\BioWare.csproj" />
   </ItemGroup>
 
 </Project>

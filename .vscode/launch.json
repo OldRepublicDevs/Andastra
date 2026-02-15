@@ -1,6 +1,12 @@
 {
   "version": "0.2.0",
   "configurations": [
+  {
+    "name": "C#: OdyTools Debug",
+    "type": "dotnet",
+    "request": "launch",
+    "projectPath": "${workspaceFolder}/src/Tools/OdyTools/OdyTools.csproj"
+  },
     {
       "name": ".NET 9.0 Launch NCSDecomp",
       "type": "coreclr",

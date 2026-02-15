@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using BioWare.Common;
 using BioWare.Resource.Formats.GFF;
-using BioWare.Common;
 using BioWare.Resource;
 using JetBrains.Annotations;
 

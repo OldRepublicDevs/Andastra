@@ -1041,7 +1041,7 @@ namespace BioWare.TSLPatcher.Reader
                 string parsedValue = valueStr;
                 if (valueStr.Contains(':'))
                 {
-                    string[] parts = valueStr.Split(':', 2);
+                    string[] parts = valueStr.Split(new[] { ':' }, 2);
                     typeSpecifier = parts[0];
                     parsedValue = parts[1];
                 }
@@ -1737,7 +1737,11 @@ namespace BioWare.TSLPatcher.Reader
                     {
                         hexString = "0" + hexString;
                     }
+#if NET472
+                    value = Net472ConvertExtensions.FromHexString(hexString);
+#else
                     value = Convert.FromHexString(hexString);
+#endif
                 }
                 else
                 {

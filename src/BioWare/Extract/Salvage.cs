@@ -19,7 +19,6 @@ using BioWare.Resource.Formats.TLK;
 using BioWare.Resource.Formats.TPC;
 using BioWare.Resource.Formats.TwoDA;
 using BioWare.Resource.Formats.VIS;
-using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.LYT;
 using BioWare.Resource.Formats.GFF.Generics;

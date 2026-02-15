@@ -1,0 +1,135 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:editors="clr-namespace:OdyTools.Editors"
+        x:Class="OdyTools.Editors.OdyToolGFF"
+        Title="GFF Editor"
+        MinWidth="400" MinHeight="250"
+        Width="668" Height="486">
+    <DockPanel>
+        <!-- Menu Bar -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New" Name="actionNew" />
+                <MenuItem Header="_Open" Name="actionOpen" />
+                <MenuItem Header="_Save" Name="actionSave" HotKey="Ctrl+S" />
+                <MenuItem Header="Save _As" Name="actionSave_As" />
+                <Separator />
+                <MenuItem Header="Revert to _Saved" Name="actionRevert" />
+                <Separator />
+                <MenuItem Header="E_xit" Name="actionExit" />
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="_Undo" Name="actionUndo" HotKey="Ctrl+Z" />
+                <MenuItem Header="_Redo" Name="actionRedo" HotKey="Ctrl+Y" />
+                <Separator />
+                <MenuItem Header="_Find in Tree..." Name="actionFind" HotKey="Ctrl+F" />
+                <MenuItem Header="Use Selection for _Find" Name="actionUseSelectionForFind" HotKey="Ctrl+E" />
+                <MenuItem Header="_Replace in Tree..." Name="actionReplace" HotKey="Ctrl+H" />
+                <MenuItem Header="Find _Next" Name="actionFindNext" HotKey="F3" />
+                <MenuItem Header="Find _Previous" Name="actionFindPrevious" HotKey="Shift+F3" />
+                <MenuItem Header="_Go to Selection" Name="actionGoToSelection" HotKey="Ctrl+J" />
+                <Separator />
+                <MenuItem Header="Move _Up" Name="actionMoveNodeUp" HotKey="Alt+Up" />
+                <MenuItem Header="Move _Down" Name="actionMoveNodeDown" HotKey="Alt+Down" />
+                <MenuItem Header="_Sort Children" Name="actionSortChildren" />
+                <MenuItem Header="Insert Sibling _Before" Name="actionInsertSiblingBefore" />
+                <MenuItem Header="Insert Sibling _After" Name="actionInsertSiblingAfter" />
+                <Separator />
+                <MenuItem Header="_Cut Node" Name="actionCutNode" HotKey="Ctrl+X" />
+                <MenuItem Header="_Copy Node" Name="actionCopyNode" HotKey="Ctrl+C" />
+                <MenuItem Header="_Paste Node" Name="actionPasteNode" HotKey="Ctrl+V" />
+                <MenuItem Header="_Duplicate Node" Name="actionDuplicateNode" />
+                <Separator />
+                <MenuItem Header="E_xpand All" Name="actionExpandAll" />
+                <MenuItem Header="_Collapse All" Name="actionCollapseAll" />
+                <Separator />
+                <MenuItem Header="_Go to Struct ID..." Name="actionGoToStructId" HotKey="Ctrl+G" />
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="Zoom _In" Name="actionZoomIn" HotKey="Ctrl+Plus" />
+                <MenuItem Header="Zoom _Out" Name="actionZoomOut" HotKey="Ctrl+Minus" />
+                <MenuItem Header="_Normal Size" Name="actionZoomNormal" HotKey="Ctrl+0" />
+                <Separator />
+                <MenuItem Header="Search _Actions..." Name="actionSearchActions" HotKey="Ctrl+Shift+P" />
+                <Separator />
+                <MenuItem Header="_Reset Layout" Name="actionResetLayout" />
+            </MenuItem>
+            <MenuItem Header="_Tools">
+                <MenuItem Header="_Convert value..." Name="actionConvertValue" />
+                <MenuItem Header="Set TLK" Name="actionSetTLK" />
+            </MenuItem>
+        </Menu>
+
+        <!-- Main Content + Status bar -->
+        <Grid RowDefinitions="*,Auto">
+        <Grid Name="mainGrid" Grid.Row="0" ColumnDefinitions="2*,*">
+            <!-- Tree View (left) - Tiled-style outline; zoom via FontSize in code-behind -->
+            <Border Grid.Column="0" BorderBrush="#D0D0D0" BorderThickness="0,0,1,0" Padding="4">
+                <TreeView Name="treeView" FontFamily="Courier New" FontSize="12">
+                <TreeView.ItemTemplate>
+                    <TreeDataTemplate DataType="editors:GFFTreeNodeViewModel" ItemsSource="{Binding Children}">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock Text="{Binding KeyDisplay}" FontFamily="Courier New" FontWeight="SemiBold" MinWidth="120" />
+                            <TextBlock Text="{Binding TypeDisplay}" FontFamily="Courier New" Foreground="Gray" MinWidth="80" />
+                            <TextBlock Text="{Binding ValueSummary}" FontFamily="Courier New" Foreground="#606060" TextTrimming="CharacterEllipsis" MaxWidth="200" />
+                        </StackPanel>
+                    </TreeDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+            </Border>
+
+            <!-- Right Panel - Tiled-style Properties dock -->
+            <Grid Name="rightPanel" Grid.Column="1" RowDefinitions="Auto,Auto,*" Margin="0" MinWidth="220">
+                <!-- Properties header (Tiled-style dock title) -->
+                <Border Grid.Row="0" Background="#F0F0F0" BorderBrush="#D0D0D0" BorderThickness="0,0,0,1" Padding="8,6">
+                    <TextBlock Text="Properties" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center" />
+                </Border>
+                <Border Name="fieldBox" Grid.Row="1" BorderBrush="#D0D0D0" BorderThickness="1" Padding="10" Margin="6,6,6,10" IsEnabled="False" Background="#FAFAFA" CornerRadius="2">
+                    <Grid RowDefinitions="Auto,Auto">
+                        <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,5">
+                            <TextBlock Text="Label:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" />
+                            <TextBox Name="labelEdit" Grid.Column="1" MaxLength="16" />
+                        </Grid>
+                        <Grid Grid.Row="1" ColumnDefinitions="Auto,*">
+                            <TextBlock Text="Type:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" />
+                            <ComboBox Name="typeCombo" Grid.Column="1">
+                                <ComboBoxItem Content="UInt8" />
+                                <ComboBoxItem Content="Int8" />
+                                <ComboBoxItem Content="UInt16" />
+                                <ComboBoxItem Content="Int16" />
+                                <ComboBoxItem Content="UInt32" />
+                                <ComboBoxItem Content="Int32" />
+                                <ComboBoxItem Content="UInt64" />
+                                <ComboBoxItem Content="Int64" />
+                                <ComboBoxItem Content="Single" />
+                                <ComboBoxItem Content="Double" />
+                                <ComboBoxItem Content="String" />
+                                <ComboBoxItem Content="ResRef" />
+                                <ComboBoxItem Content="LocalizedString" />
+                                <ComboBoxItem Content="Binary" />
+                                <ComboBoxItem Content="Struct" />
+                                <ComboBoxItem Content="List" />
+                                <ComboBoxItem Content="Vector4" />
+                                <ComboBoxItem Content="Vector3" />
+                            </ComboBox>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- Pages Stack -->
+                <ContentControl Name="pages" Grid.Row="2" Margin="6,0,6,6" />
+            </Grid>
+        </Grid>
+        <!-- Status bar - Tiled-style: left=status text, right=zoom -->
+        <Border Grid.Row="1" Padding="8,4" Background="#E8E8E8" BorderBrush="#D0D0D0" BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Name="statusText" Text="GFF Editor" VerticalAlignment="Center" Grid.Column="0" />
+                <StackPanel Orientation="Horizontal" Spacing="8" Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="Zoom:" VerticalAlignment="Center" Foreground="#606060" Margin="0,0,4,0" />
+                    <ComboBox Name="zoomCombo" MinWidth="72" />
+                </StackPanel>
+            </Grid>
+        </Border>
+        </Grid>
+    </DockPanel>
+</Window>

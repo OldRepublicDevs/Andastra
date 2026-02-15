@@ -5,6 +5,7 @@ using Andastra.Game.Stride.Graphics;
 using JetBrains.Annotations;
 using Stride.Core.Mathematics;
 using StrideGraphics = Stride.Graphics;
+using Stride.Graphics;
 
 namespace Andastra.Game.Stride.GUI
 {
@@ -57,10 +58,10 @@ namespace Andastra.Game.Stride.GUI
     /// </remarks>
     public class StrideMenuRenderer : BaseMenuRenderer
     {
-        private StrideGraphics.GraphicsDevice _graphicsDevice;
-        private StrideGraphics.SpriteBatch _spriteBatch;
-        private StrideGraphics.SpriteFont _font;
-        private global::Stride.Graphics.Texture _whiteTexture;
+        private GraphicsDevice _graphicsDevice;
+        private SpriteBatch _spriteBatch;
+        private SpriteFont _font;
+        private Texture _whiteTexture;
         private bool _isDisposed = false;
         private bool _deferredInit = false;
 
@@ -70,7 +71,7 @@ namespace Andastra.Game.Stride.GUI
         /// <param name="graphicsDevice">The Stride GraphicsDevice to use for rendering.</param>
         /// <param name="font">Optional SpriteFont for text rendering. Can be null.</param>
         /// <exception cref="ArgumentNullException">Thrown if graphicsDevice is null.</exception>
-        public StrideMenuRenderer([NotNull] StrideGraphics.GraphicsDevice graphicsDevice, StrideGraphics.SpriteFont font = null)
+        public StrideMenuRenderer([NotNull] GraphicsDevice graphicsDevice, SpriteFont font = null)
         {
             if (graphicsDevice == null)
             {
@@ -100,17 +101,17 @@ namespace Andastra.Game.Stride.GUI
                 // Create SpriteBatch for 2D rendering (only needs GraphicsDevice, not CommandList)
                 if (_spriteBatch == null)
                 {
-                    _spriteBatch = new global::Stride.Graphics.SpriteBatch(_graphicsDevice);
+                    _spriteBatch = new SpriteBatch(_graphicsDevice);
                 }
 
                 // Create 1x1 white texture for drawing rectangles and backgrounds
                 // Stride Texture.New2D with initial data uses the graphics device internally
                 if (_whiteTexture == null)
                 {
-                    _whiteTexture = global::Stride.Graphics.Texture.New2D(
+                    _whiteTexture = Texture.New2D(
                         _graphicsDevice, 1, 1,
-                        StrideGraphics.PixelFormat.R8G8B8A8_UNorm,
-                        new[] { new Color(255, 255, 255, 255) });
+                        PixelFormat.R8G8B8A8_UNorm,
+                        new[] { new global::Stride.Core.Mathematics.Color(255, 255, 255, 255) });
                 }
 
                 // Initialize base class with viewport dimensions
@@ -213,7 +214,7 @@ namespace Andastra.Game.Stride.GUI
 
                 // Begin sprite batch with proper GraphicsContext (required by Stride API)
                 // Reference: Stride SpriteBatch docs - Begin accepts GraphicsContext, SpriteSortMode, BlendStateDescription
-                _spriteBatch.Begin(graphicsContext, StrideGraphics.SpriteSortMode.Deferred, StrideGraphics.BlendStates.AlphaBlend);
+                _spriteBatch.Begin(graphicsContext, StrideGraphics.SpriteSortMode.Deferred, BlendStates.AlphaBlend);
 
                 try
                 {

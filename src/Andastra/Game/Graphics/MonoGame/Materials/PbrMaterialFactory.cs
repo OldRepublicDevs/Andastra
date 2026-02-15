@@ -4,7 +4,6 @@ using System.Numerics;
 using BioWare.Common;
 using BioWare.Resource.Formats.TPC;
 using BioWare.Extract;
-using BioWare.Common;
 using BioWare.Resource;
 using Andastra.Game.Graphics.MonoGame.Converters;
 using Andastra.Game.Graphics.MonoGame.Enums;

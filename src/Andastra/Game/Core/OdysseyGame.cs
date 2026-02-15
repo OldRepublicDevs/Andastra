@@ -45,7 +45,7 @@ namespace Andastra.Game.Core
     /// </summary>
     /// <remarks>
     /// Odyssey Game Wrapper:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00404250 @ 0x00404250 (WinMain equivalent, initializes game)
+    /// - WinMain / game init (Reva; K1 = k1_win_gog_swkotor.exe, TSL = k2_win_gog_legacypc_swkotor2.exe): K1 WinMain @ 0x004041f0, TSL WinMain @ 0x00404250.
     /// - Original implementation: Initializes engine, creates game session, runs game loop
     /// - Graphics backend: MonoGame (exclusive)
     /// - Game session: Manages all game systems (combat, dialogue, AI, scripts, etc.)

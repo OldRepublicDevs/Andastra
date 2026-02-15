@@ -1,7 +1,5 @@
 using System;
 using System.Linq;
-using System.Text;
-using BioWare.Common;
 using JetBrains.Annotations;
 
 namespace BioWare.Common

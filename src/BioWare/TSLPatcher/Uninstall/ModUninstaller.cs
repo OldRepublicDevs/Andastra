@@ -6,6 +6,7 @@ using System.Linq;
 using BioWare.Common;
 using BioWare.Resource.Formats.TLK;
 using BioWare.TSLPatcher.Logger;
+using BioWare.Utility;
 using BioWare.Utility.System;
 using JetBrains.Annotations;
 
@@ -115,7 +116,7 @@ namespace BioWare.Uninstall
             foreach (string fileStr in existingFiles)
             {
                 var filePath = new CaseAwarePath(fileStr);
-                string relFilePath = Path.GetRelativePath(_gamePath, filePath);
+                string relFilePath = PathHelper.GetRelativePath(_gamePath, filePath);
 
                 if (File.Exists(filePath))
                 {
@@ -133,7 +134,7 @@ namespace BioWare.Uninstall
                     continue;
                 }
 
-                string relativePathFromBackup = Path.GetRelativePath(backupFolder, file);
+                string relativePathFromBackup = PathHelper.GetRelativePath(backupFolder, file);
                 string destinationPath = Path.Combine(_gamePath, relativePathFromBackup);
 
                 // [CanBeNull] Ensure parent directory exists
@@ -145,7 +146,7 @@ namespace BioWare.Uninstall
 
                 File.Copy(file, destinationPath, overwrite: true);
 
-                string relativeToGameParent = Path.GetRelativePath(Path.GetDirectoryName(_gamePath) ?? "", destinationPath);
+                string relativeToGameParent = PathHelper.GetRelativePath(Path.GetDirectoryName(_gamePath) ?? "", destinationPath);
                 _logger.AddNote($"Restoring backup of '{file.Name}' to '{relativeToGameParent}'...");
             }
         }
@@ -238,7 +239,7 @@ namespace BioWare.Uninstall
             {
                 foreach (CaseAwarePath item in filesInBackup)
                 {
-                    string relativePath = Path.GetRelativePath(mostRecentBackupFolder, item);
+                    string relativePath = PathHelper.GetRelativePath(mostRecentBackupFolder, item);
                     _logger.AddNote($"Would restore file '{relativePath}'");
                 }
             }

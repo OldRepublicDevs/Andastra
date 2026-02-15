@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using BioWare.Common;
 using BioWare.Resource.Formats.ERF;
-using BioWare.Common;
 using BioWare.Resource;
 
 namespace BioWare.Extract

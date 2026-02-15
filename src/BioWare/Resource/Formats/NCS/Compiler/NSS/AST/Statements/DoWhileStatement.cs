@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using BioWare.Resource.Formats.NCS.Compiler.NSS.AST;
 using BioWare.Common.Script;
-using BioWare.Resource.Formats.NCS.Compiler.NSS.AST;
 using JetBrains.Annotations;
 
 namespace BioWare.Resource.Formats.NCS.Compiler.NSS.AST.Statements

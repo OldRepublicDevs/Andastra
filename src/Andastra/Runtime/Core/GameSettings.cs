@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Core
 {
@@ -16,13 +17,12 @@ namespace Andastra.Runtime.Core
     /// </summary>
     /// <remarks>
     /// Game Settings:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) game configuration system
+    /// - INI configuration (Reva; K1 = k1_win_gog_swkotor.exe, TSL = k2_win_gog_legacypc_swkotor2.exe): load K1 LoadOptions @ 0x0061dbe0, TSL FUN_00633270 @ 0x00633270; write K1 SaveOptions @ 0x005edf70, TSL FUN_00631ff0 @ 0x00631ff0.
     /// - Located via string references: "swkotor2.ini" @ 0x007b5740, ".\swkotor2.ini" @ 0x007b5644, "config.txt" @ 0x007b5750
     /// - "swkotor.ini" (K1 config file), "DiffSettings" @ 0x007c2cdc (display settings)
     /// - Original implementation: Game settings loaded from INI file (swkotor2.ini for K2, swkotor.ini for K1)
     /// - Settings include: BioWareGame path window size, fullscreen mode, graphics options, audio options
     /// - Command-line arguments override INI file settings
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00633270 @ 0x00633270 (loads configuration from INI file)
     /// </remarks>
     public class GameSettings
     {
@@ -81,7 +81,7 @@ namespace Andastra.Runtime.Core
         /// - Controls how responsive mouse movement is for camera rotation/looking
         /// - Range: 0.0 (no sensitivity) to 1.0 (maximum sensitivity)
         /// - Applied to mouse delta input when processing camera controls
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Mouse input scaling for camera control
+        /// - Mouse input scaling for camera (Reva): K1 LoadOptions @ 0x0061dbe0 loads "Mouse Sensitivity" (string @ 0x0074fab8) into CClientOptions::mouse_sensitivity, SaveOptions @ 0x005edf70 writes it; TSL FUN_0066d6d0 @ 0x0066d6d0 (LoadOptions) loads into this+0x58, FUN_0066a4f0 @ 0x0066a4f0 (SaveOptions) writes it; string "Mouse Sensitivity" @ 0x007c85cc. Scaling applied in free-look/camera code (K1: SetFreeLookCamera @ 0x006413c0, CSWCameraFreeLook).
         /// </remarks>
         public float MouseSensitivity { get; set; } = 0.5f;
 
@@ -120,12 +120,9 @@ namespace Andastra.Runtime.Core
         /// </summary>
         /// <remarks>
         /// Audio Settings:
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) audio configuration system
-        /// - Located via string references: "MusicVolume" @ 0x007c2cdc, "SoundVolume" @ 0x007c2ce0, "VoiceVolume" @ 0x007c2ce4
+        /// - Audio configuration (Reva): K1 LoadOptions @ 0x0061dbe0 reads Sound Options (Music/Voiceover/Sound Effects/Movie Volume), ApplySoundOptions @ 0x0061d1c0 applies volumes; SaveOptions @ 0x005edf70 writes them. TSL FUN_0066d6d0 @ 0x0066d6d0 (LoadOptions) loads volumes into this+0x4d..0x50, FUN_0066cca0 @ 0x0066cca0 (ApplySoundOptions) applies them, FUN_0066a4f0 @ 0x0066a4f0 (SaveOptions) writes. Strings: K1 "Music Volume" @ 0x0074f91c, "Sound Options" @ 0x0073d724; TSL "Music Volume" @ 0x007c83bc, "Sound Options" @ 0x007b5720.
         /// - Original implementation: Audio volumes stored in INI file (swkotor2.ini for K2, swkotor.ini for K1)
         /// - Volume range: 0.0 to 1.0 (0% to 100% in UI)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00631ff0 @ 0x00631ff0 (writes INI values for audio settings)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00633270 @ 0x00633270 (loads audio settings from INI file)
         /// </remarks>
         public AudioSettings Audio { get; set; } = new AudioSettings();
 
@@ -138,8 +135,7 @@ namespace Andastra.Runtime.Core
         /// - Located via string references: "Width" @ 0x007c2cd0, "Height" @ 0x007c2cd4, "Fullscreen" @ 0x007c2cd8
         /// - Original implementation: Graphics settings stored in INI file (swkotor2.ini for K2, swkotor.ini for K1)
         /// - Settings include: Resolution, Fullscreen mode, Texture quality, Shadow quality, Anti-aliasing
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00633270 @ 0x00633270 (loads graphics settings from INI file)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00631ff0 @ 0x00631ff0 (writes graphics settings to INI file)
+        /// - Load INI (graphics): K1 LoadOptions @ 0x0061dbe0, TSL FUN_00633270 @ 0x00633270. Write INI (graphics): K1 SaveOptions @ 0x005edf70, TSL FUN_00631ff0 @ 0x00631ff0.
         /// </remarks>
         public GraphicsSettings Graphics { get; set; } = new GraphicsSettings();
 
@@ -183,7 +179,7 @@ namespace Andastra.Runtime.Core
         /// - Controls automatic pausing of the game under various conditions
         /// - Each setting corresponds to a different autopause trigger
         /// - Original implementation: Stored in INI file as boolean values
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWGuiOptionsMain::OnAutopauseOpt handles autopause menu
+        /// - Autopause menu (Reva): K1 OnAutopause @ 0x006aad10 (CSWGuiInGameOptions), OnAutopauseOpt @ 0x006de2c0 (CSWGuiOptionsMain); TSL autopause flags loaded in FUN_0066d6d0 @ 0x0066d6d0 and saved in FUN_0066a4f0 @ 0x0066a4f0 (section "Autopause Options" @ 0x007c848c). TSL options GUI autopause handling in same options flow (no separate symbol at 0x006de2c0; that offset is inside FUN_006de1e0).
         /// </remarks>
         public class AutopauseSettings
         {
@@ -268,6 +264,11 @@ namespace Andastra.Runtime.Core
             /// Whether anti-aliasing is enabled.
             /// </summary>
             public bool AntiAliasing { get; set; } = true;
+
+            /// <summary>
+            /// Preferred display mode for the launcher path.
+            /// </summary>
+            public DisplayModePreference DisplayMode { get; set; } = DisplayModePreference.BorderlessFullscreen;
         }
 
         /// <summary>
@@ -325,9 +326,8 @@ namespace Andastra.Runtime.Core
         /// - Located via string references: "Feedback" options in main menu, "BTN_FEEDBACK" (feedback button in options menu)
         /// - Original implementation: Various visual/audio feedback options
         /// - Settings stored in INI file (swkotor.ini for K1, swkotor2.ini for K2)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWGuiOptionsMain::OnFeedbackOpt @ 0x006e2df0 (feedback options handler)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00631ff0 @ 0x00631ff0 (writes feedback settings to INI file)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00633270 @ 0x00633270 (loads feedback settings from INI file)
+        /// - Feedback options handler (Reva; K1 = k1_win_gog_swkotor.exe, TSL = k2_win_gog_legacypc_swkotor2.exe): K1 OnFeedback @ 0x006aac90 (CSWGuiInGameOptions), TSL FUN_006e28e0 @ 0x006e28e0 (0x006e2df0 within).
+        /// - Write INI (feedback): K1 SaveOptions @ 0x005edf70, TSL FUN_00631ff0 @ 0x00631ff0. Load INI (feedback): K1 LoadOptions @ 0x0061dbe0, TSL FUN_00633270 @ 0x00633270.
         /// </remarks>
         public FeedbackSettings Feedback { get; set; } = new FeedbackSettings();
 
@@ -341,9 +341,8 @@ namespace Andastra.Runtime.Core
         /// - "keymap" @ 0x007c4cbc (keymap.2da file reference), "Pause" @ 0x007c4de8
         /// - Original implementation: Key bindings stored in keymap.2da, mouse settings in INI file
         /// - Settings stored in INI file (swkotor.ini for K1, swkotor2.ini for K2)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CExoInputInternal input system (exoinputinternal.cpp @ 0x007c64dc)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00631ff0 @ 0x00631ff0 (writes controls settings to INI file)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00633270 @ 0x00633270 (loads controls settings from INI file)
+        /// - Reva: CExoInputInternal input system — K1 CExoInputInternal @ 0x005e1880, GetEvents @ 0x005e24e0; TSL FUN_0062e6a0 (GetEvents) @ 0x0062e6a0. String "exoinputinternal.cpp": K1 @ 0x0074d640, TSL @ 0x007c64dc.
+        /// - Write INI (controls): K1 SaveOptions @ 0x005edf70, TSL FUN_00631ff0 @ 0x00631ff0. Load INI (controls): K1 LoadOptions @ 0x0061dbe0, TSL FUN_00633270 @ 0x00633270.
         /// - Key bindings: All game actions can be rebound (Pause, Cycle Party, Quick Slots, etc.)
         /// - Mouse settings: Sensitivity, invert Y axis, button configuration
         /// </remarks>
@@ -357,7 +356,7 @@ namespace Andastra.Runtime.Core
         /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe feedback system
         /// - Controls visual and audio feedback during gameplay
         /// - Settings stored in INI file (swkotor.ini for K1, swkotor2.ini for K2)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWGuiOptionsMain::OnFeedbackOpt @ 0x006e2df0
+        /// - Feedback options handler: K1 OnFeedback @ 0x006aac90, TSL FUN_006e28e0 @ 0x006e28e0 (Reva).
         /// </remarks>
         public class FeedbackSettings
         {
@@ -447,7 +446,7 @@ namespace Andastra.Runtime.Core
         /// - "keymap" @ 0x007c4cbc (keymap.2da file reference), "Pause" @ 0x007c4de8
         /// - Original implementation: Key bindings stored in keymap.2da, mouse settings in INI file
         /// - Settings stored in INI file (swkotor.ini for K1, swkotor2.ini for K2)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CExoInputInternal input system (exoinputinternal.cpp @ 0x007c64dc)
+        /// - Reva: CExoInputInternal input system — K1 CExoInputInternal @ 0x005e1880, GetEvents @ 0x005e24e0; TSL FUN_0062e6a0 (GetEvents) @ 0x0062e6a0. String "exoinputinternal.cpp": K1 @ 0x0074d640, TSL @ 0x007c64dc.
         /// - Key bindings: All game actions can be rebound (Pause, Cycle Party, Quick Slots, etc.)
         /// - Mouse settings: Sensitivity, invert Y axis, button configuration
         /// - Default key bindings match original KOTOR:
@@ -469,7 +468,7 @@ namespace Andastra.Runtime.Core
             /// - Action names match keymap.2da labels (e.g., "Pause", "CycleParty", "QuickSlot1", etc.)
             /// - Key names use Keys enum names (e.g., "Space", "Tab", "D1", "D2", etc.)
             /// - Original implementation: Key bindings loaded from keymap.2da, can be customized in options menu
-            /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): keymap.2da defines keyboard mappings for different contexts (ingame, GUI, dialog, etc.)
+            /// - Reva: keymap.2da loader — K1 CTwoDimArrays::Load2DArrays_Keymap @ 0x005c2400; TSL FUN_006107c0 @ 0x006107c0. String "keymap": K1 @ 0x0074ba88, TSL @ 0x007c4cbc.
             /// </remarks>
             public Dictionary<string, string> KeyBindings { get; set; } = new Dictionary<string, string>();
 
@@ -482,7 +481,7 @@ namespace Andastra.Runtime.Core
             /// - Action names: "Move", "Attack", "ContextAction", "CameraRotate", "CameraZoom"
             /// - Button names: "Left", "Right", "Middle", "XButton1", "XButton2"
             /// - Original implementation: Mouse buttons can be rebound in options menu
-            /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Reverse Mouse Buttons" @ 0x007c8628 option swaps left/right buttons
+            /// - "Reverse Mouse Buttons" (Reva; K1 = k1_win_gog_swkotor.exe, TSL = k2_win_gog_legacypc_swkotor2.exe): string TSL @ 0x007c8628, K1 @ 0x0074fb28; option handler K1 OnRevMouseButtons @ 0x006dfd10, TSL FUN_0066a4f0 @ 0x0066a4f0 / FUN_0066d6d0 @ 0x0066d6d0.
             /// </remarks>
             public Dictionary<string, string> MouseButtonBindings { get; set; } = new Dictionary<string, string>();
 

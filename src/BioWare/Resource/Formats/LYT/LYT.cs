@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using BioWare.Common;
-using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.GFF;
 using JetBrains.Annotations;

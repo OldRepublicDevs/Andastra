@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using BioWare.Common;
+using BioWare.Utility;
 using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.KEY;
 using BioWare.Resource.Formats.RIM;
-using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.BIF;
 using JetBrains.Annotations;
@@ -749,7 +749,7 @@ namespace BioWare.Tools
                 string bifFilename;
                 try
                 {
-                    string relPath = Path.GetRelativePath(bifDir, bifPath);
+                    string relPath = PathHelper.GetRelativePath(bifDir, bifPath);
                     bifFilename = relPath.Replace("\\", "/");
                 }
                 catch

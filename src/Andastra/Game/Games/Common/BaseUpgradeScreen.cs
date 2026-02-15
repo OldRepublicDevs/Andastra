@@ -7,7 +7,6 @@ using BioWare.Common;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.TwoDA;
 using BioWare.Extract;
-using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.GFF.Generics.UTI;
 using Andastra.Runtime.Core.Enums;

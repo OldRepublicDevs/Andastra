@@ -5,7 +5,6 @@ using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.SSF;
 using BioWare.Resource.Formats.TLK;
 using BioWare.Resource.Formats.TwoDA;
-using BioWare.Common;
 using BioWare.Resource;
 
 namespace BioWare.Tools

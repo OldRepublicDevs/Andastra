@@ -1,10 +1,8 @@
 using System;
 using System.IO;
-using System.Reflection;
-using System.Collections.Generic;
-using SharpCompress;
-using SharpCompress.Compressors;
+#if !NET472
 using SharpCompress.Compressors.LZMA;
+#endif
 
 namespace BioWare.Utility.LZMA
 {
@@ -12,7 +10,7 @@ namespace BioWare.Utility.LZMA
     /// Minimal helper for raw LZMA1 compression/decompression (no headers) matching PyKotor bzf.py (lzma.FORMAT_RAW, FILTER_LZMA1).
     /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/bzf.py:130-134
     /// Original: return lzma.decompress(compressed_data, format=lzma.FORMAT_RAW, filters=[{"id": lzma.FILTER_LZMA1}])
-    /// 
+    ///
     /// Implementation uses SharpCompress for raw LZMA1 format decompression matching Python's lzma.FORMAT_RAW with FILTER_LZMA1.
     /// The properties are fixed for BZF files: lc=3, lp=0, pb=2, dict=8MB (0x5D, 0x00, 0x00, 0x80, 0x00).
     /// </summary>
@@ -32,6 +30,9 @@ namespace BioWare.Utility.LZMA
         /// <exception cref="InvalidDataException">Thrown if decompression fails or size mismatch occurs</exception>
         public static byte[] Decompress(byte[] compressedData, int uncompressedSize)
         {
+#if NET472
+            throw new NotSupportedException("LZMA compression not supported on .NET Framework 4.7.2");
+#else
             if (compressedData == null)
             {
                 throw new ArgumentNullException(nameof(compressedData));
@@ -69,8 +70,87 @@ namespace BioWare.Utility.LZMA
                         ex);
                 }
             }
+#endif
         }
 
+        /// <summary>
+        /// Compresses data using raw LZMA1 format matching PyKotor's compression behavior.
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bif/io_bif.py:233
+        /// Original: compressed: bytes = lzma.compress(resource.data, format=lzma.FORMAT_RAW, filters=_LZMA_RAW_FILTERS)
+        ///
+        /// The output format is raw LZMA1: properties (5 bytes) + compressed data (no container headers).
+        /// Properties are fixed for BZF files: lc=3, lp=0, pb=2, dict=8MB (0x5D, 0x00, 0x00, 0x80, 0x00).
+        /// </summary>
+        /// <param name="uncompressedData">The uncompressed data to compress</param>
+        /// <returns>The compressed LZMA1 data (raw format: properties + compressed data, no container headers)</returns>
+        /// <exception cref="ArgumentNullException">Thrown if input data is null</exception>
+        /// <exception cref="ArgumentException">Thrown if input data is empty</exception>
+        /// <exception cref="InvalidOperationException">Thrown if compression fails</exception>
+        public static byte[] Compress(byte[] uncompressedData)
+        {
+#if NET472
+            throw new NotSupportedException("LZMA compression not supported on .NET Framework 4.7.2");
+#else
+            if (uncompressedData == null)
+            {
+                throw new ArgumentNullException(nameof(uncompressedData));
+            }
+
+            if (uncompressedData.Length == 0)
+            {
+                throw new ArgumentException("Uncompressed data cannot be empty", nameof(uncompressedData));
+            }
+
+            // Use SharpCompress LzmaStream for compression
+            // The properties byte array encodes: lc=3, lp=0, pb=2, dict=8MB (0x5D, 0x00, 0x00, 0x80, 0x00)
+            // Property byte 0: pb*5*9 + lp*9 + lc = 2*45 + 0*9 + 3 = 93 = 0x5D
+            // Property bytes 1-4: Dictionary size in little-endian format (0x00800000 = 8MB = 8388608 bytes)
+            using (MemoryStream inputStream = new MemoryStream(uncompressedData))
+            using (MemoryStream outputStream = new MemoryStream())
+            {
+                // Create LZMA encoder stream with the known properties
+                // For compression, SharpCompress LzmaStream constructor signature is:
+                // LzmaStream(properties, outputStream, uncompressedSize) for compression
+                // Let's try using the properties byte array directly with output stream
+                using (LzmaStream lzmaStream = new LzmaStream(LzmaProperties, outputStream, uncompressedData.Length))
+                {
+                    // Copy input data to LZMA encoder stream
+                    inputStream.CopyTo(lzmaStream);
+                    lzmaStream.Flush();
+                }
+
+                // Get compressed data (properties + compressed data for raw LZMA1 format)
+                byte[] compressedData = outputStream.ToArray();
+
+                // For raw LZMA1 format matching PyKotor, we need: properties (5 bytes) + compressed data
+                // SharpCompress should write: properties (5 bytes) + compressed data
+                // Verify the output starts with our known properties
+                if (compressedData.Length < 5)
+                {
+                    throw new InvalidOperationException("Compressed data is too short to contain properties");
+                }
+
+                // Verify properties match our expected properties (first 5 bytes)
+                for (int i = 0; i < LzmaProperties.Length; i++)
+                {
+                    if (compressedData[i] != LzmaProperties[i])
+                    {
+                        // Properties don't match - replace with our known properties
+                        compressedData[0] = LzmaProperties[0];
+                        compressedData[1] = LzmaProperties[1];
+                        compressedData[2] = LzmaProperties[2];
+                        compressedData[3] = LzmaProperties[3];
+                        compressedData[4] = LzmaProperties[4];
+                        break;
+                    }
+                }
+
+                return compressedData;
+            }
+#endif
+        }
+
+#if !NET472
         /// <summary>
         /// Decompresses using known LZMA properties (standard BZF format).
         /// For raw LZMA1, properties are embedded at the start of the stream, so we skip them.
@@ -281,79 +361,7 @@ namespace BioWare.Utility.LZMA
             Array.Copy(payload, stripped, newLength);
             return stripped;
         }
-
-        /// <summary>
-        /// Compresses data using raw LZMA1 format matching PyKotor's compression behavior.
-        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bif/io_bif.py:233
-        /// Original: compressed: bytes = lzma.compress(resource.data, format=lzma.FORMAT_RAW, filters=_LZMA_RAW_FILTERS)
-        /// 
-        /// The output format is raw LZMA1: properties (5 bytes) + compressed data (no container headers).
-        /// Properties are fixed for BZF files: lc=3, lp=0, pb=2, dict=8MB (0x5D, 0x00, 0x00, 0x80, 0x00).
-        /// </summary>
-        /// <param name="uncompressedData">The uncompressed data to compress</param>
-        /// <returns>The compressed LZMA1 data (raw format: properties + compressed data, no container headers)</returns>
-        /// <exception cref="ArgumentNullException">Thrown if input data is null</exception>
-        /// <exception cref="ArgumentException">Thrown if input data is empty</exception>
-        /// <exception cref="InvalidOperationException">Thrown if compression fails</exception>
-        public static byte[] Compress(byte[] uncompressedData)
-        {
-            if (uncompressedData == null)
-            {
-                throw new ArgumentNullException(nameof(uncompressedData));
-            }
-
-            if (uncompressedData.Length == 0)
-            {
-                throw new ArgumentException("Uncompressed data cannot be empty", nameof(uncompressedData));
-            }
-
-            // Use SharpCompress LzmaStream for compression
-            // The properties byte array encodes: lc=3, lp=0, pb=2, dict=8MB (0x5D, 0x00, 0x00, 0x80, 0x00)
-            // Property byte 0: pb*5*9 + lp*9 + lc = 2*45 + 0*9 + 3 = 93 = 0x5D
-            // Property bytes 1-4: Dictionary size in little-endian format (0x00800000 = 8MB = 8388608 bytes)
-            using (MemoryStream inputStream = new MemoryStream(uncompressedData))
-            using (MemoryStream outputStream = new MemoryStream())
-            {
-                // Create LZMA encoder stream with the known properties
-                // For compression, SharpCompress LzmaStream constructor signature is:
-                // LzmaStream(properties, outputStream, uncompressedSize) for compression
-                // Let's try using the properties byte array directly with output stream
-                using (LzmaStream lzmaStream = new LzmaStream(LzmaProperties, outputStream, uncompressedData.Length))
-                {
-                    // Copy input data to LZMA encoder stream
-                    inputStream.CopyTo(lzmaStream);
-                    lzmaStream.Flush();
-                }
-
-                // Get compressed data (properties + compressed data for raw LZMA1 format)
-                byte[] compressedData = outputStream.ToArray();
-
-                // For raw LZMA1 format matching PyKotor, we need: properties (5 bytes) + compressed data
-                // SharpCompress should write: properties (5 bytes) + compressed data
-                // Verify the output starts with our known properties
-                if (compressedData.Length < 5)
-                {
-                    throw new InvalidOperationException("Compressed data is too short to contain properties");
-                }
-
-                // Verify properties match our expected properties (first 5 bytes)
-                for (int i = 0; i < LzmaProperties.Length; i++)
-                {
-                    if (compressedData[i] != LzmaProperties[i])
-                    {
-                        // Properties don't match - replace with our known properties
-                        compressedData[0] = LzmaProperties[0];
-                        compressedData[1] = LzmaProperties[1];
-                        compressedData[2] = LzmaProperties[2];
-                        compressedData[3] = LzmaProperties[3];
-                        compressedData[4] = LzmaProperties[4];
-                        break;
-                    }
-                }
-
-                return compressedData;
-            }
-        }
+#endif
     }
 }
 

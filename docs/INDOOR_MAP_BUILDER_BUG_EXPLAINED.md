@@ -1,4 +1,4 @@
-# HolocronToolset / Module Walkability Issues
+# OdyTools / Module Walkability Issues
 
 ## Problem 1 — v4 Beta: Complete Immobility
 - Modules generated with the **v4 beta Indoor Map Builder** (K1 or K2)
@@ -19,7 +19,7 @@
 ---
 
 ## Problem 3 — v2.0.4 Conversion Issue: K2 Transition Failure
-- HolocronToolset **v2.0.4**:
+- OdyTools **v2.0.4**:
   - Works correctly for **K1** (walkable, transitions functional)
 - After converting that K1 module to **K2** using **MDLEdit**:
   - Room‑to‑room walkability breaks

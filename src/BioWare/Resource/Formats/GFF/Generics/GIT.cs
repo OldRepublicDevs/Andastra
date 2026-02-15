@@ -4,7 +4,6 @@ using System.Linq;
 using System.Numerics;
 using BioWare.Common;
 using BioWare.Resource.Formats.GFF;
-using BioWare.Common;
 using BioWare.Resource;
 using JetBrains.Annotations;
 
@@ -93,7 +92,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
     /// 
     /// ORIGINAL IMPLEMENTATION:
     /// 
-    /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GIT files are loaded when an area is initialized. The engine reads
+    /// Reva: K1: LoadGIT @ 0x0050dd80, SaveGIT @ 0x0050ba00 ("GIT " @ 0x00747b70). TSL: LoadGIT @ 0x004e9440, SaveGIT @ 0x004e7040. GIT files are loaded when an area is initialized; the engine reads
     /// all instance lists and places objects at their specified positions. Audio properties are
     /// used to set up ambient sounds and music. When the player saves, the current state of all
     /// instances is written back to the GIT file.

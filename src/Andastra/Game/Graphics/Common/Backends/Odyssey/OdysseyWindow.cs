@@ -6,7 +6,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 {
     /// <summary>
     /// Odyssey engine window implementation.
-    /// Wraps native Windows HWND created by OdysseyGraphicsBackend.
+    /// Wraps native Windows HWND created by Kotor1/Kotor2GraphicsBackend.
     /// </summary>
     /// <remarks>
     /// Odyssey Window:
@@ -25,6 +25,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         private bool _isFullscreen;
         private int _width;
         private int _height;
+        private readonly bool _restoreDisplayMode;
         
         #region Windows P/Invoke
         
@@ -114,7 +115,8 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// <param name="width">Window width.</param>
         /// <param name="height">Window height.</param>
         /// <param name="isFullscreen">Whether the window is fullscreen.</param>
-        public OdysseyWindow(IntPtr windowHandle, string title, int width, int height, bool isFullscreen)
+        /// <param name="restoreDisplayMode">Whether to restore the display mode on close.</param>
+        public OdysseyWindow(IntPtr windowHandle, string title, int width, int height, bool isFullscreen, bool restoreDisplayMode)
         {
             _windowHandle = windowHandle;
             _title = title ?? "KOTOR";
@@ -122,6 +124,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             _height = height;
             _isFullscreen = isFullscreen;
             _isMouseVisible = true;
+            _restoreDisplayMode = restoreDisplayMode;
         }
         
         /// <summary>
@@ -229,8 +232,8 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         {
             if (_windowHandle != IntPtr.Zero)
             {
-                // Restore display mode if fullscreen
-                if (_isFullscreen)
+                // Restore display mode if we changed it
+                if (_restoreDisplayMode)
                 {
                     ChangeDisplaySettingsA(IntPtr.Zero, 0);
                 }

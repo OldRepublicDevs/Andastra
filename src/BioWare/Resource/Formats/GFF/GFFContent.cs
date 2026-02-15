@@ -74,6 +74,7 @@ namespace BioWare.Resource.Formats.GFF
             if (lower.EndsWith(".uts")) return GFFContent.UTS;
             if (lower.EndsWith(".utt")) return GFFContent.UTT;
             if (lower.EndsWith(".utw")) return GFFContent.UTW;
+            if (lower.EndsWith(".gui")) return GFFContent.GUI;
             if (lower.EndsWith(".gam")) return GFFContent.GAM;
             if (lower.EndsWith(".cnv")) return GFFContent.CNV;
             return GFFContent.GFF;

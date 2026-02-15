@@ -5,7 +5,6 @@ using System.Numerics;
 using BioWare.Common;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Common.Logger;
-using BioWare.Common;
 using BioWare.Resource;
 
 namespace BioWare.Resource.Formats.GFF.Generics
@@ -310,14 +309,14 @@ namespace BioWare.Resource.Formats.GFF.Generics
             }
 
             // Extract waypoint list - all fields optional
-            // [LoadWaypoint] @ (K1: 0x00505360, TSL: 0x004e04a0) @ [LoadWaypoint2] @ (K1: TODO: Find this address, TSL: 0x0056f5a0)
+            // Reva: [LoadWaypoint list] K1: LoadWaypoints @ 0x00505360, TSL: FUN_004e04a0 @ 0x004e04a0. [LoadWaypoint single] K1: LoadWaypoint (CSWSWaypoint) @ 0x005c7f30, TSL: FUN_0056f5a0 @ 0x0056f5a0.
             var waypointList = root.Acquire("WaypointList", new GFFList());
             foreach (var waypointStruct in waypointList)
             {
                 var waypoint = new GITWaypoint
                 {
-                    // Engine default: Invalid LocalizedString ([LoadWaypoint2] @ (K1: TODO: Find this address, TSL: 0x0056f5a0) line 52-54)
-                    Name = waypointStruct.Acquire("LocalizedName", LocalizedString.FromInvalid()), // Engine default: "" ([LoadWaypoint2] @ (K1: TODO: Find this address, TSL: 0x0056f5a0) line 43)
+                    // Engine default: Invalid LocalizedString (Reva: LoadWaypoint single K1: 0x005c7f30, TSL: 0x0056f5a0 line 52-54)
+                    Name = waypointStruct.Acquire("LocalizedName", LocalizedString.FromInvalid()), // Engine default: "" (Reva: K1: 0x005c7f30, TSL: 0x0056f5a0 line 43)
                     Tag = waypointStruct.Acquire("Tag", ""),
                     // Engine default: "" (not explicitly loaded, but ResRef defaults to blank)
                     ResRef = waypointStruct.Acquire("TemplateResRef", ResRef.FromBlank()),
@@ -330,18 +329,18 @@ namespace BioWare.Resource.Formats.GFF.Generics
                 };
                 if (waypoint.HasMapNote)
                 {
-                    // Engine default: Invalid LocalizedString ([LoadWaypoint2] @ (K1: TODO: Find this address, TSL: 0x0056f5a0) line 84)
+                    // Engine default: Invalid LocalizedString (Reva: K1: 0x005c7f30, TSL: 0x0056f5a0 line 84)
                     waypoint.MapNote = waypointStruct.Acquire("MapNote", LocalizedString.FromInvalid());
-                    // Engine default: 0 (false) [LoadWaypoint] @ (K1: TODO: Find this address, TSL: 0x0056f5a0) line 80
+                    // Engine default: 0 (false) (Reva: K1: 0x005c7f30, TSL: 0x0056f5a0 line 80)
                     waypoint.MapNoteEnabled = waypointStruct.Acquire("MapNoteEnabled", 0) != 0;
                 }
                 else
                 {
                     waypoint.MapNote = null; // Explicitly set to null when HasMapNote is false, matching Python behavior
                 }
-                // Engine default: 0.0 ([LoadWaypoint2] @ (K1: TODO: Find this address, TSL: 0x0056f5a0) line 65)
+                // Engine default: 0.0 (Reva: K1: 0x005c7f30, TSL: 0x0056f5a0 line 65)
                 float rotX = waypointStruct.Acquire("XOrientation", 0.0f);
-                // Engine default: 0.0 ([LoadWaypoint2] @ (K1: TODO: Find this address, TSL: 0x0056f5a0) line 67)
+                // Engine default: 0.0 (Reva: K1: 0x005c7f30, TSL: 0x0056f5a0 line 67)
                 float rotY = waypointStruct.Acquire("YOrientation", 0.0f);
                 if (Math.Abs(rotX) < 1e-6f && Math.Abs(rotY) < 1e-6f)
                 {

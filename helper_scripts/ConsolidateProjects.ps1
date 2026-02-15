@@ -441,7 +441,7 @@ Write-Host "`n=== Renaming Test Projects ===" -ForegroundColor Cyan
 
 $renames = @{
     "src\Tests\KotorDiff.Tests\KotorDiff.NET.Tests.csproj" = "src\Tests\KotorDiff.Tests\KotorDiff.Tests.csproj"
-    "src\Tests\HolocronToolset.Tests\HolocronToolset.NET.Tests.csproj" = "src\Tests\HolocronToolset.Tests\HolocronToolset.Tests.csproj"
+    "tests\OdyTools.Tests\OdyTools.NET.Tests.csproj" = "tests\OdyTools.Tests\OdyTools.Tests.csproj"
 }
 
 foreach ($oldPath in $renames.Keys) {

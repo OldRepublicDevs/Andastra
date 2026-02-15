@@ -1,8 +1,4 @@
-using BioWare;
-using BioWare.Common;
-using BioWare.Resource.Formats.GFF;
-using BioWare.Common;
-using BioWare.Resource;
+﻿using BioWare.Common;
 
 namespace BioWare.Resource.Formats.GFF.Generics
 {
@@ -11,29 +7,29 @@ namespace BioWare.Resource.Formats.GFF.Generics
     /// </summary>
     /// <remarks>
     /// WHAT IS IFOHELPERS?
-    /// 
+    ///
     /// IFOHelpers is a helper class that converts between GFF (Generic File Format) files and
     /// IFO (Module Info) objects. IFO files are stored as GFF files, so these helpers extract
     /// the IFO data from the GFF structure and convert IFO objects back into GFF format.
-    /// 
+    ///
     /// WHAT ARE THE MAIN FUNCTIONS?
-    /// 
+    ///
     /// 1. ConstructIfo: Converts a GFF file into an IFO object
     ///    - Reads all fields from the GFF structure
     ///    - Creates an IFO object with all the module information
     ///    - Handles default values when fields are missing
-    /// 
+    ///
     /// 2. DismantleIfo: Converts an IFO object into a GFF file
     ///    - Takes an IFO object and creates a GFF structure
     ///    - Writes all fields to the GFF structure
     ///    - Handles game-specific differences (K1 vs K2)
-    /// 
+    ///
     /// HOW DOES CONSTRUCTIFO WORK?
-    /// 
+    ///
     /// STEP 1: Create New IFO Object
     /// - Creates an empty IFO object
     /// - Gets the root GFF structure
-    /// 
+    ///
     /// STEP 2: Extract Basic Fields
     /// - Reads Mod_ID (16-byte unique identifier)
     /// - Reads Mod_Name (module display name)
@@ -41,35 +37,35 @@ namespace BioWare.Resource.Formats.GFF.Generics
     /// - Reads Mod_Entry_Area (starting area)
     /// - Reads Mod_Entry_X/Y/Z (entry position)
     /// - Reads Mod_Entry_Dir_X/Y (entry direction)
-    /// 
+    ///
     /// STEP 3: Extract Script Hooks
     /// - Reads all script hook fields (OnClientEnter, OnHeartbeat, etc.)
     /// - Each script hook is a ResRef pointing to an NCS file
-    /// 
+    ///
     /// STEP 4: Extract Area List
     /// - Reads Mod_Area_list (list of all areas in the module)
     /// - Each area is a ResRef pointing to an ARE file
-    /// 
+    ///
     /// STEP 5: Extract Time Settings
     /// - Reads Mod_DawnHour, Mod_DuskHour (day/night transition times)
     /// - Reads Mod_MinPerHour (time scale)
     /// - Reads Mod_StartMonth/Day/Hour/Year (module start time)
-    /// 
+    ///
     /// STEP 6: Extract Other Fields
     /// - Reads Mod_Description (module description)
     /// - Reads Mod_Version (module version number)
     /// - Reads Expansion_Pack (expansion pack requirement)
     /// - Reads Mod_XPScale (experience point scaling)
-    /// 
+    ///
     /// STEP 7: Return IFO Object
     /// - Returns the complete IFO object with all data
-    /// 
+    ///
     /// HOW DOES DISMANTLEIFO WORK?
-    /// 
+    ///
     /// STEP 1: Create New GFF File
     /// - Creates a new GFF file with IFO content type
     /// - Gets the root GFF structure
-    /// 
+    ///
     /// STEP 2: Write Basic Fields
     /// - Writes Mod_ID (16-byte unique identifier)
     /// - Writes Mod_Name (module display name)
@@ -77,52 +73,52 @@ namespace BioWare.Resource.Formats.GFF.Generics
     /// - Writes Mod_Entry_Area (starting area)
     /// - Writes Mod_Entry_X/Y/Z (entry position)
     /// - Writes Mod_Entry_Dir_X/Y (entry direction, calculated from angle)
-    /// 
+    ///
     /// STEP 3: Write Script Hooks
     /// - Writes all script hook fields (OnClientEnter, OnHeartbeat, etc.)
-    /// 
+    ///
     /// STEP 4: Write Area List
     /// - Writes Mod_Area_list (list of all areas in the module)
-    /// 
+    ///
     /// STEP 5: Write Time Settings
     /// - Writes Mod_DawnHour, Mod_DuskHour
     /// - Writes Mod_MinPerHour
     /// - Writes Mod_StartMonth/Day/Hour/Year
-    /// 
+    ///
     /// STEP 6: Write Other Fields
     /// - Writes Mod_Description
     /// - Writes Mod_Version
     /// - Writes Expansion_Pack
     /// - Writes Mod_XPScale
-    /// 
+    ///
     /// STEP 7: Return GFF File
     /// - Returns the complete GFF file that can be saved to disk
-    /// 
+    ///
     /// DEFAULT VALUES:
-    /// 
+    ///
     /// When reading a GFF file, if a field is missing, the helper uses default values that
     /// match the original game engine's behavior. For example:
     /// - Mod_ID defaults to 16 zero bytes
     /// - Entry position defaults to (0, 0, 0)
     /// - Entry direction defaults to (1, 0, 0) if Mod_Entry_Dir_Y is missing
     /// - Script hooks default to blank ResRef (no script)
-    /// 
+    ///
     /// These defaults are verified against the original game engine's loading functions.
-    /// 
+    ///
     /// GAME-SPECIFIC DIFFERENCES:
-    /// 
+    ///
     /// Some fields are only present in KotOR 2 (K2), not in KotOR 1 (K1):
     /// - Mod_OnPlrCancelCutscene: Only in K2
     /// - Mod_VO_ID: Only in K2
-    /// 
+    ///
     /// The DismantleIfo function handles these differences based on the game parameter.
-    /// 
+    ///
     /// ORIGINAL IMPLEMENTATION:
-    /// 
-    /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): The original engine loads IFO files by reading GFF structures.
+    ///
+    /// Reva: K1: LoadModuleStart @ 0x004c9050, CResIFO/"IFO " @ 0x00745330. TSL: LoadModuleStart @ 0x00501fa0. The original engine loads IFO files by reading GFF structures.
     /// The ConstructIfo function matches the engine's loading behavior, using the same field
     /// names and default values.
-    /// 
+    ///
     /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/ifo.py
     /// Original: construct_ifo and dismantle_ifo functions
     /// </remarks>
@@ -135,17 +131,17 @@ namespace BioWare.Resource.Formats.GFF.Generics
         /// <returns>An IFO object with all module information extracted from the GFF</returns>
         /// <remarks>
         /// WHAT THIS FUNCTION DOES:
-        /// 
+        ///
         /// This function reads all the module information from a GFF file and creates an IFO
         /// object. It extracts entry points, script hooks, area lists, time settings, and all
         /// other module metadata.
-        /// 
+        ///
         /// HOW IT WORKS:
-        /// 
+        ///
         /// The function reads fields from the GFF root structure using field names that match
         /// the original game engine. If a field is missing, it uses default values that match
         /// the engine's behavior. This ensures compatibility with existing IFO files.
-        /// 
+        ///
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/ifo.py:127-182
         /// Original: def construct_ifo(gff: GFF) -> IFO:
         /// Engine references: k2_win_gog_aspyr_swkotor2.exe:0x00501fa0, k1_win_gog_swkotor.exe:0x004c9050
@@ -393,13 +389,13 @@ namespace BioWare.Resource.Formats.GFF.Generics
         /// - Line 98: Writes Mod_StartMiliSec (UInt16) - current game time millisecond component
         /// - Line 99: Writes Mod_PauseDay (UInt32) - pause day from time system object +0x28
         /// - Line 100: Writes Mod_PauseTime (UInt32) - pause time from time system object +0x2c
-        /// 
+        ///
         /// This function matches the original engine's IFO serialization behavior exactly:
         /// 1. Gets current game time as day + milliseconds from time manager
         /// 2. Converts milliseconds to hour/minute/second/millisecond components
         /// 3. Gets pause day/time from time manager
         /// 4. Populates IFO object with StartMinute, StartSecond, StartMiliSec, PauseDay, PauseTime
-        /// 
+        ///
         /// The IFO object should then be serialized using DismantleIfo to create the GFF file.
         /// </remarks>
         // TODO: STUB - ITimeManager interface should be defined in BioWare to avoid Andastra dependency
@@ -423,7 +419,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
             // 2. Use reflection to access GameTimeHour, GameTimeMinute, GameTimeSecond, GameTimeMillisecond properties
             // 3. Use reflection to call GetGameTimeDayAndMilliseconds and GetPauseDayAndTime methods
             // 4. Implement ConvertMillisecondsToTimeComponents as a static helper in BioWare.Common
-            
+
             // For now, set default values to allow compilation
             ifo.StartMinute = 0;
             ifo.StartSecond = 0;

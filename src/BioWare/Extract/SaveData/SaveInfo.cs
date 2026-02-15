@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using BioWare.Common;
-using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.GFF.Generics;
 

@@ -44,13 +44,13 @@ namespace Andastra.Runtime.Core.Save
     /// - [module]_s.rim - Per-module state (positions, etc.)
     /// - NFO.res - Save metadata (name, time, screenshot)
     ///
-    /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) save system implementation:
-    /// - Main save function: SerializeSaveNfo @ 0x004eb750 (located via "savenfo" @ 0x007be1f0)
-    /// - Save global variables: SaveGlobalVariables @ 0x005ac670 (located via "GLOBALVARS" @ 0x007c27bc)
-    /// - Save party table: SavePartyTable @ 0x0057bd70 (located via "PARTYTABLE" @ 0x007c1910)
-    /// - Load save function: 0x00708990 @ 0x00708990 (located via "LoadSavegame" @ 0x007bdc90)
-    /// - Auto-save function: 0x004f0c50 @ 0x004f0c50
-    /// - Load save metadata: 0x00707290 @ 0x00707290
+    /// Reva: Save system implementation — K1: StallEventSaveGame @ 0x004b3110 (main save; "savenfo" @ 0x0074542c). TSL: SerializeSaveNfo @ 0x004eb750 ("savenfo" @ 0x007be1f0).
+    /// - Main save: K1 StallEventSaveGame @ 0x004b3110, TSL SerializeSaveNfo @ 0x004eb750
+    /// - Save global variables: K1 Save @ 0x0052ad10 ("GLOBALVARS" @ 0x007484ec), TSL SaveGlobalVariables @ 0x005ac670 ("GLOBALVARS" @ 0x007c27bc)
+    /// - Save party table: K1 SaveTableInfo @ 0x005648c0, TSL SavePartyTable @ 0x0057bd70 ("PARTYTABLE" K1 @ 0x0074930c, TSL @ 0x007c1910)
+    /// - Load save: K1 LoadData @ 0x006c8e50 / GetGameDirectory @ 0x006c8250, TSL LoadData @ 0x00707290 / FUN_00708990 @ 0x00708990
+    /// - Auto-save: K1 DoPCAutosave @ 0x004b8300, TSL FUN_004f0c50 @ 0x004f0c50 (both ref "savenfo")
+    /// - Load save metadata: K1 LoadData @ 0x006c8e50, TSL LoadData @ 0x00707290
     /// </remarks>
     public class SaveSystem
     {
@@ -402,8 +402,7 @@ namespace Andastra.Runtime.Core.Save
         }
 
         // Save party member list and selection state
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): SavePartyTable @ 0x0057bd70
-        // Located via string reference: "PARTYTABLE" @ 0x007c1910
+        // Reva: K1 SaveTableInfo @ 0x005648c0, TSL SavePartyTable (FUN_0057bd70) @ 0x0057bd70. String "PARTYTABLE" K1 @ 0x0074930c, TSL @ 0x007c1910.
         // Original implementation: Writes GFF file with "PT  " signature (V2.0) containing party members, puppets, available NPCs,
         // influence values, gold, XP pool, solo mode flag, cheat used flag, and various game state flags
         // Constructs path "{savePath}\PARTYTABLE"
@@ -470,8 +469,8 @@ namespace Andastra.Runtime.Core.Save
         /// Saves plot state to save data.
         /// </summary>
         /// <remarks>
-        /// Plot State Saving (k2_win_gog_aspyr_swkotor2.exe):
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Plot state is saved as part of game state
+        /// Plot State Saving: Plot/flag state is persisted in GLOBALVARS.res as part of game state.
+        /// Reva: K1 Save (CSWGlobalVariableTable) @ 0x0052ad10 ("GLOBALVARS" @ 0x007484ec), TSL Save @ 0x005ac670 ("GLOBALVARS" @ 0x007c27bc).
         /// - Original implementation: Plot states are tracked and saved to prevent duplicate processing
         /// - Plot state includes: plot index, label, triggered status, completed status, trigger count
         /// </remarks>
@@ -506,9 +505,8 @@ namespace Andastra.Runtime.Core.Save
         /// Saves faction reputation state to save data.
         /// </summary>
         /// <remarks>
-        /// Faction Reputation Saving (k2_win_gog_aspyr_swkotor2.exe):
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Faction reputation is saved as REPUTE.fac file in savegame.sav
-        /// - Located via string reference: "REPUTE" @ (needs verification)
+        /// Faction Reputation Saving: Faction reputation is saved as REPUTE.fac (GFF with "FAC " signature) in savegame.sav.
+        /// Reva: K1 SaveModuleFAC @ 0x004c3960 ("FAC " @ 0x00745854, "REPUTE" @ 0x00745d8c), TSL SaveModuleFAC (FUN_004fcab0) @ 0x004fcab0 ("FactionList" @ 0x007be604, "REPUTE" @ 0x007beac0).
         /// - Original implementation: Faction relationships stored in GFF structures with FactionID, FactionRep fields
         /// - Faction reputation matrix: Dictionary&lt;sourceFaction, Dictionary&lt;targetFaction, reputation&gt;&gt;
         /// - Reputation values: 0-100 range (0-10=hostile, 11-89=neutral, 90-100=friendly)
@@ -634,9 +632,8 @@ namespace Andastra.Runtime.Core.Save
             }
 
             // Save module-to-area mapping for the current module
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Mod_Area_list in module IFO file
+            // Reva: Mod_Area_list is a GFF field in module IFO. K1 LoadModuleStart @ 0x004c9050, SerializeIfoGameTime @ 0x004c7050 ("Mod_Area_list" @ 0x007459a0); TSL LoadModuleStart @ 0x00501fa0, SerializeIfoGameTime @ 0x00500290 ("Mod_Area_list" @ 0x007be748).
             // Original implementation: Module IFO contains Mod_Area_list field (GFF List) with area ResRefs
-            // Located via string references: "Mod_Area_list" @ 0x007be748 (k2_win_gog_aspyr_swkotor2.exe)
             // This allows verification of area-to-module relationships without loading the module IFO
             Runtime.Core.Interfaces.IModule module = _world.CurrentModule;
             if (module != null && !string.IsNullOrEmpty(module.ResRef))
@@ -751,7 +748,7 @@ namespace Andastra.Runtime.Core.Save
         /// Creates a creature state from an entity.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 (save creature data to GFF)
+        /// Reva: K1 SerializeCreature_K2 @ 0x00500610, TSL SerializeCreature_K2 @ 0x005226d0. Saves creature/entity data to GFF.
         /// Original implementation saves complete creature state including:
         /// - Position, orientation, HP, FP
         /// - Level, XP, ClassLevels, Skills, Attributes

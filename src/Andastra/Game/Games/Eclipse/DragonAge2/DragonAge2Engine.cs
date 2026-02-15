@@ -1,6 +1,5 @@
 using BioWare.Common;
 using Andastra.Game.Games.Common;
-using Andastra.Game.Games.Common;
 
 namespace Andastra.Game.Games.Engines.Eclipse.DragonAge2
 {

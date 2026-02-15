@@ -101,7 +101,13 @@ namespace Andastra.Game.Stride.Graphics
                     }
 
                     _game.Window.Title = _pendingTitle;
-                    _game.Window.IsFullscreen = _pendingFullscreen;
+                    // Borderless fullscreen (like MonoGameFPS): FullscreenIsBorderlessWindow = SDL_WINDOW_FULLSCREEN_DESKTOP, avoids exclusive
+                    var fullscreenBorderlessProp = _game.Window.GetType().GetProperty("FullscreenIsBorderlessWindow");
+                    if (fullscreenBorderlessProp != null && fullscreenBorderlessProp.CanWrite)
+                    {
+                        fullscreenBorderlessProp.SetValue(_game.Window, true);
+                    }
+                    _game.Window.IsFullscreen = true;
                     _game.Window.IsMouseVisible = true;
                 }
             };
@@ -134,7 +140,7 @@ namespace Andastra.Game.Stride.Graphics
                     // This ensures thread safety and proper resource management in Stride 4.x
 
                     // Apply VSync state if it was set before graphics device was initialized
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): VSync controlled via DirectX Present parameters (PresentationInterval)
+                    // Original (Reva; K1 = k1_win_gog_swkotor.exe, TSL = k2_win_gog_legacypc_swkotor2.exe): VSync via OpenGL wglSwapIntervalEXT; K1 InitExtensions @ 0x00436490, TSL FUN_00447760 @ 0x00447760 (resolve/call wglSwapIntervalEXT).
                     // Stride equivalent: GraphicsDevice.Presenter.VSyncMode
                     if (_desiredVSyncState.HasValue)
                     {
@@ -305,7 +311,7 @@ namespace Andastra.Game.Stride.Graphics
 
         /// <summary>
         /// Applies VSync state to the Stride GraphicsDevice.Presenter.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DirectX Present parameters control VSync via PresentationInterval
+        /// Original (Reva; K1 = k1_win_gog_swkotor.exe, TSL = k2_win_gog_legacypc_swkotor2.exe): VSync via OpenGL wglSwapIntervalEXT; K1 InitExtensions @ 0x00436490, TSL FUN_00447760 @ 0x00447760.
         /// </summary>
         /// <param name="enabled">True to enable VSync, false to disable it.</param>
         private void ApplyVSyncState(bool enabled)

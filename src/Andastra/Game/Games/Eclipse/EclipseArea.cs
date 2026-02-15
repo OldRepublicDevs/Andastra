@@ -8,7 +8,6 @@ using System.Runtime.InteropServices;
 using BioWare;
 using BioWare.Common;
 using BioWare.Extract;
-using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.BWM;
 using BioWare.Resource.Formats.GFF;
@@ -8955,7 +8954,7 @@ namespace Andastra.Game.Games.Eclipse
             }
 
             // Handle opacity for alpha blending
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity opacity is used for fade-in/fade-out effects
+            // Reva: Entity opacity/fade — K1 CSWCObject::SetAlpha @ 0x0063cb50, ApplyAlpha @ 0x006a3e80, GetFinalFadeAlpha @ 0x0063dee0, UpdateAlpha @ 0x006a4c00; TSL SetBlendingMode @ 0x004ab6a0 (Material::SetBlendingMode match).
             float opacity = renderable.Opacity;
             bool needsAlphaBlending = opacity < 1.0f;
 
@@ -8965,7 +8964,7 @@ namespace Andastra.Game.Games.Eclipse
             contextGraphicsDevice.SetRasterizerState(contextGraphicsDevice.CreateRasterizerState());
 
             // Set up blend state for opacity/alpha blending if needed
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entities with opacity < 1.0 use alpha blending
+            // Reva: Alpha blending when opacity < 1 — K1 Material::SetBlendingMode @ 0x0047af70, TSL SetBlendingMode @ 0x004ab6a0.
             // Original implementation: DirectX 8/9 render states D3DRS_ALPHABLENDENABLE, D3DRS_SRCBLEND, D3DRS_DESTBLEND
             // Standard alpha blending: SrcAlpha * SourceColor + (1 - SrcAlpha) * DestinationColor
             if (needsAlphaBlending)
@@ -8974,7 +8973,7 @@ namespace Andastra.Game.Games.Eclipse
                 // Configure blend state for standard alpha blending:
                 // - Color: SourceAlpha * SourceColor + InverseSourceAlpha * DestinationColor
                 // - Alpha: SourceAlpha * SourceAlpha + InverseSourceAlpha * DestinationAlpha
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Standard alpha blending uses D3DBLEND_SRCALPHA and D3DBLEND_INVSRCALPHA
+                // Reva: Standard alpha (GL_SRC_ALPHA / GL_ONE_MINUS_SRC_ALPHA) — K1 Material::SetBlendingMode @ 0x0047af70 (glBlendFunc from GL_SRC_ALPHA array), TSL SetBlendingMode @ 0x004ab6a0.
                 IBlendState blendState = contextGraphicsDevice.CreateBlendState();
                 blendState.BlendEnable = true;
                 blendState.ColorBlendFunction = GraphicsBlendFunction.Add;
@@ -8991,7 +8990,7 @@ namespace Andastra.Game.Games.Eclipse
             else
             {
                 // Opaque rendering: disable blending for maximum performance
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Opaque entities use no blending (One/Zero blend factors)
+                // Reva: Opaque (no blend) — same Material::SetBlendingMode when src=0, dest=2; K1 @ 0x0047af70, TSL @ 0x004ab6a0.
                 IBlendState blendState = graphicsDevice.CreateBlendState();
                 blendState.BlendEnable = false;
                 blendState.ColorBlendFunction = GraphicsBlendFunction.Add;
@@ -9007,7 +9006,7 @@ namespace Andastra.Game.Games.Eclipse
             }
 
             // Apply opacity to basic effect
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity opacity is applied to material alpha for fade-in/fade-out effects
+            // Reva: Opacity to material alpha — K1 CSWCObject::SetAlpha @ 0x0063cb50, ApplyAlpha @ 0x006a3e80; TSL SetBlendingMode @ 0x004ab6a0.
             // IBasicEffect.Alpha property controls the alpha channel of the rendered output
             basicEffect.Alpha = opacity;
 

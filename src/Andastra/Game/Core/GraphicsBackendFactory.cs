@@ -1,5 +1,5 @@
 using System;
-using Andastra.Game.Graphics.Common.Backends;
+using Andastra.Game.Graphics.Common.Backends.Odyssey;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Enums;
@@ -12,7 +12,7 @@ namespace Andastra.Game.Core
     /// </summary>
     /// <remarks>
     /// Graphics Backend Factory:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) graphics initialization system
+    /// - Graphics initialization (Reva; K1 = k1_win_gog_swkotor.exe, TSL = k2_win_gog_legacypc_swkotor2.exe): K1 Initialize @ 0x0044dab0 (CAurInternalGL), TSL FUN_00461c50 @ 0x00461c50 (window/OpenGL context creation).
     /// - Original game uses DirectX 8/9 for rendering (D3D8.dll, D3D9.dll)
     /// - Located via string references: "Graphics Options" @ 0x007b56a8, "BTN_GRAPHICS" @ 0x007d0d8c, "optgraphics_p" @ 0x007d2064
     /// - "2D3DBias" @ 0x007c612c, "2D3D Bias" @ 0x007c71f8 (graphics settings)
@@ -20,7 +20,7 @@ namespace Andastra.Game.Core
     /// - This implementation: Factory for creating modern graphics backends (MonoGame, Stride) and original engine backends (OdysseyEngine)
     /// - Note: MonoGame and Stride are modern graphics frameworks, not present in original game
     /// - Original game rendering: DirectX 8/9 fixed-function pipeline
-    /// - OdysseyEngine: Matches original game rendering exactly 1:1 (OdysseyGraphicsBackend with KotorGame.K1 or K2)
+    /// - OdysseyEngine: Matches original game rendering exactly 1:1 (Kotor1GraphicsBackend for K1, Kotor2GraphicsBackend for K2)
     /// </remarks>
     public static class GraphicsBackendFactory
     {
@@ -45,7 +45,18 @@ namespace Andastra.Game.Core
                         {
                             throw new ArgumentException("Game type (K1 or K2) is required when creating OdysseyEngine backend", nameof(gameType));
                         }
-                        return new OdysseyGraphicsBackend(gameType.Value);
+                        if (gameType.Value == KotorGame.K1)
+                        {
+                            return new Kotor1GraphicsBackend();
+                        }
+                        else if (gameType.Value == KotorGame.K2)
+                        {
+                            return new Kotor2GraphicsBackend();
+                        }
+                        else
+                        {
+                            throw new ArgumentException("OdysseyEngine backend only supports K1 or K2 game types", nameof(gameType));
+                        }
                     default:
                         throw new ArgumentException("Unknown graphics backend type: " + backendType, nameof(backendType));
                 }

@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using BioWare.Common;
-using BioWare.Common;
 using BioWare.Resource;
 using JetBrains.Annotations;
 
@@ -17,28 +16,61 @@ namespace BioWare.Resource.Formats.TwoDA
 
         /// <summary>
         /// Reads a 2DA file from a file path, byte array, or stream.
-        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tlk/tlk_auto.py
+        /// Supports binary .2da and CSV (.2da.csv or .csv). Format is auto-detected by path extension or content.
         /// </summary>
         public static TwoDA Read2DA(object source, int offset = 0, int? size = null, ResourceType fileFormat = null)
         {
             if (source is string filepath)
             {
-                // Assume full file read; let TwoDABinaryReader handle actual range
-                var reader = new TwoDABinaryReader(File.ReadAllBytes(filepath));
-                return reader.Load();
+                byte[] fileBytes = File.ReadAllBytes(filepath);
+                return Read2DAFromBytes(fileBytes, filepath);
             }
-            if (source is byte[] data)
+            if (source is byte[] bytes)
             {
-                // Ignore offset/size in constructor; pass entire data, let .Load handle offset/size if needed
-                var reader = new TwoDABinaryReader(data);
-                return reader.Load();
+                return Read2DAFromBytes(bytes, null);
             }
             if (source is Stream stream)
             {
-                var reader = new TwoDABinaryReader(stream);
-                return reader.Load();
+                byte[] streamBytes;
+                using (var ms = new MemoryStream())
+                {
+                    stream.CopyTo(ms);
+                    streamBytes = ms.ToArray();
+                }
+                return Read2DAFromBytes(streamBytes, null);
             }
             throw new ArgumentException("Source must be string, byte[], or Stream");
+        }
+
+        private static TwoDA Read2DAFromBytes(byte[] data, string filepath)
+        {
+            bool preferCsv = !string.IsNullOrEmpty(filepath) &&
+                (filepath.EndsWith(".csv", StringComparison.OrdinalIgnoreCase) ||
+                 filepath.EndsWith(".2da.csv", StringComparison.OrdinalIgnoreCase));
+            if (preferCsv || LooksLikeCsv(data))
+            {
+                return TwoDACsvReader.Load(data);
+            }
+            var reader = new TwoDABinaryReader(data);
+            return reader.Load();
+        }
+
+        private static bool LooksLikeCsv(byte[] data)
+        {
+            if (data == null || data.Length < 4) return false;
+            // Binary 2DA starts with "2DA " (ASCII)
+            if (data.Length >= 4 && data[0] == '2' && data[1] == 'D' && data[2] == 'A' && data[3] == ' ')
+            {
+                return false;
+            }
+            // CSV: printable ASCII and commas/newlines
+            int printable = 0;
+            for (int i = 0; i < Math.Min(data.Length, 512); i++)
+            {
+                byte b = data[i];
+                if (b == ',' || b == '\n' || b == '\r' || (b >= 0x20 && b < 0x7F)) printable++;
+            }
+            return printable > Math.Min(data.Length, 512) * 0.8;
         }
 
         /// <summary>
@@ -51,20 +83,11 @@ namespace BioWare.Resource.Formats.TwoDA
 
         /// <summary>
         /// Writes the 2DA data to the target location with the specified format.
-        /// 1:1 port of Python write_2da function.
         /// </summary>
         public static void Write2DA(TwoDA twoda, string target, ResourceType fileFormat)
         {
-            if (fileFormat == ResourceType.TwoDA)
-            {
-                var writer = new TwoDABinaryWriter(twoda);
-                byte[] data = writer.Write();
-                File.WriteAllBytes(target, data);
-            }
-            else
-            {
-                throw new ArgumentException("Unsupported format specified; use one of [ResourceType.TwoDA, ResourceType.TwoDA_CSV, ResourceType.TwoDA_JSON].");
-            }
+            byte[] data = Bytes2DA(twoda, fileFormat);
+            File.WriteAllBytes(target, data);
         }
 
         /// <summary>
@@ -76,11 +99,14 @@ namespace BioWare.Resource.Formats.TwoDA
         }
 
         /// <summary>
-        /// Returns the 2DA data as a byte array.
-        /// 1:1 port of Python bytes_2da function.
+        /// Returns the 2DA data as a byte array (binary .2da or CSV depending on fileFormat).
         /// </summary>
         public static byte[] Bytes2DA(TwoDA twoda, [CanBeNull] ResourceType fileFormat = null)
         {
+            if (fileFormat == ResourceType.TwoDA_CSV)
+            {
+                return TwoDACsvWriter.Write(twoda);
+            }
             var writer = new TwoDABinaryWriter(twoda);
             return writer.Write();
         }

@@ -1,0 +1,118 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:OdyTools.Editors"
+        x:Class="OdyTools.Editors.OdyToolGIT"
+        Title="GIT Editor (Game Instance Template)"
+        MinWidth="720" MinHeight="480"
+        Width="900" Height="580">
+  <DockPanel>
+    <Menu DockPanel.Dock="Top" Name="menuBar">
+      <MenuItem Header="_File">
+        <MenuItem Header="_New" Name="actionNew"
+                  ToolTip.Tip="Create a new empty GIT. All instance lists will be cleared."/>
+        <MenuItem Header="_Open" Name="actionOpen"
+                  ToolTip.Tip="Open a GIT file from disk or from a game resource."/>
+        <MenuItem Header="_Save" Name="actionSave"
+                  ToolTip.Tip="Save the current GIT. Shortcut: Ctrl+S"/>
+        <MenuItem Header="Save _As" Name="actionSaveAs"
+                  ToolTip.Tip="Save the GIT to a new file name or location."/>
+        <Separator/>
+        <MenuItem Header="_Revert" Name="actionRevert"
+                  ToolTip.Tip="Discard unsaved changes and reload the file from disk."/>
+        <Separator/>
+        <MenuItem Header="E_xit" Name="actionExit"
+                  ToolTip.Tip="Close the GIT Editor. You will be prompted to save if there are unsaved changes."/>
+      </MenuItem>
+    </Menu>
+
+    <!-- Toolbar: filter -->
+    <Border DockPanel.Dock="Top" Padding="12,8" Background="{DynamicResource ThemeControlLowBrush}" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto">
+        <TextBlock Grid.Column="0" Text="Filter:" VerticalAlignment="Center" Margin="0,0,8,0"
+                   ToolTip.Tip="Filter the instance list by tag or resref. Does not change the GIT file."/>
+        <TextBox Name="filterEdit" Grid.Column="1" Watermark="filter by tag or resref..."
+                 MaxLength="64"
+                 ToolTip.Tip="Type part of a creature, door, placeable, trigger, waypoint, or sound tag/resref to show only matching entries. Leave empty to show all."/>
+      </Grid>
+    </Border>
+
+    <!-- Main: instance list + detail -->
+    <Grid ColumnDefinitions="280,*" Margin="8,0,8,8">
+      <!-- Left: instance list -->
+      <Border Grid.Column="0" Margin="0,0,4,0" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" CornerRadius="8"
+              Background="{DynamicResource ThemeControlLowBrush}"
+              ToolTip.Tip="All instances in this area (creatures, doors, placeables, triggers, waypoints, sounds, encounters, stores, cameras). Select one to view or edit in the panel on the right.">
+        <Grid RowDefinitions="Auto,*">
+          <TextBlock Grid.Row="0" Text="Instances" FontWeight="SemiBold" Margin="12,10,12,6" FontSize="13"
+                     ToolTip.Tip="List of all placed objects in the area. Double-click to focus; use filter above to narrow the list."/>
+          <ListBox Name="instanceList" Grid.Row="1" Margin="4,0,4,8"
+                   ToolTip.Tip="Select an instance to view or edit its position, rotation, and template.">
+            <ListBox.ItemTemplate>
+              <DataTemplate DataType="local:GITInstanceItem">
+                <TextBlock Text="{Binding DisplayText}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Grid>
+      </Border>
+
+      <!-- Right: detail panel -->
+      <Border Grid.Column="1" Margin="4,0,0,0" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" CornerRadius="8"
+              Background="{DynamicResource ThemeControlLowBrush}" Padding="16">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+          <StackPanel Name="detailPanel" Spacing="12">
+            <!-- No selection -->
+            <StackPanel Name="detailNoSelection" Spacing="8">
+              <TextBlock Text="Details" FontWeight="SemiBold" FontSize="14"
+                         ToolTip.Tip="Properties of the selected instance."/>
+              <TextBlock Name="noSelectionText" Text="Select an instance in the list to view and edit its position, rotation, and template."
+                         TextWrapping="Wrap" Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="12"/>
+            </StackPanel>
+
+            <!-- Instance details (visible when selection exists) -->
+            <StackPanel Name="detailInstance" IsVisible="False" Spacing="10">
+              <TextBlock Name="detailTypeLabel" Text="Instance" FontWeight="SemiBold" FontSize="14"/>
+              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" ColumnSpacing="8" RowSpacing="6">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Template ResRef:" VerticalAlignment="Center"
+                           ToolTip.Tip="Resource name of the template (UTC, UTD, UTP, etc.)."/>
+                <TextBox Name="detailResRef" Grid.Row="0" Grid.Column="1"
+                         ToolTip.Tip="e.g. n_droid_protocol for a creature, gen_door_01 for a door."/>
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="X:" VerticalAlignment="Center"
+                           ToolTip.Tip="World X position."/>
+                <NumericUpDown Name="detailPosX" Grid.Row="1" Grid.Column="1" Minimum="-99999" Maximum="99999" Increment="0.1" FormatString="0.00"/>
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Y:" VerticalAlignment="Center"
+                           ToolTip.Tip="World Y position."/>
+                <NumericUpDown Name="detailPosY" Grid.Row="2" Grid.Column="1" Minimum="-99999" Maximum="99999" Increment="0.1" FormatString="0.00"/>
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Z:" VerticalAlignment="Center"
+                           ToolTip.Tip="World Z position (height)."/>
+                <NumericUpDown Name="detailPosZ" Grid.Row="3" Grid.Column="1" Minimum="-99999" Maximum="99999" Increment="0.1" FormatString="0.00"/>
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Bearing:" VerticalAlignment="Center"
+                           ToolTip.Tip="Facing angle in radians (0 = east)."/>
+                <NumericUpDown Name="detailBearing" Grid.Row="4" Grid.Column="1" Minimum="-3.14159" Maximum="3.14159" Increment="0.01" FormatString="0.0000"/>
+                <TextBlock Name="detailTagLabel" Grid.Row="5" Grid.Column="0" Text="Tag:" VerticalAlignment="Center" IsVisible="False"
+                           ToolTip.Tip="Optional tag (doors, placeables, triggers, waypoints, sounds)."/>
+                <TextBox Name="detailTag" Grid.Row="5" Grid.Column="1" IsVisible="False"
+                         ToolTip.Tip="Script/tag identifier. Shown for door, placeable, trigger, waypoint, sound."/>
+              </Grid>
+              <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+                <Button Name="removeInstanceButton" Content="Remove instance"
+                        ToolTip.Tip="Remove the selected instance from the GIT. This cannot be undone without reverting the file."/>
+              </StackPanel>
+            </StackPanel>
+
+            <Separator/>
+            <TextBlock Name="detailHelpText" TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                       Text="GIT files define all placed objects in an area: creatures, doors, placeables, triggers, waypoints, sounds, encounters, stores, and cameras. Each instance has a template (UTC, UTD, etc.) and position. Changes here are saved when you save the file."
+                       ToolTip.Tip="Game Instance Template: positions and references for every object in the area."/>
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+    </Grid>
+
+    <!-- Status bar -->
+    <Border DockPanel.Dock="Bottom" Padding="12,8" Background="{DynamicResource ThemeControlLowBrush}" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="0,1,0,0">
+      <TextBlock Name="statusText" Text="GIT Editor" Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="12"
+                 ToolTip.Tip="Instance count and current selection. Save to write changes to the GIT file."/>
+    </Border>
+  </DockPanel>
+</Window>

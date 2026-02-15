@@ -40,6 +40,7 @@ namespace Andastra.Game.GUI
         private TextBlock _graphicsBackendLabel;
         private TextBlock _pathLabel;
         private GraphicsSettingsData _graphicsSettings;
+        private GraphicsSettingsData _defaultGraphicsSettings;
         private List<GraphicsBackendItem> _graphicsBackendItems;
         private List<GameItem> _gameItems;
 
@@ -82,6 +83,8 @@ namespace Andastra.Game.GUI
             SelectedGame = GameType.K1; // Default
             SelectedGraphicsBackend = GraphicsBackendType.MonoGame; // Default
             _graphicsSettings = new GraphicsSettingsData();
+            _defaultGraphicsSettings = CreateDefaultGraphicsSettings(SelectedGame);
+            ApplyGameDefaultGraphicsSettings(SelectedGame, true);
             _gameItems = new List<GameItem>();
 
             InitializeComponent();
@@ -275,7 +278,7 @@ namespace Andastra.Game.GUI
         {
             try
             {
-                var settingsDialog = new GraphicsSettingsDialog(SelectedGraphicsBackend, _graphicsSettings);
+                var settingsDialog = new GraphicsSettingsDialog(SelectedGraphicsBackend, _graphicsSettings, _defaultGraphicsSettings);
                 var result = await settingsDialog.ShowDialog<bool>(this);
                 if (result)
                 {
@@ -310,6 +313,7 @@ namespace Andastra.Game.GUI
             {
                 SelectedGame = _gameItems[selectedIndex].Game;
                 UpdatePathComboBox();
+                ApplyGameDefaultGraphicsSettings(SelectedGame);
             }
         }
 
@@ -368,6 +372,57 @@ namespace Andastra.Game.GUI
             {
                 _pathTextBox.Text = paths[0];
             }
+        }
+
+        private GraphicsSettingsData CreateDefaultGraphicsSettings(GameType game)
+        {
+            var defaults = new GraphicsSettingsData();
+
+            // Match original engine defaults for fullscreen.
+            // Odyssey (K1/K2) runs fullscreen by default; other engines are windowed.
+            if (game == GameType.K1 || game == GameType.K2)
+            {
+                defaults.WindowFullscreen = true;
+            }
+            else
+            {
+                defaults.WindowFullscreen = false;
+            }
+
+            return defaults;
+        }
+
+        private void ApplyGameDefaultGraphicsSettings(GameType game, bool force = false)
+        {
+            if (_graphicsSettings == null)
+            {
+                _graphicsSettings = new GraphicsSettingsData();
+            }
+
+            var newDefaults = CreateDefaultGraphicsSettings(game);
+
+            _graphicsSettings.WindowFullscreen = ApplyDefaultIfUnmodified(
+                _graphicsSettings.WindowFullscreen,
+                _defaultGraphicsSettings?.WindowFullscreen,
+                newDefaults.WindowFullscreen,
+                force);
+
+            _defaultGraphicsSettings = newDefaults;
+        }
+
+        private static bool? ApplyDefaultIfUnmodified(bool? currentValue, bool? oldDefault, bool? newDefault, bool force)
+        {
+            if (!newDefault.HasValue)
+            {
+                return currentValue;
+            }
+
+            if (force || !currentValue.HasValue || (oldDefault.HasValue && currentValue == oldDefault))
+            {
+                return newDefault.Value;
+            }
+
+            return currentValue;
         }
 
         private async void BrowseButton_Click(object sender, RoutedEventArgs e)
@@ -498,11 +553,11 @@ namespace Andastra.Game.GUI
             {
                 case GameType.K1:
                     return File.Exists(Path.Combine(path, "chitin.key")) &&
-                           File.Exists(Path.Combine(path, "k1_win_gog_swkotor.exe"));
+                           File.Exists(Path.Combine(path, "swkotor.exe"));
 
                 case GameType.K2:
                     return File.Exists(Path.Combine(path, "chitin.key")) &&
-                           File.Exists(Path.Combine(path, "k2_win_gog_aspyr_swkotor2.exe"));
+                           File.Exists(Path.Combine(path, "swkotor2.exe"));
 
                 case GameType.NWN:
                     {

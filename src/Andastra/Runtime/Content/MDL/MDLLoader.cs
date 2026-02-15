@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using BioWare.Common;
-using BioWare.Common;
 using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.MDL;

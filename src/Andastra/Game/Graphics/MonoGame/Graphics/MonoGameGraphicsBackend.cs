@@ -69,9 +69,11 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
             _pendingFullscreen = fullscreen;
 
             // Configure graphics device manager before Run() is called
+            // Borderless fullscreen (like MonoGameFPS): windowed + IsBorderless + full screen size
+            // Avoids exclusive fullscreen; window fills screen with no title bar
             _graphicsDeviceManager.PreferredBackBufferWidth = width;
             _graphicsDeviceManager.PreferredBackBufferHeight = height;
-            _graphicsDeviceManager.IsFullScreen = fullscreen;
+            _graphicsDeviceManager.IsFullScreen = false;
 
             _isInitialized = true;
         }
@@ -94,6 +96,10 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
                 // Apply deferred settings now that Window is available
                 _game.Window.Title = _pendingTitle;
                 _game.IsMouseVisible = true;
+
+                // Borderless fullscreen: no title bar, window at (0,0) covering screen (like MonoGameFPS)
+                _game.Window.IsBorderless = true;
+                _game.Window.Position = new Point(0, 0);
                 _graphicsDeviceManager.ApplyChanges();
 
                 // Create wrapper objects now that GraphicsDevice, Content, and Window are available

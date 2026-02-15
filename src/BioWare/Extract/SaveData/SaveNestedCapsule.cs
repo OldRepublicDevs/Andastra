@@ -6,7 +6,6 @@ using BioWare.Common;
 using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.RIM;
-using BioWare.Common;
 using BioWare.Resource;
 
 namespace BioWare.Extract.SaveData

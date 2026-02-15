@@ -1,0 +1,89 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:widgets="clr-namespace:OdyTools.Widgets"
+             xmlns:widgetsEdit="clr-namespace:OdyTools.Widgets.Edit"
+             x:Class="OdyTools.Widgets.Settings.GITSettingsWidget">
+    <ScrollViewer>
+        <StackPanel Spacing="15" Margin="10">
+            <!-- Controls section (matching PyKotor git.ui) -->
+            <Border BorderBrush="LightGray" BorderThickness="1" Padding="10">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Controls" FontWeight="Bold" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button Name="controlsResetButton" Content="Reset" />
+                    </StackPanel>
+                    <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Move Camera:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgets:SetBindWidget Grid.Row="0" Grid.Column="1" Name="moveCameraBindEdit" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Rotate Camera:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgets:SetBindWidget Grid.Row="1" Grid.Column="1" Name="rotateCameraBindEdit" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Zoom Camera:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgets:SetBindWidget Grid.Row="2" Grid.Column="1" Name="zoomCameraBindEdit" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Select Object:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgets:SetBindWidget Grid.Row="3" Grid.Column="1" Name="selectUnderneathBindEdit" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Rotate Object:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgets:SetBindWidget Grid.Row="4" Grid.Column="1" Name="rotateSelectedToPointBindEdit" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Delete Object:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgets:SetBindWidget Grid.Row="5" Grid.Column="1" Name="deleteSelectedBindEdit" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Duplicate Object:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgets:SetBindWidget Grid.Row="6" Grid.Column="1" Name="duplicateSelectedBindEdit" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Toggle Instance Lock:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgets:SetBindWidget Grid.Row="7" Grid.Column="1" Name="toggleLockInstancesBindEdit" Margin="0,0,0,5" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Walkmesh Colours section (matching PyKotor git.ui) -->
+            <Border BorderBrush="LightGray" BorderThickness="1" Padding="10">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Walkmesh Colours" FontWeight="Bold" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button Name="coloursResetButton" Content="Reset" />
+                    </StackPanel>
+                    <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Undefined:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgetsEdit:ColorEdit Grid.Row="0" Grid.Column="1" Name="undefinedMaterialColourEdit" MinHeight="23" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Dirt:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgetsEdit:ColorEdit Grid.Row="1" Grid.Column="1" Name="dirtMaterialColourEdit" MinHeight="23" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Obscuring:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgetsEdit:ColorEdit Grid.Row="2" Grid.Column="1" Name="obscuringMaterialColourEdit" MinHeight="23" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Grass:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgetsEdit:ColorEdit Grid.Row="3" Grid.Column="1" Name="grassMaterialColourEdit" MinHeight="23" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Stone:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgetsEdit:ColorEdit Grid.Row="4" Grid.Column="1" Name="stoneMaterialColourEdit" MinHeight="23" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Wood:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgetsEdit:ColorEdit Grid.Row="5" Grid.Column="1" Name="woodMaterialColourEdit" MinHeight="23" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Water:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgetsEdit:ColorEdit Grid.Row="6" Grid.Column="1" Name="waterMaterialColourEdit" MinHeight="23" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Non-Walk:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgetsEdit:ColorEdit Grid.Row="7" Grid.Column="1" Name="nonWalkMaterialColourEdit" MinHeight="23" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Transparent:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgetsEdit:ColorEdit Grid.Row="8" Grid.Column="1" Name="transparentMaterialColourEdit" MinHeight="23" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="9" Grid.Column="0" Text="Carpet:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgetsEdit:ColorEdit Grid.Row="9" Grid.Column="1" Name="carpetMaterialColourEdit" MinHeight="23" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="10" Grid.Column="0" Text="Metal:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgetsEdit:ColorEdit Grid.Row="10" Grid.Column="1" Name="metalMaterialColourEdit" MinHeight="23" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="11" Grid.Column="0" Text="Puddles:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgetsEdit:ColorEdit Grid.Row="11" Grid.Column="1" Name="puddlesMaterialColourEdit" MinHeight="23" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="12" Grid.Column="0" Text="Swamp:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgetsEdit:ColorEdit Grid.Row="12" Grid.Column="1" Name="swampMaterialColourEdit" MinHeight="23" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="13" Grid.Column="0" Text="Mud:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgetsEdit:ColorEdit Grid.Row="13" Grid.Column="1" Name="mudMaterialColourEdit" MinHeight="23" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="14" Grid.Column="0" Text="Leaves:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgetsEdit:ColorEdit Grid.Row="14" Grid.Column="1" Name="leavesMaterialColourEdit" MinHeight="23" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="15" Grid.Column="0" Text="Lava:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgetsEdit:ColorEdit Grid.Row="15" Grid.Column="1" Name="lavaMaterialColourEdit" MinHeight="23" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="16" Grid.Column="0" Text="Bottomless Pit:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgetsEdit:ColorEdit Grid.Row="16" Grid.Column="1" Name="bottomlessPitMaterialColourEdit" MinHeight="23" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="17" Grid.Column="0" Text="Deep Water:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgetsEdit:ColorEdit Grid.Row="17" Grid.Column="1" Name="deepWaterMaterialColourEdit" MinHeight="23" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="18" Grid.Column="0" Text="Door:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgetsEdit:ColorEdit Grid.Row="18" Grid.Column="1" Name="doorMaterialColourEdit" MinHeight="23" Margin="0,0,0,5" />
+                        <TextBlock Grid.Row="19" Grid.Column="0" Text="Non-Walk Grass:" VerticalAlignment="Center" Margin="0,0,5,5" />
+                        <widgetsEdit:ColorEdit Grid.Row="19" Grid.Column="1" Name="nonWalkGrassMaterialColourEdit" MinHeight="23" Margin="0,0,0,5" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

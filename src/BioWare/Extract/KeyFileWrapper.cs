@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using BioWare.Common;
 using BioWare.Resource.Formats.KEY;
-using BioWare.Common;
 using BioWare.Resource;
 
 namespace BioWare.Extract

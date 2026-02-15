@@ -1,15 +1,31 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using Andastra.Runtime.Core;
+using Andastra.Runtime.Graphics;
+using BioWare.Common;
+using BioWare.Tools;
 
 namespace Andastra.Game.Core
 {
+    /// <summary>
+    /// Result of parsing CLI arguments for game launch.
+    /// </summary>
+    public sealed class CliParseResult
+    {
+        public BioWareGame? Game { get; set; }
+        public string Path { get; set; }
+        public bool HasGameSpecified { get; set; }
+        public bool HasPathSpecified { get; set; }
+    }
+
     /// <summary>
     /// Game settings and configuration with command-line parsing.
     /// </summary>
     /// <remarks>
     /// Game Settings Extensions:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00633270 @ 0x00633270 (initializes directory aliases and configuration)
+    /// - Directory aliases and configuration (Reva; K1 = k1_win_gog_swkotor.exe, TSL = k2_win_gog_legacypc_swkotor2.exe): K1 LoadOptions @ 0x0061dbe0, TSL FUN_00633270 @ 0x00633270 (loads INI and sets up HD0, CD0, OVERRIDE, etc.).
     /// - Located via string references: "swkotor2.ini" @ 0x007b5740, ".\swkotor2.ini" @ 0x007b5644, "config.txt" @ 0x007b5750
     /// - "DiffSettings" @ 0x007c2cdc (display settings, referenced by 0x005d7ce0 @ 0x005d7ce0)
     /// - INI loading: 0x00630a90 @ 0x00630a90 (string constructor for INI values), 0x00631ea0 @ 0x00631ea0 (calls 0x00633270)
@@ -22,11 +38,139 @@ namespace Andastra.Game.Core
     public static class GameSettingsExtensions
     {
         /// <summary>
+        /// Parses CLI arguments for game and path. Supports --game (k1, k2, tsl, nwn, nwn2, dao, da2) and --path.
+        /// When path is not provided, autodetects using same logic as the GUI (PathTools for K1/K2, GamePathDetector for others).
+        /// </summary>
+        public static CliParseResult ParseCliArgs(string[] args)
+        {
+            var result = new CliParseResult();
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                string arg = args[i];
+                string argLower = arg.ToLowerInvariant();
+
+                switch (argLower)
+                {
+                    case "--game":
+                    case "-g":
+                        if (i + 1 < args.Length)
+                        {
+                            string gameArg = args[++i].ToLowerInvariant();
+                            result.Game = ParseGameArgument(gameArg);
+                            result.HasGameSpecified = result.Game.HasValue;
+                        }
+                        break;
+
+                    case "--path":
+                    case "-p":
+                        if (i + 1 < args.Length)
+                        {
+                            result.Path = args[++i];
+                            result.HasPathSpecified = !string.IsNullOrWhiteSpace(result.Path);
+                        }
+                        break;
+                }
+            }
+
+            // Backward compat: --k1, --k2, --tsl also set game
+            if (!result.HasGameSpecified)
+            {
+                for (int i = 0; i < args.Length; i++)
+                {
+                    string argLower = args[i].ToLowerInvariant();
+                    if (argLower == "--k1" || argLower == "-k1")
+                    {
+                        result.Game = BioWareGame.K1;
+                        result.HasGameSpecified = true;
+                        break;
+                    }
+                    if (argLower == "--k2" || argLower == "-k2" || argLower == "--tsl")
+                    {
+                        result.Game = BioWareGame.K2;
+                        result.HasGameSpecified = true;
+                        break;
+                    }
+                }
+            }
+
+            // Autodetect path when game is specified but path is not
+            if (result.HasGameSpecified && result.Game.HasValue && !result.HasPathSpecified)
+            {
+                string detectedPath = DetectGamePath(result.Game.Value);
+                if (!string.IsNullOrEmpty(detectedPath))
+                {
+                    result.Path = detectedPath;
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Parses a game identifier string (k1, k2, tsl, nwn, nwn2, dao, da, da2) to BioWareGame.
+        /// </summary>
+        public static BioWareGame? ParseGameArgument(string gameArg)
+        {
+            if (string.IsNullOrWhiteSpace(gameArg)) return null;
+            switch (gameArg.ToLowerInvariant())
+            {
+                case "k1": return BioWareGame.K1;
+                case "k2":
+                case "tsl": return BioWareGame.K2;
+                case "nwn": return BioWareGame.NWN;
+                case "nwn2": return BioWareGame.NWN2;
+                case "dao":
+                case "da": return BioWareGame.DA;
+                case "da2": return BioWareGame.DA2;
+                default: return null;
+            }
+        }
+
+        /// <summary>
+        /// Detects game installation path using same logic as the GUI (PathTools for K1/K2, GamePathDetector for others).
+        /// </summary>
+        public static string DetectGamePath(BioWareGame game)
+        {
+            if (game == BioWareGame.K1 || game == BioWareGame.K2)
+            {
+                var foundPaths = PathTools.FindKotorPathsFromDefault();
+                if (foundPaths.TryGetValue(game, out List<CaseAwarePath> paths) && paths != null && paths.Count > 0)
+                {
+                    string resolved = paths[0].GetResolvedPath();
+                    if (Directory.Exists(resolved)) return resolved;
+                }
+                var kotorGame = game == BioWareGame.K1 ? KotorGame.K1 : KotorGame.K2;
+                List<string> detectorPaths = GamePathDetector.FindKotorPathsFromDefault(kotorGame);
+                return detectorPaths != null && detectorPaths.Count > 0 ? detectorPaths[0] : null;
+            }
+            else
+            {
+                List<string> paths = GamePathDetector.FindGamePathsFromDefault(game);
+                return paths != null && paths.Count > 0 ? paths[0] : null;
+            }
+        }
+
+        /// <summary>
         /// Parse command line arguments into settings.
         /// </summary>
         public static GameSettings FromCommandLine(string[] args)
         {
             var settings = new GameSettings();
+            var cliResult = ParseCliArgs(args);
+
+            if (cliResult.Game.HasValue)
+            {
+                if (cliResult.Game.Value == BioWareGame.K1)
+                    settings.Game = KotorGame.K1;
+                else if (cliResult.Game.Value == BioWareGame.K2)
+                    settings.Game = KotorGame.K2;
+            }
+
+            if (!string.IsNullOrEmpty(cliResult.Path))
+            {
+                settings.GamePath = cliResult.Path;
+            }
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -172,17 +316,61 @@ namespace Andastra.Game.Core
             catch { /* ignore parse errors */ }
         }
 
-        private static void PrintHelp()
+        /// <summary>
+        /// Applies borderless fullscreen dimensions to settings (primary screen size).
+        /// Call when launching from launcher to ensure game window fills the screen without borders.
+        /// </summary>
+        public static void ApplyBorderlessFullscreen(GameSettings settings)
         {
-            Console.WriteLine("Odyssey Engine - KOTOR Recreation");
+            if (settings == null) return;
+            var (width, height) = GetPrimaryScreenSize();
+            if (width > 0 && height > 0)
+            {
+                settings.Width = width;
+                settings.Height = height;
+                if (settings.Graphics != null)
+                {
+                    settings.Graphics.ResolutionWidth = width;
+                    settings.Graphics.ResolutionHeight = height;
+                    settings.Graphics.DisplayMode = DisplayModePreference.BorderlessFullscreen;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the primary screen dimensions. Uses GetSystemMetrics on Windows, fallback 1920x1080 otherwise.
+        /// </summary>
+        private static (int width, int height) GetPrimaryScreenSize()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                try
+                {
+                    int w = GetSystemMetrics(0); // SM_CXSCREEN
+                    int h = GetSystemMetrics(1); // SM_CYSCREEN
+                    if (w > 0 && h > 0) return (w, h);
+                }
+                catch { }
+            }
+            return (1920, 1080);
+        }
+
+        [DllImport("user32.dll")]
+        private static extern int GetSystemMetrics(int nIndex);
+
+        public static void PrintHelp()
+        {
+            Console.WriteLine("Andastra - BioWare Game Launcher");
             Console.WriteLine();
-            Console.WriteLine("Usage: Odyssey.Game [options]");
+            Console.WriteLine("Usage: Andastra [options]");
             Console.WriteLine();
             Console.WriteLine("Options:");
-            Console.WriteLine("  --k1, -k1           Run KOTOR 1 (default)");
+            Console.WriteLine("  --game, -g <game>   Game to launch: k1, k2, tsl, nwn, nwn2, dao, da, da2");
+            Console.WriteLine("  --path, -p <path>   Path to game installation (autodetect if omitted)");
+            Console.WriteLine("  --no-launcher, -n   Skip GUI launcher (use with --game for CLI launch)");
+            Console.WriteLine("  --k1, -k1           Run KOTOR 1 (default for Odyssey)");
             Console.WriteLine("  --k2, -k2, --tsl    Run KOTOR 2 (TSL)");
-            Console.WriteLine("  --path, -p <path>   Path to KOTOR installation");
-            Console.WriteLine("  --module, -m <name> Start at specific module");
+            Console.WriteLine("  --module, -m <name> Start at specific module (KOTOR)");
             Console.WriteLine("  --load, -l <save>   Load save game");
             Console.WriteLine("  --width, -w <n>     Window width (default: 1280)");
             Console.WriteLine("  --height, -h <n>    Window height (default: 720)");

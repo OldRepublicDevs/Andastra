@@ -8,8 +8,6 @@ using BioWare;
 using BioWare.Common;
 using BioWare.Extract;
 using BioWare.Extract.Capsule;
-using BioWare.Extract;
-using BioWare.Common;
 using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 

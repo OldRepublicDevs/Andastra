@@ -49,6 +49,18 @@ namespace BioWare.Resource.Formats.BWM
     /// </summary>
     public class BWM : IEquatable<BWM>
     {
+        /// <summary>Gets the component of a Vector3 at axis index (0=X, 1=Y, 2=Z). Compatible with net472 and net9.0.</summary>
+        private static float Vec3At(Vector3 v, int i)
+        {
+            switch (i) { case 0: return v.X; case 1: return v.Y; default: return v.Z; }
+        }
+
+        /// <summary>Returns a new Vector3 with the component at axis index set to value. Compatible with net472 and net9.0.</summary>
+        private static Vector3 Vec3SetAt(Vector3 v, int i, float value)
+        {
+            switch (i) { case 0: return new Vector3(value, v.Y, v.Z); case 1: return new Vector3(v.X, value, v.Z); default: return new Vector3(v.X, v.Y, value); }
+        }
+
         /// <summary>
         /// The type of walkmesh: AreaModel (WOK file) or PlaceableOrDoor (PWK/DWK file).
         /// </summary>
@@ -359,8 +371,8 @@ namespace BioWare.Resource.Formats.BWM
                 {
                     for (int axis = 0; axis < 3; axis++)
                     {
-                        bbmin[axis] = Math.Min(bbmin[axis], vertex[axis]);
-                        bbmax[axis] = Math.Max(bbmax[axis], vertex[axis]);
+                        bbmin = Vec3SetAt(bbmin, axis, Math.Min(Vec3At(bbmin, axis), Vec3At(vertex, axis)));
+                        bbmax = Vec3SetAt(bbmax, axis, Math.Max(Vec3At(bbmax, axis), Vec3At(vertex, axis)));
                     }
                 }
                 bbcentre = bbcentre + face.Centre();
@@ -392,7 +404,7 @@ namespace BioWare.Resource.Formats.BWM
             foreach (var face in faces)
             {
                 Vector3 centre = face.Centre();
-                changeAxis = changeAxis && Math.Abs(centre[splitAxis] - bbcentre[splitAxis]) < 1e-6f;
+                changeAxis = changeAxis && Math.Abs(Vec3At(centre, splitAxis) - Vec3At(bbcentre, splitAxis)) < 1e-6f;
             }
             if (changeAxis)
             {
@@ -410,7 +422,7 @@ namespace BioWare.Resource.Formats.BWM
                 foreach (var face in faces)
                 {
                     Vector3 centre = face.Centre();
-                    if (centre[splitAxis] < bbcentre[splitAxis])
+                    if (Vec3At(centre, splitAxis) < Vec3At(bbcentre, splitAxis))
                     {
                         facesLeft.Add(face);
                     }
@@ -1716,7 +1728,7 @@ namespace BioWare.Resource.Formats.BWM
         /// CRITICAL: This method only modifies transition indices. Vertex positions, materials, and
         /// all other face properties are preserved.
         ///
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:426-452
+        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:426-452
         /// Original: def remap_transitions(self, bwm: BWM, dummy_index: int, actual_index: int | None):
         /// </summary>
         /// <param name="dummyIndex">The dummy transition index to remap (from kit component)</param>

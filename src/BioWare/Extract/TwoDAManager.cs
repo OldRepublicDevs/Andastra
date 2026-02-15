@@ -4,7 +4,6 @@ using System.Linq;
 using BioWare.Common;
 using BioWare.Resource.Formats.TwoDA;
 // using BioWare.Extract; // Removed to break circular dependency
-using BioWare.Common;
 using BioWare.Resource;
 
 namespace BioWare.Extract

@@ -88,11 +88,13 @@ namespace BioWare.Tools
                             BioWareGame.K1,
                             new List<string>
                             {
+                                // Steam
                                 "~/.local/share/steam/common/steamapps/swkotor",
-                                "~/.local/share/steam/common/swkotor",
-                                "~/.steam/debian-installation/steamapps/common/swkotor",
                                 "~/.steam/root/steamapps/common/swkotor",
+                                "~/.steam/debian-installation/steamapps/common/swkotor",
+                                // Flatpak Steam
                                 "~/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/swkotor",
+                                // WSL Defaults
                                 "/mnt/C/Program Files/Steam/steamapps/common/swkotor",
                                 "/mnt/C/Program Files (x86)/Steam/steamapps/common/swkotor",
                                 "/mnt/C/Program Files/LucasArts/SWKotOR",
@@ -105,15 +107,15 @@ namespace BioWare.Tools
                             BioWareGame.K2,
                             new List<string>
                             {
+                                // Steam
                                 "~/.local/share/Steam/common/steamapps/Knights of the Old Republic II",
-                                "~/.local/share/Steam/common/steamapps/kotor2",
-                                "~/.local/share/aspyr-media/kotor2",
-                                "~/.local/share/aspyr-media/Knights of the Old Republic II",
-                                "~/.local/share/Steam/common/Knights of the Old Republic II",
-                                "~/.steam/debian-installation/steamapps/common/Knights of the Old Republic II",
-                                "~/.steam/debian-installation/steamapps/common/kotor2",
                                 "~/.steam/root/steamapps/common/Knights of the Old Republic II",
+                                "~/.steam/debian-installation/steamapps/common/Knights of the Old Republic II",
+                                // Aspyr Port Saves
+                                "~/.local/share/aspyr-media/kotor2",
+                                // Flatpak Steam
                                 "~/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Knights of the Old Republic II/steamassets",
+                                // WSL Defaults
                                 "/mnt/C/Program Files/Steam/steamapps/common/Knights of the Old Republic II",
                                 "/mnt/C/Program Files (x86)/Steam/steamapps/common/Knights of the Old Republic II",
                                 "/mnt/C/Program Files/LucasArts/SWKotOR2",

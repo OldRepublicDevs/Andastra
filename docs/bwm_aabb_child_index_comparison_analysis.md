@@ -901,7 +901,7 @@ This is why experienced modders prefer KOTORMax for module creation - it's simpl
 
 ### Why This Matters for Indoor Map Builder
 
-The Indoor Map Builder (HolocronToolset) uses a different approach entirely - it builds modules programmatically without requiring manual vertex painting or edge selection. Instead, it uses proximity-based hook matching to automatically connect rooms. However, if users want to edit walkmesh data manually, understanding these different methodologies helps explain why some workflows are preferred over others.
+The Indoor Map Builder (OdyTools) uses a different approach entirely - it builds modules programmatically without requiring manual vertex painting or edge selection. Instead, it uses proximity-based hook matching to automatically connect rooms. However, if users want to edit walkmesh data manually, understanding these different methodologies helps explain why some workflows are preferred over others.
 
 ---
 

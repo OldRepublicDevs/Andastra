@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using BioWare.Common;
-using BioWare.Common;
 using BioWare.Resource;
 
 namespace BioWare.Extract

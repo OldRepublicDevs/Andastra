@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -28,8 +29,10 @@ namespace Andastra.Game.GUI
     {
         private GraphicsBackendType _selectedBackend;
         private GraphicsSettingsData _settings;
+        private GraphicsSettingsData _defaultSettings;
         private TabControl _tabControl;
         private Dictionary<string, Control> _controlMap;
+        private Dictionary<string, Button> _revertButtons;
         private ComboBox _presetComboBox;
         private GraphicsPreset _currentPreset;
         private TextBox _searchTextBox;
@@ -47,11 +50,13 @@ namespace Andastra.Game.GUI
         /// </summary>
         /// <param name="backendType">The selected graphics backend.</param>
         /// <param name="initialSettings">Initial settings to load (can be null).</param>
-        public GraphicsSettingsDialog(GraphicsBackendType backendType, GraphicsSettingsData initialSettings = null)
+        public GraphicsSettingsDialog(GraphicsBackendType backendType, GraphicsSettingsData initialSettings = null, GraphicsSettingsData defaultSettings = null)
         {
             _selectedBackend = backendType;
             _settings = initialSettings ?? new GraphicsSettingsData();
+            _defaultSettings = defaultSettings;
             _controlMap = new Dictionary<string, Control>();
+            _revertButtons = new Dictionary<string, Button>();
             _tabPageMap = new Dictionary<string, TabItem>();
             _currentPreset = GraphicsPreset.Custom;
             _result = false;
@@ -954,11 +959,12 @@ namespace Andastra.Game.GUI
             return page;
         }
 
-        private Panel CreateLabeledControl(string labelText, Control control, string helpKey = null)
+        private Panel CreateLabeledControl(string labelText, Control control, string helpKey = null, string settingKey = null)
         {
+            settingKey = settingKey ?? helpKey;
             var grid = new Grid
             {
-                ColumnDefinitions = new ColumnDefinitions("200,10,*,10,Auto"),
+                ColumnDefinitions = new ColumnDefinitions("200,10,*,10,Auto,10,Auto"),
                 Margin = new Thickness(0, 5, 0, 5)
             };
 
@@ -973,6 +979,27 @@ namespace Andastra.Game.GUI
 
             Grid.SetColumn(control, 2);
             grid.Children.Add(control);
+
+            if (!string.IsNullOrEmpty(settingKey) && TryGetSettingValue(_defaultSettings, settingKey, out _))
+            {
+                var revertButton = new Button
+                {
+                    Content = "Revert",
+                    Width = 60,
+                    Height = 25,
+                    IsVisible = false
+                };
+                revertButton.Click += (sender, e) =>
+                {
+                    ApplyDefaultToControl(settingKey, control);
+                    UpdateRevertButton(settingKey, control);
+                };
+                Grid.SetColumn(revertButton, 4);
+                grid.Children.Add(revertButton);
+                _revertButtons[settingKey] = revertButton;
+                AttachRevertUpdateHandlers(settingKey, control);
+                UpdateRevertButton(settingKey, control);
+            }
 
             // Add help button
             var helpButton = new Button
@@ -1004,10 +1031,160 @@ namespace Andastra.Game.GUI
                     await helpWindow.ShowDialog(this);
                 };
             }
-            Grid.SetColumn(helpButton, 4);
+            Grid.SetColumn(helpButton, 6);
             grid.Children.Add(helpButton);
 
             return grid;
+        }
+
+        private void AttachRevertUpdateHandlers(string settingKey, Control control)
+        {
+            if (control is TextBox textBox)
+            {
+                textBox.TextChanged += (sender, e) => UpdateRevertButton(settingKey, control);
+            }
+            else if (control is NumericUpDown numericUpDown)
+            {
+                numericUpDown.ValueChanged += (sender, e) => UpdateRevertButton(settingKey, control);
+            }
+            else if (control is CheckBox checkBox)
+            {
+                checkBox.Checked += (sender, e) => UpdateRevertButton(settingKey, control);
+                checkBox.Unchecked += (sender, e) => UpdateRevertButton(settingKey, control);
+            }
+            else if (control is ComboBox comboBox)
+            {
+                comboBox.SelectionChanged += (sender, e) => UpdateRevertButton(settingKey, control);
+            }
+        }
+
+        private void UpdateRevertButton(string settingKey, Control control)
+        {
+            if (!_revertButtons.TryGetValue(settingKey, out var revertButton))
+            {
+                return;
+            }
+
+            if (!TryGetSettingValue(_defaultSettings, settingKey, out var defaultValue))
+            {
+                revertButton.IsVisible = false;
+                return;
+            }
+
+            var currentValue = GetControlValueForKey(control, settingKey);
+            revertButton.IsVisible = !ValuesEqual(currentValue, defaultValue);
+        }
+
+        private void ApplyDefaultToControl(string settingKey, Control control)
+        {
+            if (!TryGetSettingValue(_defaultSettings, settingKey, out var defaultValue))
+            {
+                return;
+            }
+
+            if (control is TextBox textBox)
+            {
+                textBox.Text = defaultValue?.ToString() ?? string.Empty;
+            }
+            else if (control is NumericUpDown numericUpDown)
+            {
+                numericUpDown.Value = Convert.ToDecimal(defaultValue, CultureInfo.InvariantCulture);
+            }
+            else if (control is CheckBox checkBox)
+            {
+                checkBox.IsChecked = Convert.ToBoolean(defaultValue, CultureInfo.InvariantCulture);
+            }
+            else if (control is ComboBox comboBox)
+            {
+                comboBox.SelectedItem = defaultValue?.ToString();
+            }
+        }
+
+        private static bool TryGetSettingValue(GraphicsSettingsData settings, string key, out object value)
+        {
+            value = null;
+            if (settings == null || string.IsNullOrWhiteSpace(key))
+            {
+                return false;
+            }
+
+            var property = typeof(GraphicsSettingsData).GetProperty(key);
+            if (property == null)
+            {
+                return false;
+            }
+
+            value = property.GetValue(settings);
+            return value != null;
+        }
+
+        private object GetControlValueForKey(Control control, string key)
+        {
+            var property = typeof(GraphicsSettingsData).GetProperty(key);
+            if (property == null)
+            {
+                return null;
+            }
+
+            var targetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+            object rawValue = null;
+
+            if (control is TextBox textBox)
+            {
+                rawValue = textBox.Text;
+            }
+            else if (control is NumericUpDown numericUpDown)
+            {
+                rawValue = numericUpDown.Value ?? 0m;
+            }
+            else if (control is CheckBox checkBox)
+            {
+                rawValue = checkBox.IsChecked ?? false;
+            }
+            else if (control is ComboBox comboBox)
+            {
+                rawValue = comboBox.SelectedItem?.ToString();
+            }
+
+            if (rawValue == null)
+            {
+                return null;
+            }
+
+            if (targetType == typeof(string))
+            {
+                return rawValue.ToString();
+            }
+
+            if (targetType.IsEnum)
+            {
+                return Enum.Parse(targetType, rawValue.ToString(), true);
+            }
+
+            return Convert.ChangeType(rawValue, targetType, CultureInfo.InvariantCulture);
+        }
+
+        private static bool ValuesEqual(object a, object b)
+        {
+            if (a == null && b == null) return true;
+            if (a == null || b == null) return false;
+
+            if (a is float af && b is float bf)
+            {
+                return Math.Abs(af - bf) < 0.0001f;
+            }
+
+            if (a is double ad && b is double bd)
+            {
+                return Math.Abs(ad - bd) < 0.0001;
+            }
+
+            if (a is decimal am && b is decimal bm)
+            {
+                return Math.Abs(am - bm) < 0.0001m;
+            }
+
+            return a.Equals(b);
         }
 
         private Panel CreateColorVector3Layout(float x, float y, float z, string baseKey)

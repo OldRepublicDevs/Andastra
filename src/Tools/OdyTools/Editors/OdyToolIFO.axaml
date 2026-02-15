@@ -1,0 +1,140 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="OdyTools.Editors.OdyToolIFO"
+        Title="Module Info Editor (KotOR)"
+        MinWidth="520" MinHeight="560"
+        Width="640" Height="680">
+  <DockPanel>
+    <Menu DockPanel.Dock="Top" Name="menuBar">
+      <MenuItem Header="_File">
+        <MenuItem Header="_New" Name="actionNew"
+                  ToolTip.Tip="Create a new empty module info. All fields will be reset to defaults."/>
+        <MenuItem Header="_Open" Name="actionOpen"
+                  ToolTip.Tip="Open an IFO file from disk or from a game resource."/>
+        <MenuItem Header="_Save" Name="actionSave"
+                  ToolTip.Tip="Save the current module info. Shortcut: Ctrl+S"/>
+        <MenuItem Header="Save _As" Name="actionSaveAs"
+                  ToolTip.Tip="Save the module info to a new file name or location."/>
+        <Separator/>
+        <MenuItem Header="_Revert" Name="actionRevert"
+                  ToolTip.Tip="Discard unsaved changes and reload the file from disk."/>
+        <Separator/>
+        <MenuItem Header="E_xit" Name="actionExit"
+                  ToolTip.Tip="Close the Module Info Editor. You will be prompted to save if there are unsaved changes."/>
+      </MenuItem>
+      <MenuItem Header="_Edit">
+        <MenuItem Header="_Undo" Name="actionUndo"
+                  ToolTip.Tip="Undo the last change. Shortcut: Ctrl+Z"/>
+        <MenuItem Header="_Redo" Name="actionRedo"
+                  ToolTip.Tip="Redo the last undone change. Shortcut: Ctrl+Y"/>
+        <Separator/>
+        <MenuItem Header="_Find..." Name="actionFind"
+                  ToolTip.Tip="Search for text in tag, VO ID, hak, area resref, and script names. Shortcut: Ctrl+F"/>
+        <MenuItem Header="Find _Next" Name="actionFindNext"
+                  ToolTip.Tip="Jump to the next match. Shortcut: F3"/>
+      </MenuItem>
+    </Menu>
+
+    <!-- Toolbar -->
+    <Border DockPanel.Dock="Top" Padding="12,8" Background="{DynamicResource ThemeControlLowBrush}" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="0,0,0,1">
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button Name="findButton" Content="Find..."
+                ToolTip.Tip="Search for text in tag, scripts, and other fields. Shortcut: Ctrl+F"/>
+      </StackPanel>
+    </Border>
+
+    <!-- Main: scrollable sections -->
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Margin="8,0,8,8">
+      <StackPanel Spacing="8">
+        <!-- Basic Information -->
+        <Expander Header="Basic Information" IsExpanded="True"
+                  ToolTip.Tip="Module name, tag, voice-over ID, hak pack, and description.">
+          <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" Margin="8,8">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Module Name:" VerticalAlignment="Center" Margin="0,0,12,8"
+                       ToolTip.Tip="Display name of the module (localized). Use Edit Name to change."/>
+            <Grid Grid.Row="0" Grid.Column="1" ColumnDefinitions="*,Auto" Margin="0,0,0,8">
+              <TextBox Name="NameEdit" Grid.Column="0" IsReadOnly="True" Margin="0,0,8,0"/>
+              <Button Name="NameEditBtn" Grid.Column="1" Content="Edit Name"/>
+            </Grid>
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Tag:" VerticalAlignment="Center" Margin="0,0,12,8"
+                       ToolTip.Tip="Module tag used by scripts to identify this module."/>
+            <TextBox Name="TagEdit" Grid.Row="1" Grid.Column="1" Margin="0,0,0,8"/>
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="VO ID:" VerticalAlignment="Center" Margin="0,0,12,8"
+                       ToolTip.Tip="Voice-over identifier for modules with voice acting."/>
+            <TextBox Name="VoIdEdit" Grid.Row="2" Grid.Column="1" Margin="0,0,0,8"/>
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Hak:" VerticalAlignment="Center" Margin="0,0,12,8"
+                       ToolTip.Tip="Hak pack name if this module uses custom content packs."/>
+            <TextBox Name="HakEdit" Grid.Row="3" Grid.Column="1" Margin="0,0,0,8"/>
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Description:" VerticalAlignment="Center" Margin="0,0,12,8"
+                       ToolTip.Tip="Module description (localized). Use Edit Description to change."/>
+            <Grid Grid.Row="4" Grid.Column="1" ColumnDefinitions="*,Auto" Margin="0,0,0,8">
+              <TextBox Name="DescEdit" Grid.Column="0" IsReadOnly="True" AcceptsReturn="True" MinHeight="44" Margin="0,0,8,0"/>
+              <Button Name="DescEditBtn" Grid.Column="1" Content="Edit Description"/>
+            </Grid>
+          </Grid>
+        </Expander>
+
+        <!-- Entry Point -->
+        <Expander Header="Entry Point" IsExpanded="True"
+                  ToolTip.Tip="Starting area and position when the player enters this module.">
+          <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" Margin="8,8">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Area ResRef:" VerticalAlignment="Center" Margin="0,0,12,8"
+                       ToolTip.Tip="Resource name of the area where the player starts (e.g. end_m01aa)."/>
+            <TextBox Name="EntryResrefEdit" Grid.Row="0" Grid.Column="1" Margin="0,0,0,8"/>
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Entry X:" VerticalAlignment="Center" Margin="0,0,12,8"
+                       ToolTip.Tip="X coordinate where the player appears."/>
+            <NumericUpDown Name="EntryXSpin" Grid.Row="1" Grid.Column="1" Minimum="-99999" Maximum="99999" Increment="0.1" Margin="0,0,0,8"/>
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Entry Y:" VerticalAlignment="Center" Margin="0,0,12,8"
+                       ToolTip.Tip="Y coordinate where the player appears."/>
+            <NumericUpDown Name="EntryYSpin" Grid.Row="2" Grid.Column="1" Minimum="-99999" Maximum="99999" Increment="0.1" Margin="0,0,0,8"/>
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Entry Z:" VerticalAlignment="Center" Margin="0,0,12,8"
+                       ToolTip.Tip="Z coordinate (height) where the player appears."/>
+            <NumericUpDown Name="EntryZSpin" Grid.Row="3" Grid.Column="1" Minimum="-99999" Maximum="99999" Increment="0.1" Margin="0,0,0,8"/>
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Entry Direction:" VerticalAlignment="Center" Margin="0,0,12,8"
+                       ToolTip.Tip="Facing direction in radians (0 = east, π/2 = north)."/>
+            <NumericUpDown Name="EntryDirSpin" Grid.Row="4" Grid.Column="1" Minimum="-3.14159" Maximum="3.14159" Increment="0.01" FormatString="0.0000" Margin="0,0,0,8"/>
+          </Grid>
+        </Expander>
+
+        <!-- Time Settings -->
+        <Expander Header="Time Settings" IsExpanded="False"
+                  ToolTip.Tip="Dawn/dusk hours, time scale, and module start date/time.">
+          <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" Margin="8,8">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Dawn Hour:" VerticalAlignment="Center" Margin="0,0,12,8"
+                       ToolTip.Tip="Hour of day when dawn begins (0–23)."/>
+            <NumericUpDown Name="DawnHourSpin" Grid.Row="0" Grid.Column="1" Minimum="0" Maximum="23" Margin="0,0,0,8"/>
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Dusk Hour:" VerticalAlignment="Center" Margin="0,0,12,8"
+                       ToolTip.Tip="Hour of day when dusk begins (0–23)."/>
+            <NumericUpDown Name="DuskHourSpin" Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="23" Margin="0,0,0,8"/>
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Time Scale:" VerticalAlignment="Center" Margin="0,0,12,8"
+                       ToolTip.Tip="How fast time passes (0–100)."/>
+            <NumericUpDown Name="TimeScaleSpin" Grid.Row="2" Grid.Column="1" Minimum="0" Maximum="100" Margin="0,0,0,8"/>
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Start Month:" VerticalAlignment="Center" Margin="0,0,12,8"/>
+            <NumericUpDown Name="StartMonthSpin" Grid.Row="3" Grid.Column="1" Minimum="1" Maximum="12" Margin="0,0,0,8"/>
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Start Day:" VerticalAlignment="Center" Margin="0,0,12,8"/>
+            <NumericUpDown Name="StartDaySpin" Grid.Row="4" Grid.Column="1" Minimum="1" Maximum="31" Margin="0,0,0,8"/>
+            <TextBlock Grid.Row="5" Grid.Column="0" Text="Start Hour:" VerticalAlignment="Center" Margin="0,0,12,8"/>
+            <NumericUpDown Name="StartHourSpin" Grid.Row="5" Grid.Column="1" Minimum="0" Maximum="23" Margin="0,0,0,8"/>
+            <TextBlock Grid.Row="6" Grid.Column="0" Text="Start Year:" VerticalAlignment="Center" Margin="0,0,12,8"/>
+            <NumericUpDown Name="StartYearSpin" Grid.Row="6" Grid.Column="1" Minimum="0" Maximum="9999" Margin="0,0,0,8"/>
+            <TextBlock Grid.Row="7" Grid.Column="0" Text="XP Scale:" VerticalAlignment="Center" Margin="0,0,12,8"
+                       ToolTip.Tip="Experience point scaling (0–100)."/>
+            <NumericUpDown Name="XpScaleSpin" Grid.Row="7" Grid.Column="1" Minimum="0" Maximum="100" Margin="0,0,0,8"/>
+          </Grid>
+        </Expander>
+
+        <!-- Scripts (content added in code) -->
+        <Expander Header="Scripts" IsExpanded="False"
+                  ToolTip.Tip="Module script hooks. Each ResRef points to an NCS script run when the event occurs.">
+          <StackPanel Name="scriptPanel" Margin="8,8"/>
+        </Expander>
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- Status bar -->
+    <Border DockPanel.Dock="Bottom" Padding="12,8" Background="{DynamicResource ThemeControlLowBrush}" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="0,1,0,0">
+      <TextBlock Name="statusText" Text="Module Info" Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="12"
+                 ToolTip.Tip="Module tag and status. Changes are applied when you edit fields and commit (e.g. tab out or save)."/>
+    </Border>
+  </DockPanel>
+</Window>

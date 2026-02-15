@@ -26,7 +26,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp
             Debug("Expected arg sizes: [4, 2]");
 
             // Simulate the parsing
-            String[] parts = testLine.Split("\\s+");
+            String[] parts = System.Text.RegularExpressions.Regex.Split(testLine, "\\s+");
             IList<string> hexParts = new List<string>();
             foreach (string part in parts)
             {

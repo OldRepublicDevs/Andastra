@@ -5,7 +5,7 @@ namespace Andastra.Runtime.Game.Core
     /// </summary>
     /// <remarks>
     /// Game State Enum:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) game state management system
+    /// - Game state / module state (Reva; K1 = k1_win_gog_swkotor.exe, TSL = k2_win_gog_legacypc_swkotor2.exe): TSL FUN_006caab0 @ 0x006caab0 parses server commands (ModuleLoaded, ModuleRunning); K1 has analogous module state handling.
     /// - Located via string references: "GameState" @ 0x007c15d0 (game state field), "GameMode" @ 0x007c15e0 (game mode field)
     /// - "GAMEINPROGRESS" @ 0x007c15c8 (game in progress flag), "ModuleLoaded" @ 0x007bdd70 (module loaded flag)
     /// - "ModuleRunning" @ 0x007bdd58 (module running flag)
@@ -74,7 +74,7 @@ namespace Andastra.Runtime.Game.Core
         /// - Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe options menu system
         /// - Located via string references: "BTN_OPTIONS" (options button in main menu)
         /// - GUI Panel: "optionsmain" (main menu options) or "optionsingame" (in-game options)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWGuiOptionsMain class @ 0x006e3e80 (constructor), 0x006de240 (OnGameplayOpt), 0x006de2c0 (OnAutopauseOpt), 0x006e2df0 (OnFeedbackOpt), 0x006e3d80 (OnGraphicsOpt), 0x006e3e00 (OnSoundOpt), 0x006de340 (SetDescription), 0x006dff10 (HandleInputEvent)
+        /// - CSWGuiOptionsMain (Reva): K1 CSWGuiOptionsMain @ 0x006e3e80, OnGameplay @ 0x006aac10, OnGraphics @ 0x006aad90; TSL 0x006e3e80 (ctor), OnGameplayOpt @ 0x006de240, OnGraphicsOpt @ 0x006e3d80, OnFeedbackOpt in FUN_006e28e0 @ 0x006e28e0, OnSoundOpt @ 0x006e3e00, OnAutopauseOpt @ 0x006de2c0, SetDescription @ 0x006de340, HandleInputEvent @ 0x006dff10.
         /// - Settings categories: Graphics, Sound, Gameplay, Feedback, Autopause
         /// - Graphics: Resolution, Texture Quality, Shadow Quality, VSync, Fullscreen
         /// - Sound: Master Volume, Music Volume, Effects Volume, Voice Volume
@@ -92,7 +92,7 @@ namespace Andastra.Runtime.Game.Core
         /// </summary>
         /// <remarks>
         /// Gameplay Options Menu State:
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWGuiOptionsMain::OnGameplayOpt @ 0x006de240
+        /// - Options handler (Reva): K1 OnGameplay @ 0x006aac10, TSL OnGameplayOpt @ 0x006de240.
         /// - GUI Panel: "optionsgameplay" (gameplay options submenu)
         /// - Settings: Mouse Sensitivity, Invert Mouse Y, Auto-save, Tooltips, Difficulty
         /// - Original implementation: Submenu opened from main options menu via "BTN_GAMEPLAY" button
@@ -105,7 +105,7 @@ namespace Andastra.Runtime.Game.Core
         /// </summary>
         /// <remarks>
         /// Graphics Options Menu State:
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWGuiOptionsMain::OnGraphicsOpt @ 0x006e3d80
+        /// - Options handler (Reva): K1 OnGraphics @ 0x006aad90, TSL OnGraphicsOpt @ 0x006e3d80.
         /// - GUI Panel: "optionsgraphics" (graphics options submenu)
         /// - Settings: Resolution, Fullscreen, VSync, Texture Quality, Shadow Quality, Anisotropic Filtering, Anti-Aliasing
         /// - Original implementation: Submenu opened from main options menu via "BTN_GRAPHICS" button

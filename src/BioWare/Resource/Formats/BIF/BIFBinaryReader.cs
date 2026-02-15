@@ -3,7 +3,6 @@ using System.IO;
 using System.Text;
 using BioWare.Common;
 using BioWare.Resource.Formats;
-using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Utility.LZMA;
 using JetBrains.Annotations;

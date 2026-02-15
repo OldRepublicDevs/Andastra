@@ -682,39 +682,61 @@ namespace BioWare.Common
         // Original: def read_locstring(self) -> LocalizedString:
         /// <summary>
         /// Reads a LocalizedString following the GFF format specification.
+        /// Total length is the size of the payload (stringref + count + substrings); the 4-byte length field is not included.
+        /// Accepts both little-endian and big-endian length (tries the other if one would exceed stream).
         /// </summary>
         public LocalizedString ReadLocalizedString()
         {
             LocalizedString locString = LocalizedString.FromInvalid();
 
-            ReadUInt32(); // total length (unused)
-            uint stringref = ReadUInt32(false, true);
-            locString.StringRef = (int)stringref;
-            uint stringCount = ReadUInt32();
+            byte[] lengthBytes = ReadBytes(4);
+            uint totalLengthLe = BitConverter.ToUInt32(lengthBytes, 0);
+            uint totalLengthBe = (uint)((lengthBytes[0] << 24) | (lengthBytes[1] << 16) | (lengthBytes[2] << 8) | lengthBytes[3]);
+            int remaining = _size - _position;
+            uint totalLength = totalLengthLe;
+            if (totalLengthLe > remaining && totalLengthBe <= remaining)
+                totalLength = totalLengthBe;
 
-            for (int i = 0; i < stringCount; i++)
+            // Never read past the stream (in case stored length is wrong or endianness differs)
+            if (totalLength > remaining)
+                totalLength = (uint)remaining;
+
+            if (totalLength < 8) // need at least stringref (4) + count (4)
+                return locString;
+
+            byte[] payload = ReadBytes((int)totalLength);
+
+            using (var payloadReader = FromBytes(payload))
             {
-                uint stringId = ReadUInt32();
-                Language language;
-                Gender gender;
-                LocalizedString.SubstringPair((int)stringId, out language, out gender);
-                uint length = ReadUInt32();
+                // GFF locstring payload is written in big-endian
+                uint stringref = payloadReader.ReadUInt32(true, true);
+                locString.StringRef = (int)stringref;
+                uint stringCount = payloadReader.ReadUInt32(true);
 
-                string encodingName = LanguageExtensions.GetEncoding(language);
-                Encoding encoding = encodingName != null
-                    ? Encoding.GetEncoding(encodingName, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback)
-                    : Encoding.GetEncoding("windows-1252", EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
-
-                byte[] textBytes = ReadBytes((int)length);
-                string text = encoding.GetString(textBytes);
-
-                int nullIndex = text.IndexOf('\0');
-                if (nullIndex >= 0)
+                for (int i = 0; i < stringCount && payloadReader.Remaining >= 8; i++)
                 {
-                    text = text.Substring(0, nullIndex).TrimEnd('\0');
-                }
+                    uint stringId = payloadReader.ReadUInt32(true);
+                    LocalizedString.SubstringPair((int)stringId, out Language language, out Gender gender);
+                    uint length = payloadReader.ReadUInt32(true);
+                    if (length > payloadReader.Remaining)
+                        length = (uint)payloadReader.Remaining;
 
-                locString.SetData(language, gender, text);
+                    string encodingName = LanguageExtensions.GetEncoding(language);
+                    Encoding encoding = encodingName != null
+                        ? Encoding.GetEncoding(encodingName, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback)
+                        : Encoding.GetEncoding("windows-1252", EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
+
+                    byte[] textBytes = payloadReader.ReadBytes((int)length);
+                    string text = encoding.GetString(textBytes);
+
+                    int nullIndex = text.IndexOf('\0');
+                    if (nullIndex >= 0)
+                    {
+                        text = text.Substring(0, nullIndex).TrimEnd('\0');
+                    }
+
+                    locString.SetData(language, gender, text);
+                }
             }
 
             return locString;

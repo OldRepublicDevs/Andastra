@@ -104,8 +104,10 @@ namespace BioWare.Resource.Formats.ERF
         {
             var key = new ResourceIdentifier(resname, restype);
             // Can be null if resource not found
-            if (_resourceDict.Remove(key, out ERFResource resource))
+            ERFResource resource;
+            if (_resourceDict.TryGetValue(key, out resource))
             {
+                _resourceDict.Remove(key);
                 _resources.Remove(resource);
             }
         }

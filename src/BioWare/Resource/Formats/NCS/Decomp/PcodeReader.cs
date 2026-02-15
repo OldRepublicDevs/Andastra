@@ -454,7 +454,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp
         {
 
             // Extract hex values from rest
-            String[] parts = rest.Split("\\s+");
+            String[] parts = System.Text.RegularExpressions.Regex.Split(rest, "\\s+");
             IList<string> hexParts = new List<string>();
             foreach (string part in parts)
             {
@@ -541,7 +541,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp
         {
 
             // Extract hex values from rest
-            String[] parts = rest.Split("\\s+");
+            String[] parts = System.Text.RegularExpressions.Regex.Split(rest, "\\s+");
             IList<string> hexParts = new List<string>();
             foreach (string part in parts)
             {

@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using BioWare.Common;
 using BioWare.Extract;
-using BioWare.Common;
+using BioWare.Utility;
 using BioWare.Resource;
 using JetBrains.Annotations;
 
@@ -133,7 +133,7 @@ namespace BioWare.TSLPatcher.Diff
             HashSet<string> files = new HashSet<string>();
             foreach (string file in Directory.GetFiles(root, "*", SearchOption.AllDirectories))
             {
-                string relPath = Path.GetRelativePath(root, file).Replace('\\', '/');
+                string relPath = PathHelper.GetRelativePath(root, file).Replace('\\', '/');
                 files.Add(relPath.ToLowerInvariant());
             }
             return files;
@@ -185,7 +185,7 @@ namespace BioWare.TSLPatcher.Diff
         {
             try
             {
-                return Path.GetRelativePath(src, dst).Replace('\\', '/');
+                return PathHelper.GetRelativePath(src, dst).Replace('\\', '/');
             }
             catch
             {

@@ -8,7 +8,6 @@ using BioWare.Extract.SaveData;
 using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.RIM;
-using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.GFF.Generics;
 using BioWare.Resource.Formats.GFF.Generics.UTC;
@@ -28,7 +27,7 @@ namespace Andastra.Runtime.Content.Save
     ///   - PARTYTABLE.res (GFF)
     ///   - [module]_s.rim files
     ///
-    /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) save serialization:
+    /// Reva: Save serialization — K1: StallEventSaveGame @ 0x004b3110 ("savenfo" @ 0x0074542c, "NFO " @ 0x00745424, "MOD V1.0" @ 0x0074539c). TSL: SerializeSaveNfo @ 0x004eb750 ("savenfo" @ 0x007be1f0).
     /// - Located via string references: "savenfo" @ 0x007be1f0 (save info file), "SAVES:" @ 0x007be284 (save directory)
     /// - "SAVEGAME" @ 0x007be28c (save game directory), "SAVES:%06d - %s" @ 0x007be298 (save name format)
     /// - "LoadSavegame" @ 0x007bdc90 (load save game function), "SavegameList" @ 0x007bdca0 (save game list)
@@ -75,8 +74,7 @@ namespace Andastra.Runtime.Content.Save
         }
 
         // GFF field labels for save NFO
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004eb750 @ 0x004eb750
-        // Located via string reference: "savenfo" @ 0x007be1f0
+        // Reva: K1: StallEventSaveGame @ 0x004b3110 ("savenfo" @ 0x0074542c); TSL: SerializeSaveNfo @ 0x004eb750 ("savenfo" @ 0x007be1f0)
         // Original implementation uses these exact field names from GFF structure
         private const string FIELD_SAVE_NAME = "SAVEGAMENAME";
         private const string FIELD_MODULE_NAME = "LASTMODULE";
@@ -96,8 +94,7 @@ namespace Andastra.Runtime.Content.Save
         #region ISaveSerializer Implementation
 
         // Serialize save metadata to NFO GFF format
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): SerializeSaveNfo @ 0x004eb750
-        // Located via string reference: "savenfo" @ 0x007be1f0
+        // Reva: SerializeSaveNfo — K1: StallEventSaveGame @ 0x004b3110; TSL: 0x004eb750. ("savenfo" K1: 0x0074542c, TSL: 0x007be1f0)
         // Original implementation (from decompiled SerializeSaveNfo):
         // 1. Creates GFF with "NFO " signature (4 bytes) and "V2.0" version string
         // 2. Writes fields in this exact order:
@@ -165,8 +162,7 @@ namespace Andastra.Runtime.Content.Save
         }
 
         // Deserialize save metadata from NFO GFF format
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00707290 @ 0x00707290
-        // Located via string reference: "savenfo" @ 0x007be1f0
+        // Reva: K1: LoadData @ 0x006c8e50 ("savenfo" @ 0x0074542c); TSL: LoadData (FUN_00707290) @ 0x00707290 ("savenfo" @ 0x007be1f0)
         // Original implementation: Reads GFF with "NFO " signature, extracts AREANAME, LASTMODULE, TIMEPLAYED,
         // CHEATUSED, SAVEGAMENAME, TIMESTAMP, PCNAME, SAVENUMBER, GAMEPLAYHINT, STORYHINT0-9, LIVECONTENT,
         // REBOOTAUTOSAVE, PCAUTOSAVE, SCREENSHOT
@@ -232,8 +228,7 @@ namespace Andastra.Runtime.Content.Save
         }
 
         // Serialize save game archive to ERF format
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004eb750 @ 0x004eb750
-        // Located via string reference: "MOD V1.0" @ 0x007be0d4
+        // Reva: K1: StallEventSaveGame @ 0x004b3110, SaveModuleStart @ 0x004c8960 ("MOD V1.0" @ 0x0074539c); TSL: SerializeSaveNfo @ 0x004eb750 ("MOD V1.0" @ 0x007be0d4)
         // Original implementation: Creates ERF archive with "MOD V1.0" signature, adds GLOBALVARS.res (GFF),
         // PARTYTABLE.res (GFF), cached modules (nested ERF/RIM), INVENTORY.res, REPUTE.fac, AVAILNPC*.utc
         // Uses SaveNestedCapsule to handle nested modules and cached entities
@@ -301,8 +296,7 @@ namespace Andastra.Runtime.Content.Save
         /// Gets the save path from SaveGameData by constructing it from the save name.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00708990 @ 0x00708990
-        /// Original implementation constructs path as "SAVES:\{saveName}\"
+        /// Reva: K1: GetGameDirectory @ 0x006c8250 ("SAVES:%06d - %s" @ 0x007454d4); TSL: FUN_00708990 @ 0x00708990. Original implementation constructs path as "SAVES:\{saveName}\"
         /// Save name format: "%06d - %s" (6-digit number - name) from string @ 0x007be298
         ///
         /// Path construction:
@@ -340,7 +334,7 @@ namespace Andastra.Runtime.Content.Save
             string sanitizedName = SanitizeSaveName(saveName);
 
             // Construct path: savesDirectory/sanitizedName
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "SAVES:\{saveName}\" format
+            // Reva: "SAVES:\{saveName}\" — K1: "SAVES:%06d - %s" @ 0x007454d4; TSL: 0x007be298
             return Path.Combine(baseDirectory, sanitizedName);
         }
 
@@ -371,8 +365,7 @@ namespace Andastra.Runtime.Content.Save
         }
 
         // Deserialize save game archive from ERF format
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00708990 @ 0x00708990
-        // Located via string reference: "LoadSavegame" @ 0x007bdc90
+        // Reva: K1: LoadGame @ 0x004ba640, LoadData @ 0x006c8e50 ("SAVES:" @ 0x00745174); TSL: FUN_00708990 @ 0x00708990 ("LoadSavegame" @ 0x007bdc90)
         // Original implementation: Reads ERF archive with "MOD V1.0" signature, extracts GLOBALVARS.res and PARTYTABLE.res,
         // reads module state files ([module]_s.rim) for each area and stores in AreaStates dictionary
         public void DeserializeSaveArchive(byte[] data, SaveGameData saveData)
@@ -551,8 +544,7 @@ namespace Andastra.Runtime.Content.Save
         }
 
         // Deserialize global variables from GFF format
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005ac540 @ 0x005ac540 (called from 0x005ac740 @ 0x005ac740)
-        // Located via string reference: "GLOBALVARS" @ 0x007c27bc
+        // Reva: K1: Load @ 0x0052ade0 ("GLOBALVARS" @ 0x007484ec); TSL: Load (FUN_005ac740) @ 0x005ac740 calls FUN_005ac540 @ 0x005ac540 ("GLOBALVARS" @ 0x007c27bc)
         // Original implementation: Reads GFF with "GVT " signature, extracts catalog lists (CatBoolean, CatNumber, CatLocation, CatString)
         // and corresponding value arrays (ValBoolean, ValNumber, ValLocation, ValString)
         // Restores variables by matching catalog entry index with value array index
@@ -674,8 +666,7 @@ namespace Andastra.Runtime.Content.Save
         #region Party Table
 
         // Serialize party table to GFF format
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): SavePartyTable @ 0x0057bd70
-        // Located via string reference: "PARTYTABLE" @ 0x007c1910
+        // Reva: K1: SaveTableInfo @ 0x005648c0 ("PARTYTABLE" @ 0x0074930c, "PT  " @ 0x00749318); TSL: SaveTableInfo (FUN_0057bd70) @ 0x0057bd70 ("PARTYTABLE" @ 0x007c1910)
         // Original implementation (from decompiled SavePartyTable):
         // 1. Creates GFF with "PT  " signature (4 bytes) and "V2.0" version string
         // 2. Writes fields in this exact order:
@@ -744,8 +735,7 @@ namespace Andastra.Runtime.Content.Save
 
             // Use BioWare GFF writer
             // Original creates GFF with "PT  " signature and "V2.0" version
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057bd70 @ 0x0057bd70 creates GFF with "PT  " signature
-            // Located via string reference: "PARTYTABLE" @ 0x007c1910
+            // Reva: K1: SaveTableInfo @ 0x005648c0; TSL: FUN_0057bd70 @ 0x0057bd70 (creates GFF with "PT  " signature)
             // Note: BioWare GFFBinaryWriter always writes "V3.2" version, but signature is correct
             var gff = new GFF(GFFContent.PT);
             var root = gff.Root;
@@ -969,8 +959,7 @@ namespace Andastra.Runtime.Content.Save
 
         // Helper to get member ID from ResRef
         // Member IDs: -1 = Player, 0-8 = NPC slots (K1), 0-11 = NPC slots (K2)
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): partytable.2da system
-        // Located via string reference: "PARTYTABLE" @ 0x007c1910
+        // Reva: partytable.2da / party table — K1: LoadTableInfo @ 0x00565d20 ("PARTYTABLE" @ 0x0074930c); TSL: LoadPartyTable (FUN_0057dcd0) @ 0x0057dcd0 ("PARTYTABLE" @ 0x007c1910)
         // Original implementation: partytable.2da maps NPC ResRefs to member IDs (row index = member ID)
         // partytable.2da structure: Row label is ResRef, row index is member ID (0-11 for K2, 0-8 for K1)
         // Based on nwscript.nss constants: NPC_PLAYER = -1, NPC_BASTILA = 0, etc.
@@ -990,10 +979,7 @@ namespace Andastra.Runtime.Content.Save
             }
 
             // Try to load from partytable.2da if GameDataManager is available
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): partytable.2da system
-            // Located via string reference: "PARTYTABLE" @ 0x007c1910
-            // Original implementation: partytable.2da maps NPC ResRefs to member IDs (row index = member ID)
-            // partytable.2da structure: Row label is ResRef, row index is member ID (0-11 for K2, 0-8 for K1)
+            // Reva: K1: LoadTableInfo @ 0x00565d20; TSL: FUN_0057dcd0 @ 0x0057dcd0. partytable.2da maps NPC ResRefs to member IDs (row index = member ID).
             if (_gameDataManager != null)
             {
                 // Use dynamic to call GetTable without referencing Odyssey.Kotor
@@ -1106,13 +1092,7 @@ namespace Andastra.Runtime.Content.Save
 
         // Helper to get ResRef from member ID (reverse of GetMemberId)
         // Member IDs: -1 = Player, 0-8 = NPC slots (K1), 0-11 = NPC slots (K2)
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): partytable.2da system
-        // Located via string reference: "PARTYTABLE" @ 0x007c1910
-        // Original implementation: partytable.2da maps NPC ResRefs to member IDs (row index = member ID)
-        // partytable.2da structure: Row label is ResRef, row index is member ID (0-11 for K2, 0-8 for K1)
-        // Reverse mapping: member ID -> ResRef by reading row label at index = member ID
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 @ 0x0057dcd0 (LoadPartyTable function)
-        // Original implementation reads PT_MEMBER_ID (float) and converts to ResRef using partytable.2da lookup
+        // Reva: partytable.2da / LoadPartyTable — K1: LoadTableInfo @ 0x00565d20; TSL: LoadPartyTable (FUN_0057dcd0) @ 0x0057dcd0. Reads PT_MEMBER_ID and uses partytable.2da lookup.
         private string GetResRefFromMemberId(float memberId)
         {
             // Player character (member ID = -1)
@@ -1131,10 +1111,7 @@ namespace Andastra.Runtime.Content.Save
             }
 
             // Try to load from partytable.2da if GameDataManager is available
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): partytable.2da system
-            // Located via string reference: "PARTYTABLE" @ 0x007c1910
-            // Original implementation: partytable.2da row index = member ID, row label = ResRef
-            // 0x0057dcd0 @ 0x0057dcd0: Reads PT_MEMBER_ID and uses row index to get ResRef from partytable.2da
+            // Reva: K1: 0x00565d20; TSL: 0x0057dcd0. partytable.2da row index = member ID, row label = ResRef.
             if (_gameDataManager != null)
             {
                 // Use dynamic to call GetTable without referencing Odyssey.Kotor
@@ -1201,8 +1178,7 @@ namespace Andastra.Runtime.Content.Save
         }
 
         // Deserialize party table from GFF format
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 @ 0x0057dcd0
-        // Located via string reference: "PARTYTABLE" @ 0x007c1910
+        // Reva: K1: LoadTableInfo @ 0x00565d20 ("PARTYTABLE" @ 0x0074930c); TSL: LoadPartyTable (FUN_0057dcd0) @ 0x0057dcd0 ("PARTYTABLE" @ 0x007c1910)
         // Original implementation: Reads GFF with "PT  " signature, extracts all party-related fields including
         // party members, puppets, available NPCs, influence values, gold, XP pool, solo mode, cheat flags,
         // galaxy map state, Pazaak cards, tutorial windows, message lists, cost multipliers, and various game state flags
@@ -1277,7 +1253,7 @@ namespace Andastra.Runtime.Content.Save
                 byte numMembers = root.GetUInt8("PT_NUM_MEMBERS");
 
                 // PT_MEMBERS - List of party members
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 @ 0x0057dcd0
+                // Reva: LoadPartyTable K1: 0x00565d20, TSL: 0x0057dcd0
                 // Original implementation: Reads PT_MEMBER_ID (float) and PT_IS_LEADER (byte) for each member
                 // Maps member IDs to ResRefs using partytable.2da lookup (row index = member ID, row label = ResRef)
                 // Adds ResRefs to SelectedParty list and sets LeaderResRef if PT_IS_LEADER is true
@@ -1298,7 +1274,7 @@ namespace Andastra.Runtime.Content.Save
                         bool isLeader = entry.GetUInt8("PT_IS_LEADER") != 0;
 
                         // Map member ID to ResRef using reverse lookup
-                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 @ 0x0057dcd0
+                        // Reva: LoadPartyTable K1: 0x00565d20, TSL: 0x0057dcd0
                         // Original implementation uses partytable.2da to convert member ID (row index) to ResRef (row label)
                         string memberResRef = GetResRefFromMemberId(memberId);
 
@@ -1367,7 +1343,7 @@ namespace Andastra.Runtime.Content.Save
                 }
 
                 // PT_AVAIL_NPCS - Available NPCs list (12 entries)
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 @ 0x0057dcd0
+                // Reva: LoadPartyTable K1: 0x00565d20, TSL: 0x0057dcd0
                 // Original implementation: Reads PT_NPC_AVAIL (byte) and PT_NPC_SELECT (byte) for each NPC slot (0-11)
                 // List index corresponds to member ID (0-11), maps to ResRef using partytable.2da lookup
                 // PT_AVAIL_NPCS[0] = NPC at member ID 0, PT_AVAIL_NPCS[1] = NPC at member ID 1, etc.
@@ -1388,7 +1364,7 @@ namespace Andastra.Runtime.Content.Save
                         bool selectable = entry.GetUInt8("PT_NPC_SELECT") != 0;
 
                         // Map index (member ID) to NPC ResRef using reverse lookup
-                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 @ 0x0057dcd0
+                        // Reva: LoadPartyTable K1: 0x00565d20, TSL: 0x0057dcd0
                         // Original implementation uses partytable.2da to convert member ID (row index) to ResRef (row label)
                         // List index i corresponds to member ID i (0-11)
                         string npcResRef = GetResRefFromMemberId((float)i);
@@ -2137,8 +2113,7 @@ namespace Andastra.Runtime.Content.Save
             GFFList repList = new GFFList();
 
             // Populate FactionList and RepList from SaveGameData.FactionReputation
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Faction reputation saved in REPUTE.fac (GFF with "FAC " signature)
-            // Located via string references: "REPUTE" @ (needs verification), "FactionList" @ 0x007be604
+            // Reva: K1: SaveModuleFAC @ 0x004c3960 ("FAC " @ 0x00745854, "REPUTE" @ 0x00745d8c); TSL: SaveModuleFAC (FUN_004fcab0) @ 0x004fcab0 ("FactionList" @ 0x007be604, "REPUTE" @ 0x007beac0). REPUTE.fac = GFF with "FAC " signature.
             // Reference: vendor/xoreos/src/engines/nwn2/faction.cpp:179-226 (loadFac method)
             if (saveData.FactionReputation != null && saveData.FactionReputation.Reputations != null)
             {
@@ -2275,8 +2250,7 @@ namespace Andastra.Runtime.Content.Save
                 UTC utc = CreateUtcFromCreatureState(memberState.State, templateResRef, out Dictionary<string, int> itemStackSizes);
 
                 // Serialize UTC to bytes with StackSize support for save games
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005675e0 @ 0x005675e0 writes StackSize to ItemList struct when serializing creatures
-                // k2_win_gog_aspyr_swkotor2.exe: SerializeCreature_K2 @ 0x005226d0 calls 0x005675e0 for each inventory item
+                // Reva: K1: SaveItem @ 0x0055ccd0 ("StackSize" @ 0x00748fe0); TSL: SaveItem (FUN_005675e0) @ 0x005675e0 ("StackSize" @ 0x007c0a34). SerializeCreature_K2 @ 0x005226d0 calls SaveItem per inventory item.
                 byte[] utcData = SerializeUtcForSaveGame(utc, BioWareGame.K2, itemStackSizes);
 
                 // Create ResRef for cached character (AVAILNPC + index)
@@ -2385,8 +2359,7 @@ namespace Andastra.Runtime.Content.Save
 
                     // Add powers from KnownPowers that belong to this class level
                     // Note: KnownPowers is a List<string>, we need to convert to integer IDs
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): spells.2da system
-                    // Located via string references: "spells.2da" @ 0x007c2e60
+                    // Reva: spells.2da — K1: LoadSpellsTable @ 0x005be4c0 ("Can't load spells.2da" @ 0x0074b5c0); TSL: FUN_0060e860 @ 0x0060e860 (string @ 0x007c4918).
                     // Original implementation: spells.2da row index = spell/power ID, row label = spell label
                     // The engine uses spell IDs (row indices) to store powers in UTC structures
                     // Based on vendor/PyKotor/wiki/2DA-spells.md: spells.2da structure where row index directly corresponds to spell ID
@@ -2447,8 +2420,7 @@ namespace Andastra.Runtime.Content.Save
             // Set feats from KnownFeats
             // KnownFeats is List<string>, but UTC expects List<int>
             // Try to parse as integers, or look up by label in feat.2da if not numeric
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): feat.2da system
-            // Located via string reference: "CSWClass::LoadFeatTable: Can't load feat.2da" @ 0x007c4720
+            // Reva: feat.2da — K1: LoadFeatsTable @ 0x005bd0f0 ("Can't load feat.2da" @ 0x0074b3c8); TSL: FUN_0060d350 @ 0x0060d350 ("Can't load feat.2da" @ 0x007c4720).
             // Original implementation: feat.2da row index = feat ID, row label = feat label
             // The engine uses feat IDs (row indices) to store feats in UTC structures
             if (creatureState.KnownFeats != null)
@@ -2543,7 +2515,7 @@ namespace Andastra.Runtime.Content.Save
             }
 
             // Set inventory from Inventory list
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ItemList in UTC format stores one entry per unique item template
+            // Reva: ItemList/StackSize — K1: SaveItem @ 0x0055ccd0; TSL: SaveItem @ 0x005675e0. UTC ItemList: one entry per unique item template.
             // StackSize is written when serializing creatures in save games (0x005675e0 @ 0x005675e0 line 15)
             // k2_win_gog_aspyr_swkotor2.exe: SerializeCreature_K2 @ 0x005226d0 iterates through inventory and calls 0x005675e0 for each item
             // 0x005675e0 writes StackSize, Charges, Upgrades, and other item properties to ItemList struct
@@ -2551,7 +2523,7 @@ namespace Andastra.Runtime.Content.Save
             if (creatureState.Inventory != null)
             {
                 // Group identical items by TemplateResRef to handle stacks properly
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Items with the same template are grouped, StackSize is written per entry
+                // Reva: K1: 0x0055ccd0; TSL: 0x005675e0. Items with same template grouped, StackSize per entry.
                 // Original implementation: One ItemList entry per unique item template with StackSize field
                 Dictionary<string, ItemState> groupedItems = new Dictionary<string, ItemState>(StringComparer.OrdinalIgnoreCase);
 
@@ -2560,11 +2532,11 @@ namespace Andastra.Runtime.Content.Save
                     if (itemState != null && !string.IsNullOrEmpty(itemState.TemplateResRef))
                     {
                         // Group items by TemplateResRef - if same template exists, combine stack sizes
-                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Items with same template are combined with total StackSize
+                        // Reva: K1: 0x0055ccd0; TSL: 0x005675e0. Same template combined with total StackSize.
                         if (groupedItems.TryGetValue(itemState.TemplateResRef, out ItemState existingItem))
                         {
                             // Combine stacks: add stack sizes together
-                            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): StackSize is cumulative for identical items
+                            // Reva: K1: 0x0055ccd0; TSL: 0x005675e0. StackSize cumulative for identical items.
                             existingItem.StackSize += itemState.StackSize;
                             // Preserve other properties from the first item (charges, identified, upgrades)
                             // If items have different properties, we use the first item's properties
@@ -2579,7 +2551,7 @@ namespace Andastra.Runtime.Content.Save
 
                 // Add one InventoryItem per unique item template
                 // StackSize will be written directly to GFF structure when serializing for save games
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ItemList contains one entry per unique item with StackSize field
+                // Reva: K1: 0x0055ccd0; TSL: 0x005675e0. ItemList: one entry per unique item with StackSize.
                 foreach (ItemState groupedItem in groupedItems.Values)
                 {
                     // Create InventoryItem for each unique item template
@@ -2589,7 +2561,7 @@ namespace Andastra.Runtime.Content.Save
 
                 // Store stack sizes for later use when serializing UTC for save games
                 // This allows us to write StackSize directly to the GFF structure even though InventoryItem doesn't support it
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): StackSize is written to ItemList struct when serializing creatures in save games
+                // Reva: K1: 0x0055ccd0; TSL: 0x005675e0. StackSize written to ItemList when serializing creatures.
                 itemStackSizes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
                 foreach (ItemState groupedItem in groupedItems.Values)
                 {
@@ -2610,8 +2582,7 @@ namespace Andastra.Runtime.Content.Save
 
         /// <summary>
         /// Serializes a UTC object to bytes for save game format, including StackSize in ItemList.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005675e0 @ 0x005675e0 writes StackSize to ItemList struct when serializing creatures in save games.
-        /// k2_win_gog_aspyr_swkotor2.exe: SerializeCreature_K2 @ 0x005226d0 calls 0x005675e0 for each inventory item.
+        /// Reva: K1: SaveItem @ 0x0055ccd0; TSL: SaveItem (FUN_005675e0) @ 0x005675e0. SerializeCreature_K2 @ 0x005226d0 calls SaveItem per inventory item.
         /// </summary>
         /// <param name="utc">The UTC object to serialize.</param>
         /// <param name="game">The game version.</param>
@@ -2629,15 +2600,14 @@ namespace Andastra.Runtime.Content.Save
             GFFStruct root = gff.Root;
 
             // Modify ItemList to include StackSize for each item
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005675e0 @ 0x005675e0 line 15 writes StackSize as WORD (ushort)
-            // k2_win_gog_aspyr_swkotor2.exe: StackSize is written to ItemList struct when serializing creatures in save games
+            // Reva: SaveItem K1: 0x0055ccd0, TSL: 0x005675e0; line 15 writes StackSize as WORD (ushort).
             if (itemStackSizes != null && itemStackSizes.Count > 0 && utc.Inventory != null && utc.Inventory.Count > 0)
             {
                 GFFList itemList = root.Acquire<GFFList>("ItemList", new GFFList());
                 if (itemList != null && itemList.Count > 0)
                 {
                     // Update each item struct in ItemList to include StackSize
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ItemList contains one entry per unique item with StackSize field
+                    // Reva: K1: 0x0055ccd0; TSL: 0x005675e0. ItemList: one entry per unique item with StackSize.
                     for (int i = 0; i < itemList.Count && i < utc.Inventory.Count; i++)
                     {
                         GFFStruct itemStruct = itemList[i];
@@ -2647,7 +2617,7 @@ namespace Andastra.Runtime.Content.Save
                             if (item != null && itemStackSizes.TryGetValue(item.ResRef.ToString(), out int stackSize))
                             {
                                 // Write StackSize to ItemList struct
-                                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005675e0 @ 0x005675e0 line 15 writes StackSize as WORD (ushort)
+                                // Reva: SaveItem K1: 0x0055ccd0, TSL: 0x005675e0 line 15 (StackSize as WORD).
                                 // However, save game format uses DWORD (uint) for StackSize (see SerializeInventory line 2066)
                                 // We'll use DWORD to match the save game format
                                 itemStruct.SetUInt32("StackSize", (uint)Math.Max(1, stackSize));
@@ -2684,7 +2654,7 @@ namespace Andastra.Runtime.Content.Save
 
                 // Cached modules are stored as ResourceType.SAV (2057) with ResRef = areaResRef
                 // The data inside is RIM format (standard format for area state in k2_win_gog_aspyr_swkotor2.exe)
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area state is stored as [module]_s.rim in savegame.sav
+                // Reva: K1 StoreCurrentModule @ 0x004b2e70, TSL StoreCurrentModule @ 0x004eb4a0. Area state is stored as [module]_s.rim in savegame.sav (string "_s.rim" refs: K1 PopulateModules @ 0x0067bc40, TSL PopulateModules @ 0x006d1a50).
                 // SerializeAreaStateAsModule creates a RIM archive containing the area state GFF
                 byte[] moduleData = SerializeAreaStateAsModule(areaState);
                 if (moduleData != null)
@@ -2738,7 +2708,7 @@ namespace Andastra.Runtime.Content.Save
             {
                 // Add area state GFF to RIM archive
                 // Resource name is the area ResRef, type is GFF
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area state stored as GFF resource in RIM with ResRef = area ResRef
+                // Reva: K1 SaveModuleFinish @ 0x004ca680, TSL SaveModuleFinish @ 0x005035e0. Area state stored as GFF resource in RIM with ResRef = area ResRef (SaveStatic ARE).
                 string areaResRef = areaState.AreaResRef ?? "area";
                 rim.SetData(areaResRef, ResourceType.GFF, areaStateGffData);
             }
@@ -2751,7 +2721,7 @@ namespace Andastra.Runtime.Content.Save
 
         /// <summary>
         /// Serializes area state to GFF format.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 saves entity states to GFF format
+        /// Reva: K1: SerializeCreature_K2 @ 0x00500610; TSL: SerializeCreature_K2 @ 0x005226d0. Saves entity states to GFF format.
         /// Creates a GFF with area state data including entity states, destroyed entities, spawned entities, and local variables.
         /// </summary>
         private byte[] SerializeAreaStateToGff(AreaState areaState)
@@ -2839,7 +2809,7 @@ namespace Andastra.Runtime.Content.Save
 
         /// <summary>
         /// Serializes an entity state to a GFF struct.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 saves entity states to GFF format
+        /// Reva: K1: SerializeCreature_K2 @ 0x00500610; TSL: SerializeCreature_K2 @ 0x005226d0.
         /// </summary>
         private void SerializeEntityStateToGff(GFFStruct structData, EntityState entityState)
         {

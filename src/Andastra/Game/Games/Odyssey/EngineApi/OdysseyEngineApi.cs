@@ -2908,10 +2908,8 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// GetIsInCombat(object oCreature=OBJECT_SELF, int bOnlyCountReal=FALSE) - Returns TRUE if the creature is in combat
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetIsInCombat implementation
-        /// Located via string reference: "InCombatHPBase" @ 0x007bf224, "CombatRoundData" @ 0x007bf6b4
-        /// Original implementation: 0x005119a0 @ 0x005119a0 checks combat state and active combat rounds
-        /// - If bOnlyCountReal=FALSE: Returns true if combat state is InCombat (any combat, including just targeted)
+        /// Reva: K1 ExecuteCommandGetIsInCombat @ 0x00539d80 (reads creature->field59_0x4e0); TSL routine 320, command table in InitializeCommands @ 0x005d35f0. Strings: "InCombatHPBase" TSL @ 0x007bf224, "CombatRoundData" TSL @ 0x007bf6b4.
+        /// - If bOnlyCountReal=FALSE: Returns true if combat state is InCombat (any combat, including just targeted). K1 checks creature field at 0x4e0.
         /// - If bOnlyCountReal=TRUE: Returns true only if there's an active combat round (real combat, actively fighting)
         /// Comment from original: "RWT-OEI 09/30/04 - If you pass TRUE in as the second parameter then this function will only return true if the character is in REAL combat. If you don't know what that means, don't pass in TRUE."
         /// </summary>
@@ -5836,10 +5834,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             if (targetFaction == null)
             {
                 // Create faction component if it doesn't exist
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Faction component creation during entity faction change
-                // Original implementation: Creates new faction component and assigns it to entity
-                // Located via string references: "FactionID" @ 0x007c40b4 (k2_win_gog_aspyr_swkotor2.exe)
-                // Function: 0x005fb0f0 @ 0x005fb0f0 loads FactionID from creature template
+                // Reva: Faction on change — K1 ExecuteCommandChangeFaction @ 0x0052f2f0 (CFactionManager::GetFaction + CSWSFaction::AddMember @ 0x005bfa70; placeables *(+0x23c)=factionId). FactionID from template: K1 ReadStatsFromGff @ 0x005afce0, "FactionID" @ 0x0074ae48; TSL DeserializeCreatureFromGFF_K2 @ 0x005fb0f0, "FactionID" @ 0x007c40b4.
                 // Component initialization: Faction component should be initialized with FactionManager for proper reputation lookups
                 if (objectToChange is Runtime.Core.Entities.Entity concreteEntity)
                 {
@@ -6100,7 +6095,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// - If waypoint tag is provided, positions party at that waypoint
         /// - If waypoint tag is empty, uses default entry waypoint from module IFO
         /// - Party members positioned in line perpendicular to waypoint facing (1.0 unit spacing)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 positions all party members at waypoint with spacing
+        /// - Reva: K1 HandlePlayerToServerCheatMessage @ 0x00520bf0 (party-at-waypoint logic at 0x005226d0); TSL HandlePlayerToServerCheatMessage @ 0x005a20f0. (TSL 0x005226d0 is SerializeCreature_K2, not waypoint positioning.)
         ///
         /// Cross-Engine Equivalents:
         /// - k2_win_gog_aspyr_swkotor2.exe: Same function ID (509), identical implementation pattern
@@ -6527,8 +6522,8 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Implement appear animation if bUseAppearAnimation is TRUE
-            // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Objects created with appear animation play a fade-in effect
-            // Located via string references: "spawn" @ 0x007c21d8 (k2_win_gog_aspyr_swkotor2.exe), "spawntype" @ 0x007bab44 (k2_win_gog_aspyr_swkotor2.exe)
+            // Based on k1_win_gog_swkotor.exe and k2_win_gog_legacypc_swkotor2.exe: Objects created with appear animation play a fade-in effect
+            // Reva: K1: OnApplyAppear @ 0x004dd4f0, CSWSCreature::AddAppearActions @ 0x004ecff0 (adds action type 0x34). TSL: strings "There was no place to spawn the goon." @ 0x007c21d8, "spawntype" @ 0x007bab44 (no symbol match for OnApplyAppear)
             // Original implementation: Objects fade in from opacity 0.0 to 1.0 over a duration (typically 0.5-1.0 seconds)
             // For creatures: May also play a spawn animation (typically animation ID 0 or a specific spawn animation)
             // Fade-in duration: 0.75 seconds for smooth visual transition (matches original engine behavior and ActionDestroyObject fade-out)
@@ -6538,7 +6533,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                 if (entity is Runtime.Core.Entities.Entity entityImpl)
                 {
                     // Set appear animation flag and timing for fade-in system
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Appear animation uses opacity fade-in from 0.0 to 1.0
+                    // Reva: Appear uses opacity fade-in from 0.0 to 1.0; same alpha path as EclipseArea (CSWCObject::SetAlpha, ApplyAlpha, UpdateAlpha, GetFinalFadeAlpha). K1: OnApplyAppear @ 0x004dd4f0, AddAppearActions @ 0x004ecff0. TSL: spawn strings @ 0x007c21d8, 0x007bab44.
                     // Similar pattern to ActionDestroyObject fade-out, but in reverse (fade-in instead of fade-out)
                     // The AppearAnimationFadeSystem will update Opacity property over time
                     entityImpl.SetData("AppearAnimation", true);
@@ -6563,7 +6558,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                     }
 
                     // For creatures, play spawn animation if animation component is available
-                    // Based on k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe: Creatures may play a spawn animation when appearing
+                    // Based on k1_win_gog_swkotor.exe and k2_win_gog_legacypc_swkotor2.exe: Creatures may play a spawn animation when appearing
                     // Spawn animation is typically animation ID 0 (first animation in model's animation array)
                     // Animation component should be attached by ComponentInitializer for creatures
                     if (objectType == 1) // OBJECT_TYPE_CREATURE
@@ -6572,7 +6567,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                         if (animationComponent != null)
                         {
                             // Play spawn animation (animation ID 0 is typically the spawn/appear animation)
-                            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Spawn animation plays while entity fades in
+                            // Reva: K1: AddAppearActions @ 0x004ecff0 adds action 0x34 (appear); spawn animation plays while entity fades in. TSL: spawn strings @ 0x007c21d8, 0x007bab44.
                             // Animation plays once (not looping) and completes as fade-in finishes
                             // If animation ID 0 doesn't exist, entity will just fade in without animation
                             animationComponent.PlayAnimation(0, 1.0f, false); // Animation ID 0, normal speed, no loop
@@ -6581,7 +6576,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
                     // For placeables, doors, and other objects with animation components:
                     // They may also have spawn animations, but typically just fade in
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Most non-creature objects just fade in without specific animations
+                    // Reva: K1: OnApplyAppear @ 0x004dd4f0 runs only for creatures (GAME_OBJECT_TYPES check); most non-creature objects just use opacity fade-in. TSL: same string refs.
                     // However, placeables with animation components may have an appear animation (animation ID 0)
                     if (objectType == 4) // OBJECT_TYPE_PLACEABLE
                     {
@@ -6589,11 +6584,11 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                         if (animationComponent != null)
                         {
                             // Placeables may have an appear animation (animation ID 0), similar to creatures
-                            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Placeables with appear animations play animation ID 0 while fading in
+                            // Reva: K1: AddAppearActions is creature-only; placeables use same opacity fade; animation ID 0 if present. TSL: spawn strings @ 0x007c21d8, 0x007bab44.
                             // Animation ID 0 is typically the first animation in the model's animation array
                             // If animation ID 0 doesn't exist, entity will just fade in without animation
                             // Animation plays once (not looping) and completes as fade-in finishes
-                            // k2_win_gog_aspyr_swkotor2.exe: Placeable appear animation behavior matches creature spawn animation pattern
+                            // k2_win_gog_legacypc_swkotor2.exe: Placeable appear animation behavior matches creature spawn animation pattern
                             animationComponent.PlayAnimation(0, 1.0f, false); // Animation ID 0, normal speed, no loop
                         }
                     }
@@ -7591,9 +7586,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetInfluence(int nNPC) - Returns influence value for NPC (0-100)
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Influence system (TSL only)
-        /// Located via string references: "PT_INFLUENCE" @ 0x007c1788, "PT_NPC_INFLUENCE" @ 0x007c1774
-        /// "BaseInfluence" @ 0x007bf6fc, "Influence" @ 0x007c4f78
+        /// Reva: K1: N/A (Influence is TSL-only). TSL: SavePartyTable @ 0x0057bd70 (writes PT_INFLUENCE/PT_NPC_INFLUENCE), LoadPartyTable @ 0x0057dcd0 (reads same); influence calc FUN_00525ba0 @ 0x00525ba0 (BaseInfluence @ 0x007bf6fc); FUN_00612bf0 @ 0x00612bf0 (Influence @ 0x007c4f78). Strings: PT_INFLUENCE @ 0x007c1788, PT_NPC_INFLUENCE @ 0x007c1774.
         /// GUI: "LBL_INFLUENCE_RECV" @ 0x007c8b38, "LBL_INFLUENCE_LOST" @ 0x007c8b0c
         /// Original implementation: Influence values stored in PARTYTABLE.res GFF (PT_INFLUENCE list)
         /// Each NPC has influence value 0-100 stored in PT_NPC_INFLUENCE field
@@ -7602,8 +7595,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         private Variable Func_GetInfluence(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetInfluence(int nNPC) - returns influence value for NPC (0-100)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Influence system (TSL only)
-            // Located via string references: "PT_INFLUENCE" @ 0x007c1788, "PT_NPC_INFLUENCE" @ 0x007c1774
+            // Reva: TSL only. LoadPartyTable @ 0x0057dcd0 reads PT_NPC_INFLUENCE from PARTYTABLE.res; influence at party+0x11c, loaded to param_1+0x47.
             // Original implementation: Reads influence from PARTYTABLE.res GFF structure
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
 
@@ -7630,16 +7622,14 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// SetInfluence(int nNPC, int nInfluence) - Sets influence value for NPC (0-100)
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Influence system (TSL only)
-        /// Located via string references: "PT_INFLUENCE" @ 0x007c1788, "PT_NPC_INFLUENCE" @ 0x007c1774
+        /// Reva: TSL only. SavePartyTable @ 0x0057bd70 writes PT_INFLUENCE list and PT_NPC_INFLUENCE per slot from party+0x11c.
         /// Original implementation: Writes influence to PARTYTABLE.res GFF structure (PT_NPC_INFLUENCE field)
         /// Influence value clamped to 0-100 range
         /// </remarks>
         private Variable Func_SetInfluence(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // SetInfluence(int nNPC, int nInfluence) - sets influence value for NPC (0-100)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Influence system (TSL only)
-            // Located via string references: "PT_INFLUENCE" @ 0x007c1788, "PT_NPC_INFLUENCE" @ 0x007c1774
+            // Reva: TSL only. SavePartyTable @ 0x0057bd70 serializes influence from party struct+0x11c to PT_NPC_INFLUENCE.
             // Original implementation: Writes influence to PARTYTABLE.res GFF structure
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
             int influence = args.Count > 1 ? args[1].AsInt() : 50;
@@ -7664,16 +7654,14 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// ModifyInfluence(int nNPC, int nModifier) - Modifies influence value for NPC by modifier amount
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Influence system (TSL only)
-        /// Located via string references: "PT_INFLUENCE" @ 0x007c1788, "PT_NPC_INFLUENCE" @ 0x007c1774
+        /// Reva: TSL only. FUN_00525ba0 @ 0x00525ba0 computes influence (BaseInfluence @ 0x007bf6fc); read/modify/write via LoadPartyTable/SavePartyTable.
         /// Original implementation: Reads current influence, adds modifier, writes back to PARTYTABLE.res GFF
         /// Influence value clamped to 0-100 range after modification
         /// </remarks>
         private Variable Func_ModifyInfluence(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // ModifyInfluence(int nNPC, int nModifier) - modifies influence value for NPC by modifier amount
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Influence system (TSL only)
-            // Located via string references: "PT_INFLUENCE" @ 0x007c1788, "PT_NPC_INFLUENCE" @ 0x007c1774
+            // Reva: TSL only. Influence stored at party+0x11c (12 DWORDs); FUN_00525ba0 updates influence at creature+0x1198, offset 0x18a.
             // Original implementation: Reads current influence, adds modifier, writes back to GFF
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
             int modifier = args.Count > 1 ? args[1].AsInt() : 0;
@@ -7755,10 +7743,8 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                 }
 
                 // Create entity from template using EntityFactory
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): AddAvailableNPCByTemplate implementation
-                // Located via string references: "TemplateResRef" @ 0x007bd00c, entity creation from UTC templates
+                // Reva: K1: ExecuteCommandAddAvailableNPCByTemplate @ 0x0052dcd0 (calls CSWPartyTable::AddNPC with template string). TSL: FUN_005afbe0 @ 0x005afbe0 (InitializeCommands @ 0x005d3868). Strings: TemplateResRef K1 @ 0x00747494, TSL @ 0x007bd00c.
                 // Original implementation: Creates creature from UTC template and adds to available party members
-                // Ghidra analysis: 0x0057bd70 @ 0x0057bd70 saves party data, 0x0057dcd0 @ 0x0057dcd0 loads party data
                 // EntityFactory accessed via ModuleLoader.EntityFactory property
                 // Get current module from ModuleLoader
                 BioWare.Common.Module module = moduleLoader.GetCurrentModule();
@@ -7779,8 +7765,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                     }
 
                     // Create creature from template using EntityFactory
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EntityFactory.CreateCreatureFromTemplate creates creature from UTC template
-                    // Located via string references: "TemplateResRef" @ 0x007bd00c, "Creature template '%s' doesn't exist.\n" @ 0x007bf78c
+                    // Reva: K1: CSWSCreature::LoadFromTemplate @ 0x005026d0 (UTC GFF, "Creature template '%s' doesn't exist.\n" @ 0x00747340); CSWSArea::LoadCreatures @ 0x00504a70 reads TemplateResRef. TSL: FUN_005261b0 @ 0x005261b0 (LoadFromTemplate equiv, DeserializeCreatureFromGFF_K2); "Creature template '%s' doesn't exist.\n" @ 0x007bf78c, TemplateResRef @ 0x007bd00c.
                     // Original implementation: Loads UTC GFF template, creates entity with template data, registers in world
                     Loading.EntityFactory entityFactory = moduleLoader.EntityFactory;
                     if (entityFactory != null)
@@ -7904,17 +7889,14 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetStealthXPEnabled() - Returns TRUE if stealth XP is enabled for the current area
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetStealthXPEnabled @ routine ID 836
-        /// Located via string references: "StealthXPEnabled" @ 0x007bd1b4
-        /// Ghidra analysis: 0x004e26d0 @ 0x004e26d0 reads "StealthXPEnabled" from AreaProperties GFF structure
-        /// Stored at object offset +0x2f4 as byte (boolean) in area properties
+        /// Reva: K1: ExecuteCommandGetStealthXPEnabled @ 0x00546ce0; CSWSArea::LoadProperties @ 0x00507490 reads "StealthXPEnabled" from AreaProperties GFF (string @ 0x007475fc). TSL: LoadAreaProperties @ 0x004e26d0 reads StealthXPEnabled (area+0x2f4); string @ 0x007bd1b4.
+        /// Stored at object offset +0x2f4 as byte (boolean) in area properties (TSL)
         /// Original implementation: Reads boolean from GFF field "StealthXPEnabled" in AreaProperties
         /// </remarks>
         private Variable Func_GetStealthXPEnabled(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // Get stealth XP enabled state from current area
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e26d0 @ 0x004e26d0 reads StealthXPEnabled from AreaProperties GFF
-            // Located via string references: "StealthXPEnabled" @ 0x007bd1b4
+            // Reva: K1: LoadProperties @ 0x00507490 reads field; TSL: LoadAreaProperties @ 0x004e26d0 reads "StealthXPEnabled" into area+0x2f4.
             // Original implementation: Reads boolean from AreaProperties GFF structure at offset +0x2f4
             if (ctx.World != null && ctx.World.CurrentArea != null)
             {
@@ -7927,10 +7909,8 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// SetStealthXPEnabled(int nEnabled) - Sets whether stealth XP is enabled for the current area
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): SetStealthXPEnabled @ routine ID 837
-        /// Located via string references: "StealthXPEnabled" @ 0x007bd1b4
-        /// Ghidra analysis: 0x004e11d0 @ 0x004e11d0 writes "StealthXPEnabled" to AreaProperties GFF structure
-        /// Stored at object offset +0x2f4 as byte (boolean) in area properties
+        /// Reva: K1: ExecuteCommandSetStealthXPEnabled @ 0x00546d30; CSWSArea::SaveProperties @ 0x00506090 writes "StealthXPEnabled" to AreaProperties GFF (string @ 0x007475fc). TSL: SaveAreaProperties @ 0x004e11d0 writes StealthXPEnabled from area+0x2f4; string @ 0x007bd1b4.
+        /// Stored at object offset +0x2f4 as byte (boolean) in area properties (TSL)
         /// Original implementation: Writes boolean to GFF field "StealthXPEnabled" in AreaProperties
         /// </remarks>
         private Variable Func_SetStealthXPEnabled(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -7938,8 +7918,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             int enabled = args.Count > 0 ? args[0].AsInt() : 1;
 
             // Set stealth XP enabled state in current area
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e11d0 @ 0x004e11d0 writes StealthXPEnabled to AreaProperties GFF
-            // Located via string references: "StealthXPEnabled" @ 0x007bd1b4
+            // Reva: K1: SaveProperties @ 0x00506090 writes field; TSL: SaveAreaProperties @ 0x004e11d0 writes area+0x2f4 to "StealthXPEnabled" in AreaProperties GFF.
             // Original implementation: Writes boolean to AreaProperties GFF structure at offset +0x2f4
             if (ctx.World != null && ctx.World.CurrentArea != null)
             {
@@ -7953,9 +7932,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// ShowUpgradeScreen(object oItem, object oCharacter, int nDisableItemCreation, int nDisableUpgrade, string sOverride2DA) - Displays the upgrade screen where the player can modify weapons and armor
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ShowUpgradeScreen @ 0x00680cb0 (routine ID 850)
-        /// Located via string references: "upgradeitems_p" @ 0x007d09e4, "BTN_UPGRADEITEM" @ 0x007d09d4
-        /// "BTN_UPGRADEITEMS" @ 0x007d0b58, "BTN_CREATEITEMS" @ 0x007d0b48, "upgradesel_p" (upgrade selection screen)
+        /// Reva: K1: ExecuteCommandShowUpgradeScreen @ 0x00543990, ShowUpgradeScreen @ 0x0062e760. TSL: FUN_00680cb0 @ 0x00680cb0 (routine ID 850). Strings TSL: "upgradeitems_p" @ 0x007d09e4, "BTN_UPGRADEITEM" @ 0x007d09d4, "BTN_UPGRADEITEMS" @ 0x007d0b58, "upgradesel_p" @ 0x007d0ba4.
         /// Original implementation:
         /// - Validates item exists if oItem != OBJECT_INVALID (0x7f000000) via object lookup
         /// - Creates upgrade selection screen GUI ("upgradesel_p") with item type filters (All, Lightsaber, Ranged, Melee, Armor)
@@ -7972,9 +7949,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         ///   - Upgrade availability checks (skill requirements)
         ///   - Item creation success rates (higher skills = better success)
         ///   - Upgrade application skill checks (skill requirements for applying upgrades)
-        ///   [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Character skills stored in IStatsComponent, accessed via GetSkillRank()
-        ///   Skills extracted when character is set via BaseUpgradeScreen.ExtractCharacterSkills()
-        ///   Original implementation: Character skills were NOT IMPLEMENTED in original ShowUpgradeScreen
+        ///   Reva: K1: GetSkillRank @ 0x005aa570, ExecuteCommandGetSkillRank @ 0x0053d050. TSL: skill data via internal structs (e.g. "SkillRankBons" @ 0x007bf1f4, FUN_005119a0). Character skills in our engine: IStatsComponent/GetSkillRank(); original ShowUpgradeScreen did not use script-visible skill checks.
         /// - If nDisableItemCreation = TRUE, then the player will not be able to access the item creation screen
         /// - If nDisableUpgrade = TRUE, then the player will be forced straight to item creation and not be able to access Item Upgrading
         /// - sOverride2DA: Override 2DA file name (empty string for default upgradeitems.2da)
@@ -7986,7 +7961,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         {
             // ShowUpgradeScreen(object oItem = OBJECT_INVALID, object oCharacter = OBJECT_INVALID,
             //                   int nDisableItemCreation = FALSE, int nDisableUpgrade = FALSE, string sOverride2DA = "")
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ShowUpgradeScreen @ 0x00680cb0
+            // Reva: K1: ExecuteCommandShowUpgradeScreen @ 0x00543990; TSL: FUN_00680cb0 @ 0x00680cb0.
             uint item = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
             uint character = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
             int disableItemCreation = args.Count > 2 ? args[2].AsInt() : 0;
@@ -8105,8 +8080,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetFeatAcquired(int nFeat, object oCreature=OBJECT_SELF) - Returns whether creature has access to a feat, even if unusable
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetFeatAcquired function (TSL only, function ID 783)
-        /// Located via string references: Feat acquisition checking (separate from usability)
+        /// Reva: K1: N/A (GetFeatAcquired is TSL-only; K1 has GetHasFeat only: ExecuteCommandGetHasFeat @ 0x00539170). TSL: routine ID 783 (0x30f); constant at 0x0056525a in FUN_00565130 @ 0x00565130; dispatcher CMP 0x30f at 0x005bbc11.
         /// Original implementation: Checks if creature has the feat in their feat list, regardless of daily limits or restrictions
         /// Returns TRUE if creature has the feat (even if exhausted or restricted)
         /// Returns FALSE if creature doesn't have the feat

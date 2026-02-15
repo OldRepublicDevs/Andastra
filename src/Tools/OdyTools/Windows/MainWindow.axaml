@@ -1,0 +1,229 @@
+<Window
+  x:Class="OdyTools.Windows.MainWindow"
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:widgets="using:OdyTools.Widgets"
+  Title="OdyTools"
+  Width="1200"
+  Height="800">
+  <DockPanel>
+    <!--  Menu Bar  -->
+    <Menu Name="menuBar" DockPanel.Dock="Top">
+      <MenuItem Header="_File">
+        <MenuItem Header="_New">
+          <MenuItem
+            Name="actionNewDLG"
+            Header="_Dialog"
+            IsEnabled="False" />
+          <MenuItem
+            Name="actionNewNSS"
+            Header="_Script"
+            IsEnabled="False" />
+          <MenuItem
+            Name="actionNewUTC"
+            Header="_Creature"
+            IsEnabled="False" />
+          <MenuItem
+            Name="actionNewUTP"
+            Header="_Placeable"
+            IsEnabled="False" />
+          <MenuItem
+            Name="actionNewUTD"
+            Header="_Door"
+            IsEnabled="False" />
+          <MenuItem
+            Name="actionNewUTI"
+            Header="_Item"
+            IsEnabled="False" />
+          <MenuItem
+            Name="actionNewUTS"
+            Header="_Sound"
+            IsEnabled="False" />
+          <MenuItem
+            Name="actionNewUTT"
+            Header="_Trigger"
+            IsEnabled="False" />
+          <MenuItem
+            Name="actionNewUTM"
+            Header="_Merchant"
+            IsEnabled="False" />
+          <MenuItem
+            Name="actionNewUTW"
+            Header="_Waypoint"
+            IsEnabled="False" />
+          <MenuItem
+            Name="actionNewUTE"
+            Header="_Encounter"
+            IsEnabled="False" />
+          <MenuItem Name="actionNewTLK" Header="_TalkTable" />
+          <Separator />
+          <MenuItem Name="actionNewGFF" Header="_GFF" />
+          <MenuItem Name="actionNewERF" Header="_ERF" />
+          <MenuItem Name="actionNewTXT" Header="_TXT" />
+          <MenuItem Name="actionNewSSF" Header="_SSF" />
+        </MenuItem>
+        <MenuItem Name="openAction" Header="_Open" />
+        <MenuItem Name="menuRecentFiles" Header="_Recent Files" />
+        <Separator />
+        <MenuItem Name="actionSettings" Header="_Settings" />
+        <Separator />
+        <MenuItem Name="actionExit" Header="E_xit" />
+      </MenuItem>
+      <MenuItem Header="_Edit">
+        <MenuItem
+          Name="actionEditTLK"
+          Header="Edit _Talk Table"
+          IsEnabled="False" />
+        <MenuItem
+          Name="actionEditJRL"
+          Header="Edit _Journal"
+          IsEnabled="False" />
+      </MenuItem>
+      <MenuItem Header="_Tools">
+        <MenuItem
+          Name="actionModuleDesigner"
+          Header="_Module Designer"
+          IsEnabled="False" />
+        <MenuItem
+          Name="actionIndoorMapBuilder"
+          Header="_Indoor Map Builder"
+          IsEnabled="False" />
+        <Separator />
+        <MenuItem
+          Name="actionKotorDiff"
+          Header="_KotorDiff"
+          IsEnabled="False" />
+        <MenuItem
+          Name="actionTSLPatchDataEditor"
+          Header="_TSLPatchData Editor"
+          IsEnabled="False" />
+        <Separator />
+        <MenuItem
+          Name="actionFileSearch"
+          Header="_File Search"
+          IsEnabled="False" />
+        <MenuItem
+          Name="actionCloneModule"
+          Header="_Clone Module"
+          IsEnabled="False" />
+      </MenuItem>
+      <MenuItem Name="menuTheme" Header="_Theme" />
+      <MenuItem Name="menuLanguage" Header="_Language" />
+      <MenuItem Header="_Help">
+        <MenuItem Name="actionHelpAbout" Header="_About" />
+        <MenuItem Header="_Discord">
+          <MenuItem Name="actionDiscordOdyTools" Header="_OdyTools" />
+          <MenuItem Name="actionDiscordKotOR" Header="_KOTOR Community Portal" />
+          <MenuItem Name="actionDiscordDeadlyStream" Header="_Deadly Stream" />
+        </MenuItem>
+        <MenuItem Name="actionInstructions" Header="_Instructions" />
+        <MenuItem Name="actionHelpUpdates" Header="Check For _Updates" />
+      </MenuItem>
+    </Menu>
+
+    <!--  Status Bar  -->
+    <Border
+      Name="statusbar"
+      Height="25"
+      Background="LightGray"
+      DockPanel.Dock="Bottom" />
+
+    <!--  Main Content  -->
+    <Grid ColumnDefinitions="*,Auto">
+      <!--  Left Panel: Resource Tabs  -->
+      <Grid Grid.Column="0" RowDefinitions="Auto,*">
+        <ComboBox
+          Name="gameCombo"
+          Grid.Row="0"
+          Margin="5,5,5,4" />
+        <Border
+          Grid.Row="1"
+          Margin="5,0,5,5"
+          Padding="4"
+          Background="{DynamicResource ThemeControlLowBrush}"
+          BorderBrush="{DynamicResource ThemeControlMidBrush}"
+          BorderThickness="1"
+          CornerRadius="8">
+          <TabControl Name="resourceTabs" IsEnabled="False">
+            <TabItem Name="coreTab" Header="Core">
+              <widgets:ResourceList Name="coreWidget" />
+            </TabItem>
+            <TabItem Name="savesTab" Header="Saves">
+              <Grid RowDefinitions="Auto,*">
+                <StackPanel
+                  Grid.Row="0"
+                  Margin="5"
+                  Orientation="Horizontal">
+                  <Button
+                    Name="openSaveEditorButton"
+                    Margin="0,0,5,0"
+                    Content="Open Save Editor"
+                    IsEnabled="False" />
+                </StackPanel>
+                <widgets:ResourceList Name="savesWidget" Grid.Row="1" />
+              </Grid>
+            </TabItem>
+            <TabItem Name="modulesTab" Header="Modules">
+              <Grid RowDefinitions="Auto,*">
+                <Button
+                  Name="specialActionButton"
+                  Grid.Row="0"
+                  Margin="5"
+                  HorizontalAlignment="Left"
+                  Content="Designer" />
+                <widgets:ResourceList Name="modulesWidget" Grid.Row="1" />
+              </Grid>
+            </TabItem>
+            <TabItem Name="overrideTab" Header="Override">
+              <widgets:ResourceList Name="overrideWidget" />
+            </TabItem>
+            <TabItem Name="texturesTab" Header="Textures">
+              <widgets:ResourceList Name="texturesWidget" />
+            </TabItem>
+          </TabControl>
+        </Border>
+      </Grid>
+
+      <!--  Right Panel: Action Buttons  -->
+      <Border
+        Grid.Column="1"
+        Width="150"
+        BorderBrush="LightGray"
+        BorderThickness="1,0,0,0">
+        <StackPanel Margin="5" Spacing="10">
+          <Button
+            Name="openButton"
+            HorizontalAlignment="Stretch"
+            Content="Open Selected" />
+          <Button
+            Name="extractButton"
+            HorizontalAlignment="Stretch"
+            Content="Extract Selected" />
+          <Button
+            Name="erfEditorButton"
+            HorizontalAlignment="Stretch"
+            Content="ERF Editor"
+            IsVisible="False" />
+
+          <Expander Header="TPC" IsExpanded="True">
+            <StackPanel Margin="5" Spacing="5">
+              <CheckBox Name="tpcDecompileCheckbox" Content="Decompile" />
+              <CheckBox Name="tpcTxiCheckbox" Content="Extract TXI" />
+            </StackPanel>
+          </Expander>
+
+          <Expander Header="MDL" IsExpanded="True">
+            <StackPanel Margin="5" Spacing="5">
+              <CheckBox
+                Name="mdlDecompileCheckbox"
+                Content="Decompile"
+                IsEnabled="False"
+                ToolTip.Tip="Decompile feature is not available." />
+              <CheckBox Name="mdlTexturesCheckbox" Content="Extract Textures" />
+            </StackPanel>
+          </Expander>
+        </StackPanel>
+      </Border>
+    </Grid>
+  </DockPanel>
+</Window>

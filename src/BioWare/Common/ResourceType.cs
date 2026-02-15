@@ -53,6 +53,23 @@ namespace BioWare.Common
         public bool IsGff() => Contents == "gff";
 
         /// <summary>
+        /// Returns True if this resource type is GFF or a GFF abstraction (e.g. GFF_XML, IFO_XML, GIT_XML).
+        /// </summary>
+        public bool IsGffOrGffAbstraction() => IsGff() || TargetType().IsGff();
+
+        /// <summary>
+        /// Returns an array of all ResourceTypes that are GFF, including XML/JSON abstractions (e.g. gff.xml, ifo.xml, git.xml).
+        /// </summary>
+        public static ResourceType[] GetAllGffTypes()
+        {
+            return typeof(ResourceType).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+                .Where(f => f.FieldType == typeof(ResourceType))
+                .Select(f => (ResourceType)f.GetValue(null))
+                .Where(rt => rt != null && !rt.IsInvalid && rt.IsGffOrGffAbstraction())
+                .ToArray();
+        }
+
+        /// <summary>
         /// Returns the target type for this resource type.
         /// </summary>
         public ResourceType TargetType()
@@ -278,7 +295,7 @@ namespace BioWare.Common
         public static readonly ResourceType INVALID = new ResourceType(-1, "", "Undefined", "binary", isInvalid: true, name: "INVALID");
         public static readonly ResourceType RES = new ResourceType(0, "res", "Save Data", "gff", name: "RES");
         public static readonly ResourceType BMP = new ResourceType(1, "bmp", "Images", "binary", name: "BMP");
-        public static readonly ResourceType MVE = new ResourceType(2, "mve", "Video", "video", name: "MVE"); // Video, 
+        public static readonly ResourceType MVE = new ResourceType(2, "mve", "Video", "video", name: "MVE"); // Video,
         public static readonly ResourceType TGA = new ResourceType(3, "tga", "Textures", "binary", name: "TGA");
         public static readonly ResourceType WAV = new ResourceType(4, "wav", "Audio", "binary", name: "WAV");
         public static readonly ResourceType PLT = new ResourceType(6, "plt", "Other", "binary", name: "PLT");
