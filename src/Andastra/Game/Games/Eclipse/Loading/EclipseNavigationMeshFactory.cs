@@ -5,7 +5,6 @@ using BioWare;
 using BioWare.Common;
 using BioWare.Resource.Formats.BWM;
 using BioWare.Extract;
-using BioWare.Common;
 using BioWare.Resource;
 using Andastra.Runtime.Core.Module;
 using Andastra.Game.Games.Eclipse;

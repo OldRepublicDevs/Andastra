@@ -2,9 +2,7 @@ using System;
 using System.IO;
 using BioWare.Common;
 using BioWare.Resource.Formats.GFF;
-using BioWare.Common;
 using BioWare.Resource;
-using BioWare.Resource.Formats.GFF;
 
 namespace BioWare.Resource.Formats.GFF.Generics.CNV
 {

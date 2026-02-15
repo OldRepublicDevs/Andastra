@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using BioWare.Common;
-using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Utility;
 using JetBrains.Annotations;

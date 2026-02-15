@@ -49,7 +49,7 @@ namespace KotorDiff.Gui
         private bool _compareHashes = true;
         private bool _taskRunning = false;
 
-        // Matching Python: def __init__(self): ... super().__init__(title="KotorDiff - Holocron Toolset", ...)
+        // Matching Python: def __init__(self): ... super().__init__(title="KotorDiff - OdyTools", ...)
         public KotorDiffApp()
         {
             InitializeComponent();

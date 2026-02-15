@@ -9,7 +9,6 @@ using BioWare.Resource.Formats.RIM;
 using BioWare.Resource.Formats.TPC;
 using BioWare.Resource.Formats.VIS;
 using BioWare.Extract;
-using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.LYT;
 using BioWare.Resource.Formats.GFF.Generics;

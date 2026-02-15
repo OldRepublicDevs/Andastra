@@ -1,0 +1,163 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="OdyTools.Editors.OdyToolTXT"
+        Title="Text Editor (KotOR)"
+        MinWidth="500" MinHeight="350"
+        Width="800" Height="600">
+  <Window.Styles>
+    <Style Selector="Border.txt-toolbar">
+      <Setter Property="Padding" Value="8,6"/>
+      <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderBrush}"/>
+      <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    </Style>
+    <Style Selector="Border.txt-statusbar">
+      <Setter Property="Padding" Value="12,6"/>
+      <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderBrush}"/>
+      <Setter Property="BorderThickness" Value="0,1,0,0"/>
+    </Style>
+  </Window.Styles>
+  <DockPanel>
+    <!-- Menu Bar -->
+    <Menu DockPanel.Dock="Top" Name="menuBar">
+      <MenuItem Header="_File">
+        <MenuItem Header="_New" Name="actionNew" InputGesture="Ctrl+N"
+                  ToolTip.Tip="Create a new document."/>
+        <MenuItem Header="_Open..." Name="actionOpen" InputGesture="Ctrl+O"
+                  ToolTip.Tip="Open a text file from disk."/>
+        <MenuItem Header="_Save" Name="actionSave" InputGesture="Ctrl+S"
+                  ToolTip.Tip="Save the current document."/>
+        <MenuItem Header="Save _As..." Name="actionSaveAs"
+                  ToolTip.Tip="Save the document with a new name or location."/>
+        <Separator/>
+        <MenuItem Header="_Revert" Name="actionRevert"
+                  ToolTip.Tip="Discard changes and reload from disk."/>
+        <Separator/>
+        <MenuItem Header="E_xit" Name="actionExit" InputGesture="Alt+F4"
+                  ToolTip.Tip="Close the editor."/>
+      </MenuItem>
+      <MenuItem Header="_Edit">
+        <MenuItem Header="_Undo" Name="actionUndo" InputGesture="Ctrl+Z"
+                  ToolTip.Tip="Undo the last action."/>
+        <MenuItem Header="_Redo" Name="actionRedo" InputGesture="Ctrl+Y"
+                  ToolTip.Tip="Redo the last undone action."/>
+        <Separator/>
+        <MenuItem Header="Cu_t" Name="actionCut" InputGesture="Ctrl+X"
+                  ToolTip.Tip="Cut the selected text."/>
+        <MenuItem Header="_Copy" Name="actionCopy" InputGesture="Ctrl+C"
+                  ToolTip.Tip="Copy the selected text."/>
+        <MenuItem Header="_Paste" Name="actionPaste" InputGesture="Ctrl+V"
+                  ToolTip.Tip="Paste from clipboard."/>
+        <MenuItem Header="_Delete" Name="actionDelete" InputGesture="Delete"
+                  ToolTip.Tip="Delete the selected text."/>
+        <Separator/>
+        <MenuItem Header="_Find..." Name="actionFind" InputGesture="Ctrl+F"
+                  ToolTip.Tip="Search for text."/>
+        <MenuItem Header="Find _Next" Name="actionFindNext" InputGesture="F3"
+                  ToolTip.Tip="Find next occurrence."/>
+        <MenuItem Header="Find _Previous" Name="actionFindPrevious" InputGesture="Shift+F3"
+                  ToolTip.Tip="Find previous occurrence."/>
+        <MenuItem Header="_Replace..." Name="actionReplace" InputGesture="Ctrl+H"
+                  ToolTip.Tip="Find and replace text."/>
+        <Separator/>
+        <MenuItem Header="_Go To Line..." Name="actionGoToLine" InputGesture="Ctrl+G"
+                  ToolTip.Tip="Go to a specific line number."/>
+        <MenuItem Header="Select _All" Name="actionSelectAll" InputGesture="Ctrl+A"
+                  ToolTip.Tip="Select all text."/>
+        <Separator/>
+        <MenuItem Header="Time/_Date" Name="actionTimeDate" InputGesture="F5"
+                  ToolTip.Tip="Insert current date and time."/>
+      </MenuItem>
+      <MenuItem Header="_Format">
+        <MenuItem Header="Word _Wrap" Name="actionWordWrap" ToggleType="CheckBox"
+                  ToolTip.Tip="Toggle word wrapping."/>
+        <MenuItem Header="_Font..." Name="actionFont"
+                  ToolTip.Tip="Change font family and size."/>
+      </MenuItem>
+      <MenuItem Header="_View">
+        <MenuItem Header="Zoom _In" Name="actionZoomIn" InputGesture="Ctrl+Plus"
+                  ToolTip.Tip="Increase text size."/>
+        <MenuItem Header="Zoom _Out" Name="actionZoomOut" InputGesture="Ctrl+Minus"
+                  ToolTip.Tip="Decrease text size."/>
+        <MenuItem Header="Restore Default _Zoom" Name="actionZoomReset" InputGesture="Ctrl+0"
+                  ToolTip.Tip="Reset zoom to 100%."/>
+        <Separator/>
+        <MenuItem Header="_Status Bar" Name="actionStatusBar" ToggleType="CheckBox" IsChecked="True"
+                  ToolTip.Tip="Show or hide the status bar."/>
+      </MenuItem>
+    </Menu>
+
+    <!-- Toolbar -->
+    <Border DockPanel.Dock="Top" Classes="txt-toolbar">
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <Button Name="tbNew" Content="New" ToolTip.Tip="New (Ctrl+N)"/>
+        <Button Name="tbOpen" Content="Open" ToolTip.Tip="Open (Ctrl+O)"/>
+        <Button Name="tbSave" Content="Save" ToolTip.Tip="Save (Ctrl+S)"/>
+        <Separator/>
+        <Button Name="tbCut" Content="Cut" ToolTip.Tip="Cut (Ctrl+X)"/>
+        <Button Name="tbCopy" Content="Copy" ToolTip.Tip="Copy (Ctrl+C)"/>
+        <Button Name="tbPaste" Content="Paste" ToolTip.Tip="Paste (Ctrl+V)"/>
+        <Separator/>
+        <Button Name="tbUndo" Content="Undo" ToolTip.Tip="Undo (Ctrl+Z)"/>
+        <Button Name="tbRedo" Content="Redo" ToolTip.Tip="Redo (Ctrl+Y)"/>
+        <Separator/>
+        <Button Name="tbFind" Content="Find" ToolTip.Tip="Find (Ctrl+F)"/>
+        <Button Name="tbReplace" Content="Replace" ToolTip.Tip="Replace (Ctrl+H)"/>
+        <Separator/>
+        <TextBlock Name="zoomLabel" Text="100%" VerticalAlignment="Center" FontSize="12"
+                   Foreground="{DynamicResource ThemeForegroundLowBrush}" Margin="8,0,0,0"/>
+      </StackPanel>
+    </Border>
+
+    <!-- Main content: text area -->
+    <ScrollViewer Name="textScroll" HorizontalScrollBarVisibility="Auto"
+                  VerticalScrollBarVisibility="Auto" Background="White">
+      <TextBox Name="TextEdit"
+                 AcceptsReturn="True"
+                 AcceptsTab="True"
+                 TextWrapping="NoWrap"
+                 FontFamily="Consolas,Courier New,Monospace"
+                 FontSize="14"
+                 MinHeight="200"
+                 Padding="12,8"
+                 BorderThickness="0"
+                 Background="Transparent">
+          <TextBox.ContextMenu>
+            <ContextMenu>
+              <MenuItem Header="_Undo" Name="ctxUndo"/>
+              <MenuItem Header="_Redo" Name="ctxRedo"/>
+              <Separator/>
+              <MenuItem Header="Cu_t" Name="ctxCut"/>
+              <MenuItem Header="_Copy" Name="ctxCopy"/>
+              <MenuItem Header="_Paste" Name="ctxPaste"/>
+              <MenuItem Header="_Delete" Name="ctxDelete"/>
+              <Separator/>
+              <MenuItem Header="_Find..." Name="ctxFind"/>
+              <MenuItem Header="_Replace..." Name="ctxReplace"/>
+              <MenuItem Header="Find _Next" Name="ctxFindNext"/>
+              <Separator/>
+              <MenuItem Header="Select _All" Name="ctxSelectAll"/>
+              <Separator/>
+              <MenuItem Header="Time/_Date" Name="ctxTimeDate"/>
+            </ContextMenu>
+          </TextBox.ContextMenu>
+        </TextBox>
+    </ScrollViewer>
+
+    <!-- Status Bar -->
+    <Border Name="statusBar" DockPanel.Dock="Bottom" Classes="txt-statusbar">
+      <Grid ColumnDefinitions="Auto,Auto,Auto,*">
+        <TextBlock Name="statusLnCol" Text="Ln 1, Col 1" FontSize="12"
+                   Foreground="{DynamicResource ThemeForegroundLowBrush}" Margin="0,0,24,0"/>
+        <TextBlock Name="statusChars" Grid.Column="1" Text="0 characters" FontSize="12"
+                   Foreground="{DynamicResource ThemeForegroundLowBrush}" Margin="0,0,24,0"/>
+        <TextBlock Name="statusLines" Grid.Column="2" Text="1 line" FontSize="12"
+                   Foreground="{DynamicResource ThemeForegroundLowBrush}" Margin="0,0,24,0"/>
+        <TextBlock Name="statusEncoding" Grid.Column="3" Text="UTF-8" FontSize="12"
+                   Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                   HorizontalAlignment="Right"/>
+      </Grid>
+    </Border>
+  </DockPanel>
+</Window>

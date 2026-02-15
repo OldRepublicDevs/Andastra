@@ -1,0 +1,137 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:w="clr-namespace:OdyTools.Widgets"
+        x:Class="OdyTools.Editors.OdyToolUTW"
+        Title="Waypoint Editor"
+        MinWidth="400" MinHeight="340"
+        Width="460" Height="400"
+        WindowStartupLocation="CenterScreen">
+  <Window.Styles>
+    <!-- Header bar: subtle background and bottom border -->
+    <Style Selector="Border.waypoint-header">
+      <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderBrush}"/>
+      <Setter Property="BorderThickness" Value="0,0,0,1"/>
+      <Setter Property="Padding" Value="14,12"/>
+    </Style>
+    <!-- Form row labels: fixed width for alignment, muted when not focused -->
+    <Style Selector="TextBlock.form-label">
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="Margin" Value="0,0,14,0"/>
+      <Setter Property="MinWidth" Value="80"/>
+      <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}"/>
+      <Setter Property="FontSize" Value="13"/>
+    </Style>
+    <!-- Section title (e.g. in Advanced tab) -->
+    <Style Selector="TextBlock.section-title">
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundLowBrush}"/>
+      <Setter Property="Margin" Value="0,8,0,6"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <!-- Tab items: comfortable padding -->
+    <Style Selector="TabItem">
+      <Setter Property="Padding" Value="14,10"/>
+      <Setter Property="FontSize" Value="13"/>
+    </Style>
+    <!-- Small action button (Copy from ResRef / Copy from Tag) -->
+    <Style Selector="Button.generate-btn">
+      <Setter Property="MinWidth" Value="32"/>
+      <Setter Property="MaxWidth" Value="32"/>
+      <Setter Property="MinHeight" Value="32"/>
+      <Setter Property="Padding" Value="6,0"/>
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="ToolTip.ShowDelay" Value="400"/>
+    </Style>
+    <!-- Comments multiline text area -->
+    <Style Selector="TextBox.comments-box">
+      <Setter Property="MinHeight" Value="140"/>
+      <Setter Property="Padding" Value="10,8"/>
+      <Setter Property="FontFamily" Value="Consolas, monospace"/>
+      <Setter Property="FontSize" Value="12"/>
+    </Style>
+  </Window.Styles>
+  <DockPanel LastChildFill="True">
+    <Menu DockPanel.Dock="Top" Name="menuBar">
+      <MenuItem Header="_File">
+        <MenuItem Header="_New" Name="actionNew" HotKey="Ctrl+N"/>
+        <MenuItem Header="_Open" Name="actionOpen" HotKey="Ctrl+O"/>
+        <MenuItem Header="_Save" Name="actionSave" HotKey="Ctrl+S"/>
+        <MenuItem Header="Save _As" Name="actionSaveAs"/>
+        <Separator/>
+        <MenuItem Header="_Revert" Name="actionRevert"/>
+        <Separator/>
+        <MenuItem Header="E_xit" Name="actionExit" HotKey="Alt+F4"/>
+      </MenuItem>
+      <MenuItem Header="_Edit">
+        <MenuItem Header="_Undo" Name="actionUndo" HotKey="Ctrl+Z"/>
+        <MenuItem Header="_Redo" Name="actionRedo" HotKey="Ctrl+Y"/>
+        <Separator/>
+        <MenuItem Header="Find..." Name="actionFind" HotKey="Ctrl+F"/>
+        <MenuItem Header="Find _Next" Name="actionFindNext" HotKey="F3"/>
+      </MenuItem>
+      <MenuItem Header="_Help" Name="menuHelp"/>
+    </Menu>
+
+    <Border DockPanel.Dock="Top" Classes="waypoint-header">
+      <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto" Margin="0,0,0,2">
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Waypoint:" VerticalAlignment="Center" Margin="0,0,10,0"
+                   Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="12"/>
+        <TextBlock Name="waypointSummary" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center"
+                   Text="— | —" Foreground="{DynamicResource ThemeForegroundBrush}" FontSize="13"
+                   TextTrimming="CharacterEllipsis"
+                   ToolTip.Tip="Tag | ResRef — identifier shown on area map and in travel menu"/>
+      </Grid>
+    </Border>
+
+    <ScrollViewer DockPanel.Dock="Top" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Margin="0,0,0,0">
+      <TabControl Name="mainTabs" Margin="12,12,12,12" Padding="0,4">
+        <TabItem Header="Basic">
+          <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*" Margin="16,20,16,24" RowSpacing="14" ColumnSpacing="0">
+            <TextBlock Grid.Row="0" Grid.Column="0" Classes="form-label" Text="Name:"/>
+            <w:LocalizedStringEdit Name="nameEdit" Grid.Row="0" Grid.Column="1"
+                ToolTip.Tip="Display name on area map and travel menu (GFF: LocalizedName). Scripts target by Tag, not name."/>
+            <TextBlock Grid.Row="1" Grid.Column="0" Classes="form-label" Text="Tag:"/>
+            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <TextBox Name="tagEdit" MinWidth="200" MaxWidth="320"
+                  ToolTip.Tip="Unique waypoint identifier for scripts and transitions (GFF: Tag). GetObjectByTag and doors/triggers use this."/>
+              <Button Name="tagGenerateButton" Classes="generate-btn" Content="⟳"
+                  ToolTip.Tip="Copy from ResRef — set Tag to match Template ResRef so they stay in sync for script targeting."/>
+            </StackPanel>
+            <TextBlock Grid.Row="2" Grid.Column="0" Classes="form-label" Text="ResRef:"/>
+            <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <TextBox Name="resrefEdit" MinWidth="200" MaxWidth="320" MaxLength="16"
+                  ToolTip.Tip="Waypoint template resource reference (GFF: TemplateResRef). .utw implied. Max 16 chars; must match .utw filename."/>
+              <Button Name="resrefGenerateButton" Classes="generate-btn" Content="⟳"
+                  ToolTip.Tip="Copy from Tag — set Template ResRef from Tag (max 16 chars). ResRef must match .utw filename."/>
+            </StackPanel>
+          </Grid>
+        </TabItem>
+        <TabItem Header="Advanced">
+          <StackPanel Margin="16,20,16,24" Spacing="4">
+            <TextBlock Classes="section-title" Text="Map note (area map pin)"/>
+            <CheckBox Name="isNoteCheckbox" Content="Is a Map Note" Margin="0,4,0,0"
+                ToolTip.Tip="When set, this waypoint shows custom text on the area map. MapNote and MapNoteEnabled are only read when this is set."/>
+            <CheckBox Name="noteEnabledCheckbox" Content="Map Note is Enabled" Margin="0,6,0,0"
+                ToolTip.Tip="Map note pin is initially visible. Only applies when Is a Map Note is set; scripts can toggle visibility."/>
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto" Margin="0,12,0,0" RowSpacing="0" ColumnSpacing="0">
+              <TextBlock Grid.Row="0" Grid.Column="0" Classes="form-label" Text="Map Note:"/>
+              <w:LocalizedStringEdit Name="noteEdit" Grid.Row="0" Grid.Column="1"
+                  ToolTip.Tip="Text shown on the area map when Is a Map Note is set (GFF: MapNote). Use for quest hints or location labels."/>
+            </Grid>
+          </StackPanel>
+        </TabItem>
+        <TabItem Header="Comments">
+          <TextBox Name="commentsEdit" Classes="comments-box" Margin="16,20,16,24"
+              AcceptsReturn="True" TextWrapping="Wrap"
+              Watermark="Developer comments (not used by the game engine)..."
+              ToolTip.Tip="Comment (GFF: Comment). Developer-only; toolset use."/>
+        </TabItem>
+      </TabControl>
+    </ScrollViewer>
+
+    <Border DockPanel.Dock="Bottom" Padding="12,8" Background="{DynamicResource ThemeControlLowBrush}" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="0,1,0,0">
+      <TextBlock Name="statusText" Text="Waypoint" Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="12"/>
+    </Border>
+  </DockPanel>
+</Window>

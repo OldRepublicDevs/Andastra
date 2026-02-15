@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using BioWare.Utility;
 using JetBrains.Annotations;
 
 namespace BioWare.Common
@@ -336,10 +337,10 @@ namespace BioWare.Common
             if (!Path.IsPathRooted(thisPath) || !Path.IsPathRooted(basePathStr))
             {
                 // For relative paths, just do string manipulation
-                return Path.GetRelativePath(basePathStr, thisPath);
+                return PathHelper.GetRelativePath(basePathStr, thisPath);
             }
 
-            return Path.GetRelativePath(basePathStr, thisPath);
+            return PathHelper.GetRelativePath(basePathStr, thisPath);
         }
 
         public static string StrNorm(string path, string slash)

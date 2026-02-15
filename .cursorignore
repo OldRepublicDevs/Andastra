@@ -1,5 +1,7 @@
 
 .*
+src/MonoGameFPS
+src/StrideGameFPS
 .history/
 *.exe
 vendor/DeNCS/

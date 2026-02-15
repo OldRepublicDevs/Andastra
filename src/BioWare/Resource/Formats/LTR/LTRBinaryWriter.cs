@@ -38,7 +38,7 @@ namespace BioWare.Resource.Formats.LTR
             {
                 _writer.WriteString("LTR ", stringLength: 4);
                 _writer.WriteString("V1.0", stringLength: 4);
-                _writer.WriteUInt8(28);
+                _writer.WriteUInt8((byte)LTR.NumCharacters);
 
                 foreach (float chance in _ltr.Singles.Start)
                 {
@@ -53,7 +53,7 @@ namespace BioWare.Resource.Formats.LTR
                     _writer.WriteSingle(chance);
                 }
 
-                for (int i = 0; i < 28; i++)
+                for (int i = 0; i < LTR.NumCharacters; i++)
                 {
                     foreach (float chance in _ltr.Doubles[i].Start)
                     {
@@ -69,9 +69,9 @@ namespace BioWare.Resource.Formats.LTR
                     }
                 }
 
-                for (int i = 0; i < 28; i++)
+                for (int i = 0; i < LTR.NumCharacters; i++)
                 {
-                    for (int j = 0; j < 28; j++)
+                    for (int j = 0; j < LTR.NumCharacters; j++)
                     {
                         foreach (float chance in _ltr.Triples[i][j].Start)
                         {

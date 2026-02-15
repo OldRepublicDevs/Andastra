@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using BioWare.Common;
 using BioWare.Extract.Chitin;
-using BioWare.Common;
 using BioWare.Resource;
 using ChitinClass = BioWare.Extract.Chitin.Chitin;
 

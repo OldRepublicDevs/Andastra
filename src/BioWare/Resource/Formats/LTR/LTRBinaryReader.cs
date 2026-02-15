@@ -51,56 +51,56 @@ namespace BioWare.Resource.Formats.LTR
                 }
 
                 byte letterCount = _reader.ReadUInt8();
-                if (letterCount != 28)
+                if (letterCount != LTR.NumCharacters)
                 {
-                    throw new ArgumentException("LTR files that do not handle exactly 28 characters are not supported.");
+                    throw new ArgumentException("LTR files that do not handle exactly " + LTR.NumCharacters + " characters are not supported.");
                 }
 
                 // Read single-letter probability block
-                for (int i = 0; i < 28; i++)
+                for (int i = 0; i < LTR.NumCharacters; i++)
                 {
                     _ltr.Singles.Start[i] = _reader.ReadSingle();
                 }
-                for (int i = 0; i < 28; i++)
+                for (int i = 0; i < LTR.NumCharacters; i++)
                 {
                     _ltr.Singles.Middle[i] = _reader.ReadSingle();
                 }
-                for (int i = 0; i < 28; i++)
+                for (int i = 0; i < LTR.NumCharacters; i++)
                 {
                     _ltr.Singles.End[i] = _reader.ReadSingle();
                 }
 
                 // Read double-letter probability blocks
-                for (int i = 0; i < 28; i++)
+                for (int i = 0; i < LTR.NumCharacters; i++)
                 {
-                    for (int j = 0; j < 28; j++)
+                    for (int j = 0; j < LTR.NumCharacters; j++)
                     {
                         _ltr.Doubles[i].Start[j] = _reader.ReadSingle();
                     }
-                    for (int j = 0; j < 28; j++)
+                    for (int j = 0; j < LTR.NumCharacters; j++)
                     {
                         _ltr.Doubles[i].Middle[j] = _reader.ReadSingle();
                     }
-                    for (int j = 0; j < 28; j++)
+                    for (int j = 0; j < LTR.NumCharacters; j++)
                     {
                         _ltr.Doubles[i].End[j] = _reader.ReadSingle();
                     }
                 }
 
                 // Read triple-letter probability blocks
-                for (int i = 0; i < 28; i++)
+                for (int i = 0; i < LTR.NumCharacters; i++)
                 {
-                    for (int j = 0; j < 28; j++)
+                    for (int j = 0; j < LTR.NumCharacters; j++)
                     {
-                        for (int k = 0; k < 28; k++)
+                        for (int k = 0; k < LTR.NumCharacters; k++)
                         {
                             _ltr.Triples[i][j].Start[k] = _reader.ReadSingle();
                         }
-                        for (int k = 0; k < 28; k++)
+                        for (int k = 0; k < LTR.NumCharacters; k++)
                         {
                             _ltr.Triples[i][j].Middle[k] = _reader.ReadSingle();
                         }
-                        for (int k = 0; k < 28; k++)
+                        for (int k = 0; k < LTR.NumCharacters; k++)
                         {
                             _ltr.Triples[i][j].End[k] = _reader.ReadSingle();
                         }

@@ -3,7 +3,6 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using BioWare.Common;
-using BioWare.Common;
 using BioWare.Resource;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Video.Bink;

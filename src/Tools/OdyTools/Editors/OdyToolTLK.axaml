@@ -1,0 +1,87 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="OdyTools.Editors.OdyToolTLK"
+        Title="TLK Editor"
+        MinWidth="400" MinHeight="300"
+        Width="560" Height="620">
+    <DockPanel>
+        <!-- Menu Bar -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New" Name="actionNew" />
+                <MenuItem Header="_Open" Name="actionOpen" />
+                <MenuItem Header="_Save" Name="actionSave" HotKey="Ctrl+S" />
+                <MenuItem Header="Save _As" Name="actionSaveAs" />
+                <Separator />
+                <MenuItem Header="_Revert" Name="actionRevert" />
+                <Separator />
+                <MenuItem Header="E_xit" Name="actionExit" />
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="_Undo" Name="actionUndo" HotKey="Ctrl+Z" />
+                <MenuItem Header="_Redo" Name="actionRedo" HotKey="Ctrl+Y" />
+                <Separator />
+                <MenuItem Header="_Find..." Name="actionFind" HotKey="Ctrl+F" />
+                <MenuItem Header="_Replace..." Name="actionReplace" HotKey="Ctrl+H" />
+                <MenuItem Header="Find _Next" Name="actionFindNext" HotKey="F3" />
+                <Separator />
+                <MenuItem Header="_Insert Entry" Name="actionInsert" />
+                <MenuItem Header="_Delete Entry" Name="actionDeleteEntry" HotKey="Delete" />
+                <Separator />
+                <MenuItem Header="_Go To Entry..." Name="actionGoTo" HotKey="Ctrl+G" />
+            </MenuItem>
+            <MenuItem Header="_Language" Name="menuLanguage" />
+        </Menu>
+
+        <!-- Main Content -->
+        <Grid RowDefinitions="Auto,Auto,*,Auto,Auto">
+            <!-- Search Box -->
+            <Border Name="searchBox" Grid.Row="0" BorderBrush="LightGray" BorderThickness="1" Padding="5" Margin="5" IsVisible="True">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBox Name="searchEdit" Grid.Column="0" Watermark="Search text or sound..." Margin="0,0,5,0" />
+                    <Button Name="searchButton" Grid.Column="1" Content="Search" Width="70" />
+                </Grid>
+            </Border>
+
+            <!-- Jump Box -->
+            <Border Name="jumpBox" Grid.Row="1" BorderBrush="LightGray" BorderThickness="1" Padding="5" Margin="5" IsVisible="True">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Text="Go To Entry:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" />
+                    <NumericUpDown Name="jumpSpinbox" Grid.Column="1" Minimum="0" Maximum="0" Margin="0,0,5,0" />
+                    <Button Name="jumpButton" Grid.Column="2" Content="Go" Width="70" />
+                </Grid>
+            </Border>
+
+            <!-- Talk Table -->
+            <DataGrid Name="talkTable" Grid.Row="2" 
+                      AutoGenerateColumns="True"
+                      CanUserReorderColumns="False"
+                      CanUserResizeColumns="True"
+                      SelectionMode="Single">
+                <DataGrid.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="_Insert Entry" Name="ctxInsert" />
+                        <MenuItem Header="_Delete Entry" Name="ctxDeleteEntry" />
+                        <Separator />
+                        <MenuItem Header="_Find..." Name="ctxFind" />
+                        <MenuItem Header="_Go To Entry..." Name="ctxGoTo" />
+                    </ContextMenu>
+                </DataGrid.ContextMenu>
+            </DataGrid>
+
+            <!-- Bottom Panel -->
+            <Grid Grid.Row="3" RowDefinitions="Auto,Auto" Margin="5">
+                <TextBox Name="textEdit" Grid.Row="0" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,5" />
+                <Grid Grid.Row="1" ColumnDefinitions="Auto,*">
+                    <TextBlock Text="Sound ResRef:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" />
+                    <TextBox Name="soundEdit" Grid.Column="1" MaxLength="16" />
+                </Grid>
+            </Grid>
+
+            <!-- Status bar -->
+            <Border Grid.Row="4" Padding="8,4" Background="#E1E1E1">
+                <TextBlock Name="statusText" Text="0 entries" VerticalAlignment="Center" />
+            </Border>
+        </Grid>
+    </DockPanel>
+</Window>

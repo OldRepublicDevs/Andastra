@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using BioWare;
 using BioWare.Common;
 using BioWare.Resource.Formats.GFF;
-using BioWare.Common;
 using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 

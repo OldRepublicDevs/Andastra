@@ -1,0 +1,199 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        x:Class="OdyTools.Editors.OdyToolLTR"
+        mc:Ignorable="d"
+        Title="LTR Editor"
+        Width="1180"
+        Height="760"
+        MinWidth="980"
+        MinHeight="680">
+  <DockPanel>
+    <Menu DockPanel.Dock="Top" Name="menuBar">
+      <MenuItem Header="_File">
+        <MenuItem Header="_New" Name="actionNew" HotKey="Ctrl+N"/>
+        <MenuItem Header="_Open..." Name="actionOpen" HotKey="Ctrl+O"/>
+        <Separator/>
+        <MenuItem Header="_Save" Name="actionSave" HotKey="Ctrl+S"/>
+        <MenuItem Header="Save _As..." Name="actionSaveAs"/>
+        <Separator/>
+        <MenuItem Header="_Revert" Name="actionRevert"/>
+        <Separator/>
+        <MenuItem Header="E_xit" Name="actionExit"/>
+      </MenuItem>
+      <MenuItem Header="_Edit">
+        <MenuItem Header="_Undo" Name="actionUndo" HotKey="Ctrl+Z"/>
+        <MenuItem Header="_Redo" Name="actionRedo" HotKey="Ctrl+Y"/>
+        <Separator/>
+        <MenuItem Header="_Find" Name="actionFind" HotKey="Ctrl+F"/>
+        <MenuItem Header="Find _Next" Name="actionFindNext" HotKey="F3"/>
+      </MenuItem>
+      <MenuItem Header="_Tools">
+        <MenuItem Header="Normalize Visible Distribution" Name="actionNormalizeVisible"/>
+        <MenuItem Header="Set Visible Distribution to Uniform" Name="actionUniformVisible"/>
+        <Separator/>
+        <MenuItem Header="Generate Name Samples" Name="actionGenerateNames"/>
+      </MenuItem>
+    </Menu>
+
+    <Border DockPanel.Dock="Top"
+            Padding="10,8"
+            Background="{DynamicResource ThemeControlLowBrush}"
+            BorderBrush="{DynamicResource ThemeBorderBrush}"
+            BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto,260,Auto,Auto,*" RowDefinitions="Auto">
+        <TextBlock Grid.Column="0" Text="Find:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+        <TextBox Grid.Column="1" Name="SearchBox" Watermark="Search visible rows..." VerticalAlignment="Center"/>
+        <CheckBox Grid.Column="2" Name="FindMatchCaseCheck" Content="Match case" VerticalAlignment="Center" Margin="10,0,10,0"/>
+        <Button Grid.Column="3" Name="actionFindNextButton" Content="Find Next (F3)" VerticalAlignment="Center"/>
+        <TextBlock Grid.Column="4"
+                   Name="ContextText"
+                   Text="Context: none selected"
+                   VerticalAlignment="Center"
+                   Margin="14,0,0,0"
+                   TextTrimming="CharacterEllipsis"/>
+      </Grid>
+    </Border>
+
+    <Grid Margin="10" ColumnDefinitions="2.4*,1.25*" RowDefinitions="*">
+      <Border Grid.Column="0"
+              Margin="0,0,8,0"
+              BorderBrush="{DynamicResource ThemeBorderBrush}"
+              BorderThickness="1"
+              CornerRadius="8"
+              Padding="8">
+        <TabControl Name="MainTabControl">
+          <TabItem Header="Singles">
+            <DataGrid Name="TableSingles"
+                      AutoGenerateColumns="False"
+                      CanUserResizeColumns="True"
+                      CanUserSortColumns="True"
+                      GridLinesVisibility="All"
+                      IsReadOnly="False">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="Context" Binding="{ReflectionBinding DisplayContext}" IsReadOnly="True" Width="120"/>
+                <DataGridTextColumn Header="Char" Binding="{ReflectionBinding Character}" IsReadOnly="True" Width="80"/>
+                <DataGridTextColumn Header="Start" Binding="{ReflectionBinding Start}" Width="*"/>
+                <DataGridTextColumn Header="Middle" Binding="{ReflectionBinding Middle}" Width="*"/>
+                <DataGridTextColumn Header="End" Binding="{ReflectionBinding End}" Width="*"/>
+              </DataGrid.Columns>
+            </DataGrid>
+          </TabItem>
+
+          <TabItem Header="Doubles">
+            <Grid RowDefinitions="Auto,*">
+              <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+                <TextBlock Text="Previous char:" VerticalAlignment="Center"/>
+                <ComboBox Name="DoublePrevCombo" Width="90"/>
+              </StackPanel>
+              <DataGrid Name="TableDoubles"
+                        Grid.Row="1"
+                        AutoGenerateColumns="False"
+                        CanUserResizeColumns="True"
+                        CanUserSortColumns="True"
+                        GridLinesVisibility="All"
+                        IsReadOnly="False">
+                <DataGrid.Columns>
+                  <DataGridTextColumn Header="Context" Binding="{ReflectionBinding DisplayContext}" IsReadOnly="True" Width="120"/>
+                  <DataGridTextColumn Header="Char" Binding="{ReflectionBinding Character}" IsReadOnly="True" Width="80"/>
+                  <DataGridTextColumn Header="Start" Binding="{ReflectionBinding Start}" Width="*"/>
+                  <DataGridTextColumn Header="Middle" Binding="{ReflectionBinding Middle}" Width="*"/>
+                  <DataGridTextColumn Header="End" Binding="{ReflectionBinding End}" Width="*"/>
+                </DataGrid.Columns>
+              </DataGrid>
+            </Grid>
+          </TabItem>
+
+          <TabItem Header="Triples">
+            <Grid RowDefinitions="Auto,*">
+              <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+                <TextBlock Text="Previous chars:" VerticalAlignment="Center"/>
+                <ComboBox Name="TriplePrev2Combo" Width="90"/>
+                <ComboBox Name="TriplePrev1Combo" Width="90"/>
+              </StackPanel>
+              <DataGrid Name="TableTriples"
+                        Grid.Row="1"
+                        AutoGenerateColumns="False"
+                        CanUserResizeColumns="True"
+                        CanUserSortColumns="True"
+                        GridLinesVisibility="All"
+                        IsReadOnly="False">
+                <DataGrid.Columns>
+                  <DataGridTextColumn Header="Context" Binding="{ReflectionBinding DisplayContext}" IsReadOnly="True" Width="120"/>
+                  <DataGridTextColumn Header="Char" Binding="{ReflectionBinding Character}" IsReadOnly="True" Width="80"/>
+                  <DataGridTextColumn Header="Start" Binding="{ReflectionBinding Start}" Width="*"/>
+                  <DataGridTextColumn Header="Middle" Binding="{ReflectionBinding Middle}" Width="*"/>
+                  <DataGridTextColumn Header="End" Binding="{ReflectionBinding End}" Width="*"/>
+                </DataGrid.Columns>
+              </DataGrid>
+            </Grid>
+          </TabItem>
+        </TabControl>
+      </Border>
+
+      <StackPanel Grid.Column="1" Spacing="10">
+        <Border BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10">
+          <StackPanel Spacing="8">
+            <TextBlock Text="Quick Edit" FontWeight="Bold"/>
+            <TextBlock Text="Applies directly to one character in the selected mode/context."
+                       FontSize="11"
+                       Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                       TextWrapping="Wrap"/>
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+              <TextBlock Grid.Row="0" Grid.Column="0" Text="Mode:" VerticalAlignment="Center" Margin="0,0,8,6"/>
+              <ComboBox Grid.Row="0" Grid.Column="1" Name="QuickModeCombo" Margin="0,0,0,6"/>
+              <TextBlock Grid.Row="1" Grid.Column="0" Text="Char:" VerticalAlignment="Center" Margin="0,0,8,6"/>
+              <ComboBox Grid.Row="1" Grid.Column="1" Name="QuickCharCombo" Margin="0,0,0,6"/>
+              <TextBlock Grid.Row="2" Grid.Column="0" Text="Start:" VerticalAlignment="Center" Margin="0,0,8,6"/>
+              <NumericUpDown Grid.Row="2" Grid.Column="1" Name="QuickStartSpin" Minimum="0" Maximum="1" Increment="0.001" FormatString="0.0000" Margin="0,0,0,6"/>
+              <TextBlock Grid.Row="3" Grid.Column="0" Text="Middle:" VerticalAlignment="Center" Margin="0,0,8,6"/>
+              <NumericUpDown Grid.Row="3" Grid.Column="1" Name="QuickMiddleSpin" Minimum="0" Maximum="1" Increment="0.001" FormatString="0.0000" Margin="0,0,0,6"/>
+              <TextBlock Grid.Row="4" Grid.Column="0" Text="End:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+              <NumericUpDown Grid.Row="4" Grid.Column="1" Name="QuickEndSpin" Minimum="0" Maximum="1" Increment="0.001" FormatString="0.0000"/>
+            </Grid>
+            <Button Name="ApplyQuickButton" Content="Apply Quick Edit"/>
+          </StackPanel>
+        </Border>
+
+        <Border BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10">
+          <StackPanel Spacing="8">
+            <TextBlock Text="Distribution Tools" FontWeight="Bold"/>
+            <TextBlock Text="Operate on visible rows only (current mode and context)."
+                       FontSize="11"
+                       Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                       TextWrapping="Wrap"/>
+            <Button Name="NormalizeVisibleButton" Content="Normalize Visible Distribution"/>
+            <Button Name="UniformVisibleButton" Content="Set Visible to Uniform"/>
+          </StackPanel>
+        </Border>
+
+        <Border BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10">
+          <StackPanel Spacing="8">
+            <TextBlock Text="Name Generator Preview" FontWeight="Bold"/>
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto">
+              <TextBlock Grid.Column="0" Text="Count:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+              <NumericUpDown Grid.Column="1" Name="GeneratorCountSpin" Minimum="1" Maximum="500" Increment="1"/>
+            </Grid>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button Name="GenerateNamesButton" Content="Generate Samples" HorizontalAlignment="Stretch"/>
+              <Button Name="ClearGeneratedButton" Content="Clear"/>
+            </StackPanel>
+            <ListBox Name="GeneratedNamesList" MinHeight="180"/>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </Grid>
+
+    <Border DockPanel.Dock="Bottom"
+            Padding="10,6"
+            Background="{DynamicResource ThemeControlLowBrush}"
+            BorderBrush="{DynamicResource ThemeBorderBrush}"
+            BorderThickness="0,1,0,0">
+      <TextBlock Name="statusText"
+                 Text="LTR status"
+                 FontSize="12"
+                 Foreground="{DynamicResource ThemeForegroundLowBrush}"/>
+    </Border>
+  </DockPanel>
+</Window>

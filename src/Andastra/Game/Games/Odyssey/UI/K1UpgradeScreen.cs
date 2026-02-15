@@ -197,7 +197,7 @@ namespace Andastra.Game.Games.Odyssey.UI
 
                         // Check IsPlayer data flag
                         object isPlayerData = entity.GetData("IsPlayer");
-                        if (isPlayerData is bool && (bool)isPlayerData)
+                        if (isPlayerData is bool v && v)
                         {
                             character = entity;
                             break;
@@ -451,7 +451,7 @@ namespace Andastra.Game.Games.Odyssey.UI
                             }
 
                             object isPlayerData = entity.GetData("IsPlayer");
-                            if (isPlayerData is bool && (bool)isPlayerData)
+                            if (isPlayerData is bool v && v)
                             {
                                 character = entity;
                                 break;

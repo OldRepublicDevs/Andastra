@@ -15,7 +15,7 @@ namespace Andastra.Game.Core
     /// </summary>
     /// <remarks>
     /// Game Path Detection:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) installation path detection system
+    /// - Installation path (Reva; K1 = k1_win_gog_swkotor.exe, TSL = k2_win_gog_legacypc_swkotor2.exe): exe path via GetModuleFileNameA; K1 GetGameVersionInfo @ 0x005e6b10, InitGameApp @ 0x00403f20; TSL FUN_00632350 @ 0x00632350. Config/aliases: K1 LoadOptions @ 0x0061dbe0, TSL FUN_00633270 @ 0x00633270. Startup: K1 WinMain @ 0x004041f0, TSL WinMain @ 0x00404250.
     /// - Located via string references: Original engine reads installation path from Windows registry
     /// - Registry access: Uses Windows Registry API (RegOpenKeyEx, RegQueryValueEx) for path lookup
     /// - Registry keys: K1 uses "SOFTWARE\BioWare\SW\KOTOR" or "SOFTWARE\LucasArts\KotOR"
@@ -518,9 +518,20 @@ namespace Andastra.Game.Core
                 return false;
             }
 
-            // Check for game executable
-            string exeName = game == KotorGame.K1 ? "k1_win_gog_swkotor.exe" : "k2_win_gog_aspyr_swkotor2.exe";
-            if (!File.Exists(Path.Combine(path, exeName)))
+            // Check for game executable (Steam: swkotor.exe/swkotor2.exe, GOG: k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe)
+            string[] exeNames = game == KotorGame.K1
+                ? new[] { "swkotor.exe", "k1_win_gog_swkotor.exe" }
+                : new[] { "swkotor2.exe", "k2_win_gog_aspyr_swkotor2.exe" };
+            bool hasExe = false;
+            foreach (string exeName in exeNames)
+            {
+                if (File.Exists(Path.Combine(path, exeName)))
+                {
+                    hasExe = true;
+                    break;
+                }
+            }
+            if (!hasExe)
             {
                 return false;
             }

@@ -72,7 +72,7 @@ foreach ($projFile in $projects) {
         "..\\KotorDiff\\Resolution\\Resolution.csproj" = "..\\KotorDiff\\KotorDiff.csproj"
         "..\\KotorDiff\\KotorDiff.NET.csproj" = "..\\KotorDiff\\KotorDiff.csproj"
         "..\\NSSComp\\NSSComp.NET.csproj" = "..\\NSSComp\\NSSComp.csproj"
-        "..\\HolocronToolset\\HolocronToolset.NET.csproj" = "..\\HolocronToolset\\HolocronToolset.csproj"
+        "..\\OdyTools\\OdyTools.NET.csproj" = "..\\OdyTools\\OdyTools.csproj"
     }
 
     foreach ($itemGroup in $xml.Project.ItemGroup) {

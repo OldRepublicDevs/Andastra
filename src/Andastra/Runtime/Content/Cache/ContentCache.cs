@@ -11,7 +11,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BioWare.Common;
-using BioWare.Common;
 using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 

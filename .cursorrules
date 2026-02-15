@@ -191,6 +191,12 @@ else if (GameType == GameType.K2) { /* K2 TSL behavior */ }
 ```
 
 Leave existing inheritance unchanged. Never refactor it.
+## 6.1
+Always use the following structure for avalonia windows/widgets/dialogs/etc:
+- <name_of_thing>.axaml
+- <name_of_thing>.axaml.cs
+
+Do NOT use <name_of_thing>.cs intended to be paired with a <name_of_thing>.axaml! If you run into this, **fix immediately and ensure it builds successfully**
 
 ## 7. Reverse Engineering Workflow
 
@@ -216,7 +222,13 @@ Follow this mandatory sequence:
 
 Use only `scripts/NcsTool.ps1` for compile, decompile, compare, roundtrip, generate-defs.
 
-## 9. Documentation
+## 9. Roslyn Navicode MCP
+
+Use the Roslyn Navicode MCP to help not only with code completion and navigation, but also for anything and everything you could possibly use them for given the task at hand. If you can consider functionality to *add* to roslyn navicode for tasks that you seem to be struggling to achieve in bulk, please do so. Such as it should be possible to migrate a full class from one file to another or change the using path and have all references updated automatically. This should be possible as a single tool call for example. And should be possible to do in bulk within that same tool name.
+
+**Critical**: If Roslyn Navicode MCP setup or tool fails (connection/error/unavailable), stop immediately and inform user.
+
+## 10. Documentation
 
 - Public-facing `.md`: Place in `docs/`
 - Progress roadmaps: Place in `.cursor/roadmaps/*.md`

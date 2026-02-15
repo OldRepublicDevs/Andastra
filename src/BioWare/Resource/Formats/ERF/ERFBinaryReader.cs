@@ -4,7 +4,6 @@ using System.IO;
 using System.Text;
 using BioWare.Common;
 using BioWare.Resource.Formats;
-using BioWare.Common;
 using BioWare.Resource;
 using JetBrains.Annotations;
 
@@ -47,7 +46,7 @@ namespace BioWare.Resource.Formats.ERF
                 }
 
                 ERFType? erfType = null;
-                foreach (ERFType type in Enum.GetValues<ERFType>())
+                foreach (ERFType type in (ERFType[])Enum.GetValues(typeof(ERFType)))
                 {
                     if (ERFTypeExtensions.ToFourCC(type) == fileType)
                     {

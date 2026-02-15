@@ -6,7 +6,6 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Aurora;
 using JetBrains.Annotations;
-using Andastra.Game.Games.Common;
 
 namespace Andastra.Game.Games.Aurora
 {

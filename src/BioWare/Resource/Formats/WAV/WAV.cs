@@ -1,6 +1,5 @@
 using System;
 using BioWare.Common;
-using BioWare.Common;
 using BioWare.Resource;
 
 namespace BioWare.Resource.Formats.WAV

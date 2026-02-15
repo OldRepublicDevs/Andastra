@@ -4,7 +4,6 @@ using Andastra.Runtime.Content.Interfaces;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Aurora;
 using Andastra.Game.Games.Aurora.Profiles;
-using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Eclipse.DragonAge2;
 using Andastra.Game.Games.Eclipse.DragonAgeOrigins;
 using DragonAgeOriginsEngine = Andastra.Game.Games.Engines.Eclipse.DragonAgeOrigins.DragonAgeOriginsEngine;
@@ -21,7 +20,7 @@ namespace Andastra.Game.Core
     /// <remarks>
     /// Engine Factory:
     /// - Maps BioWareGame enum values to appropriate engine instances
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00404250 @ 0x00404250 determines game type and initializes appropriate engine
+    /// - Game type / engine init (Reva; K1 = k1_win_gog_swkotor.exe, TSL = k2_win_gog_legacypc_swkotor2.exe): WinMain determines game and initializes engine; K1 WinMain @ 0x004041f0, TSL WinMain @ 0x00404250.
     /// - Original implementation: Game executable identifies itself and initializes engine accordingly
     /// - Cross-engine: All BioWare games follow similar pattern - determine game type, create engine, initialize
     /// - This factory provides unified access to all engine families (Odyssey, Aurora, Eclipse, Infinity)

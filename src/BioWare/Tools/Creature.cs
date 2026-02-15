@@ -5,7 +5,6 @@ using BioWare.Common;
 using BioWare.Common.Logger;
 using BioWare.Resource.Formats.TwoDA;
 using BioWare.Extract;
-using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats;
 using BioWare.Resource.Formats.GFF.Generics;

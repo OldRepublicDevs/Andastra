@@ -3,9 +3,7 @@ using BioWare.Resource.Formats.NCS.Compiler.NSS.AST;
 using System.Linq;
 using BioWare.Common.Script;
 using BioWare.Resource.Formats.NCS;
-using BioWare.Resource.Formats.NCS.Compiler.NSS.AST;
 using BioWare.Resource.Formats.NCS.Compiler.NSS;
-using BioWare.Resource.Formats.NCS.Compiler.NSS.AST;
 
 namespace BioWare.Resource.Formats.NCS.Compiler.NSS.AST.Expressions
 {

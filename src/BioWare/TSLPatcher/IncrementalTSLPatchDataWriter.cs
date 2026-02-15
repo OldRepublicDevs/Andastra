@@ -21,7 +21,6 @@ using BioWare.TSLPatcher.Mods.NCS;
 using BioWare.TSLPatcher.Mods.SSF;
 using BioWare.TSLPatcher.Mods.TLK;
 using BioWare.TSLPatcher.Mods.TwoDA;
-using BioWare.Common;
 using BioWare.Resource;
 // Removed: using Tools; // Removed to break circular dependency
 // Using fully qualified names directly in code instead

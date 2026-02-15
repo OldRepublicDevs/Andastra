@@ -5813,7 +5813,7 @@ namespace Andastra.Game.Games.Odyssey
                 }
 
                 // 9. Check for nested module corruption (EventQueue in module.ifo)
-                // Based on HTInstallation.IsSaveCorrupted implementation
+                // Based on OdyInstallation.IsSaveCorrupted implementation
                 // Check each .sav resource (cached modules) for EventQueue corruption
                 bool hasCorruptedModule = false;
                 foreach (var resource in erf)

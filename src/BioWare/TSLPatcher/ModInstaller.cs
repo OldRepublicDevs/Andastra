@@ -19,7 +19,6 @@ using BioWare.TSLPatcher.Mods.SSF;
 using BioWare.TSLPatcher.Mods.TLK;
 using BioWare.TSLPatcher.Mods.TwoDA;
 using BioWare.TSLPatcher.Reader;
-using BioWare.Common;
 using BioWare.Resource;
 using IniParser.Model;
 using JetBrains.Annotations;
@@ -675,7 +674,7 @@ namespace BioWare.TSLPatcher
                     if (!string.IsNullOrEmpty(subdirectoryPath))
                     {
                         // Calculate game folder by going up the directory tree based on subdirectory depth
-                        string[] subdirParts = subdirectoryPath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
+                        string[] subdirParts = subdirectoryPath.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
                         string currentPath = destinationFilePath;
                         for (int i = 0; i < subdirParts.Length; i++)
                         {

@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using BioWare.Common;
 using BioWare.Extract.Capsule;
-using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.TPC;
 using JetBrains.Annotations;

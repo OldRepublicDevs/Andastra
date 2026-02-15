@@ -3175,7 +3175,6 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
                     // Metal Shading Language source code for clearUAVUint compute shader
                     string shaderSource = @"
                         #include <metal_stdlib>
-                        using namespace metal;
 
                         kernel void clearUAVUint(texture2d<uint, access::write> output [[texture(0)]],
                                                  constant uint& clearValue [[buffer(0)]],

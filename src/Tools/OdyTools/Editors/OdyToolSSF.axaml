@@ -1,0 +1,295 @@
+<Window
+  x:Class="OdyTools.Editors.OdyToolSSF"
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  Title="Soundset Editor (KotOR)"
+  Width="1000"
+  Height="640"
+  MinWidth="900"
+  MinHeight="580">
+  <Window.Styles>
+    <!--  Sound list row: subtle background, hover and selected states  -->
+    <Style Selector="Border.sound-row">
+      <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+      <Setter Property="Padding" Value="12,8" />
+      <Setter Property="Margin" Value="0,0,0,0" />
+    </Style>
+    <Style Selector="Border.sound-row:pointerover">
+      <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightLowBrush}" />
+    </Style>
+    <Style Selector="Border.sound-row.selected">
+      <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightLowBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
+      <Setter Property="BorderThickness" Value="0,0,0,2" />
+    </Style>
+    <!--  Play button: compact icon-style  -->
+    <Style Selector="Button.play-sound">
+      <Setter Property="MinWidth" Value="44" />
+      <Setter Property="MinHeight" Value="32" />
+      <Setter Property="Padding" Value="10,6" />
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <Style Selector="Button.play-sound:pointerover">
+      <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush}" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <!--  Stop button when playing  -->
+    <Style Selector="Button.stop-sound">
+      <Setter Property="MinWidth" Value="44" />
+      <Setter Property="MinHeight" Value="32" />
+      <Setter Property="Padding" Value="10,6" />
+      <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <!--  Group header in sound list  -->
+    <Style Selector="Border.sound-group-header">
+      <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderBrush}" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+      <Setter Property="Padding" Value="12,8,12,6" />
+    </Style>
+  </Window.Styles>
+  <DockPanel>
+    <Menu Name="menuBar" DockPanel.Dock="Top">
+      <MenuItem Header="_File">
+        <MenuItem
+          Name="actionNew"
+          Header="_New"
+          ToolTip.Tip="Create a new empty soundset. All strrefs will be set to -1 (no sound)." />
+        <MenuItem
+          Name="actionOpen"
+          Header="_Open"
+          ToolTip.Tip="Open an SSF file from disk or from a game resource." />
+        <MenuItem
+          Name="actionSave"
+          Header="_Save"
+          ToolTip.Tip="Save the current soundset. Shortcut: Ctrl+S" />
+        <MenuItem
+          Name="actionSaveAs"
+          Header="Save _As"
+          ToolTip.Tip="Save the soundset to a new file name or location." />
+        <Separator />
+        <MenuItem
+          Name="actionRevert"
+          Header="_Revert"
+          ToolTip.Tip="Discard unsaved changes and reload the file from disk." />
+        <Separator />
+        <MenuItem
+          Name="actionExit"
+          Header="E_xit"
+          ToolTip.Tip="Close the Soundset Editor. You will be prompted to save if there are unsaved changes." />
+      </MenuItem>
+      <MenuItem Header="_Edit">
+        <MenuItem
+          Name="actionUndo"
+          Header="_Undo"
+          ToolTip.Tip="Undo the last strref change. Shortcut: Ctrl+Z" />
+        <MenuItem
+          Name="actionRedo"
+          Header="_Redo"
+          ToolTip.Tip="Redo the last undone change. Shortcut: Ctrl+Y" />
+        <Separator />
+        <MenuItem
+          Name="actionFindStrref"
+          Header="Find _Strref..."
+          ToolTip.Tip="Search for a sound event by its TLK string reference. Shortcut: Ctrl+F" />
+        <MenuItem
+          Name="actionFindStrrefNext"
+          Header="Find Strref _Next"
+          ToolTip.Tip="Jump to the next row matching the strref from Find. Shortcut: F3" />
+      </MenuItem>
+    </Menu>
+
+    <!--  Toolbar: Talk table + Find + Stop  -->
+    <Border
+      Padding="12,10"
+      Background="{DynamicResource ThemeControlLowBrush}"
+      BorderBrush="{DynamicResource ThemeBorderBrush}"
+      BorderThickness="0,0,0,1"
+      DockPanel.Dock="Top">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="Auto">
+        <Button
+          Name="talktableButton"
+          Grid.Column="0"
+          Width="160"
+          Margin="0,0,12,0"
+          Content="Select Talk Table"
+          ToolTip.Tip="Choose the dialog.tlk file used to resolve string references. Each strref points to a TLK entry; the voice/sound ResRef in that entry is the WAV played in-game. Typically use the game's dialog.tlk." />
+        <TextBlock
+          Name="talktableLabel"
+          Grid.Column="1"
+          VerticalAlignment="Center"
+          Foreground="{DynamicResource ThemeForegroundBrush}"
+          Text="Using: dialog.tlk"
+          TextTrimming="CharacterEllipsis"
+          ToolTip.Tip="Currently loaded talk table file. Sounds are resolved from this file (Override, StreamVoice, StreamSounds, CHITIN)." />
+        <Button
+          Name="stopPlayButton"
+          Grid.Column="2"
+          Margin="0,0,8,0"
+          Classes="stop-sound"
+          Content="■ Stop"
+          IsVisible="False"
+          ToolTip.Tip="Stop the currently playing sound." />
+        <TextBlock
+          Name="soundCountLabel"
+          Grid.Column="3"
+          VerticalAlignment="Center"
+          FontSize="12"
+          Foreground="{DynamicResource ThemeForegroundLowBrush}"
+          Text="27 sounds"
+          ToolTip.Tip="Total number of sound event slots in this soundset (KotOR uses 27)." />
+      </Grid>
+    </Border>
+
+    <!--  Main content: list + preview panel  -->
+    <Grid Margin="0,0,0,0" ColumnDefinitions="1*,400">
+      <!--  Left: scrollable sound list  -->
+      <Border
+        Grid.Column="0"
+        Margin="8,8,4,8"
+        Background="{DynamicResource ThemeControlLowBrush}"
+        BorderBrush="{DynamicResource ThemeBorderBrush}"
+        BorderThickness="1"
+        CornerRadius="8"
+        ToolTip.Tip="Each row is one sound event. Set the Strref to a TLK string ID; the game plays the WAV linked to that ID. Use ▶ to preview.">
+        <Grid RowDefinitions="Auto,*">
+          <!--  Column headers  -->
+          <Border
+            Grid.Row="0"
+            Padding="12,10"
+            Background="{DynamicResource ThemeControlMidBrush}"
+            BorderBrush="{DynamicResource ThemeBorderBrush}"
+            BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="130,80,*,110,Auto" RowDefinitions="Auto">
+              <TextBlock
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                FontWeight="SemiBold"
+                Text="Category"
+                ToolTip.Tip="In-game event that triggers this sound (e.g. Battle Cry, Select, Pain)." />
+              <TextBlock
+                Grid.Column="1"
+                Margin="8,0,0,0"
+                VerticalAlignment="Center"
+                FontWeight="SemiBold"
+                Text="Strref"
+                ToolTip.Tip="TLK string reference. -1 = no sound. Value indexes into dialog.tlk; the linked WAV is played in-game." />
+              <TextBlock
+                Grid.Column="2"
+                Margin="8,0,0,0"
+                VerticalAlignment="Center"
+                FontWeight="SemiBold"
+                Text="Preview (TLK text)"
+                ToolTip.Tip="Dialogue or label text from the talk table for this strref (read-only)." />
+              <TextBlock
+                Grid.Column="3"
+                Margin="8,0,0,0"
+                VerticalAlignment="Center"
+                FontWeight="SemiBold"
+                Text="Sound (ResRef)"
+                ToolTip.Tip="WAV ResRef from the talk table for this strref (read-only)." />
+              <TextBlock
+                Grid.Column="4"
+                Margin="8,0,0,0"
+                VerticalAlignment="Center"
+                FontWeight="SemiBold"
+                Text="Play"
+                ToolTip.Tip="Play the WAV for this entry. Requires talk table and game installation." />
+            </Grid>
+          </Border>
+          <ScrollViewer
+            Grid.Row="1"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto">
+            <StackPanel Name="SoundRowsPanel" Margin="0,4,0,8" />
+          </ScrollViewer>
+        </Grid>
+      </Border>
+
+      <!--  Right: Preview & Play panel  -->
+      <Border
+        Grid.Column="1"
+        Margin="4,8,8,8"
+        Padding="16"
+        Background="{DynamicResource ThemeControlLowBrush}"
+        BorderBrush="{DynamicResource ThemeBorderBrush}"
+        BorderThickness="1"
+        CornerRadius="8">
+        <StackPanel Spacing="12">
+          <TextBlock
+            FontSize="14"
+            FontWeight="SemiBold"
+            Text="Preview &amp; Play"
+            ToolTip.Tip="Details for the selected sound event. Click a row in the list or focus a strref to select." />
+          <TextBlock
+            Name="previewCategoryLabel"
+            FontSize="12"
+            Foreground="{DynamicResource ThemeForegroundBrush}"
+            Text="Category: —"
+            TextWrapping="Wrap" />
+          <TextBlock
+            Name="previewStrrefLabel"
+            FontSize="12"
+            Foreground="{DynamicResource ThemeForegroundLowBrush}"
+            Text="Strref: —" />
+          <TextBox
+            Name="previewTextBlock"
+            MinHeight="60"
+            MaxHeight="80"
+            AcceptsReturn="True"
+            IsReadOnly="True"
+            TextWrapping="Wrap"
+            ToolTip.Tip="Dialogue or label text from the talk table for the selected strref."
+            Watermark="TLK text for this strref (select a row)" />
+          <TextBlock
+            Name="previewResRefLabel"
+            FontSize="12"
+            Foreground="{DynamicResource ThemeForegroundLowBrush}"
+            Text="Sound ResRef: —"
+            ToolTip.Tip="WAV filename (no extension) that the game will play for this event." />
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button
+              Name="previewPlayButton"
+              Classes="play-sound"
+              Content="▶ Play"
+              IsEnabled="False"
+              ToolTip.Tip="Play the WAV for the selected sound event. Requires a valid strref, talk table, and game installation." />
+            <TextBlock
+              Name="previewPlayingLabel"
+              VerticalAlignment="Center"
+              FontSize="12"
+              Foreground="{DynamicResource ThemeAccentBrush}"
+              IsVisible="False"
+              Text="" />
+          </StackPanel>
+          <Separator />
+          <TextBlock
+            Name="previewHelpText"
+            FontSize="11"
+            Foreground="{DynamicResource ThemeForegroundLowBrush}"
+            Text="Strref = TLK string ID. The game looks up this ID in dialog.tlk and plays the linked WAV. Set to -1 for no sound. Use Select Talk Table to choose which dialog.tlk is used for preview and playback."
+            TextWrapping="Wrap"
+            ToolTip.Tip="Each sound event stores one integer (strref). In-game, the engine resolves it via the active dialog.tlk to a WAV and plays it." />
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <!--  Status bar  -->
+    <Border
+      Padding="12,8"
+      Background="{DynamicResource ThemeControlLowBrush}"
+      BorderBrush="{DynamicResource ThemeBorderBrush}"
+      BorderThickness="0,1,0,0"
+      DockPanel.Dock="Bottom">
+      <TextBlock
+        Name="statusText"
+        FontSize="12"
+        Foreground="{DynamicResource ThemeForegroundLowBrush}"
+        Text="27 sounds | dialog.tlk"
+        ToolTip.Tip="Summary: number of sound events and the current talk table file. The soundset stores only strrefs; actual WAVs are resolved at runtime from the TLK." />
+    </Border>
+  </DockPanel>
+</Window>

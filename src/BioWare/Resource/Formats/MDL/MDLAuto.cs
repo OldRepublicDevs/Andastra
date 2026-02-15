@@ -4,7 +4,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using BioWare.Common;
 using BioWare.Resource.Formats.MDLData;
-using BioWare.Common;
 using BioWare.Resource;
 
 namespace BioWare.Resource.Formats.MDL

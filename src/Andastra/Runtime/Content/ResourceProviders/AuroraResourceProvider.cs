@@ -8,7 +8,6 @@ using BioWare.Common;
 using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.KEY;
-using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.BIF;
 using Andastra.Runtime.Content.Interfaces;

@@ -31,13 +31,13 @@ $referenceMap = @{
     "..\\KotorDiff\\Resolution\\Resolution.csproj" = "..\\KotorDiff\\KotorDiff.csproj"
     "..\\KotorDiff\\KotorDiff.NET.csproj" = "..\\KotorDiff\\KotorDiff.csproj"
     "..\\NSSComp\\NSSComp.NET.csproj" = "..\\NSSComp\\NSSComp.csproj"
-    "..\\HolocronToolset\\HolocronToolset.NET.csproj" = "..\\HolocronToolset\\HolocronToolset.csproj"
-    "..\\HolocronToolset\\Data\\Data.csproj" = "..\\HolocronToolset\\HolocronToolset.csproj"
-    "..\\HolocronToolset\\Dialogs\\Dialogs.csproj" = "..\\HolocronToolset\\HolocronToolset.csproj"
-    "..\\HolocronToolset\\Editors\\Editors.csproj" = "..\\HolocronToolset\\HolocronToolset.csproj"
-    "..\\HolocronToolset\\Utils\\Utils.csproj" = "..\\HolocronToolset\\HolocronToolset.csproj"
-    "..\\HolocronToolset\\Widgets\\Widgets.csproj" = "..\\HolocronToolset\\HolocronToolset.csproj"
-    "..\\HolocronToolset\\Windows\\Windows.csproj" = "..\\HolocronToolset\\HolocronToolset.csproj"
+    "..\\OdyTools\\OdyTools.NET.csproj" = "..\\OdyTools\\OdyTools.csproj"
+    "..\\OdyTools\\Data\\Data.csproj" = "..\\OdyTools\\OdyTools.csproj"
+    "..\\OdyTools\\Dialogs\\Dialogs.csproj" = "..\\OdyTools\\OdyTools.csproj"
+    "..\\OdyTools\\Editors\\Editors.csproj" = "..\\OdyTools\\OdyTools.csproj"
+    "..\\OdyTools\\Utils\\Utils.csproj" = "..\\OdyTools\\OdyTools.csproj"
+    "..\\OdyTools\\Widgets\\Widgets.csproj" = "..\\OdyTools\\OdyTools.csproj"
+    "..\\OdyTools\\Windows\\Windows.csproj" = "..\\OdyTools\\OdyTools.csproj"
 }
 
 # Find all .csproj files

@@ -9,6 +9,32 @@ namespace BioWare.Resource.Formats.LTR
     // Original: class LTRBlock(ComparableMixin)
     public class LTRBlock : IEquatable<LTRBlock>
     {
+        private static int GetValidatedCharacterIndex(string char_)
+        {
+            if (char_ == null || char_.Length != 1)
+            {
+                throw new ArgumentException("The character specified was not a real character.");
+            }
+
+            int charId = LTR.CharacterSet.IndexOf(char_);
+            if (charId < 0)
+            {
+                throw new IndexOutOfRangeException("The character specified was invalid.");
+            }
+
+            return charId;
+        }
+
+        private static float ValidateChance(float chance)
+        {
+            if (chance < 0.0f || chance > 1.0f)
+            {
+                throw new ArgumentException("The chance specified must be between 0.0 and 1.0 inclusive.");
+            }
+
+            return chance;
+        }
+
         private readonly List<float> _start;
         private readonly List<float> _middle;
         private readonly List<float> _end;
@@ -26,79 +52,31 @@ namespace BioWare.Resource.Formats.LTR
         // Original: def set_start(self, char: str, chance: float)
         public void SetStart(string char_, float chance)
         {
-            if (char_ == null || char_.Length != 1)
-            {
-                throw new ArgumentException("The character specified was not a real character.");
-            }
-            if (!LTR.CharacterSet.Contains(char_))
-            {
-                throw new IndexOutOfRangeException("The character specified was invalid.");
-            }
-            if (chance < 0.0f || chance > 1.0f)
-            {
-                throw new ArgumentException("The chance specified must be between 0.0 and 1.0 inclusive.");
-            }
-
-            int charId = LTR.CharacterSet.IndexOf(char_);
-            _start[charId] = chance;
+            int charId = GetValidatedCharacterIndex(char_);
+            _start[charId] = ValidateChance(chance);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ltr/ltr_data.py:479-507
         // Original: def set_middle(self, char: str, chance: float)
         public void SetMiddle(string char_, float chance)
         {
-            if (char_ == null || char_.Length != 1)
-            {
-                throw new ArgumentException("The character specified was not a real character.");
-            }
-            if (!LTR.CharacterSet.Contains(char_))
-            {
-                throw new IndexOutOfRangeException("The character specified was invalid.");
-            }
-            if (chance < 0.0f || chance > 1.0f)
-            {
-                throw new ArgumentException("The chance specified must be between 0.0 and 1.0 inclusive.");
-            }
-
-            int charId = LTR.CharacterSet.IndexOf(char_);
-            _middle[charId] = chance;
+            int charId = GetValidatedCharacterIndex(char_);
+            _middle[charId] = ValidateChance(chance);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ltr/ltr_data.py:509-537
         // Original: def set_end(self, char: str, chance: float)
         public void SetEnd(string char_, float chance)
         {
-            if (char_ == null || char_.Length != 1)
-            {
-                throw new ArgumentException("The character specified was not a real character.");
-            }
-            if (!LTR.CharacterSet.Contains(char_))
-            {
-                throw new IndexOutOfRangeException("The character specified was invalid.");
-            }
-            if (chance < 0.0f || chance > 1.0f)
-            {
-                throw new ArgumentException("The chance specified must be between 0.0 and 1.0 inclusive.");
-            }
-
-            int charId = LTR.CharacterSet.IndexOf(char_);
-            _end[charId] = chance;
+            int charId = GetValidatedCharacterIndex(char_);
+            _end[charId] = ValidateChance(chance);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ltr/ltr_data.py:539-567
         // Original: def get_start(self, char: str) -> float
         public float GetStart(string char_)
         {
-            if (char_ == null || char_.Length != 1)
-            {
-                throw new ArgumentException("The character specified was not a real character.");
-            }
-            if (!LTR.CharacterSet.Contains(char_))
-            {
-                throw new IndexOutOfRangeException("The character specified was invalid.");
-            }
-
-            int charId = LTR.CharacterSet.IndexOf(char_);
+            int charId = GetValidatedCharacterIndex(char_);
             return _start[charId];
         }
 
@@ -106,16 +84,7 @@ namespace BioWare.Resource.Formats.LTR
         // Original: def get_middle(self, char: str) -> float
         public float GetMiddle(string char_)
         {
-            if (char_ == null || char_.Length != 1)
-            {
-                throw new ArgumentException("The character specified was not a real character.");
-            }
-            if (!LTR.CharacterSet.Contains(char_))
-            {
-                throw new IndexOutOfRangeException("The character specified was invalid.");
-            }
-
-            int charId = LTR.CharacterSet.IndexOf(char_);
+            int charId = GetValidatedCharacterIndex(char_);
             return _middle[charId];
         }
 
@@ -123,16 +92,7 @@ namespace BioWare.Resource.Formats.LTR
         // Original: def get_end(self, char: str) -> float
         public float GetEnd(string char_)
         {
-            if (char_ == null || char_.Length != 1)
-            {
-                throw new ArgumentException("The character specified was not a real character.");
-            }
-            if (!LTR.CharacterSet.Contains(char_))
-            {
-                throw new IndexOutOfRangeException("The character specified was invalid.");
-            }
-
-            int charId = LTR.CharacterSet.IndexOf(char_);
+            int charId = GetValidatedCharacterIndex(char_);
             return _end[charId];
         }
 

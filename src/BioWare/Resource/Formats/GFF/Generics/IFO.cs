@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using BioWare.Common;
-using BioWare.Common;
 using BioWare.Resource;
 using JetBrains.Annotations;
 
@@ -121,7 +120,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
     /// 
     /// ORIGINAL IMPLEMENTATION:
     /// 
-    /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): IFO files are loaded when a module is initialized. The engine reads
+    /// Reva: K1: LoadModuleStart @ 0x004c9050 (reads IFO GFF; "IFO " @ 0x00745330). TSL: LoadModuleStart @ 0x00501fa0. IFO files are loaded when a module is initialized; the engine reads
     /// the entry point information to place the player, loads all areas in the AreaList, sets up
     /// the time system, and registers script hooks for event handling.
     /// 
@@ -274,7 +273,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
         public int XpScale { get; set; }
 
         // Game time fields (current game time stored in IFO)
-        // SerializeIfoGameTime @ (K1: TODO: Find this address, TSL: 0x00500290) (k2_win_gog_aspyr_swkotor2.exe: SerializeIfoGameTime @ 0x00500290)
+        // Reva: SerializeIfoGameTime @ K1: 0x004c7050 (SaveModuleIFOStart), TSL: 0x00500290
         // Lines 96-100: Writes current game time as Mod_StartMinute/Second/MiliSec and Mod_PauseDay/PauseTime
         // These fields are written from the current game time when the IFO is saved
         // Implementation: Use IFOHelpers.PopulateIfoGameTimeFromTimeManager() to populate these fields from TimeManager
@@ -283,7 +282,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
         /// Written to IFO as Mod_StartMinute field.
         /// </summary>
         /// <remarks>
-        /// SerializeIfoGameTime @ (K1: TODO: Find this address, TSL: 0x00500290) line 96 (k2_win_gog_aspyr_swkotor2.exe: SerializeIfoGameTime @ 0x00500290)
+        /// Reva: SerializeIfoGameTime K1: 0x004c7050, TSL: 0x00500290 (line 96)
         /// Written via FUN_004137e0(param_1, param_2, local_5c[0], "Mod_StartMinute")
         /// Populated by IFOHelpers.PopulateIfoGameTimeFromTimeManager() which matches original engine behavior
         /// </remarks>
@@ -294,7 +293,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
         /// Written to IFO as Mod_StartSecond field.
         /// </summary>
         /// <remarks>
-        /// SerializeIfoGameTime @ (K1: TODO: Find this address, TSL: 0x00500290) line 97 (k2_win_gog_aspyr_swkotor2.exe: SerializeIfoGameTime @ 0x00500290)
+        /// Reva: SerializeIfoGameTime K1: 0x004c7050, TSL: 0x00500290 (line 97)
         /// Written via FUN_004137e0(param_1, param_2, local_58[0], "Mod_StartSecond")
         /// Populated by IFOHelpers.PopulateIfoGameTimeFromTimeManager() which matches original engine behavior
         /// </remarks>
@@ -305,7 +304,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
         /// Written to IFO as Mod_StartMiliSec field.
         /// </summary>
         /// <remarks>
-        /// SerializeIfoGameTime @ (K1: TODO: Find this address, TSL: 0x00500290) line 98 (k2_win_gog_aspyr_swkotor2.exe: SerializeIfoGameTime @ 0x00500290)
+        /// Reva: SerializeIfoGameTime K1: 0x004c7050, TSL: 0x00500290 (line 98)
         /// Written via FUN_004137e0(param_1, param_2, local_54[0], "Mod_StartMiliSec")
         /// Populated by IFOHelpers.PopulateIfoGameTimeFromTimeManager() which matches original engine behavior
         /// </remarks>
@@ -316,7 +315,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
         /// Written to IFO as Mod_PauseDay field.
         /// </summary>
         /// <remarks>
-        /// SerializeIfoGameTime @ (K1: TODO: Find this address, TSL: 0x00500290) line 99 (k2_win_gog_aspyr_swkotor2.exe: SerializeIfoGameTime @ 0x00500290)
+        /// Reva: SerializeIfoGameTime K1: 0x004c7050, TSL: 0x00500290 (line 99)
         /// Written via FUN_00413880(param_1, param_2, uVar1, "Mod_PauseDay")
         /// Value comes from offset +0x28 of time system object (from FUN_004dc6e0 result)
         /// Populated by IFOHelpers.PopulateIfoGameTimeFromTimeManager() which matches original engine behavior
@@ -328,10 +327,10 @@ namespace BioWare.Resource.Formats.GFF.Generics
         /// Written to IFO as Mod_PauseTime field.
         /// </summary>
         /// <remarks>
-        /// SerializeIfoGameTime @ (K1: TODO: Find this address, TSL: 0x00500290) line 100 (k2_win_gog_aspyr_swkotor2.exe: SerializeIfoGameTime @ 0x00500290)
+        /// Reva: SerializeIfoGameTime K1: 0x004c7050, TSL: 0x00500290 (line 100)
         /// Written via FUN_00413880(param_1, param_2, uVar2, "Mod_PauseTime")
         /// Value comes from offset +0x2c of time system object (from FUN_004dc6e0 result)
-        /// String reference: "Mod_PauseTime" @ (K1: TODO: Find this address, TSL: 0x007be89c)
+        /// Reva: "Mod_PauseTime" @ K1: 0x00745b14, TSL: 0x007be89c
         /// Populated by IFOHelpers.PopulateIfoGameTimeFromTimeManager() which matches original engine behavior
         /// </remarks>
         public uint PauseTime { get; set; }

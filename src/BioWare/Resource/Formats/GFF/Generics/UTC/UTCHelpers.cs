@@ -4,10 +4,8 @@ using System.Linq;
 using BioWare.Common;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Common.Logger;
-using BioWare.Common;
 using BioWare.Resource;
 using static BioWare.Common.GameExtensions;
-using BioWare.Resource.Formats.GFF;
 
 namespace BioWare.Resource.Formats.GFF.Generics.UTC
 {

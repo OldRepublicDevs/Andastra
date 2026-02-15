@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shared props for slim editor standalones: Avalonia + BioWare only, no OdyTools project ref. -->
+<Project>
+  <PropertyGroup>
+    <AvaloniaCopyWin32Dll>false</AvaloniaCopyWin32Dll>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <NoWin32Manifest>true</NoWin32Manifest>
+  </PropertyGroup>
+  <!-- Minimal packages: Avalonia + MessageBox only; add editor-specific in csproj (Markdig, etc.). -->
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.11" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.11" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.11" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.11" />
+    <PackageReference Include="MessageBox.Avalonia" Version="3.3.1.1" />
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <PackageReference Include="System.Memory" Version="4.6.3" />
+  </ItemGroup>
+</Project>

@@ -1,7 +1,6 @@
 using System.IO;
 using BioWare.Common;
 using BioWare.Resource.Formats.KEY;
-using BioWare.Common;
 using BioWare.Resource;
 
 namespace BioWare.Extract

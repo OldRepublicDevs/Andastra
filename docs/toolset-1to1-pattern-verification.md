@@ -1,10 +1,10 @@
-# HolocronToolset 1:1 Python Pattern Verification
+# OdyTools 1:1 Python Pattern Verification
 
 ## Date: 2025-12-17
 
 ## Summary
 
-All HolocronToolset editors have been verified to follow the 1:1 Python implementation pattern, ensuring exact parity with the PyKotor toolset behavior.
+All OdyTools editors have been verified to follow the 1:1 Python implementation pattern, ensuring exact parity with the PyKotor toolset behavior.
 
 ## Pattern Requirements
 
@@ -21,41 +21,41 @@ The 1:1 Python pattern requires:
 
 All GFF-based editors follow the 1:1 pattern:
 
-- ✅ **UTWEditor** - Waypoint editor (already fixed)
-- ✅ **UTPEditor** - Placeable editor
-- ✅ **UTCEditor** - Creature editor
-- ✅ **UTDEditor** - Door editor (recently fixed)
-- ✅ **UTIEditor** - Item editor
-- ✅ **UTMEditor** - Merchant editor
-- ✅ **UTSEditor** - Sound editor
-- ✅ **UTEEditor** - Encounter editor
-- ✅ **UTTEditor** - Trigger editor
-- ✅ **AREEditor** - Area editor
-- ✅ **IFOEditor** - Module info editor
-- ✅ **GITEditor** - Git editor
+- ✅ **OdyToolUTW** - Waypoint editor (already fixed)
+- ✅ **OdyToolUTP** - Placeable editor
+- ✅ **OdyToolUTC** - Creature editor
+- ✅ **OdyToolUTD** - Door editor (recently fixed)
+- ✅ **OdyToolUTI** - Item editor
+- ✅ **OdyToolUTM** - Merchant editor
+- ✅ **OdyToolUTS** - Sound editor
+- ✅ **OdyToolUTE** - Encounter editor
+- ✅ **OdyToolUTT** - Trigger editor
+- ✅ **OdyToolARE** - Area editor
+- ✅ **OdyToolIFO** - Module info editor
+- ✅ **OdyToolGIT** - Git editor
 
 ### Non-GFF Editors
 
 All non-GFF editors have been checked for the pattern:
 
-- ✅ **NSSEditor** - Script editor
-- ✅ **DLGEditor** - Dialog editor
-- ✅ **WAVEditor** - Audio editor
-- ✅ **TXTEditor** - Text editor
-- ✅ **TwoDAEditor** - 2DA table editor
-- ✅ **TPCEditor** - Texture editor
-- ✅ **TLKEditor** - Talk table editor
-- ✅ **SSFEditor** - Sound set editor
-- ✅ **SaveGameEditor** - Save game editor
-- ✅ **PTHEditor** - Path editor
-- ✅ **MDLEditor** - Model editor
-- ✅ **LYTEditor** - Layout editor
-- ✅ **LTREditor** - Letter editor
-- ✅ **LIPEditor** - Lip sync editor
-- ✅ **JRLEditor** - Journal editor
-- ✅ **ERFEditor** - ERF archive editor
-- ✅ **GFFEditor** - Generic GFF editor
-- ✅ **BWMEditor** - Walkmesh editor
+- ✅ **OdyToolNSS** - Script editor
+- ✅ **OdyToolDLG** - Dialog editor
+- ✅ **OdyToolWAV** - Audio editor
+- ✅ **OdyToolTXT** - Text editor
+- ✅ **OdyToolTwoDA** - 2DA table editor
+- ✅ **OdyToolTPC** - Texture editor
+- ✅ **OdyToolTLK** - Talk table editor
+- ✅ **OdyToolSSF** - Sound set editor
+- ✅ **OdyToolSAV** - Save game editor
+- ✅ **OdyToolPTH** - Path editor
+- ✅ **OdyToolMDL** - Model editor
+- ✅ **OdyToolLYT** - Layout editor
+- ✅ **OdyToolLTR** - Letter editor
+- ✅ **OdyToolLIP** - Lip sync editor
+- ✅ **OdyToolJRL** - Journal editor
+- ✅ **OdyToolERF** - ERF archive editor
+- ✅ **OdyToolGFF** - Generic GFF editor
+- ✅ **OdyToolBWM** - Walkmesh editor
 
 ## GFF Helper Boolean Fix
 
@@ -92,7 +92,7 @@ Use the provided PowerShell script to run all toolset tests:
 Or run tests directly:
 
 ```powershell
-dotnet test src/Tests/HolocronToolset.Tests/HolocronToolset.NET.Tests.csproj
+dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj
 ```
 
 ## Key Improvements

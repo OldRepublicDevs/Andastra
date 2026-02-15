@@ -4,7 +4,6 @@ using BioWare;
 using BioWare.Common;
 using BioWare.Resource.Formats.TLK;
 using BioWare.Extract;
-using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.GFF.Generics;
 using Andastra.Game.Games.Common.Journal;

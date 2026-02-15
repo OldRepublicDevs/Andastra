@@ -1,0 +1,164 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:widgets="using:OdyTools.Widgets"
+        xmlns:local="clr-namespace:OdyTools.Editors"
+        x:Class="OdyTools.Editors.OdyToolJRL"
+        Title="Journal Editor (KotOR)"
+        MinWidth="820" MinHeight="520"
+        Width="960" Height="620">
+  <Window.Styles>
+    <Style Selector="Border.jrl-tree-item">
+      <Setter Property="Padding" Value="8,6"/>
+      <Setter Property="Background" Value="Transparent"/>
+    </Style>
+    <Style Selector="Border.jrl-tree-item:pointerover">
+      <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightLowBrush}"/>
+    </Style>
+  </Window.Styles>
+  <DockPanel>
+    <Menu DockPanel.Dock="Top" Name="menuBar">
+      <MenuItem Header="_File">
+        <MenuItem Header="_New" Name="actionNew"
+                  ToolTip.Tip="Create a new empty journal. All quests and entries will be cleared."/>
+        <MenuItem Header="_Open" Name="actionOpen"
+                  ToolTip.Tip="Open a JRL file from disk or from a game resource."/>
+        <MenuItem Header="_Save" Name="actionSave"
+                  ToolTip.Tip="Save the current journal. Shortcut: Ctrl+S"/>
+        <MenuItem Header="Save _As" Name="actionSaveAs"
+                  ToolTip.Tip="Save the journal to a new file name or location."/>
+        <Separator/>
+        <MenuItem Header="_Revert" Name="actionRevert"
+                  ToolTip.Tip="Discard unsaved changes and reload the file from disk."/>
+        <Separator/>
+        <MenuItem Header="E_xit" Name="actionExit"
+                  ToolTip.Tip="Close the Journal Editor. You will be prompted to save if there are unsaved changes."/>
+      </MenuItem>
+      <MenuItem Header="_Edit">
+        <MenuItem Header="_Undo" Name="actionUndo"
+                  ToolTip.Tip="Undo the last change. Shortcut: Ctrl+Z"/>
+        <MenuItem Header="_Redo" Name="actionRedo"
+                  ToolTip.Tip="Redo the last undone change. Shortcut: Ctrl+Y"/>
+        <Separator/>
+        <MenuItem Header="Find..." Name="actionFind"
+                  ToolTip.Tip="Search for text in quest names and entry text. Shortcut: Ctrl+F"/>
+        <MenuItem Header="Find _Next" Name="actionFindNext"
+                  ToolTip.Tip="Jump to the next match. Shortcut: F3"/>
+      </MenuItem>
+    </Menu>
+
+    <!-- Toolbar -->
+    <Border DockPanel.Dock="Top" Padding="12,8" Background="{DynamicResource ThemeControlLowBrush}" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="0,0,0,1">
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button Name="addQuestButton" Content="+ Quest"
+                ToolTip.Tip="Add a new quest category to the journal."/>
+        <Button Name="addEntryButton" Content="+ Entry" IsEnabled="False"
+                ToolTip.Tip="Add a new entry to the selected quest. Select a quest first."/>
+        <Button Name="removeButton" Content="Remove" IsEnabled="False"
+                ToolTip.Tip="Remove the selected quest or entry. Select an item in the tree first."/>
+        <Separator/>
+        <Button Name="findButton" Content="Find..."
+                ToolTip.Tip="Search for text in quest names and entry text. Shortcut: Ctrl+F"/>
+        <TextBlock Name="questCountLabel" VerticalAlignment="Center" Margin="16,0,0,0"
+                   Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="12"
+                   ToolTip.Tip="Number of quest categories in this journal."/>
+      </StackPanel>
+    </Border>
+
+    <!-- Main: tree + detail -->
+    <Grid ColumnDefinitions="1*,380" Margin="8,0,8,8">
+      <!-- Left: quest/entry tree -->
+      <Border Grid.Column="0" Margin="0,0,4,0" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" CornerRadius="8"
+              Background="{DynamicResource ThemeControlLowBrush}"
+              ToolTip.Tip="Quest categories (top level) and their entries (children). Select an item to view or edit in the panel on the right.">
+        <Grid RowDefinitions="Auto,*">
+          <TextBlock Grid.Row="0" Text="Quests &amp; entries" FontWeight="SemiBold" Margin="12,10,12,6" FontSize="13"
+                     ToolTip.Tip="Journal structure: each quest can have multiple entries. The game shows these in the journal UI."/>
+          <TreeView Name="journalTree" Grid.Row="1" Margin="4,0,4,8">
+            <TreeView.ItemTemplate>
+              <TreeDataTemplate DataType="local:JournalTreeItem" ItemsSource="{Binding Children}">
+                <Border Classes="jrl-tree-item">
+                  <TextBlock Text="{Binding Text}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                </Border>
+              </TreeDataTemplate>
+            </TreeView.ItemTemplate>
+          </TreeView>
+        </Grid>
+      </Border>
+
+      <!-- Right: detail panel -->
+      <Border Grid.Column="1" Margin="4,0,0,0" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" CornerRadius="8"
+              Background="{DynamicResource ThemeControlLowBrush}" Padding="16">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+          <StackPanel Name="detailPanel" Spacing="12">
+            <!-- No selection -->
+            <StackPanel Name="detailNoSelection" Spacing="8">
+              <TextBlock Text="Details" FontWeight="SemiBold" FontSize="14"
+                         ToolTip.Tip="Properties of the selected quest or entry."/>
+              <TextBlock Name="noSelectionText" Text="Select a quest or entry in the tree to view and edit its properties."
+                         TextWrapping="Wrap" Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="12"/>
+            </StackPanel>
+
+            <!-- Quest details (hidden by default, shown when quest selected) -->
+            <StackPanel Name="detailQuest" IsVisible="False" Spacing="10">
+              <TextBlock Text="Quest" FontWeight="SemiBold" FontSize="14"/>
+              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" VerticalAlignment="Center" Margin="0,0,8,0"
+                           ToolTip.Tip="Display name of the quest category (localized string)."/>
+                <widgets:LocalizedStringEdit Name="questNameEdit" Grid.Row="0" Grid.Column="1" Margin="0,0,0,6"/>
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Planet ID:" VerticalAlignment="Center" Margin="0,0,8,0"
+                           ToolTip.Tip="Planet identifier for this quest (0 = no specific planet)."/>
+                <NumericUpDown Name="questPlanetId" Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="int.MaxValue" Margin="0,0,0,6"/>
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Priority:" VerticalAlignment="Center" Margin="0,0,8,0"
+                           ToolTip.Tip="Display priority: Highest, High, Medium, Low, Lowest."/>
+                <ComboBox Name="questPriority" Grid.Row="2" Grid.Column="1" Margin="0,0,0,6"
+                          ToolTip.Tip="Determines order when multiple quests are shown."/>
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Tag:" VerticalAlignment="Center" Margin="0,0,8,0"
+                           ToolTip.Tip="Optional script/tag reference for this quest."/>
+                <TextBox Name="questTag" Grid.Row="3" Grid.Column="1" Margin="0,0,0,6"
+                         ToolTip.Tip="String tag used by scripts to identify this quest."/>
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Comment:" VerticalAlignment="Center" Margin="0,0,8,0"
+                           ToolTip.Tip="Optional comment (not shown in-game)."/>
+                <TextBox Name="questComment" Grid.Row="4" Grid.Column="1" AcceptsReturn="True" MinHeight="48" Margin="0,0,0,6"
+                         ToolTip.Tip="Editor comment; not displayed in the game journal."/>
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Entries:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <TextBlock Name="questEntryCount" Grid.Row="5" Grid.Column="1" VerticalAlignment="Center"
+                           ToolTip.Tip="Number of journal entries in this quest."/>
+              </Grid>
+            </StackPanel>
+
+            <!-- Entry details (hidden by default, shown when entry selected) -->
+            <StackPanel Name="detailEntry" IsVisible="False" Spacing="10">
+              <TextBlock Text="Entry" FontWeight="SemiBold" FontSize="14"/>
+              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Text:" VerticalAlignment="Center" Margin="0,0,8,0"
+                           ToolTip.Tip="Journal entry text (localized string). Shown in-game when this entry is active."/>
+                <widgets:LocalizedStringEdit Name="entryTextEdit" Grid.Row="0" Grid.Column="1" Margin="0,0,0,6"/>
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Entry ID:" VerticalAlignment="Center" Margin="0,0,8,0"
+                           ToolTip.Tip="Numeric ID used by scripts to trigger or check this entry."/>
+                <NumericUpDown Name="entryId" Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="int.MaxValue" Margin="0,0,0,6"/>
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="End:" VerticalAlignment="Center" Margin="0,0,8,0"
+                           ToolTip.Tip="If checked, this entry marks the quest as ended when shown."/>
+                <CheckBox Name="entryEnd" Grid.Row="2" Grid.Column="1" Margin="0,0,0,6"
+                          ToolTip.Tip="When set, displaying this entry completes the quest in the journal."/>
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="XP %:" VerticalAlignment="Center" Margin="0,0,8,0"
+                           ToolTip.Tip="Experience point percentage awarded when this entry is shown."/>
+                <NumericUpDown Name="entryXpPct" Grid.Row="3" Grid.Column="1" Minimum="0" Maximum="100" FormatString="0.0" Increment="0.1" Margin="0,0,0,6"/>
+              </Grid>
+            </StackPanel>
+
+            <Separator/>
+            <TextBlock Name="detailHelpText" TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                       Text="JRL files define journal (quest) categories and their entries. Scripts add/remove entries and set which are active. Priority controls display order."
+                       ToolTip.Tip="Journal format: quests contain entries; the game shows active entries based on script logic."/>
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+    </Grid>
+
+    <!-- Status bar -->
+    <Border DockPanel.Dock="Bottom" Padding="12,8" Background="{DynamicResource ThemeControlLowBrush}" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="0,1,0,0">
+      <TextBlock Name="statusText" Text="Journal" Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="12"
+                 ToolTip.Tip="Summary: number of quest categories. Each quest can have multiple entries."/>
+    </Border>
+  </DockPanel>
+</Window>

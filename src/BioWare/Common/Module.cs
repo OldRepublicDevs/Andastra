@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using BioWare.Common;
 using BioWare.Extract;
 using BioWare.Extract.Capsule;
-using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.GFF;
@@ -17,10 +15,6 @@ using BioWare.Resource.Formats.VIS;
 using BioWare.Resource.Formats.LYT;
 using BioWare.Resource.Formats.TPC;
 using BioWare.Resource.Formats.NCS;
-using BioWare.Extract;
-using BioWare.Common;
-using BioWare.Resource;
-using BioWare.Resource.Formats;
 using BioWare.Resource.Formats.GFF.Generics;
 using BioWare.Resource.Formats.GFF.Generics.ARE;
 using BioWare.Resource.Formats.GFF.Generics.DLG;
@@ -55,7 +49,7 @@ namespace BioWare.Common
         /// Contains: IFO (module info), ARE (area data), GIT (dynamic area info)
         /// File naming: &lt;modulename&gt;.rim
         /// Note: Only loaded in simple mode (flag at offset 0x54 == 0)
-        /// (K1: 0x004094a0, TSL: TODO: Find this address) line 32-42
+        /// Reva: AsyncLoad K1: 0x004094a0, TSL: 0x004096b0 (line 32-42)
         /// </summary>
         MAIN,  // .rim
 
@@ -64,7 +58,7 @@ namespace BioWare.Common
         /// Contains: ARE (area data) and related area resources
         /// File naming: &lt;modulename&gt;_a.rim
         /// Behavior: REPLACES .rim in complex mode
-        /// (K1: 0x004094a0, TSL: TODO: Find this address) line 61, 159
+        /// Reva: AsyncLoad K1: 0x004094a0, TSL: 0x004096b0 (line 61, 159)
         /// </summary>
         AREA,  // _a.rim
 
@@ -73,7 +67,7 @@ namespace BioWare.Common
         /// Contains: ARE (area data) and extended area resources
         /// File naming: &lt;modulename&gt;_adx.rim
         /// Behavior: REPLACES .rim if _a.rim not found
-        /// (K1: 0x004094a0, TSL: TODO: Find this address) line 74, 85
+        /// Reva: AsyncLoad K1: 0x004094a0, TSL: 0x004096b0 (line 74, 85)
         /// </summary>
         AREA_EXTENDED,  // _adx.rim
 
@@ -83,7 +77,7 @@ namespace BioWare.Common
         /// File naming: &lt;modulename&gt;_s.rim
         /// Behavior: ADDS to base (only if .mod not found)
         /// Note: In KotOR 2, DLG files are NOT in _s.rim (see K2_DLG)
-        /// (K1: 0x004094a0, TSL: TODO: Find this address) line 107, 118
+        /// Reva: AsyncLoad K1: 0x004094a0, TSL: 0x004096b0 (line 107, 118)
         /// </summary>
         DATA,  // _s.rim
 
@@ -93,7 +87,7 @@ namespace BioWare.Common
         /// File naming: &lt;modulename&gt;_dlg.erf
         /// Behavior: ADDS to base (only if .mod not found, K2 only)
         /// Note: KotOR 1 stores DLG files in _s.rim, KotOR 2 uses separate _dlg.erf
-        /// (K1: TODO: Find this address, TSL: 0x004096b0) line 128, 147
+        /// Reva: AsyncLoad K1: 0x004094a0, TSL: 0x004096b0 (line 128, 147; _dlg.erf is TSL-only)
         /// </summary>
         K2_DLG,  // _dlg.erf
 
@@ -103,7 +97,7 @@ namespace BioWare.Common
         /// File naming: &lt;modulename&gt;.mod
         /// Behavior: REPLACES all other files (skips _s.rim/_dlg.erf)
         /// Priority: Takes precedence over .rim/_s.rim/_dlg.erf files
-        /// (K1: 0x004094a0, TSL: TODO: Find this address) line 95, 136
+        /// Reva: AsyncLoad K1: 0x004094a0, TSL: 0x004096b0 (line 95, 136)
         /// </summary>
         MOD  // .mod
     }
@@ -182,7 +176,7 @@ namespace BioWare.Common
                 return restype == ResourceType.ARE || restype == ResourceType.IFO || restype == ResourceType.GIT;
             }
 
-            // _a.rim and _adx.rim contain ARE resources (K1: 0x004094a0, TSL: TODO: Find this address) line 61, 74 - checks for ARE type 0xbba)
+            // _a.rim and _adx.rim contain ARE resources (Reva: AsyncLoad K1: 0x004094a0, TSL: 0x004096b0) line 61, 74 - checks for ARE type 0xbba)
             if (type == KModuleType.AREA || type == KModuleType.AREA_EXTENDED)
             {
                 return restype == ResourceType.ARE || restype == ResourceType.IFO || restype == ResourceType.GIT;

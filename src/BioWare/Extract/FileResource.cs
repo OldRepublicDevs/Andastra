@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using BioWare.Common;
 using BioWare.Extract;
-using BioWare.Common;
 using BioWare.Resource;
 using JetBrains.Annotations;
 

@@ -6,15 +6,15 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 {
     /// <summary>
     /// Odyssey engine graphics device implementation.
-    /// Wraps the OpenGL context created by OdysseyGraphicsBackend.
+    /// Wraps the OpenGL context created by Kotor1/Kotor2GraphicsBackend.
     /// </summary>
     /// <remarks>
     /// Odyssey Graphics Device:
-    /// - Based on verified components of k1_win_gog_swkotor.exe and k2_win_gog_aspyr_swkotor2.exe
+    /// - Based on verified components of k1_win_gog_swkotor.exe and k2_win_gog_legacypc_swkotor2.exe (Reva)
     /// - Original game graphics device: OpenGL context with WGL extensions
     /// - Graphics device operations: glClear, glViewport, glDrawArrays, glDrawElements
-    /// - k1_win_gog_swkotor.exe: Graphics functions at 0x0044dab0 (init), 0x00427c90 (textures)
-    /// - k2_win_gog_aspyr_swkotor2.exe: Graphics functions at 0x00461c50 (init), 0x0042a100 (textures)
+    /// - K1: Initialize @ 0x0044dab0 (init), InitializeFrameBufferModifications @ 0x00427c90 (textures)
+    /// - TSL: FUN_00461c50 @ 0x00461c50 (init), FUN_0042a100 @ 0x0042a100 (textures)
     /// - This implementation: Wraps OpenGL context for IGraphicsDevice interface
     /// </remarks>
     public class OdysseyGraphicsDevice : IGraphicsDevice
@@ -230,8 +230,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Creates a texture from pixel data.
-        /// Based on k1_win_gog_swkotor.exe: 0x00427c90 @ 0x00427c90 (texture initialization)
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0042a100 @ 0x0042a100 (texture initialization)
+        /// Original (Reva; K1 = k1_win_gog_swkotor.exe, TSL = k2_win_gog_legacypc_swkotor2.exe): K1 InitializeFrameBufferModifications @ 0x00427c90, TSL FUN_0042a100 @ 0x0042a100 (texture/framebuffer initialization).
         /// </summary>
         /// <param name="width">Texture width.</param>
         /// <param name="height">Texture height.</param>

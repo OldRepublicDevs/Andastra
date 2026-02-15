@@ -407,6 +407,8 @@ Resources that use `FUN_004074d0`/`FUN_004075a0` (which calls `FUN_00407230`/`FU
 
 **Note**: This list was compiled by analyzing all callers of `FUN_004074d0` in swkotor.exe using Ghidra MCP. Each handler function calls `FUN_004074d0` with a specific resource type ID, proving that these resource types use the resource system and can be placed in modules.
 
+**SSF (soundset) playback (toolset)**: Andastra OdyToolSSF resolves WAV for playback via TLK strref → TalkTable GetSound (Voiceover ResRef) → `installation.Sound(resname, [OVERRIDE, VOICE, SOUND, CHITIN])`, matching OdyToolDLG Play Voice and OdyToolUTS. See `OdyToolSSF.cs` Reva comment and `VoiceSearchOrder`.
+
 ### Resource Types NOT Using Resource System
 
 | Resource Type | ID (Hex) | ID (Dec) | Loading Method | Evidence |

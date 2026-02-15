@@ -9,7 +9,6 @@ using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.SSF;
 using BioWare.Resource.Formats.TwoDA;
 using BioWare.Common.Logger;
-using BioWare.Common;
 using BioWare.Resource;
 using JetBrains.Annotations;
 

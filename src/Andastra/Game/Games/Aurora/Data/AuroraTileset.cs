@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using BioWare;
 using BioWare.Common;
-using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.SET;
 using Andastra.Runtime.Content.Interfaces;

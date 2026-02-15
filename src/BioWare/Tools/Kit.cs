@@ -14,7 +14,6 @@ using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.RIM;
 using BioWare.Resource.Formats.TPC;
 using BioWare.Resource.Formats.TwoDA;
-using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.LYT;
 using BioWare.Resource.Formats.GFF.Generics;
@@ -1718,7 +1717,7 @@ namespace BioWare.Tools
 
             // Write all models (MDL/MDX) that aren't components or skyboxes
             // This ensures we extract all models referenced by the module, not just room components
-            // Reference: Tools/HolocronToolset/src/toolset/gui/windows/main.py extractAllModuleModels
+            // Reference: Tools/OdyTools/src/toolset/gui/windows/main.py extractAllModuleModels
             string modelsDir = Path.Combine(kitDir, "models");
             Directory.CreateDirectory(modelsDir);
             foreach (var kvp in allModels)

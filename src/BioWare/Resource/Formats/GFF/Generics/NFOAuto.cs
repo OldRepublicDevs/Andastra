@@ -1,9 +1,7 @@
 using System;
 using BioWare.Common;
 using BioWare.Resource.Formats.GFF;
-using BioWare.Common;
 using BioWare.Resource;
-using BioWare.Resource.Formats.GFF;
 
 namespace BioWare.Resource.Formats.GFF.Generics
 {

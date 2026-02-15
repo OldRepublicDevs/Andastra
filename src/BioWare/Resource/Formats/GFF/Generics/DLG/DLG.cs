@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BioWare.Common;
-using BioWare.Common;
 using BioWare.Resource;
 using JetBrains.Annotations;
 

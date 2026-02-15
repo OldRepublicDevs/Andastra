@@ -1,0 +1,49 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:widgets="clr-namespace:OdyTools.Widgets"
+        x:Class="OdyTools.Editors.OdyToolWAV"
+        Title="Audio Editor"
+        MinWidth="560" MinHeight="220"
+        Width="640" Height="280">
+  <Window.Styles>
+    <Style Selector="TextBlock.infoLabel">
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}"/>
+      <Setter Property="Opacity" Value="0.85"/>
+    </Style>
+  </Window.Styles>
+  <DockPanel>
+    <!-- Info bar -->
+    <Border DockPanel.Dock="Top"
+            Background="{DynamicResource ThemeControlLowBrush}"
+            BorderBrush="{DynamicResource ThemeBorderBrush}"
+            BorderThickness="0,0,0,1"
+            Padding="16,12">
+      <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+        <TextBlock x:Name="formatLabel"
+                   Grid.Row="0" Grid.Column="0"
+                   Text="Format: —"
+                   Classes="infoLabel"
+                   Margin="0,0,24,4"/>
+        <TextBlock x:Name="sizeLabel"
+                   Grid.Row="0" Grid.Column="1"
+                   Text=""
+                   Classes="infoLabel"
+                   HorizontalAlignment="Right"
+                   Margin="0,0,0,4"/>
+        <TextBlock x:Name="pathLabel"
+                   Grid.Row="1" Grid.Column="0"
+                   Grid.ColumnSpan="2"
+                   Text="No file loaded"
+                   Classes="infoLabel"
+                   Opacity="0.7"
+                   TextTrimming="CharacterEllipsis"/>
+      </Grid>
+    </Border>
+    <!-- Media player -->
+    <Border DockPanel.Dock="Top"
+            Padding="0">
+      <widgets:MediaPlayerWidget x:Name="mediaPlayerWidget"/>
+    </Border>
+  </DockPanel>
+</Window>

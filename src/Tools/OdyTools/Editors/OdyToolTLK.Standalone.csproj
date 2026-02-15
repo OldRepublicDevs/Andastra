@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="Standalone\OdyTools.Standalone.Editor.props" />
+  <PropertyGroup>
+    <_OdyToolsRoot>$([System.IO.Path]::GetDirectoryName('$(MSBuildProjectDirectory)'))</_OdyToolsRoot>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>7.3</LangVersion>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <Platforms>x86;x64;arm64</Platforms>
+    <UseAppHost>true</UseAppHost>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <IsPackable>false</IsPackable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <TargetFrameworks>net9.0;net472</TargetFrameworks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <OutputType>WinExe</OutputType>
+    <Optimize>true</Optimize>
+    <Nullable>disable</Nullable>
+    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(RuntimeIdentifier)'=='' OR $(RuntimeIdentifier.StartsWith('win'))">
+    <OutputType>WinExe</OutputType>
+  </PropertyGroup>
+  <PropertyGroup Condition="!$(RuntimeIdentifier.StartsWith('win')) AND '$(RuntimeIdentifier)'!=''">
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>OdyTools.Editors.Standalone.EditorStandaloneHost.EditorStandaloneProgram</StartupObject>
+    <DefineConstants>$(DefineConstants);TLK_STANDALONE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    <AppConfig>$(MSBuildProjectDirectory)\app.config</AppConfig>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BioWare\BioWare.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Markdig" Version="0.44.0" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+  <!-- Slim: only Avalonia + BioWare; minimal OdyTools source (no OdyTools ref, no Windows/ModelRenderer/NAudio). -->
+  <ItemGroup>
+    <Compile Include="Standalone\EditorStandaloneHost\EditorStandaloneProgram.cs" />
+    <Compile Include="Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml.cs" />
+    <Compile Include="OdyToolTLK.cs" />
+    <Compile Include="TLKEntryViewModel.cs" />
+    <Compile Include="Editor.cs" />
+    <Compile Include="EditorHelpers.cs" />
+    <Compile Include="EditorWikiMapping.cs" />
+    <Compile Include="WindowUtils.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Common\CollectionViewSource.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Data\OdyInstallation.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Data\Settings.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Data\GlobalSettings.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Utils\PathUtils.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaXaml Remove="**\*.axaml" />
+    <AvaloniaXaml Include="Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml" />
+    <AvaloniaXaml Include="OdyToolTLK.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" />
+  </ItemGroup>
+</Project>

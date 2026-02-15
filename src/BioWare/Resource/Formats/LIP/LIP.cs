@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using BioWare.Common;
-using BioWare.Common;
 using BioWare.Resource;
 
 namespace BioWare.Resource.Formats.LIP

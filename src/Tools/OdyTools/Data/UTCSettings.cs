@@ -1,0 +1,31 @@
+using System;
+
+namespace OdyTools.Data
+{
+    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/utc.py:1163-1181
+    // Original: class UTCSettings:
+    public class UTCSettings : Settings
+    {
+        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/utc.py:1164-1181
+        // Original: def __init__(self): self.settings = QSettings("OdyToolsV3", "OdyToolUTC")
+        public UTCSettings() : base("OdyToolUTC")
+        {
+        }
+
+        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/utc.py:1167-1173
+        // Original: @property def saveUnusedFields(self) -> bool:
+        public bool SaveUnusedFields
+        {
+            get => GetValue("saveUnusedFields", true);
+            set => SetValue("saveUnusedFields", value);
+        }
+
+        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/utc.py:1175-1181
+        // Original: @property def alwaysSaveK2Fields(self) -> bool:
+        public bool AlwaysSaveK2Fields
+        {
+            get => GetValue("alwaysSaveK2Fields", false);
+            set => SetValue("alwaysSaveK2Fields", value);
+        }
+    }
+}

@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using BioWare.Common;
 using BioWare.Resource.Formats.KEY;
-using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Utility.LZMA;
 using JetBrains.Annotations;

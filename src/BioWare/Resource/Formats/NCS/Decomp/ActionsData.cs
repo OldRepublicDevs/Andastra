@@ -214,7 +214,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp
                 this.defaultValues = new List<string>();
                 this.paramsize = 0;
                 Pattern p = Pattern.Compile("\\s*(\\w+)\\s+\\w+(\\s*=\\s*(\\S+))?\\s*");
-                String[] tokens = @params.Split(",");
+                String[] tokens = @params.Split(new[] { "," }, StringSplitOptions.None);
                 for (int i = 0; i < tokens.Length; ++i)
                 {
                     Matcher m = p.Matcher(tokens[i]);

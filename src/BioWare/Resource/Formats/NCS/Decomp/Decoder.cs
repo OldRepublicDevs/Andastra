@@ -302,7 +302,11 @@ namespace BioWare.Resource.Formats.NCS.Decomp
             this.pos += 4;
             BigInteger i = this.ToBigIntegerSigned(buffer);
             int bits = i.IntValue();
+#if NET472
+            float value = Net472BitConverterExtensions.Int32BitsToSingle(bits);
+#else
             float value = BitConverter.Int32BitsToSingle(bits);
+#endif
             return value.ToString();
         }
 

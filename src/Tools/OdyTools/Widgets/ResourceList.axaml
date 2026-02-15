@@ -1,0 +1,75 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:widgets="using:OdyTools.Widgets"
+             x:Class="OdyTools.Widgets.ResourceList">
+    <UserControl.Styles>
+        <Style Selector="TreeView#resourceTree">
+            <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeControlLowBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="6" />
+        </Style>
+        <Style Selector="TreeView#resourceTree TreeViewItem">
+            <Setter Property="IsExpanded" Value="{ReflectionBinding IsExpanded, Mode=TwoWay}" />
+            <Setter Property="Margin" Value="0,0,0,2" />
+        </Style>
+        <Style Selector="TreeView#resourceTree Border.resource-item">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="TreeView#resourceTree TreeViewItem:pointerover Border.resource-item">
+            <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
+        </Style>
+        <Style Selector="TreeView#resourceTree TreeViewItem:selected Border.resource-item">
+            <Setter Property="Background" Value="{DynamicResource ThemeControlHighBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
+        </Style>
+    </UserControl.Styles>
+    <Grid RowDefinitions="Auto,Auto,*">
+        <!-- Section Combo and Refresh Button -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="5">
+            <ComboBox Name="sectionCombo" Grid.Column="0" Margin="0,0,5,0" />
+            <Button Name="refreshButton" Grid.Column="1" Content="Refresh" Width="70" ToolTip.Tip="Refresh this list." />
+        </Grid>
+
+        <!-- Search and Reload -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="5,0,5,5">
+            <TextBox Name="searchEdit" Grid.Column="0" Watermark="search..." Margin="0,0,5,0" />
+            <Button Name="reloadButton" Grid.Column="1" Content="Reload" Width="70" ToolTip.Tip="Reload the active module/folder." />
+        </Grid>
+
+        <!-- Resource Tree (SelectionMode.Multiple matches PyKotor ExtendedSelection; context menu via ContextRequested) -->
+        <TreeView Name="resourceTree" Grid.Row="2" SelectionMode="Multiple">
+            <TreeView.ItemTemplate>
+                <TreeDataTemplate x:DataType="widgets:ResourceTreeNode" ItemsSource="{Binding Children}">
+                    <Border Classes="resource-item" Padding="6,4" Margin="2,0,4,0" CornerRadius="4">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Width="6" Height="6" CornerRadius="3" VerticalAlignment="Center"
+                                    Background="{DynamicResource ThemeAccentBrush}"
+                                    IsVisible="{Binding IsCategory}" />
+                            <Border Width="6" Height="6" CornerRadius="3" VerticalAlignment="Center"
+                                    Background="{DynamicResource ThemeForegroundLowBrush}"
+                                    IsVisible="{Binding IsResourceNode}" />
+                            <TextBlock Grid.Column="1"
+                                       Margin="8,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontWeight="{Binding TitleFontWeight}"
+                                       Text="{Binding Title}"
+                                       TextTrimming="CharacterEllipsis" />
+                            <Border Grid.Column="2"
+                                    Margin="8,0,0,0"
+                                    Padding="6,1"
+                                    CornerRadius="8"
+                                    Background="{DynamicResource ThemeControlLowBrush}"
+                                    IsVisible="{Binding IsCategory}">
+                                <TextBlock FontSize="11" Text="{Binding ItemCountLabel}" />
+                            </Border>
+                        </Grid>
+                    </Border>
+                </TreeDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+    </Grid>
+</UserControl>

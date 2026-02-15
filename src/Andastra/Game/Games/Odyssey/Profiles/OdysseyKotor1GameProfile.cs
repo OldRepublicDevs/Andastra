@@ -3,7 +3,6 @@ using BioWare.Common;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Odyssey.EngineApi;
 using Andastra.Game.Scripting.Interfaces;
-using Andastra.Game.Games.Common;
 
 namespace Andastra.Game.Games.Odyssey.Profiles
 {

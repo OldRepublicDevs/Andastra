@@ -9,7 +9,6 @@ using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.LYT;
 using BioWare.Resource.Formats.VIS;
 using BioWare.Extract;
-using BioWare.Common;
 using BioWare.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Enums;

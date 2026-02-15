@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using BioWare.Common;
-using BioWare.Common;
 using BioWare.Resource;
 
 namespace BioWare.Resource.Formats.LTR
@@ -12,6 +11,22 @@ namespace BioWare.Resource.Formats.LTR
     // Original: class LTR(ComparableMixin)
     public class LTR : IEquatable<LTR>
     {
+        private static int GetCharacterIndex(string char_)
+        {
+            if (char_ == null || char_.Length != 1)
+            {
+                throw new ArgumentException("The character specified was not a real character.");
+            }
+
+            int index = CharacterSet.IndexOf(char_);
+            if (index < 0)
+            {
+                throw new IndexOutOfRangeException("The character specified was invalid.");
+            }
+
+            return index;
+        }
+
         public const string CharacterSet = "abcdefghijklmnopqrstuvwxyz'-";
         public const int NumCharacters = 28;
 
@@ -205,66 +220,66 @@ namespace BioWare.Resource.Formats.LTR
         // Original: def set_doubles_start/middle/end
         public void SetDoublesStart(string previous1, string char_, float chance)
         {
-            _doubles[CharacterSet.IndexOf(previous1)].SetStart(char_, chance);
+            _doubles[GetCharacterIndex(previous1)].SetStart(char_, chance);
         }
 
         public void SetDoublesMiddle(string previous1, string char_, float chance)
         {
-            _doubles[CharacterSet.IndexOf(previous1)].SetMiddle(char_, chance);
+            _doubles[GetCharacterIndex(previous1)].SetMiddle(char_, chance);
         }
 
         public void SetDoublesEnd(string previous1, string char_, float chance)
         {
-            _doubles[CharacterSet.IndexOf(previous1)].SetEnd(char_, chance);
+            _doubles[GetCharacterIndex(previous1)].SetEnd(char_, chance);
         }
 
         // Public getters for editor access
         public float GetDoublesStart(string previous1, string char_)
         {
-            return _doubles[CharacterSet.IndexOf(previous1)].GetStart(char_);
+            return _doubles[GetCharacterIndex(previous1)].GetStart(char_);
         }
 
         public float GetDoublesMiddle(string previous1, string char_)
         {
-            return _doubles[CharacterSet.IndexOf(previous1)].GetMiddle(char_);
+            return _doubles[GetCharacterIndex(previous1)].GetMiddle(char_);
         }
 
         public float GetDoublesEnd(string previous1, string char_)
         {
-            return _doubles[CharacterSet.IndexOf(previous1)].GetEnd(char_);
+            return _doubles[GetCharacterIndex(previous1)].GetEnd(char_);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ltr/ltr_data.py:329-354
         // Original: def set_triples_start/middle/end
         public void SetTriplesStart(string previous2, string previous1, string char_, float chance)
         {
-            _triples[CharacterSet.IndexOf(previous2)][CharacterSet.IndexOf(previous1)].SetStart(char_, chance);
+            _triples[GetCharacterIndex(previous2)][GetCharacterIndex(previous1)].SetStart(char_, chance);
         }
 
         public void SetTriplesMiddle(string previous2, string previous1, string char_, float chance)
         {
-            _triples[CharacterSet.IndexOf(previous2)][CharacterSet.IndexOf(previous1)].SetMiddle(char_, chance);
+            _triples[GetCharacterIndex(previous2)][GetCharacterIndex(previous1)].SetMiddle(char_, chance);
         }
 
         public void SetTriplesEnd(string previous2, string previous1, string char_, float chance)
         {
-            _triples[CharacterSet.IndexOf(previous2)][CharacterSet.IndexOf(previous1)].SetEnd(char_, chance);
+            _triples[GetCharacterIndex(previous2)][GetCharacterIndex(previous1)].SetEnd(char_, chance);
         }
 
         // Public getters for editor access
         public float GetTriplesStart(string previous2, string previous1, string char_)
         {
-            return _triples[CharacterSet.IndexOf(previous2)][CharacterSet.IndexOf(previous1)].GetStart(char_);
+            return _triples[GetCharacterIndex(previous2)][GetCharacterIndex(previous1)].GetStart(char_);
         }
 
         public float GetTriplesMiddle(string previous2, string previous1, string char_)
         {
-            return _triples[CharacterSet.IndexOf(previous2)][CharacterSet.IndexOf(previous1)].GetMiddle(char_);
+            return _triples[GetCharacterIndex(previous2)][GetCharacterIndex(previous1)].GetMiddle(char_);
         }
 
         public float GetTriplesEnd(string previous2, string previous1, string char_)
         {
-            return _triples[CharacterSet.IndexOf(previous2)][CharacterSet.IndexOf(previous1)].GetEnd(char_);
+            return _triples[GetCharacterIndex(previous2)][GetCharacterIndex(previous1)].GetEnd(char_);
         }
 
         // Internal access for reader/writer
