@@ -14,7 +14,7 @@ namespace OdyTools.Widgets
     /// </summary>
     public class NWScriptSyntaxHighlighter
     {
-        // Exhaustive NWScript keywords: statements, types, preprocessor, literals
+        // Exhaustive NWScript 1.69 / KotOR language keywords: statements, types, preprocessor, literals
         private static readonly string[] Keywords = new[]
         {
             "action", "break", "case", "const", "continue", "default", "do", "effect", "else",

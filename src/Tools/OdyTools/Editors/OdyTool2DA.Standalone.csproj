@@ -15,12 +15,12 @@
     <UseAppHost>true</UseAppHost>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <AssemblyName>OdyTool2DA</AssemblyName>
     <IsPackable>false</IsPackable>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
-    <TargetFrameworks>net9.0;net472</TargetFrameworks>
+    <TargetFrameworks>net9.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <OutputType>WinExe</OutputType>
     <Optimize>true</Optimize>
     <Nullable>disable</Nullable>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
@@ -39,18 +39,14 @@
     <StartupObject>OdyTools.Editors.Standalone.EditorStandaloneHost.EditorStandaloneProgram</StartupObject>
     <DefineConstants>$(DefineConstants);TWODA_STANDALONE</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
-    <AppConfig>$(MSBuildProjectDirectory)\app.config</AppConfig>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\..\BioWare\BioWare.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Markdig" Version="0.44.0" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+    <!-- Pin to satisfy BioWare/SharpCompress (avoid NU1605 downgrade when building net48) -->
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.1" />
   </ItemGroup>
 
   <!-- Slim: only host + TwoDA editor + minimal shared (no OdyTools ref, no Windows/ModelRenderer/NAudio/etc.) -->
@@ -74,8 +70,10 @@
     <AvaloniaXaml Include="OdyTool2DA.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" />
   </ItemGroup>
+  <!-- Force executable and entry point. Debug=Exe for console. -->
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+    <OutputType Condition="'$(Configuration)' == 'Debug'">Exe</OutputType>
+    <OutputType Condition="'$(Configuration)' != 'Debug'">WinExe</OutputType>
     <StartupObject>OdyTools.Editors.Standalone.EditorStandaloneHost.EditorStandaloneProgram</StartupObject>
   </PropertyGroup>
 </Project>

@@ -20,7 +20,6 @@
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <TargetFramework>net9.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <OutputType>WinExe</OutputType>
     <Optimize>true</Optimize>
     <Nullable>disable</Nullable>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
@@ -33,7 +32,7 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>OdyTools.Editors.Standalone.EditorStandaloneHost.EditorStandaloneProgram</StartupObject>
+    <StartupObject>OdyTools.Editors.Standalone.NSS.Program</StartupObject>
     <DefineConstants>$(DefineConstants);NSS_STANDALONE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
@@ -45,6 +44,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Standalone\Program.NSS.cs" />
     <Compile Include="Standalone\EditorStandaloneHost\EditorStandaloneProgram.cs" />
     <Compile Include="Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml.cs" />
     <Compile Include="OdyToolNSS.axaml.cs" />
@@ -72,6 +72,7 @@
     <Compile Include="$(_OdyToolsRoot)\Utils\ScriptUtils.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\ScriptDecompiler.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\ScriptCompiler.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Utils\NssFormatHelper.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\LogDirectoryHelper.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\GitHubApiModels.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\GitHubDownloader.cs" />
@@ -91,9 +92,10 @@
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\LoadFromModuleDialog.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" />
   </ItemGroup>
-  <!-- Force executable and entry point (standalone must be runnable app, not library). -->
+  <!-- Force executable and entry point (standalone must be runnable app). Debug=Exe for console. -->
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <StartupObject>OdyTools.Editors.Standalone.EditorStandaloneHost.EditorStandaloneProgram</StartupObject>
+    <OutputType Condition="'$(Configuration)' == 'Debug'">Exe</OutputType>
+    <OutputType Condition="'$(Configuration)' != 'Debug'">WinExe</OutputType>
+    <StartupObject>OdyTools.Editors.Standalone.NSS.Program</StartupObject>
   </PropertyGroup>
 </Project>

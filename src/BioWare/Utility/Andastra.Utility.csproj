@@ -43,6 +43,7 @@
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <RestoreTreatWarningsAsErrors>false</RestoreTreatWarningsAsErrors>
     <WarningLevel>0</WarningLevel>
     <BuildInParallel>true</BuildInParallel>
     <UseSharedCompilation>true</UseSharedCompilation>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -18,10 +19,16 @@ namespace OdyTools.Widgets
         public string DisplayText { get; set; }
         public string InsertText { get; set; }
 
-        public CompletionItem(string displayText, string insertText = null)
+        /// <summary>
+        /// Optional description or signature (e.g. function signature) shown as tooltip in the completion list.
+        /// </summary>
+        public string Description { get; set; }
+
+        public CompletionItem(string displayText, string insertText = null, string description = null)
         {
             DisplayText = displayText ?? "";
             InsertText = insertText ?? displayText ?? "";
+            Description = description ?? "";
         }
 
         public override string ToString() => DisplayText;
@@ -311,6 +318,17 @@ namespace OdyTools.Widgets
                 BorderThickness = new Avalonia.Thickness(1),
                 MaxHeight = 300,
             };
+
+            // Item template: show DisplayText and set tooltip to Description when present (e.g. function signature)
+            _listBox.ItemTemplate = new FuncDataTemplate<CompletionItem>((item, _) =>
+            {
+                var textBlock = new TextBlock { Text = item.DisplayText, VerticalAlignment = Layout.VerticalAlignment.Center };
+                if (!string.IsNullOrEmpty(item.Description))
+                {
+                    ToolTip.SetTip(textBlock, item.Description);
+                }
+                return textBlock;
+            });
 
             // Style for alternating rows
             _listBox.Resources.Add("AlternateItemBackground", new SolidColorBrush(Color.FromRgb(245, 245, 245)));

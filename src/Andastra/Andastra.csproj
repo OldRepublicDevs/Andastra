@@ -63,6 +63,7 @@
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <SkipMonoGameContentPipeline Condition="'$(SkipMonoGameContentPipeline)' == ''">false</SkipMonoGameContentPipeline>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <RestoreTreatWarningsAsErrors>false</RestoreTreatWarningsAsErrors>
     <UseRidGraph>true</UseRidGraph>
     <UseSharedCompilation>true</UseSharedCompilation>
     <WarningLevel>0</WarningLevel>

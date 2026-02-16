@@ -63,6 +63,7 @@
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <RestoreTreatWarningsAsErrors>false</RestoreTreatWarningsAsErrors>
     <UseRidGraph>true</UseRidGraph>
     <UseSharedCompilation>true</UseSharedCompilation>
     <WarningLevel>0</WarningLevel>

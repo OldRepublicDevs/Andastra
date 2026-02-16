@@ -2,13 +2,21 @@
 <!-- Shared props for slim editor standalones: Avalonia + BioWare only, no OdyTools project ref. -->
 <Project>
   <PropertyGroup>
-    <!-- Standalones are always executables with explicit entry point (do not override in consuming csproj). -->
-    <OutputType>WinExe</OutputType>
-    <StartupObject>OdyTools.Editors.Standalone.EditorStandaloneHost.EditorStandaloneProgram</StartupObject>
+    <!-- Standalones are always executables. Each .csproj must set StartupObject to its own Program type. -->
+    <!-- Debug: Exe so a console appears and startup/errors are visible when running via dotnet run. -->
+    <OutputType Condition="'$(Configuration)' == 'Debug'">Exe</OutputType>
+    <OutputType Condition="'$(Configuration)' != 'Debug'">WinExe</OutputType>
     <AvaloniaCopyWin32Dll>false</AvaloniaCopyWin32Dll>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <NoWin32Manifest>true</NoWin32Manifest>
   </PropertyGroup>
+  <!-- Force executable output (Exe in Debug for console, WinExe in Release). -->
+  <Target Name="ForceStandaloneExe" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <OutputType Condition="'$(Configuration)' == 'Debug'">Exe</OutputType>
+      <OutputType Condition="'$(Configuration)' != 'Debug'">WinExe</OutputType>
+    </PropertyGroup>
+  </Target>
   <!-- Minimal packages: Avalonia + MessageBox only; add editor-specific in csproj (Markdig, etc.). -->
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.11" />

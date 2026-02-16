@@ -12,10 +12,12 @@ namespace OdyTools.Utils
     {
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_compiler.py:28-73
         // Original: def ht_compile_script(source: str, installation_path: Path, *, tsl: bool) -> bytes | None:
-        public static byte[] HtCompileScript(string source, string installationPath, bool tsl = false)
+        /// <param name="logMessage">Optional callback to receive compile progress/errors (e.g. for NSS editor Output panel).</param>
+        public static byte[] HtCompileScript(string source, string installationPath, bool tsl = false, Action<string> logMessage = null)
         {
             if (string.IsNullOrEmpty(source))
             {
+                logMessage?.Invoke("Compile skipped: source is empty.");
                 return null;
             }
 
@@ -38,14 +40,21 @@ namespace OdyTools.Utils
                 NCS ncs = NCSAuto.CompileNss(source, game, null, libraryLookup);
                 if (ncs == null)
                 {
+                    logMessage?.Invoke("Compile returned no NCS output.");
                     return null;
                 }
 
+                logMessage?.Invoke("Compile succeeded.");
                 return NCSAuto.BytesNcs(ncs);
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"Error compiling script: {ex}");
+                string msg = $"Error compiling script: {ex.Message}";
+                logMessage?.Invoke(msg);
+                if (logMessage == null)
+                {
+                    System.Console.WriteLine($"Error compiling script: {ex}");
+                }
                 return null;
             }
         }

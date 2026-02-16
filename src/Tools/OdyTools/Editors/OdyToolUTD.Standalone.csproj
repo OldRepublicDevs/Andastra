@@ -81,8 +81,10 @@
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\LocalizedStringEdit.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\ComboBox2DA.axaml" />
   </ItemGroup>
+  <!-- Force executable and entry point. Debug=Exe for console. -->
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+    <OutputType Condition="'$(Configuration)' == 'Debug'">Exe</OutputType>
+    <OutputType Condition="'$(Configuration)' != 'Debug'">WinExe</OutputType>
     <StartupObject>OdyTools.Editors.Standalone.EditorStandaloneHost.EditorStandaloneProgram</StartupObject>
   </PropertyGroup>
 </Project>

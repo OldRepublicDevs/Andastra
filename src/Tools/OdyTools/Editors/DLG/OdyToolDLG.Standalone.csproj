@@ -21,7 +21,6 @@
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <TargetFrameworks>net9.0;net472</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <OutputType>WinExe</OutputType>
     <Optimize>true</Optimize>
     <Nullable>disable</Nullable>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
@@ -34,7 +33,7 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>OdyTools.Editors.Standalone.EditorStandaloneHost.EditorStandaloneProgram</StartupObject>
+    <StartupObject>OdyTools.Editors.Standalone.DLG.Program</StartupObject>
     <DefineConstants>$(DefineConstants);DLG_STANDALONE</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
@@ -55,6 +54,7 @@
 
   <!-- Slim: only Avalonia + BioWare; minimal OdyTools source (no OdyTools ref). -->
   <ItemGroup>
+    <Compile Include="Program.DLG.Standalone.cs" />
     <Compile Include="..\Standalone\EditorStandaloneHost\EditorStandaloneProgram.cs" />
     <Compile Include="..\Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml.cs" />
     <Compile Include="OdyToolDLG.axaml.cs" />
@@ -106,9 +106,10 @@
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\GFFFieldSpinBox.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\ColorEdit.axaml" />
   </ItemGroup>
-  <!-- Force executable and entry point (standalone must be runnable app, not library). -->
+  <!-- Force executable and entry point (standalone must be runnable app). Debug=Exe for console. -->
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <StartupObject>OdyTools.Editors.Standalone.EditorStandaloneHost.EditorStandaloneProgram</StartupObject>
+    <OutputType Condition="'$(Configuration)' == 'Debug'">Exe</OutputType>
+    <OutputType Condition="'$(Configuration)' != 'Debug'">WinExe</OutputType>
+    <StartupObject>OdyTools.Editors.Standalone.DLG.Program</StartupObject>
   </PropertyGroup>
 </Project>

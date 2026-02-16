@@ -22,9 +22,19 @@ namespace OdyTools.Editors.Standalone.EditorStandaloneHost
         /// <summary>Set when startup fails; used by StandaloneErrorApp to show the error in a window.</summary>
         public static Exception LastStartupException;
 
+        /// <summary>Entry point when StartupObject is this class (e.g. most editor standalones).</summary>
         [STAThread]
-        public static void Main(string[] args)
+        public static void Main(string[] args) => Run(args);
+
+        /// <summary>Runs the standalone editor app. Call this from each standalone's Program.Main.</summary>
+        public static void Run(string[] args)
         {
+            // Run from app base dir so assets and native deps resolve when launched via "dotnet run" from repo root.
+            try { System.IO.Directory.SetCurrentDirectory(AppContext.BaseDirectory); } catch { }
+
+#if DEBUG
+            try { Console.WriteLine("Standalone editor starting (base: {0})", AppContext.BaseDirectory); } catch { }
+#endif
             StartupArgs = args ?? new string[0];
             ParseStartupArguments(StartupArgs);
             try

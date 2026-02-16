@@ -195,19 +195,29 @@ function Get-ProjectAppInfo {
 }
 
 # --- Resolve framework-dependent target from project (net472 vs net48) ---
-function Get-ProjectFrameworkDependent {
+function Get-ProjectTargetFrameworks {
     param([string]$ProjectPath)
     if ([string]::IsNullOrWhiteSpace($ProjectPath) -or -not (Test-Path -LiteralPath $ProjectPath -PathType Leaf)) {
-        return $FrameworkDependent
+        return @()
     }
     $content = Get-Content -LiteralPath $ProjectPath -Raw -ErrorAction SilentlyContinue
-    if (-not $content) { return $FrameworkDependent }
+    if (-not $content) { return @() }
     if ($content -match 'TargetFrameworks[^>]*>([^<]+)<') {
-        $tfs = $Matches[1] -split '[;,]' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
-        $hasNet48 = $tfs -contains 'net48'
-        $hasNet472 = $tfs -contains 'net472'
-        if ($hasNet472 -and -not $hasNet48) { return 'net472' }
+        return @($Matches[1] -split '[;,]' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
     }
+    if ($content -match 'TargetFramework[^s][^>]*>([^<]+)<') {
+        return @($Matches[1].Trim())
+    }
+    return @()
+}
+
+function Get-ProjectFrameworkDependent {
+    param([string]$ProjectPath)
+    $tfs = Get-ProjectTargetFrameworks -ProjectPath $ProjectPath
+    if ($tfs.Count -eq 0) { return $FrameworkDependent }
+    $hasNet48 = $tfs -contains 'net48'
+    $hasNet472 = $tfs -contains 'net472'
+    if ($hasNet472 -and -not $hasNet48) { return 'net472' }
     return $FrameworkDependent
 }
 
@@ -246,9 +256,7 @@ function New-MsBuildProperties {
         Platform = $platform; RuntimeIdentifier = $rid; PublishDir = $publishDir
         _TargetId = "Folder"; PublishProtocol = "FileSystem"; Configuration = "Release"
     }
-    if ($IsStandaloneProject -and -not [string]::IsNullOrEmpty($ProjectName)) {
-        $base["AssemblyName"] = $ProjectName
-    }
+    # Do not set AssemblyName here: /p:AssemblyName would apply to all projects in the graph (e.g. BioWare) and break the build. Set AssemblyName in the standalone .csproj instead.
     if ($sc) {
         $base["IncludeNativeLibrariesForSelfExtract"] = "true"
         $base["PublishSingleFile"] = "true"
@@ -269,7 +277,8 @@ function New-MsBuildProperties {
 function Get-PredefinedPublishProfiles {
     param([string]$ProjectName = "", [string]$SolutionDirAbsolute = "", [string]$ProjectPath = "", [string]$AppNameForBundle = "", [switch]$IsStandaloneProject)
     $fdFramework = Get-ProjectFrameworkDependent -ProjectPath $ProjectPath
-    return $ProfileSpecs | ForEach-Object {
+    $projectTfs = Get-ProjectTargetFrameworks -ProjectPath $ProjectPath
+    $profiles = $ProfileSpecs | ForEach-Object {
         $spec = $_.Clone()
         if (-not $spec.SelfContained) { $spec.Framework = $fdFramework }
         $name = if ($spec.SelfContained) { "$($spec.Framework)_$($spec.Rid)_selfcontained" } else { "$($spec.Framework)_$($spec.Rid)" }
@@ -279,6 +288,11 @@ function Get-PredefinedPublishProfiles {
             MsBuildProperties = New-MsBuildProperties -Spec $spec -ProjectName $ProjectName -SolutionDirAbsolute $SolutionDirAbsolute -AppNameForBundle $AppNameForBundle -IsStandaloneProject:$IsStandaloneProject
         }
     }
+    # Only include profiles for frameworks the project actually targets (skip net48/net472 FD if project is net9.0-only)
+    if ($projectTfs.Count -gt 0) {
+        $profiles = @($profiles | Where-Object { $projectTfs -contains $_.TargetFramework })
+    }
+    return $profiles
 }
 
 function Get-PublishProfileInfo {
@@ -673,15 +687,22 @@ try {
                 $successCount++
             } catch {
                 $failureCount++
-                $ctx = @{
-                    Project = $projectName
-                    ProfileName = $pi.Name
-                    Framework = $pi.Framework
-                    RuntimeIdentifier = $pi.Rid
-                    ProjectFile = $proj
+                Write-Log "[$projectName] Build/archive failed ($($pi.Name))" -Level "ERROR"
+                # When failure is from dotnet publish/restore, show only the dotnet output (no PowerShell stack)
+                if ($_.Exception.Message -match '--- (dotnet|restore) output ---') {
+                    Write-Host ""
+                    Write-Host $_.Exception.Message -ForegroundColor Red
+                    Write-Host ""
+                } else {
+                    $ctx = @{
+                        Project = $projectName
+                        ProfileName = $pi.Name
+                        Framework = $pi.Framework
+                        RuntimeIdentifier = $pi.Rid
+                        ProjectFile = $proj
+                    }
+                    Write-PublishErrorDiagnostics -ErrorRecord $_ -Context $ctx
                 }
-                Write-Log "[$projectName] Build/archive failed" -Level "ERROR"
-                Write-PublishErrorDiagnostics -ErrorRecord $_ -Context $ctx
             }
         }
     }
@@ -702,7 +723,13 @@ try {
 }
 catch {
     Write-Log "Build process failed" -Level "ERROR" -Variables @{ LogFile = $LogFile }
-    Write-PublishErrorDiagnostics -ErrorRecord $_ -Context @{ LogFile = $LogFile }
+    if ($_.Exception.Message -match '--- (dotnet|restore) output ---') {
+        Write-Host ""
+        Write-Host $_.Exception.Message -ForegroundColor Red
+        Write-Host ""
+    } else {
+        Write-PublishErrorDiagnostics -ErrorRecord $_ -Context @{ LogFile = $LogFile }
+    }
     throw
 }
 
