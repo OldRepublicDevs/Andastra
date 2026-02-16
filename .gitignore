@@ -7,7 +7,17 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/Dotnet.gitignore
 
-# Build results
+# Build results and binaries (no dll/pdb/exe/so in repo)
+*.dll
+*.pdb
+*.exe
+*.so
+*.vsix
+fullproject.xml
+debug_ast_traversal.txt
+/core
+vendor/CKOTOR2/include/swkotor2_ghidra_export.c
+src/TSLPatcher.Tests/test_files/k1_player.bif
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
