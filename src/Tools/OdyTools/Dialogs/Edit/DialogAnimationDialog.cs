@@ -9,7 +9,7 @@ using OdyTools.Widgets.Edit;
 
 namespace OdyTools.Dialogs.Edit
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/edit/dialog_animation.py:17
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/dialog_animation.py:17
     // Original: class EditAnimationDialog(QDialog):
     public partial class DialogAnimationDialog : Window
     {
@@ -26,7 +26,7 @@ namespace OdyTools.Dialogs.Edit
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/edit/dialog_animation.py:18-55
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/dialog_animation.py:18-55
         // Original: def __init__(self, parent, installation, animation_arg=None):
         public DialogAnimationDialog(Window parent, OdyInstallation installation, DLGAnimation animationArg = null)
         {
@@ -115,7 +115,7 @@ namespace OdyTools.Dialogs.Edit
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/edit/dialog_animation.py:43-48
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/dialog_animation.py:43-48
         // Original: Load animation list from 2DA
         private void LoadAnimationData()
         {
@@ -154,7 +154,7 @@ namespace OdyTools.Dialogs.Edit
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/edit/dialog_animation.py:51-55
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/dialog_animation.py:51-55
         // Original: def animation(self) -> DLGAnimation:
         public DLGAnimation GetAnimation()
         {

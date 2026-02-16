@@ -25,13 +25,13 @@ jobs:
             framework: net48
             platform: win7
             arch: x64
-            rid: win7-x64
+            rid: win-x64
             selfcontained: false
           - os: windows-latest
             framework: net48
             platform: win7
             arch: x86
-            rid: win7-x86
+            rid: win-x86
             selfcontained: false
           
           # Windows 10/11 - .NET 9
@@ -101,7 +101,7 @@ jobs:
       - name: Update version in csproj
         run: |
           $version = "${{ inputs.version }}"
-          $csprojPath = "src/HoloPatcher/HoloPatcher.csproj"
+          $csprojPath = "src/OdyPatch/OdyPatch.csproj"
           
           # Update Version tag
           (Get-Content $csprojPath) -replace '<Version>.*</Version>', "<Version>$version</Version>" | Set-Content $csprojPath
@@ -115,19 +115,19 @@ jobs:
         shell: pwsh
 
       - name: Restore dependencies
-        run: dotnet restore src/HoloPatcher/HoloPatcher.csproj
+        run: dotnet restore src/OdyPatch/OdyPatch.csproj
 
       - name: Build
         run: |
           if [ "${{ matrix.framework }}" == "net48" ]; then
-            msbuild src/HoloPatcher/HoloPatcher.csproj `
+            msbuild src/OdyPatch/OdyPatch.csproj `
               /p:Configuration=Release `
               /p:TargetFramework=${{ matrix.framework }} `
               /p:RuntimeIdentifier=${{ matrix.rid }} `
               /p:SelfContained=${{ matrix.selfcontained }} `
               /p:PublishDir=dist\build\${{ matrix.framework }}\${{ matrix.rid }}\
           else
-            dotnet publish src/HoloPatcher/HoloPatcher.csproj `
+            dotnet publish src/OdyPatch/OdyPatch.csproj `
               -c Release `
               -f ${{ matrix.framework }} `
               -r ${{ matrix.rid }} `
@@ -147,7 +147,7 @@ jobs:
           $framework = "${{ matrix.framework }}"
           
           $sourceDir = "dist/build/$framework/$rid"
-          $archiveName = "HoloPatcher-$version-$platform-$arch.zip"
+          $archiveName = "OdyPatch-$version-$platform-$arch.zip"
           $archivePath = "dist/$archiveName"
           
           # Create dist directory if it doesn't exist
@@ -175,8 +175,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: HoloPatcher-${{ inputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}
-          path: dist/HoloPatcher-${{ inputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}.zip
+          name: OdyPatch-${{ inputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}
+          path: dist/OdyPatch-${{ inputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}.zip
           retention-days: 30
           if-no-files-found: error
 

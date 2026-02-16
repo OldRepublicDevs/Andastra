@@ -4,7 +4,7 @@ using Avalonia.Markup.Xaml;
 
 namespace OdyTools.Dialogs.Save
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/save/to_rim.py:13
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_rim.py:13
     // Original: class RimSaveOption(IntEnum):
     public enum RimSaveOption
     {
@@ -13,7 +13,7 @@ namespace OdyTools.Dialogs.Save
         Override = 2
     }
 
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/save/to_rim.py:19
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_rim.py:19
     // Original: class RimSaveDialog(QDialog):
     public partial class RimSaveDialog : Window
     {
@@ -27,7 +27,7 @@ namespace OdyTools.Dialogs.Save
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/save/to_rim.py:20-54
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_rim.py:20-54
         // Original: def __init__(self, parent):
         public RimSaveDialog(Window parent)
         {
@@ -95,7 +95,7 @@ namespace OdyTools.Dialogs.Save
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/save/to_rim.py:48-50
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_rim.py:48-50
         // Original: def save_as_mod(self):
         private void SaveAsMod()
         {
@@ -103,7 +103,7 @@ namespace OdyTools.Dialogs.Save
             Close();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/save/to_rim.py:52-54
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_rim.py:52-54
         // Original: def save_as_override(self):
         private void SaveAsOverride()
         {

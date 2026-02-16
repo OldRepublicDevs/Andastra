@@ -5,5 +5,7 @@
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+        <StyleInclude Source="avares://OdyTools/Themes/OdyToolsLightTheme.axaml"/>
+        <StyleInclude Source="avares://OdyTools/Themes/MonacoTheme.axaml"/>
     </Application.Styles>
 </Application>

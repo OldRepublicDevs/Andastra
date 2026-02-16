@@ -7,14 +7,14 @@ using Avalonia.Threading;
 
 namespace OdyTools.Widgets
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/progressbar.py:15
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/progressbar.py:15
     // Original: class AnimatedProgressBar(QProgressBar):
     public class AnimatedProgressBar : ProgressBar
     {
         private DispatcherTimer _timer;
         private int _offset;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/progressbar.py:16-21
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/progressbar.py:16-21
         // Original: def __init__(self, parent=None):
         public AnimatedProgressBar()
         {
@@ -27,7 +27,7 @@ namespace OdyTools.Widgets
             _timer.Start();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/progressbar.py:23-30
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/progressbar.py:23-30
         // Original: def update_animation(self):
         private void UpdateAnimation()
         {
@@ -52,7 +52,7 @@ namespace OdyTools.Widgets
             InvalidateVisual();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/progressbar.py:32-78
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/progressbar.py:32-78
         // Original: def paintEvent(self, event: QPaintEvent):
         public override void Render(DrawingContext context)
         {
@@ -73,12 +73,12 @@ namespace OdyTools.Widgets
                 return;
             }
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/progressbar.py:56-76
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/progressbar.py:56-76
             // Original: Draw the shimmering effect (moving light)
             DrawShimmeringEffect(context, width, height, filledWidth);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/progressbar.py:56-76
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/progressbar.py:56-76
         // Original: def paintEvent - shimmering effect drawing logic
         private void DrawShimmeringEffect(DrawingContext context, double width, double height, double filledWidth)
         {

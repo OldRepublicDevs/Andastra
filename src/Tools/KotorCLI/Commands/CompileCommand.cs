@@ -310,7 +310,7 @@ namespace KotorCLI.Commands
                                 }
 
                                 // Compile using built-in compiler
-                                NCS ncs = NCSAuto.CompileNss(nssSource, game, null, null, libraryLookup);
+                                NCS ncs = NCSAuto.CompileNss(nssSource, game, null, libraryLookup, false);
                                 NCSAuto.WriteNcs(ncs, outputFile);
 
                                 logger.Debug($"Compiled: {nssFile.Name} -> {Path.GetFileName(outputFile)}");

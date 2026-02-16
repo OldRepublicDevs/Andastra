@@ -6,7 +6,8 @@
         Height="200"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
-        ShowInTaskbar="True">
+        ShowInTaskbar="True"
+        RequestedThemeVariant="Light">
   <Grid Margin="20">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>

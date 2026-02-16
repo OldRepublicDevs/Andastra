@@ -14,7 +14,7 @@ using MsBox.Avalonia.Enums;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/edit/locstring.py:20
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/locstring.py:20
     // Original: class LocalizedStringDialog(QDialog):
     public partial class LocalizedStringDialog : Window
     {
@@ -26,7 +26,7 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/edit/locstring.py:21-107
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/locstring.py:21-107
         // Original: def __init__(self, parent, installation, locstring):
         public LocalizedStringDialog(Window parent, OdyInstallation installation, LocalizedString locstring)
         {
@@ -173,7 +173,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/edit/locstring.py:75-85
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/locstring.py:75-85
         // Original: def stringref_changed(self, stringref: int):
         private void StringRefChanged(int stringref)
         {
@@ -198,7 +198,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/edit/locstring.py:87-88
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/locstring.py:87-88
         // Original: def new_tlk_string(self):
         private void NewTlkString()
         {
@@ -218,7 +218,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/edit/locstring.py:90-91
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/locstring.py:90-91
         // Original: def no_tlk_string(self):
         private void NoTlkString()
         {
@@ -228,14 +228,14 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/edit/locstring.py:93-94
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/locstring.py:93-94
         // Original: def substring_changed(self):
         private void SubstringChanged()
         {
             UpdateText();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/edit/locstring.py:96-100
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/locstring.py:96-100
         // Original: def _update_text(self):
         private void UpdateText()
         {
@@ -273,7 +273,7 @@ namespace OdyTools.Dialogs
             _stringEdit.Text = text;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/edit/locstring.py:102-106
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/locstring.py:102-106
         // Original: def string_edited(self):
         private void StringEdited()
         {
@@ -306,7 +306,7 @@ namespace OdyTools.Dialogs
             LocString.SetData(selectedLanguage, selectedGender, editedText);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/edit/locstring.py:62-70
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/locstring.py:62-70
         // Original: def accept(self):
         private void Accept()
         {

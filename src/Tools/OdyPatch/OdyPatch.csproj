@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AllowOptimize>true</AllowOptimize>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>None</DebugType>
+    <LangVersion>7.3</LangVersion>
+    <Platforms>x86;x64;arm64</Platforms>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <PackageId>OdyPatch</PackageId>
+    <TargetFrameworks>net9.0;net472</TargetFrameworks>
+    <UseAppHost>true</UseAppHost>
+    
+    <!-- Build Configuration -->
+    <AllowEditAndContinue>false</AllowEditAndContinue>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+    
+    <!-- Package Metadata -->
+    <Version>1.0.0-alpha1</Version>
+    <AssemblyVersion>1.0.0.0-alpha1</AssemblyVersion>
+    <FileVersion>1.0.0.0-alpha1</FileVersion>
+    <Authors>th3w1zard1</Authors>
+    <Company>OpenKotOR</Company>
+    <Product>OdyPatch</Product>
+    <Description>OdyPatch, providing a graphical interface for installing and managing KotOR 1 and 2 mods for the Odyssey Game Engine.</Description>
+    <PackageLicenseExpression>LGPL-3.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/OldRepublicDevs/Andastra</PackageProjectUrl>
+    <PackageTags>kotor;tsl;patcher;mod;gui;avalonia;odypatch;ui;tslpatcher;odypatcher;swkotor;swkotor2;thesithlords;knights;of;the;old;republic;star;wars;modding;game;video;bik;bioware</PackageTags>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/OldRepublicDevs/Andastra</RepositoryUrl>
+    <IsPackable>true</IsPackable>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
+
+  </PropertyGroup>
+  <!-- OutputType: WinExe for Windows (no console), Exe for Linux/macOS (GUI with optional console) -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)'=='' OR $(RuntimeIdentifier.StartsWith('win'))">
+    <OutputType>WinExe</OutputType>
+  </PropertyGroup>
+  <PropertyGroup Condition="!$(RuntimeIdentifier.StartsWith('win')) AND '$(RuntimeIdentifier)'!=''">
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <!-- Release Configuration -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <Optimize>true</Optimize>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  <!-- Debug Configuration -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <!-- Build only net9.0 for Debug to speed up development builds -->
+    <TargetFrameworks>net9.0</TargetFrameworks>
+    <OutputType Condition="'$(OS)' == 'Windows_NT'">WinExe</OutputType>
+    <OutputType Condition="'$(OS)' != 'Windows_NT'">Exe</OutputType>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  <!-- AvaloniaUI defs -->
+  <PropertyGroup>
+    <AvaloniaCopyWin32Dll>false</AvaloniaCopyWin32Dll>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <NoWin32Manifest>true</NoWin32Manifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.11" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.11" />
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <PackageReference Include="NetSparkleUpdater.SparkleUpdater" Version="3.0.4" />
+    <PackageReference Include="Dotnet.Bundle" Version="*" />
+    <PackageReference Include="System.Windows.Extensions" Version="10.0.1" Condition="'$(TargetFramework)' != 'net472'" />
+    <!-- Explicitly resolve transitive dependencies from Microsoft.Extensions.* 10.0.1 -->
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
+  </ItemGroup>
+  <!-- net472: binding redirects for Avalonia/System.Memory -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    <AppConfig>$(MSBuildProjectDirectory)\app.config</AppConfig>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <PackageReference Include="System.Memory" Version="4.6.3" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Andastra\Andastra.csproj" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <ProjectReference Include="..\OdyPatch.UI\OdyPatch.UI.csproj" />
+  </ItemGroup>
+</Project>

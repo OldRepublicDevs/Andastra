@@ -22,7 +22,7 @@ using FileResource = BioWare.Extract.FileResource;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_location_result.py:1006
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1006
     // Original: class FileSelectionWindow(QMainWindow):
     /// <summary>
     /// Window for selecting a file from multiple search results.
@@ -37,7 +37,7 @@ namespace OdyTools.Dialogs
         private OdyInstallation _installation;
         private List<string> _detailedStatAttributes;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_location_result.py:1007-1025
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1007-1025
         // Original: def __init__(self, search_results: Sequence[FileResource | ResourceResult | LocationResult], ...):
         /// <summary>
         /// Initializes a new instance of FileSelectionWindow.
@@ -94,7 +94,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_location_result.py:671-681
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:671-681
         // Original: def _unify_resources(self, resources: Sequence[FileResource | ResourceResult | LocationResult]):
         /// <summary>
         /// Converts various resource types (FileResource, LocationResult) to a unified list of FileResource.
@@ -253,7 +253,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_location_result.py:1073-1081
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1073-1081
         // Original: def update_table_headers(self):
         private void UpdateTableHeaders()
         {
@@ -291,7 +291,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_location_result.py:1116-1155
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1116-1155
         // Original: def populate_table(self):
         private void PopulateTable()
         {
@@ -357,7 +357,7 @@ namespace OdyTools.Dialogs
             _resourceTable.ItemsSource = tableItems;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_location_result.py:1157-1166
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1157-1166
         // Original: def human_readable_size(self, size: float, decimal_places: int = 2) -> str:
         private string HumanReadableSize(long size, int decimalPlaces = 2)
         {
@@ -378,7 +378,7 @@ namespace OdyTools.Dialogs
             return string.Format("{0:F" + decimalPlaces + "} {1}", sizeDouble, unit);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_location_result.py:1220-1234
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1220-1234
         // Original: def toggle_detailed_info(self):
         private void ToggleDetailedInfo()
         {
@@ -419,7 +419,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_location_result.py:1247-1259
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1247-1259
         // Original: def get_stat_attributes(self, path: Path) -> list[str]:
         /// <summary>
         /// Gets all available file stat attributes for display in detailed mode.
@@ -477,7 +477,7 @@ namespace OdyTools.Dialogs
             return attributes;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_location_result.py:1236-1241
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1236-1241
         // Original: def _init_table(self):
         private void InitTable()
         {
@@ -492,7 +492,7 @@ namespace OdyTools.Dialogs
             ResizeToContent();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_location_result.py:1089-1105
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1089-1105
         // Original: def resize_to_content(self):
         private void ResizeToContent()
         {
@@ -535,7 +535,7 @@ namespace OdyTools.Dialogs
             CenterWindow();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_location_result.py:1063-1071
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1063-1071
         // Original: def center_and_adjust_window(self):
         private void CenterWindow()
         {
@@ -565,7 +565,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_location_result.py:1041-1042
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1041-1042
         // Original: open_button.clicked.connect(lambda: self.resource_table.on_double_click(installation=self.installation))
         private void OpenSelected()
         {
@@ -575,14 +575,14 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_location_result.py:1043
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1043
         // Original: self.resource_table.doubleClicked.connect(lambda: self.resource_table.on_double_click(installation=self.installation))
         private void OnDoubleClick()
         {
             OpenSelected();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_location_result.py:927-936
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:927-936
         // Original: def open_selected_resource(self, resources: set[FileResource], installation: OdyInstallation | None = None, ...):
         private void OpenResource(FileResource resource)
         {
@@ -601,7 +601,7 @@ namespace OdyTools.Dialogs
             {
                 System.Console.WriteLine($"Error opening resource: {ex}");
                 
-                // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/window.py:344-352
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/window.py:344-352
                 // Original: QMessageBox(QMessageBox.Icon.Critical, tr("An unexpected error has occurred"), str(universal_simplify_exception(e)), ...).show()
                 // Note: Using ex.Message for error details (similar to universal_simplify_exception in PyKotor)
                 string errorMessage = ex.Message;
@@ -625,7 +625,7 @@ namespace OdyTools.Dialogs
         /// <summary>
         /// Populates comprehensive file stat attributes for a resource table item.
         /// Matches PyKotor's add_file_item and add_extra_file_details methods.
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_location_result.py:1182-1217
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1182-1217
         /// </summary>
         private void PopulateFileStatAttributes(ResourceTableItem item, FileInfo fileInfo, FileResource resource)
         {
@@ -717,7 +717,7 @@ namespace OdyTools.Dialogs
         
         /// <summary>
         /// Formats a DateTime to a human-readable string.
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_location_result.py:1083-1087
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1083-1087
         /// Original: def format_time(self, timestamp: float) -> str:
         /// </summary>
         private string FormatTime(DateTime dateTime)
@@ -832,7 +832,7 @@ namespace OdyTools.Dialogs
     }
 
     // Helper class for table items
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_location_result.py
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py
     // Original: ResourceTableWidgetItem class with comprehensive file stat attributes
     internal class ResourceTableItem
     {

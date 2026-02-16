@@ -12,6 +12,7 @@ using BioWare.TSLPatcher;
 using BioWare.Extract.Capsule;
 using BioWare.Common;
 using BioWare.Resource;
+using KotorDiff;
 using KotorDiff.Cache;
 using CachedFileComparison = KotorDiff.Cache.CachedFileComparison;
 using KotorDiff.Resolution;
@@ -942,7 +943,7 @@ namespace KotorDiff.Diff
             {
                 foreach (string file in Directory.GetFiles(dir1, "*", SearchOption.AllDirectories))
                 {
-                    string relPath = Path.GetRelativePath(dir1, file).Replace('\\', '/');
+                    string relPath = dir1.GetRelativePath(file).Replace('\\', '/');
                     filesPath1.Add(relPath);
                 }
             }
@@ -951,7 +952,7 @@ namespace KotorDiff.Diff
             {
                 foreach (string file in Directory.GetFiles(dir2, "*", SearchOption.AllDirectories))
                 {
-                    string relPath = Path.GetRelativePath(dir2, file).Replace('\\', '/');
+                    string relPath = dir2.GetRelativePath(file).Replace('\\', '/');
                     filesPath2.Add(relPath);
                 }
             }
@@ -1339,7 +1340,7 @@ namespace KotorDiff.Diff
         {
             try
             {
-                return Path.GetRelativePath(fromDir, toPath).Replace('\\', '/');
+                return fromDir.GetRelativePath(toPath).Replace('\\', '/');
             }
             catch (Exception)
             {

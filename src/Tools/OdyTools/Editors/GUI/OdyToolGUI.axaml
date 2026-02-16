@@ -1,0 +1,23 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="OdyTools.Editors.GUI.OdyToolGUI"
+        Title="OdyToolGUI"
+        MinWidth="900" MinHeight="500"
+        Width="1200" Height="700"
+        RequestedThemeVariant="Light">
+  <Window.Styles>
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#F3F5F9" />
+    </Style>
+    <Style Selector="Menu">
+      <Setter Property="Background" Value="#F1F3F4" />
+      <Setter Property="Foreground" Value="#202124" />
+      <Setter Property="BorderBrush" Value="#D7DBE6" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+    <Style Selector="MenuItem">
+      <Setter Property="Foreground" Value="#202124" />
+    </Style>
+  </Window.Styles>
+  <ContentControl x:Name="contentRoot"/>
+</Window>

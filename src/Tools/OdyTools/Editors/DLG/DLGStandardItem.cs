@@ -8,7 +8,7 @@ using BioWare.Resource.Formats.GFF.Generics.DLG;
 
 /// <summary>
 /// Represents a standard item in the DLG tree model.
-/// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/model.py:52-100
+/// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:52-100
 /// Original: class DLGStandardItem(QStandardItem):
 /// </summary>
 
@@ -101,7 +101,7 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Inserts a child item at the specified index.
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/model.py:162-175
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:162-175
         /// Original: def insertRow(self, row: int, item: DLGStandardItem):
         /// </summary>
         /// <param name="index">The index at which to insert the child.</param>

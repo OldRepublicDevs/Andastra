@@ -10,7 +10,24 @@ using Avalonia.Styling;
 
 namespace OdyTools.Widgets
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/nss.py:469-473
+    /// <summary>
+    /// Represents a single completion option with optional different display and insert text.
+    /// </summary>
+    public struct CompletionItem
+    {
+        public string DisplayText { get; set; }
+        public string InsertText { get; set; }
+
+        public CompletionItem(string displayText, string insertText = null)
+        {
+            DisplayText = displayText ?? "";
+            InsertText = insertText ?? displayText ?? "";
+        }
+
+        public override string ToString() => DisplayText;
+    }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:469-473
     // Original: QCompleter equivalent for Avalonia
     // Provides autocompletion functionality similar to Qt's QCompleter
     /// <summary>
@@ -23,10 +40,17 @@ namespace OdyTools.Widgets
         private Popup _popup;
         private ListBox _listBox;
         private List<string> _completionList;
+        private List<CompletionItem> _completionItems;
         private string _completionPrefix;
         private bool _caseSensitive;
         private bool _wrapAround;
         private CompletionMode _completionMode;
+
+        /// <summary>
+        /// Raised when the user commits a completion (Enter, Tab, or double-click).
+        /// Argument is the text to insert at the cursor.
+        /// </summary>
+        public event Action<string> CompletionSelected;
 
         // Matching PyKotor: QCompleter.CompletionMode
         public enum CompletionMode
@@ -83,16 +107,26 @@ namespace OdyTools.Widgets
 
         // Matching PyKotor: QCompleter.setModel() equivalent
         /// <summary>
-        /// Sets the completion model (list of completion strings).
+        /// Sets the completion model (list of completion strings). Display and insert text are the same.
         /// </summary>
         public void SetModel(List<string> completionList)
         {
             _completionList = completionList ?? new List<string>();
+            _completionItems = null;
+        }
+
+        /// <summary>
+        /// Sets the completion model with separate display and insert text for full IntelliSense-style completion.
+        /// </summary>
+        public void SetModelWithInsertText(List<CompletionItem> items)
+        {
+            _completionItems = items ?? new List<CompletionItem>();
+            _completionList = _completionItems.Select(i => i.DisplayText).ToList();
         }
 
         // Matching PyKotor: QCompleter.model() equivalent
         /// <summary>
-        /// Gets the completion model.
+        /// Gets the completion model (display strings).
         /// </summary>
         public List<string> Model()
         {
@@ -123,17 +157,17 @@ namespace OdyTools.Widgets
         /// </summary>
         public int CompletionCount()
         {
-            if (_completionList == null || string.IsNullOrEmpty(_completionPrefix))
+            if ((_completionList == null && _completionItems == null) || string.IsNullOrEmpty(_completionPrefix))
             {
                 return 0;
             }
 
-            return GetFilteredCompletions().Count;
+            return GetFilteredCompletionsList().Count;
         }
 
         // Matching PyKotor: QCompleter.currentCompletion()
         /// <summary>
-        /// Gets the currently selected completion string.
+        /// Gets the currently selected completion display string.
         /// </summary>
         public string CurrentCompletion()
         {
@@ -143,6 +177,40 @@ namespace OdyTools.Widgets
             }
 
             return _listBox.SelectedItem.ToString();
+        }
+
+        /// <summary>
+        /// Gets the text to insert for the currently selected completion.
+        /// </summary>
+        public string CurrentInsertText()
+        {
+            if (_listBox == null || _listBox.SelectedItem == null)
+            {
+                return "";
+            }
+
+            if (_listBox.SelectedItem is CompletionItem item)
+            {
+                return item.InsertText ?? item.DisplayText ?? "";
+            }
+
+            return _listBox.SelectedItem.ToString();
+        }
+
+        /// <summary>
+        /// Returns true if the completion popup is currently open.
+        /// </summary>
+        public bool IsPopupOpen => _popup != null && _popup.IsOpen;
+
+        /// <summary>
+        /// Closes the completion popup without inserting.
+        /// </summary>
+        public void ClosePopup()
+        {
+            if (_popup != null)
+            {
+                _popup.IsOpen = false;
+            }
         }
 
         // Matching PyKotor: QCompleter.popup()
@@ -164,13 +232,8 @@ namespace OdyTools.Widgets
         /// </summary>
         public void Complete(Avalonia.Rect rect)
         {
-            if (_widget == null || _completionList == null || _completionList.Count == 0)
-            {
-                return;
-            }
-
-            var filtered = GetFilteredCompletions();
-            if (filtered.Count == 0)
+            var filtered = GetFilteredCompletionsList();
+            if (_widget == null || filtered.Count == 0)
             {
                 return;
             }
@@ -180,12 +243,11 @@ namespace OdyTools.Widgets
                 InitializePopup();
             }
 
-            // Update list box with filtered completions
+            // Update list box with filtered completions (CompletionItem.ToString() shows DisplayText)
             _listBox.ItemsSource = filtered;
             _listBox.SelectedIndex = 0;
 
             // Position popup near the widget
-            var widgetBounds = _widget.Bounds;
             _popup.PlacementTarget = _widget;
             _popup.Placement = PlacementMode.Bottom;
             _popup.HorizontalOffset = rect.X;
@@ -194,20 +256,39 @@ namespace OdyTools.Widgets
             _popup.IsOpen = true;
         }
 
-        // Get filtered completions based on prefix
-        private List<string> GetFilteredCompletions()
+        /// <summary>
+        /// Returns filtered completion items for the current prefix (matched against InsertText).
+        /// </summary>
+        private List<CompletionItem> GetFilteredCompletionsList()
         {
-            if (_completionList == null || string.IsNullOrEmpty(_completionPrefix))
-            {
-                return _completionList ?? new List<string>();
-            }
-
             StringComparison comparison = _caseSensitive
                 ? StringComparison.Ordinal
                 : StringComparison.OrdinalIgnoreCase;
 
+            if (_completionItems != null && _completionItems.Count > 0)
+            {
+                if (string.IsNullOrEmpty(_completionPrefix))
+                {
+                    return new List<CompletionItem>(_completionItems);
+                }
+                return _completionItems
+                    .Where(item => (item.InsertText ?? item.DisplayText ?? "").StartsWith(_completionPrefix, comparison))
+                    .ToList();
+            }
+
+            if (_completionList == null || _completionList.Count == 0)
+            {
+                return new List<CompletionItem>();
+            }
+
+            if (string.IsNullOrEmpty(_completionPrefix))
+            {
+                return _completionList.Select(s => new CompletionItem(s, s)).ToList();
+            }
+
             return _completionList
-                .Where(item => item.StartsWith(_completionPrefix, comparison))
+                .Where(s => s.StartsWith(_completionPrefix, comparison))
+                .Select(s => new CompletionItem(s, s))
                 .ToList();
         }
 
@@ -234,26 +315,43 @@ namespace OdyTools.Widgets
             // Style for alternating rows
             _listBox.Resources.Add("AlternateItemBackground", new SolidColorBrush(Color.FromRgb(245, 245, 245)));
 
-            _listBox.SelectionChanged += (s, e) =>
-            {
-                // Handle selection change
-            };
+            _listBox.SelectionChanged += (s, e) => { };
 
             _listBox.KeyDown += (s, e) =>
             {
-                if (e.Key == Key.Enter || e.Key == Key.Return)
+                if (e.Key == Key.Enter || e.Key == Key.Return || e.Key == Key.Tab)
                 {
-                    // Insert completion
+                    CommitSelection();
                     e.Handled = true;
                 }
                 else if (e.Key == Key.Escape)
                 {
-                    _popup.IsOpen = false;
+                    ClosePopup();
                     e.Handled = true;
                 }
             };
 
+            _listBox.DoubleTapped += (s, e) =>
+            {
+                CommitSelection();
+            };
+
             _popup.Child = _listBox;
+        }
+
+        private void CommitSelection()
+        {
+            if (!IsPopupOpen)
+            {
+                return;
+            }
+
+            string insertText = CurrentInsertText();
+            ClosePopup();
+            if (!string.IsNullOrEmpty(insertText))
+            {
+                CompletionSelected?.Invoke(insertText);
+            }
         }
     }
 }

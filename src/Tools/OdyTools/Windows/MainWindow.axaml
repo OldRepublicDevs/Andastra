@@ -5,7 +5,8 @@
   xmlns:widgets="using:OdyTools.Widgets"
   Title="OdyTools"
   Width="1200"
-  Height="800">
+  Height="800"
+  RequestedThemeVariant="Light">
   <DockPanel>
     <!--  Menu Bar  -->
     <Menu Name="menuBar" DockPanel.Dock="Top">
@@ -125,7 +126,9 @@
     <Border
       Name="statusbar"
       Height="25"
-      Background="LightGray"
+      Background="#E8EAED"
+      BorderBrush="#DADCE0"
+      BorderThickness="0,1,0,0"
       DockPanel.Dock="Bottom" />
 
     <!--  Main Content  -->
@@ -140,8 +143,8 @@
           Grid.Row="1"
           Margin="5,0,5,5"
           Padding="4"
-          Background="{DynamicResource ThemeControlLowBrush}"
-          BorderBrush="{DynamicResource ThemeControlMidBrush}"
+          Background="#FFFFFF"
+          BorderBrush="#D7DBE6"
           BorderThickness="1"
           CornerRadius="8">
           <TabControl Name="resourceTabs" IsEnabled="False">
@@ -188,7 +191,8 @@
       <Border
         Grid.Column="1"
         Width="150"
-        BorderBrush="LightGray"
+        Background="#FAFBFC"
+        BorderBrush="#D7DBE6"
         BorderThickness="1,0,0,0">
         <StackPanel Margin="5" Spacing="10">
           <Button

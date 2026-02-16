@@ -3,7 +3,7 @@ using OdyTools.Data;
 
 namespace OdyTools.Windows
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py:451-461
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:451-461
     // Original: @dataclass class RoomClipboardData:
     public class RoomClipboardData
     {

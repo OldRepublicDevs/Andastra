@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using BioWare.Extract;
 using BioWare.Extract.Capsule;
+using KotorDiff;
 
 namespace KotorDiff.Diff
 {
@@ -73,7 +74,7 @@ namespace KotorDiff.Diff
         {
             foreach (var file in dirPath.GetFiles("*", SearchOption.AllDirectories).OrderBy(f => f.FullName))
             {
-                string rel = Path.GetRelativePath(dirPath.FullName, file.FullName);
+                string rel = dirPath.FullName.GetRelativePath(file.FullName);
                 string basePrefix = rel.Substring(0, rel.Length - file.Name.Length);
                 yield return FromFile(file, basePrefix);
             }
@@ -164,7 +165,7 @@ namespace KotorDiff.Diff
                 // Override files
                 foreach (var resource in installation.OverrideResources())
                 {
-                    string identifier = Path.GetRelativePath(installRoot.FullName, resource.FilePath).Replace('\\', '/');
+                    string identifier = installRoot.FullName.GetRelativePath(resource.FilePath).Replace('\\', '/');
                     results.Add(new ComparableResource(identifier, resource.ResType.Extension.ToLowerInvariant(), resource.GetData()));
                 }
 

@@ -71,7 +71,7 @@ namespace BioWare.Uninstall
             {
                 showErrorDialog?.Invoke(
                     "No backups found!",
-                    $"No backups found at '{backupFolder}'!{Environment.NewLine}HoloPatcher cannot uninstall TSLPatcher.exe installations."
+                    $"No backups found at '{backupFolder}'!{Environment.NewLine}OdyPatch cannot uninstall TSLPatcher.exe installations."
                 );
                 return null;
             }
@@ -91,7 +91,7 @@ namespace BioWare.Uninstall
             {
                 showErrorDialog?.Invoke(
                     "No backups found!",
-                    $"No backups found at '{backupFolder}'!{Environment.NewLine}HoloPatcher cannot uninstall TSLPatcher.exe installations."
+                    $"No backups found at '{backupFolder}'!{Environment.NewLine}OdyPatch cannot uninstall TSLPatcher.exe installations."
                 );
                 return null;
             }

@@ -8,21 +8,21 @@ using DuplicateRoomsCommand = OdyTools.Windows.DuplicateRoomsCommand;
 
 namespace OdyTools.Windows
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py
     // Original: class IndoorBuilder(QMainWindow):
     public class IndoorBuilderWindow : Window
     {
         private OdyInstallation _installation;
 
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py
         // Original: def __init__(self, parent, installation):
         public IndoorBuilderWindow(Window parent = null, OdyInstallation installation = null)
         {
             InitializeComponent();
             _installation = installation;
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py:512-515
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:512-515
             // Original: if installation is not None:
             // Original:     self._module_kit_manager: ModuleKitManager = ModuleKitManager(installation)
             // Original: else:
@@ -82,7 +82,7 @@ namespace OdyTools.Windows
             Content = panel;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py
         // Original: self.ui = Ui_MainWindow() - UI wrapper class exposing all controls
         public IndoorBuilderWindowUi Ui { get; private set; }
 
@@ -160,7 +160,7 @@ namespace OdyTools.Windows
             // Matching Python line 610: self.ui.actionZoomOut.triggered.connect(lambda: self.ui.mapRenderer.zoom_in_camera(-ZOOM_STEP))
             Ui.ActionZoomOut = () => Ui.MapRenderer.ZoomInCamera(-0.2f); // ZOOM_STEP = 0.2
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py:632-638
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:632-638
             // Original: self.ui.gridSizeSpin.valueChanged.connect(self.ui.mapRenderer.set_grid_size)
             // Original: self.ui.rotSnapSpin.valueChanged.connect(self.ui.mapRenderer.set_rotation_snap)
             // Original: self.ui.snapToHooksCheck.toggled.connect(self.ui.mapRenderer.set_snap_to_hooks)
@@ -170,26 +170,26 @@ namespace OdyTools.Windows
             // Setup checkbox binding for snap to hooks
             Ui.SnapToHooksCheckToggled = (value) => Ui.MapRenderer.SetSnapToHooks(value);
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py:1222-1247
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1222-1247
             // Original: def _initialize_options_ui(self):
             InitializeOptionsUI();
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py:249
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:249
             // Original: self._setup_modules()
             SetupModules();
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder/builder.py:277
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder/builder.py:277
             // Original: self.ui.moduleSelect.currentIndexChanged.connect(self.on_module_selected)
             // Wire up module selection event
             Ui.ModuleSelect.SetCurrentIndexChangedHandler(OnModuleSelected);
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder/builder.py:278
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder/builder.py:278
             // Original: self.ui.moduleComponentList.currentItemChanged.connect(self.on_module_component_selected)
             // Wire up module component selection event
             // Note: Module component selection will be implemented when moduleComponentList UI is fully integrated
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py:1222-1247
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1222-1247
         // Original: def _initialize_options_ui(self):
         //     """Initialize Options UI to match renderer's initial state."""
         private void InitializeOptionsUI()
@@ -217,7 +217,7 @@ namespace OdyTools.Windows
             Ui.BlockCheckboxSignals = false;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py:1751-1755
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1751-1755
         // Original: def select_all(self):
         private void SelectAll()
         {
@@ -236,7 +236,7 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py:1756-1764
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1756-1764
         // Original: def deselect_all(self):
         private void DeselectAll()
         {
@@ -266,7 +266,7 @@ namespace OdyTools.Windows
             // self._refresh_status_bar()
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py:1628-1640
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1628-1640
         // Original: def delete_selected(self):
         private void DeleteSelected()
         {
@@ -288,7 +288,7 @@ namespace OdyTools.Windows
             UndoStack.Push(cmd);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py:1650-1674
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1650-1674
         // Original: def duplicate_selected(self):
         private void DuplicateSelected()
         {
@@ -326,7 +326,7 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py:1770-1773
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1770-1773
         // Original: def reset_view(self):
         public void ResetView()
         {
@@ -338,7 +338,7 @@ namespace OdyTools.Windows
             Ui.MapRenderer.SetCameraZoom(1.0f); // DEFAULT_CAMERA_ZOOM = 1.0
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py:1775-1782
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1775-1782
         // Original: def center_on_selection(self):
         public void CenterOnSelection()
         {
@@ -360,7 +360,7 @@ namespace OdyTools.Windows
             Ui.MapRenderer.SetCameraPosition(cx, cy);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py:1249-1256
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1249-1256
         // Original: def _refresh_status_bar(self, mouse_pos: QPoint | Vector2 | None = None, mouse_buttons: set[int | Qt.MouseButton] | None = None, keys: set[int | Qt.Key] | None = None):
         private void RefreshStatusBar(System.Numerics.Vector2? mousePos, HashSet<int> mouseButtons, HashSet<int> keys)
         {
@@ -368,7 +368,7 @@ namespace OdyTools.Windows
             UpdateStatusBar(mousePos, mouseButtons, keys);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py:1004-1171
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1004-1171
         // Original: def _update_status_bar(self, screen: QPoint | Vector2 | None = None, buttons: set[int | Qt.MouseButton] | None = None, keys: set[int | Qt.Key] | None = None):
         /// <summary>
         /// Rich status bar mirroring Module Designer style.
@@ -508,7 +508,7 @@ namespace OdyTools.Windows
         // Original: self._emoji_style = "font-size:12pt; font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji','EmojiOne','Twemoji Mozilla','Segoe UI Symbol',sans-serif; vertical-align:middle;"
         private const string EmojiStyle = "font-size:12pt; font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji','EmojiOne','Twemoji Mozilla','Segoe UI Symbol',sans-serif; vertical-align:middle;";
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py:1074-1094
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1074-1094
         // Original: def sort_with_modifiers(...)
         private List<int> SortWithModifiers(HashSet<int> items, Func<int, string> getStringFunc, string qtEnumType)
         {
@@ -554,7 +554,7 @@ namespace OdyTools.Windows
             return modifiers.Concat(normal).ToList();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py:1096-1112
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1096-1112
         // Original: def get_qt_key_string_local(key: int | Qt.Key | Qt.MouseButton) -> str:
         private string GetKeyString(int key)
         {
@@ -564,7 +564,7 @@ namespace OdyTools.Windows
             return $"Key{key}";
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py:1114-1130
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1114-1130
         // Original: def get_qt_button_string_local(btn: int | Qt.MouseButton | Qt.Key) -> str:
         private string GetButtonString(int button)
         {
@@ -574,7 +574,7 @@ namespace OdyTools.Windows
             return $"Btn{button}";
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py:1135-1145
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1135-1145
         // Original: def fmt(seq: list[int | Qt.Key | Qt.MouseButton], formatter: Callable[[int | Qt.Key | Qt.MouseButton], str], color: str) -> str:
         private string FormatItems(List<int> seq, Func<int, string> formatter, string color)
         {
@@ -587,7 +587,7 @@ namespace OdyTools.Windows
             return string.Join("&nbsp;+&nbsp;", coloredItems);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder/builder.py:483-504
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder/builder.py:483-504
         // Original: def _setup_modules(self):
         /// <summary>
         /// Set up the module selection combobox with available modules from the installation.
@@ -631,7 +631,7 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder/builder.py:632-668
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder/builder.py:632-668
         // Original: def on_module_selected(self, index: int = -1):
         /// <summary>
         /// Handle module selection from the combobox.
@@ -693,7 +693,7 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder/builder.py:669-690
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder/builder.py:669-690
         // Original: def on_module_component_selected(self, item: QListWidgetItem | None = None):
         /// <summary>
         /// Handle module component selection from the list.
@@ -730,7 +730,7 @@ namespace OdyTools.Windows
         }
     }
 
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/indoor_builder.py
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py
     // Original: self.ui = Ui_MainWindow() - UI wrapper class exposing all controls
     public class IndoorBuilderWindowUi
     {

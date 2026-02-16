@@ -12,7 +12,7 @@ using OdyTools.Widgets.Edit;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/indoor_settings.py:16
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:16
     // Original: class IndoorMapSettings(QDialog):
     public partial class IndoorMapSettingsDialog : Window
     {
@@ -32,7 +32,7 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/indoor_settings.py:17-95
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:17-95
         // Original: def __init__(self, parent, installation, indoor_map, kits):
         public IndoorMapSettingsDialog(Window parent, OdyInstallation installation, IndoorMap indoorMap, List<Kit> kits)
         {
@@ -187,7 +187,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/indoor_settings.py:63-85
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:63-85
         // Original: Load indoor map data into UI
         private void LoadIndoorMapData()
         {
@@ -196,28 +196,28 @@ namespace OdyTools.Dialogs
                 return;
             }
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/indoor_settings.py:63-85
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:63-85
             // Original: self.ui.nameEdit.set_locstring(indoor_map.name)
             if (_nameEdit != null)
             {
                 _nameEdit.SetLocString(_indoorMap.Name);
             }
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/indoor_settings.py:64
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:64
             // Original: self.ui.colorEdit.set_color(indoor_map.lighting)
             if (_colorEdit != null)
             {
                 _colorEdit.SetColor(_indoorMap.Lighting);
             }
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/indoor_settings.py:65
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:65
             // Original: self.ui.warpCodeEdit.setText(indoor_map.module_id)
             if (_warpCodeEdit != null)
             {
                 _warpCodeEdit.Text = _indoorMap.ModuleId;
             }
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/indoor_settings.py:68-85
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:68-85
             // Original: Populate skybox selector
             if (_skyboxSelect != null)
             {
@@ -282,11 +282,11 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/indoor_settings.py:89-95
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:89-95
         // Original: def accept(self):
         private void Accept()
         {
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/indoor_settings.py:92-95
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:92-95
             // Original: self._indoorMap.name = self.ui.nameEdit.locstring()
             if (_indoorMap != null)
             {
@@ -295,21 +295,21 @@ namespace OdyTools.Dialogs
                     _indoorMap.Name = _nameEdit.GetLocString();
                 }
 
-                // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/indoor_settings.py:93
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:93
                 // Original: self._indoorMap.lighting = self.ui.colorEdit.color()
                 if (_colorEdit != null)
                 {
                     _indoorMap.Lighting = _colorEdit.GetColor();
                 }
 
-                // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/indoor_settings.py:94
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:94
                 // Original: self._indoorMap.module_id = self.ui.warpCodeEdit.text()
                 if (_warpCodeEdit != null)
                 {
                     _indoorMap.ModuleId = _warpCodeEdit.Text ?? "";
                 }
 
-                // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/indoor_settings.py:95
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:95
                 // Original: self._indoorMap.skybox = self.ui.skyboxSelect.currentData()
                 if (_skyboxSelect != null && _skyboxSelect.SelectedIndex >= 0)
                 {

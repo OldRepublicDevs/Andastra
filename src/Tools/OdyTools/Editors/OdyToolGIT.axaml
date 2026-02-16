@@ -2,9 +2,24 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:OdyTools.Editors"
         x:Class="OdyTools.Editors.OdyToolGIT"
-        Title="GIT Editor (Game Instance Template)"
+        Title="OdyToolGIT"
         MinWidth="720" MinHeight="480"
-        Width="900" Height="580">
+        Width="900" Height="580"
+        RequestedThemeVariant="Light">
+  <Window.Styles>
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#F3F5F9" />
+    </Style>
+    <Style Selector="Menu">
+      <Setter Property="Background" Value="#F1F3F4" />
+      <Setter Property="Foreground" Value="#202124" />
+      <Setter Property="BorderBrush" Value="#D7DBE6" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+    <Style Selector="MenuItem">
+      <Setter Property="Foreground" Value="#202124" />
+    </Style>
+  </Window.Styles>
   <DockPanel>
     <Menu DockPanel.Dock="Top" Name="menuBar">
       <MenuItem Header="_File">
@@ -21,12 +36,12 @@
                   ToolTip.Tip="Discard unsaved changes and reload the file from disk."/>
         <Separator/>
         <MenuItem Header="E_xit" Name="actionExit"
-                  ToolTip.Tip="Close the GIT Editor. You will be prompted to save if there are unsaved changes."/>
+                  ToolTip.Tip="Close OdyToolGIT. You will be prompted to save if there are unsaved changes."/>
       </MenuItem>
     </Menu>
 
     <!-- Toolbar: filter -->
-    <Border DockPanel.Dock="Top" Padding="12,8" Background="{DynamicResource ThemeControlLowBrush}" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="0,0,0,1">
+    <Border DockPanel.Dock="Top" Padding="12,8" Background="#FAFBFC" BorderBrush="#D7DBE6" BorderThickness="0,0,0,1">
       <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto">
         <TextBlock Grid.Column="0" Text="Filter:" VerticalAlignment="Center" Margin="0,0,8,0"
                    ToolTip.Tip="Filter the instance list by tag or resref. Does not change the GIT file."/>
@@ -39,8 +54,8 @@
     <!-- Main: instance list + detail -->
     <Grid ColumnDefinitions="280,*" Margin="8,0,8,8">
       <!-- Left: instance list -->
-      <Border Grid.Column="0" Margin="0,0,4,0" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" CornerRadius="8"
-              Background="{DynamicResource ThemeControlLowBrush}"
+      <Border Grid.Column="0" Margin="0,0,4,0" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="8"
+              Background="#FAFBFC"
               ToolTip.Tip="All instances in this area (creatures, doors, placeables, triggers, waypoints, sounds, encounters, stores, cameras). Select one to view or edit in the panel on the right.">
         <Grid RowDefinitions="Auto,*">
           <TextBlock Grid.Row="0" Text="Instances" FontWeight="SemiBold" Margin="12,10,12,6" FontSize="13"
@@ -57,8 +72,8 @@
       </Border>
 
       <!-- Right: detail panel -->
-      <Border Grid.Column="1" Margin="4,0,0,0" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" CornerRadius="8"
-              Background="{DynamicResource ThemeControlLowBrush}" Padding="16">
+      <Border Grid.Column="1" Margin="4,0,0,0" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="8"
+              Background="#FAFBFC" Padding="16">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
           <StackPanel Name="detailPanel" Spacing="12">
             <!-- No selection -->
@@ -66,7 +81,7 @@
               <TextBlock Text="Details" FontWeight="SemiBold" FontSize="14"
                          ToolTip.Tip="Properties of the selected instance."/>
               <TextBlock Name="noSelectionText" Text="Select an instance in the list to view and edit its position, rotation, and template."
-                         TextWrapping="Wrap" Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="12"/>
+                         TextWrapping="Wrap" Foreground="#3C4043" FontSize="12"/>
             </StackPanel>
 
             <!-- Instance details (visible when selection exists) -->
@@ -101,7 +116,7 @@
             </StackPanel>
 
             <Separator/>
-            <TextBlock Name="detailHelpText" TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}"
+            <TextBlock Name="detailHelpText" TextWrapping="Wrap" FontSize="11" Foreground="#3C4043"
                        Text="GIT files define all placed objects in an area: creatures, doors, placeables, triggers, waypoints, sounds, encounters, stores, and cameras. Each instance has a template (UTC, UTD, etc.) and position. Changes here are saved when you save the file."
                        ToolTip.Tip="Game Instance Template: positions and references for every object in the area."/>
           </StackPanel>
@@ -110,8 +125,8 @@
     </Grid>
 
     <!-- Status bar -->
-    <Border DockPanel.Dock="Bottom" Padding="12,8" Background="{DynamicResource ThemeControlLowBrush}" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="0,1,0,0">
-      <TextBlock Name="statusText" Text="GIT Editor" Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="12"
+    <Border DockPanel.Dock="Bottom" Padding="12,8" Background="#FAFBFC" BorderBrush="#D7DBE6" BorderThickness="0,1,0,0">
+      <TextBlock Name="statusText" Text="OdyToolGIT" Foreground="#3C4043" FontSize="12"
                  ToolTip.Tip="Instance count and current selection. Save to write changes to the GIT file."/>
     </Border>
   </DockPanel>

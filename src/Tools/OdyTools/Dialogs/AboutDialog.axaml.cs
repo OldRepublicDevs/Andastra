@@ -9,7 +9,7 @@ using OdyTools.Config;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/about.py:15
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/about.py:15
     // Original: class About(QDialog):
     public partial class AboutDialog : Window
     {
@@ -17,12 +17,12 @@ namespace OdyTools.Dialogs
         private Button _closeButton;
         private Image _image;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/about.py:41-43
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/about.py:41-43
         // Original: self.ui = Ui_Dialog()
         // Expose UI widgets for testing
         public AboutDialogUi Ui { get; private set; }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/about.py:16-55
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/about.py:16-55
         // Original: def __init__(self, parent):
         public AboutDialog() : this(null)
         {
@@ -126,7 +126,7 @@ namespace OdyTools.Dialogs
             };
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/about.py:50-52
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/about.py:50-52
         // Original: self.ui.aboutLabel.setText(self.ui.aboutLabel.text().replace("X.X.X", LOCAL_PROGRAM_INFO["currentVersion"]))
         private void SetupUI()
         {
@@ -214,7 +214,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/about.py:41-43
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/about.py:41-43
         // Original: self.ui = Ui_Dialog()
         // UI wrapper class for testing access
         public class AboutDialogUi
@@ -331,7 +331,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/about.py:54-55
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/about.py:54-55
         // Original: def showEvent(self, event: QShowEvent): self.setFixedSize(self.size())
         protected override void OnOpened(EventArgs e)
         {

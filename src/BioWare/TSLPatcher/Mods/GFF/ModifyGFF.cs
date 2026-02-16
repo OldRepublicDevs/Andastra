@@ -11,7 +11,7 @@ namespace BioWare.TSLPatcher.Mods.GFF
 {
 
     /// <summary>
-    /// GFF modification algorithms for TSLPatcher/HoloPatcher.
+    /// GFF modification algorithms for TSLPatcher/OdyPatch.
     ///
     /// This module implements GFF field modification logic for applying patches from changes.ini files.
     /// Handles field additions, modifications, list operations, and struct manipulations.

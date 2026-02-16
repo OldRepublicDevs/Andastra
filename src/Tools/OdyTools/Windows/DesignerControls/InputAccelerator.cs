@@ -2,7 +2,7 @@ using System;
 
 namespace OdyTools.Windows.DesignerControls
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/designer_controls.py:79-116
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/designer_controls.py:79-116
     // Original: class InputAccelerator
     /// <summary>
     /// Provides acceleration curves for input.
@@ -15,7 +15,7 @@ namespace OdyTools.Windows.DesignerControls
         private readonly float _power;
         private readonly float _threshold;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/designer_controls.py:86-94
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/designer_controls.py:86-94
         // Original: def __init__(self, power: float = 1.5, threshold: float = 2.0)
         /// <summary>
         /// Initialize the accelerator.
@@ -38,7 +38,7 @@ namespace OdyTools.Windows.DesignerControls
         /// </summary>
         public float Threshold => _threshold;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/designer_controls.py:96-116
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/designer_controls.py:96-116
         // Original: def accelerate(self, value: float) -> float
         /// <summary>
         /// Apply acceleration to an input value.

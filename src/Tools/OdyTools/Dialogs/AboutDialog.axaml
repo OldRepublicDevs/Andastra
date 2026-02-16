@@ -4,7 +4,13 @@
         Title="About"
         Width="430" Height="207"
         WindowStartupLocation="CenterOwner"
-        CanResize="False">
+        CanResize="False"
+        RequestedThemeVariant="Light">
+    <Window.Styles>
+        <Style Selector="Window">
+            <Setter Property="Background" Value="#F3F5F9" />
+        </Style>
+    </Window.Styles>
     <Grid ColumnDefinitions="Auto,*" Margin="20">
         <!-- Icon/Image -->
         <Image Name="image" Grid.Column="0" Width="128" Height="128" Margin="0,0,20,0" />

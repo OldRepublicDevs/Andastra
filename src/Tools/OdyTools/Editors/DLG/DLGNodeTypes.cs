@@ -7,7 +7,7 @@ namespace OdyTools.Editors.DLG
 {
     /// <summary>
     /// Categories of dialogue nodes.
-    /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/node_types.py:14-20
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/node_types.py:14-20
     /// </summary>
     public enum NodeCategory
     {
@@ -18,7 +18,7 @@ namespace OdyTools.Editors.DLG
 
     /// <summary>
     /// Visual styles for nodes.
-    /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/node_types.py:22-31
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/node_types.py:22-31
     /// </summary>
     public enum NodeStyle
     {
@@ -32,7 +32,7 @@ namespace OdyTools.Editors.DLG
 
     /// <summary>
     /// Rule for validating node connections.
-    /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/node_types.py:33-40
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/node_types.py:33-40
     /// </summary>
     public class NodeValidationRule
     {
@@ -44,7 +44,7 @@ namespace OdyTools.Editors.DLG
 
     /// <summary>
     /// Metadata about a node type.
-    /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/node_types.py:43-54
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/node_types.py:43-54
     /// </summary>
     public class NodeTypeInfo
     {
@@ -60,7 +60,7 @@ namespace OdyTools.Editors.DLG
 
     /// <summary>
     /// Registry of available node types and validation rules.
-    /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/node_types.py:57-254
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/node_types.py:57-254
     /// </summary>
     public static class NodeTypes
     {

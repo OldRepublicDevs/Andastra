@@ -4,7 +4,7 @@ using Avalonia.Markup.Xaml;
 
 namespace OdyTools.Dialogs.Save
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/save/to_bif.py:13
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_bif.py:13
     // Original: class BifSaveOption(IntEnum):
     public enum BifSaveOption
     {
@@ -13,7 +13,7 @@ namespace OdyTools.Dialogs.Save
         Override = 2
     }
 
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/save/to_bif.py:19
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_bif.py:19
     // Original: class BifSaveDialog(QDialog):
     public partial class BifSaveDialog : Window
     {
@@ -27,7 +27,7 @@ namespace OdyTools.Dialogs.Save
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/save/to_bif.py:20-46
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_bif.py:20-46
         // Original: def __init__(self, parent):
         public BifSaveDialog(Window parent)
         {
@@ -95,7 +95,7 @@ namespace OdyTools.Dialogs.Save
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/save/to_bif.py:48-50
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_bif.py:48-50
         // Original: def save_as_mod(self):
         private void SaveAsMod()
         {
@@ -103,7 +103,7 @@ namespace OdyTools.Dialogs.Save
             Close();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/save/to_bif.py:52-54
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_bif.py:52-54
         // Original: def save_as_override(self):
         private void SaveAsOverride()
         {

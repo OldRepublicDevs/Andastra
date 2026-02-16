@@ -1,8 +1,9 @@
+using System;
 using System.Collections.Generic;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/editor_wiki_mapping.py
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/editor_wiki_mapping.py
     // Original: EDITOR_WIKI_MAP: dict[str, str | None]
     public static class EditorWikiMapping
     {
@@ -30,7 +31,7 @@ namespace OdyTools.Editors
             { "OdyToolTLK", new string[] { "TLK-File-Format.md", "Bioware-Aurora-TalkTable.md" } },
             { "OdyToolTPC", new string[] { "TPC-File-Format.md" } },
             // Note: OdyToolTXT intentionally not included - plain text, no specific format
-            { "OdyToolTwoDA", new string[] { "2DA-File-Format.md", "Bioware-Aurora-2DA.md" } },
+            { "OdyTool2DA", new string[] { "2DA-File-Format.md", "Bioware-Aurora-2DA.md" } },
             { "OdyToolUTC", new string[] { "GFF-UTC.md", "Bioware-Aurora-Creature.md" } },
             { "OdyToolUTD", new string[] { "GFF-UTD.md", "Bioware-Aurora-DoorPlaceableGFF.md" } },
             { "OdyToolUTE", new string[] { "GFF-UTE.md", "Bioware-Aurora-Encounter.md" } },
@@ -59,6 +60,33 @@ namespace OdyTools.Editors
         {
             string[] files = GetWikiFiles(editorClassName);
             return files != null && files.Length > 0 ? files[0] : null;
+        }
+
+        /// <summary>
+        /// Returns all unique wiki filenames for the help browser sidebar (all docs in the wiki).
+        /// Sorted for display; includes index pages like Home and README.
+        /// </summary>
+        public static IReadOnlyList<string> GetAllWikiFilenames()
+        {
+            var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string[] files in EditorWikiMap.Values)
+            {
+                foreach (string f in files)
+                    set.Add(f);
+            }
+            set.Add("Home.md");
+            set.Add("README.md");
+            var list = new List<string>(set);
+            list.Sort((a, b) =>
+            {
+                bool aIndex = a.Equals("Home.md", StringComparison.OrdinalIgnoreCase) || a.Equals("README.md", StringComparison.OrdinalIgnoreCase);
+                bool bIndex = b.Equals("Home.md", StringComparison.OrdinalIgnoreCase) || b.Equals("README.md", StringComparison.OrdinalIgnoreCase);
+                if (aIndex && !bIndex) return -1;
+                if (!aIndex && bIndex) return 1;
+                if (aIndex && bIndex) return string.Compare(a, b, StringComparison.OrdinalIgnoreCase);
+                return string.Compare(a, b, StringComparison.OrdinalIgnoreCase);
+            });
+            return list;
         }
     }
 }

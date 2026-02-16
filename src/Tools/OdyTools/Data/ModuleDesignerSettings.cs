@@ -6,17 +6,17 @@ using KotorColor = BioWare.Common.Color;
 
 namespace OdyTools.Data
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:148
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:148
     // Original: class ModuleDesignerSettings(Settings):
     public class ModuleDesignerSettings : Settings
     {
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:149-150
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:149-150
         // Original: def __init__(self): super().__init__("ModuleDesigner")
         public ModuleDesignerSettings() : base("ModuleDesigner")
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:152-159
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:152-159
         // Original: def resetControls3d(self):
         public void ResetControls3d()
         {
@@ -58,7 +58,7 @@ namespace OdyTools.Data
             ToggleLockInstancesBind.ResetToDefault(this);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:161-168
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:161-168
         // Original: def resetControls2d(self):
         public void ResetControls2d()
         {
@@ -76,7 +76,7 @@ namespace OdyTools.Data
             DuplicateObject2dBind.ResetToDefault(this);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:169-176
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:169-176
         // Original: def resetControlsFc(self):
         public void ResetControlsFc()
         {
@@ -100,7 +100,7 @@ namespace OdyTools.Data
             MoveCameraToCursorFcBind.ResetToDefault(this);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:177-184
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:177-184
         // Original: def resetMaterialColors(self):
         public void ResetMaterialColors()
         {
@@ -132,7 +132,7 @@ namespace OdyTools.Data
             return Tuple.Create(keys ?? new HashSet<Key>(), mouseButtons ?? new HashSet<PointerUpdateKind>());
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:185-326
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:185-326
         // Original: region Ints/Binds (Controls - 3D)
         public SettingsProperty<int> MoveCameraSensitivity3d { get; } = new SettingsProperty<int>("moveCameraSensitivity3d", 100);
         public SettingsProperty<int> RotateCameraSensitivity3d { get; } = new SettingsProperty<int>("rotateCameraSensitivity3d", 100);
@@ -233,7 +233,7 @@ namespace OdyTools.Data
             new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("resetCameraView3dBind", 
                 CreateBind(new HashSet<Key> { Key.Home }, new HashSet<PointerUpdateKind>()));
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:328-402
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:328-402
         // Original: region Int/Binds (Controls - 3D FreeCam)
         public SettingsProperty<int> RotateCameraSensitivityFC { get; } = new SettingsProperty<int>("rotateCameraSensitivityFC", 100);
         public SettingsProperty<int> FlyCameraSpeedFC { get; } = new SettingsProperty<int>("flyCameraSpeedFC", 100);
@@ -285,7 +285,7 @@ namespace OdyTools.Data
             new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("moveCameraToCursorFcBind", 
                 CreateBind(new HashSet<Key> { Key.X }, new HashSet<PointerUpdateKind>()));
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:404-454
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:404-454
         // Original: region Int/Binds (Controls - 2D)
         public SettingsProperty<int> MoveCameraSensitivity2d { get; } = new SettingsProperty<int>("moveCameraSensitivity2d", 100);
         public SettingsProperty<int> RotateCameraSensitivity2d { get; } = new SettingsProperty<int>("rotateCameraSensitivity2d", 100);
@@ -319,13 +319,13 @@ namespace OdyTools.Data
             new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("duplicateObject2dBind", 
                 CreateBind(new HashSet<Key> { Key.LeftAlt }, new HashSet<PointerUpdateKind> { PointerUpdateKind.LeftButtonPressed }));
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:456-461
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:456-461
         // Original: region Binds (Controls - Both)
         public SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>> ToggleLockInstancesBind { get; } = 
             new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("toggleLockInstancesBind", 
                 CreateBind(new HashSet<Key> { Key.L }, new HashSet<PointerUpdateKind>()));
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:463-544
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:463-544
         // Original: region Ints (Material Colours)
         public SettingsProperty<int> UndefinedMaterialColour { get; } = 
             new SettingsProperty<int>("undefinedMaterialColour", new KotorColor(0.400f, 0.400f, 0.400f, 0.5f).ToRgbaInteger());
@@ -368,7 +368,7 @@ namespace OdyTools.Data
         public SettingsProperty<int> NonWalkGrassMaterialColour { get; } = 
             new SettingsProperty<int>("nonWalkGrassMaterialColour", new KotorColor(0.000f, 0.600f, 0.000f, 0.5f).ToRgbaInteger());
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:546-551
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:546-551
         // Original: region Ints
         public SettingsProperty<int> FieldOfView { get; } = new SettingsProperty<int>("fieldOfView", 70);
     }

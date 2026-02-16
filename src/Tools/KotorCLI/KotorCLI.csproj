@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -10,7 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
-    <PackageReference Include="System.CommandLine" Version="2.0.0" />
+    <PackageReference Include="System.CommandLine" Version="2.0.2" />
     <PackageReference Include="Tomlyn" Version="0.18.0" />
     <ProjectReference Include="..\..\BioWare\BioWare.csproj" />
     <!-- Explicitly resolve transitive dependencies from Microsoft.Extensions.* 10.0.1 -->

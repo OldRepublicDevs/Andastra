@@ -1,6 +1,6 @@
 # NuGet Package Distribution
 
-Both `TSLPatcher.Core` and `Andastra` (formerly HoloPatcher) are configured to be distributed as NuGet packages, allowing other C# projects to reference them directly instead of using the CLI.
+Both `TSLPatcher.Core` and `OdyPatch` are configured to be distributed as NuGet packages, allowing other C# projects to reference them directly instead of using the CLI.
 
 ## Building NuGet Packages
 
@@ -14,7 +14,7 @@ dotnet pack --configuration Release
 
 # Packages will be created in:
 # - src/TSLPatcher.Core/bin/Release/TSLPatcher.Core.2.0.0-alpha1.nupkg
-# - src/HoloPatcher/bin/Release/Andastra.2.0.0-alpha1.nupkg (note: folder name is legacy)
+# - src/OdyPatch/bin/Release/OdyPatch.2.0.0-alpha1.nupkg
 ```
 
 ### Build Individual Packages
@@ -23,8 +23,8 @@ dotnet pack --configuration Release
 # Build only TSLPatcher.Core
 dotnet pack src/TSLPatcher.Core/TSLPatcher.Core.csproj --configuration Release
 
-# Build only Andastra (note: folder name is legacy)
-dotnet pack src/HoloPatcher/HoloPatcher.csproj --configuration Release
+# Build only OdyPatch
+dotnet pack src/OdyPatch/OdyPatch.csproj --configuration Release
 ```
 
 ## Installing Packages
@@ -90,12 +90,12 @@ var installer = new ModInstaller(
 installer.Install();
 ```
 
-### Using Andastra
+### Using OdyPatch
 
-Andastra can be used as a library for programmatic access:
+OdyPatch can be used as a library for programmatic access:
 
 ```csharp
-using Andastra; // Note: namespace may still be HoloPatcher internally
+using OdyPatch.UI;
 
 // Access core functionality through Andastra classes
 // (Implementation depends on what public APIs are exposed)
@@ -115,7 +115,7 @@ using Andastra; // Note: namespace may still be HoloPatcher internally
 dotnet nuget push src/TSLPatcher.Core/bin/Release/TSLPatcher.Core.*.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
 
 # Publish Andastra
-dotnet nuget push src/HoloPatcher/bin/Release/Andastra.*.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
+dotnet nuget push src/OdyPatch/bin/Release/OdyPatch.*.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
 ```
 
 3. **Publish symbol packages** (optional):
@@ -127,7 +127,7 @@ dotnet nuget push src/TSLPatcher.Core/bin/Release/TSLPatcher.Core.*.snupkg --api
 ## Package Dependencies
 
 - **TSLPatcher.Core**: Standalone library with no dependencies on Andastra
-- **Andastra**: Depends on TSLPatcher.Core (automatically included when installing Andastra)
+- **OdyPatch**: Depends on TSLPatcher.Core (automatically included when installing OdyPatch)
 
 ## Version Management
 

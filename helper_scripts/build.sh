@@ -1,17 +1,17 @@
 #!/bin/bash
-# Build script for HoloPatcher.NET
+# Build script for OdyPatch.NET
 
-echo "Building HoloPatcher.NET..."
+echo "Building OdyPatch.NET..."
 
 # Restore dependencies
-dotnet restore HoloPatcher.sln
+dotnet restore OdyPatch.sln
 
 # Build the solution
-dotnet build HoloPatcher.sln --configuration Release
+dotnet build OdyPatch.sln --configuration Release
 
 # Run tests
 echo "Running tests..."
-dotnet test HoloPatcher.sln --configuration Release --no-build
+dotnet test OdyPatch.sln --configuration Release --no-build
 
 echo "Build complete!"
 

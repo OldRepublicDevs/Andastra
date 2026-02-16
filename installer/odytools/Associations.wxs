@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <Component Id="cmpOdyToolsAppRegistration" Directory="INSTALLFOLDER" Guid="*">
+      <Condition><![CDATA[ODyTOOLS_ENABLE_ASSOCIATIONS=1]]></Condition>
+
+      <RegistryKey Root="HKLM" Key="Software\Classes\Applications\OdyTools.exe\shell\open\command">
+        <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]OdyTools.exe&quot; --shell-open &quot;%1&quot;" KeyPath="yes" />
+      </RegistryKey>
+
+      <RegistryKey Root="HKLM" Key="Software\Classes\OdyTools.2da\shell\open\command">
+        <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]Editors\OdyTool2DA.exe&quot; &quot;%1&quot;" />
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Classes\OdyTools.gff\shell\open\command">
+        <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]Editors\OdyToolGFF.exe&quot; &quot;%1&quot;" />
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Classes\OdyTools.tlk\shell\open\command">
+        <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]Editors\OdyToolTLK.exe&quot; &quot;%1&quot;" />
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Classes\OdyTools.dlg\shell\open\command">
+        <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]Editors\OdyToolDLG.exe&quot; &quot;%1&quot;" />
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Classes\OdyTools.erf\shell\open\command">
+        <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]Editors\OdyToolERF.exe&quot; &quot;%1&quot;" />
+      </RegistryKey>
+
+      <RegistryKey Root="HKLM" Key="Software\Classes\.2da\OpenWithProgids">
+        <RegistryValue Name="OdyTools.2da" Type="string" Value="" />
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Classes\.gff\OpenWithProgids">
+        <RegistryValue Name="OdyTools.gff" Type="string" Value="" />
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Classes\.tlk\OpenWithProgids">
+        <RegistryValue Name="OdyTools.tlk" Type="string" Value="" />
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Classes\.dlg\OpenWithProgids">
+        <RegistryValue Name="OdyTools.dlg" Type="string" Value="" />
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Classes\.erf\OpenWithProgids">
+        <RegistryValue Name="OdyTools.erf" Type="string" Value="" />
+      </RegistryKey>
+    </Component>
+  </Fragment>
+
+  <Fragment>
+    <Component Id="cmpOdyToolsFileAssociations" Directory="INSTALLFOLDER" Guid="*">
+      <Condition><![CDATA[ODyTOOLS_ENABLE_ASSOCIATIONS=1]]></Condition>
+      <RegistryKey Root="HKLM" Key="Software\Classes\SystemFileAssociations\.2da\shell\OdyTools">
+        <RegistryValue Name="MUIVerb" Type="string" Value="OdyTools" KeyPath="yes" />
+        <RegistryValue Name="SubCommands" Type="string" Value="OdyTools.ConvertToGFF;OdyTools.ConvertToJSON;OdyTools.DiffPickTarget1;OdyTools.DiffRunTarget2;OdyTools.DiffRunTarget2Gui" />
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Classes\SystemFileAssociations\.gff\shell\OdyTools">
+        <RegistryValue Name="MUIVerb" Type="string" Value="OdyTools" />
+        <RegistryValue Name="SubCommands" Type="string" Value="OdyTools.ConvertTo2DA;OdyTools.ConvertToJSON;OdyTools.DiffPickTarget1;OdyTools.DiffRunTarget2;OdyTools.DiffRunTarget2Gui" />
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Classes\SystemFileAssociations\.tlk\shell\OdyTools">
+        <RegistryValue Name="MUIVerb" Type="string" Value="OdyTools" />
+        <RegistryValue Name="SubCommands" Type="string" Value="OdyTools.ConvertToJSON;OdyTools.DiffPickTarget1;OdyTools.DiffRunTarget2;OdyTools.DiffRunTarget2Gui" />
+      </RegistryKey>
+    </Component>
+  </Fragment>
+
+  <Fragment>
+    <Component Id="cmpOdyToolsContextMenu" Directory="INSTALLFOLDER" Guid="*">
+      <Condition><![CDATA[ODyTOOLS_ENABLE_CONTEXTMENU=1]]></Condition>
+      <RegistryKey Root="HKLM" Key="Software\Classes\Directory\shell\OdyTools">
+        <RegistryValue Name="MUIVerb" Type="string" Value="OdyTools" KeyPath="yes" />
+        <RegistryValue Name="SubCommands" Type="string" Value="OdyTools.DiffPickTarget1;OdyTools.DiffRunTarget2;OdyTools.DiffRunTarget2Gui" />
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Classes\Directory\Background\shell\OdyTools">
+        <RegistryValue Name="MUIVerb" Type="string" Value="OdyTools" />
+        <RegistryValue Name="SubCommands" Type="string" Value="OdyTools.DiffPickTarget1;OdyTools.DiffRunTarget2;OdyTools.DiffRunTarget2Gui" />
+      </RegistryKey>
+    </Component>
+  </Fragment>
+
+  <Fragment>
+    <Component Id="cmpOdyToolsCommandStore" Directory="INSTALLFOLDER" Guid="*">
+      <Condition><![CDATA[ODyTOOLS_ENABLE_CONTEXTMENU=1 OR ODyTOOLS_ENABLE_ASSOCIATIONS=1]]></Condition>
+
+      <RegistryKey Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\OdyTools.ConvertToGFF">
+        <RegistryValue Type="string" Value="Convert to GFF" KeyPath="yes" />
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\OdyTools.ConvertToGFF\command">
+        <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]OdyTools.exe&quot; --shell-convert gff &quot;%1&quot;" />
+      </RegistryKey>
+
+      <RegistryKey Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\OdyTools.ConvertTo2DA">
+        <RegistryValue Type="string" Value="Convert to 2DA" />
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\OdyTools.ConvertTo2DA\command">
+        <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]OdyTools.exe&quot; --shell-convert 2da &quot;%1&quot;" />
+      </RegistryKey>
+
+      <RegistryKey Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\OdyTools.ConvertToJSON">
+        <RegistryValue Type="string" Value="Convert to JSON" />
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\OdyTools.ConvertToJSON\command">
+        <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]OdyTools.exe&quot; --shell-convert json &quot;%1&quot;" />
+      </RegistryKey>
+
+      <RegistryKey Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\OdyTools.DiffPickTarget1">
+        <RegistryValue Type="string" Value="Pick diff target 1" />
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\OdyTools.DiffPickTarget1\command">
+        <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]OdyTools.exe&quot; --shell-diff-pick1 &quot;%1&quot;" />
+      </RegistryKey>
+
+      <RegistryKey Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\OdyTools.DiffRunTarget2">
+        <RegistryValue Type="string" Value="Set diff target 2 and start diff" />
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\OdyTools.DiffRunTarget2\command">
+        <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]OdyTools.exe&quot; --shell-diff-run &quot;%1&quot;" />
+      </RegistryKey>
+
+      <RegistryKey Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\OdyTools.DiffRunTarget2Gui">
+        <RegistryValue Type="string" Value="Pick diff target 2 and start diff (GUI)" />
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\OdyTools.DiffRunTarget2Gui\command">
+        <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]OdyTools.exe&quot; --shell-diff-run &quot;%1&quot; --gui" />
+      </RegistryKey>
+    </Component>
+  </Fragment>
+
+  <Fragment>
+    <Component Id="cmpOdyToolsGuidedDefaults" Directory="INSTALLFOLDER" Guid="*">
+      <Condition><![CDATA[ODyTOOLS_GUIDED_DEFAULTS=1]]></Condition>
+      <RegistryKey Root="HKCU" Key="Software\Andastra\OdyTools\Installer">
+        <RegistryValue Name="NeedsGuidedDefaultAssociationSetup" Type="integer" Value="1" KeyPath="yes" />
+      </RegistryKey>
+    </Component>
+  </Fragment>
+</Wix>

@@ -6,7 +6,7 @@ using Avalonia.Media;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/application.py:69-77
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:69-77
     // Original: QFontDialog.getFont() - provides font selection dialog
     public partial class FontDialog : Window
     {
@@ -26,7 +26,7 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/application.py:69-77
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:69-77
         // Original: def select_font(self): QFontDialog.getFont(current_font, self)
         public FontDialog(Window parent)
         {

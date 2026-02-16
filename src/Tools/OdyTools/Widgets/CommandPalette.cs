@@ -7,7 +7,7 @@ using Avalonia.Markup.Xaml;
 
 namespace OdyTools.Widgets
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/command_palette.py:25
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/command_palette.py:25
     // Original: class CommandPalette(QDialog):
     public partial class CommandPalette : Window
     {
@@ -19,7 +19,7 @@ namespace OdyTools.Widgets
 
         public event Action<string> CommandSelected;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/command_palette.py:30-41
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/command_palette.py:30-41
         // Original: def __init__(self, parent: QWidget | None = None):
         public CommandPalette(Window parent = null)
         {
@@ -156,7 +156,7 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/command_palette.py:102-120
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/command_palette.py:102-120
         // Original: def register_command(self, command_id, label, callback, category=None):
         public void RegisterCommand(string commandId, string label, Action callback, string category = null)
         {
@@ -169,7 +169,7 @@ namespace OdyTools.Widgets
             FilterCommands();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/command_palette.py:122-140
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/command_palette.py:122-140
         // Original: def _filter_commands(self):
         private void FilterCommands()
         {
@@ -198,7 +198,7 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/command_palette.py:142-150
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/command_palette.py:142-150
         // Original: def _execute_selected(self):
         private void ExecuteSelected()
         {
@@ -221,14 +221,14 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/command_palette.py:152-155
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/command_palette.py:152-155
         // Original: def _on_item_double_clicked(self, item):
         private void OnItemDoubleClicked()
         {
             ExecuteSelected();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/command_palette.py:157-160
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/command_palette.py:157-160
         // Original: def show_palette(self):
         public void ShowPalette()
         {

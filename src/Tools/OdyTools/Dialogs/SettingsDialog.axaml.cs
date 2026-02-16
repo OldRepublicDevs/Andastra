@@ -9,7 +9,7 @@ using MsBox.Avalonia.Enums;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/settings.py:18
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:18
     // Original: class SettingsDialog(QDialog):
     public partial class SettingsDialog : Window
     {
@@ -22,22 +22,22 @@ namespace OdyTools.Dialogs
         private Control _moduleDesignerWidget;
         private Control _applicationSettingsWidget;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/settings.py:42-43
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:42-43
         // Original: self.ui = settings.Ui_Dialog(); self.ui.setupUi(self)
         public SettingsDialogUi Ui { get; private set; }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/settings.py:38
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:38
         // Original: self._is_resetting: bool = False
         public bool IsResetting => _isResetting;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/settings.py:38
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:38
         // Original: self.installation_edited: bool = False
         public bool InstallationEdited => _installationEdited;
 
         // Dialog result property (true if OK clicked, false if Cancel or closed)
         public bool? Result { get; private set; }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/settings.py:19-125
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:19-125
         // Original: def __init__(self, parent):
         public SettingsDialog(Window parent = null)
         {
@@ -131,7 +131,7 @@ namespace OdyTools.Dialogs
             _applicationSettingsWidget = CreateWidgetSafe(() => new ApplicationSettingsWidget(), nameof(ApplicationSettingsWidget))
                 ?? new ContentControl { Content = new TextBlock { Text = "Application (failed to load)" } };
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/settings.py:61
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:61
             if (_installationsWidget is InstallationsWidget iwProg)
             {
                 iwProg.SettingsEdited += OnInstallationEdited;
@@ -173,7 +173,7 @@ namespace OdyTools.Dialogs
 
         private void SetupUI()
         {
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/settings.py:42-43
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:42-43
             // Original: self.ui = settings.Ui_Dialog(); self.ui.setupUi(self)
             // Find all controls from XAML and expose via Ui property
             TreeView settingsTree = null;
@@ -232,7 +232,7 @@ namespace OdyTools.Dialogs
                 _applicationSettingsWidget = new ContentControl { Content = new TextBlock { Text = "Application (failed to load)" } };
             }
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/settings.py:61
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:61
             // Original: self.ui.installationsWidget.sig_settings_edited.connect(self.on_installation_edited)
             if (_installationsWidget is InstallationsWidget iw)
             {
@@ -252,7 +252,7 @@ namespace OdyTools.Dialogs
                 CancelButton = cancelButton
             };
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/settings.py:52-58
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:52-58
             // Original: self.page_dict: dict[str, QWidget]
             var pageDict = new Dictionary<string, Control>
             {
@@ -283,7 +283,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/settings.py:75-92
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:75-92
         // Original: def on_page_change(self, page_tree_item: QTreeWidgetItem):
         private void OnSettingsTreeSelectionChanged(Dictionary<string, Control> pageDict)
         {
@@ -297,7 +297,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/settings.py:113-114
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:113-114
         // Original: def on_installation_edited(self): self.installation_edited = True
         private void OnInstallationEdited(object sender, EventArgs e)
         {
@@ -317,7 +317,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/settings.py:116-125
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:116-125
         // Original: def accept(self):
         public void Accept()
         {
@@ -336,11 +336,11 @@ namespace OdyTools.Dialogs
             Close(true);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/settings.py:94-111
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:94-111
         // Original: def on_reset_all_settings(self):
         public async void OnResetAllSettings()
         {
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/settings.py:95-111
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:95-111
             // Original: QMessageBox.question and QMessageBox.information
             var confirmBox = MessageBoxManager.GetMessageBoxStandard(
                 "Reset All Settings",
@@ -352,7 +352,7 @@ namespace OdyTools.Dialogs
 
             if (confirmResult == ButtonResult.Yes)
             {
-                // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/settings.py:104
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:104
                 // Original: GlobalSettings().settings.clear()
                 _settings.Clear();
 
@@ -369,7 +369,7 @@ namespace OdyTools.Dialogs
         }
     }
 
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/settings.py:42-43
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:42-43
     // Original: self.ui = settings.Ui_Dialog() - UI wrapper class exposing all controls
     public class SettingsDialogUi
     {

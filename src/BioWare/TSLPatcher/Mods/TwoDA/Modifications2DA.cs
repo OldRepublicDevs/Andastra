@@ -11,7 +11,7 @@ namespace BioWare.TSLPatcher.Mods.TwoDA
 {
 
     /// <summary>
-    /// 2DA modification algorithms for TSLPatcher/HoloPatcher.
+    /// 2DA modification algorithms for TSLPatcher/OdyPatch.
     ///
     /// This module implements 2DA modification logic for applying patches from changes.ini files.
     /// Handles row/column additions, cell modifications, and memory token resolution.

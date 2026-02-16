@@ -9,33 +9,22 @@ using Avalonia.Markup.Xaml;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.TextFormatting;
+using OdyTools.Themes;
 
 namespace OdyTools.Widgets
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:80
-    // Original: class CodeEditor(QPlainTextEdit):
     public class CodeEditor : TextBox
     {
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:1588-1691
-        // Original: Column selection mode tracking fields
-        // Column selection mode is activated by Alt+Shift+Drag
         private bool _columnSelectionMode = false;
         private Point? _columnSelectionAnchor = null;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:162-163
-        // Original: self._folded_block_numbers: set[int] = set()  # Block numbers that are folded (blocks that start foldable regions)
-        // Original: self._foldable_regions: dict[int, int] = {}  # Map start block number to end block number for foldable regions
-        // Code folding tracking fields
         private HashSet<int> _foldedBlockNumbers = new HashSet<int>(); // Block numbers that are folded (blocks that start foldable regions)
         private Dictionary<int, int> _foldableRegions = new Dictionary<int, int>(); // Map start block number to end block number for foldable regions
         private Dictionary<int, string> _foldedContentCache = new Dictionary<int, string>(); // Cache of folded content for restoration (for future use)
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:1416-1470
-        // Original: Extra selections for highlighting multiple occurrences (QTextEdit.ExtraSelection)
         // In Avalonia, we track selections as tuples of (start, end) positions
         private List<Tuple<int, int>> _extraSelections = new List<Tuple<int, int>>(); // Extra selections for highlighting multiple occurrences
 
-        // Zoom functionality - tracks zoom level and base font size
         // Matching VS Code and modern IDE zoom behavior (Ctrl+Plus, Ctrl+Minus, Ctrl+0)
         private double _baseFontSize = 12.0; // Base font size in points (default Avalonia TextBox size)
         private double _zoomLevel = 1.0; // Current zoom level (1.0 = 100%, 1.1 = 110%, etc.)
@@ -50,20 +39,26 @@ namespace OdyTools.Widgets
         private const double BookmarkMarkerRadius = 6.0; // Radius of circular bookmark marker
         private readonly SolidColorBrush BookmarkMarkerBrush = new SolidColorBrush(Color.FromRgb(255, 193, 7)); // Amber/gold color for bookmark markers
 
+        // Monaco/VS Code: current line highlight and indent guides
+        private bool _monacoStyleEnabled = true;
+
         // Ctrl+K sequence handling fields
         // Implements VS Code-style key sequences where Ctrl+K is pressed first, then a second key
         private bool _ctrlKPressed = false; // Whether Ctrl+K was pressed and we're waiting for the second key
         private DateTime _ctrlKPressTime = DateTime.MinValue; // When Ctrl+K was pressed for timeout handling
         private const int CtrlKSequenceTimeoutMs = 1500; // Timeout in milliseconds (1.5 seconds) to reset sequence
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:95-121
-        // Original: def __init__(self, parent: QWidget):
         public CodeEditor()
         {
             InitializeComponent();
             AcceptsReturn = true;
             AcceptsTab = true;
             TextWrapping = Avalonia.Media.TextWrapping.NoWrap;
+
+            // Monaco/VS Code Dark+ theme defaults (1:1 parity)
+            Background = OdyTools.Themes.MonacoColors.EditorBackgroundBrush;
+            Foreground = OdyTools.Themes.MonacoColors.EditorForegroundBrush;
+            FontFamily = new FontFamily("Cascadia Code, Consolas, Menlo, Monaco, 'Courier New', monospace");
 
             // Initialize font size with base size
             // If FontSize is already set (e.g., from XAML), use that as base
@@ -79,18 +74,14 @@ namespace OdyTools.Widgets
             // Update foldable regions when text changes
             this.TextChanged += (s, e) => UpdateFoldableRegions();
 
-            // Match brackets when cursor position changes (for bracket highlighting)
-            // Matching PyKotor implementation: bracket matching happens on cursor position change
             this.TextChanged += (s, e) => MatchBrackets();
         }
 
         private void InitializeComponent()
         {
-            bool xamlLoaded = false;
             try
             {
                 AvaloniaXamlLoader.Load(this);
-                xamlLoaded = true;
             }
             catch
             {
@@ -161,13 +152,56 @@ namespace OdyTools.Widgets
             return new HashSet<int>(_bookmarkedLines);
         }
 
-        // Custom rendering for bookmark visualization
+        // Custom rendering for Monaco/VS Code visuals and bookmark visualization
         public override void Render(DrawingContext context)
         {
             base.Render(context);
-
-            // Draw bookmark indicators in the left margin
+            DrawMonacoVisuals(context);
             DrawBookmarkIndicators(context);
+        }
+
+        /// <summary>Draws Monaco/VS Code current line highlight and indent guides.</summary>
+        private void DrawMonacoVisuals(DrawingContext context)
+        {
+            if (!_monacoStyleEnabled || string.IsNullOrEmpty(Text)) return;
+
+            string[] lines = Text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            int currentLine = GetLineFromPosition(SelectionStart);
+
+            var typeface = new Typeface(FontFamily ?? FontFamily.Default, FontStyle, FontWeight);
+            var ft = new FormattedText("A", CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+                typeface, FontSize, Foreground);
+            double lineHeight = ft.Height * 1.2;
+            double charWidth = FontSize * 0.6;
+            const int indentSize = 4;
+
+            // Current line highlight (VS Code editor.lineHighlightBackground)
+            // GetLineFromPosition returns 0-based line index
+            if (currentLine >= 0 && currentLine < lines.Length)
+            {
+                double y = currentLine * lineHeight;
+                context.FillRectangle(MonacoColors.EditorLineHighlightBrush,
+                    new Rect(0, y, Math.Max(Bounds.Width, 10000), lineHeight));
+            }
+
+            // Indent guides (VS Code editorIndentGuide.background)
+            for (int i = 0; i < lines.Length; i++)
+            {
+                int indent = 0;
+                foreach (char c in lines[i])
+                {
+                    if (c == ' ') indent++;
+                    else if (c == '\t') indent += indentSize;
+                    else break;
+                }
+                for (int col = indentSize; col <= indent; col += indentSize)
+                {
+                    double x = col * charWidth;
+                    double y = i * lineHeight;
+                    context.DrawLine(new Pen(MonacoColors.EditorIndentGuideBrush, 1),
+                        new Point(x, y), new Point(x, y + lineHeight));
+                }
+            }
         }
 
         /// <summary>
@@ -218,22 +252,16 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation: QPlainTextEdit.toPlainText()
-        // Original: Returns the plain text content
         public string ToPlainText()
         {
             return Text ?? "";
         }
 
-        // Matching PyKotor implementation: QPlainTextEdit.setPlainText(text)
-        // Original: Sets the plain text content
         public void SetPlainText(string text)
         {
             Text = text ?? "";
         }
 
-        // Matching PyKotor implementation: QPlainTextEdit.document()
-        // Original: Returns the QTextDocument
         // For Avalonia, we'll return null as TextBox doesn't have a separate document model
         public object Document()
         {
@@ -353,8 +381,6 @@ namespace OdyTools.Widgets
             return false;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:1416-1470
-        // Original: def select_all_occurrences(self): Select all occurrences of current word (VS Code Ctrl+Shift+L behavior)
         /// <summary>
         /// Selects all occurrences of the current word or selected text.
         /// Matching VS Code Ctrl+Shift+L behavior.
@@ -394,9 +420,7 @@ namespace OdyTools.Widgets
             _extraSelections.Clear();
 
             // Find all occurrences (case-sensitive, whole words only)
-            // Matching PyKotor: QTextDocument.FindFlag.FindCaseSensitively | QTextDocument.FindFlag.FindWholeWords
             string documentText = Text;
-            int searchStart = 0;
 
             // Build regex pattern for whole word matching
             string escapedSearchText = Regex.Escape(searchText);
@@ -415,7 +439,7 @@ namespace OdyTools.Widgets
 
                 if (_extraSelections.Count > 0)
                 {
-                    // Set cursor to first selection (matching PyKotor behavior)
+                    // Set cursor to first selection
                     var firstSelection = _extraSelections[0];
                     SelectionStart = firstSelection.Item1;
                     SelectionEnd = firstSelection.Item2;
@@ -428,8 +452,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation: QPlainTextEdit.extraSelections()
-        // Original: Returns list of extra selections for testing
         /// <summary>
         /// Gets the list of extra selections (for testing purposes).
         /// Returns list of (start, end) tuples representing all extra selections.
@@ -439,8 +461,6 @@ namespace OdyTools.Widgets
             return new List<Tuple<int, int>>(_extraSelections);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:677-772
-        // Original: def _match_brackets(self): Highlight matching brackets (VS Code feature)
         /// <summary>
         /// Highlights matching brackets when cursor is positioned at an opening or closing bracket.
         /// Matching VS Code bracket matching behavior - highlights both the bracket at cursor and its matching pair.
@@ -551,7 +571,6 @@ namespace OdyTools.Widgets
             }
 
             // Clear existing extra selections and add bracket selections
-            // Matching PyKotor: extra_selections list is rebuilt with bracket highlights
             List<Tuple<int, int>> newExtraSelections = new List<Tuple<int, int>>();
 
             if (foundPos >= 0)
@@ -626,14 +645,11 @@ namespace OdyTools.Widgets
             return char.IsLetterOrDigit(c) || c == '_';
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/nss.py:2459-2483
-        // Original: Code folding shortcuts and other keyboard shortcuts
         // Handle keyboard shortcuts for word selection and code folding
         // Based on VS Code behavior
         protected override void OnKeyDown(KeyEventArgs e)
         {
             // Handle Ctrl+D shortcut for select next occurrence
-            // Matching PyKotor implementation: Ctrl+D selects next occurrence of word
             if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.Key == Key.D)
             {
                 SelectNextOccurrence();
@@ -642,9 +658,6 @@ namespace OdyTools.Widgets
             }
 
             // Handle Ctrl+/ shortcut for toggle comment
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/nss.py:1053
-            // Original: action_toggle_comment.setShortcut(QKeySequence("Ctrl+/"))
-            // Original: action_toggle_comment.triggered.connect(self.ui.codeEdit.toggle_comment)
             if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && (e.Key == Key.OemQuestion || e.Key == Key.Divide))
             {
                 ToggleComment();
@@ -653,9 +666,6 @@ namespace OdyTools.Widgets
             }
 
             // Handle Ctrl+Shift+K shortcut for delete line
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/nss.py:2485-2487
-            // Original: delete_line_shortcut = QShortcut(QKeySequence("Ctrl+Shift+K"), self)
-            // Original: delete_line_shortcut.activated.connect(self._delete_line)
             if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.KeyModifiers.HasFlag(KeyModifiers.Shift) && e.Key == Key.K)
             {
                 DeleteLine();
@@ -664,11 +674,6 @@ namespace OdyTools.Widgets
             }
 
             // Code folding shortcuts
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/nss.py:2475-2483
-            // Original: fold_shortcut = QShortcut(QKeySequence("Ctrl+Shift+["), self)
-            // Original: unfold_shortcut = QShortcut(QKeySequence("Ctrl+Shift+]"), self)
-            // Original: fold_all_shortcut = QShortcut(QKeySequence("Ctrl+K, Ctrl+0"), self)
-            // Original: unfold_all_shortcut = QShortcut(QKeySequence("Ctrl+K, Ctrl+J"), self)
             if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.KeyModifiers.HasFlag(KeyModifiers.Shift))
             {
                 // Ctrl+Shift+[ for fold region
@@ -805,7 +810,6 @@ namespace OdyTools.Widgets
             base.OnKeyDown(e);
 
             // Match brackets after cursor movement keys
-            // Matching PyKotor: bracket matching updates when cursor moves
             if (e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down ||
                 e.Key == Key.Home || e.Key == Key.End || e.Key == Key.PageUp || e.Key == Key.PageDown)
             {
@@ -813,8 +817,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:983-1026
-        // Original: def find_next(self, find_text: str | None = None, case_sensitive: bool = False, whole_words: bool = False, regex: bool = False, backward: bool = False):
         /// <summary>
         /// Finds the next occurrence of the specified text in the document.
         /// Matches PyKotor implementation which supports case-sensitive, whole words, and regex search.
@@ -937,8 +939,6 @@ namespace OdyTools.Widgets
             return false;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:1028-1030
-        // Original: def find_previous(self, find_text: str | None = None, case_sensitive: bool = False, whole_words: bool = False, regex: bool = False):
         /// <summary>
         /// Finds the previous occurrence of the specified text in the document.
         /// </summary>
@@ -952,8 +952,6 @@ namespace OdyTools.Widgets
             return FindNext(findText, caseSensitive, wholeWords, regex, backward: true);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:1040-1070
-        // Original: def replace_all_occurrences(self, find_text: str, replace_text: str, case_sensitive: bool = False, whole_words: bool = False, regex: bool = False):
         /// <summary>
         /// Replaces all occurrences of the specified text in the document.
         /// Matches PyKotor implementation which supports case-sensitive, whole words, and regex search.
@@ -1009,9 +1007,6 @@ namespace OdyTools.Widgets
                     return 0;
                 }
 
-                // Matching PyKotor implementation: Replace all matches with literal replaceText
-                // The PyKotor code uses cursor.insertText(replace_text) which inserts literal text,
-                // not a regex replacement pattern. So we need to replace each match individually.
                 StringBuilder result = new StringBuilder(documentText);
                 int offset = 0;
 
@@ -1041,8 +1036,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:1588-1622
-        // Original: def mousePressEvent(self, event: QMouseEvent):
         /// <summary>
         /// Handles pointer press events for column selection mode.
         /// Column selection is activated by Alt+Shift+LeftButton drag.
@@ -1050,7 +1043,6 @@ namespace OdyTools.Widgets
         protected override void OnPointerPressed(PointerPressedEventArgs e)
         {
             // Check if Alt+Shift is pressed for column selection
-            // Matching PyKotor implementation: Alt+Shift modifier activates column selection mode
             if (e.KeyModifiers.HasFlag(KeyModifiers.Alt) &&
                 e.KeyModifiers.HasFlag(KeyModifiers.Shift) &&
                 e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
@@ -1079,8 +1071,6 @@ namespace OdyTools.Widgets
             MatchBrackets();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:1624-1680
-        // Original: def mouseMoveEvent(self, event: QMouseEvent):
         /// <summary>
         /// Handles pointer move events for column selection dragging.
         /// Creates a column/block selection spanning the same column range across multiple lines.
@@ -1144,8 +1134,6 @@ namespace OdyTools.Widgets
             base.OnPointerMoved(e);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:1682-1691
-        // Original: def mouseReleaseEvent(self, event: QMouseEvent):
         /// <summary>
         /// Handles pointer release events to end column selection mode.
         /// </summary>
@@ -1412,9 +1400,6 @@ namespace OdyTools.Widgets
         /// Exposed for testing purposes.
         /// </summary>
         public bool ColumnSelectionMode => _columnSelectionMode;
-
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:1257-1272
-        // Original: def duplicate_line(self):
         /// <summary>
         /// Duplicates the current line or selected lines.
         /// If there's a selection, duplicates the lines containing the selection.
@@ -1486,8 +1471,6 @@ namespace OdyTools.Widgets
             SelectionEnd = SelectionStart;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/nss.py:3326-3345
-        // Original: def _delete_line(self): Delete current line(s) - VS Code Ctrl+Shift+K
         /// <summary>
         /// Deletes the current line or selected lines.
         /// If there's a selection, deletes all lines containing the selection.
@@ -1513,8 +1496,6 @@ namespace OdyTools.Widgets
             if (selectionStart != selectionEnd)
             {
                 // Delete selected lines
-                // Matching PyKotor: cursor.setPosition(start), cursor.movePosition(StartOfBlock)
-                // Then cursor.setPosition(end, KeepAnchor), cursor.movePosition(EndOfBlock, KeepAnchor)
                 int startLine = GetLineFromPosition(selectionStart);
                 int endLine = GetLineFromPosition(selectionEnd);
 
@@ -1526,14 +1507,11 @@ namespace OdyTools.Widgets
             else
             {
                 // Delete current line
-                // Matching PyKotor: cursor.movePosition(StartOfBlock), cursor.movePosition(EndOfBlock, KeepAnchor)
-                // Then if not atEnd(), cursor.movePosition(Right, KeepAnchor) to include newline
                 int currentLine = GetLineFromPosition(selectionStart);
                 deleteStartPos = GetPositionFromLine(currentLine);
                 deleteEndPos = GetPositionFromLineContentEnd(currentLine);
 
                 // Include newline if not last line
-                // Matching PyKotor: if not cursor.atEnd(): cursor.movePosition(Right, KeepAnchor)
                 if (currentLine < lines.Length - 1)
                 {
                     deleteEndPos = GetPositionFromLineEndIncludingNewline(currentLine);
@@ -1558,7 +1536,6 @@ namespace OdyTools.Widgets
             }
 
             // Delete the selected text
-            // Matching PyKotor: cursor.removeSelectedText()
             string newText = Text.Remove(deleteStartPos, deleteEndPos - deleteStartPos);
             Text = newText;
 
@@ -1574,8 +1551,6 @@ namespace OdyTools.Widgets
             SelectionEnd = newCursorPos;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:1307-1349
-        // Original: def move_line_up_or_down(self, direction: Literal["up", "down"] = "up"):
         /// <summary>
         /// Moves the current line or selected lines up or down.
         /// Matching VS Code Alt+Up/Down behavior.
@@ -1840,8 +1815,6 @@ namespace OdyTools.Widgets
             return position;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:482-570
-        // Original: def _update_foldable_regions(self):
         /// <summary>
         /// Updates the foldable regions based on braces in the document.
         /// Detects brace pairs ({}) and marks regions between them as foldable.
@@ -1957,8 +1930,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:1479-1493
-        // Original: def _find_foldable_region_at_cursor(self) -> tuple[int, int] | None:
         /// <summary>
         /// Finds the foldable region that contains or starts at the current cursor position.
         /// </summary>
@@ -1992,8 +1963,6 @@ namespace OdyTools.Widgets
             return null;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:1495-1524
-        // Original: def fold_region(self):
         /// <summary>
         /// Folds the current code region (VS Code Ctrl+Shift+[ behavior).
         /// Note: In Avalonia TextBox, we can't directly hide lines like Qt's QPlainTextEdit.
@@ -2021,8 +1990,6 @@ namespace OdyTools.Widgets
             _foldedBlockNumbers.Add(startBlock);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:1526-1555
-        // Original: def unfold_region(self):
         /// <summary>
         /// Unfolds the current code region (VS Code Ctrl+Shift+] behavior).
         /// Note: In Avalonia TextBox, we can't directly show hidden lines like Qt's QPlainTextEdit.
@@ -2050,8 +2017,6 @@ namespace OdyTools.Widgets
             _foldedBlockNumbers.Remove(startBlock);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:1557-1570
-        // Original: def fold_all(self):
         /// <summary>
         /// Folds all code regions (VS Code Ctrl+K Ctrl+0 behavior).
         /// </summary>
@@ -2074,8 +2039,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:1572-1586
-        // Original: def unfold_all(self):
         /// <summary>
         /// Unfolds all code regions (VS Code Ctrl+K Ctrl+J behavior).
         /// </summary>
@@ -2213,13 +2176,10 @@ namespace OdyTools.Widgets
             FontSize = newFontSize;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/code_editor.py:244-272
-        // Original: def toggle_comment(self):
         /// <summary>
         /// Toggles comment for the current line or selected lines.
         /// If any selected line is not commented, all selected lines are commented.
         /// If all selected lines are commented, all selected lines are uncommented.
-        /// Matching PyKotor behavior: adds "// " prefix for commenting, removes "//" for uncommenting.
         /// </summary>
         public void ToggleComment()
         {
@@ -2238,7 +2198,7 @@ namespace OdyTools.Widgets
             int startLine = GetLineFromPosition(selectionStart);
             int endLine = GetLineFromPosition(selectionEnd);
 
-            // Expand selection to full lines (matching PyKotor: StartOfLine to EndOfLine)
+            // Expand selection to full lines
             int firstLineStart = GetPositionFromLine(startLine);
             int lastLineEnd = GetPositionFromLineContentEnd(endLine);
 
@@ -2372,32 +2332,22 @@ namespace OdyTools.Widgets
             return position;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/nss.py:2778-2788
-        // Original: def _toggle_word_wrap(self):
         /// <summary>
         /// Toggles word wrap mode for the code editor.
         /// Switches between NoWrap and Wrap modes.
-        /// Matching PyKotor behavior: toggles line wrap mode and logs the state change.
         /// </summary>
         /// <returns>True if word wrap is now enabled, false if disabled.</returns>
         public bool ToggleWordWrap()
         {
-            // Matching PyKotor implementation: check current mode and toggle
-            // Original: current_mode: QPlainTextEdit.LineWrapMode = self.ui.codeEdit.lineWrapMode()
-            // Original: if current_mode == QPlainTextEdit.LineWrapMode.NoWrap:
             if (TextWrapping == Avalonia.Media.TextWrapping.NoWrap)
             {
-                // Original: self.ui.codeEdit.setLineWrapMode(QPlainTextEdit.LineWrapMode.WidgetWidth)
                 TextWrapping = Avalonia.Media.TextWrapping.Wrap;
-                // Original: self._log_to_output("Word wrap: ON")
                 // Note: Logging would be handled by OdyToolNSS if needed
                 return true;
             }
             else
             {
-                // Original: self.ui.codeEdit.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
                 TextWrapping = Avalonia.Media.TextWrapping.NoWrap;
-                // Original: self._log_to_output("Word wrap: OFF")
                 // Note: Logging would be handled by OdyToolNSS if needed
                 return false;
             }

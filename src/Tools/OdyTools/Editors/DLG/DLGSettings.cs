@@ -5,7 +5,7 @@ namespace OdyTools.Editors.DLG
 {
     /// <summary>
     /// Settings management for DLG editor.
-    /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/settings.py
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/settings.py
     /// </summary>
     public class DLGSettings
     {

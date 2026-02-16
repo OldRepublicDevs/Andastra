@@ -8,7 +8,7 @@ namespace OdyTools.Dialogs
 {
     /// <summary>
     /// Dialog for choosing between decompiling an NCS file or downloading it from GitHub.
-    /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/nss.py:2170-2194
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2170-2194
     /// </summary>
     public partial class DecompileOrDownloadDialog : Window
     {

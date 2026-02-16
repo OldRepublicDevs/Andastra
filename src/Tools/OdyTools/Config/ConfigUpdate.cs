@@ -8,13 +8,13 @@ using Newtonsoft.Json;
 
 namespace OdyTools.Config
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/config/config_update.py:45
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/config/config_update.py:45
     // Original: def fetch_update_info(update_link: str, timeout: int = 15) -> dict[str, Any]:
     public static class ConfigUpdate
     {
         private static readonly HttpClient HttpClient = new HttpClient();
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/config/config_update.py:45-61
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/config/config_update.py:45-61
         // Original: def fetch_update_info(update_link: str, timeout: int = 15) -> dict[str, Any]:
         public static async Task<Dictionary<string, object>> FetchUpdateInfoAsync(string updateLink, int timeoutSeconds = 15)
         {
@@ -31,7 +31,7 @@ namespace OdyTools.Config
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/config/config_update.py:64-123
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/config/config_update.py:64-123
         // Original: def get_remote_toolset_update_info(*, use_beta_channel: bool = False, silent: bool = False):
         public static async Task<Dictionary<string, object>> GetRemoteToolsetUpdateInfoAsync(bool useBetaChannel = false, bool silent = false)
         {
@@ -72,7 +72,7 @@ namespace OdyTools.Config
             return ConfigInfo.LocalProgramInfo;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/config/config_update.py:126-141
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/config/config_update.py:126-141
         // Original: def is_remote_version_newer(local_version: str, remote_version: str) -> bool | None:
         public static bool? IsRemoteVersionNewer(string localVersion, string remoteVersion)
         {

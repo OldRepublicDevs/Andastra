@@ -50,7 +50,6 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <OutputType Condition="'$(OS)' == 'Windows_NT'">WinExe</OutputType>
     <OutputType Condition="'$(OS)' != 'Windows_NT'">Exe</OutputType>
-    <RuntimeIdentifiers>win-x86;win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
     <BuildInParallel>true</BuildInParallel>
     <DebugSymbols>false</DebugSymbols>
     <DebugType>portable</DebugType>

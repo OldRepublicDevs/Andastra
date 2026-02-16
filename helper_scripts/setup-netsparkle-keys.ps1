@@ -176,11 +176,11 @@ Write-Host "Next Steps:" -ForegroundColor Cyan
 Write-Host "===========" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "1. Add Public Key to UpdateManager.cs:" -ForegroundColor Yellow
-Write-Host "   Update src/HoloPatcher/UpdateManager.cs:" -ForegroundColor White
+Write-Host "   Update src/OdyPatch/UpdateManager.cs:" -ForegroundColor White
 Write-Host "   Ed25519PublicKey = `"$publicKey`"" -ForegroundColor Gray
 Write-Host ""
 Write-Host "2. Add Private Key to GitHub Secrets:" -ForegroundColor Yellow
-Write-Host "   - Go to: https://github.com/th3w1zard1/HoloPatcher.NET/settings/secrets/actions" -ForegroundColor White
+Write-Host "   - Go to: https://github.com/th3w1zard1/OdyPatch/settings/secrets/actions" -ForegroundColor White
 Write-Host "   - Click 'New repository secret'" -ForegroundColor White
 Write-Host "   - Name: NETSPARKLE_PRIVATE_KEY" -ForegroundColor White
 Write-Host "   - Value: $privateKey" -ForegroundColor Gray

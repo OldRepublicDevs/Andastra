@@ -72,14 +72,17 @@ namespace OdyTools.Dialogs
             AddShortcutCategory("File Operations", new[]
             {
                 ("F5", "Compile Script"),
-                ("Ctrl+Shift+P", "Show Command Palette")
+                ("Ctrl+Shift+P", "Show Command Palette"),
+                ("Ctrl+P", "Quick Open / Command Palette")
             });
 
             AddShortcutCategory("Navigation", new[]
             {
                 ("F12", "Go to Definition"),
                 ("Shift+F12", "Find All References"),
-                ("Ctrl+G", "Go to Line")
+                ("Ctrl+G", "Go to Line"),
+                ("F8", "Go to Next Problem"),
+                ("Shift+F8", "Go to Previous Problem")
             });
 
             AddShortcutCategory("Editing", new[]
@@ -88,15 +91,23 @@ namespace OdyTools.Dialogs
                 ("Ctrl+C", "Copy"),
                 ("Ctrl+V", "Paste"),
                 ("Ctrl+/", "Toggle Line Comment"),
+                ("Ctrl+Space", "Trigger Suggest"),
                 ("Ctrl+Z", "Undo"),
                 ("Ctrl+Y", "Redo"),
-                ("Ctrl+A", "Select All")
+                ("Ctrl+A", "Select All"),
+                ("Ctrl+Shift+D", "Duplicate Line"),
+                ("Ctrl+Shift+K", "Delete Line"),
+                ("Alt+Up", "Move Line Up"),
+                ("Alt+Down", "Move Line Down")
             });
 
             AddShortcutCategory("View", new[]
             {
                 ("Ctrl+B", "Toggle File Explorer"),
                 ("Ctrl+`", "Toggle Terminal Panel"),
+                ("Ctrl+J", "Toggle Output Panel"),
+                ("Ctrl+Shift+E", "Focus Explorer"),
+                ("Ctrl+Shift+F", "Focus Explorer Search"),
                 ("Ctrl+Mouse Wheel", "Zoom In/Out"),
                 ("Ctrl+0", "Reset Zoom")
             });
@@ -169,18 +180,21 @@ namespace OdyTools.Dialogs
                 };
                 _mainPanel.Children.Add(header);
 
-                // Add categories
+                // Add categories (must match SetupProgrammaticUI)
                 AddShortcutCategory("File Operations", new[]
                 {
                     ("F5", "Compile Script"),
-                    ("Ctrl+Shift+P", "Show Command Palette")
+                    ("Ctrl+Shift+P", "Show Command Palette"),
+                    ("Ctrl+P", "Quick Open / Command Palette")
                 });
 
                 AddShortcutCategory("Navigation", new[]
                 {
                     ("F12", "Go to Definition"),
                     ("Shift+F12", "Find All References"),
-                    ("Ctrl+G", "Go to Line")
+                    ("Ctrl+G", "Go to Line"),
+                    ("F8", "Go to Next Problem"),
+                    ("Shift+F8", "Go to Previous Problem")
                 });
 
                 AddShortcutCategory("Editing", new[]
@@ -189,15 +203,23 @@ namespace OdyTools.Dialogs
                     ("Ctrl+C", "Copy"),
                     ("Ctrl+V", "Paste"),
                     ("Ctrl+/", "Toggle Line Comment"),
+                    ("Ctrl+Space", "Trigger Suggest"),
                     ("Ctrl+Z", "Undo"),
                     ("Ctrl+Y", "Redo"),
-                    ("Ctrl+A", "Select All")
+                    ("Ctrl+A", "Select All"),
+                    ("Ctrl+Shift+D", "Duplicate Line"),
+                    ("Ctrl+Shift+K", "Delete Line"),
+                    ("Alt+Up", "Move Line Up"),
+                    ("Alt+Down", "Move Line Down")
                 });
 
                 AddShortcutCategory("View", new[]
                 {
                     ("Ctrl+B", "Toggle File Explorer"),
                     ("Ctrl+`", "Toggle Terminal Panel"),
+                    ("Ctrl+J", "Toggle Output Panel"),
+                    ("Ctrl+Shift+E", "Focus Explorer"),
+                    ("Ctrl+Shift+F", "Focus Explorer Search"),
                     ("Ctrl+Mouse Wheel", "Zoom In/Out"),
                     ("Ctrl+0", "Reset Zoom")
                 });

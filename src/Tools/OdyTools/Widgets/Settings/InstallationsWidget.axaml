@@ -10,10 +10,10 @@
         </Grid>
 
         <!-- Separator -->
-        <Border Grid.Column="1" BorderBrush="LightGray" BorderThickness="1,0,0,0" />
+        <Border Grid.Column="1" BorderBrush="#D7DBE6" BorderThickness="1,0,0,0" />
 
         <!-- Path Frame (right) -->
-        <Border Name="pathFrame" Grid.Column="2" BorderBrush="LightGray" BorderThickness="1" Padding="10" IsEnabled="False">
+        <Border Name="pathFrame" Grid.Column="2" BorderBrush="#D7DBE6" BorderThickness="1" Padding="10" IsEnabled="False">
             <Grid RowDefinitions="Auto,Auto,Auto">
                 <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,10">
                     <TextBlock Text="Name:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" />

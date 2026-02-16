@@ -1,9 +1,31 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="OdyTools.Editors.OdyToolTLK"
-        Title="TLK Editor"
+        Title="OdyToolTLK"
         MinWidth="400" MinHeight="300"
-        Width="560" Height="620">
+        Width="560" Height="620"
+        RequestedThemeVariant="Light">
+    <Window.Styles>
+        <Style Selector="Window">
+            <Setter Property="Background" Value="#F3F5F9" />
+        </Style>
+        <Style Selector="Menu">
+            <Setter Property="Background" Value="#F1F3F4" />
+            <Setter Property="Foreground" Value="#202124" />
+            <Setter Property="BorderBrush" Value="#D7DBE6" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+        </Style>
+        <Style Selector="MenuItem">
+            <Setter Property="Foreground" Value="#202124" />
+        </Style>
+        <Style Selector="ContextMenu">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="Foreground" Value="#202124" />
+        </Style>
+        <Style Selector="ContextMenu MenuItem">
+            <Setter Property="Foreground" Value="#202124" />
+        </Style>
+    </Window.Styles>
     <DockPanel>
         <!-- Menu Bar -->
         <Menu DockPanel.Dock="Top">
@@ -25,18 +47,32 @@
                 <MenuItem Header="_Replace..." Name="actionReplace" HotKey="Ctrl+H" />
                 <MenuItem Header="Find _Next" Name="actionFindNext" HotKey="F3" />
                 <Separator />
-                <MenuItem Header="_Insert Entry" Name="actionInsert" />
+                <MenuItem Header="_Insert Entry" Name="actionInsert" HotKey="Ctrl+I" />
                 <MenuItem Header="_Delete Entry" Name="actionDeleteEntry" HotKey="Delete" />
                 <Separator />
                 <MenuItem Header="_Go To Entry..." Name="actionGoTo" HotKey="Ctrl+G" />
             </MenuItem>
-            <MenuItem Header="_Language" Name="menuLanguage" />
+            <MenuItem Header="_Language" Name="menuLanguage">
+                <MenuItem Header="Auto-detect (from file)" Name="actionLangAutoDetect" />
+                <Separator />
+                <MenuItem Header="English" Name="actionLangEnglish" />
+                <MenuItem Header="Français" Name="actionLangFrench" />
+                <MenuItem Header="Deutsch" Name="actionLangGerman" />
+                <MenuItem Header="Italiano" Name="actionLangItalian" />
+                <MenuItem Header="Español" Name="actionLangSpanish" />
+                <MenuItem Header="Polski" Name="actionLangPolish" />
+                <Separator />
+                <MenuItem Header="中文（简体）" Name="actionLangChineseSimplified" />
+                <MenuItem Header="中文（繁體）" Name="actionLangChineseTraditional" />
+                <MenuItem Header="日本語" Name="actionLangJapanese" />
+                <MenuItem Header="한국어" Name="actionLangKorean" />
+            </MenuItem>
         </Menu>
 
         <!-- Main Content -->
         <Grid RowDefinitions="Auto,Auto,*,Auto,Auto">
             <!-- Search Box -->
-            <Border Name="searchBox" Grid.Row="0" BorderBrush="LightGray" BorderThickness="1" Padding="5" Margin="5" IsVisible="True">
+            <Border Name="searchBox" Grid.Row="0" Background="#FFFFFF" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="6" Padding="8" Margin="8,6,8,6" IsVisible="True">
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBox Name="searchEdit" Grid.Column="0" Watermark="Search text or sound..." Margin="0,0,5,0" />
                     <Button Name="searchButton" Grid.Column="1" Content="Search" Width="70" />
@@ -44,7 +80,7 @@
             </Border>
 
             <!-- Jump Box -->
-            <Border Name="jumpBox" Grid.Row="1" BorderBrush="LightGray" BorderThickness="1" Padding="5" Margin="5" IsVisible="True">
+            <Border Name="jumpBox" Grid.Row="1" Background="#FFFFFF" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="6" Padding="8" Margin="8,0,8,6" IsVisible="True">
                 <Grid ColumnDefinitions="Auto,*,Auto">
                     <TextBlock Text="Go To Entry:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" />
                     <NumericUpDown Name="jumpSpinbox" Grid.Column="1" Minimum="0" Maximum="0" Margin="0,0,5,0" />
@@ -52,9 +88,9 @@
                 </Grid>
             </Border>
 
-            <!-- Talk Table -->
-            <DataGrid Name="talkTable" Grid.Row="2" 
-                      AutoGenerateColumns="True"
+            <!-- Talk Table: StringRef (#), Text, Sound columns - columns built in code to avoid compiled binding issues -->
+            <DataGrid Name="talkTable" Grid.Row="2"
+                      AutoGenerateColumns="False"
                       CanUserReorderColumns="False"
                       CanUserResizeColumns="True"
                       SelectionMode="Single">
@@ -65,6 +101,8 @@
                         <Separator />
                         <MenuItem Header="_Find..." Name="ctxFind" />
                         <MenuItem Header="_Go To Entry..." Name="ctxGoTo" />
+                        <Separator />
+                        <MenuItem Header="Find _LocalizedString references" Name="ctxFindReferences" />
                     </ContextMenu>
                 </DataGrid.ContextMenu>
             </DataGrid>
@@ -79,8 +117,8 @@
             </Grid>
 
             <!-- Status bar -->
-            <Border Grid.Row="4" Padding="8,4" Background="#E1E1E1">
-                <TextBlock Name="statusText" Text="0 entries" VerticalAlignment="Center" />
+            <Border Grid.Row="4" Padding="8,4" Background="#E8EAED" BorderBrush="#DADCE0" BorderThickness="0,1,0,0">
+                <TextBlock Name="statusText" Text="0 entries" VerticalAlignment="Center" Foreground="#202124" />
             </Border>
         </Grid>
     </DockPanel>

@@ -17,6 +17,7 @@ namespace OdyTools.Dialogs
         private Button _cancelButton;
         private int _currentLine;
         private int _totalLines;
+        private bool _confirmedWithOk;
 
         // Public parameterless constructor for XAML
         public GoToLineDialog() : this(1, 1)
@@ -78,20 +79,22 @@ namespace OdyTools.Dialogs
                 Watermark = $"1-{_totalLines}"
             };
             _lineNumberEdit.TextChanged += (s, e) => ValidateInput();
-            _lineNumberEdit.KeyDown += (s, e) =>
-            {
-                if (e.Key == Avalonia.Input.Key.Enter)
+                _lineNumberEdit.KeyDown += (s, e) =>
                 {
-                    if (IsValidInput())
+                    if (e.Key == Avalonia.Input.Key.Enter)
                     {
+                        if (IsValidInput())
+                        {
+                            _confirmedWithOk = true;
+                            Close();
+                        }
+                    }
+                    else if (e.Key == Avalonia.Input.Key.Escape)
+                    {
+                        _confirmedWithOk = false;
                         Close();
                     }
-                }
-                else if (e.Key == Avalonia.Input.Key.Escape)
-                {
-                    Close();
-                }
-            };
+                };
             inputPanel.Children.Add(_lineNumberEdit);
             mainPanel.Children.Add(inputPanel);
 
@@ -117,11 +120,12 @@ namespace OdyTools.Dialogs
             {
                 if (IsValidInput())
                 {
+                    _confirmedWithOk = true;
                     Close();
                 }
             };
             _cancelButton = new Button { Content = "Cancel", MinWidth = 75 };
-            _cancelButton.Click += (s, e) => Close();
+            _cancelButton.Click += (s, e) => { _confirmedWithOk = false; Close(); };
             buttonPanel.Children.Add(_okButton);
             buttonPanel.Children.Add(_cancelButton);
             mainPanel.Children.Add(buttonPanel);
@@ -152,11 +156,13 @@ namespace OdyTools.Dialogs
                     {
                         if (IsValidInput())
                         {
+                            _confirmedWithOk = true;
                             Close();
                         }
                     }
                     else if (e.Key == Avalonia.Input.Key.Escape)
                     {
+                        _confirmedWithOk = false;
                         Close();
                     }
                 };
@@ -170,6 +176,7 @@ namespace OdyTools.Dialogs
                 {
                     if (IsValidInput())
                     {
+                        _confirmedWithOk = true;
                         Close();
                     }
                 };
@@ -177,7 +184,7 @@ namespace OdyTools.Dialogs
 
             if (_cancelButton != null)
             {
-                _cancelButton.Click += (s, e) => Close();
+                _cancelButton.Click += (s, e) => { _confirmedWithOk = false; Close(); };
             }
         }
 
@@ -249,7 +256,7 @@ namespace OdyTools.Dialogs
         /// <returns>The line number (1-indexed) if valid, or null if cancelled or invalid.</returns>
         public int? GetLineNumber()
         {
-            if (!IsValidInput())
+            if (!_confirmedWithOk || !IsValidInput())
             {
                 return null;
             }

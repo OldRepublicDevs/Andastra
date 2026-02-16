@@ -13,7 +13,7 @@ namespace OdyTools.Editors.DLG
         private List<DLGStandardItem> _rootItems = new List<DLGStandardItem>();
         private OdyToolDLG _editor;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/model.py:293-294
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:293-294
         // Original: self.link_to_items: weakref.WeakKeyDictionary[DLGLink, list[DLGStandardItem]] = weakref.WeakKeyDictionary()
         // Original: self.node_to_items: weakref.WeakKeyDictionary[DLGNode, list[DLGStandardItem]] = weakref.WeakKeyDictionary()
         // Note: C# doesn't have WeakKeyDictionary, so we use ConditionalWeakTable which provides similar functionality
@@ -116,7 +116,7 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Adds a root node to the dialog graph.
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/model.py:846-856
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:846-856
         /// Original: def add_root_node(self):
         /// </summary>
         public DLGStandardItem AddRootNode()
@@ -148,7 +148,7 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Adds a child node to the specified parent item.
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/model.py:858-877
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:858-877
         /// Original: def add_child_to_item(self, parent_item: DLGStandardItem, link: DLGLink | None = None) -> DLGStandardItem:
         /// </summary>
         public DLGStandardItem AddChildToItem(DLGStandardItem parentItem, DLGLink link = null)
@@ -270,7 +270,7 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Counts the number of references to a node in the UI tree model.
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/model.py:1065-1070
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1065-1070
         /// Original: def count_item_refs(self, link: DLGLink) -> int:
         /// </summary>
         /// <param name="link">The link to count references for.</param>
@@ -292,7 +292,7 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Checks if an item is a copy (has multiple items referencing the same node).
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/model.py:1214-1220
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1214-1220
         /// Original: def is_copy(self, item: DLGStandardItem) -> bool:
         /// </summary>
         /// <param name="item">The item to check.</param>
@@ -315,7 +315,7 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Updates the display text for an item.
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/model.py:1072-1212
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1072-1212
         /// Original: def update_item_display_text(self, item: DLGStandardItem, *, update_copies: bool = True)
         /// </summary>
         /// <param name="item">The DLGStandardItem to update.</param>
@@ -591,7 +591,7 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Recursively loads a dialog item and all its children into the model.
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/model.py:752-807
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:752-807
         /// Original: def load_dlg_item_rec(self, item_to_load: DLGStandardItem, copied_link: DLGLink | None = None):
         /// </summary>
         /// <param name="itemToLoad">The item to load recursively.</param>
@@ -647,7 +647,7 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Shifts an item in the tree by a given amount.
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/model.py:1248-1285
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1248-1285
         /// Original: def shift_item(self, item: DLGStandardItem, amount: int, *, no_selection_update: bool = False):
         /// </summary>
         /// <param name="item">The item to shift.</param>
@@ -705,7 +705,7 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Copies a link and node to the clipboard as JSON.
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/model.py:890-898
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:890-898
         /// Original: def copy_link_and_node(self, link: DLGLink | None):
         /// Note: In Python, this only sets clipboard. The editor's _copy is set separately.
         /// In C#, we set both clipboard and editor._copy for convenience.
@@ -750,7 +750,7 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Pastes a link as a child of the specified parent item.
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/model.py:900-975
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:900-975
         /// Original: def paste_item(self, parent_item: DLGStandardItem | Self | None, pasted_link: DLGLink | None = None, *, row: int | None = None, as_new_branches: bool = True):
         /// </summary>
         /// <param name="parentItem">The parent item to paste under, or null for root.</param>
@@ -923,7 +923,7 @@ namespace OdyTools.Editors.DLG
                 parentItem.InsertChild(insertIndex, newItem);
 
                 // Add link to parent node's Links collection at the correct position
-                // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/model.py:650-683
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:650-683
                 // Original: links_list.insert(item_row, item.link) and update list_index for all links
                 if (parentItem.Link?.Node != null)
                 {
@@ -1007,7 +1007,7 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Gets a new unique list index for a node.
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/model.py:977-996
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:977-996
         /// Original: def _get_new_node_list_index(self, node: DLGNode, entry_indices: set[int] | None = None, reply_indices: set[int] | None = None) -> int:
         /// </summary>
         /// <param name="node">The node to get a new index for.</param>
@@ -1075,7 +1075,7 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Removes all occurrences of a node and all links to it from the model and CoreDlg.
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/model.py:1017-1049
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1017-1049
         /// Original: def delete_node_everywhere(self, node: DLGNode):
         /// </summary>
         /// <param name="nodeToRemove">The node to remove everywhere.</param>
@@ -1102,7 +1102,7 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Recursively removes links to a node from the model tree.
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/model.py:1025-1046
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1025-1046
         /// Original: def remove_links_recursive(node_to_remove: DLGNode, parent_item: DLGStandardItem | DLGStandardItemModel):
         /// </summary>
         /// <param name="nodeToRemove">The node to remove.</param>
@@ -1228,7 +1228,7 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Deletes a node from the DLG and UI tree model.
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/model.py:1051-1063
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1051-1063
         /// Original: def delete_node(self, item: DLGStandardItem):
         /// </summary>
         /// <param name="item">The DLGStandardItem to delete.</param>
@@ -1323,7 +1323,7 @@ namespace OdyTools.Editors.DLG
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/model.py:483-509
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:483-509
         // Original: def mimeData(self, indexes: Iterable[QModelIndex]) -> QMimeData:
         /// <summary>
         /// Serializes items to MIME data format for drag-and-drop operations.
@@ -1423,7 +1423,7 @@ namespace OdyTools.Editors.DLG
             return $"{nodeType}: {text}";
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/tree_view.py:598-614
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/tree_view.py:598-614
         // Original: def parse_mime_data(self, mime_data: QMimeData) -> list[dict[Literal["row", "column", "roles"], Any]]:
         /// <summary>
         /// Parses MIME data from JSON format back into item data structures.

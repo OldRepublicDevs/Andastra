@@ -10,7 +10,7 @@ using BioWare.Common;
 
 namespace OdyTools.Widgets.Settings
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:20
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:20
     // Original: class ModuleDesignerWidget(SettingsWidget):
     public partial class ModuleDesignerSettingsWidget : UserControl
     {
@@ -124,7 +124,7 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:76-84
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:76-84
         // Original: def _load3dBindValues(self):
         private void Load3dBindValues()
         {
@@ -179,7 +179,7 @@ namespace OdyTools.Widgets.Settings
             RegisterBindIfExists("resetCameraView3dBind", _settings.ResetCameraView3dBind);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:86-93
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:86-93
         // Original: def _loadFcBindValues(self):
         private void LoadFcBindValues()
         {
@@ -214,7 +214,7 @@ namespace OdyTools.Widgets.Settings
             RegisterBindIfExists("moveCameraToCursorFcBind", _settings.MoveCameraToCursorFcBind);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:95-102
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:95-102
         // Original: def _load2dBindValues(self):
         private void Load2dBindValues()
         {
@@ -243,7 +243,7 @@ namespace OdyTools.Widgets.Settings
             RegisterBindIfExists("duplicateObject2dBind", _settings.DuplicateObject2dBind);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:104-107
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:104-107
         // Original: def _loadColourValues(self):
         private void LoadColourValues()
         {
@@ -298,7 +298,7 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:109-114
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:109-114
         // Original: def setup_values(self):
         private void SetupValues()
         {
@@ -312,7 +312,7 @@ namespace OdyTools.Widgets.Settings
             LoadColourValues();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:116-129
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:116-129
         // Original: def save(self):
         public void Save()
         {
@@ -383,7 +383,7 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:131-133
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:131-133
         // Original: def resetControls3d(self):
         private void ResetControls3d()
         {
@@ -391,7 +391,7 @@ namespace OdyTools.Widgets.Settings
             Load3dBindValues();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:135-137
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:135-137
         // Original: def resetControlsFc(self):
         private void ResetControlsFc()
         {
@@ -399,7 +399,7 @@ namespace OdyTools.Widgets.Settings
             LoadFcBindValues();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:139-141
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:139-141
         // Original: def resetControls2d(self):
         private void ResetControls2d()
         {
@@ -407,7 +407,7 @@ namespace OdyTools.Widgets.Settings
             Load2dBindValues();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/module_designer.py:143-145
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:143-145
         // Original: def resetColours(self):
         private void ResetColours()
         {

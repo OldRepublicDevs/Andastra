@@ -9,6 +9,7 @@ using BioWare.Extract;
 using BioWare.Extract.Capsule;
 using BioWare.Common;
 using BioWare.Resource;
+using KotorDiff;
 using KotorDiff.Diff;
 using KotorDiff.Logger;
 using JetBrains.Annotations;
@@ -260,7 +261,7 @@ namespace KotorDiff.Resolution
                 string sourceDesc;
                 try
                 {
-                    string relPath = Path.GetRelativePath(installRoot, chosenFilepath);
+                    string relPath = installRoot.GetRelativePath(chosenFilepath);
                     sourceDesc = $"{locationType}: {relPath}";
                 }
                 catch (ArgumentException)
@@ -606,7 +607,7 @@ namespace KotorDiff.Resolution
                         {
                             object installation = allInstallationsWithPaths[installIdx];
                             string installPath = installation is Installation inst ? inst.Path : install1.Path;
-                            string relPath = Path.GetRelativePath(installPath, filepath);
+                            string relPath = installPath.GetRelativePath(filepath);
                             string fullPath = $"{installName}/{relPath}";
 
                             if (isChosen)

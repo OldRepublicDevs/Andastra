@@ -98,7 +98,7 @@ Add:
 
 ### 3. Update UpdateManager.cs
 
-In `src/HoloPatcher/UpdateManager.cs`, set (note: folder name is legacy, project is now Andastra):
+In `src/OdyPatch.UI/UpdateManager.cs`, set:
 
 ```csharp
 Ed25519PublicKey = "your_base64_public_key_here"

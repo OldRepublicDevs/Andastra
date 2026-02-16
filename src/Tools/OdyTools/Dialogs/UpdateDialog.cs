@@ -14,7 +14,7 @@ using MsBox.Avalonia.Enums;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/update_dialog.py:83
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_dialog.py:83
     // Original: class UpdateDialog(QDialog):
     public partial class UpdateDialog : Window
     {
@@ -34,7 +34,7 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/update_dialog.py:84-100
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_dialog.py:84-100
         // Original: def __init__(self, parent=None):
         public UpdateDialog(Window parent)
         {
@@ -138,14 +138,14 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/update_dialog.py:102-106
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_dialog.py:102-106
         // Original: def include_prerelease(self) -> bool:
         private bool IncludePrerelease()
         {
             return _preReleaseCheckbox?.IsChecked ?? false;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/update_dialog.py:105-106
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_dialog.py:105-106
         // Original: def set_prerelease(self, value):
         private void SetPrerelease(bool value)
         {
@@ -155,7 +155,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/update_dialog.py:180-185
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_dialog.py:180-185
         // Original: def init_config(self):
         private void InitConfig()
         {
@@ -214,14 +214,14 @@ namespace OdyTools.Dialogs
             });
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/update_dialog.py:225-229
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_dialog.py:225-229
         // Original: def on_pre_release_changed(self, state: bool):
         private void OnPreReleaseChanged()
         {
             FilterReleasesBasedOnPrerelease();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/update_dialog.py:219-223
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_dialog.py:219-223
         // Original: def populate_fork_combo_box(self):
         private void PopulateForkComboBox()
         {
@@ -248,7 +248,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/update_dialog.py:231-249
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_dialog.py:231-249
         // Original: def filter_releases_based_on_prerelease(self):
         private void FilterReleasesBasedOnPrerelease()
         {
@@ -315,14 +315,14 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/update_dialog.py:251-257
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_dialog.py:251-257
         // Original: def on_fork_changed(self, index: int):
         private void OnForkChanged()
         {
             FilterReleasesBasedOnPrerelease();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/update_dialog.py:259-262
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_dialog.py:259-262
         // Original: def get_selected_tag(self) -> str:
         private string GetSelectedTag()
         {
@@ -333,7 +333,7 @@ namespace OdyTools.Dialogs
             return "";
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/update_dialog.py:263-273
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_dialog.py:263-273
         // Original: def on_release_changed(self, index: int):
         private void OnReleaseChanged()
         {
@@ -365,7 +365,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/update_dialog.py:275-280
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_dialog.py:275-280
         // Original: def get_latest_release(self) -> GithubRelease | None:
         private object GetLatestRelease()
         {
@@ -386,7 +386,7 @@ namespace OdyTools.Dialogs
             return null;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/update_dialog.py:281-286
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_dialog.py:281-286
         // Original: def on_update_latest_clicked(self):
         private void OnUpdateLatestClicked()
         {
@@ -405,7 +405,7 @@ namespace OdyTools.Dialogs
             StartUpdate(latestRelease);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/update_dialog.py:288-294
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_dialog.py:288-294
         // Original: def on_install_selected(self):
         private void OnInstallSelected()
         {
@@ -433,7 +433,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/update_dialog.py:296-379
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_dialog.py:296-379
         // Original: def start_update(self, release: GithubRelease):
         private void StartUpdate(object release)
         {

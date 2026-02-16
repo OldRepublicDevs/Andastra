@@ -17,7 +17,7 @@ using MsBox.Avalonia.Enums;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editor.py:291
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:291
     // Original: class Editor(QMainWindow):
     public abstract class Editor : Window
     {
@@ -63,9 +63,11 @@ namespace OdyTools.Editors
             RefreshWindowTitle();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editor.py:303-350
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:303-350
         // Original: def __init__(self, parent, title, iconName, readSupported, writeSupported, installation):
         private bool _exitMenuItemWired;
+        /// <summary>True while closing after user answered the save-changes dialog; prevents Showing the dialog again on the subsequent Closing event.</summary>
+        private bool _closingAfterSavePrompt;
 
         protected Editor(
             Window parent,
@@ -78,6 +80,7 @@ namespace OdyTools.Editors
             _installation = installation;
             _editorTitle = title;
             Title = title;
+            ApplyEditorWindowDefaults();
             _readSupported = readSupported ?? new ResourceType[0];
             _writeSupported = writeSupported ?? new ResourceType[0];
 
@@ -86,8 +89,18 @@ namespace OdyTools.Editors
             Closing += OnEditorClosing;
         }
 
+        private void ApplyEditorWindowDefaults()
+        {
+            // Shared defaults keep standalone and in-app editors consistent.
+            MinWidth = 900;
+            MinHeight = 620;
+            Width = double.IsNaN(Width) || Width < 1200 ? 1200 : Width;
+            Height = double.IsNaN(Height) || Height < 780 ? 780 : Height;
+        }
+
         private async void OnEditorClosing(object sender, WindowClosingEventArgs e)
         {
+            if (_closingAfterSavePrompt) return;
             if (!_dirty) return;
             e.Cancel = true;
             var result = await ShowSaveChangesDialogAsync();
@@ -95,11 +108,13 @@ namespace OdyTools.Editors
             {
                 try { Save(); } catch { return; }
                 ClearDirty();
+                _closingAfterSavePrompt = true;
                 Close();
             }
             else if (result == SaveChangesResult.DontSave)
             {
                 ClearDirty();
+                _closingAfterSavePrompt = true;
                 Close();
             }
         }
@@ -209,12 +224,12 @@ namespace OdyTools.Editors
             return string.Equals(s, "Exit", StringComparison.OrdinalIgnoreCase);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editor.py:489-516
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:489-516
         // Original: def setupEditorFilters(self, readSupported, writeSupported):
         protected void SetupEditorFilters()
         {
             // Setup file filters for open/save dialogs
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editor.py:489-516
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:489-516
             // Original: Additional formats handling
             // Add format variants (XML, JSON, CSV, ASCII, YAML) for each base resource type
             var additionalFormats = new[] { "XML", "JSON", "CSV", "ASCII", "YAML" };
@@ -339,11 +354,11 @@ namespace OdyTools.Editors
             return ext == ".bif" || ext == ".rim" || ext == ".erf" || ext == ".mod" || ext == ".sav";
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editor.py:523-589
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:523-589
         // Original: def save_as(self):
         public abstract void SaveAs();
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editor.py:590-644
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:590-644
         // Original: def save(self):
         public virtual void Save()
         {
@@ -378,7 +393,7 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editor.py:700-750
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:700-750
         // Original: def load(self, filepath, resref, restype, data):
         public virtual void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
@@ -390,7 +405,7 @@ namespace OdyTools.Editors
             RefreshWindowTitle();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editor.py:750-780
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:750-780
         // Original: def new(self):
         public virtual void New()
         {
@@ -402,11 +417,18 @@ namespace OdyTools.Editors
             RefreshWindowTitle();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editor.py:750-780
+        /// <summary>Reload from last saved/reverted state. No-op if no revert data.</summary>
+        public virtual void Revert()
+        {
+            if (_revert == null || string.IsNullOrEmpty(_filepath)) return;
+            Load(_filepath, _resname, _restype, _revert);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:750-780
         // Original: def build(self) -> tuple[bytes, bytes]:
         public abstract Tuple<byte[], byte[]> Build();
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editor.py:518-521
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:518-521
         // Original: def getOpenedFileName(self) -> str:
         public string GetOpenedFileName()
         {
@@ -439,6 +461,13 @@ namespace OdyTools.Editors
             }
         }
 
+        /// <summary>When editor has .axaml with ContentControl x:Name="contentRoot", injects content there; otherwise sets Window.Content.</summary>
+        protected void SetContentOrInject(object content)
+        {
+            var root = this.FindControl<ContentControl>("contentRoot");
+            if (root != null) root.Content = content; else Content = content;
+        }
+
         /// <summary>
         /// Creates an expander-based form section (e.g. "Basic", "Advanced", "Comments") and adds it to the main panel.
         /// Use the returned Content panel to add labeled fields. Shared by UTS/UTD/UTE and other form-style editors.
@@ -456,7 +485,7 @@ namespace OdyTools.Editors
             return (expander, content);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editor/base.py:187-239
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/base.py:187-239
         // Original: def _add_help_action(self, wiki_filename: str | None = None):
         public void AddHelpAction(string wikiFilename = null)
         {
@@ -505,7 +534,7 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editor/base.py:241-251
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/base.py:241-251
         // Original: def _show_help_dialog(self, wiki_filename: str):
         public void ShowHelpDialog(string wikiFilename)
         {

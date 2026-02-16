@@ -1,4 +1,4 @@
-# Build NuGet packages for CSharpKOTOR and HoloPatcher
+# Build NuGet packages for CSharpKOTOR and OdyPatch
 # Usage: .\build-nuget.ps1 [--publish] [--source <feed-url>] [--api-key <key>]
 #
 # API Key can be provided via:
@@ -50,18 +50,18 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-# Build HoloPatcher package
-Write-Host "`nBuilding HoloPatcher..." -ForegroundColor Cyan
-dotnet pack src/HoloPatcher/HoloPatcher.csproj --configuration $Configuration --no-build
+# Build OdyPatch package
+Write-Host "`nBuilding OdyPatch..." -ForegroundColor Cyan
+dotnet pack src/OdyPatch/OdyPatch.csproj --configuration $Configuration --no-build
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Failed to build HoloPatcher package" -ForegroundColor Red
+    Write-Host "Failed to build OdyPatch package" -ForegroundColor Red
     exit 1
 }
 
 # Find package files
 $tslCorePackage = Get-ChildItem -Path "src/CSharpKOTOR/bin/$Configuration" -Filter "*.nupkg" | Select-Object -First 1
-$holoPatcherPackage = Get-ChildItem -Path "src/HoloPatcher/bin/$Configuration" -Filter "*.nupkg" | Select-Object -First 1
+$OdyPatchPackage = Get-ChildItem -Path "src/OdyPatch/bin/$Configuration" -Filter "*.nupkg" | Select-Object -First 1
 
 if ($tslCorePackage) {
     Write-Host "`nCSharpKOTOR package created: $($tslCorePackage.FullName)" -ForegroundColor Green
@@ -70,10 +70,10 @@ if ($tslCorePackage) {
     exit 1
 }
 
-if ($holoPatcherPackage) {
-    Write-Host "HoloPatcher package created: $($holoPatcherPackage.FullName)" -ForegroundColor Green
+if ($OdyPatchPackage) {
+    Write-Host "OdyPatch package created: $($OdyPatchPackage.FullName)" -ForegroundColor Green
 } else {
-    Write-Host "HoloPatcher package not found!" -ForegroundColor Red
+    Write-Host "OdyPatch package not found!" -ForegroundColor Red
     exit 1
 }
 
@@ -106,27 +106,27 @@ if ($Publish) {
         exit 1
     }
 
-    # Publish HoloPatcher
-    Write-Host "Publishing HoloPatcher..." -ForegroundColor Cyan
-    & dotnet $pushArgs $holoPatcherPackage.FullName
+    # Publish OdyPatch
+    Write-Host "Publishing OdyPatch..." -ForegroundColor Cyan
+    & dotnet $pushArgs $OdyPatchPackage.FullName
 
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "Failed to publish HoloPatcher" -ForegroundColor Red
+        Write-Host "Failed to publish OdyPatch" -ForegroundColor Red
         exit 1
     }
 
     # Publish symbol packages if they exist
     $tslCoreSymbols = Get-ChildItem -Path "src/CSharpKOTOR/bin/$Configuration" -Filter "*.snupkg" | Select-Object -First 1
-    $holoPatcherSymbols = Get-ChildItem -Path "src/HoloPatcher/bin/$Configuration" -Filter "*.snupkg" | Select-Object -First 1
+    $OdyPatchSymbols = Get-ChildItem -Path "src/OdyPatch/bin/$Configuration" -Filter "*.snupkg" | Select-Object -First 1
 
     if ($tslCoreSymbols) {
         Write-Host "Publishing CSharpKOTOR symbols..." -ForegroundColor Cyan
         & dotnet $pushArgs $tslCoreSymbols.FullName
     }
 
-    if ($holoPatcherSymbols) {
-        Write-Host "Publishing HoloPatcher symbols..." -ForegroundColor Cyan
-        & dotnet $pushArgs $holoPatcherSymbols.FullName
+    if ($OdyPatchSymbols) {
+        Write-Host "Publishing OdyPatch symbols..." -ForegroundColor Cyan
+        & dotnet $pushArgs $OdyPatchSymbols.FullName
     }
 
     Write-Host "`nPackages published successfully!" -ForegroundColor Green

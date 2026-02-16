@@ -57,7 +57,7 @@
   <ItemGroup>
     <Compile Include="..\Standalone\EditorStandaloneHost\EditorStandaloneProgram.cs" />
     <Compile Include="..\Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml.cs" />
-    <Compile Include="OdyToolDLG.cs" />
+    <Compile Include="OdyToolDLG.axaml.cs" />
     <Compile Include="DLGSettings.cs" />
     <Compile Include="DLGModel.cs" />
     <Compile Include="DLGConstants.cs" />
@@ -75,6 +75,8 @@
     <Compile Include="$(_OdyToolsRoot)\Data\OdyInstallation.cs" />
     <Compile Include="$(_OdyToolsRoot)\Data\Settings.cs" />
     <Compile Include="$(_OdyToolsRoot)\Data\GlobalSettings.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Common\Localization.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\InlineEditorHelp.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\PathUtils.cs" />
     <Compile Include="$(_OdyToolsRoot)\Common\CollectionViewSource.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml.cs" />
@@ -88,14 +90,15 @@
     <Compile Include="$(_OdyToolsRoot)\Editors\Actions\AddStarterAction.cs" />
     <Compile Include="$(_OdyToolsRoot)\Editors\Actions\MoveStarterAction.cs" />
     <Compile Include="$(_OdyToolsRoot)\Editors\Actions\RemoveStarterAction.cs" />
-    <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\ComboBox2DA.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\ComboBox2DA.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\PlainTextEdit.cs" />
-    <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\GFFFieldSpinBox.cs" />
-    <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\ColorEdit.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\GFFFieldSpinBox.axaml.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\ColorEdit.axaml.cs" />
   </ItemGroup>
   <ItemGroup>
     <AvaloniaXaml Remove="**\*.axaml" />
     <AvaloniaXaml Include="..\Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml" />
+    <AvaloniaXaml Include="OdyToolDLG.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\ColorPickerDialog.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\LocalizedStringDialog.axaml" />
@@ -103,4 +106,9 @@
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\GFFFieldSpinBox.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\ColorEdit.axaml" />
   </ItemGroup>
+  <!-- Force executable and entry point (standalone must be runnable app, not library). -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <StartupObject>OdyTools.Editors.Standalone.EditorStandaloneHost.EditorStandaloneProgram</StartupObject>
+  </PropertyGroup>
 </Project>

@@ -2,9 +2,62 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="OdyTools.Dialogs.EditorHelpDialog"
         Title="Help"
-        Width="900" Height="700"
-        WindowStartupLocation="CenterOwner">
-    <ScrollViewer Name="scrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-        <StackPanel Name="htmlContainer" Orientation="Vertical" Margin="24" />
-    </ScrollViewer>
+        Width="1200" Height="800"
+        WindowStartupLocation="CenterOwner"
+        RequestedThemeVariant="Light">
+    <Window.Styles>
+        <Style Selector="Window">
+            <Setter Property="Background" Value="#F3F5F9" />
+        </Style>
+        <!-- Emphasize current section in TOC (right sidebar) - visible in real time as user scrolls -->
+        <Style Selector="ListBox#tocListBox ListBoxItem:selected">
+            <Setter Property="Background" Value="#e3f2fd" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="ListBox#tocListBox ListBoxItem">
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <!-- Left sidebar: all wiki docs - click to load -->
+        <Style Selector="ListBox#docListBox ListBoxItem">
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+    </Window.Styles>
+    <Grid RowDefinitions="Auto,*" ColumnDefinitions="220,*,280">
+        <!-- Toolbar: Back, Forward (spans full width for clarity, but we put it in center column) -->
+        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="8,6" Spacing="8">
+            <Button Name="backButton" Content="← Back" ToolTip.Tip="Go back" IsEnabled="False" />
+            <Button Name="forwardButton" Content="Forward →" ToolTip.Tip="Go forward" IsEnabled="False" />
+        </StackPanel>
+
+        <!-- Left: Document list (sidebar) -->
+        <Border Grid.Row="1" Grid.Column="0" Background="#f6f8fa" BorderBrush="#e1e4e8" BorderThickness="0,0,1,0">
+            <Grid RowDefinitions="Auto,*">
+                <TextBlock Grid.Row="0" Text="Documents" FontWeight="SemiBold" Margin="12,10,12,6" />
+                <ListBox Name="docListBox" Grid.Row="1" Margin="8,0,8,8"
+                         SelectionMode="Single"
+                         Background="Transparent"
+                         BorderThickness="0" />
+            </Grid>
+        </Border>
+
+        <!-- Center: Content -->
+        <ScrollViewer Name="scrollViewer" Grid.Row="1" Grid.Column="1"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto"
+                      Margin="8">
+            <StackPanel Name="htmlContainer" Orientation="Vertical" Margin="24" />
+        </ScrollViewer>
+
+        <!-- Right: Table of contents -->
+        <Border Grid.Row="1" Grid.Column="2" Background="#fafbfc" BorderBrush="#e1e4e8" BorderThickness="1,0,0,0">
+            <Grid RowDefinitions="Auto,*">
+                <TextBlock Grid.Row="0" Text="On this page" FontWeight="SemiBold" Margin="12,10,12,6" />
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="8,0,8,8">
+                    <ListBox Name="tocListBox" SelectionMode="Single" Background="Transparent" BorderThickness="0" />
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
 </Window>

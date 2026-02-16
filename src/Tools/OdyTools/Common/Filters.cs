@@ -6,20 +6,20 @@ using Avalonia.Input;
 
 namespace OdyTools.Common
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/filters.py:17
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/filters.py:17
     // Original: class TemplateFilterProxyModel(QSortFilterProxyModel):
     public abstract class TemplateFilterProxyModel
     {
         public abstract object GetSortValue(int index);
     }
 
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/filters.py:23
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/filters.py:23
     // Original: class RobustSortFilterProxyModel(TemplateFilterProxyModel):
     public class RobustSortFilterProxyModel : TemplateFilterProxyModel
     {
         private Dictionary<int, int> _sortStates = new Dictionary<int, int>();
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/filters.py:32
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/filters.py:32
         // Original: def toggle_sort(self, column: int):
         public void ToggleSort(int column)
         {
@@ -43,14 +43,14 @@ namespace OdyTools.Common
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/filters.py:47
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/filters.py:47
         // Original: def reset_sort(self):
         public void ResetSort()
         {
             _sortStates.Clear();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/filters.py:52
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/filters.py:52
         // Original: def get_sort_value(self, index: QModelIndex) -> Any:
         public override object GetSortValue(int index)
         {
@@ -59,14 +59,14 @@ namespace OdyTools.Common
         }
     }
 
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/filters.py:75
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/filters.py:75
     // Original: class NoScrollEventFilter(QObject):
     public class NoScrollEventFilter
     {
         private Control _parentWidget;
         private readonly HashSet<Control> _filteredControls = new HashSet<Control>();
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/filters.py:76
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/filters.py:76
         // Original: def eventFilter(self, obj: QObject, event: QEvent) -> bool:
         // In Avalonia, we handle scroll events by intercepting PointerWheelChanged events
         // and forwarding them to the parent widget to prevent scrollbar interaction with controls
@@ -85,7 +85,7 @@ namespace OdyTools.Common
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/filters.py:96
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/filters.py:96
         // Original: def setup_filter(self, include_types, parent_widget):
         public void SetupFilter(Control parentWidget, Type[] includeTypes = null)
         {
@@ -149,11 +149,11 @@ namespace OdyTools.Common
         }
     }
 
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/filters.py:123
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/filters.py:123
     // Original: class HoverEventFilter(QObject):
     public class HoverEventFilter
     {
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/filters.py:132
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/filters.py:132
         // Original: def eventFilter(self, obj: QObject, event: QEvent) -> bool:
         public bool EventFilter(Control obj, PointerEventArgs evt)
         {

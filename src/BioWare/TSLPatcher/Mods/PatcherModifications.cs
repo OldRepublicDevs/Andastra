@@ -16,7 +16,7 @@ namespace BioWare.TSLPatcher.Mods
         /// <summary>Do nothing: don't even check (TSLPatcher default)</summary>
         public const string IGNORE = "ignore";
 
-        /// <summary>Log a warning (HoloPatcher default)</summary>
+        /// <summary>Log a warning (OdyPatch default)</summary>
         public const string WARN = "warn";
 
         /// <summary>Rename the file in the Override folder with the 'old_' prefix. Also logs a warning.</summary>
@@ -66,7 +66,7 @@ namespace BioWare.TSLPatcher.Mods
     ///         !Filename=&lt;asdf_file.qwer&gt; - Literally the same as !SaveAs
     ///         !Destination=relative/path/to/destination/folder - The relative path to the folder to save this patched file.
     ///         !OverrideType=&lt;warn or ignore or rename&gt; - How to handle conflict resolution. See `class OverrideType` above.
-    ///         !SourceFolder=relative/path/to/tslpatchdata/subfolder - **NEW HOLOPATCHER** support for pathing within the mod's tslpatchdata itself. Currently only used in InstallList.
+    ///         !SourceFolder=relative/path/to/tslpatchdata/subfolder - **NEW OdyPatch** support for pathing within the mod's tslpatchdata itself. Currently only used in InstallList.
     ///     NOTE: Some patch lists, albeit rare, have different exclamation-point variables. See tslpatcher/mods/ncs.py and tslpatcher/mods/tlk.py for outliers.
     /// </summary>
     public abstract class PatcherModifications
@@ -181,7 +181,7 @@ namespace BioWare.TSLPatcher.Mods
             fileSectionDict.Remove("!ReplaceFile");
 
             // TSLPatcher defaults to "ignore". However realistically, Override file shadowing is
-            // a major problem, so HoloPatcher defaults to "warn"
+            // a major problem, so OdyPatch defaults to "warn"
             OverrideTypeValue = fileSectionDict.TryGetValue("!OverrideType", out string overrideType) ? overrideType.ToLowerInvariant() : OverrideType.WARN;
             fileSectionDict.Remove("!OverrideType");
             // !SourceFolder: Relative path from mod_path (which is typically the tslpatchdata folder) to source files.

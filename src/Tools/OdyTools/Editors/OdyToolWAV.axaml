@@ -2,21 +2,25 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:widgets="clr-namespace:OdyTools.Widgets"
         x:Class="OdyTools.Editors.OdyToolWAV"
-        Title="Audio Editor"
+        Title="OdyToolWAV"
         MinWidth="560" MinHeight="220"
-        Width="640" Height="280">
+        Width="640" Height="280"
+        RequestedThemeVariant="Light">
   <Window.Styles>
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#F3F5F9" />
+    </Style>
     <Style Selector="TextBlock.infoLabel">
       <Setter Property="FontSize" Value="12"/>
-      <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}"/>
+      <Setter Property="Foreground" Value="#202124"/>
       <Setter Property="Opacity" Value="0.85"/>
     </Style>
   </Window.Styles>
   <DockPanel>
     <!-- Info bar -->
     <Border DockPanel.Dock="Top"
-            Background="{DynamicResource ThemeControlLowBrush}"
-            BorderBrush="{DynamicResource ThemeBorderBrush}"
+            Background="#FAFBFC"
+            BorderBrush="#D7DBE6"
             BorderThickness="0,0,0,1"
             Padding="16,12">
       <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">

@@ -18,14 +18,14 @@ using MsBox.Avalonia.Enums;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/window.py:26
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/window.py:26
     // Original: TOOLSET_WINDOWS: list[QDialog | QMainWindow] = []
     public static class WindowUtils
     {
         private static readonly List<Window> ToolsetWindows = new List<Window>();
         private static readonly object UniqueSentinel = new object();
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/window.py:31-62
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/window.py:31-62
         // Original: def add_window(window: QDialog | QMainWindow, *, show: bool = True):
         public static void AddWindow(Window window, bool show = true)
         {
@@ -50,7 +50,7 @@ namespace OdyTools.Editors
             ToolsetWindows.Add(window);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/window.py:65-72
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/window.py:65-72
         // Original: def add_recent_file(file: Path):
         public static void AddRecentFile(string filePath)
         {
@@ -73,7 +73,7 @@ namespace OdyTools.Editors
             settings.SetValue("RecentFiles", recentFiles);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/window.py:75-356
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/window.py:75-356
         // Original: def open_resource_editor(...):
         [CanBeNull]
         public static Tuple<string, Window> OpenResourceEditor(
@@ -102,7 +102,7 @@ namespace OdyTools.Editors
             catch (Exception ex)
             {
                 System.Console.WriteLine($"Error getting resource data: {ex}");
-                // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/window.py:178
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/window.py:178
                 // Original: QMessageBox(QMessageBox.Icon.Critical, tr("Failed to get the file data."), tr("An error occurred while attempting to read the data of the file.")).exec()
                 var errorBox = MessageBoxManager.GetMessageBoxStandard(
                     "Failed to get the file data.",
@@ -114,7 +114,7 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/window.py:127-356
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/window.py:127-356
         // Original: def _open_resource_editor_impl(...):
         [CanBeNull]
         public static Tuple<string, Window> OpenResourceEditor(
@@ -126,7 +126,7 @@ namespace OdyTools.Editors
             Window parentWindow = null,
             bool? gffSpecialized = null)
         {
-            if (restype == null)
+            if (restype == null || restype.IsInvalid)
             {
                 return null;
             }
@@ -156,6 +156,12 @@ namespace OdyTools.Editors
 #elif ERF_STANDALONE
             if (restype == ResourceType.ERF || restype == ResourceType.MOD || restype == ResourceType.RIM || restype == ResourceType.BIF)
                 editor = new OdyToolERF(parentWindow, installation);
+            else if (targetType.Contents == "gff")
+                editor = new OdyToolGFF(parentWindow, installation);
+            else if (targetType == ResourceType.TwoDA)
+                editor = new OdyTool2DA(parentWindow, installation);
+            else if (restype.Contents == "plaintext")
+                editor = new OdyToolTXT(parentWindow, installation);
 #elif GFF_STANDALONE
             if (targetType == ResourceType.GUI || targetType.Contents == "gff" || targetType == ResourceType.DLG || targetType == ResourceType.UTC || targetType == ResourceType.BTC || targetType == ResourceType.BIC
                 || targetType == ResourceType.UTP || targetType == ResourceType.BTP || targetType == ResourceType.UTD || targetType == ResourceType.BTD
@@ -219,7 +225,7 @@ namespace OdyTools.Editors
                 editor = new OdyToolTXT(parentWindow, installation);
 #elif TWODA_STANDALONE
             if (targetType == ResourceType.TwoDA)
-                editor = new OdyToolTwoDA(parentWindow, installation);
+                editor = new OdyTool2DA(parentWindow, installation);
 #elif UTC_STANDALONE
             if (targetType == ResourceType.UTC || targetType == ResourceType.BTC || targetType == ResourceType.BIC)
                 editor = new OdyToolUTC(parentWindow, installation);
@@ -251,7 +257,7 @@ namespace OdyTools.Editors
             // Full OdyTools: route to appropriate editor based on resource type
             if (targetType == global::BioWare.Common.ResourceType.TwoDA)
             {
-                editor = new OdyToolTwoDA(parentWindow, installation);
+                editor = new OdyTool2DA(parentWindow, installation);
             }
             else if (targetType == global::BioWare.Common.ResourceType.SSF)
             {
@@ -285,7 +291,7 @@ namespace OdyTools.Editors
             {
                 if (installation == null && restype == ResourceType.NCS)
                 {
-                    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/window.py:215-219
+                    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/window.py:215-219
                     // Original: QMessageBox.warning(parent_window_widget, tr("Cannot decompile NCS without an installation active"), tr("Please select an installation from the dropdown before loading an NCS."))
                     var warningBox = MessageBoxManager.GetMessageBoxStandard(
                         "Cannot decompile NCS without an installation active",
@@ -488,7 +494,7 @@ namespace OdyTools.Editors
 
             if (editor == null)
             {
-                // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/window.py:326-335
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/window.py:326-335
                 // Original: QMessageBox(QMessageBox.Icon.Critical, tr("Failed to open file"), trf("The selected file format '{format}' is not yet supported.", format=str(restype)), ...).show()
                 // Note: C# string.Format uses positional placeholders {0}, {1}, etc., so we convert the Python named placeholder {format} to {0}
                 string message = string.Format("The selected file format '{0}' is not yet supported.", restype?.ToString() ?? "unknown");
@@ -503,7 +509,8 @@ namespace OdyTools.Editors
 
             try
             {
-                editor.Load(filepath, resname, restype, data);
+                byte[] loadData = data ?? Array.Empty<byte>();
+                editor.Load(filepath, resname, restype, loadData);
                 AddWindow(editor, show: true);
                 if (!string.IsNullOrEmpty(filepath) && File.Exists(filepath))
                 {
@@ -513,7 +520,7 @@ namespace OdyTools.Editors
             }
             catch (Exception ex)
             {
-                // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/window.py:345-352
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/window.py:345-352
                 // Original: QMessageBox(QMessageBox.Icon.Critical, tr("An unexpected error has occurred"), str(universal_simplify_exception(e)), ...).show()
                 // Note: Using ex.Message for error details (similar to universal_simplify_exception in PyKotor)
                 string errorMessage = ex.Message;

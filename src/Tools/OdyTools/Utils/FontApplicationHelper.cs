@@ -7,7 +7,7 @@ using OdyTools.Data;
 
 namespace OdyTools.Utils
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/application.py:69-77
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:69-77
     // Original: QApplication.setFont(font) - applies font globally to all Qt widgets
     // In Avalonia, fonts are applied via styles/resources to match Qt's global font behavior
     /// <summary>

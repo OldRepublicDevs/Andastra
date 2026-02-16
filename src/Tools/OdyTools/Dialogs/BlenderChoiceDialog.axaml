@@ -3,10 +3,11 @@
         x:Class="OdyTools.Dialogs.BlenderChoiceDialog"
         Title="Choose Editor"
         MinWidth="500"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        RequestedThemeVariant="Light">
     <StackPanel Margin="20" Spacing="16">
         <!-- Info Frame -->
-        <Border Name="infoFrame" BorderBrush="Gray" BorderThickness="1" Padding="10">
+        <Border Name="infoFrame" BorderBrush="#D7DBE6" BorderThickness="1" Padding="10">
             <StackPanel Name="infoLayout" Spacing="5">
                 <!-- Blender info will be added here -->
             </StackPanel>
@@ -26,7 +27,7 @@
         <!-- Feature Comparison -->
         <TextBlock Text="Blender: ⭐⭐⭐ Performance, ⭐⭐⭐ 3D Navigation, ⭐⭐⭐ Model Editing&#x0a;Built-in: ⭐ Performance, ⭐⭐ 3D Navigation, ❌ Model Editing"
                    FontSize="11"
-                   Foreground="Gray"
+                   Foreground="#3C4043"
                    HorizontalAlignment="Center"
                    TextAlignment="Center" />
 

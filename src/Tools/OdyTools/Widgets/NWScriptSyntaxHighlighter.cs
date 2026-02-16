@@ -5,7 +5,7 @@ using OdyTools.Data;
 
 namespace OdyTools.Widgets
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/syntax_highlighter.py:21
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/syntax_highlighter.py:21
     // Original: class SyntaxHighlighter(QSyntaxHighlighter):
     /// <summary>
     /// Syntax highlighter for NWScript (NSS) code in the OdyTool NSS.
@@ -14,35 +14,25 @@ namespace OdyTools.Widgets
     /// </summary>
     public class NWScriptSyntaxHighlighter
     {
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/syntax_highlighter.py:22-40
-        // Original: KEYWORDS: ClassVar[list[str]]
+        // Exhaustive NWScript keywords: statements, types, preprocessor, literals
         private static readonly string[] Keywords = new[]
         {
-            "#include",
-            "action",
-            "effect",
-            "FALSE",
-            "float",
-            "for",
-            "if",
-            "int",
-            "location",
-            "object",
-            "return",
-            "string",
-            "talent",
-            "TRUE",
-            "vector",
-            "void",
-            "while"
+            "action", "break", "case", "const", "continue", "default", "do", "effect", "else",
+            "event", "FALSE", "float", "for", "if", "int", "location", "object", "return",
+            "string", "struct", "switch", "talent", "TRUE", "vector", "void", "while"
+        };
+
+        private static readonly string[] PreprocessorKeywords = new[]
+        {
+            "#include", "#define", "#ifdef", "#ifndef", "#endif", "#else"
         };
 
         private static readonly string[] Operators = new[]
         {
-            "=", "==", "!=", "<", "<=", ">", ">=", "!", "+", "-", "/", "<<", ">>", "&", "|"
+            "=", "==", "!=", "<", "<=", ">", ">=", "!", "+", "-", "*", "/", "%", "<<", ">>", "&", "|", "^", "&&", "||", "++", "--"
         };
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/syntax_highlighter.py:49-58
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/syntax_highlighter.py:49-58
         // Original: def __init__(self, parent: QTextDocument, installation: OdyInstallation | None = None):
         /// <summary>
         /// Initializes a new instance of the NWScriptSyntaxHighlighter.
@@ -77,7 +67,7 @@ namespace OdyTools.Widgets
         /// </summary>
         public List<HighlightingRule> Rules { get; private set; }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/syntax_highlighter.py:60-81
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/syntax_highlighter.py:60-81
         // Original: def _setupRules(self):
         /// <summary>
         /// Sets up the highlighting rules based on the current game configuration.
@@ -85,6 +75,23 @@ namespace OdyTools.Widgets
         private void SetupRules()
         {
             Rules = new List<HighlightingRule>();
+
+            // Preprocessor format (purple/darkMagenta) - #include, #define, etc.
+            var preprocessorFormat = new HighlightingFormat { Color = "darkMagenta", Bold = true, Italic = false };
+            foreach (string pp in PreprocessorKeywords)
+            {
+                Rules.Add(new HighlightingRule
+                {
+                    Pattern = new Regex(@"^\s*" + Regex.Escape(pp) + @"\b", RegexOptions.Compiled | RegexOptions.Multiline),
+                    Format = preprocessorFormat
+                });
+            }
+            // Any #identifier for preprocessor
+            Rules.Add(new HighlightingRule
+            {
+                Pattern = new Regex(@"#\s*[a-zA-Z_][a-zA-Z0-9_]*", RegexOptions.Compiled),
+                Format = preprocessorFormat
+            });
 
             // Keyword format (blue)
             var keywordFormat = new HighlightingFormat { Color = "blue", Bold = false, Italic = false };
@@ -105,23 +112,33 @@ namespace OdyTools.Widgets
                 Format = functionFormat
             });
 
-            // Number format (brown)
+            // Number format (brown) - integers, floats, hex literals (0x, 0X)
             var numberFormat = new HighlightingFormat { Color = "brown", Bold = false, Italic = false };
+            Rules.Add(new HighlightingRule
+            {
+                Pattern = new Regex(@"\b0[xX][0-9a-fA-F]+\b", RegexOptions.Compiled),
+                Format = numberFormat
+            });
             Rules.Add(new HighlightingRule
             {
                 Pattern = new Regex(@"\b[0-9]+\b", RegexOptions.Compiled),
                 Format = numberFormat
             });
+            Rules.Add(new HighlightingRule
+            {
+                Pattern = new Regex(@"\b[0-9]+\.[0-9]+([eE][+-]?[0-9]+)?[fF]?\b", RegexOptions.Compiled),
+                Format = numberFormat
+            });
 
-            // String format (darkMagenta)
+            // String format (darkMagenta) - double-quoted
             var stringFormat = new HighlightingFormat { Color = "darkMagenta", Bold = false, Italic = false };
             Rules.Add(new HighlightingRule
             {
-                Pattern = new Regex(@""".*?""", RegexOptions.Compiled),
+                Pattern = new Regex(@"""(?:[^""\\]|\\.)*""", RegexOptions.Compiled),
                 Format = stringFormat
             });
 
-            // Comment format (gray, italic)
+            // Single-line comment format (gray, italic)
             var commentFormat = new HighlightingFormat { Color = "gray", Bold = false, Italic = true };
             Rules.Add(new HighlightingRule
             {
@@ -129,7 +146,13 @@ namespace OdyTools.Widgets
                 Format = commentFormat
             });
 
-            // Multi-line comment format
+            // Multi-line comment format (/* ... */)
+            Rules.Add(new HighlightingRule
+            {
+                Pattern = new Regex(@"/\*[\s\S]*?\*/", RegexOptions.Compiled),
+                Format = commentFormat
+            });
+
             MultilineCommentFormat = commentFormat;
         }
 
@@ -138,7 +161,7 @@ namespace OdyTools.Widgets
         /// </summary>
         public HighlightingFormat MultilineCommentFormat { get; set; }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/syntax_highlighter.py:148-157
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/syntax_highlighter.py:148-157
         // Original: def update_rules(self, is_tsl: bool):
         /// <summary>
         /// Updates the highlighting rules based on the selected game.

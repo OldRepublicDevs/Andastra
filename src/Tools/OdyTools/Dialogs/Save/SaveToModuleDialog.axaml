@@ -3,7 +3,8 @@
         x:Class="OdyTools.Dialogs.Save.SaveToModuleDialog"
         Title="Save to Module"
         Width="300" Height="150"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        RequestedThemeVariant="Light">
     <StackPanel Margin="10" Spacing="10">
         <TextBlock Text="ResRef:" />
         <TextBox Name="resrefEdit" />

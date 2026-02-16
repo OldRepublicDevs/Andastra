@@ -5,7 +5,7 @@ namespace OdyTools.Blender
 {
     /// <summary>
     /// Information about a detected Blender installation.
-    /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/blender/detection.py:34-66
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/blender/detection.py:34-66
     /// </summary>
     public class BlenderInfo
     {

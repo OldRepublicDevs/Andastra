@@ -4,7 +4,7 @@ using Avalonia.Markup.Xaml;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/select_update.py
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_update.py
     // Original: class SelectUpdateDialog(QDialog):
     public partial class SelectUpdateDialog : Window
     {

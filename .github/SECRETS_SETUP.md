@@ -14,7 +14,7 @@ You need to add the following secrets to your GitHub repository for the workflow
 ```
 
 **How to add**:
-1. Go to: https://github.com/th3w1zard1/HoloPatcher.NET/settings/secrets/actions
+1. Go to: https://github.com/th3w1zard1/OdyPatch.NET/settings/secrets/actions
 2. Click **"New repository secret"**
 3. Name: `NETSPARKLE_PRIVATE_KEY`
 4. Value: `+/29dcynDIGndUh+50B0QLGGCzALNgPeT6ZKm3jeeDk=`

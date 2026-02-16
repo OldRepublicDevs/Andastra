@@ -9,7 +9,7 @@ using BioWare.Resource.Formats.LYT;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/lyt_dialogs.py:15
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/lyt_dialogs.py:15
     // Original: class RoomPropertiesDialog(QDialog):
     public class RoomPropertiesDialog : Window
     {
@@ -19,7 +19,7 @@ namespace OdyTools.Dialogs
         private NumericUpDown _ySpin;
         private NumericUpDown _zSpin;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/lyt_dialogs.py:16-88
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/lyt_dialogs.py:16-88
         // Original: def __init__(self, room: LYTRoom, parent=None):
         public RoomPropertiesDialog(LYTRoom room, Window parent = null)
         {
@@ -79,7 +79,7 @@ namespace OdyTools.Dialogs
             Content = mainPanel;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/lyt_dialogs.py:74-88
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/lyt_dialogs.py:74-88
         // Original: def accept(self):
         private void Accept()
         {
@@ -140,7 +140,7 @@ namespace OdyTools.Dialogs
         }
     }
 
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/lyt_dialogs.py:91
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/lyt_dialogs.py:91
     // Original: class TrackPropertiesDialog(QDialog):
     public class TrackPropertiesDialog : Window
     {
@@ -150,7 +150,7 @@ namespace OdyTools.Dialogs
         private NumericUpDown _ySpin;
         private NumericUpDown _zSpin;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/lyt_dialogs.py:92-149
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/lyt_dialogs.py:92-149
         // Original: def __init__(self, rooms: list[LYTRoom], track: LYTTrack, parent=None):
         public TrackPropertiesDialog(LYTTrack track, Window parent = null)
         {
@@ -210,7 +210,7 @@ namespace OdyTools.Dialogs
             Content = mainPanel;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/lyt_dialogs.py:150-164
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/lyt_dialogs.py:150-164
         // Original: def accept(self):
         private void Accept()
         {

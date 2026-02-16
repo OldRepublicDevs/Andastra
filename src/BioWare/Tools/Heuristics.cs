@@ -20,7 +20,7 @@ namespace BioWare.Tools
         /// <remarks>
         /// References:
         /// - vendor/KOTOR_Registry_Install_Path_Editor (Registry path detection)
-        /// - vendor/HoloPatcher.NET/src/HoloPatcher/Utils (Game detection logic)
+        /// - vendor/OdyPatch.NET/src/OdyPatch/Utils (Game detection logic; legacy repo name)
         /// Note: File and folder heuristics vary between Steam, GOG, and disc releases
         ///
         /// Processing Logic:

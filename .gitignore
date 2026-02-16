@@ -60,4 +60,5 @@ src/MonoGameFPS/
 src/StrideOpenWorldFps/
 helper_scripts/test_kaitai_*.ps1
 dist/
-publish_2026-02-26-02-19.log
+publish_*.log
+*.log

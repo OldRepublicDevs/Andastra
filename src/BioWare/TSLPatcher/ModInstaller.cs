@@ -291,7 +291,7 @@ namespace BioWare.TSLPatcher
                 patchesList.AddRange(GetTlkPatches(cfg));
                 patchesList.AddRange(cfg.Patches2DA);
                 patchesList.AddRange(cfg.PatchesGFF);
-                // Note: TSLPatcher runs [CompileList] *after* [HACKList], which is objectively bad, so HoloPatcher here will do the inverse.
+                // Note: TSLPatcher runs [CompileList] *after* [HACKList], which is objectively bad, so OdyPatch here will do the inverse.
                 patchesList.AddRange(cfg.PatchesNSS);
                 patchesList.AddRange(cfg.PatchesNCS);
                 patchesList.AddRange(cfg.PatchesSSF);

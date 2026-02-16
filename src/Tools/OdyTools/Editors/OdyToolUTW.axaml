@@ -2,30 +2,40 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:w="clr-namespace:OdyTools.Widgets"
         x:Class="OdyTools.Editors.OdyToolUTW"
-        Title="Waypoint Editor"
+        Title="OdyToolUTW"
         MinWidth="400" MinHeight="340"
         Width="460" Height="400"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        RequestedThemeVariant="Light">
   <Window.Styles>
-    <!-- Header bar: subtle background and bottom border -->
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#F3F5F9" />
+    </Style>
+    <Style Selector="Menu">
+      <Setter Property="Background" Value="#F1F3F4" />
+      <Setter Property="Foreground" Value="#202124" />
+      <Setter Property="BorderBrush" Value="#D7DBE6" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+    <Style Selector="MenuItem">
+      <Setter Property="Foreground" Value="#202124" />
+    </Style>
     <Style Selector="Border.waypoint-header">
-      <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}"/>
-      <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderBrush}"/>
+      <Setter Property="Background" Value="#FAFBFC"/>
+      <Setter Property="BorderBrush" Value="#D7DBE6"/>
       <Setter Property="BorderThickness" Value="0,0,0,1"/>
       <Setter Property="Padding" Value="14,12"/>
     </Style>
-    <!-- Form row labels: fixed width for alignment, muted when not focused -->
     <Style Selector="TextBlock.form-label">
       <Setter Property="VerticalAlignment" Value="Center"/>
       <Setter Property="Margin" Value="0,0,14,0"/>
       <Setter Property="MinWidth" Value="80"/>
-      <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}"/>
+      <Setter Property="Foreground" Value="#202124"/>
       <Setter Property="FontSize" Value="13"/>
     </Style>
-    <!-- Section title (e.g. in Advanced tab) -->
     <Style Selector="TextBlock.section-title">
       <Setter Property="FontSize" Value="12"/>
-      <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundLowBrush}"/>
+      <Setter Property="Foreground" Value="#3C4043"/>
       <Setter Property="Margin" Value="0,8,0,6"/>
       <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
@@ -76,9 +86,9 @@
     <Border DockPanel.Dock="Top" Classes="waypoint-header">
       <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto" Margin="0,0,0,2">
         <TextBlock Grid.Row="0" Grid.Column="0" Text="Waypoint:" VerticalAlignment="Center" Margin="0,0,10,0"
-                   Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="12"/>
+                   Foreground="#3C4043" FontSize="12"/>
         <TextBlock Name="waypointSummary" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center"
-                   Text="— | —" Foreground="{DynamicResource ThemeForegroundBrush}" FontSize="13"
+                   Text="— | —" Foreground="#202124" FontSize="13"
                    TextTrimming="CharacterEllipsis"
                    ToolTip.Tip="Tag | ResRef — identifier shown on area map and in travel menu"/>
       </Grid>
@@ -130,8 +140,8 @@
       </TabControl>
     </ScrollViewer>
 
-    <Border DockPanel.Dock="Bottom" Padding="12,8" Background="{DynamicResource ThemeControlLowBrush}" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="0,1,0,0">
-      <TextBlock Name="statusText" Text="Waypoint" Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="12"/>
+    <Border DockPanel.Dock="Bottom" Padding="12,8" Background="#E8EAED" BorderBrush="#DADCE0" BorderThickness="0,1,0,0">
+      <TextBlock Name="statusText" Text="Waypoint" Foreground="#202124" FontSize="12"/>
     </Border>
   </DockPanel>
 </Window>

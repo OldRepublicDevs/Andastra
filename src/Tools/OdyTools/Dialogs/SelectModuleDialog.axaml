@@ -3,7 +3,8 @@
         x:Class="OdyTools.Dialogs.SelectModuleDialog"
         Title="Open Module"
         Width="336" Height="373"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        RequestedThemeVariant="Light">
     <StackPanel Margin="10" Spacing="10">
         <TextBox Name="filterEdit" Watermark="filter..." />
         <ListBox Name="moduleList" />

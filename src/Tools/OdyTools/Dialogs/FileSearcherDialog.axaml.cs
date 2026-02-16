@@ -10,14 +10,14 @@ using FileResource = BioWare.Extract.FileResource;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/search.py:39
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:39
     // Original: class FileSearcher(QDialog):
     public partial class FileSearcherDialog : Window
     {
         private Dictionary<string, OdyInstallation> _installations;
         private OdyInstallation _selectedInstallation;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/search.py:55-56
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:55-56
         // Original: self.ui = Ui_Dialog(); self.ui.setupUi(self)
         public FileSearcherDialogUi Ui { get; private set; }
 
@@ -26,7 +26,7 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/search.py:42-72
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:42-72
         // Original: def __init__(self, parent, installations):
         public FileSearcherDialog(Window parent, Dictionary<string, OdyInstallation> installations)
         {
@@ -141,7 +141,7 @@ namespace OdyTools.Dialogs
 
         private void SetupUI()
         {
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/search.py:55-56
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:55-56
             // Original: self.ui = Ui_Dialog(); self.ui.setupUi(self)
             // Find all controls from XAML and expose via Ui property
             // Use try-catch to handle cases where XAML controls might not be available (e.g., in tests)
@@ -186,7 +186,7 @@ namespace OdyTools.Dialogs
                 SetupProgrammaticUI();
             }
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/search.py:64-72
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:64-72
             // Original: Setup installations in combo box - store installation as data
             if (Ui.InstallationSelect != null && _installations != null)
             {
@@ -206,7 +206,7 @@ namespace OdyTools.Dialogs
                 }
             }
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/search.py:70-71
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:70-71
             // Original: Connect Select All checkbox
             if (Ui.SelectAllCheck != null)
             {
@@ -226,7 +226,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/search.py:73-97
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:73-97
         // Original: def toggle_all_checkboxes(self, state: Qt.CheckState):
         private void ToggleAllCheckboxes(bool checkState)
         {
@@ -267,7 +267,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/search.py:99-149
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:99-149
         // Original: def accept(self):
         private void OnSearch()
         {
@@ -339,7 +339,7 @@ namespace OdyTools.Dialogs
             Search(query);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/search.py:151-191
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:151-191
         // Original: def search(self, query):
         public void Search(FileSearchQuery query)
         {
@@ -417,7 +417,7 @@ namespace OdyTools.Dialogs
             OnFileResults(results, query.Installation);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/search.py:39-40
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:39-40
         // Original: file_results = Signal(list, OdyInstallation)
         public event Action<List<FileResource>, OdyInstallation> FileResults;
 
@@ -437,7 +437,7 @@ namespace OdyTools.Dialogs
         }
     }
 
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/search.py:55-56
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:55-56
     // Original: self.ui = Ui_Dialog() - UI wrapper class exposing all controls
     public class FileSearcherDialogUi
     {
@@ -484,7 +484,7 @@ namespace OdyTools.Dialogs
         public Button CancelButton { get; set; }
     }
 
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/search.py:25-36
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:25-36
     // Original: @dataclass class FileSearchQuery:
     public class FileSearchQuery
     {

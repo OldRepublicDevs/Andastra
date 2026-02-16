@@ -4,25 +4,28 @@
         x:Class="OdyTools.Dialogs.InsertInstanceDialog"
         Title="Insert Instance"
         Width="800" Height="600"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        RequestedThemeVariant="Light">
+    <Window.Styles>
+        <Style Selector="Window">
+            <Setter Property="Background" Value="#F3F5F9" />
+        </Style>
+    </Window.Styles>
     <Grid ColumnDefinitions="*,2*" Margin="10">
         <!-- Left Panel -->
         <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto" Margin="0,0,10,0">
             <!-- Preview Group -->
-            <Border Grid.Row="0" BorderBrush="Gray" BorderThickness="1" Margin="0,0,0,10">
+            <Border Grid.Row="0" BorderBrush="#D7DBE6" BorderThickness="1" Margin="0,0,0,10">
                 <Grid RowDefinitions="Auto,*">
                     <TextBlock Grid.Row="0" Text="Preview" FontWeight="Bold" Margin="5" />
-                    <Border Grid.Row="1" MinWidth="250" MinHeight="250" Background="LightGray" Margin="5">
-                        <!-- TODO: ModelRenderer temporarily commented out - needs implementation
+                    <Border Grid.Row="1" MinWidth="250" MinHeight="250" Background="#E8EAED" Margin="5">
                         <Widgets:ModelRenderer x:Name="previewRenderer" />
-                        -->
-                        <TextBlock Text="Preview (ModelRenderer not yet implemented)" VerticalAlignment="Center" HorizontalAlignment="Center" />
                     </Border>
                 </Grid>
             </Border>
 
             <!-- Information Group -->
-            <Border Grid.Row="1" BorderBrush="Gray" BorderThickness="1" Margin="0,0,0,10">
+            <Border Grid.Row="1" BorderBrush="#D7DBE6" BorderThickness="1" Margin="0,0,0,10">
                 <Grid RowDefinitions="Auto,*">
                     <TextBlock Grid.Row="0" Text="Information" FontWeight="Bold" Margin="5" />
                     <StackPanel Grid.Row="1" Spacing="5" Margin="5">
@@ -36,7 +39,7 @@
         <!-- Right Panel -->
         <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*,Auto">
             <!-- Settings Group -->
-            <Border Grid.Row="0" BorderBrush="Gray" BorderThickness="1" Margin="0,0,0,10">
+            <Border Grid.Row="0" BorderBrush="#D7DBE6" BorderThickness="1" Margin="0,0,0,10">
                 <Grid RowDefinitions="Auto,*">
                     <TextBlock Grid.Row="0" Text="Settings" FontWeight="Bold" Margin="5" />
                     <Grid Grid.Row="1" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" Margin="5">
@@ -50,7 +53,7 @@
             </Border>
 
             <!-- Resource Type Group -->
-            <Border Grid.Row="1" BorderBrush="Gray" BorderThickness="1" Margin="0,0,0,10">
+            <Border Grid.Row="1" BorderBrush="#D7DBE6" BorderThickness="1" Margin="0,0,0,10">
                 <Grid RowDefinitions="Auto,*">
                     <TextBlock Grid.Row="0" Text="Resource Type" FontWeight="Bold" Margin="5" />
                     <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" Margin="5">
@@ -62,7 +65,7 @@
             </Border>
 
             <!-- Resource List Group -->
-            <Border Grid.Row="2" BorderBrush="Gray" BorderThickness="1" Margin="0,0,0,10">
+            <Border Grid.Row="2" BorderBrush="#D7DBE6" BorderThickness="1" Margin="0,0,0,10">
                 <Grid RowDefinitions="Auto,*">
                     <TextBlock Grid.Row="0" Text="Resource List" FontWeight="Bold" Margin="5" />
                     <Grid Grid.Row="1" RowDefinitions="Auto,*" Margin="5">

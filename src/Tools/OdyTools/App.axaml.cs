@@ -8,7 +8,7 @@ using OdyTools.Windows;
 
 namespace OdyTools.NET
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/main_app.py:208
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_app.py:208
     // Original: def main(): app = QApplication(sys.argv)
     public partial class App : Application
     {
@@ -19,32 +19,32 @@ namespace OdyTools.NET
 
         public override void OnFrameworkInitializationCompleted()
         {
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/__main__.py:44
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/__main__.py:44
             // Original: main_init()
             MainInit.Initialize();
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/main_app.py:217
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_app.py:217
             // Original: setup_pre_init_settings()
             MainSettings.SetupPreInitSettings();
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                // Matching PyKotor implementation at Tools/OdyTools/src/toolset/main_app.py:269
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_app.py:269
                 // Original: if is_running_from_temp():
                 if (MainInit.IsRunningFromTemp())
                 {
-                    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/main_app.py:270-275
+                    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_app.py:270-275
                     // Original: QMessageBox.critical(...); sys.exit(...)
                     throw new InvalidOperationException(
                         "This application cannot be run from within a zip or temporary directory. " +
                         "Please extract it to a permanent location before running.");
                 }
 
-                // Matching PyKotor implementation at Tools/OdyTools/src/toolset/main_app.py:278
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_app.py:278
                 // Original: tool_window = ToolWindow()
                 desktop.MainWindow = new MainWindow();
 
-                // Matching PyKotor implementation at Tools/OdyTools/src/toolset/main_app.py:281
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_app.py:281
                 // Original: tool_window.show()
                 desktop.MainWindow.Show();
 
@@ -65,6 +65,11 @@ namespace OdyTools.NET
                 if (desktop.MainWindow is MainWindow mainWindow)
                 {
                     mainWindow.UpdateManager?.CheckForUpdates(silent: true);
+                    if (!string.IsNullOrWhiteSpace(Program.PendingOpenTslPatchDataPath))
+                    {
+                        string tslpatchdataPath = Program.PendingOpenTslPatchDataPath;
+                        Dispatcher.UIThread.Post(() => mainWindow.OpenTslPatchDataEditor(tslpatchdataPath));
+                    }
                 }
             }
 

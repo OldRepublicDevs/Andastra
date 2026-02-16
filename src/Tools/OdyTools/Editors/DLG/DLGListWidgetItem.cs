@@ -8,7 +8,7 @@ namespace OdyTools.Editors
 {
     /// <summary>
     /// List widget item for DLG links with weak reference support.
-    /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/list_widget_base.py:28-76
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/list_widget_base.py:28-76
     /// Original: class DLGListWidgetItem(QListWidgetItem):
     /// </summary>
     public class DLGListWidgetItem

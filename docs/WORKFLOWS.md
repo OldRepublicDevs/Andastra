@@ -104,7 +104,7 @@ Go to Repository Settings → Secrets and variables → Actions, and add:
 
 ### 3. Update UpdateManager
 
-In `src/HoloPatcher/UpdateManager.cs`, set (note: folder name is legacy, project is now Andastra):
+In `src/OdyPatch.UI/UpdateManager.cs`, set:
 
 ```csharp
 Ed25519PublicKey = "your_base64_public_key_here"
@@ -117,7 +117,7 @@ Or use an environment variable or configuration file.
 The `release-please-config.json` is already configured. It will:
 
 - Monitor commits for conventional commit messages
-- Update version in `HoloPatcher.csproj` (note: project name is legacy, solution is now Andastra)
+- Update version in `OdyPatch.csproj`
 - Create release PRs automatically
 
 ## Release Process
@@ -149,7 +149,7 @@ The `release-please-config.json` is already configured. It will:
 
 ### Manual Release
 
-1. **Update version** in `src/HoloPatcher/HoloPatcher.csproj` (note: folder/project name is legacy, solution is now Andastra):
+1. **Update version** in `src/OdyPatch/OdyPatch.csproj`:
 
    ```xml
    <Version>2.0.0</Version>

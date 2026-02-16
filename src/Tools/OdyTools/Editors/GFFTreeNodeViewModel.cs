@@ -8,7 +8,7 @@ namespace OdyTools.Editors
 {
     /// <summary>
     /// ViewModel for GFF tree nodes. Supports hierarchical binding in TreeView.
-    /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/gff.py (QStandardItem + roles).
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/gff.py (QStandardItem + roles).
     /// </summary>
     public class GFFTreeNodeViewModel : INotifyPropertyChanged
     {
@@ -98,12 +98,25 @@ namespace OdyTools.Editors
 
         public GFFTreeNodeViewModel(string text, GFFFieldType fieldType, string label, object value)
         {
-            _text = text;
+            _text = text ?? "";
             _label = label;
             _value = value;
             FieldType = fieldType;
             Children = new ObservableCollection<GFFTreeNodeViewModel>();
             StructId = -1;
+            _keyDisplay = "";
+            _typeDisplay = fieldType.ToString();
+            _valueSummary = "";
+        }
+
+        /// <summary>Used when the UI falls back to displaying the object (e.g. TreeViewItem default content).</summary>
+        public override string ToString()
+        {
+            if (!string.IsNullOrEmpty(_keyDisplay)) return _keyDisplay;
+            if (!string.IsNullOrEmpty(_label)) return _label;
+            if (IsRoot) return "[ROOT]";
+            if (FieldType == GFFFieldType.Struct) return $"Struct (ID: {StructId})";
+            return _typeDisplay ?? FieldType.ToString();
         }
     }
 }

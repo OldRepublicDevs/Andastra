@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build NuGet packages for CSharpKOTOR and HoloPatcher
+# Build NuGet packages for CSharpKOTOR and OdyPatch
 # Usage: ./build-nuget.sh [--publish] [--source <feed-url>] [--api-key <key>]
 
 set -e
@@ -41,28 +41,28 @@ echo ""
 echo "Building CSharpKOTOR..."
 dotnet pack src/CSharpKOTOR/CSharpKOTOR.csproj --configuration "$CONFIGURATION" --no-build
 
-# Build HoloPatcher package
+# Build OdyPatch package
 echo ""
-echo "Building HoloPatcher..."
-dotnet pack src/HoloPatcher/HoloPatcher.csproj --configuration "$CONFIGURATION" --no-build
+echo "Building OdyPatch..."
+dotnet pack src/OdyPatch/OdyPatch.csproj --configuration "$CONFIGURATION" --no-build
 
 # Find package files
 TSL_CORE_PACKAGE=$(find "src/CSharpKOTOR/bin/$CONFIGURATION" -name "*.nupkg" | head -n 1)
-HOLO_PATCHER_PACKAGE=$(find "src/HoloPatcher/bin/$CONFIGURATION" -name "*.nupkg" | head -n 1)
+ODY_PATCH_PACKAGE=$(find "src/OdyPatch/bin/$CONFIGURATION" -name "*.nupkg" | head -n 1)
 
 if [ -z "$TSL_CORE_PACKAGE" ]; then
     echo "CSharpKOTOR package not found!"
     exit 1
 fi
 
-if [ -z "$HOLO_PATCHER_PACKAGE" ]; then
-    echo "HoloPatcher package not found!"
+if [ -z "$ODY_PATCH_PACKAGE" ]; then
+    echo "OdyPatch package not found!"
     exit 1
 fi
 
 echo ""
 echo "CSharpKOTOR package created: $TSL_CORE_PACKAGE"
-echo "HoloPatcher package created: $HOLO_PATCHER_PACKAGE"
+echo "OdyPatch package created: $ODY_PATCH_PACKAGE"
 
 # Publish if requested
 if [ "$PUBLISH" = true ]; then
@@ -78,22 +78,22 @@ if [ "$PUBLISH" = true ]; then
     echo "Publishing CSharpKOTOR..."
     dotnet nuget push "$TSL_CORE_PACKAGE" --api-key "$API_KEY" --source "$SOURCE" --skip-duplicate
 
-    # Publish HoloPatcher
-    echo "Publishing HoloPatcher..."
-    dotnet nuget push "$HOLO_PATCHER_PACKAGE" --api-key "$API_KEY" --source "$SOURCE" --skip-duplicate
+    # Publish OdyPatch
+    echo "Publishing OdyPatch..."
+    dotnet nuget push "$ODY_PATCH_PACKAGE" --api-key "$API_KEY" --source "$SOURCE" --skip-duplicate
 
     # Publish symbol packages if they exist
     TSL_CORE_SYMBOLS=$(find "src/CSharpKOTOR/bin/$CONFIGURATION" -name "*.snupkg" | head -n 1)
-    HOLO_PATCHER_SYMBOLS=$(find "src/HoloPatcher/bin/$CONFIGURATION" -name "*.snupkg" | head -n 1)
+    ODY_PATCH_SYMBOLS=$(find "src/OdyPatch/bin/$CONFIGURATION" -name "*.snupkg" | head -n 1)
 
     if [ -n "$TSL_CORE_SYMBOLS" ]; then
         echo "Publishing CSharpKOTOR symbols..."
         dotnet nuget push "$TSL_CORE_SYMBOLS" --api-key "$API_KEY" --source "$SOURCE" --skip-duplicate
     fi
 
-    if [ -n "$HOLO_PATCHER_SYMBOLS" ]; then
-        echo "Publishing HoloPatcher symbols..."
-        dotnet nuget push "$HOLO_PATCHER_SYMBOLS" --api-key "$API_KEY" --source "$SOURCE" --skip-duplicate
+    if [ -n "$ODY_PATCH_SYMBOLS" ]; then
+        echo "Publishing OdyPatch symbols..."
+        dotnet nuget push "$ODY_PATCH_SYMBOLS" --api-key "$API_KEY" --source "$SOURCE" --skip-duplicate
     fi
 
     echo ""

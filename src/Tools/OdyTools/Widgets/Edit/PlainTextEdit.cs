@@ -7,7 +7,7 @@ using BioWare;
 
 namespace OdyTools.Widgets.Edit
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/edit/plaintext.py:14
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/plaintext.py:14
     // Original: class HTPlainTextEdit(QPlainTextEdit):
     public partial class PlainTextEdit : TextBox
     {
@@ -35,7 +35,7 @@ namespace OdyTools.Widgets.Edit
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/edit/plaintext.py:18-20
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/plaintext.py:18-20
         // Original: def __init__(self, *args, **kwargs):
         public PlainTextEdit(LocalizedString locstring = null)
         {
@@ -45,7 +45,7 @@ namespace OdyTools.Widgets.Edit
             AcceptsTab = false;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/edit/plaintext.py:22-24
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/plaintext.py:22-24
         // Original: def keyReleaseEvent(self, e: QKeyEvent):
         protected override void OnKeyUp(KeyEventArgs e)
         {
@@ -53,7 +53,7 @@ namespace OdyTools.Widgets.Edit
             KeyReleased?.Invoke();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/edit/plaintext.py:26-28
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/plaintext.py:26-28
         // Original: def mouseDoubleClickEvent(self, e: QMouseEvent):
         protected override void OnPointerPressed(PointerPressedEventArgs e)
         {

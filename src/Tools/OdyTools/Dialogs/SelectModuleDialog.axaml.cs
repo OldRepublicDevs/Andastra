@@ -11,7 +11,7 @@ using OdyTools.Data;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/select_module.py:18
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py:18
     // Original: class SelectModuleDialog(QDialog):
     public partial class SelectModuleDialog : Window
     {
@@ -24,7 +24,7 @@ namespace OdyTools.Dialogs
         private Button _browseButton;
         private List<ModuleListItem> _allModuleItems; // Store all items for filtering
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/select_module.py:50-52
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py:50-52
         // Original: self.ui = Ui_Dialog()
         // Expose UI widgets for testing
         public SelectModuleDialogUi Ui { get; private set; }
@@ -34,7 +34,7 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/select_module.py:19-67
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py:19-67
         // Original: def __init__(self, parent, installation):
         public SelectModuleDialog(Window parent, OdyInstallation installation)
         {
@@ -164,7 +164,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/select_module.py:69-98
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py:69-98
         // Original: def _build_module_list(self):
         private void BuildModuleList()
         {
@@ -215,7 +215,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/select_module.py:100-111
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py:100-111
         // Original: def browse(self):
         //          filepath, _ = QFileDialog.getOpenFileName(
         //              self,
@@ -294,7 +294,7 @@ namespace OdyTools.Dialogs
             Close(true);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/select_module.py:113-127
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py:113-127
         // Original: def confirm(self):
         private void Confirm()
         {
@@ -306,7 +306,7 @@ namespace OdyTools.Dialogs
             Close(true);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/select_module.py:129-130
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py:129-130
         // Original: def on_row_changed(self):
         private void OnRowChanged()
         {
@@ -316,7 +316,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/select_module.py:132-150
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py:132-150
         // Original: def on_filter_edited(self):
         // Made public for testing purposes (Python version is also accessible)
         public void OnFilterEdited()
@@ -327,7 +327,7 @@ namespace OdyTools.Dialogs
                 return;
             }
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/select_module.py:144-150
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py:144-150
             // Original: text = self.ui.filterEdit.text()
             // Original: for row in range(self.ui.moduleList.count()):
             // Original:     item: QListWidgetItem | None = self.ui.moduleList.item(row)
@@ -346,7 +346,7 @@ namespace OdyTools.Dialogs
 
         public string SelectedModule => _selectedModule;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/select_module.py
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py
         // Original: dialog.exec() - blocking modal dialog that returns true if accepted
         // PyKotor's QDialog.exec() is a blocking modal dialog that returns QDialog.DialogCode.Accepted (true) or Rejected (false)
         // This synchronous method provides the same behavior for compatibility with existing code
@@ -400,7 +400,7 @@ namespace OdyTools.Dialogs
             return result && !string.IsNullOrEmpty(_selectedModule);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/select_module.py:50-52
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py:50-52
         // Original: self.ui = Ui_Dialog()
         // UI wrapper class for testing access
         public class SelectModuleDialogUi

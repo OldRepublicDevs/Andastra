@@ -12,6 +12,7 @@ using BioWare.Resource.Formats.LIP;
 using BioWare.Resource.Formats.SSF;
 using BioWare.Resource.Formats.TLK;
 using BioWare.Resource.Formats.TwoDA;
+using KotorDiff;
 using KotorDiff.Diff;
 using JetBrains.Annotations;
 
@@ -133,14 +134,14 @@ namespace KotorDiff.Differ
             {
                 foreach (string file in Directory.EnumerateFiles(dir1, "*", SearchOption.AllDirectories))
                 {
-                    files1.Add(Path.GetRelativePath(dir1, file));
+                    files1.Add(dir1.GetRelativePath(file));
                 }
             }
             if (Directory.Exists(dir2))
             {
                 foreach (string file in Directory.EnumerateFiles(dir2, "*", SearchOption.AllDirectories))
                 {
-                    files2.Add(Path.GetRelativePath(dir2, file));
+                    files2.Add(dir2.GetRelativePath(file));
                 }
             }
 

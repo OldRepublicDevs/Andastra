@@ -6,11 +6,11 @@ using Game = BioWare.Common.BioWareGame;
 
 namespace OdyTools.Utils
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/script_compiler.py:28
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_compiler.py:28
     // Original: def ht_compile_script(...):
     public static class ScriptCompiler
     {
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/script_compiler.py:28-73
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_compiler.py:28-73
         // Original: def ht_compile_script(source: str, installation_path: Path, *, tsl: bool) -> bytes | None:
         public static byte[] HtCompileScript(string source, string installationPath, bool tsl = false)
         {
@@ -21,7 +21,7 @@ namespace OdyTools.Utils
 
             string extractPath = ScriptUtils.SetupExtractPath();
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/script_compiler.py:62-64
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_compiler.py:62-64
             // Original: if os.name == "posix" or return_value == QMessageBox.StandardButton.Yes:
             // Original: log.debug("user chose Yes, compiling with builtin")
             // Original: return bytes(bytes_ncs(compile_nss(source, Game.K2 if tsl else Game.K1, library_lookup=[extract_path])))

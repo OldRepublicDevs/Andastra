@@ -3,11 +3,11 @@ using System.Numerics;
 
 namespace OdyTools.Data
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/lyt.py:8
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/lyt.py:8
     // Original: class OdyToolLYTSettings(GITSettings):
     public class OdyToolLYTSettings : GITSettings
     {
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/lyt.py:9-15
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/lyt.py:9-15
         // Original: def __init__(self): super().__init__()
         public OdyToolLYTSettings() : base()
         {
@@ -17,7 +17,7 @@ namespace OdyTools.Data
             ShowDoorHookLabels = true;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/lyt.py:12-15
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/lyt.py:12-15
         // Original: LYT-specific settings
         public float GridSize
         {
@@ -43,7 +43,7 @@ namespace OdyTools.Data
             set => SetValue("ShowDoorHookLabels", value);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/lyt.py:17-22
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/lyt.py:17-22
         // Original: def load(self):
         public void Load()
         {
@@ -53,7 +53,7 @@ namespace OdyTools.Data
             ShowDoorHookLabels = GetValue("ShowDoorHookLabels", true);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/lyt.py:24-29
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/lyt.py:24-29
         // Original: def save(self):
         // Intentionally hides base Save() to provide LYT-specific save semantics (sets LYT properties which auto-save via SetValue)
         public new void Save()

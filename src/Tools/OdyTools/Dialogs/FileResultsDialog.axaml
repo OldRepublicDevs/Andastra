@@ -3,7 +3,8 @@
         x:Class="OdyTools.Dialogs.FileResultsDialog"
         Title="Search Results"
         Width="303" Height="401"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        RequestedThemeVariant="Light">
     <StackPanel Margin="10" Spacing="10">
         <ListBox Name="resultList" />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="5">

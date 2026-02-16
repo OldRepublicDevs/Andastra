@@ -2,7 +2,7 @@ using Avalonia.Markup.Xaml;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:38
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:38
     // Original: class InsertInstanceDialog(QDialog):
     public partial class InsertInstanceDialog
     {

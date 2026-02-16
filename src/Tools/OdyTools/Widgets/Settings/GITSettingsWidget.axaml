@@ -6,7 +6,7 @@
     <ScrollViewer>
         <StackPanel Spacing="15" Margin="10">
             <!-- Controls section (matching PyKotor git.ui) -->
-            <Border BorderBrush="LightGray" BorderThickness="1" Padding="10">
+            <Border BorderBrush="#D7DBE6" BorderThickness="1" Padding="10">
                 <StackPanel Spacing="10">
                     <TextBlock Text="Controls" FontWeight="Bold" />
                     <StackPanel Orientation="Horizontal" Spacing="10">
@@ -34,7 +34,7 @@
             </Border>
 
             <!-- Walkmesh Colours section (matching PyKotor git.ui) -->
-            <Border BorderBrush="LightGray" BorderThickness="1" Padding="10">
+            <Border BorderBrush="#D7DBE6" BorderThickness="1" Padding="10">
                 <StackPanel Spacing="10">
                     <TextBlock Text="Walkmesh Colours" FontWeight="Bold" />
                     <StackPanel Orientation="Horizontal" Spacing="10">

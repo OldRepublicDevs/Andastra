@@ -55,7 +55,7 @@
   <ItemGroup>
     <Compile Include="Standalone\EditorStandaloneHost\EditorStandaloneProgram.cs" />
     <Compile Include="Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml.cs" />
-    <Compile Include="OdyToolTLK.cs" />
+    <Compile Include="OdyToolTLK.axaml.cs" />
     <Compile Include="TLKEntryViewModel.cs" />
     <Compile Include="Editor.cs" />
     <Compile Include="EditorHelpers.cs" />
@@ -67,11 +67,19 @@
     <Compile Include="$(_OdyToolsRoot)\Data\GlobalSettings.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\PathUtils.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\FileResultsDialog.axaml.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\InlineEditorHelp.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Common\Localization.cs" />
   </ItemGroup>
   <ItemGroup>
     <AvaloniaXaml Remove="**\*.axaml" />
     <AvaloniaXaml Include="Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml" />
     <AvaloniaXaml Include="OdyToolTLK.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\FileResultsDialog.axaml" />
   </ItemGroup>
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <StartupObject>OdyTools.Editors.Standalone.EditorStandaloneHost.EditorStandaloneProgram</StartupObject>
+  </PropertyGroup>
 </Project>

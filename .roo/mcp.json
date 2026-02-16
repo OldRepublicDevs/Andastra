@@ -2,7 +2,7 @@
   "mcpServers": {
     "git-mcp": {
       "type": "streamable-http",
-      "url": "https://gitmcp.io/OldRepublicDevs/HoloPatcher.NET"
+      "url": "https://gitmcp.io/OldRepublicDevs/OdyPatch.NET"
     }
   }
 }

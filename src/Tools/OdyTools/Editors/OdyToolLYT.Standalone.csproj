@@ -51,7 +51,7 @@
   <ItemGroup>
     <Compile Include="Standalone\EditorStandaloneHost\EditorStandaloneProgram.cs" />
     <Compile Include="Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml.cs" />
-    <Compile Include="OdyToolLYT.cs" />
+    <Compile Include="OdyToolLYT.axaml.cs" />
     <Compile Include="Editor.cs" />
     <Compile Include="EditorHelpers.cs" />
     <Compile Include="EditorWikiMapping.cs" />
@@ -69,4 +69,8 @@
     <AvaloniaXaml Include="Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" />
   </ItemGroup>
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <StartupObject>OdyTools.Editors.Standalone.EditorStandaloneHost.EditorStandaloneProgram</StartupObject>
+  </PropertyGroup>
 </Project>

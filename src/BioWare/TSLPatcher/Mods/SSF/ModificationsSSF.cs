@@ -32,7 +32,7 @@ namespace BioWare.TSLPatcher.Mods.SSF
     }
 
     /// <summary>
-    /// SSF modification algorithms for TSLPatcher/HoloPatcher.
+    /// SSF modification algorithms for TSLPatcher/OdyPatch.
     /// 
     /// This module implements SSF modification logic for applying patches from changes.ini files.
     /// Handles sound set entry modifications and memory token resolution.

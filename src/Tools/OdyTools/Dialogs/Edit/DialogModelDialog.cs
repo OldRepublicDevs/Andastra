@@ -7,7 +7,7 @@ using BioWare.Resource.Formats.GFF.Generics.DLG;
 
 namespace OdyTools.Dialogs.Edit
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/edit/dialog_model.py:15
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/dialog_model.py:15
     // Original: class CutsceneModelDialog(QDialog):
     public partial class DialogModelDialog : Window
     {
@@ -22,7 +22,7 @@ namespace OdyTools.Dialogs.Edit
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/edit/dialog_model.py:16-47
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/dialog_model.py:16-47
         // Original: def __init__(self, parent, stunt=None):
         public DialogModelDialog(Window parent, DLGStunt stunt = null)
         {
@@ -94,7 +94,7 @@ namespace OdyTools.Dialogs.Edit
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/edit/dialog_model.py:39-41
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/dialog_model.py:39-41
         // Original: Load stunt data
         private void LoadStuntData()
         {
@@ -108,7 +108,7 @@ namespace OdyTools.Dialogs.Edit
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/edit/dialog_model.py:43-47
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/dialog_model.py:43-47
         // Original: def stunt(self) -> DLGStunt:
         public DLGStunt GetStunt()
         {

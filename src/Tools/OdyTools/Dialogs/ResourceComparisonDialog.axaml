@@ -3,7 +3,8 @@
         x:Class="OdyTools.Dialogs.ResourceComparisonDialog"
         Title="Compare Resources"
         Width="1200" Height="700"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        RequestedThemeVariant="Light">
     <Grid RowDefinitions="Auto,*,Auto" Margin="10">
         <!-- Header -->
         <Grid Grid.Row="0" ColumnDefinitions="*,*" Margin="0,0,0,10">

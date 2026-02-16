@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace OdyTools.Config
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/config/config_version.py:4
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/config/config_version.py:4
     // Original: def version_to_toolset_tag(version: str) -> str:
     public static class ConfigVersion
     {
@@ -19,7 +19,7 @@ namespace OdyTools.Config
             return $"v{version}-toolset";
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/config/config_version.py:14
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/config/config_version.py:14
         // Original: def toolset_tag_to_version(tag: str) -> str:
         public static string ToolsetTagToVersion(string tag)
         {

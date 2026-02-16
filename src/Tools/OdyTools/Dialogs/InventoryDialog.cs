@@ -18,7 +18,7 @@ using BioWare.Resource;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/inventory.py:71
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:71
     // Original: class InventoryEditor(QDialog):
     public partial class InventoryDialog : Window
     {
@@ -37,7 +37,7 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/inventory.py:72-150
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:72-150
         // Original: def __init__(self, parent, installation, capsules, folders, inventory, equipment, ...):
         // Note: PyKotor uses Sequence[LazyCapsule] but UTM/UTP editors pass list[Capsule], so we use List<Capsule> for compatibility
         public InventoryDialog(
@@ -113,7 +113,7 @@ namespace OdyTools.Dialogs
             Content = panel;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/inventory.py
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py
         // Original: self.ui = Ui_Dialog() - UI wrapper class exposing all controls
         public InventoryDialogUi Ui { get; private set; }
 
@@ -277,7 +277,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/inventory.py:191-197
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:191-197
         // Original: for item in self.inventory:
         //          try:
         //              self.ui.contentsTable.add_item(str(item.resref), droppable=item.droppable, infinite=item.infinite)
@@ -361,7 +361,7 @@ namespace OdyTools.Dialogs
         public List<InventoryItem> Inventory => _inventory;
         public Dictionary<EquipmentSlot, InventoryItem> Equipment => _equipment;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/inventory.py:205-221
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:205-221
         // Original: def accept(self): super().accept(); self.inventory.clear(); ...
         // Updates inventory and equipment from UI before dialog closes with OK
         private void Accept()
@@ -370,7 +370,7 @@ namespace OdyTools.Dialogs
             _inventory.Clear();
             if (_contentsTable != null && _contentsTable.ItemsSource != null)
             {
-                // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/inventory.py:208-212
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:208-212
                 // Original: for i in range(self.ui.contentsTable.rowCount()):
                 //          table_item: QTableWidgetItem | None = self.ui.contentsTable.item(i, 1)
                 //          if not isinstance(table_item, ItemContainer):
@@ -439,7 +439,7 @@ namespace OdyTools.Dialogs
 
             // Clear existing equipment and rebuild from equipment frames
             _equipment.Clear();
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/inventory.py:214-221
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:214-221
             // Original: self.equipment.clear()
             //          widget: DropFrame | QObject
             //          for widget in self.ui.standardEquipmentTab.children() + self.ui.naturalEquipmentTab.children():
@@ -449,7 +449,7 @@ namespace OdyTools.Dialogs
             ExtractEquipmentFromFrames();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/inventory.py:214-221
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:214-221
         // Original: Iterates through standardEquipmentTab and naturalEquipmentTab children to find DropFrame widgets
         // and extract equipment information (slot, resname, droppable, infinite)
         private void ExtractEquipmentFromFrames()
@@ -692,7 +692,7 @@ namespace OdyTools.Dialogs
         }
     }
 
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/inventory.py
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py
     // Original: self.ui = Ui_Dialog() - UI wrapper class exposing all controls
     public class InventoryDialogUi
     {
@@ -705,7 +705,7 @@ namespace OdyTools.Dialogs
         public Control NaturalEquipmentTab { get; set; }
     }
 
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/inventory.py:607-625
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:607-625
     // Original: class InventoryTableResnameItem(ItemContainer, QTableWidgetItem):
     // This class represents a row item in the inventory DataGrid, containing ResRef, Droppable, and Infinite properties.
     // In PyKotor, InventoryTableResnameItem extends both ItemContainer (which has droppable and infinite) and QTableWidgetItem (which has resname).

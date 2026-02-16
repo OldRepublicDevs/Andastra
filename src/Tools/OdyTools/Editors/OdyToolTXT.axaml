@@ -1,20 +1,33 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="OdyTools.Editors.OdyToolTXT"
-        Title="Text Editor (KotOR)"
+        Title="OdyToolTXT"
         MinWidth="500" MinHeight="350"
-        Width="800" Height="600">
+        Width="800" Height="600"
+        RequestedThemeVariant="Light">
   <Window.Styles>
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#F3F5F9" />
+    </Style>
+    <Style Selector="Menu">
+      <Setter Property="Background" Value="#F1F3F4" />
+      <Setter Property="Foreground" Value="#202124" />
+      <Setter Property="BorderBrush" Value="#D7DBE6" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+    <Style Selector="MenuItem">
+      <Setter Property="Foreground" Value="#202124" />
+    </Style>
     <Style Selector="Border.txt-toolbar">
       <Setter Property="Padding" Value="8,6"/>
-      <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}"/>
-      <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderBrush}"/>
+      <Setter Property="Background" Value="#FAFBFC"/>
+      <Setter Property="BorderBrush" Value="#D7DBE6"/>
       <Setter Property="BorderThickness" Value="0,0,0,1"/>
     </Style>
     <Style Selector="Border.txt-statusbar">
       <Setter Property="Padding" Value="12,6"/>
-      <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}"/>
-      <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderBrush}"/>
+      <Setter Property="Background" Value="#E8EAED"/>
+      <Setter Property="BorderBrush" Value="#DADCE0"/>
       <Setter Property="BorderThickness" Value="0,1,0,0"/>
     </Style>
   </Window.Styles>
@@ -106,13 +119,13 @@
         <Button Name="tbReplace" Content="Replace" ToolTip.Tip="Replace (Ctrl+H)"/>
         <Separator/>
         <TextBlock Name="zoomLabel" Text="100%" VerticalAlignment="Center" FontSize="12"
-                   Foreground="{DynamicResource ThemeForegroundLowBrush}" Margin="8,0,0,0"/>
+                   Foreground="#3C4043" Margin="8,0,0,0"/>
       </StackPanel>
     </Border>
 
     <!-- Main content: text area -->
     <ScrollViewer Name="textScroll" HorizontalScrollBarVisibility="Auto"
-                  VerticalScrollBarVisibility="Auto" Background="White">
+                  VerticalScrollBarVisibility="Auto" Background="#FFFFFF">
       <TextBox Name="TextEdit"
                  AcceptsReturn="True"
                  AcceptsTab="True"
@@ -149,13 +162,13 @@
     <Border Name="statusBar" DockPanel.Dock="Bottom" Classes="txt-statusbar">
       <Grid ColumnDefinitions="Auto,Auto,Auto,*">
         <TextBlock Name="statusLnCol" Text="Ln 1, Col 1" FontSize="12"
-                   Foreground="{DynamicResource ThemeForegroundLowBrush}" Margin="0,0,24,0"/>
+                   Foreground="#3C4043" Margin="0,0,24,0"/>
         <TextBlock Name="statusChars" Grid.Column="1" Text="0 characters" FontSize="12"
-                   Foreground="{DynamicResource ThemeForegroundLowBrush}" Margin="0,0,24,0"/>
+                   Foreground="#3C4043" Margin="0,0,24,0"/>
         <TextBlock Name="statusLines" Grid.Column="2" Text="1 line" FontSize="12"
-                   Foreground="{DynamicResource ThemeForegroundLowBrush}" Margin="0,0,24,0"/>
+                   Foreground="#3C4043" Margin="0,0,24,0"/>
         <TextBlock Name="statusEncoding" Grid.Column="3" Text="UTF-8" FontSize="12"
-                   Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                   Foreground="#3C4043"
                    HorizontalAlignment="Right"/>
       </Grid>
     </Border>

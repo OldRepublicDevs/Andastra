@@ -12,7 +12,7 @@ using FileResource = BioWare.Extract.FileResource;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/resource_comparison.py:28
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/resource_comparison.py:28
     // Original: class ResourceComparisonDialog(QDialog):
     public partial class ResourceComparisonDialog : Window
     {
@@ -31,7 +31,7 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/resource_comparison.py:31-52
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/resource_comparison.py:31-52
         // Original: def __init__(self, parent, resource1, resource2=None):
         public ResourceComparisonDialog(Window parent, FileResource resource1, FileResource resource2 = null)
         {
@@ -206,7 +206,7 @@ namespace OdyTools.Dialogs
             });
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/resource_comparison.py:121-146
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/resource_comparison.py:121-146
         // Original: def _load_resources(self):
         private void LoadResources()
         {
@@ -267,7 +267,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/resource_comparison.py:148-170
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/resource_comparison.py:148-170
         // Original: def _format_data(self, data: bytes) -> str:
         private string FormatData(byte[] data)
         {

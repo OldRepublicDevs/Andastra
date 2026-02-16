@@ -36,11 +36,9 @@ This repository uses GitHub Actions for:
 
 | Platform | Arch | Framework | Self-Contained | RID |
 |----------|------|-----------|----------------|-----|
-| Windows 7 | x64 | .NET Framework 4.8 | No | win7-x64 |
-| Windows 7 | x86 | .NET Framework 4.8 | No | win7-x86 |
-| Windows 10/11 | x64 | .NET 9 | Yes | win-x64 |
-| Windows 10/11 | x86 | .NET 9 | Yes | win-x86 |
-| Windows 10/11 | arm64 | .NET 9 | Yes | win-arm64 |
+| Windows 7/8/10/11 | x64 | .NET 9/.NET Framework 4.8 | Yes | win-x64 |
+| Windows 7/8/10/11 | x86 | .NET 9/.NET Framework 4.8 | Yes | win-x86 |
+| Windows 7/8/10/11 | arm64 | .NET 9/.NET Framework 4.8 | Yes | win-arm64 |
 | Linux | x64 | .NET 9 | Yes | linux-x64 |
 | Linux | arm64 | .NET 9 | Yes | linux-arm64 |
 | macOS | x64 | .NET 9 | Yes | osx-x64 |

@@ -6,13 +6,13 @@ using OdyTools.Config;
 
 namespace OdyTools.Windows
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/help.py:40
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/help.py:40
     // Original: class HelpWindow(QMainWindow):
     public class HelpWindow : Window
     {
         private string _version;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/help.py:43-72
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/help.py:43-72
         // Original: def __init__(self, parent, startingPage=None):
         public HelpWindow(Window parent = null, string startingPage = null)
         {
@@ -60,7 +60,7 @@ namespace OdyTools.Windows
             Content = panel;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/help.py
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/help.py
         // Original: self.ui = Ui_MainWindow() - UI wrapper class exposing all controls
         public HelpWindowUi Ui { get; private set; }
 
@@ -70,7 +70,7 @@ namespace OdyTools.Windows
             Ui = new HelpWindowUi();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/help.py:76-92
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/help.py:76-92
         // Original: def _setup_contents(self):
         private void SetupContents()
         {
@@ -90,7 +90,7 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/help.py:117-166
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/help.py:117-166
         // Original: def check_for_updates(self):
         private void CheckForUpdates()
         {
@@ -98,7 +98,7 @@ namespace OdyTools.Windows
             // This will be implemented when update checking is available
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/help.py:182-196
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/help.py:182-196
         // Original: def _wrap_html_with_styles(self, html_body: str) -> str:
         private string WrapHtmlWithStyles(string htmlBody)
         {
@@ -129,7 +129,7 @@ namespace OdyTools.Windows
         }
     }
 
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/help.py
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/help.py
     // Original: self.ui = Ui_MainWindow() - UI wrapper class exposing all controls
     public class HelpWindowUi
     {

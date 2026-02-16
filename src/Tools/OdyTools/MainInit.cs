@@ -7,11 +7,11 @@ using OdyTools.Utils;
 
 namespace OdyTools.NET
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/main_init.py:151
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_init.py:151
     // Original: def main_init():
     public static class MainInit
     {
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/main_init.py:18-27
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_init.py:18-27
         // Original: def is_frozen() -> bool:
         public static bool IsFrozen()
         {
@@ -57,7 +57,7 @@ namespace OdyTools.NET
             return ret;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/main_init.py:30-44
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_init.py:30-44
         // Original: def on_app_crash(etype, exc, tback):
         /// <summary>
         /// Handles uncaught exceptions.
@@ -95,7 +95,7 @@ namespace OdyTools.NET
             logger.Critical("Uncaught exception", excInfo: true, exception: exception);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/main_init.py:147-148
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_init.py:147-148
         // Original: def is_running_from_temp() -> bool:
         public static bool IsRunningFromTemp()
         {
@@ -108,7 +108,7 @@ namespace OdyTools.NET
             return entryAssembly.StartsWith(tempPath, StringComparison.OrdinalIgnoreCase);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/main_init.py:151-185
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_init.py:151-185
         // Original: def main_init():
         public static void Initialize()
         {

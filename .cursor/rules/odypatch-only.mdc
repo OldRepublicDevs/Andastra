@@ -1,0 +1,10 @@
+---
+description: Solution and codebase use only OdyPatch and OdyPatch.UI; never HoloPatcher
+alwaysApply: true
+---
+
+# OdyPatch Only – No HoloPatcher
+
+- **Solution:** The solution must reference only **OdyPatch** and **OdyPatch.UI** (paths: `src\Tools\OdyPatch\OdyPatch.csproj` and `src\Tools\OdyPatch.UI\OdyPatch.UI.csproj`).
+- **Do not:** Add, rename to, or reference HoloPatcher or HoloPatcher.UI in the solution or in src. Do not add solution entries for `HoloPatcher` or `HoloPatcher.UI`, or paths under `src\Tools\HoloPatcher` or `src\Tools\HoloPatcher.UI`.
+- **Do not:** Un-delete or recreate `HoloPatcher` or `HoloPatcher.UI` folders under `src\Tools`. Only OdyPatch and OdyPatch.UI exist there.

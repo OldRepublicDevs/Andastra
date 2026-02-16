@@ -32,12 +32,9 @@
 
   <!-- Release Configuration -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <TargetFrameworks></TargetFrameworks>
+    <TargetFrameworks>net9.0</TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '10.0.0'))">
-      $(TargetFrameworks);net10.0
-    </TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0.0'))">
-      $(TargetFrameworks);net9.0
+      net10.0;$(TargetFrameworks)
     </TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '8.0.0'))">
       $(TargetFrameworks);net9.0
@@ -69,14 +66,6 @@
     <UseRidGraph>true</UseRidGraph>
     <UseSharedCompilation>true</UseSharedCompilation>
     <WarningLevel>0</WarningLevel>
-  </PropertyGroup>
-
-  <!-- RuntimeIdentifiers -->
-  <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
-    <RuntimeIdentifiers>win7-x86;win7-x64;win10-x86;win10-x64</RuntimeIdentifiers>
-  </PropertyGroup>
-  <PropertyGroup Condition="!$(TargetFramework.StartsWith('net4'))">
-    <RuntimeIdentifiers>win-x86;win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <ItemGroup>

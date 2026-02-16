@@ -25,7 +25,7 @@ namespace BioWare.TSLPatcher.Config
         public int SaveProcessedScripts { get; set; }
         public LogLevel LogLevel { get; set; } = LogLevel.Warnings;
 
-        // Optional HoloPatcher features
+        // Optional OdyPatch features
         public bool IgnoreFileExtensions { get; set; }
 
         // Settings for mod metadata (ModName, Author, etc.)

@@ -11,7 +11,7 @@ namespace BioWare.TSLPatcher.Mods.NCS
 {
 
     /// <summary>
-    /// NCS modification algorithms for TSLPatcher/HoloPatcher.
+    /// NCS modification algorithms for TSLPatcher/OdyPatch.
     ///
     /// This module implements NCS bytecode modification logic for applying patches from changes.ini files.
     /// Handles byte-level modifications for memory tokens (StrRef, 2DAMemory) in compiled scripts.

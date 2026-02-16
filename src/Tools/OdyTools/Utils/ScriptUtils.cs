@@ -4,11 +4,11 @@ using OdyTools.Data;
 
 namespace OdyTools.Utils
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/script_utils.py:34
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_utils.py:34
     // Original: class NoOpRegistrySpoofer:
     public class NoOpRegistrySpoofer : IDisposable
     {
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/script_utils.py:35-45
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_utils.py:35-45
         // Original: def __enter__(self) -> Self: / def __exit__(...):
         public NoOpRegistrySpoofer()
         {
@@ -21,7 +21,7 @@ namespace OdyTools.Utils
         }
     }
 
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/script_utils.py:48-68
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_utils.py:48-68
     // Original: def setup_extract_path() -> Path:
     public static class ScriptUtils
     {
@@ -42,7 +42,7 @@ namespace OdyTools.Utils
             return extractPath;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/script_utils.py:71-109
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_utils.py:71-109
         // Original: def handle_permission_error(...):
         public static void HandlePermissionError(NoOpRegistrySpoofer regSpoofer, string installationPath, Exception e)
         {

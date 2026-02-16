@@ -3,16 +3,29 @@
         xmlns:widgets="using:OdyTools.Widgets"
         xmlns:local="clr-namespace:OdyTools.Editors"
         x:Class="OdyTools.Editors.OdyToolJRL"
-        Title="Journal Editor (KotOR)"
+        Title="OdyToolJRL"
         MinWidth="820" MinHeight="520"
-        Width="960" Height="620">
+        Width="960" Height="620"
+        RequestedThemeVariant="Light">
   <Window.Styles>
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#F3F5F9" />
+    </Style>
+    <Style Selector="Menu">
+      <Setter Property="Background" Value="#F1F3F4" />
+      <Setter Property="Foreground" Value="#202124" />
+      <Setter Property="BorderBrush" Value="#D7DBE6" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+    <Style Selector="MenuItem">
+      <Setter Property="Foreground" Value="#202124" />
+    </Style>
     <Style Selector="Border.jrl-tree-item">
       <Setter Property="Padding" Value="8,6"/>
       <Setter Property="Background" Value="Transparent"/>
     </Style>
     <Style Selector="Border.jrl-tree-item:pointerover">
-      <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightLowBrush}"/>
+      <Setter Property="Background" Value="#E3F2FD"/>
     </Style>
   </Window.Styles>
   <DockPanel>
@@ -31,7 +44,7 @@
                   ToolTip.Tip="Discard unsaved changes and reload the file from disk."/>
         <Separator/>
         <MenuItem Header="E_xit" Name="actionExit"
-                  ToolTip.Tip="Close the Journal Editor. You will be prompted to save if there are unsaved changes."/>
+                  ToolTip.Tip="Close OdyToolJRL. You will be prompted to save if there are unsaved changes."/>
       </MenuItem>
       <MenuItem Header="_Edit">
         <MenuItem Header="_Undo" Name="actionUndo"
@@ -47,7 +60,7 @@
     </Menu>
 
     <!-- Toolbar -->
-    <Border DockPanel.Dock="Top" Padding="12,8" Background="{DynamicResource ThemeControlLowBrush}" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="0,0,0,1">
+    <Border DockPanel.Dock="Top" Padding="12,8" Background="#FAFBFC" BorderBrush="#D7DBE6" BorderThickness="0,0,0,1">
       <StackPanel Orientation="Horizontal" Spacing="8">
         <Button Name="addQuestButton" Content="+ Quest"
                 ToolTip.Tip="Add a new quest category to the journal."/>
@@ -59,7 +72,7 @@
         <Button Name="findButton" Content="Find..."
                 ToolTip.Tip="Search for text in quest names and entry text. Shortcut: Ctrl+F"/>
         <TextBlock Name="questCountLabel" VerticalAlignment="Center" Margin="16,0,0,0"
-                   Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="12"
+                   Foreground="#3C4043" FontSize="12"
                    ToolTip.Tip="Number of quest categories in this journal."/>
       </StackPanel>
     </Border>
@@ -67,8 +80,8 @@
     <!-- Main: tree + detail -->
     <Grid ColumnDefinitions="1*,380" Margin="8,0,8,8">
       <!-- Left: quest/entry tree -->
-      <Border Grid.Column="0" Margin="0,0,4,0" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" CornerRadius="8"
-              Background="{DynamicResource ThemeControlLowBrush}"
+      <Border Grid.Column="0" Margin="0,0,4,0" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="8"
+              Background="#FAFBFC"
               ToolTip.Tip="Quest categories (top level) and their entries (children). Select an item to view or edit in the panel on the right.">
         <Grid RowDefinitions="Auto,*">
           <TextBlock Grid.Row="0" Text="Quests &amp; entries" FontWeight="SemiBold" Margin="12,10,12,6" FontSize="13"
@@ -86,8 +99,8 @@
       </Border>
 
       <!-- Right: detail panel -->
-      <Border Grid.Column="1" Margin="4,0,0,0" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" CornerRadius="8"
-              Background="{DynamicResource ThemeControlLowBrush}" Padding="16">
+      <Border Grid.Column="1" Margin="4,0,0,0" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="8"
+              Background="#FAFBFC" Padding="16">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
           <StackPanel Name="detailPanel" Spacing="12">
             <!-- No selection -->
@@ -95,7 +108,7 @@
               <TextBlock Text="Details" FontWeight="SemiBold" FontSize="14"
                          ToolTip.Tip="Properties of the selected quest or entry."/>
               <TextBlock Name="noSelectionText" Text="Select a quest or entry in the tree to view and edit its properties."
-                         TextWrapping="Wrap" Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="12"/>
+                         TextWrapping="Wrap" Foreground="#3C4043" FontSize="12"/>
             </StackPanel>
 
             <!-- Quest details (hidden by default, shown when quest selected) -->
@@ -147,7 +160,7 @@
             </StackPanel>
 
             <Separator/>
-            <TextBlock Name="detailHelpText" TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource ThemeForegroundLowBrush}"
+            <TextBlock Name="detailHelpText" TextWrapping="Wrap" FontSize="11" Foreground="#3C4043"
                        Text="JRL files define journal (quest) categories and their entries. Scripts add/remove entries and set which are active. Priority controls display order."
                        ToolTip.Tip="Journal format: quests contain entries; the game shows active entries based on script logic."/>
           </StackPanel>
@@ -156,8 +169,8 @@
     </Grid>
 
     <!-- Status bar -->
-    <Border DockPanel.Dock="Bottom" Padding="12,8" Background="{DynamicResource ThemeControlLowBrush}" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="0,1,0,0">
-      <TextBlock Name="statusText" Text="Journal" Foreground="{DynamicResource ThemeForegroundLowBrush}" FontSize="12"
+    <Border DockPanel.Dock="Bottom" Padding="12,8" Background="#FAFBFC" BorderBrush="#D7DBE6" BorderThickness="0,1,0,0">
+      <TextBlock Name="statusText" Text="Journal" Foreground="#3C4043" FontSize="12"
                  ToolTip.Tip="Summary: number of quest categories. Each quest can have multiple entries."/>
     </Border>
   </DockPanel>

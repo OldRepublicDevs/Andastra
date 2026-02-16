@@ -18,7 +18,7 @@ using UTIProperty = BioWare.Resource.Formats.GFF.Generics.UTI.UTIProperty;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/uti.py:572-691
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:572-691
     // Original: class PropertyEditor(QDialog):
     public partial class PropertyEditorDialog : Window
     {
@@ -42,7 +42,7 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/uti.py:573-655
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:573-655
         // Original: def __init__(self, installation: OdyInstallation, uti_property: UTIProperty):
         public PropertyEditorDialog(Window parent, OdyInstallation installation, UTIProperty utiProperty)
         {
@@ -147,7 +147,7 @@ namespace OdyTools.Dialogs
             // This is a fallback - normally XAML will be used
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/uti.py:599-655
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:599-655
         private void SetupUI()
         {
             if (_installation == null)
@@ -243,7 +243,7 @@ namespace OdyTools.Dialogs
             ReloadTextboxes();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/uti.py:657-669
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:657-669
         // Original: def reload_textboxes(self):
         private void ReloadTextboxes()
         {
@@ -281,7 +281,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/uti.py:671-677
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:671-677
         // Original: def select_cost(self):
         private void SelectCost()
         {
@@ -293,7 +293,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/uti.py:679-685
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:679-685
         // Original: def select_param(self):
         private void SelectParam()
         {
@@ -357,7 +357,7 @@ namespace OdyTools.Dialogs
             return string.Join(" ", words);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/uti.py:687-691
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:687-691
         // Original: def uti_property(self) -> UTIProperty:
         public UTIProperty GetUtiProperty()
         {
@@ -377,7 +377,7 @@ namespace OdyTools.Dialogs
             return _utiProperty;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/uti.py:238-244
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:238-244
         // Original: if not dialog.exec(): return
         // PyKotor's QDialog.exec() is a blocking modal dialog that returns QDialog.DialogCode.Accepted (true) or Rejected (false)
         // This synchronous method provides the same behavior for compatibility with existing code

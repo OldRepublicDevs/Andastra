@@ -9,7 +9,7 @@ namespace OdyTools.Editors.DLG
 {
     /// <summary>
     /// List widget for displaying DLG links.
-    /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/list_widget_base.py:79-184
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/list_widget_base.py:79-184
     /// Original: class DLGListWidget(QListWidget):
     /// </summary>
     public class DLGListWidget : ListBox
@@ -110,7 +110,7 @@ namespace OdyTools.Editors.DLG
             item.SetData(2, hoverDisplay); // ExtraDisplayRole
 
             // Get tooltip text
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/list_widget_base.py:172
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/list_widget_base.py:172
             // Original: text: str = repr(item.link.node) if self.editor._installation is None else self.editor._installation.string(item.link.node.text)
             string text;
             if (_editor?.Installation == null)
@@ -172,6 +172,22 @@ namespace OdyTools.Editors.DLG
             if (Items is System.Collections.IList list)
             {
                 list.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Removes a single item from the list (used e.g. for Unpin).
+        /// </summary>
+        public void RemoveItem(DLGListWidgetItem item)
+        {
+            if (item == null)
+            {
+                return;
+            }
+            _items.Remove(item);
+            if (Items is System.Collections.IList list)
+            {
+                list.Remove(item);
             }
         }
 

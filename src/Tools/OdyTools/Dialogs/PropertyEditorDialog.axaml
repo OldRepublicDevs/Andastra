@@ -5,7 +5,8 @@
         Title="Edit Property"
         Width="536" Height="318"
         MinWidth="400" MinHeight="300"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        RequestedThemeVariant="Light">
     <Grid RowDefinitions="*,Auto" Margin="10">
         <Grid Grid.Row="0" ColumnDefinitions="3*,4*,4*">
             <!-- Left Column: Property Info -->

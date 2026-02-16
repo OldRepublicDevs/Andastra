@@ -7,17 +7,17 @@ using KotorColor = BioWare.Common.Color;
 
 namespace OdyTools.Data
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/git.py:14
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:14
     // Original: class GITSettings(Settings):
     public class GITSettings : Settings
     {
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/git.py:15-22
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:15-22
         // Original: def __init__(self): super().__init__("OdyToolGIT")
         public GITSettings() : base("OdyToolGIT")
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/git.py:18-22
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:18-22
         // Original: def resetMaterialColors(self):
         // Material colours use plain GetValue/SetValue (not SettingsProperty), so we set defaults directly.
         public void ResetMaterialColors()
@@ -44,7 +44,7 @@ namespace OdyTools.Data
             SetValue("WoodMaterialColour", new KotorColor(0.258f, 0.059f, 0.007f, 0.5f).ToRgbaInteger());
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/git.py:24-28
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:24-28
         // Original: def resetControls(self):
         // PyKotor: for setting in dir(self):
         //              if not setting.endswith("Bind"):
@@ -70,7 +70,7 @@ namespace OdyTools.Data
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/git.py:30-67
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:30-67
         // Original: Instance Labels (Strings)
         public string CreatureLabel
         {
@@ -126,7 +126,7 @@ namespace OdyTools.Data
             set => SetValue("TriggerLabel", value);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/git.py:69-150
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:69-150
         // Original: Material Colours (Ints)
         public int UndefinedMaterialColour
         {
@@ -248,62 +248,62 @@ namespace OdyTools.Data
             set => SetValue("NonWalkGrassMaterialColour", value);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/git.py:152-189
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:152-189
         // Original: Binds (Controls)
         private static Tuple<HashSet<Key>, HashSet<PointerUpdateKind>> CreateBind(HashSet<Key> keys, HashSet<PointerUpdateKind> mouseButtons)
         {
             return Tuple.Create(keys ?? new HashSet<Key>(), mouseButtons ?? new HashSet<PointerUpdateKind>());
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/git.py:153-156
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:153-156
         // Original: moveCameraBind = Settings.addSetting("moveCameraBind", ({Qt.Key.Key_Control}, {Qt.MouseButton.LeftButton}))
         public SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>> MoveCameraBind { get; } =
             new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("moveCameraBind",
                 CreateBind(new HashSet<Key> { Key.LeftCtrl }, new HashSet<PointerUpdateKind> { PointerUpdateKind.LeftButtonPressed }));
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/git.py:157-160
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:157-160
         // Original: rotateCameraBind = Settings.addSetting("rotateCameraBind", ({Qt.Key.Key_Control}, {Qt.MouseButton.MiddleButton}))
         public SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>> RotateCameraBind { get; } =
             new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("rotateCameraBind",
                 CreateBind(new HashSet<Key> { Key.LeftCtrl }, new HashSet<PointerUpdateKind> { PointerUpdateKind.MiddleButtonPressed }));
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/git.py:161-164
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:161-164
         // Original: zoomCameraBind = Settings.addSetting("zoomCameraBind", ({Qt.Key.Key_Control}, set()))
         public SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>> ZoomCameraBind { get; } =
             new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("zoomCameraBind",
                 CreateBind(new HashSet<Key> { Key.LeftCtrl }, new HashSet<PointerUpdateKind>()));
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/git.py:165-168
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:165-168
         // Original: rotateSelectedToPointBind = Settings.addSetting("rotateSelectedToPointBind", (set(), {Qt.MouseButton.MiddleButton}))
         public SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>> RotateSelectedToPointBind { get; } =
             new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("rotateSelectedToPointBind",
                 CreateBind(new HashSet<Key>(), new HashSet<PointerUpdateKind> { PointerUpdateKind.MiddleButtonPressed }));
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/git.py:169-172
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:169-172
         // Original: moveSelectedBind = Settings.addSetting("moveSelectedBind", (set(), {Qt.MouseButton.LeftButton}))
         public SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>> MoveSelectedBind { get; } =
             new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("moveSelectedBind",
                 CreateBind(new HashSet<Key>(), new HashSet<PointerUpdateKind> { PointerUpdateKind.LeftButtonPressed }));
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/git.py:173-176
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:173-176
         // Original: selectUnderneathBind = Settings.addSetting("selectUnderneathBind", (set(), {Qt.MouseButton.LeftButton}))
         public SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>> SelectUnderneathBind { get; } =
             new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("selectUnderneathBind",
                 CreateBind(new HashSet<Key>(), new HashSet<PointerUpdateKind> { PointerUpdateKind.LeftButtonPressed }));
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/git.py:177-180
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:177-180
         // Original: deleteSelectedBind = Settings.addSetting("deleteSelectedBind", ({Qt.Key.Key_Delete}, None))
         public SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>> DeleteSelectedBind { get; } =
             new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("deleteSelectedBind",
                 CreateBind(new HashSet<Key> { Key.Delete }, new HashSet<PointerUpdateKind>()));
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/git.py:181-184
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:181-184
         // Original: duplicateSelectedBind = Settings.addSetting("duplicateSelectedBind", ({Qt.Key.Key_Alt}, {Qt.MouseButton.LeftButton}))
         public SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>> DuplicateSelectedBind { get; } =
             new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("duplicateSelectedBind",
                 CreateBind(new HashSet<Key> { Key.LeftAlt }, new HashSet<PointerUpdateKind> { PointerUpdateKind.LeftButtonPressed }));
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/editor_settings/git.py:185-188
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:185-188
         // Original: toggleLockInstancesBind = Settings.addSetting("toggleLockInstancesBind", ({Qt.Key.Key_L}, set()))
         public SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>> ToggleLockInstancesBind { get; } =
             new SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>("toggleLockInstancesBind",

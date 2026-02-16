@@ -73,7 +73,7 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: 'HoloPatcher-*'
+          pattern: 'OdyPatch-*'
           merge-multiple: false
           path: artifacts
           github-token: ${{ secrets.GITHUB_TOKEN }}

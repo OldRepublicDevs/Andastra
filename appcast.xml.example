@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
-    <title>HoloPatcher Updates</title>
-    <link>https://github.com/th3w1zard1/HoloPatcher.NET</link>
-    <description>HoloPatcher automatic update feed</description>
+    <title>OdyPatch Updates</title>
+    <link>https://github.com/th3w1zard1/OdyPatch.NET</link>
+    <description>OdyPatch automatic update feed</description>
     <language>en</language>
     
     <!-- Latest stable release -->
     <item>
-      <title>HoloPatcher 2.0.0</title>
+      <title>OdyPatch 2.0.0</title>
       <pubDate>Mon, 01 Jan 2024 00:00:00 +0000</pubDate>
       <sparkle:version>2.0.0</sparkle:version>
       <sparkle:shortVersionString>2.0.0</sparkle:shortVersionString>
@@ -16,7 +16,7 @@
       
       <!-- Windows x64 -->
       <enclosure 
-        url="https://github.com/th3w1zard1/HoloPatcher.NET/releases/download/v2.0.0/HoloPatcher-2.0.0-win-x64.zip"
+        url="https://github.com/th3w1zard1/OdyPatch.NET/releases/download/v2.0.0/OdyPatch-2.0.0-win-x64.zip"
         sparkle:version="2.0.0"
         sparkle:shortVersionString="2.0.0"
         sparkle:os="windows"
@@ -26,7 +26,7 @@
       
       <!-- Linux x64 -->
       <enclosure 
-        url="https://github.com/th3w1zard1/HoloPatcher.NET/releases/download/v2.0.0/HoloPatcher-2.0.0-linux-x64.zip"
+        url="https://github.com/th3w1zard1/OdyPatch.NET/releases/download/v2.0.0/OdyPatch-2.0.0-linux-x64.zip"
         sparkle:version="2.0.0"
         sparkle:shortVersionString="2.0.0"
         sparkle:os="linux"
@@ -36,7 +36,7 @@
       
       <!-- macOS x64 -->
       <enclosure 
-        url="https://github.com/th3w1zard1/HoloPatcher.NET/releases/download/v2.0.0/HoloPatcher-2.0.0-osx-x64.zip"
+        url="https://github.com/th3w1zard1/OdyPatch.NET/releases/download/v2.0.0/OdyPatch-2.0.0-osx-x64.zip"
         sparkle:version="2.0.0"
         sparkle:shortVersionString="2.0.0"
         sparkle:os="macos"
@@ -46,7 +46,7 @@
       
       <!-- macOS ARM64 -->
       <enclosure 
-        url="https://github.com/th3w1zard1/HoloPatcher.NET/releases/download/v2.0.0/HoloPatcher-2.0.0-osx-arm64.zip"
+        url="https://github.com/th3w1zard1/OdyPatch.NET/releases/download/v2.0.0/OdyPatch-2.0.0-osx-arm64.zip"
         sparkle:version="2.0.0"
         sparkle:shortVersionString="2.0.0"
         sparkle:os="macos"
@@ -54,17 +54,17 @@
         length="12345678"
         type="application/zip" />
       
-      <sparkle:releaseNotesLink>https://github.com/th3w1zard1/HoloPatcher.NET/releases/tag/v2.0.0</sparkle:releaseNotesLink>
+      <sparkle:releaseNotesLink>https://github.com/th3w1zard1/OdyPatch.NET/releases/tag/v2.0.0</sparkle:releaseNotesLink>
     </item>
     
     <!-- Previous release (for reference) -->
     <item>
-      <title>HoloPatcher 1.9.0</title>
+      <title>OdyPatch 1.9.0</title>
       <pubDate>Mon, 01 Dec 2023 00:00:00 +0000</pubDate>
       <sparkle:version>1.9.0</sparkle:version>
       <sparkle:shortVersionString>1.9.0</sparkle:shortVersionString>
       <enclosure 
-        url="https://github.com/th3w1zard1/HoloPatcher.NET/releases/download/v1.9.0/HoloPatcher-1.9.0-win-x64.zip"
+        url="https://github.com/th3w1zard1/OdyPatch.NET/releases/download/v1.9.0/OdyPatch-1.9.0-win-x64.zip"
         sparkle:version="1.9.0"
         sparkle:shortVersionString="1.9.0"
         sparkle:os="windows"
@@ -74,4 +74,3 @@
     </item>
   </channel>
 </rss>
-

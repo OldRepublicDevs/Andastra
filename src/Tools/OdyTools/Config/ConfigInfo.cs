@@ -4,23 +4,23 @@ using Newtonsoft.Json;
 
 namespace OdyTools.Config
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/config/config_info.py:37
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/config/config_info.py:37
     // Original: LOCAL_PROGRAM_INFO: dict[str, Any] = {
     public static class ConfigInfo
     {
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/config/config_info.py:110-111
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/config/config_info.py:110-111
         // Original: CURRENT_VERSION = LOCAL_PROGRAM_INFO["currentVersion"]
         public const string CurrentVersion = "4.0.0";
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/config/config_info.py:37-108
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/config/config_info.py:37-108
         // Original: LOCAL_PROGRAM_INFO: dict[str, Any] = {
         public static Dictionary<string, object> LocalProgramInfo => new Dictionary<string, object>
         {
             ["currentVersion"] = CurrentVersion,
             ["toolsetLatestVersion"] = "3.1.1",
             ["toolsetLatestBetaVersion"] = "4.0.0",
-            ["updateInfoLink"] = "https://api.github.com/repos/th3w1zard1/PyKotor/contents/Tools/OdyTools/src/toolset/config/config_info.py",
-            ["updateBetaInfoLink"] = "https://api.github.com/repos/th3w1zard1/PyKotor/contents/Tools/OdyTools/src/toolset/config/config_info.py?ref=bleeding-edge",
+            ["updateInfoLink"] = "https://api.github.com/repos/th3w1zard1/PyKotor/contents/Tools/HolocronToolset/src/toolset/config/config_info.py",
+            ["updateBetaInfoLink"] = "https://api.github.com/repos/th3w1zard1/PyKotor/contents/Tools/HolocronToolset/src/toolset/config/config_info.py?ref=bleeding-edge",
             ["toolsetDownloadLink"] = "https://deadlystream.com/files/file/1982-andastra-toolset",
             ["toolsetBetaDownloadLink"] = "https://github.com/th3w1zard1/PyKotor/releases/tag/v{tag}-toolset",
             ["toolsetDirectLinks"] = new Dictionary<string, Dictionary<string, List<string>>>

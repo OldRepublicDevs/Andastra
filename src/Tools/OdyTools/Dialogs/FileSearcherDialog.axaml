@@ -3,17 +3,23 @@
         x:Class="OdyTools.Dialogs.FileSearcherDialog"
         Title="File Search"
         Width="310" Height="391"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        RequestedThemeVariant="Light">
+    <Window.Styles>
+        <Style Selector="Window">
+            <Setter Property="Background" Value="#F3F5F9" />
+        </Style>
+    </Window.Styles>
     <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="10">
         <!-- Top: Search within and String to look for -->
         <Grid Grid.Row="0" ColumnDefinitions="*,*" Margin="0,0,0,10">
-            <Border Grid.Column="0" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" Margin="0,0,5,0" Padding="5">
+            <Border Grid.Column="0" BorderBrush="#D7DBE6" BorderThickness="1" Margin="0,0,5,0" Padding="5">
                 <StackPanel>
                     <TextBlock Text="Search within" FontWeight="Bold" Margin="0,0,0,5" />
                     <ComboBox Name="installationSelect" />
                 </StackPanel>
             </Border>
-            <Border Grid.Column="1" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" Margin="5,0,0,0" Padding="5">
+            <Border Grid.Column="1" BorderBrush="#D7DBE6" BorderThickness="1" Margin="5,0,0,0" Padding="5">
                 <StackPanel>
                     <TextBlock Text="String to look for" FontWeight="Bold" Margin="0,0,0,5" />
                     <TextBox Name="searchTextEdit" />
@@ -24,7 +30,7 @@
         <!-- Bottom: Search options -->
         <Grid Grid.Row="1" ColumnDefinitions="*,*">
             <!-- Left: Search in -->
-            <Border Grid.Column="0" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" Margin="0,0,5,0" Padding="5">
+            <Border Grid.Column="0" BorderBrush="#D7DBE6" BorderThickness="1" Margin="0,0,5,0" Padding="5">
                 <StackPanel>
                     <TextBlock Text="Search in" FontWeight="Bold" Margin="0,0,0,5" />
                     <CheckBox Name="coreCheck" Content="Core" IsChecked="True" />
@@ -35,14 +41,14 @@
 
             <!-- Right: Case and Options -->
             <StackPanel Grid.Column="1" Margin="5,0,0,0" Spacing="10">
-                <Border BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" Padding="5">
+                <Border BorderBrush="#D7DBE6" BorderThickness="1" Padding="5">
                     <StackPanel>
                         <TextBlock Text="Case" FontWeight="Bold" Margin="0,0,0,5" />
                         <RadioButton Name="caseSensitiveRadio" Content="Sensitive" GroupName="CaseGroup" />
                         <RadioButton Name="caseInsensitiveRadio" Content="Insensitive" GroupName="CaseGroup" IsChecked="True" />
                     </StackPanel>
                 </Border>
-                <Border BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" Padding="5">
+                <Border BorderBrush="#D7DBE6" BorderThickness="1" Padding="5">
                     <StackPanel>
                         <TextBlock Text="Options" FontWeight="Bold" Margin="0,0,0,5" />
                         <CheckBox Name="filenamesOnlyCheck" Content="Filenames only" />

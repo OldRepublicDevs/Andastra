@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using KotorDiff;
 
 namespace KotorDiff.Diff
 {
@@ -145,7 +146,7 @@ namespace KotorDiff.Diff
             var files = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var file in Directory.GetFiles(root, "*", SearchOption.AllDirectories))
             {
-                string relPath = Path.GetRelativePath(root, file).Replace('\\', '/').ToLowerInvariant();
+                string relPath = root.GetRelativePath(file).Replace('\\', '/').ToLowerInvariant();
                 files.Add(relPath);
             }
             return files;

@@ -2,6 +2,8 @@
   <PropertyGroup>
     <GenerateMSBuildEditorConfigFile>false</GenerateMSBuildEditorConfigFile>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <!-- SDK 10+ (MSB3992): Opt out of new attribute-based target framework info so RootElementName is not required -->
+    <UseAttributeForTargetFrameworkInfoPropertyNames>false</UseAttributeForTargetFrameworkInfoPropertyNames>
     <!-- For .NET 9.0, these packages are built into the framework - prefer framework assemblies -->
     <AssetTargetFallback>$(AssetTargetFallback);net9.0</AssetTargetFallback>
     <!-- Suppress NU1102 for System.Text.RegularExpressions and System.Threading.Tasks.Extensions -->

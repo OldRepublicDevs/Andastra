@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package
+      Name="OdyTools"
+      Manufacturer="Andastra"
+      Version="4.0.0"
+      UpgradeCode="A76CC4B9-9A0C-4A59-8D00-6D9C69D69A91"
+      InstallerVersion="500"
+      Scope="perMachine">
+    <MajorUpgrade DowngradeErrorMessage="A newer version of OdyTools is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <Property Id="ODyTOOLS_ADD_STARTMENU" Value="1" />
+    <Property Id="ODyTOOLS_ADD_DESKTOP" Value="0" />
+    <Property Id="ODyTOOLS_ENABLE_ASSOCIATIONS" Value="1" />
+    <Property Id="ODyTOOLS_ENABLE_CONTEXTMENU" Value="1" />
+    <Property Id="ODyTOOLS_ENABLE_STARTUP" Value="0" />
+    <Property Id="ODyTOOLS_GUIDED_DEFAULTS" Value="1" />
+
+    <ui:WixUI Id="WixUI_FeatureTree" />
+
+    <StandardDirectory Id="ProgramFilesFolder">
+      <Directory Id="INSTALLFOLDER" Name="OdyTools">
+        <Directory Id="EDITORFOLDER" Name="Editors" />
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="OdyToolsProgramMenuDir" Name="OdyTools" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder" />
+    <StandardDirectory Id="StartupFolder" />
+
+    <Feature Id="MainFeature" Title="OdyTools AIO" Level="1" Display="expand" Description="All-in-one OdyTools application.">
+      <ComponentRef Id="cmpOdyToolsExe" />
+      <ComponentRef Id="cmpStartMenuShortcut" />
+      <ComponentRef Id="cmpDesktopShortcut" />
+      <ComponentRef Id="cmpStartupShortcut" />
+      <ComponentRef Id="cmpOdyToolsAppRegistration" />
+      <ComponentRef Id="cmpOdyToolsFileAssociations" />
+      <ComponentRef Id="cmpOdyToolsContextMenu" />
+      <ComponentRef Id="cmpOdyToolsCommandStore" />
+      <ComponentRef Id="cmpOdyToolsGuidedDefaults" />
+    </Feature>
+
+    <Feature Id="StandaloneEditorsFeature" Title="Standalone Editors" Level="1" Display="expand" Description="Install standalone editor executables.">
+      <Feature Id="EditorsCoreFeature" Title="Core Editors" Level="1" Description="Most common editors.">
+        <ComponentRef Id="cmpOdyTool2DAExe" />
+        <ComponentRef Id="cmpOdyToolGFFExe" />
+        <ComponentRef Id="cmpOdyToolTLKExe" />
+        <ComponentRef Id="cmpOdyToolERFExe" />
+        <ComponentRef Id="cmpOdyToolNSSExe" />
+      </Feature>
+      <Feature Id="EditorsAdditionalFeature" Title="Additional Editors" Level="1" Description="Optional editor binaries.">
+        <ComponentRef Id="cmpOdyToolAREExe" />
+        <ComponentRef Id="cmpOdyToolBWMExe" />
+        <ComponentRef Id="cmpOdyToolDLGExe" />
+        <ComponentRef Id="cmpOdyToolGITExe" />
+        <ComponentRef Id="cmpOdyToolIFOExe" />
+        <ComponentRef Id="cmpOdyToolJRLExe" />
+        <ComponentRef Id="cmpOdyToolLIPExe" />
+        <ComponentRef Id="cmpOdyToolLTRExe" />
+        <ComponentRef Id="cmpOdyToolLYTExe" />
+        <ComponentRef Id="cmpOdyToolMDLExe" />
+        <ComponentRef Id="cmpOdyToolPTHExe" />
+        <ComponentRef Id="cmpOdyToolSAVExe" />
+        <ComponentRef Id="cmpOdyToolSSFExe" />
+        <ComponentRef Id="cmpOdyToolTPCExe" />
+        <ComponentRef Id="cmpOdyToolTXTExe" />
+        <ComponentRef Id="cmpOdyToolUTCExe" />
+        <ComponentRef Id="cmpOdyToolUTDExe" />
+        <ComponentRef Id="cmpOdyToolUTEExe" />
+        <ComponentRef Id="cmpOdyToolUTIExe" />
+        <ComponentRef Id="cmpOdyToolUTMExe" />
+        <ComponentRef Id="cmpOdyToolUTPExe" />
+        <ComponentRef Id="cmpOdyToolUTSExe" />
+        <ComponentRef Id="cmpOdyToolUTTExe" />
+        <ComponentRef Id="cmpOdyToolUTWExe" />
+        <ComponentRef Id="cmpOdyToolWAVExe" />
+      </Feature>
+    </Feature>
+
+    <Component Id="cmpOdyToolsExe" Directory="INSTALLFOLDER" Guid="*">
+      <File Id="filOdyToolsExe" Source="$(PublishRoot)\AIO\OdyTools.exe" KeyPath="yes" />
+    </Component>
+
+    <Component Id="cmpStartMenuShortcut" Directory="OdyToolsProgramMenuDir" Guid="*">
+      <Condition><![CDATA[ODyTOOLS_ADD_STARTMENU=1]]></Condition>
+      <Shortcut Id="scStartMenuOdyTools" Name="OdyTools" Target="[INSTALLFOLDER]OdyTools.exe" WorkingDirectory="INSTALLFOLDER" />
+      <RemoveFolder Id="rfProgramMenuFolder" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\Andastra\OdyTools\Installer" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <Component Id="cmpDesktopShortcut" Directory="DesktopFolder" Guid="*">
+      <Condition><![CDATA[ODyTOOLS_ADD_DESKTOP=1]]></Condition>
+      <Shortcut Id="scDesktopOdyTools" Name="OdyTools" Target="[INSTALLFOLDER]OdyTools.exe" WorkingDirectory="INSTALLFOLDER" />
+      <RegistryValue Root="HKCU" Key="Software\Andastra\OdyTools\Installer" Name="DesktopShortcut" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <Component Id="cmpStartupShortcut" Directory="StartupFolder" Guid="*">
+      <Condition><![CDATA[ODyTOOLS_ENABLE_STARTUP=1]]></Condition>
+      <Shortcut Id="scStartupOdyTools" Name="OdyTools" Target="[INSTALLFOLDER]OdyTools.exe" WorkingDirectory="INSTALLFOLDER" />
+      <RegistryValue Root="HKCU" Key="Software\Andastra\OdyTools\Installer" Name="StartupShortcut" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <Component Id="cmpOdyTool2DAExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyTool2DAExe" Source="$(PublishRoot)\Editors\OdyTool2DA.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolGFFExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolGFFExe" Source="$(PublishRoot)\Editors\OdyToolGFF.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolTLKExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolTLKExe" Source="$(PublishRoot)\Editors\OdyToolTLK.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolERFExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolERFExe" Source="$(PublishRoot)\Editors\OdyToolERF.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolNSSExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolNSSExe" Source="$(PublishRoot)\Editors\OdyToolNSS.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolAREExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolAREExe" Source="$(PublishRoot)\Editors\OdyToolARE.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolBWMExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolBWMExe" Source="$(PublishRoot)\Editors\OdyToolBWM.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolDLGExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolDLGExe" Source="$(PublishRoot)\Editors\OdyToolDLG.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolGITExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolGITExe" Source="$(PublishRoot)\Editors\OdyToolGIT.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolIFOExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolIFOExe" Source="$(PublishRoot)\Editors\OdyToolIFO.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolJRLExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolJRLExe" Source="$(PublishRoot)\Editors\OdyToolJRL.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolLIPExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolLIPExe" Source="$(PublishRoot)\Editors\OdyToolLIP.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolLTRExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolLTRExe" Source="$(PublishRoot)\Editors\OdyToolLTR.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolLYTExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolLYTExe" Source="$(PublishRoot)\Editors\OdyToolLYT.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolMDLExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolMDLExe" Source="$(PublishRoot)\Editors\OdyToolMDL.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolPTHExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolPTHExe" Source="$(PublishRoot)\Editors\OdyToolPTH.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolSAVExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolSAVExe" Source="$(PublishRoot)\Editors\OdyToolSAV.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolSSFExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolSSFExe" Source="$(PublishRoot)\Editors\OdyToolSSF.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolTPCExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolTPCExe" Source="$(PublishRoot)\Editors\OdyToolTPC.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolTXTExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolTXTExe" Source="$(PublishRoot)\Editors\OdyToolTXT.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolUTCExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolUTCExe" Source="$(PublishRoot)\Editors\OdyToolUTC.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolUTDExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolUTDExe" Source="$(PublishRoot)\Editors\OdyToolUTD.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolUTEExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolUTEExe" Source="$(PublishRoot)\Editors\OdyToolUTE.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolUTIExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolUTIExe" Source="$(PublishRoot)\Editors\OdyToolUTI.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolUTMExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolUTMExe" Source="$(PublishRoot)\Editors\OdyToolUTM.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolUTPExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolUTPExe" Source="$(PublishRoot)\Editors\OdyToolUTP.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolUTSExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolUTSExe" Source="$(PublishRoot)\Editors\OdyToolUTS.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolUTTExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolUTTExe" Source="$(PublishRoot)\Editors\OdyToolUTT.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolUTWExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolUTWExe" Source="$(PublishRoot)\Editors\OdyToolUTW.exe" KeyPath="yes" /></Component>
+    <Component Id="cmpOdyToolWAVExe" Directory="EDITORFOLDER" Guid="*"><File Id="filOdyToolWAVExe" Source="$(PublishRoot)\Editors\OdyToolWAV.exe" KeyPath="yes" /></Component>
+  </Package>
+</Wix>

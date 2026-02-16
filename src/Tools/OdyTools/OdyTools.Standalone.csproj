@@ -35,13 +35,13 @@
     <Compile Remove="Program.cs" />
     <Compile Remove="App.axaml.cs" />
     <!-- Exclude per-editor standalone entry points (use unified host only) -->
-    <Compile Remove="Editors\Standalone\OdyToolTwoDA\**" />
+    <Compile Remove="Editors\Standalone\OdyTool2DA\**" />
   </ItemGroup>
   <!-- Use default AvaloniaXaml; remove main app and per-editor standalone XAML (no code-behind in this build) -->
   <ItemGroup>
     <AvaloniaXaml Remove="App.axaml" />
     <AvaloniaXaml Remove="**\App.axaml" />
-    <AvaloniaXaml Remove="Editors\Standalone\OdyToolTwoDA\**" />
+    <AvaloniaXaml Remove="Editors\Standalone\OdyTool2DA\**" />
   </ItemGroup>
   <!-- OutputType -->
   <PropertyGroup Condition="'$(RuntimeIdentifier)'=='' OR $(RuntimeIdentifier.StartsWith('win'))">

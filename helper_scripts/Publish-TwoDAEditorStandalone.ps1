@@ -1,4 +1,4 @@
-# Publish TwoDAEditor.Standalone to a single Windows EXE (no DLLs or other files).
+# Publish OdyTool2DA.Standalone to a single Windows EXE (no DLLs or other files).
 # Uses .NET 9.0; single-file publish is not supported for .NET Framework (net472).
 # Run from repo root: .\helper_scripts\Publish-TwoDAEditorStandalone.ps1
 
@@ -7,13 +7,13 @@ param(
     [string]$TargetFramework = "net9.0",
     [ValidateSet("win-x64", "win-x86")]
     [string]$Runtime = "win-x64",
-    [string]$OutputDir = "dist\TwoDAEditor",
+    [string]$OutputDir = "dist\OdyTool2DA",
     [string]$Configuration = "Release"
 )
 
 $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path -Parent $PSScriptRoot
-$ProjectPath = Join-Path $RepoRoot "src\Tools\OdyTools\Editors\TwoDAEditor.Standalone.csproj"
+$ProjectPath = Join-Path $RepoRoot "src\Tools\OdyTools\Editors\OdyTool2DA.Standalone.csproj"
 
 if (-not (Test-Path $ProjectPath)) {
     Write-Error "Project not found: $ProjectPath"
@@ -35,7 +35,7 @@ if (-not (Test-Path (Split-Path $PublishDir -Parent))) {
     New-Item -ItemType Directory -Path (Split-Path $PublishDir -Parent) -Force | Out-Null
 }
 
-Write-Host "Publishing TwoDAEditor.Standalone to a single EXE (Windows)..." -ForegroundColor Cyan
+Write-Host "Publishing OdyTool2DA.Standalone to a single EXE (Windows)..." -ForegroundColor Cyan
 Write-Host "  Framework: $TargetFramework | Runtime: $Runtime | Output: $PublishDir" -ForegroundColor Gray
 
 $args = @(
@@ -64,7 +64,7 @@ if ($LASTEXITCODE -ne 0) {
 
 # When single-file, the output should be one exe; remove any stray files (e.g. .pdb) if present
 if ($PublishSingleFile) {
-    $exeName = "TwoDAEditor.Standalone.exe"
+    $exeName = "OdyTool2DA.Standalone.exe"
     $exePath = Join-Path $PublishDir $exeName
     if (Test-Path $exePath) {
         Get-ChildItem $PublishDir -File | Where-Object { $_.Name -ne $exeName } | Remove-Item -Force

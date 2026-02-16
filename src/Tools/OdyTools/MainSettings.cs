@@ -7,11 +7,11 @@ using OdyTools.Data;
 
 namespace OdyTools.NET
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/main_settings.py:16
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_settings.py:16
     // Original: def setup_pre_init_settings():
     public static class MainSettings
     {
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/main_settings.py:16-37
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_settings.py:16-37
         // Original: def setup_pre_init_settings():
         /// <summary>
         /// Setup pre-initialization settings for the OdyTools.
@@ -71,6 +71,20 @@ namespace OdyTools.NET
 
             // Apply theme from GlobalSettings before MainWindow is shown
             ApplyTheme();
+
+            // Apply language from GlobalSettings (defaults to system culture when no preference saved)
+            ApplyLanguage();
+        }
+
+        /// <summary>
+        /// Applies the language from GlobalSettings to Localization.
+        /// Uses system culture as default when no user preference is saved (cross-platform).
+        /// </summary>
+        public static void ApplyLanguage()
+        {
+            var settings = new GlobalSettings();
+            int langInt = Math.Max(0, Math.Min(5, settings.SelectedLanguage));
+            OdyTools.Common.Localization.SetLanguage((OdyTools.Common.ToolsetLanguage)langInt);
         }
 
         /// <summary>
@@ -101,7 +115,7 @@ namespace OdyTools.NET
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/main_settings.py:40-72
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_settings.py:40-72
         // Original: def setup_post_init_settings():
         /// <summary>
         /// Set up post-initialization settings for the application.
@@ -171,7 +185,7 @@ namespace OdyTools.NET
             // However, we maintain the structure for potential future Avalonia equivalents.
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/main_settings.py:75-103
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_settings.py:75-103
         // Original: def setup_toolset_default_env():
         /// <summary>
         /// Setup default environment variables for the toolset based on our recommendations.

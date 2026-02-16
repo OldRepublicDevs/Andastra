@@ -297,7 +297,7 @@ namespace BioWare.TSLPatcher.Reader
                 ? (LogLevel)logLevelInt
                 : LogLevel.Warnings;
 
-            // HoloPatcher optional
+            // OdyPatch optional
             Config.IgnoreFileExtensions = bool.TryParse(settingsIni.GetValueOrDefault("IgnoreExtensions"), out bool ign) && ign;
 
             // Mod metadata (ModName, Author)
@@ -2342,7 +2342,7 @@ namespace BioWare.TSLPatcher.Reader
         {
             var fieldnameToFieldtype = new Dictionary<string, GFFFieldType>(StringComparer.OrdinalIgnoreCase)
         {
-            { "Binary", GFFFieldType.Binary }, // HoloPatcher only.
+            { "Binary", GFFFieldType.Binary }, // OdyPatch only.
             { "Byte", GFFFieldType.UInt8 },
             { "Char", GFFFieldType.Int8 },
             { "Word", GFFFieldType.UInt16 },

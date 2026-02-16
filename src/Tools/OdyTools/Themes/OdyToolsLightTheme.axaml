@@ -1,0 +1,119 @@
+<!-- OdyTools light theme: same color scheme as OdyTool2DA (window, menu, panels, status, context menu, tooltips). -->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style Selector="Window">
+        <Setter Property="Background" Value="#F3F5F9" />
+    </Style>
+    <Style Selector="Menu">
+        <Setter Property="Background" Value="#F1F3F4" />
+        <Setter Property="Foreground" Value="#202124" />
+        <Setter Property="BorderBrush" Value="#D7DBE6" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+    <Style Selector="MenuItem">
+        <Setter Property="Foreground" Value="#202124" />
+    </Style>
+    <Style Selector="Menu MenuItem">
+        <Setter Property="Foreground" Value="#202124" />
+    </Style>
+    <Style Selector="Button.command">
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="Padding" Value="6,3" />
+        <Setter Property="Margin" Value="0,0,1,0" />
+        <Setter Property="CornerRadius" Value="2" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="#202124" />
+    </Style>
+    <Style Selector="Button.command:pointerover">
+        <Setter Property="Background" Value="#E8EAED" />
+    </Style>
+    <Style Selector="Button.command.primary">
+        <Setter Property="Background" Value="#1A73E8" />
+        <Setter Property="Foreground" Value="#202124" />
+    </Style>
+    <Style Selector="Button.command.primary:pointerover">
+        <Setter Property="Background" Value="#1765CC" />
+    </Style>
+    <Style Selector="Button.sidebarCmd">
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="Padding" Value="6,3" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="#202124" />
+    </Style>
+    <Style Selector="Button.sidebarCmd:pointerover">
+        <Setter Property="Background" Value="#E8EAED" />
+    </Style>
+    <Style Selector="Border.panel">
+        <Setter Property="Background" Value="#FFFFFF" />
+        <Setter Property="BorderBrush" Value="#D7DBE6" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <Style Selector="TextBox">
+        <Setter Property="MinHeight" Value="0" />
+    </Style>
+    <Style Selector="TextBlock#statusText">
+        <Setter Property="Foreground" Value="#202124" />
+    </Style>
+    <Style Selector="TextBlock.emptyStateText">
+        <Setter Property="Foreground" Value="#202124" />
+    </Style>
+    <Style Selector="TextBlock.sectionTitle">
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="#3C4043" />
+        <Setter Property="Margin" Value="0,0,0,6" />
+    </Style>
+    <Style Selector="ContextMenu">
+        <Setter Property="Background" Value="#FFFFFF" />
+        <Setter Property="Foreground" Value="#202124" />
+    </Style>
+    <Style Selector="ContextMenu MenuItem">
+        <Setter Property="Foreground" Value="#202124" />
+    </Style>
+    <Style Selector="ToolTip">
+        <Setter Property="Foreground" Value="#202124" />
+        <Setter Property="Background" Value="#FFFFFF" />
+    </Style>
+    <!-- Default DataGrid: light header and grid lines -->
+    <Style Selector="DataGrid">
+        <Setter Property="Background" Value="#FFFFFF" />
+        <Setter Property="BorderBrush" Value="#D7DBE6" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="HorizontalGridLinesBrush" Value="#E4E8F1" />
+        <Setter Property="VerticalGridLinesBrush" Value="#E4E8F1" />
+        <Setter Property="Foreground" Value="#202124" />
+    </Style>
+    <Style Selector="DataGrid DataGridColumnHeader">
+        <Setter Property="Background" Value="#E8EAED" />
+        <Setter Property="Foreground" Value="#202124" />
+    </Style>
+    <Style Selector="DataGrid DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+        <Setter Property="Fill" Value="#E3F2FD" />
+    </Style>
+    <!-- TreeView: light background and text -->
+    <Style Selector="TreeView">
+        <Setter Property="Background" Value="#FFFFFF" />
+        <Setter Property="Foreground" Value="#202124" />
+        <Setter Property="BorderBrush" Value="#D7DBE6" />
+    </Style>
+    <!-- Expander -->
+    <Style Selector="Expander">
+        <Setter Property="Foreground" Value="#202124" />
+    </Style>
+    <Style Selector="CheckBox">
+        <Setter Property="Foreground" Value="#202124" />
+    </Style>
+    <Style Selector="ComboBox">
+        <Setter Property="Foreground" Value="#202124" />
+    </Style>
+    <Style Selector="TabControl">
+        <Setter Property="Foreground" Value="#202124" />
+    </Style>
+</Styles>

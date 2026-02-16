@@ -8,7 +8,7 @@ using BioWare.Resource;
 
 namespace OdyTools.Dialogs.Save
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/save/to_module.py:9
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_module.py:9
     // Original: class SaveToModuleDialog(QDialog):
     public partial class SaveToModuleDialog : Window
     {
@@ -23,7 +23,7 @@ namespace OdyTools.Dialogs.Save
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/save/to_module.py:12-45
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_module.py:12-45
         // Original: def __init__(self, resname, restype, supported):
         public SaveToModuleDialog(string resname, ResourceType restype, List<ResourceType> supported)
         {
@@ -95,7 +95,7 @@ namespace OdyTools.Dialogs.Save
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/save/to_module.py:37-38
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_module.py:37-38
         // Original: Load data into UI
         private void LoadData(string resname, ResourceType restype)
         {
@@ -120,14 +120,14 @@ namespace OdyTools.Dialogs.Save
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/save/to_module.py:41-42
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_module.py:41-42
         // Original: def resname(self) -> str:
         public string GetResname()
         {
             return _resrefEdit?.Text ?? "";
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/save/to_module.py:44-45
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_module.py:44-45
         // Original: def restype(self) -> ResourceType:
         public ResourceType GetRestype()
         {

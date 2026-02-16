@@ -23,7 +23,7 @@ using BioWare.Resource.Formats.TLK;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:35
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:35
     // Original: class TSLPatchDataEditor(QDialog):
     public partial class TSLPatchDataEditorDialog : Window
     {
@@ -79,12 +79,12 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:38-61
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:38-61
         // Original: def __init__(self, parent, installation=None, tslpatchdata_path=None):
         public TSLPatchDataEditorDialog(Window parent, OdyInstallation installation, string tslpatchdataPath = null)
         {
             InitializeComponent();
-            Title = "TSLPatchData Editor - Create HoloPatcher Mod";
+            Title = "TSLPatchData Editor - Create OdyPatch Mod";
             Width = 1400;
             Height = 900;
             _installation = installation;
@@ -180,7 +180,7 @@ namespace OdyTools.Dialogs
             _saveButton = this.FindControl<Button>("saveButton");
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:160-212
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:160-212
         // Original: def _create_general_tab(self):
         private void CreateGeneralTab()
         {
@@ -236,7 +236,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:214-266
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:214-266
         // Original: def _create_2da_memory_tab(self):
         private void Create2DAMemoryTab()
         {
@@ -307,7 +307,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:268-303
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:268-303
         // Original: def _create_tlk_strref_tab(self):
         private void CreateTLKStrRefTab()
         {
@@ -406,7 +406,7 @@ namespace OdyTools.Dialogs
             RefreshTlkStringTree();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:305-348
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:305-348
         // Original: def _create_gff_fields_tab(self):
         private void CreateGFFFieldsTab()
         {
@@ -473,7 +473,7 @@ namespace OdyTools.Dialogs
         }
 
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:350-373
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:350-373
         // Original: def _create_scripts_tab(self):
         private void CreateScriptsTab()
         {
@@ -508,7 +508,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:375-394
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:375-394
         // Original: def _create_ini_preview_tab(self):
         private void CreateINIPreviewTab()
         {
@@ -541,7 +541,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:397-403
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:397-403
         // Original: def _browse_tslpatchdata_path(self):
         private async void BrowseTslpatchdataPath()
         {
@@ -622,7 +622,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:405-420
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:405-420
         // Original: def _create_new_tslpatchdata(self):
         private async void CreateNewTslpatchdata()
         {
@@ -726,7 +726,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:422-430
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:422-430
         // Original: def _load_existing_config(self):
         private void LoadExistingConfig()
         {
@@ -845,7 +845,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:521-523
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:521-523
         // Original: def _on_gff_file_selected(self, item):
         private void OnGffFileSelected(object sender, SelectionChangedEventArgs e)
         {
@@ -951,7 +951,7 @@ namespace OdyTools.Dialogs
             return modifier.GetType().Name;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:525-527
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:525-527
         // Original: def _open_gff_editor(self):
         private async void OpenGffEditor()
         {
@@ -1034,7 +1034,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:529-534
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:529-534
         // Original: def _add_script(self):
         private async Task AddScript()
         {
@@ -1124,7 +1124,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:536-540
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:536-540
         // Original: def _remove_script(self):
         private void RemoveScript()
         {
@@ -1148,7 +1148,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:483-497
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:483-497
         // Original: def _add_tlk_string(self):
         private async void AddTlkString()
         {
@@ -1184,7 +1184,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:487-489
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:487-489
         // Original: def _edit_tlk_string(self):
         private async void EditTlkString()
         {
@@ -1261,7 +1261,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:491-496
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:491-496
         // Original: def _remove_tlk_string(self):
         private void RemoveTlkString()
         {
@@ -1299,7 +1299,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:498-519
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:498-519
         // Original: def _open_tlk_editor(self):
         private void OpenTlkEditor()
         {
@@ -1349,7 +1349,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:460-481
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:460-481
         // Original: def _add_2da_memory(self), _on_2da_selected(self), _add_2da_token(self), _edit_2da_token(self), _remove_2da_token(self):
         private async void Add2DAMemory()
         {
@@ -2017,7 +2017,7 @@ namespace OdyTools.Dialogs
                     $"- {_twodaModifications.Count} 2DA modification(s)\n" +
                     $"- {_tlkStrings.Count} TLK string(s)\n" +
                     $"- {_scriptPaths.Count} script(s)\n\n" +
-                    $"You can now distribute this folder with HoloPatcher/TSLPatcher.",
+                    $"You can now distribute this folder with OdyPatch/TSLPatcher.",
                     ButtonEnum.Ok,
                     MsBox.Avalonia.Enums.Icon.Success);
                 await successBox.ShowAsync();
@@ -2033,7 +2033,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:566-571
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:566-571
         // Original: def _preview_ini(self):
         private void PreviewIni()
         {
@@ -2046,7 +2046,7 @@ namespace OdyTools.Dialogs
             UpdateIniPreview();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:542-564
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:542-564
         // Original: def _update_ini_preview(self):
         private void UpdateIniPreview()
         {
@@ -2216,7 +2216,7 @@ namespace OdyTools.Dialogs
             _iniPreviewText.Text = previewLines.ToString();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:573-588
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:573-588
         // Original: def _save_configuration(self):
         private async void SaveConfiguration()
         {
@@ -2282,7 +2282,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/tslpatchdata_editor.py:422-430
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:422-430
         // Original: def _load_existing_config(self) - TLK loading part
         private void LoadTlkStringsFromIni(string[] iniLines)
         {

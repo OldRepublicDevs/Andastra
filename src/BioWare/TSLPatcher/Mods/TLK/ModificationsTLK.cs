@@ -11,7 +11,7 @@ namespace BioWare.TSLPatcher.Mods.TLK
 {
 
     /// <summary>
-    /// TLK modification algorithms for TSLPatcher/HoloPatcher.
+    /// TLK modification algorithms for TSLPatcher/OdyPatch.
     ///
     /// This module implements TLK modification logic for applying patches from changes.ini files.
     /// Handles string additions, modifications, and memory token resolution.

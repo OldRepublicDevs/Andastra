@@ -80,7 +80,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Finds all KOTOR installation paths from default locations.
-        /// Similar to FindKotorPathsFromDefault in HoloPatcher.UI/Core.cs.
+        /// Similar to FindKotorPathsFromDefault in OdyPatch.UI/Core.cs.
         /// </summary>
         public static List<string> FindKotorPathsFromDefault(KotorGame game)
         {

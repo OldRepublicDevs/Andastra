@@ -11,7 +11,7 @@ using OdyTools.Data;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/env_vars.py:184
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py:184
     // Original: class EnvVariableDialog(QDialog):
     public partial class EnvVariableDialog : Window
     {
@@ -29,7 +29,7 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/env_vars.py:185-258
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py:185-258
         // Original: def __init__(self, parent: QWidget | None = None):
         public EnvVariableDialog(Window parent)
         {
@@ -155,7 +155,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/env_vars.py:260-280
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py:260-280
         // Original: def update_description_and_completer(self):
         private void UpdateDescriptionAndCompleter()
         {
@@ -215,7 +215,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/env_vars.py:283-310
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py:283-310
         // Original: def check_value_validity(self):
         private void CheckValueValidity()
         {
@@ -301,7 +301,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/env_vars.py:312-315
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py:312-315
         // Original: def browse_directory(self):
         private async void BrowseDirectory()
         {
@@ -364,7 +364,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/env_vars.py:317-320
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py:317-320
         // Original: def browse_file(self):
         private async void BrowseFile()
         {
@@ -427,7 +427,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/env_vars.py:322-323
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py:322-323
         // Original: def get_data(self) -> tuple[str, str]:
         public Tuple<string, string> GetData()
         {
@@ -436,7 +436,7 @@ namespace OdyTools.Dialogs
             return Tuple.Create(name, value);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/env_vars.py:325-327
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py:325-327
         // Original: def set_data(self, name: str, value: str):
         public void SetData(string name, string value)
         {

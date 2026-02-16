@@ -5,7 +5,8 @@
         x:Class="OdyTools.Dialogs.IndoorMapSettingsDialog"
         Title="Module Settings"
         Width="285" Height="200"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        RequestedThemeVariant="Light">
     <StackPanel Margin="10" Spacing="10">
         <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0,0,0,10">
             <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" VerticalAlignment="Center" Margin="0,0,5,5" />

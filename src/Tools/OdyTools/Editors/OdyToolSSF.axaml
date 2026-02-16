@@ -2,29 +2,40 @@
   x:Class="OdyTools.Editors.OdyToolSSF"
   xmlns="https://github.com/avaloniaui"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-  Title="Soundset Editor (KotOR)"
+  Title="OdyToolSSF"
   Width="1000"
   Height="640"
   MinWidth="900"
-  MinHeight="580">
+  MinHeight="580"
+  RequestedThemeVariant="Light">
   <Window.Styles>
-    <!--  Sound list row: subtle background, hover and selected states  -->
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#F3F5F9" />
+    </Style>
+    <Style Selector="Menu">
+      <Setter Property="Background" Value="#F1F3F4" />
+      <Setter Property="Foreground" Value="#202124" />
+      <Setter Property="BorderBrush" Value="#D7DBE6" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+    <Style Selector="MenuItem">
+      <Setter Property="Foreground" Value="#202124" />
+    </Style>
     <Style Selector="Border.sound-row">
-      <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
+      <Setter Property="Background" Value="#FAFBFC" />
       <Setter Property="BorderBrush" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0,0,0,1" />
       <Setter Property="Padding" Value="12,8" />
       <Setter Property="Margin" Value="0,0,0,0" />
     </Style>
     <Style Selector="Border.sound-row:pointerover">
-      <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightLowBrush}" />
+      <Setter Property="Background" Value="#E3F2FD" />
     </Style>
     <Style Selector="Border.sound-row.selected">
-      <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightLowBrush}" />
-      <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
+      <Setter Property="Background" Value="#E3F2FD" />
+      <Setter Property="BorderBrush" Value="#1A73E8" />
       <Setter Property="BorderThickness" Value="0,0,0,2" />
     </Style>
-    <!--  Play button: compact icon-style  -->
     <Style Selector="Button.play-sound">
       <Setter Property="MinWidth" Value="44" />
       <Setter Property="MinHeight" Value="32" />
@@ -33,20 +44,18 @@
       <Setter Property="CornerRadius" Value="6" />
     </Style>
     <Style Selector="Button.play-sound:pointerover">
-      <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush}" />
+      <Setter Property="Background" Value="#1A73E8" />
       <Setter Property="Foreground" Value="White" />
     </Style>
-    <!--  Stop button when playing  -->
     <Style Selector="Button.stop-sound">
       <Setter Property="MinWidth" Value="44" />
       <Setter Property="MinHeight" Value="32" />
       <Setter Property="Padding" Value="10,6" />
       <Setter Property="CornerRadius" Value="6" />
     </Style>
-    <!--  Group header in sound list  -->
     <Style Selector="Border.sound-group-header">
-      <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
-      <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderBrush}" />
+      <Setter Property="Background" Value="#E8EAED" />
+      <Setter Property="BorderBrush" Value="#D7DBE6" />
       <Setter Property="BorderThickness" Value="0,0,0,1" />
       <Setter Property="Padding" Value="12,8,12,6" />
     </Style>
@@ -79,7 +88,7 @@
         <MenuItem
           Name="actionExit"
           Header="E_xit"
-          ToolTip.Tip="Close the Soundset Editor. You will be prompted to save if there are unsaved changes." />
+          ToolTip.Tip="Close OdyToolSSF. You will be prompted to save if there are unsaved changes." />
       </MenuItem>
       <MenuItem Header="_Edit">
         <MenuItem
@@ -105,8 +114,8 @@
     <!--  Toolbar: Talk table + Find + Stop  -->
     <Border
       Padding="12,10"
-      Background="{DynamicResource ThemeControlLowBrush}"
-      BorderBrush="{DynamicResource ThemeBorderBrush}"
+      Background="#FAFBFC"
+      BorderBrush="#D7DBE6"
       BorderThickness="0,0,0,1"
       DockPanel.Dock="Top">
       <Grid ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="Auto">
@@ -121,7 +130,7 @@
           Name="talktableLabel"
           Grid.Column="1"
           VerticalAlignment="Center"
-          Foreground="{DynamicResource ThemeForegroundBrush}"
+          Foreground="#202124"
           Text="Using: dialog.tlk"
           TextTrimming="CharacterEllipsis"
           ToolTip.Tip="Currently loaded talk table file. Sounds are resolved from this file (Override, StreamVoice, StreamSounds, CHITIN)." />
@@ -138,7 +147,7 @@
           Grid.Column="3"
           VerticalAlignment="Center"
           FontSize="12"
-          Foreground="{DynamicResource ThemeForegroundLowBrush}"
+          Foreground="#3C4043"
           Text="27 sounds"
           ToolTip.Tip="Total number of sound event slots in this soundset (KotOR uses 27)." />
       </Grid>
@@ -150,8 +159,8 @@
       <Border
         Grid.Column="0"
         Margin="8,8,4,8"
-        Background="{DynamicResource ThemeControlLowBrush}"
-        BorderBrush="{DynamicResource ThemeBorderBrush}"
+        Background="#FAFBFC"
+        BorderBrush="#D7DBE6"
         BorderThickness="1"
         CornerRadius="8"
         ToolTip.Tip="Each row is one sound event. Set the Strref to a TLK string ID; the game plays the WAV linked to that ID. Use ▶ to preview.">
@@ -160,8 +169,8 @@
           <Border
             Grid.Row="0"
             Padding="12,10"
-            Background="{DynamicResource ThemeControlMidBrush}"
-            BorderBrush="{DynamicResource ThemeBorderBrush}"
+            Background="#E8EAED"
+            BorderBrush="#D7DBE6"
             BorderThickness="0,0,0,1">
             <Grid ColumnDefinitions="130,80,*,110,Auto" RowDefinitions="Auto">
               <TextBlock
@@ -214,8 +223,8 @@
         Grid.Column="1"
         Margin="4,8,8,8"
         Padding="16"
-        Background="{DynamicResource ThemeControlLowBrush}"
-        BorderBrush="{DynamicResource ThemeBorderBrush}"
+        Background="#FAFBFC"
+        BorderBrush="#D7DBE6"
         BorderThickness="1"
         CornerRadius="8">
         <StackPanel Spacing="12">
@@ -227,13 +236,13 @@
           <TextBlock
             Name="previewCategoryLabel"
             FontSize="12"
-            Foreground="{DynamicResource ThemeForegroundBrush}"
+            Foreground="#202124"
             Text="Category: —"
             TextWrapping="Wrap" />
           <TextBlock
             Name="previewStrrefLabel"
             FontSize="12"
-            Foreground="{DynamicResource ThemeForegroundLowBrush}"
+            Foreground="#3C4043"
             Text="Strref: —" />
           <TextBox
             Name="previewTextBlock"
@@ -247,7 +256,7 @@
           <TextBlock
             Name="previewResRefLabel"
             FontSize="12"
-            Foreground="{DynamicResource ThemeForegroundLowBrush}"
+            Foreground="#3C4043"
             Text="Sound ResRef: —"
             ToolTip.Tip="WAV filename (no extension) that the game will play for this event." />
           <StackPanel Orientation="Horizontal" Spacing="8">
@@ -261,7 +270,7 @@
               Name="previewPlayingLabel"
               VerticalAlignment="Center"
               FontSize="12"
-              Foreground="{DynamicResource ThemeAccentBrush}"
+              Foreground="#1A73E8"
               IsVisible="False"
               Text="" />
           </StackPanel>
@@ -269,7 +278,7 @@
           <TextBlock
             Name="previewHelpText"
             FontSize="11"
-            Foreground="{DynamicResource ThemeForegroundLowBrush}"
+            Foreground="#3C4043"
             Text="Strref = TLK string ID. The game looks up this ID in dialog.tlk and plays the linked WAV. Set to -1 for no sound. Use Select Talk Table to choose which dialog.tlk is used for preview and playback."
             TextWrapping="Wrap"
             ToolTip.Tip="Each sound event stores one integer (strref). In-game, the engine resolves it via the active dialog.tlk to a WAV and plays it." />
@@ -280,14 +289,14 @@
     <!--  Status bar  -->
     <Border
       Padding="12,8"
-      Background="{DynamicResource ThemeControlLowBrush}"
-      BorderBrush="{DynamicResource ThemeBorderBrush}"
+      Background="#FAFBFC"
+      BorderBrush="#D7DBE6"
       BorderThickness="0,1,0,0"
       DockPanel.Dock="Bottom">
       <TextBlock
         Name="statusText"
         FontSize="12"
-        Foreground="{DynamicResource ThemeForegroundLowBrush}"
+        Foreground="#3C4043"
         Text="27 sounds | dialog.tlk"
         ToolTip.Tip="Summary: number of sound events and the current talk table file. The soundset stores only strrefs; actual WAVs are resolved at runtime from the TLK." />
     </Border>

@@ -1728,7 +1728,7 @@ namespace BioWare.Resource.Formats.BWM
         /// CRITICAL: This method only modifies transition indices. Vertex positions, materials, and
         /// all other face properties are preserved.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:426-452
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:426-452
         /// Original: def remap_transitions(self, bwm: BWM, dummy_index: int, actual_index: int | None):
         /// </summary>
         /// <param name="dummyIndex">The dummy transition index to remap (from kit component)</param>

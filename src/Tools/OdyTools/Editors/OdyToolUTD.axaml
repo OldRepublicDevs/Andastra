@@ -1,0 +1,14 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="OdyTools.Editors.OdyToolUTD"
+        Title="OdyToolUTD"
+        MinWidth="700" MinHeight="500"
+        Width="900" Height="600"
+        RequestedThemeVariant="Light">
+  <Window.Styles>
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#F3F5F9" />
+    </Style>
+  </Window.Styles>
+  <ContentControl x:Name="contentRoot"/>
+</Window>

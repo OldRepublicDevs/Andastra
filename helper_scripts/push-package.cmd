@@ -1,5 +1,5 @@
 @echo off
-cd /d g:\GitHub\HoloPatcher.NET
+cd /d g:\GitHub\Andastra
 echo Checking package...
 if not exist "src\CSharpKOTOR\bin\Release\CSharpKOTOR.2.0.0-alpha1.nupkg" (
     echo ERROR: Package not found!

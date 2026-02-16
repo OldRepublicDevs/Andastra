@@ -1,130 +1,98 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using OdyTools.Config;
+using NetSparkleUpdater;
+using NetSparkleUpdater.Enums;
+using NetSparkleUpdater.Interfaces;
+using NetSparkleUpdater.SignatureVerifiers;
 using OdyTools.Data;
 
 namespace OdyTools.Windows
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/update_manager.py:35
-    // Original: class UpdateManager:
-    public class UpdateManager
+    public class UpdateManager : IDisposable
     {
-        private GlobalSettings _settings;
-        private bool _silent;
-        private object _masterInfo; // Can be Dictionary<string, object> or Exception
-        private object _edgeInfo; // Can be Dictionary<string, object> or Exception
+        private readonly GlobalSettings _settings;
+        private SparkleUpdater _sparkle;
+        private bool _initialized;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/update_manager.py:36-77
-        // Original: def __init__(self, *, silent: bool = False):
         public UpdateManager(bool silent = false)
         {
             _settings = new GlobalSettings();
-            _silent = silent;
-            _masterInfo = null;
-            _edgeInfo = null;
+            SilentCheck = silent;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/update_manager.py:42-77
-        // Original: def check_for_updates(self, *, silent: bool = False):
+        public bool SilentCheck { get; set; } = true;
+
+        public string StableAppcastUrl { get; set; } =
+            "https://github.com/th3w1zard1/Andastra/releases/latest/download/appcast.xml";
+
+        public string BetaAppcastUrl { get; set; } =
+            "https://github.com/th3w1zard1/Andastra/releases/download/bleeding-edge/appcast-beta.xml";
+
+        public string Ed25519PublicKey { get; set; } = "";
+
+        public bool CheckOnStartup { get; set; } = true;
+
+        public void Initialize()
+        {
+            if (_initialized)
+            {
+                return;
+            }
+
+            string appcastUrl = _settings.UseBetaChannel ? BetaAppcastUrl : StableAppcastUrl;
+            ISignatureVerifier verifier = string.IsNullOrWhiteSpace(Ed25519PublicKey)
+                ? (ISignatureVerifier)new Ed25519Checker(SecurityMode.Unsafe, "")
+                : new Ed25519Checker(SecurityMode.Strict, Ed25519PublicKey);
+
+            _sparkle = new SparkleUpdater(appcastUrl, verifier)
+            {
+                RelaunchAfterUpdate = true
+            };
+            _initialized = true;
+        }
+
+        public void Start()
+        {
+            Initialize();
+            if (CheckOnStartup)
+            {
+                _sparkle.StartLoop(true);
+            }
+        }
+
         public async Task CheckForUpdatesAsync(bool silent = false)
         {
-            _silent = silent;
-
-            try
+            SilentCheck = silent;
+            Initialize();
+            await Task.Run(() =>
             {
-                if (_settings.UseBetaChannel)
+                if (SilentCheck)
                 {
-                    _edgeInfo = await ConfigUpdate.GetRemoteToolsetUpdateInfoAsync(useBetaChannel: true, silent: _silent);
+                    _sparkle.CheckForUpdatesQuietly();
                 }
-
-                _masterInfo = await ConfigUpdate.GetRemoteToolsetUpdateInfoAsync(useBetaChannel: false, silent: _silent);
-                OnUpdateInfoFetched();
-            }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine($"Error checking for updates: {ex}");
-                if (!_silent)
+                else
                 {
-                    // Show error message - will be implemented with MessageBox.Avalonia
+                    _sparkle.CheckForUpdatesAtUserRequest();
                 }
-            }
+            });
         }
 
-        // Synchronous wrapper for compatibility
         public void CheckForUpdates(bool silent = false)
         {
-            // Fire and forget - updates will be checked in background
             Task.Run(async () => await CheckForUpdatesAsync(silent));
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/update_manager.py:111-164
-        // Original: def _on_update_info_fetched(self):
-        private void OnUpdateInfoFetched()
+        public void Stop()
         {
-            if (_edgeInfo == null || _masterInfo == null)
-            {
-                return;
-            }
-
-            if (_masterInfo is Exception masterEx)
-            {
-                if (!_silent)
-                {
-                    // Show error message
-                    System.Console.WriteLine($"Failed to fetch master update info: {masterEx}");
-                }
-                return;
-            }
-
-            if (_edgeInfo is Exception edgeEx)
-            {
-                if (!_silent)
-                {
-                    // Show error message
-                    System.Console.WriteLine($"Failed to fetch edge update info: {edgeEx}");
-                }
-                return;
-            }
-
-            var masterDict = _masterInfo as Dictionary<string, object>;
-            var edgeDict = _edgeInfo as Dictionary<string, object>;
-            if (masterDict == null || (_settings.UseBetaChannel && edgeDict == null))
-            {
-                return;
-            }
-
-            var remoteInfo = _settings.UseBetaChannel ? edgeDict : masterDict;
-            bool releaseVersionChecked = !_settings.UseBetaChannel;
-
-            string greatestVersion = releaseVersionChecked
-                ? remoteInfo.ContainsKey("toolsetLatestVersion") ? remoteInfo["toolsetLatestVersion"]?.ToString() ?? "" : ""
-                : remoteInfo.ContainsKey("toolsetLatestBetaVersion") ? remoteInfo["toolsetLatestBetaVersion"]?.ToString() ?? "" : "";
-
-            bool? isNewer = ConfigUpdate.IsRemoteVersionNewer(ConfigInfo.CurrentVersion, greatestVersion);
-            bool isUpToDate = isNewer == false;
-
-            DisplayVersionMessage(greatestVersion, isUpToDate, releaseVersionChecked);
+            // NetSparkleUpdater 3.x uses IDisposable; no separate Stop() method
+            _sparkle?.Dispose();
+            _sparkle = null;
+            _initialized = false;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/windows/update_manager.py:187-220
-        // Original: def _display_version_message(...):
-        private void DisplayVersionMessage(string greatestVersion, bool isUpToDate, bool releaseVersionChecked)
+        public void Dispose()
         {
-            if (isUpToDate)
-            {
-                if (_silent)
-                {
-                    return;
-                }
-                // Show "up to date" message - will be implemented with MessageBox.Avalonia
-                System.Console.WriteLine($"You are running the latest version ({ConfigInfo.CurrentVersion})");
-            }
-            else
-            {
-                // Show update available message - will be implemented with MessageBox.Avalonia
-                System.Console.WriteLine($"Update available: {greatestVersion} (current: {ConfigInfo.CurrentVersion})");
-            }
+            Stop();
         }
     }
 }

@@ -1,0 +1,130 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:OdyTools.Editors"
+        x:Class="OdyTools.Editors.OdyToolPTH"
+        Title="OdyToolPTH"
+        MinWidth="720" MinHeight="480"
+        Width="960" Height="640"
+        WindowStartupLocation="CenterScreen"
+        RequestedThemeVariant="Light">
+  <Window.Styles>
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#F3F5F9" />
+    </Style>
+    <Style Selector="Menu">
+      <Setter Property="Background" Value="#F1F3F4" />
+      <Setter Property="Foreground" Value="#202124" />
+      <Setter Property="BorderBrush" Value="#D7DBE6" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+    <Style Selector="MenuItem">
+      <Setter Property="Foreground" Value="#202124" />
+    </Style>
+  </Window.Styles>
+  <DockPanel LastChildFill="True">
+    <!-- Menu: File, Edit, View, Help (Holocron/PyKotor parity) -->
+    <Menu DockPanel.Dock="Top" Name="menuBar">
+      <MenuItem Header="_File">
+        <MenuItem Header="_New" Name="actionNew" HotKey="Ctrl+N"
+                  ToolTip.Tip="Create a new empty path (PTH)."/>
+        <MenuItem Header="_Open" Name="actionOpen" HotKey="Ctrl+O"
+                  ToolTip.Tip="Open a PTH file. Requires matching LYT for walkmesh context."/>
+        <MenuItem Header="_Save" Name="actionSave" HotKey="Ctrl+S"
+                  ToolTip.Tip="Save the current PTH."/>
+        <MenuItem Header="Save _As" Name="actionSaveAs"
+                  ToolTip.Tip="Save the PTH to a new file."/>
+        <Separator/>
+        <MenuItem Header="_Revert" Name="actionRevert"
+                  ToolTip.Tip="Discard unsaved changes and reload from file."/>
+        <Separator/>
+        <MenuItem Header="E_xit" Name="actionExit" HotKey="Alt+F4"/>
+      </MenuItem>
+      <MenuItem Header="_Edit">
+        <MenuItem Header="_Add Node" Name="actionAddNode"
+                  ToolTip.Tip="Add a path node at the current mouse position (or at origin if not over canvas)."/>
+        <MenuItem Header="_Remove Node" Name="actionRemoveNode" HotKey="Delete"
+                  ToolTip.Tip="Remove the selected node(s)."/>
+        <Separator/>
+        <MenuItem Header="Add _Edge" Name="actionAddEdge"
+                  ToolTip.Tip="Connect the first and second selected nodes (select two nodes first)."/>
+        <MenuItem Header="Remove _Edge" Name="actionRemoveEdge"
+                  ToolTip.Tip="Remove the edge between the first and second selected nodes."/>
+        <Separator/>
+        <MenuItem Header="_Copy XY" Name="actionCopyXY"
+                  ToolTip.Tip="Copy current mouse world coordinates to clipboard."/>
+      </MenuItem>
+      <MenuItem Header="_View">
+        <MenuItem Header="_Center on selection" Name="actionCenterSelection"
+                  ToolTip.Tip="Move camera to the selected node, or center on all nodes."/>
+        <MenuItem Header="Zoom _In" Name="actionZoomIn" HotKey="Ctrl+Plus"/>
+        <MenuItem Header="Zoom _Out" Name="actionZoomOut" HotKey="Ctrl+Minus"/>
+        <MenuItem Header="_Reset zoom" Name="actionZoomReset" HotKey="Ctrl+0"/>
+      </MenuItem>
+      <MenuItem Header="_Help" Name="menuHelp"/>
+    </Menu>
+
+    <!-- Main: left panel (nodes list + properties) + render area -->
+    <Grid ColumnDefinitions="280,*" Margin="8,4,8,8">
+      <!-- Left: path nodes list and properties -->
+      <Border Grid.Column="0" Margin="0,0,4,0" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="6"
+              Background="#FAFBFC" Padding="0">
+        <Grid RowDefinitions="Auto,Auto,*" RowSpacing="0">
+          <!-- Path nodes list header -->
+          <TextBlock Grid.Row="0" Text="Path nodes" FontWeight="SemiBold" Margin="12,10,12,6" FontSize="13"
+                     ToolTip.Tip="List of path waypoints. Select one or two to edit or add/remove edges."/>
+          <ListBox Name="nodeList" Grid.Row="1" Margin="8,0,8,8" MinHeight="120" MaxHeight="220"
+                   ToolTip.Tip="Click to select; selection syncs with canvas. Two selections enable Add/Remove Edge."/>
+          <!-- Properties and actions -->
+          <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="8,8,8,12">
+            <StackPanel Name="propertiesPanel" Spacing="10">
+              <TextBlock Text="Selected node" FontWeight="SemiBold" FontSize="12" Foreground="#3C4043"/>
+              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Index:" VerticalAlignment="Center"/>
+                <TextBox Name="nodeIndexBox" Grid.Row="0" Grid.Column="1" IsReadOnly="True" Background="#FAFBFC"/>
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="X:" VerticalAlignment="Center"/>
+                <NumericUpDown Name="nodePosX" Grid.Row="1" Grid.Column="1" Minimum="-99999" Maximum="99999" Increment="0.1" FormatString="0.00"
+                              ToolTip.Tip="World X coordinate of the selected node."/>
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Y:" VerticalAlignment="Center"/>
+                <NumericUpDown Name="nodePosY" Grid.Row="2" Grid.Column="1" Minimum="-99999" Maximum="99999" Increment="0.1" FormatString="0.00"
+                              ToolTip.Tip="World Y coordinate of the selected node."/>
+              </Grid>
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Name="addNodeHereButton" Content="Add node here"
+                        ToolTip.Tip="Add a new node at (X, Y) above. Set X/Y then click."/>
+                <Button Name="removeNodeButton" Content="Remove node"
+                        ToolTip.Tip="Remove the selected node."/>
+              </StackPanel>
+              <Separator/>
+              <TextBlock Text="Edge (select 2 nodes)" FontWeight="SemiBold" FontSize="12" Foreground="#3C4043"/>
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Name="addEdgeButton" Content="Add edge"
+                        ToolTip.Tip="Connect the two selected nodes. Select two nodes in the list or on the canvas."/>
+                <Button Name="removeEdgeButton" Content="Remove edge"
+                        ToolTip.Tip="Remove the connection between the two selected nodes."/>
+              </StackPanel>
+            </StackPanel>
+          </ScrollViewer>
+        </Grid>
+      </Border>
+
+      <!-- Right: PTH canvas (walkmesh + path nodes); Holocron-style render area -->
+      <Border Grid.Column="1" Margin="4,0,0,0" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="6"
+              Background="#1a1a1a" ClipToBounds="True"
+              ToolTip.Tip="Path editor: left-click select, drag to pan (or move nodes if selected). Scroll to zoom. Right-click for Add/Remove node and edges.">
+        <local:PTHRenderArea Name="pthRenderArea" Focusable="True"/>
+      </Border>
+    </Grid>
+
+    <!-- Status bar: left = mouse position, center = message, right = error (PyKotor pth_status_bar) -->
+    <Border DockPanel.Dock="Bottom" Padding="12,6" Background="#FAFBFC" BorderBrush="#D7DBE6" BorderThickness="0,1,0,0">
+      <Grid ColumnDefinitions="*,*,*">
+        <TextBlock Name="leftLabel" Grid.Column="0" VerticalAlignment="Center" FontSize="12" Foreground="#3C4043"
+                   Text="X: 0, Y: 0" ToolTip.Tip="Mouse position (world coordinates)."/>
+        <TextBlock Name="centerLabel" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="12" TextTrimming="CharacterEllipsis"
+                   ToolTip.Tip="Status message."/>
+        <TextBlock Name="rightLabel" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" FontSize="12" Foreground="#c03030"
+                   ToolTip.Tip="Error or warning."/>
+      </Grid>
+    </Border>
+  </DockPanel>
+</Window>

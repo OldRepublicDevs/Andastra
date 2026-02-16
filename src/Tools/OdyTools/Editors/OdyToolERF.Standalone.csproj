@@ -52,7 +52,11 @@
   <ItemGroup>
     <Compile Include="Standalone\EditorStandaloneHost\EditorStandaloneProgram.cs" />
     <Compile Include="Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml.cs" />
-    <Compile Include="OdyToolERF.cs" />
+    <Compile Include="OdyToolERF.axaml.cs" />
+    <Compile Include="OdyToolGFF.axaml.cs" />
+    <Compile Include="GFFTreeNodeViewModel.cs" />
+    <Compile Include="OdyTool2DA.axaml.cs" />
+    <Compile Include="OdyToolTXT.axaml.cs" />
     <Compile Include="Editor.cs" />
     <Compile Include="EditorHelpers.cs" />
     <Compile Include="EditorWikiMapping.cs" />
@@ -63,11 +67,20 @@
     <Compile Include="$(_OdyToolsRoot)\Data\GlobalSettings.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\PathUtils.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\InlineEditorHelp.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Common\Localization.cs" />
   </ItemGroup>
   <ItemGroup>
     <AvaloniaXaml Remove="**\*.axaml" />
     <AvaloniaXaml Include="Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml" />
     <AvaloniaXaml Include="OdyToolERF.axaml" />
+    <AvaloniaXaml Include="OdyToolGFF.axaml" />
+    <AvaloniaXaml Include="OdyTool2DA.axaml" />
+    <AvaloniaXaml Include="OdyToolTXT.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" />
   </ItemGroup>
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <StartupObject>OdyTools.Editors.Standalone.EditorStandaloneHost.EditorStandaloneProgram</StartupObject>
+  </PropertyGroup>
 </Project>

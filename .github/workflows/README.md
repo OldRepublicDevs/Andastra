@@ -1,6 +1,6 @@
 # GitHub Actions Workflows
 
-This directory contains GitHub Actions workflows for building, testing, and releasing HoloPatcher.
+This directory contains GitHub Actions workflows for building, testing, and releasing OdyPatch.
 
 ## Workflows
 

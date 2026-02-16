@@ -12,7 +12,7 @@ using TGAImage = BioWare.Resource.Formats.TPC.TGAImage;
 
 namespace OdyTools.Widgets
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/texture_loader.py:35
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/texture_loader.py:35
     // Original: class TextureLoaderProcess(multiprocessing.Process):
     // Request tuple: (resref, restype, context, icon_size)
     public class TextureLoadRequest
@@ -54,7 +54,7 @@ namespace OdyTools.Widgets
         private Task _loaderTask;
         private Installation _installation;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/texture_loader.py:56-57
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/texture_loader.py:56-57
         // Original: request_queue: "Queue[tuple[str, ResourceType, Any, int] | None]"
         // Original: result_queue: "Queue[tuple[Any, bytes | None, str | None]]"
         private readonly ConcurrentQueue<TextureLoadRequest> _requestQueue;
@@ -63,7 +63,7 @@ namespace OdyTools.Widgets
         // Sentinel value for shutdown (matching PyKotor SHUTDOWN_SENTINEL)
         private static readonly TextureLoadRequest ShutdownSentinel = new TextureLoadRequest(null, ResourceType.INVALID, null, 0);
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/texture_loader.py:52-71
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/texture_loader.py:52-71
         // Original: def __init__(self, installation_path: str, is_tsl: bool, request_queue, result_queue):
         public TextureLoader(string installationPath, bool isTsl)
         {
@@ -96,14 +96,14 @@ namespace OdyTools.Widgets
             _requestQueue.Enqueue(ShutdownSentinel);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/texture_loader.py:74-118
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/texture_loader.py:74-118
         // Original: def run(self):
         public void Start()
         {
             _loaderTask = Task.Run(() => RunLoader(_cancellationTokenSource.Token));
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/texture_loader.py:74-118
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/texture_loader.py:74-118
         // Original: def run(self):
         private void RunLoader(CancellationToken cancellationToken)
         {
@@ -116,7 +116,7 @@ namespace OdyTools.Widgets
                 _installation = new Installation(_installationPath);
                 System.Console.WriteLine($"TextureLoader started for: {_installationPath}");
 
-                // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/texture_loader.py:83-113
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/texture_loader.py:83-113
                 // Original: while not self._shutdown.is_set():
                 while (!cancellationToken.IsCancellationRequested)
                 {
@@ -189,7 +189,7 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/texture_loader.py:120-165
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/texture_loader.py:120-165
         // Original: def _load_texture(self, installation, resref, restype, icon_size: int = 64) -> bytes:
         private byte[] LoadTextureInternal(Installation installation, string resref, ResourceType restype, int iconSize = 64)
         {
@@ -235,7 +235,7 @@ namespace OdyTools.Widgets
             return SerializeMipmap(mipmap);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/texture_loader.py:170-190
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/texture_loader.py:170-190
         // Original: def _get_best_mipmap(self, tpc: TPC, target_size: int) -> TPCMipmap:
         private TPCMipmap GetBestMipmap(TPC tpc, int targetSize)
         {
@@ -270,7 +270,7 @@ namespace OdyTools.Widgets
             return bestMipmap;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/texture_loader.py:192-253
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/texture_loader.py:192-253
         // Original: def _load_tga_via_pil(self, data: bytes, icon_size: int) -> TPCMipmap:
         private TPCMipmap LoadTgaViaTgaReader(byte[] data, int iconSize)
         {
@@ -374,7 +374,7 @@ namespace OdyTools.Widgets
             return targetData;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/texture_loader.py:255-274
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/texture_loader.py:255-274
         // Original: def _serialize_mipmap(self, mipmap: TPCMipmap) -> bytes:
         private byte[] SerializeMipmap(TPCMipmap mipmap)
         {
@@ -405,7 +405,7 @@ namespace OdyTools.Widgets
         }
 
         // Public method for deserializing mipmap (can be used by consumers)
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/texture_loader.py:290-314
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/texture_loader.py:290-314
         // Original: def deserialize_mipmap(data: bytes) -> TPCMipmap:
         public static TPCMipmap DeserializeMipmap(byte[] data)
         {

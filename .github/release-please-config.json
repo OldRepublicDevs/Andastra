@@ -2,8 +2,8 @@
   "packages": {
     ".": {
       "release-type": "node",
-      "package-name": "HoloPatcher",
-      "version-file": "src/HoloPatcher/HoloPatcher.csproj",
+      "package-name": "OdyPatch",
+      "version-file": "src/OdyPatch/OdyPatch.csproj",
       "extra-files": [
         "src/CSharpKOTOR/CSharpKOTOR.csproj"
       ],

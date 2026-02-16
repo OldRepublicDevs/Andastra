@@ -10,11 +10,11 @@ using NcsFile = BioWare.Resource.Formats.NCS.Decomp.NcsFile;
 
 namespace OdyTools.Utils
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/script_decompiler.py:19
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_decompiler.py:19
     // Original: def ht_decompile_script(...):
     public static class ScriptDecompiler
     {
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/script_decompiler.py:19-95
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_decompiler.py:19-95
         // Original: def ht_decompile_script(compiled_bytes: bytes, installation_path: Path, *, tsl: bool) -> str:
         public static string HtDecompileScript(byte[] compiledBytes, string installationPath, bool tsl = false)
         {
@@ -26,7 +26,7 @@ namespace OdyTools.Utils
             var settings = new GlobalSettings();
             string extractPath = ScriptUtils.SetupExtractPath();
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/script_decompiler.py:46-60
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_decompiler.py:46-60
             // Original: Check for NCS decompiler path
             string ncsDecompilerPath = settings.GetValue("NcsDecompilerPath", "");
             if (string.IsNullOrEmpty(ncsDecompilerPath) || !File.Exists(ncsDecompilerPath))
@@ -55,7 +55,7 @@ namespace OdyTools.Utils
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/nss.py:2196-2246
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2196-2246
         // Original: def _decompile_ncs_dencs(self, ncs_data: bytes) -> str:
         private static string DecompileUsingBuiltIn(byte[] ncsData, string installationPath, bool tsl)
         {

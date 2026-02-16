@@ -1,5 +1,9 @@
 using System;
 using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.ReactiveUI;
 
 namespace OdyTools.Editors.Standalone.EditorStandaloneHost
@@ -10,14 +14,19 @@ namespace OdyTools.Editors.Standalone.EditorStandaloneHost
     ///   No args or "2da" = TwoDA editor (default)
     ///   Editor keys: 2da, tlk, gff, txt, ssf, ltr, lip, jrl, erf, ifo, git, utc, utp, utd, uts, utt, utm, utw, ute, uti, are, pth, dlg, wav, sav, lyt, mdl, tpc, bwm, nss
     /// </summary>
-    internal static class EditorStandaloneProgram
+    public static class EditorStandaloneProgram
     {
-        internal static string[] StartupArgs;
+        public static string[] StartupArgs;
+        public static string StartupThemeVariantName = "dark";
+
+        /// <summary>Set when startup fails; used by StandaloneErrorApp to show the error in a window.</summary>
+        public static Exception LastStartupException;
 
         [STAThread]
         public static void Main(string[] args)
         {
             StartupArgs = args ?? new string[0];
+            ParseStartupArguments(StartupArgs);
             try
             {
                 BuildAvaloniaApp()
@@ -25,9 +34,20 @@ namespace OdyTools.Editors.Standalone.EditorStandaloneHost
             }
             catch (Exception ex)
             {
+                LastStartupException = ex;
                 System.Diagnostics.Debug.WriteLine(ex.ToString());
                 Console.Error.WriteLine("Editor standalone failed to start: " + ex);
-                throw;
+                try
+                {
+                    AppBuilder.Configure<StandaloneErrorApp>()
+                        .UsePlatformDetect()
+                        .StartWithClassicDesktopLifetime(Array.Empty<string>());
+                }
+                catch
+                {
+                    Console.Error.WriteLine(ex.ToString());
+                    Environment.Exit(1);
+                }
             }
         }
 
@@ -36,5 +56,58 @@ namespace OdyTools.Editors.Standalone.EditorStandaloneHost
                 .UsePlatformDetect()
                 .LogToTrace()
                 .UseReactiveUI();
+
+        private static void ParseStartupArguments(string[] args)
+        {
+            if (args == null || args.Length == 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                var arg = (args[i] ?? string.Empty).Trim().ToLowerInvariant();
+                if (arg == "--theme" && i + 1 < args.Length)
+                {
+                    var value = (args[i + 1] ?? string.Empty).Trim().ToLowerInvariant();
+                    if (value == "light" || value == "dark")
+                    {
+                        StartupThemeVariantName = value;
+                    }
+                    i++;
+                }
+            }
+        }
+    }
+
+    /// <summary>Minimal Avalonia app used when main editor fails to start; shows error in a window so the process does not exit silently.</summary>
+    internal sealed class StandaloneErrorApp : Application
+    {
+        public override void Initialize() { }
+
+        public override void OnFrameworkInitializationCompleted()
+        {
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                var ex = EditorStandaloneProgram.LastStartupException;
+                desktop.MainWindow = new Window
+                {
+                    Title = "Editor failed to start",
+                    Width = 700,
+                    Height = 400,
+                    Content = new ScrollViewer
+                    {
+                        Content = new TextBlock
+                        {
+                            Text = ex?.ToString() ?? "Unknown error",
+                            TextWrapping = TextWrapping.Wrap,
+                            Margin = new Thickness(12)
+                        }
+                    }
+                };
+                desktop.MainWindow.Show();
+            }
+            base.OnFrameworkInitializationCompleted();
+        }
     }
 }

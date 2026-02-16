@@ -3,7 +3,8 @@
         x:Class="OdyTools.Dialogs.CloneModuleDialog"
         Title="Clone Module"
         Width="440" Height="273"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        RequestedThemeVariant="Light">
     <Grid RowDefinitions="*,Auto" Margin="10">
         <!-- Main Content -->
         <Grid Grid.Row="0" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto">

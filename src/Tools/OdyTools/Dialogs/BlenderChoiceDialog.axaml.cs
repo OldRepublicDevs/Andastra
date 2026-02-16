@@ -9,7 +9,7 @@ using OdyTools.Blender;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/blender_choice.py:40
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/blender_choice.py:40
     // Original: class BlenderChoiceDialog(QDialog):
     public partial class BlenderChoiceDialog : Window
     {
@@ -27,7 +27,7 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/blender_choice.py:49-66
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/blender_choice.py:49-66
         // Original: def __init__(self, parent, blender_info=None, context="Module Designer"):
         public BlenderChoiceDialog(Window parent, BlenderInfo blenderInfo = null, string context = "Module Designer")
         {
@@ -132,15 +132,15 @@ namespace OdyTools.Dialogs
             UpdateBlenderButtonState();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/blender_choice.py:68-71
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/blender_choice.py:68-71
         // Original: @property def choice(self) -> str:
         public string Choice => _choice;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/blender_choice.py:73-76
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/blender_choice.py:73-76
         // Original: @property def remember_choice(self) -> bool:
         public bool RememberChoice => _rememberCheckbox?.IsChecked ?? false;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/blender_choice.py:158-251
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/blender_choice.py:158-251
         // Original: def _update_blender_info_display(self):
         private void UpdateBlenderInfoDisplay()
         {
@@ -241,7 +241,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/blender_choice.py:290-310
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/blender_choice.py:290-310
         // Original: def _update_blender_button_state(self):
         private void UpdateBlenderButtonState()
         {
@@ -278,7 +278,7 @@ namespace OdyTools.Dialogs
             ToolTip.SetTip(_blenderButton, tooltip);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/blender_choice.py:312-315
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/blender_choice.py:312-315
         // Original: def _choose_blender(self):
         private void ChooseBlender()
         {
@@ -286,7 +286,7 @@ namespace OdyTools.Dialogs
             Close();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/blender_choice.py:317-320
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/blender_choice.py:317-320
         // Original: def _choose_builtin(self):
         private void ChooseBuiltin()
         {

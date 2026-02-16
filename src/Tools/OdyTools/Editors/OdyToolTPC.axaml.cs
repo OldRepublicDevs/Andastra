@@ -9,14 +9,14 @@ using OdyTools.Data;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/tpc.py:48
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tpc.py:48
     // Original: class OdyToolTPC(Editor):
     public partial class OdyToolTPC : Editor
     {
         private TPC _tpc;
 
         public OdyToolTPC(Window parent = null, OdyInstallation installation = null)
-            : base(parent, "Texture Viewer", "none",
+            : base(parent, "OdyToolTPC", "none",
                 new[] { ResourceType.TPC, ResourceType.TGA, ResourceType.JPG, ResourceType.PNG, ResourceType.BMP },
                 new[] { ResourceType.TPC, ResourceType.TGA, ResourceType.JPG, ResourceType.PNG, ResourceType.BMP },
                 installation)

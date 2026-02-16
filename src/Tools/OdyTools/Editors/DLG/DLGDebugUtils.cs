@@ -12,7 +12,7 @@ namespace OdyTools.Editors.DLG
 {
     /// <summary>
     /// Debug utilities for DLG editor.
-    /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/debug_utils.py
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/debug_utils.py
     /// </summary>
     public static class DLGDebugUtils
     {

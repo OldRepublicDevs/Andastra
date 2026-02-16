@@ -1,10 +1,91 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:editors="clr-namespace:OdyTools.Editors"
         x:Class="OdyTools.Editors.OdyToolERF"
-        Title="ERF Editor"
-        Width="400" Height="369">
-    <DockPanel>
-        <!-- Menu Bar -->
+        Title="OdyToolERF"
+        MinWidth="520" MinHeight="380"
+        Width="720" Height="520"
+        RequestedThemeVariant="Light">
+    <Window.Styles>
+        <Style Selector="Window">
+            <Setter Property="Background" Value="#F3F5F9" />
+        </Style>
+        <Style Selector="Menu">
+            <Setter Property="Background" Value="#F1F3F4" />
+            <Setter Property="Foreground" Value="#202124" />
+            <Setter Property="BorderBrush" Value="#D7DBE6" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+        </Style>
+        <Style Selector="MenuItem">
+            <Setter Property="Foreground" Value="#202124" />
+        </Style>
+        <Style Selector="Menu MenuItem">
+            <Setter Property="Foreground" Value="#202124" />
+        </Style>
+        <Style Selector="Button.command">
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Background" Value="#E8EAED" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="#202124" />
+        </Style>
+        <Style Selector="Button.command:pointerover">
+            <Setter Property="Background" Value="#DADCE0" />
+        </Style>
+        <Style Selector="Button.command:pressed">
+            <Setter Property="Background" Value="#BDC1C6" />
+        </Style>
+        <Style Selector="Border.panel">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#D7DBE6" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+        <Style Selector="DataGrid.erfTable">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="GridLinesVisibility" Value="Horizontal" />
+            <Setter Property="HorizontalGridLinesBrush" Value="#E4E8F1" />
+            <Setter Property="CanUserSortColumns" Value="True" />
+            <Setter Property="CanUserResizeColumns" Value="True" />
+            <Setter Property="CanUserReorderColumns" Value="False" />
+            <Setter Property="SelectionMode" Value="Extended" />
+            <Setter Property="HeadersVisibility" Value="All" />
+        </Style>
+        <Style Selector="DataGrid.erfTable DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="Fill" Value="#E3F2FD" />
+        </Style>
+        <Style Selector="DataGrid.erfTable DataGridCell">
+            <Setter Property="Padding" Value="6,2" />
+            <Setter Property="MinHeight" Value="22" />
+            <Setter Property="Foreground" Value="#202124" />
+        </Style>
+        <Style Selector="DataGrid.erfTable DataGridColumnHeader">
+            <Setter Property="Padding" Value="6,4" />
+            <Setter Property="MinHeight" Value="24" />
+            <Setter Property="Background" Value="#E8EAED" />
+            <Setter Property="Foreground" Value="#202124" />
+        </Style>
+        <Style Selector="ContextMenu">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="Foreground" Value="#202124" />
+        </Style>
+        <Style Selector="ContextMenu MenuItem">
+            <Setter Property="Foreground" Value="#202124" />
+        </Style>
+        <Style Selector="ToolTip">
+            <Setter Property="Foreground" Value="#202124" />
+            <Setter Property="Background" Value="#FFFFFF" />
+        </Style>
+    </Window.Styles>
+
+    <DockPanel LastChildFill="True">
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
                 <MenuItem Header="_New" Name="actionNew" />
@@ -29,42 +110,58 @@
                 <MenuItem Header="_Extract" Name="actionExtract" />
                 <MenuItem Header="_Open Resource" Name="actionOpenResource" />
             </MenuItem>
+            <MenuItem Header="_Language" Name="menuLanguage">
+                <MenuItem Header="English" Name="actionLangEnglish" />
+                <MenuItem Header="Français" Name="actionLangFrench" />
+                <MenuItem Header="Deutsch" Name="actionLangGerman" />
+                <MenuItem Header="Italiano" Name="actionLangItalian" />
+                <MenuItem Header="Español" Name="actionLangSpanish" />
+                <MenuItem Header="Polski" Name="actionLangPolish" />
+            </MenuItem>
         </Menu>
 
-        <!-- Main Content -->
-        <Grid RowDefinitions="Auto,*,Auto,Auto,Auto">
-            <!-- Filter -->
-            <TextBox Name="filterEdit" Grid.Row="0" Watermark="Filter by ResRef or Type..." Margin="4,2" />
-            <!-- Table View -->
-            <DataGrid Name="tableView" Grid.Row="1"
-                      AutoGenerateColumns="True"
-                      CanUserReorderColumns="False"
-                      CanUserResizeColumns="True"
-                      SelectionMode="Extended"
-                      GridLinesVisibility="None">
-                <DataGrid.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="Extract" Name="ctxExtract" />
-                        <MenuItem Header="Open" Name="ctxOpen" />
-                        <MenuItem Header="Remove" Name="ctxRemove" />
-                        <Separator />
-                        <MenuItem Header="Find..." Name="ctxFind" />
-                    </ContextMenu>
-                </DataGrid.ContextMenu>
-            </DataGrid>
-            <!-- Extract and Open Buttons -->
-            <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="5">
-                <Button Name="extractButton" Content="Extract" IsEnabled="False" Margin="0,0,5,0" />
-                <Button Name="openButton" Content="Open" IsEnabled="False" />
-            </StackPanel>
-            <!-- Add, Remove, Reload Buttons -->
-            <StackPanel Orientation="Horizontal" Grid.Row="3" Margin="5">
-                <Button Name="loadButton" Content="Add" Margin="0,0,5,0" />
-                <Button Name="unloadButton" Content="Remove" IsEnabled="False" Margin="0,0,5,0" />
-                <Button Name="refreshButton" Content="Reload" IsEnabled="False" />
-            </StackPanel>
-            <!-- Status Bar -->
-            <TextBlock Name="statusText" Grid.Row="4" Text="0 resources" Margin="4,2" />
+        <Border DockPanel.Dock="Bottom" Background="#E8EAED" BorderBrush="#DADCE0" BorderThickness="0,1,0,0" Padding="8,4" Height="24">
+            <TextBlock Name="statusText" Text="0 resources" VerticalAlignment="Center" HorizontalAlignment="Left" TextTrimming="CharacterEllipsis" FontSize="11" Foreground="#202124" />
+        </Border>
+
+        <Grid RowDefinitions="Auto,*" Margin="8" RowSpacing="6">
+            <!-- Toolbar: filter + actions in one compact row -->
+            <Border Background="#FFFFFF" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="6" Padding="8,6">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <TextBox Name="filterEdit" Grid.Column="0" Watermark="Filter by ResRef or Type…" Padding="6,4" FontSize="11" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="0">
+                        <Button Name="extractButton" Classes="command" Content="Extract" IsEnabled="False" ToolTip.Tip="Extract selected resources" />
+                        <Button Name="openButton" Classes="command" Content="Open" IsEnabled="False" ToolTip.Tip="Open selected resource" />
+                        <Button Name="loadButton" Classes="command" Content="Add" ToolTip.Tip="Add resources to archive" />
+                        <Button Name="unloadButton" Classes="command" Content="Remove" IsEnabled="False" ToolTip.Tip="Remove selected resources" />
+                        <Button Name="refreshButton" Classes="command" Content="Reload" IsEnabled="False" ToolTip.Tip="Reload from disk" Margin="0,0,0,0" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Classes="panel" Grid.Row="1" Padding="0" MinHeight="120">
+                <DataGrid Name="tableView" Classes="erfTable"
+                          x:DataType="editors:ERFResourceViewModel"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="ResRef" Binding="{Binding ResRef}" Width="120" />
+                        <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="80" />
+                        <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="80" />
+                        <DataGridTextColumn Header="Offset" Binding="{Binding Offset}" Width="80" />
+                    </DataGrid.Columns>
+                    <DataGrid.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Extract to..." Name="ctxExtract" />
+                            <MenuItem Header="Rename" Name="ctxRename" />
+                            <MenuItem Header="Open" Name="ctxOpen" />
+                            <MenuItem Header="Remove" Name="ctxRemove" />
+                            <Separator />
+                            <MenuItem Header="Find..." Name="ctxFind" />
+                        </ContextMenu>
+                    </DataGrid.ContextMenu>
+                </DataGrid>
+            </Border>
         </Grid>
     </DockPanel>
 </Window>

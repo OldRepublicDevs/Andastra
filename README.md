@@ -83,7 +83,7 @@ The Andastra runtime is organized into a layered architecture with strict depend
 
 **Development Tools:**
 
-- `HoloPatcher.UI` - Mod installation and patching tool
+- `OdyPatch.UI` - Mod installation and patching tool
 - `NCSDecomp` - NWScript bytecode decompiler
 - `NSSComp` - NWScript compiler
 - `OdyTools.NET` - Content creation and editing tools
@@ -104,7 +104,7 @@ The Andastra runtime is organized into a layered architecture with strict depend
 
 ### Development Tools
 
-- **HoloPatcher**: Comprehensive mod installation tool with support for 2DA, GFF, TLK, NSS/NCS, and SSF modifications
+- **OdyPatch**: Comprehensive mod installation tool with support for 2DA, GFF, TLK, NSS/NCS, and SSF modifications
 - **NCSDecomp**: Decompile NWScript bytecode back to source with full instruction analysis
 - **Script Compiler**: Compile NWScript source files to bytecode with KOTOR 1/2 compatibility
 - **Format Tools**: Read, write, and manipulate all game file formats
@@ -147,8 +147,8 @@ dotnet run --project src/Andastra/Game/Andastra.Game.csproj -- --game-path "C:\G
 ### Development Tools
 
 ```bash
-# Run HoloPatcher
-dotnet run --project src/Tools/HoloPatcher.UI/HoloPatcher.UI.csproj
+# Run OdyPatch
+dotnet run --project src/Tools/OdyPatch.UI/OdyPatch.UI.csproj
 
 # Run NCSDecomp
 dotnet run --project src/Tools/NCSDecomp/NCSDecomp.csproj
@@ -174,7 +174,7 @@ Andastra.NET/
 │   │   └── Utility/           # Shared utilities
 │   ├── BioWare.NET/               # File format parsers
 │   └── Tools/                 # Development tools
-│       ├── HoloPatcher.UI/
+│       ├── OdyPatch.UI/
 │       ├── NCSDecomp/
 │       ├── OdyTools.NET/
 │       └── ...

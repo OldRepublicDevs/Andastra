@@ -6,7 +6,7 @@ using Avalonia.Markup.Xaml;
 
 namespace OdyTools.Widgets
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/breadcrumbs_widget.py:14
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/breadcrumbs_widget.py:14
     // Original: class BreadcrumbsWidget(QWidget):
     public partial class BreadcrumbsWidget : UserControl
     {
@@ -17,7 +17,7 @@ namespace OdyTools.Widgets
 
         public event Action<string> ItemClicked;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/breadcrumbs_widget.py:19-23
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/breadcrumbs_widget.py:19-23
         // Original: def __init__(self, parent: QWidget | None = None):
         public BreadcrumbsWidget()
         {
@@ -89,7 +89,7 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/breadcrumbs_widget.py:53-61
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/breadcrumbs_widget.py:53-61
         // Original: def set_path(self, path: list[str]):
         public void SetPath(List<string> path)
         {
@@ -97,7 +97,7 @@ namespace OdyTools.Widgets
             UpdateDisplay();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/breadcrumbs_widget.py:63-90
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/breadcrumbs_widget.py:63-90
         // Original: def _update_display(self):
         private void UpdateDisplay()
         {
@@ -129,7 +129,7 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/breadcrumbs_widget.py:92-95
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/breadcrumbs_widget.py:92-95
         // Original: def _on_segment_clicked(self, index: int):
         private void OnSegmentClicked(int index)
         {
@@ -139,7 +139,7 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/common/widgets/breadcrumbs_widget.py:97-99
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/breadcrumbs_widget.py:97-99
         // Original: def clear(self):
         public void Clear()
         {

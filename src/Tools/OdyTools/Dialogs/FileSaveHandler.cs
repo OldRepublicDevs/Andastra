@@ -8,20 +8,20 @@ using FileResource = BioWare.Extract.FileResource;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/save/generic_file_saver.py:29
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/generic_file_saver.py:29
     // Original: class FileSaveHandler(Generic[T]):
     public class FileSaveHandler
     {
         private List<FileResource> _resources;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/save/generic_file_saver.py:30-36
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/generic_file_saver.py:30-36
         // Original: def __init__(self, resources: Sequence[T], parent: QWidget | None = None):
         public FileSaveHandler(List<FileResource> resources)
         {
             _resources = resources ?? new List<FileResource>();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/save/generic_file_saver.py:50-74
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/generic_file_saver.py:50-74
         // Original: def save_files(self, paths_to_write: dict[T, Path] | None = None) -> dict[T, Path]:
         public Dictionary<FileResource, string> SaveFiles(Dictionary<FileResource, string> pathsToWrite = null)
         {
@@ -55,7 +55,7 @@ namespace OdyTools.Dialogs
             return successfullySavedPaths;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/save/generic_file_saver.py:76-109
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/generic_file_saver.py:76-109
         // Original: def build_paths_to_write(self) -> dict[T, Path]:
         private Dictionary<FileResource, string> BuildPathsToWrite()
         {
@@ -84,7 +84,7 @@ namespace OdyTools.Dialogs
             return pathsToWrite;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/save/generic_file_saver.py:200-234
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/generic_file_saver.py:200-234
         // Original: def _handle_failed_extractions(self, failed_extractions: dict[Path, Exception]):
         private void HandleFailedExtractions(Dictionary<string, Exception> failedExtractions)
         {

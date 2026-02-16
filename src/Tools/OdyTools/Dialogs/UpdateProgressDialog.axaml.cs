@@ -9,7 +9,7 @@ using Avalonia.Threading;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/asyncloader.py:24
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/asyncloader.py:24
     // Original: class ProgressDialog(QDialog):
     /// <summary>
     /// Progress dialog for displaying update progress. Monitors a progress queue and updates the UI accordingly.

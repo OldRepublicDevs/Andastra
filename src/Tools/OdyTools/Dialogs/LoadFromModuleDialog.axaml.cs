@@ -10,7 +10,7 @@ using FileResource = BioWare.Extract.FileResource;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_module.py:14
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_module.py:14
     // Original: class LoadFromModuleDialog(QDialog):
     public partial class LoadFromModuleDialog : Window
     {
@@ -23,7 +23,7 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_module.py:17-60
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_module.py:17-60
         // Original: def __init__(self, capsule, supported):
         // Overload to accept Capsule directly (matching PyKotor interface)
         public LoadFromModuleDialog(Capsule capsule, IList<ResourceType> supported)
@@ -164,7 +164,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_module.py:54-60
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_module.py:54-60
         // Original: Build resource list from capsule
         private void BuildResourceList()
         {
@@ -180,7 +180,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/load_from_module.py:62-84
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_module.py:62-84
         // Original: def resname(self) -> str | None:
         public string ResName()
         {

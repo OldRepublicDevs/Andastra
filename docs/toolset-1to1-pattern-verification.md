@@ -42,7 +42,7 @@ All non-GFF editors have been checked for the pattern:
 - ✅ **OdyToolDLG** - Dialog editor
 - ✅ **OdyToolWAV** - Audio editor
 - ✅ **OdyToolTXT** - Text editor
-- ✅ **OdyToolTwoDA** - 2DA table editor
+- ✅ **OdyTool2DA** - 2DA table editor
 - ✅ **OdyToolTPC** - Texture editor
 - ✅ **OdyToolTLK** - Talk table editor
 - ✅ **OdyToolSSF** - Sound set editor

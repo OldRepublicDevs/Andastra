@@ -2,10 +2,49 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:editors="clr-namespace:OdyTools.Editors"
         x:Class="OdyTools.Editors.OdyToolGFF"
-        Title="GFF Editor"
+        Title="OdyToolGFF"
         MinWidth="400" MinHeight="250"
-        Width="668" Height="486">
-    <DockPanel>
+        Width="668" Height="486"
+        RequestedThemeVariant="Light">
+    <Window.Styles>
+        <Style Selector="Window">
+            <Setter Property="Background" Value="#F3F5F9" />
+        </Style>
+        <Style Selector="Menu">
+            <Setter Property="Background" Value="#F1F3F4" />
+            <Setter Property="Foreground" Value="#202124" />
+            <Setter Property="BorderBrush" Value="#D7DBE6" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+        </Style>
+        <Style Selector="MenuItem">
+            <Setter Property="Foreground" Value="#202124" />
+        </Style>
+        <Style Selector="Menu MenuItem">
+            <Setter Property="Foreground" Value="#202124" />
+        </Style>
+        <Style Selector="Button.command">
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Padding" Value="6,3" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="#202124" />
+        </Style>
+        <Style Selector="Button.command:pointerover">
+            <Setter Property="Background" Value="#E8EAED" />
+        </Style>
+        <Style Selector="Border.panel">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#D7DBE6" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+        </Style>
+        <Style Selector="TextBlock#statusText">
+            <Setter Property="Foreground" Value="#202124" />
+        </Style>
+    </Window.Styles>
+    <DockPanel LastChildFill="True">
         <!-- Menu Bar -->
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
@@ -58,41 +97,49 @@
                 <MenuItem Header="_Convert value..." Name="actionConvertValue" />
                 <MenuItem Header="Set TLK" Name="actionSetTLK" />
             </MenuItem>
+            <MenuItem Header="_Language" Name="menuLanguage">
+                <MenuItem Header="English" Name="actionLangEnglish" />
+                <MenuItem Header="Français" Name="actionLangFrench" />
+                <MenuItem Header="Deutsch" Name="actionLangGerman" />
+                <MenuItem Header="Italiano" Name="actionLangItalian" />
+                <MenuItem Header="Español" Name="actionLangSpanish" />
+                <MenuItem Header="Polski" Name="actionLangPolish" />
+            </MenuItem>
         </Menu>
 
         <!-- Main Content + Status bar -->
         <Grid RowDefinitions="*,Auto">
         <Grid Name="mainGrid" Grid.Row="0" ColumnDefinitions="2*,*">
             <!-- Tree View (left) - Tiled-style outline; zoom via FontSize in code-behind -->
-            <Border Grid.Column="0" BorderBrush="#D0D0D0" BorderThickness="0,0,1,0" Padding="4">
-                <TreeView Name="treeView" FontFamily="Courier New" FontSize="12">
+            <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#D7DBE6" BorderThickness="0,0,1,0" Padding="4">
+                <TreeView Name="treeView" FontFamily="Courier New" FontSize="12" Background="Transparent">
                 <TreeView.ItemTemplate>
                     <TreeDataTemplate DataType="editors:GFFTreeNodeViewModel" ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal" Spacing="12">
-                            <TextBlock Text="{Binding KeyDisplay}" FontFamily="Courier New" FontWeight="SemiBold" MinWidth="120" />
-                            <TextBlock Text="{Binding TypeDisplay}" FontFamily="Courier New" Foreground="Gray" MinWidth="80" />
-                            <TextBlock Text="{Binding ValueSummary}" FontFamily="Courier New" Foreground="#606060" TextTrimming="CharacterEllipsis" MaxWidth="200" />
+                            <TextBlock Text="{Binding KeyDisplay, FallbackValue=''}" FontFamily="Courier New" FontWeight="SemiBold" MinWidth="120" Foreground="#202124" />
+                            <TextBlock Text="{Binding TypeDisplay, FallbackValue=''}" FontFamily="Courier New" Foreground="#3C4043" MinWidth="80" />
+                            <TextBlock Text="{Binding ValueSummary, FallbackValue=''}" FontFamily="Courier New" Foreground="#3C4043" TextTrimming="CharacterEllipsis" MaxWidth="200" />
                         </StackPanel>
                     </TreeDataTemplate>
                 </TreeView.ItemTemplate>
             </TreeView>
             </Border>
 
-            <!-- Right Panel - Tiled-style Properties dock -->
+            <!-- Right Panel - Tiled-style Properties dock (explicit Foreground for light themes) -->
             <Grid Name="rightPanel" Grid.Column="1" RowDefinitions="Auto,Auto,*" Margin="0" MinWidth="220">
-                <!-- Properties header (Tiled-style dock title) -->
-                <Border Grid.Row="0" Background="#F0F0F0" BorderBrush="#D0D0D0" BorderThickness="0,0,0,1" Padding="8,6">
-                    <TextBlock Text="Properties" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center" />
+                <!-- Properties header -->
+                <Border Grid.Row="0" Background="#E8EAED" BorderBrush="#D7DBE6" BorderThickness="0,0,0,1" Padding="8,6">
+                    <TextBlock Text="Properties" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center" Foreground="#202124" />
                 </Border>
-                <Border Name="fieldBox" Grid.Row="1" BorderBrush="#D0D0D0" BorderThickness="1" Padding="10" Margin="6,6,6,10" IsEnabled="False" Background="#FAFAFA" CornerRadius="2">
+                <Border Name="fieldBox" Grid.Row="1" BorderBrush="#D7DBE6" BorderThickness="1" Padding="10" Margin="6,6,6,10" IsEnabled="False" Background="#FAFBFC" CornerRadius="4">
                     <Grid RowDefinitions="Auto,Auto">
                         <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,5">
-                            <TextBlock Text="Label:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" />
-                            <TextBox Name="labelEdit" Grid.Column="1" MaxLength="16" />
+                            <TextBlock Text="Label:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#202124" />
+                            <TextBox Name="labelEdit" Grid.Column="1" MaxLength="16" Foreground="#202124" />
                         </Grid>
                         <Grid Grid.Row="1" ColumnDefinitions="Auto,*">
-                            <TextBlock Text="Type:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" />
-                            <ComboBox Name="typeCombo" Grid.Column="1">
+                            <TextBlock Text="Type:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#202124" />
+                            <ComboBox Name="typeCombo" Grid.Column="1" Foreground="#202124">
                                 <ComboBoxItem Content="UInt8" />
                                 <ComboBoxItem Content="Int8" />
                                 <ComboBoxItem Content="UInt16" />
@@ -116,16 +163,16 @@
                     </Grid>
                 </Border>
 
-                <!-- Pages Stack -->
-                <ContentControl Name="pages" Grid.Row="2" Margin="6,0,6,6" />
+                <!-- Pages Stack (value editors) -->
+                <ContentControl Name="pages" Grid.Row="2" Margin="6,0,6,6" Foreground="#202124" />
             </Grid>
         </Grid>
-        <!-- Status bar - Tiled-style: left=status text, right=zoom -->
-        <Border Grid.Row="1" Padding="8,4" Background="#E8E8E8" BorderBrush="#D0D0D0" BorderThickness="0,1,0,0">
+        <!-- Status bar -->
+        <Border Grid.Row="1" Padding="8,4" Background="#E8EAED" BorderBrush="#DADCE0" BorderThickness="0,1,0,0">
             <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Name="statusText" Text="GFF Editor" VerticalAlignment="Center" Grid.Column="0" />
+                <TextBlock Name="statusText" Text="OdyToolGFF" VerticalAlignment="Center" Grid.Column="0" Foreground="#202124" />
                 <StackPanel Orientation="Horizontal" Spacing="8" Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Text="Zoom:" VerticalAlignment="Center" Foreground="#606060" Margin="0,0,4,0" />
+                    <TextBlock Text="Zoom:" VerticalAlignment="Center" Foreground="#3C4043" Margin="0,0,4,0" />
                     <ComboBox Name="zoomCombo" MinWidth="72" />
                 </StackPanel>
             </Grid>

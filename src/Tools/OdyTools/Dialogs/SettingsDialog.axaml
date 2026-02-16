@@ -4,7 +4,13 @@
         x:Class="OdyTools.Dialogs.SettingsDialog"
         Title="Settings"
         Width="757" Height="451"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        RequestedThemeVariant="Light">
+    <Window.Styles>
+        <Style Selector="Window">
+            <Setter Property="Background" Value="#F3F5F9" />
+        </Style>
+    </Window.Styles>
     <Grid RowDefinitions="*,Auto">
         <!-- Splitter with Settings Tree and Stacked Widgets -->
         <Grid ColumnDefinitions="200,*" Grid.Row="0">

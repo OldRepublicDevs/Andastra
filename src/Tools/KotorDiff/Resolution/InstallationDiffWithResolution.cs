@@ -10,6 +10,7 @@ using BioWare.Extract;
 using BioWare.Common;
 using BioWare.Resource;
 using BioWare.TSLPatcher.Mods;
+using KotorDiff;
 using KotorDiff.Diff;
 using BioWare.TSLPatcher;
 using JetBrains.Annotations;
@@ -595,7 +596,7 @@ namespace KotorDiff.Resolution
                 {
                     try
                     {
-                        string rel1 = Path.GetRelativePath(install1.Path, resolved1.Filepath);
+                        string rel1 = install1.Path.GetRelativePath(resolved1.Filepath);
                         file1Path = Path.Combine(install1Name, rel1);
                     }
                     catch (ArgumentException)
@@ -613,7 +614,7 @@ namespace KotorDiff.Resolution
                 {
                     try
                     {
-                        string rel2 = Path.GetRelativePath(install2.Path, resolved2.Filepath);
+                        string rel2 = install2.Path.GetRelativePath(resolved2.Filepath);
                         file2Path = Path.Combine(install2Name, rel2);
                     }
                     catch (ArgumentException)

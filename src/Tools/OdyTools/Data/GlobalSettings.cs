@@ -7,7 +7,7 @@ using OdyTools.Data;
 
 namespace OdyTools.Data
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/installations.py:203
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py:203
     // Original: class GlobalSettings(Settings):
     public class GlobalSettings : Settings
     {
@@ -31,14 +31,14 @@ namespace OdyTools.Data
                 return _instance;
             }
         }
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/installations.py:GlobalSettings
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py:GlobalSettings
         // Original: gffSpecializedEditors: SettingsProperty[bool] = SettingsProperty("gffSpecializedEditors", True)
         public SettingsProperty<bool> GffSpecializedEditors { get; } = new SettingsProperty<bool>("GffSpecializedEditors", true);
 
         public bool UseBetaChannel { get; set; } = false;
         public string SelectedTheme { get; set; } = "Light";
         public string SelectedStyle { get; set; } = "";
-        public int SelectedLanguage { get; set; } = 0; // 0 = English
+        public int SelectedLanguage { get; set; } = 0; // 0-5, default uses system language when no preference saved
         public bool JoinRIMsTogether { get; set; } = true;
         public string ExtractPath { get; set; } = "";
         public string NssCompilerPath { get; set; } = "";
@@ -46,7 +46,7 @@ namespace OdyTools.Data
         public List<string> RecentFiles { get; set; } = new List<string>();
         private bool _firstTime = true;
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/application.py:311
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:311
         // Original: app_env_variables: SettingsProperty[dict[str, str]] = Settings.addSetting("EnvironmentVariables", {...})
         public Dictionary<string, string> AppEnvVariables
         {
@@ -65,7 +65,7 @@ namespace OdyTools.Data
             UseBetaChannel = GetValue("UseBetaChannel", false);
             SelectedTheme = GetValue("SelectedTheme", "Light");
             SelectedStyle = GetValue("SelectedStyle", "");
-            SelectedLanguage = GetValue("SelectedLanguage", 0);
+            SelectedLanguage = GetValue("SelectedLanguage", OdyTools.Common.Localization.GetSystemLanguageAsInt());
             JoinRIMsTogether = GetValue("JoinRIMsTogether", true);
             _firstTime = GetValue("FirstTime", true);
         }
@@ -80,7 +80,7 @@ namespace OdyTools.Data
             GffSpecializedEditors.SetValue(this, value);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/installations.py:207-221
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py:207-221
         // Original: def installations(self) -> dict[str, InstallationConfig]:
         public Dictionary<string, Dictionary<string, object>> Installations()
         {
@@ -170,7 +170,7 @@ namespace OdyTools.Data
             SetValue("Installations", installations);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/installations.py:358
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py:358
         // Original: showPreviewUTC: SettingsProperty[bool] = Settings.addSetting("showPreviewUTC", ...)
         public bool ShowPreviewUTC
         {
@@ -178,7 +178,7 @@ namespace OdyTools.Data
             set => SetValue("showPreviewUTC", value);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/installations.py
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py
         // Original: showPreviewUTD: SettingsProperty[bool] = Settings.addSetting("showPreviewUTD", ...)
         public bool ShowPreviewUTD
         {
@@ -186,7 +186,7 @@ namespace OdyTools.Data
             set => SetValue("showPreviewUTD", value);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/installations.py
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py
         // Original: showPreviewUTP: SettingsProperty[bool] = Settings.addSetting("showPreviewUTP", ...)
         public bool ShowPreviewUTP
         {
@@ -194,7 +194,7 @@ namespace OdyTools.Data
             set => SetValue("showPreviewUTP", value);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/widgets/application.py:60-67
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:60-67
         // Original: settings.value("GlobalFont", "")
         public string GlobalFont
         {

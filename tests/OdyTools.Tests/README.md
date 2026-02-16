@@ -7,7 +7,7 @@ Editor tests for OdyTools, mirroring the Python editor tests under `PyKotor/Tool
 - **TPC, TXT, UTC, UTD, UTE, UTI, UTM, UTP, UTS, UTT, UTW** – TPC/TXT/UT*/WAV/2DA/… via dedicated or GFF-based tests  
 - **WAV, 2DA, ARE, BWM, DLG, ERF, GFF, GIT, IFO, JRL, LIP, LTR, MDL, NSS, PTH, save, SSF, TLK** – covered by `*EditorTests.cs` and `GFFBasedEditorTests.cs`
 
-**Test classes:** `OdyToolBWMTests`, `OdyToolDLGTests`, `OdyToolERFTests`, `OdyToolGFFTests`, `OdyToolGFFBasedTests` (UTC, UTD, UTE, UTI, UTM, UTP, UTS, UTT, UTW, ARE, GIT, IFO, JRL, PTH), `OdyToolLIPTests`, `OdyToolLTRTests`, `OdyToolMDLTests`, `OdyToolNSSTests`, `OdyToolSAVTests`, `OdyToolSSFTests`, `OdyToolTLKTests`, `OdyToolTPCTests`, `OdyToolTwoDATests`, `OdyToolTXTTests`, `OdyToolWAVTests`.
+**Test classes:** `OdyToolBWMTests`, `OdyToolDLGTests`, `OdyToolERFTests`, `OdyToolGFFTests`, `OdyToolGFFBasedTests` (UTC, UTD, UTE, UTI, UTM, UTP, UTS, UTT, UTW, ARE, GIT, IFO, JRL, PTH), `OdyToolLIPTests`, `OdyToolLTRTests`, `OdyToolMDLTests`, `OdyToolNSSTests`, `OdyToolSAVTests`, `OdyToolSSFTests`, `OdyToolTLKTests`, `OdyToolTPCTests`, `OdyTool2DATests`, `OdyToolTXTTests`, `OdyToolWAVTests`.
 
 Tests use **Avalonia headless** (`HeadlessUnitTestSession.StartNew(typeof(TestApp))`) so no display is required.
 

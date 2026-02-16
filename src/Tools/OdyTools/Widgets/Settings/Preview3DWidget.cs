@@ -5,7 +5,7 @@ using OdyTools.Data;
 
 namespace OdyTools.Widgets.Settings
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/widgets/settings/preview_3d.py:13
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/preview_3d.py:13
     // Original: class ModelRendererSettings(Settings):
     public partial class Preview3DWidget : UserControl
     {

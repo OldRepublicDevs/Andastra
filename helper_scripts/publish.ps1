@@ -1,455 +1,709 @@
-# Andastra publish script (unified: predefined profiles + pubxml-based).
-# Publishes executable csproj(s) for multiple RIDs; optionally creates zip archives.
-# Modes: -PublishProfilesDir (use project's .pubxml) or predefined profiles.
-# Cross-platform: discovers 7z/7za dynamically; use -SevenZipPath to override.
-# Run from repo root: .\helper_scripts\publish.ps1 -Project src/Andastra/Andastra.csproj
-# HoloPatcher with pubxml: .\helper_scripts\publish.ps1 -Project src/Tools/HoloPatcher/HoloPatcher.csproj -PublishProfilesDir src/Tools/HoloPatcher/Properties/PublishProfiles -CreateArchives
+# PowerShell version of publish_release.bat - multi-RID publish + zip archives.
+# Data-driven profiles; comprehensive logging. Run from project root.
+# When -ProjectFile is omitted, discovers all .csproj from the solution (Andastra.sln). This script never writes or modifies any .sln file.
+# Projects under toplevel .history and vendor are excluded from discovery and build.
+#
+# Examples:
+#   .\helper_scripts\publish.ps1
+#   .\helper_scripts\publish.ps1 -SolutionPath Andastra.sln
+#   .\helper_scripts\publish.ps1 -ProjectFile "MyApp\MyApp.csproj"
+#   .\helper_scripts\publish.ps1 -KeepLogsAndBuilds 5   # keep 5 most recent logs/builds (default 3); 0 = disable
+#   .\helper_scripts\publish.ps1 -BuildOdyToolsInstaller   # stage OdyTools AIO + editors and build WiX installer
 
 param(
-    [string]$Version = "v1.0.0",
-    [string]$ProjectFile = "",
-    [string]$SolutionPath = "Andastra.sln",
-    [string]$PublishProfilesDir = "",  # When set: use .pubxml profiles from this dir (single-project mode)
-    [string]$SevenZipPath = "",        # Leave empty to auto-discover 7z/7za
+    [Alias("Project", "P")]
+    [string]$ProjectFile = "",              # When empty: discover publishable projects from solution.
+    [Alias("Solution", "S")]
+    [string]$SolutionPath = "",              # Path to .sln (required when -ProjectFile is empty and multiple .sln exist in CWD).
+    [string]$FrameworkDependent = "net48",  # net48 or net472 for non-self-contained profiles
+    [Alias("Framework")]
+    [string]$FrameworkVersion = "net9.0",
+    [Alias("SevenZip", "7z")]
+    [string]$SevenZipPath = "C:\Program Files\7-Zip\7z.exe",
+    [Alias("Output", "Out", "O")]
     [string]$OutputDir = "dist",
-    [string]$TargetFramework = "net9.0",
-    [switch]$CreateArchives,
+    [Alias("V")]
     [switch]$Verbose,
+    [Alias("D")]
     [switch]$Debug,
     [ValidateSet("SilentlyContinue", "Stop", "Continue", "Inquire", "Ignore", "Suspend")]
-    [string]$ErrorAction = "Inquire"
+    [string]$ErrorAction = "Inquire",
+    [Alias("Archive", "Archives", "A")]
+    [switch]$CreateArchives = $true,
+    # Keep only the N most recent publish logs and build_* directories; 0 = disable rotation.
+    [Alias("Keep", "Rotate")]
+    [int]$KeepLogsAndBuilds = 3,
+    # Stage OdyTools AIO + standalone editors and build the WiX installer (Windows only).
+    [switch]$BuildOdyToolsInstaller = $false,
+    # Run ONLY the OdyTools installer staging + WiX build (skip main project publishes). Use for quick installer pipeline verification.
+    [switch]$BuildOdyToolsInstallerOnly = $false
 )
 
-# Repo root = parent of helper_scripts
 $ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
-$RepoRoot = (Resolve-Path (Join-Path $ScriptDir "..")).Path
-Set-Location $RepoRoot
+$InitialCwd = (Get-Location).Path
+$RepoRootFromScript = (Resolve-Path (Join-Path $ScriptDir "..")).Path
 
-$BuildTimestamp = Get-Date -Format 'yyyy-MM-yy-HH-mm'
-$LogFile = Join-Path $RepoRoot "publish_$BuildTimestamp.log"
-$ErrorActionPreference = $ErrorAction
-
-# Publishable projects: discovered from solution (executable csproj only; excludes tests and libraries)
-function Get-SolutionProjectPaths {
-    param([string]$SolutionPath)
-    $slnPath = if ([IO.Path]::IsPathRooted($SolutionPath)) { $SolutionPath } else { Join-Path $RepoRoot $SolutionPath }
-    if (-not (Test-Path $slnPath)) { return @() }
-    $content = Get-Content $slnPath -Raw -ErrorAction SilentlyContinue
-    $matches = [regex]::Matches($content, 'Project\("[^"]+"\)\s*=\s*"[^"]+",\s*"([^"]+\.csproj)"')
-    $slnDir = Split-Path $slnPath -Parent
-    $projects = foreach ($m in $matches) {
-        $rel = $m.Groups[1].Value -replace '\\', '/'
-        $full = Join-Path $slnDir $rel
-        if (Test-Path $full) { $rel }
+# Resolve solution path. When -SolutionPath is empty: use single .sln in CWD; if multiple .sln exist, require -SolutionPath.
+function Resolve-SolutionPath {
+    if (-not [string]::IsNullOrWhiteSpace($SolutionPath)) {
+        $p = if ([IO.Path]::IsPathRooted($SolutionPath)) { $SolutionPath } else { Join-Path $InitialCwd $SolutionPath }
+        if (-not (Test-Path -LiteralPath $p -PathType Leaf)) { $p = Join-Path $RepoRootFromScript $SolutionPath }
+        if (-not (Test-Path -LiteralPath $p -PathType Leaf)) { throw "Solution file not found: $SolutionPath" }
+        $resolved = (Resolve-Path -LiteralPath $p).Path
+        $relFromRepo = $resolved.Substring($RepoRootFromScript.TrimEnd([IO.Path]::DirectorySeparatorChar).Length).TrimStart([IO.Path]::DirectorySeparatorChar)
+        if (Test-PathExcluded -PathOrRel $relFromRepo) { throw "Solution path is under .history or vendor: $SolutionPath" }
+        return $resolved
     }
-    return $projects
-}
-
-function Test-IsPublishableProject {
-    param([string]$CsprojPath)
-    $full = if ([IO.Path]::IsPathRooted($CsprojPath)) { $CsprojPath } else { Join-Path $RepoRoot $CsprojPath }
-    if (-not (Test-Path $full)) { return $false }
-    $content = Get-Content $full -Raw -ErrorAction SilentlyContinue
-    if (-not $content) { return $false }
-    if ($content -match 'IsTestProject\s*=\s*true') { return $false }
-    if ($content -match '<OutputType>\s*(Exe|WinExe)\s*</OutputType>') { return $true }
-    return $false
-}
-
-function Write-Log {
-    [CmdletBinding()]
-    param(
-        [string]$Message,
-        [string]$Level = "INFO",
-        [hashtable]$Variables = @{}
-    )
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $logMessage = "[$timestamp] [$Level] $Message"
-    if ($Variables.Count -gt 0) {
-        $logMessage += " | Variables: " + ($Variables.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join ", "
+    # Exclude .sln files under .history or vendor (toplevel or any path segment)
+    $slnExclude = { param($f) $norm = ($f.FullName -replace '\\', '/').ToLowerInvariant(); $norm -match '/\.history(/|$)|/vendor(/|$)' }
+    $slnsInCwd = @(Get-ChildItem -Path $InitialCwd -Filter "*.sln" -File -ErrorAction SilentlyContinue | Where-Object { -not (& $slnExclude $_) })
+    if ($slnsInCwd.Count -gt 1) {
+        throw "Multiple solution files found in current directory. Specify -SolutionPath (e.g. -SolutionPath Andastra.sln)"
     }
-    switch ($Level.ToUpper()) {
-        "ERROR" { Write-Host $logMessage -ForegroundColor "Red"; Add-Content -Path $LogFile -Value $logMessage }
-        "WARN"  { Write-Host $logMessage -ForegroundColor "Yellow"; Add-Content -Path $LogFile -Value $logMessage }
-        "INFO"  { Write-Host $logMessage -ForegroundColor "White"; Add-Content -Path $LogFile -Value $logMessage }
-        "DEBUG" { $oc = $Host.UI.RawUI.ForegroundColor; $Host.UI.RawUI.ForegroundColor = "DarkGray"; Write-Debug $logMessage; $Host.UI.RawUI.ForegroundColor = $oc; Add-Content -Path $LogFile -Value $logMessage }
-        "VERBOSE" { $oc = $Host.UI.RawUI.ForegroundColor; $Host.UI.RawUI.ForegroundColor = "Gray"; Write-Verbose $logMessage; $Host.UI.RawUI.ForegroundColor = $oc; Add-Content -Path $LogFile -Value $logMessage }
-        default { Write-Host $logMessage -ForegroundColor "Gray"; Add-Content -Path $LogFile -Value $logMessage }
+    if ($slnsInCwd.Count -eq 1) {
+        return (Resolve-Path -LiteralPath $slnsInCwd[0].FullName).Path
     }
-}
-
-if ($Debug) {
-    $DebugPreference = "Continue"
-    $VerbosePreference = "Continue"
-    Write-Log "Debug logging enabled" -Level "INFO"
-}
-elseif ($Verbose) {
-    $VerbosePreference = "Continue"
-    Write-Log "Verbose logging enabled" -Level "INFO"
-}
-
-# Platform detection (works in PS 5.1 and PowerShell Core; avoid $IsWindows/$IsMacOS/$IsLinux as they are read-only in PS Core)
-$script:RunningOnWindows = $env:OS -eq "Windows_NT"
-$script:RunningOnMacOS = -not $script:RunningOnWindows -and ($IsMacOS -or (Test-Path "/Applications" -ErrorAction SilentlyContinue))
-$script:RunningOnLinux = -not $script:RunningOnWindows -and -not $script:RunningOnMacOS
-
-function Find-SevenZip {
-    if (-not [string]::IsNullOrWhiteSpace($SevenZipPath)) {
-        if (Test-Path -LiteralPath $SevenZipPath -PathType Leaf) {
-            return (Resolve-Path -LiteralPath $SevenZipPath).Path
-        }
-        return $null
+    $slnsInRepo = @(Get-ChildItem -Path $RepoRootFromScript -Filter "*.sln" -File -ErrorAction SilentlyContinue | Where-Object { -not (& $slnExclude $_) })
+    if ($slnsInRepo.Count -gt 1) {
+        throw "Multiple solution files found in repo root. Specify -SolutionPath (e.g. -SolutionPath Andastra.sln)"
     }
-    $candidates = @()
-    if ($script:RunningOnWindows) {
-        $pf = $env:ProgramFiles
-        $pf86 = ${env:ProgramFiles(x86)}
-        $localAppData = $env:LOCALAPPDATA
-        $userProfile = $env:USERPROFILE
-        $programData = $env:ProgramData
-        $candidates = @(
-            (Join-Path (Join-Path $pf "7-Zip") "7z.exe"),
-            (Join-Path (Join-Path $pf86 "7-Zip") "7z.exe"),
-            (Join-Path (Join-Path (Join-Path $localAppData "Programs") "7-Zip") "7z.exe"),
-            (Join-Path (Join-Path $pf "7-Zip") "7za.exe"),
-            (Join-Path (Join-Path $pf86 "7-Zip") "7za.exe"),
-            (Join-Path (Join-Path (Join-Path (Join-Path (Join-Path $userProfile "scoop") "apps") "7zip") "current") "7z.exe"),
-            (Join-Path (Join-Path (Join-Path (Join-Path (Join-Path $userProfile "scoop") "apps") "7zip") "current") "7za.exe"),
-            (Join-Path (Join-Path (Join-Path $programData "chocolatey") "bin") "7z.exe"),
-            (Join-Path (Join-Path (Join-Path $programData "chocolatey") "bin") "7za.exe"),
-            (Join-Path (Join-Path (Join-Path (Join-Path $userProfile ".local") "share") "win-7zip") "7z.exe"),
-            "C:\Program Files\7-Zip\7z.exe",
-            "C:\Program Files (x86)\7-Zip\7z.exe",
-            "C:\7-Zip\7z.exe"
-        )
-    } elseif ($script:RunningOnMacOS) {
-        $candidates = @(
-            "/opt/homebrew/bin/7z", "/opt/homebrew/bin/7za", "/opt/homebrew/bin/7zr",
-            "/usr/local/bin/7z", "/usr/local/bin/7za", "/usr/local/bin/7zr",
-            "/opt/local/bin/7z", "/opt/local/bin/7za",
-            "/usr/bin/7z", "/usr/bin/7za"
-        )
-    } else {
-        $candidates = @(
-            "/usr/bin/7z", "/usr/bin/7za", "/usr/bin/7zr",
-            "/usr/local/bin/7z", "/usr/local/bin/7za", "/usr/local/bin/7zr",
-            "/opt/p7zip/bin/7z", "/opt/p7zip/bin/7za",
-            "/snap/bin/7z"
-        )
+    if ($slnsInRepo.Count -eq 1) {
+        return (Resolve-Path -LiteralPath $slnsInRepo[0].FullName).Path
     }
-    foreach ($p in $candidates) {
-        if ($p -and (Test-Path -LiteralPath $p -PathType Leaf -ErrorAction SilentlyContinue)) {
-            return (Resolve-Path -LiteralPath $p -ErrorAction SilentlyContinue).Path
-        }
-    }
-    $inPath = @("7z", "7za", "7zr") | ForEach-Object {
-        $cmd = Get-Command $_ -ErrorAction SilentlyContinue
-        if ($cmd) { $cmd.Source }
-    } | Select-Object -First 1
-    if ($inPath) { return $inPath }
     return $null
 }
 
-function Test-RequiredTools {
-    if ($CreateArchives) {
-        $resolved = Find-SevenZip
-        if (-not $resolved) {
-            $hint = if ($script:RunningOnWindows) { "Install 7-Zip or add it to PATH" } else { "Install p7zip (e.g. apt install p7zip-full, brew install p7zip)" }
-            Write-Log "7-Zip/p7zip not found. $hint" -Level "ERROR"
-            throw "7-Zip/p7zip not found. $hint"
+# Exclude paths under toplevel .history or vendor (or any path segment)
+function Test-PathExcluded {
+    param([string]$PathOrRel)
+    $norm = ($PathOrRel -replace '\\', '/').TrimStart('/').ToLowerInvariant()
+    return ($norm -match '(^|/)(\.history|vendor)(/|$)')
+}
+
+# Parse .sln for all .csproj paths (full path); excludes .history and vendor path segments
+function Get-SolutionProjectPaths {
+    param([string]$SlnPath, [string]$Root)
+    if (-not (Test-Path -LiteralPath $SlnPath -PathType Leaf)) { return @() }
+    $content = Get-Content -LiteralPath $SlnPath -Raw -ErrorAction SilentlyContinue
+    $regexMatches = [regex]::Matches($content, 'Project\("[^"]+"\)\s*=\s*"[^"]+",\s*"([^"]+\.csproj)"')
+    $slnDir = Split-Path $SlnPath -Parent
+    $projects = foreach ($m in $regexMatches) {
+        $rel = $m.Groups[1].Value -replace '\\', '/'
+        if (Test-PathExcluded -PathOrRel $rel) { continue }
+        $full = Join-Path $slnDir ($rel -replace '/', [IO.Path]::DirectorySeparatorChar)
+        if (Test-Path -LiteralPath $full) { (Resolve-Path -LiteralPath $full).Path }
+    }
+    return @($projects)
+}
+
+$RepoRoot = $RepoRootFromScript
+if (-not [string]::IsNullOrWhiteSpace($ProjectFile)) {
+    $ResolvedSolutionPath = $null
+} else {
+    $ResolvedSolutionPath = Resolve-SolutionPath
+    if ($ResolvedSolutionPath) { $RepoRoot = (Resolve-Path (Split-Path -Parent $ResolvedSolutionPath)).Path }
+}
+Set-Location $RepoRoot
+# Absolute path to the folder containing the .sln (trailing separator) for MSBuild /p:SolutionDir
+$Script:SolutionDirAbsolute = $RepoRoot.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+
+$BuildTimestamp = Get-Date -Format 'yyyy-MM-yy-HH-mm'
+$LogFile = Join-Path $RepoRoot "publish_release_$BuildTimestamp.log"
+$ErrorActionPreference = $ErrorAction
+
+# --- Logging ---
+$Script:LogColors = @{ ERROR = "Red"; WARN = "Yellow"; INFO = "White"; DEBUG = "DarkGray"; VERBOSE = "Gray" }
+function Write-Log {
+    [CmdletBinding()]
+    param([string]$Message, [string]$Level = "INFO", [hashtable]$Variables = @{})
+    $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $logLine = "[$ts] [$Level] $Message"
+    if ($Variables.Count -gt 0) { $logLine += " | Variables: " + ($Variables.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join ", " }
+    $color = $Script:LogColors[$Level]
+    if ($color) { Write-Host $logLine -ForegroundColor $color } else { Write-Host $logLine -ForegroundColor Gray }
+    if ($Level -eq "DEBUG") { Write-Debug $logLine }
+    elseif ($Level -eq "VERBOSE") { Write-Verbose $logLine }
+    Add-Content -Path $LogFile -Value $logLine -ErrorAction SilentlyContinue
+}
+
+if ($Debug) { $DebugPreference = "Continue"; $VerbosePreference = "Continue"; Write-Log "Debug logging enabled" -Level "INFO" }
+elseif ($Verbose) { $VerbosePreference = "Continue"; Write-Log "Verbose logging enabled" -Level "INFO" }
+
+# --- Platform display names ---
+function Get-PlatformDisplayName {
+    param([string]$Rid)
+    $map = @{ "win-x64" = "Windows 64-bit"; "win-x86" = "Windows 32-bit"; "linux-x64" = "Linux 64-bit"; "linux-arm64" = "Linux ARM64"; "osx-x64" = "macOS Intel"; "osx-arm64" = "macOS Apple Silicon" }
+    if ($map[$Rid]) { return $map[$Rid] }; return $Rid
+}
+
+# --- Path helpers ---
+function Get-PublishFolderPath {
+    param([string]$Framework, [string]$Rid, [string]$LastSection, [string]$Timestamp, [string]$ProjectName = "", [switch]$WithLastSection)
+    $segments = @($OutputDir, "build_$Timestamp")
+    if (-not [string]::IsNullOrEmpty($ProjectName)) { $segments += $ProjectName }
+    if ($WithLastSection -and -not [string]::IsNullOrEmpty($LastSection)) { $segments += $LastSection }
+    $segments += $Framework, $Rid
+    return ".\" + ($segments -join "\")
+}
+
+# --- Profile sort order (lower = earlier) ---
+function Get-PublishProfileSortOrder {
+    param([string]$Rid)
+    if ($Rid -eq "win-x64") { return 1 }
+    if ($Rid -eq "win-x86") { return 2 }
+    if ($Rid -like "linux-*") { return 3 }
+    if ($Rid -like "osx-*") { return 4 }
+    return 99
+}
+
+# --- Strip '.Standalone' from project names for *.Standalone.csproj (output exe/folders) ---
+function Get-ProjectDisplayName {
+    param([string]$ProjectPath)
+    if ([string]::IsNullOrWhiteSpace($ProjectPath)) { return "" }
+    $name = [System.IO.Path]::GetFileNameWithoutExtension($ProjectPath)
+    $fileName = [System.IO.Path]::GetFileName($ProjectPath)
+    if ($fileName -match '\.Standalone\.csproj$') { return $name -replace '\.Standalone$', '' }
+    return $name
+}
+function Test-IsStandaloneProject {
+    param([string]$ProjectPath)
+    if ([string]::IsNullOrWhiteSpace($ProjectPath)) { return $false }
+    $fileName = [System.IO.Path]::GetFileName($ProjectPath)
+    return $fileName -match '\.Standalone\.csproj$'
+}
+
+# --- Read Version and AppName (Product/AssemblyName) from .csproj ---
+function Get-ProjectAppInfo {
+    param([string]$ProjectPath)
+    $appName = [System.IO.Path]::GetFileNameWithoutExtension($ProjectPath)
+    $version = "1.0.0"
+    if ([string]::IsNullOrWhiteSpace($ProjectPath) -or -not (Test-Path -LiteralPath $ProjectPath -PathType Leaf)) {
+        return @{ AppName = $appName; Version = $version }
+    }
+    $content = Get-Content -LiteralPath $ProjectPath -Raw -ErrorAction SilentlyContinue
+    if (-not $content) { return @{ AppName = $appName; Version = $version } }
+    if ($content -match '<Product>([^<]*)</Product>') { $appName = $Matches[1].Trim() }
+    elseif ($content -match '<AssemblyName>([^<]*)</AssemblyName>') { $appName = $Matches[1].Trim() }
+    if ($content -match '<Version>([^<]*)</Version>') { $version = $Matches[1].Trim() }
+    elseif ($content -match '<AssemblyVersion>([^<]*)</AssemblyVersion>') {
+        $av = $Matches[1].Trim()
+        $parts = $av -split '\.'
+        $version = if ($parts.Length -ge 3) { "$($parts[0]).$($parts[1]).$($parts[2])" } else { $av }
+    }
+    if ($version -and $version -notmatch '^v') { $version = "v$version" }
+    return @{ AppName = $appName; Version = $version }
+}
+
+# --- Resolve framework-dependent target from project (net472 vs net48) ---
+function Get-ProjectFrameworkDependent {
+    param([string]$ProjectPath)
+    if ([string]::IsNullOrWhiteSpace($ProjectPath) -or -not (Test-Path -LiteralPath $ProjectPath -PathType Leaf)) {
+        return $FrameworkDependent
+    }
+    $content = Get-Content -LiteralPath $ProjectPath -Raw -ErrorAction SilentlyContinue
+    if (-not $content) { return $FrameworkDependent }
+    if ($content -match 'TargetFrameworks[^>]*>([^<]+)<') {
+        $tfs = $Matches[1] -split '[;,]' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+        $hasNet48 = $tfs -contains 'net48'
+        $hasNet472 = $tfs -contains 'net472'
+        if ($hasNet472 -and -not $hasNet48) { return 'net472' }
+    }
+    return $FrameworkDependent
+}
+
+# --- Data-driven profile specs (Framework, Rid, SelfContained, Platform-specific overrides) ---
+$ProfileSpecs = @(
+    @{ Framework = $FrameworkVersion; Rid = "win-x64";    SelfContained = $true },
+    @{ Framework = $FrameworkVersion; Rid = "win-x86";    SelfContained = $true },
+    @{ Framework = $FrameworkVersion; Rid = "linux-x64";  SelfContained = $true },
+    @{ Framework = $FrameworkVersion; Rid = "linux-arm64"; SelfContained = $true },
+    @{ Framework = $FrameworkVersion; Rid = "osx-x64";    SelfContained = $true; Osx = $true },
+    @{ Framework = $FrameworkVersion;  Rid = "osx-arm64";  SelfContained = $true; Osx = $true },
+    @{ Framework = $FrameworkDependent; Rid = "win-x64"; SelfContained = $false },
+    @{ Framework = $FrameworkDependent; Rid = "win-x86"; SelfContained = $false }
+)
+
+# OSX bundle defaults; CFBundleDisplayName/CFBundleExecutable are overridden per-project in New-MsBuildProperties
+$OsxBundleProps = [ordered]@{
+    PublishTrimmed = "false"; UseAppHost = "true"; CFBundleDisplayName = ""
+    CFBundleIdentifier = "com.th3w1zard1.kotormodsync"; CFBundleShortVersionString = "v0.10"
+    CFBundleVersion = "v0.10.43"; LSMinimumSystemVersion = "10.13"; CFBundleIconFile = "icon53"
+    CFBundleExecutable = ""; LSApplicationCategoryType = "public.app-category.utilities"
+}
+
+function New-MsBuildProperties {
+    param([hashtable]$Spec, [string]$ProjectName = "", [string]$SolutionDirAbsolute = "", [string]$AppNameForBundle = "", [switch]$IsStandaloneProject)
+    $fw = $Spec.Framework; $rid = $Spec.Rid; $sc = $Spec.SelfContained
+    $platform = if ($rid -match "-") { ($rid -split "-")[1] } else { $rid }
+    $lastSection = if ($sc) { "selfcontained" } else { $null }
+    $mid = if (-not [string]::IsNullOrEmpty($ProjectName)) { "$OutputDir\build\$ProjectName\" } else { "$OutputDir\build\" }
+    $buildPath = if ($lastSection) { "${mid}$lastSection\$fw\$rid\" } else { "${mid}$fw\$rid\" }
+    $solutionDir = if ([string]::IsNullOrEmpty($SolutionDirAbsolute)) { $Script:SolutionDirAbsolute } else { $SolutionDirAbsolute }
+    $publishDir = $solutionDir + $buildPath
+
+    $base = [ordered]@{
+        SolutionDir = $solutionDir; SelfContained = $sc.ToString().ToLower(); TargetFramework = $fw
+        Platform = $platform; RuntimeIdentifier = $rid; PublishDir = $publishDir
+        _TargetId = "Folder"; PublishProtocol = "FileSystem"; Configuration = "Release"
+    }
+    if ($IsStandaloneProject -and -not [string]::IsNullOrEmpty($ProjectName)) {
+        $base["AssemblyName"] = $ProjectName
+    }
+    if ($sc) {
+        $base["IncludeNativeLibrariesForSelfExtract"] = "true"
+        $base["PublishSingleFile"] = "true"
+        if (-not $Spec.Osx) { $base["PublishReadyToRun"] = "true" }
+    } else {
+        $base["PublishReadyToRun"] = "true"
+    }
+    if ($Spec.Osx) {
+        foreach ($k in $OsxBundleProps.Keys) { $base[$k] = $OsxBundleProps[$k] }
+        if (-not [string]::IsNullOrEmpty($AppNameForBundle)) {
+            $base["CFBundleDisplayName"] = $AppNameForBundle
+            $base["CFBundleExecutable"] = $AppNameForBundle
         }
-        $script:ResolvedSevenZip = $resolved
-        if ($Verbose) { Write-Log "Using archiver: $resolved" -Level "VERBOSE" }
     }
-    try { dotnet --version | Out-Null }
-    catch {
-        Write-Log ".NET SDK not found in PATH" -Level "ERROR"
-        throw "dotnet CLI not found"
-    }
+    return $base
 }
 
-# --- Predefined profiles (used when -PublishProfilesDir is not set) ---
 function Get-PredefinedPublishProfiles {
-    $tf = $TargetFramework
-    [pscustomobject[]]@(
-        [pscustomobject]@{ Name = "${tf}_win-x64";   TargetFramework = $tf; RuntimeIdentifier = "win-x64";   SelfContained = $true; MsBuildProperties = @{}; LastSection = "" },
-        [pscustomobject]@{ Name = "${tf}_win-x86";   TargetFramework = $tf; RuntimeIdentifier = "win-x86";   SelfContained = $true; MsBuildProperties = @{}; LastSection = "" },
-        [pscustomobject]@{ Name = "${tf}_linux-x64";  TargetFramework = $tf; RuntimeIdentifier = "linux-x64";  SelfContained = $true; MsBuildProperties = @{}; LastSection = "" },
-        [pscustomobject]@{ Name = "${tf}_linux-arm64"; TargetFramework = $tf; RuntimeIdentifier = "linux-arm64"; SelfContained = $true; MsBuildProperties = @{}; LastSection = "" },
-        [pscustomobject]@{ Name = "${tf}_osx-x64";    TargetFramework = $tf; RuntimeIdentifier = "osx-x64";    SelfContained = $true; MsBuildProperties = @{}; LastSection = "" },
-        [pscustomobject]@{ Name = "${tf}_osx-arm64"; TargetFramework = $tf; RuntimeIdentifier = "osx-arm64"; SelfContained = $true; MsBuildProperties = @{}; LastSection = "" }
-    )
-}
-
-function Get-PublishProfileInfoFromName {
-    param([string]$FileName)
-    $parts = $FileName -split "_"
-    $framework = $parts[0]
-    $rid = $parts[1]
-    $lastSection = if ($parts.Count -gt 2) { $parts[2] } else { "" }
-    $cpu = if ($rid -match "-") { ($rid -split "-")[1] } else { $rid }
-    return @{ Framework = $framework; Rid = $rid; Cpu = $cpu; LastSection = $lastSection; FullName = $FileName }
+    param([string]$ProjectName = "", [string]$SolutionDirAbsolute = "", [string]$ProjectPath = "", [string]$AppNameForBundle = "", [switch]$IsStandaloneProject)
+    $fdFramework = Get-ProjectFrameworkDependent -ProjectPath $ProjectPath
+    return $ProfileSpecs | ForEach-Object {
+        $spec = $_.Clone()
+        if (-not $spec.SelfContained) { $spec.Framework = $fdFramework }
+        $name = if ($spec.SelfContained) { "$($spec.Framework)_$($spec.Rid)_selfcontained" } else { "$($spec.Framework)_$($spec.Rid)" }
+        [pscustomobject]@{
+            Name = $name; BaseName = $name; TargetFramework = $spec.Framework
+            RuntimeIdentifier = $spec.Rid; SelfContained = $spec.SelfContained
+            MsBuildProperties = New-MsBuildProperties -Spec $spec -ProjectName $ProjectName -SolutionDirAbsolute $SolutionDirAbsolute -AppNameForBundle $AppNameForBundle -IsStandaloneProject:$IsStandaloneProject
+        }
+    }
 }
 
 function Get-PublishProfileInfo {
-    param([Parameter(Mandatory)] [pscustomobject]$Profile)
-    $name = $Profile.Name
-    $parts = $name -split "_"
+    param([Parameter(Mandatory)] [pscustomobject]$PublishProfile)
+    $name = if ($PublishProfile.BaseName) { $PublishProfile.BaseName } else { $PublishProfile.Name }
+    $parts = if ($name) { $name -split "_" } else { @() }
     $lastSection = if ($parts.Length -gt 2) { $parts[2] } else { "" }
-    $rid = $Profile.RuntimeIdentifier
+    $rid = $PublishProfile.RuntimeIdentifier
     $cpu = if ($rid -match "-") { ($rid -split "-")[1] } else { $rid }
     return @{
-        Name = $name; Framework = $Profile.TargetFramework; Rid = $rid; Cpu = $cpu; LastSection = $lastSection
-        MsBuildProperties = $Profile.MsBuildProperties; SelfContained = [bool]$Profile.SelfContained; FullName = $name
+        Name = $name; Framework = $PublishProfile.TargetFramework; Rid = $rid; Cpu = $cpu
+        LastSection = $lastSection; MsBuildProperties = $PublishProfile.MsBuildProperties
+        SelfContained = [bool]$PublishProfile.SelfContained
     }
 }
 
-function Get-PublishProfileSortOrder {
-    param([string]$Rid)
-    switch ($Rid) {
-        "win-x64"   { return 1 }; "win-x86"   { return 2 }
-        "win7-x64"  { return 3 }; "win7-x86"  { return 4 }
-        default { if ($Rid -like "linux-*") { return 5 } elseif ($Rid -like "osx-*") { return 6 } else { return 99 } }
-    }
-}
-
-# --- Predefined-mode publish (dotnet publish with -r/-f) ---
-function Invoke-DotnetPublishOne {
-    param([hashtable]$ProfileInfo, [string]$ProjectFile, [string]$ProjectName)
-    $framework = $ProfileInfo.Framework
-    $rid = $ProfileInfo.Rid
-    $platformName = switch ($rid) { "win-x64" { "Windows 64-bit" }; "win-x86" { "Windows 32-bit" }; "win7-x64" { "Windows 64-bit" }; "win7-x86" { "Windows 32-bit" }; "linux-x64" { "Linux 64-bit" }; "linux-arm64" { "Linux ARM64" }; "osx-x64" { "macOS Intel" }; "osx-arm64" { "macOS Apple Silicon" }; default { $rid } }
-    Write-Log "[$ProjectName] Building for $platformName" -Level "INFO"
-    $outDir = Join-Path $RepoRoot ([IO.Path]::Combine($OutputDir, "build_$BuildTimestamp", $ProjectName, $TargetFramework, $rid))
-    $parent = Split-Path $outDir -Parent
-    if (-not (Test-Path $parent)) { New-Item -ItemType Directory -Path $parent -Force | Out-Null }
-    if (Test-Path $outDir) { throw "Output folder already exists: $outDir" }
-    $arguments = @("publish", $ProjectFile, "-c", "Release", "--framework", $framework, "-r", $rid, "-o", $outDir)
-    if ($ProfileInfo.SelfContained) { $arguments += "--self-contained" } else { $arguments += "--no-self-contained" }
-    $arguments += "/p:PublishSingleFile=true", "/p:PublishReadyToRun=true", "/p:IncludeNativeLibrariesForSelfExtract=true"
-    & dotnet @arguments
-    if ($LASTEXITCODE -ne 0) {
-        Write-Log "[$ProjectName] Publish failed for $platformName" -Level "ERROR" -Variables @{ ExitCode = $LASTEXITCODE }
-        throw "Publish failed with exit code: $LASTEXITCODE"
-    }
-    Write-Log "[$ProjectName] Published to $outDir" -Level "INFO"
-}
-
-# --- Pubxml helpers: resolve PublishDir from .pubxml ---
-function Get-PublishDirFromPubxml {
-    param([string]$PubxmlPath, [string]$ProjectFile)
-    [xml]$xml = Get-Content $PubxmlPath -ErrorAction SilentlyContinue
-    $publishDir = ($xml.Project.PropertyGroup | Where-Object { $_.PublishDir } | Select-Object -First 1).PublishDir
-    if (-not $publishDir) { return $null }
-    $projectDir = Split-Path $ProjectFile -Parent
-    $solDir = $RepoRoot.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
-    $publishDir = $publishDir -replace '\$\(SolutionDir\)', $solDir -replace '\\', [IO.Path]::DirectorySeparatorChar -replace '/', [IO.Path]::DirectorySeparatorChar
-    $publishDir = $publishDir.TrimEnd([IO.Path]::DirectorySeparatorChar)
-    if (-not [IO.Path]::IsPathRooted($publishDir)) {
-        $publishDir = Join-Path $projectDir $publishDir
-    }
-    return $publishDir
-}
-
-# --- Pubxml-mode publish (dotnet publish /p:PublishProfile=) ---
-function Invoke-DotnetPublishPubxml {
+# --- Exhaustive error diagnostics for dotnet/MSBuild failures ---
+# Call from catch block: Write-PublishErrorDiagnostics -ErrorRecord $_
+# Prints full stack trace, exception chain, script location, .NET stack, and build-relevant context.
+# Implicitly: without explicit per-field formatting; uses Format-List -Force to dump all properties.
+function Write-PublishErrorDiagnostics {
+    [CmdletBinding()]
     param(
-        [hashtable]$ProfileInfo,
-        [string]$ProjectFile,
-        [string]$ProjectName,
-        [string]$ProfilesDir
+        [Parameter(Mandatory)]
+        [System.Management.Automation.ErrorRecord]$ErrorRecord,
+        [hashtable]$Context = @{}
     )
-    $framework = $ProfileInfo.Framework
-    $rid = $ProfileInfo.Rid
-    $lastSection = $ProfileInfo.LastSection
-    $fileName = $ProfileInfo.FullName
-    $platformName = switch ($rid) {
-        "win7-x64" { "Windows 64-bit" }; "win7-x86" { "Windows 32-bit" }
-        "linux-x64" { "Linux 64-bit" }; "linux-arm64" { "Linux ARM64" }
-        "osx-x64" { "macOS Intel" }; "osx-arm64" { "macOS Apple Silicon" }
-        default { $rid }
+    $e = $ErrorRecord
+    $sep = "=" * 80
+    $sub = "-" * 60
+
+    Write-Host ""
+    Write-Host $sep -ForegroundColor Red
+    Write-Host " PUBLISH ERROR DIAGNOSTICS " -ForegroundColor Red
+    Write-Host $sep -ForegroundColor Red
+
+    # Context (project, profile, RID, etc.)
+    if ($Context.Count -gt 0) {
+        Write-Host "`n[Context]" -ForegroundColor Yellow
+        foreach ($k in ($Context.Keys | Sort-Object)) {
+            $v = $Context[$k]
+            if ($null -ne $v -and $v -ne "") {
+                Write-Host "  $k : $v"
+            }
+        }
     }
-    Write-Log "[$ProjectName] Building for $platformName (profile: $fileName)" -Level "INFO"
-    $publishCmd = "dotnet publish `"$ProjectFile`" -c Release --framework $framework /p:PublishProfile=$fileName.pubxml"
-    Invoke-Expression $publishCmd
+
+    # Primary error message
+    Write-Host "`n[Error Message]" -ForegroundColor Yellow
+    Write-Host "  $($e.Exception.Message)" -ForegroundColor White
+
+    # ErrorRecord core (CategoryInfo, FullyQualifiedErrorId - useful for classifying)
+    if ($e.CategoryInfo) {
+        Write-Host "`n[Category]" -ForegroundColor Yellow
+        Write-Host "  $($e.CategoryInfo.Category) : $($e.CategoryInfo.Reason)" -ForegroundColor Gray
+    }
+    if ($e.FullyQualifiedErrorId) {
+        Write-Host "  FullyQualifiedErrorId : $($e.FullyQualifiedErrorId)" -ForegroundColor Gray
+    }
+
+    # InvocationInfo - where in our script did this occur
+    if ($e.InvocationInfo) {
+        Write-Host "`n[Script Location]" -ForegroundColor Yellow
+        $inv = $e.InvocationInfo
+        if ($inv.ScriptName) { Write-Host "  Script     : $($inv.ScriptName)" }
+        if ($inv.ScriptLineNumber) { Write-Host "  Line       : $($inv.ScriptLineNumber)" }
+        if ($inv.OffsetInLine) { Write-Host "  Column     : $($inv.OffsetInLine)" }
+        if ($inv.Line) { Write-Host "  Code       : $($inv.Line.Trim())" }
+        if ($inv.PositionMessage) {
+            Write-Host "  Position   :" -ForegroundColor Gray
+            $inv.PositionMessage -split "`n" | ForEach-Object { Write-Host "    $_" -ForegroundColor Gray }
+        }
+    }
+
+    # ScriptStackTrace - our PowerShell call stack
+    if ($e.ScriptStackTrace) {
+        Write-Host "`n[PowerShell Call Stack]" -ForegroundColor Yellow
+        foreach ($line in ($e.ScriptStackTrace -split "`n")) {
+            $line = $line.Trim()
+            if ($line) { Write-Host "  $line" -ForegroundColor Cyan }
+        }
+    }
+
+    # Exception chain (Message, Type, .NET StackTrace - where build failures often surface)
+    $depth = 0
+    $ex = $e.Exception
+    while ($ex) {
+        Write-Host "`n[Exception #$depth] $($ex.GetType().FullName)" -ForegroundColor Yellow
+        Write-Host "  Message : $($ex.Message)" -ForegroundColor White
+        if ($ex.StackTrace) {
+            Write-Host "  .NET StackTrace :" -ForegroundColor Gray
+            foreach ($frame in ($ex.StackTrace -split "`n")) {
+                $frame = $frame.Trim()
+                if ($frame) {
+                    $highlight = $frame -match '\.(csproj|targets|props|cs)\('
+                    if ($highlight) { Write-Host "    $frame" -ForegroundColor White } else { Write-Host "    $frame" -ForegroundColor DarkGray }
+                }
+            }
+        }
+        if ($ex -is [System.IO.FileNotFoundException] -and $ex.FileName) {
+            Write-Host "  FileName : $($ex.FileName)" -ForegroundColor White
+        }
+        if ($ex -is [System.IO.DirectoryNotFoundException] -and $ex.Message -match '[\w\\.]+') {
+            Write-Host "  Path (from message) : $($Matches[0])" -ForegroundColor Gray
+        }
+        $ex = $ex.InnerException
+        $depth++
+    }
+
+    # ErrorDetails (recommended action, if present)
+    if ($e.ErrorDetails -and $e.ErrorDetails.Message) {
+        Write-Host "`n[Recommended Action]" -ForegroundColor Yellow
+        Write-Host "  $($e.ErrorDetails.Message)" -ForegroundColor Gray
+    }
+
+    # TargetObject (exit code, path, etc. when applicable)
+    if ($null -ne $e.TargetObject -and $e.TargetObject -isnot [System.Management.Automation.ErrorRecord]) {
+        $toStr = if ($e.TargetObject -is [string]) { $e.TargetObject } else { $e.TargetObject | Out-String }
+        if ($toStr -match '\S') {
+            Write-Host "`n[Target Object]" -ForegroundColor Yellow
+            Write-Host "  $($toStr.Trim() -replace "`n", "`n  ")" -ForegroundColor Gray
+        }
+    }
+
+    # Raw ErrorRecord dump (Format-List -Force - idiomatic, exhaustive)
+    Write-Host "`n$sub" -ForegroundColor DarkGray
+    Write-Host " [Raw ErrorRecord - Format-List * -Force]" -ForegroundColor DarkGray
+    Write-Host $sub -ForegroundColor DarkGray
+    $e | Format-List * -Force | Out-String | ForEach-Object { $_.Trim() } | Where-Object { $_ } | ForEach-Object {
+        Write-Host $_ -ForegroundColor DarkGray
+    }
+
+    Write-Host "`n$sep" -ForegroundColor Red
+    Write-Host ""
+}
+
+# --- Rotate old logs and build directories (keep N most recent) ---
+function Remove-OldLogsAndBuilds {
+    param([int]$Keep, [string]$RepoRootPath, [string]$OutDir)
+    if ($Keep -le 0) { return }
+    $logPattern = "publish_release_*.log"
+    $logDir = $RepoRootPath
+    $logs = @(Get-ChildItem -Path $logDir -Filter $logPattern -File -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending)
+    if ($logs.Count -gt $Keep) {
+        $toRemove = $logs | Select-Object -Skip $Keep
+        foreach ($f in $toRemove) {
+            Remove-Item -LiteralPath $f.FullName -Force -ErrorAction SilentlyContinue
+            Write-Log "Rotated old log" -Level "INFO" -Variables @{ Path = $f.Name }
+        }
+    }
+    $buildRoot = Join-Path $RepoRootPath $OutDir
+    if (-not (Test-Path -LiteralPath $buildRoot -PathType Container)) { return }
+    $buildDirs = @(Get-ChildItem -Path $buildRoot -Directory -Filter "build_*" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending)
+    if ($buildDirs.Count -gt $Keep) {
+        $toRemove = $buildDirs | Select-Object -Skip $Keep
+        foreach ($d in $toRemove) {
+            Remove-Item -LiteralPath $d.FullName -Recurse -Force -ErrorAction SilentlyContinue
+            Write-Log "Rotated old build" -Level "INFO" -Variables @{ Path = $d.Name }
+        }
+    }
+}
+
+# --- Tool checks ---
+function Test-RequiredTools {
+    Write-Log "Checking required tools" -Level "DEBUG" -Variables @{ SevenZipPath = $SevenZipPath }
+    if (-not (Test-Path $SevenZipPath)) {
+        Write-Log "7-Zip not found" -Level "ERROR" -Variables @{ SevenZipPath = $SevenZipPath }; throw "7-Zip not found: $SevenZipPath"
+    }
+    try {
+        $ver = dotnet --version
+        Write-Log "Dotnet found" -Level "DEBUG" -Variables @{ Version = $ver }
+    } catch {
+        Write-Log ".NET SDK not found" -Level "ERROR"; throw "Dotnet CLI not found"
+    }
+}
+
+# --- Publish ---
+function Invoke-DotnetPublish {
+    param([hashtable]$ProfileInfo, [string]$ProjectFile, [string]$ProjectName = "")
+    $fw = $ProfileInfo.Framework; $rid = $ProfileInfo.Rid; $lastSection = $ProfileInfo.LastSection
+    $props = $ProfileInfo.MsBuildProperties; $sc = $ProfileInfo.SelfContained
+    $platform = Get-PlatformDisplayName $rid
+    $logPrefix = if ($ProjectName) { "[$ProjectName] " } else { "" }
+
+    Write-Log "${logPrefix}Building for $platform" -Level "INFO"
+    Write-Log "Publish profile" -Level "DEBUG" -Variables @{ Framework = $fw; Rid = $rid; ProfileName = $ProfileInfo.Name }
+
+    $publishArgs = @("publish", $ProjectFile, "-c", "Release", "--framework", $fw, "--no-restore")
+    if ($rid) { $publishArgs += @("-r", $rid) }
+    $publishArgs += if ($sc) { "--self-contained" } else { "--no-self-contained" }
+    if ($props) {
+        foreach ($k in $props.Keys) {
+            $v = $props[$k]
+            if ($null -ne $v -and $v -ne "") { $publishArgs += "/p:$k=$v" }
+        }
+    }
+    $cmdPreview = "dotnet " + (($publishArgs | ForEach-Object { if ($_ -match '\s') { """$_""" } else { $_ } }) -join " ")
+    # Restore first with explicit TargetFramework+RID+Platform to avoid RID/Platform mismatch (NETSDK1032) when project multi-targets
+    $plat = if ($props -and $props.Platform) { $props.Platform } else { if ($rid -match "-") { ($rid -split "-")[1] } else { $rid } }
+    $restoreArgs = @("restore", $ProjectFile, "/p:TargetFramework=$fw", "/p:Configuration=Release", "/p:RuntimeIdentifier=$rid", "/p:Platform=$plat")
+    $restoreResult = & dotnet @restoreArgs 2>&1
     if ($LASTEXITCODE -ne 0) {
-        Write-Log "[$ProjectName] Publish failed for $platformName" -Level "ERROR" -Variables @{ ExitCode = $LASTEXITCODE }
-        throw "Publish failed with exit code: $LASTEXITCODE"
+        $restoreText = if ($restoreResult) { ($restoreResult | Out-String).Trim() } else { "(no output)" }
+        throw "dotnet restore failed.`n`n--- restore output ---`n$restoreText"
     }
-    $pubxmlPath = Join-Path $ProfilesDir "$fileName.pubxml"
-    $defaultPublishFolder = Get-PublishDirFromPubxml -PubxmlPath $pubxmlPath -ProjectFile $ProjectFile
-    if (-not $defaultPublishFolder) {
-        $projectDir = Split-Path $ProjectFile -Parent
-        $base = if ($framework -eq "net48") { Join-Path $RepoRoot $OutputDir } else { Join-Path $projectDir $OutputDir }
-        $base = Join-Path $base "build"
-        $defaultPublishFolder = if ([string]::IsNullOrEmpty($lastSection)) { Join-Path $base ([IO.Path]::Combine($framework, $rid)) } else { Join-Path $base ([IO.Path]::Combine($lastSection, $framework, $rid)) }
+    Write-Log "${logPrefix}Compiling application..." -Level "INFO"
+    Write-Log "Executing" -Level "DEBUG" -Variables @{ Command = $cmdPreview }
+    $dotnetOutput = & dotnet @publishArgs 2>&1
+
+    if ($LASTEXITCODE -ne 0) {
+        $outputText = if ($dotnetOutput) { ($dotnetOutput | Out-String).Trim() } else { "(no output captured)" }
+        $detail = "dotnet publish exited with code $LASTEXITCODE.`n`n--- dotnet output ---`n$outputText"
+        throw $detail
     }
-    $timestampedFolder = Join-Path $RepoRoot ([IO.Path]::Combine($OutputDir, "build_$BuildTimestamp"))
-    $timestampedFolder = if ([string]::IsNullOrEmpty($lastSection)) { Join-Path $timestampedFolder ([IO.Path]::Combine($framework, $rid)) } else { Join-Path $timestampedFolder ([IO.Path]::Combine($lastSection, $framework, $rid)) }
-    if (-not (Test-Path $defaultPublishFolder)) {
-        Write-Log "[$ProjectName] Publish folder not found: $defaultPublishFolder" -Level "ERROR"
-        throw "Publish folder not found: $defaultPublishFolder"
+    Write-Log "${logPrefix}Build completed for $platform" -Level "INFO"
+
+    $withSection = -not [string]::IsNullOrEmpty($lastSection)
+    $defaultFolder = Get-PublishFolderPath -Framework $fw -Rid $rid -LastSection $lastSection -Timestamp $BuildTimestamp -ProjectName $ProjectName -WithLastSection:$withSection
+    $defaultFolder = $defaultFolder -replace "build_$BuildTimestamp", "build"
+    $timestampedFolder = Get-PublishFolderPath -Framework $fw -Rid $rid -LastSection $lastSection -Timestamp $BuildTimestamp -ProjectName $ProjectName -WithLastSection:$withSection
+
+    if (-not (Test-Path $defaultFolder)) {
+        Write-Log "Publish folder not found" -Level "ERROR" -Variables @{ Path = $defaultFolder }; throw "Folder not found: $defaultFolder"
     }
     $parent = Split-Path $timestampedFolder -Parent
     if (-not (Test-Path $parent)) { New-Item -ItemType Directory -Path $parent -Force | Out-Null }
-    if (Test-Path $timestampedFolder) { throw "Output folder already exists: $timestampedFolder" }
-    Move-Item $defaultPublishFolder $timestampedFolder -Force
-    Write-Log "[$ProjectName] Published to $timestampedFolder" -Level "INFO"
+    if (Test-Path $timestampedFolder) { throw "Timestamped folder exists: $timestampedFolder" }
+    Move-Item $defaultFolder $timestampedFolder
+    Write-Log "${logPrefix}Moved output to $timestampedFolder" -Level "INFO"
 }
 
-# --- Archive creation (shared) ---
-function New-ArchiveOne {
-    param(
-        [hashtable]$ProfileInfo,
-        [string]$Version,
-        [string]$ProjectName,
-        [switch]$UsePubxmlPaths
+# --- OdyTools installer staging + WiX build (uses project list from solution only; no hardcoded paths) ---
+function Publish-OdyToolsInstallerPayload {
+    param([string]$RepoRootPath, [string]$StagingRoot, [string[]]$SolutionProjectPaths)
+    $norm = { param($p) ($p -replace '\\', '/').ToLowerInvariant() }
+    $aioProject = $SolutionProjectPaths | Where-Object { (& $norm $_) -match 'odytools[\/]odytools\.csproj$' } | Select-Object -First 1
+    $editorProjects = @($SolutionProjectPaths | Where-Object { ($n = & $norm $_) -match 'odytools[\/]editors[\/].*\.standalone\.csproj$' })
+    $aioOut = Join-Path $StagingRoot "AIO"
+    $editorsOut = Join-Path $StagingRoot "Editors"
+    if (Test-Path $aioOut) { Remove-Item -Recurse -Force $aioOut }
+    if (Test-Path $editorsOut) { Remove-Item -Recurse -Force $editorsOut }
+    New-Item -ItemType Directory -Path $aioOut -Force | Out-Null
+    New-Item -ItemType Directory -Path $editorsOut -Force | Out-Null
+    if (-not $aioProject -or -not (Test-Path -LiteralPath $aioProject -PathType Leaf)) {
+        Write-Log "[Installer] OdyTools.csproj not found in solution project list, skipping AIO payload." -Level "WARN"
+    } else {
+        Write-Log "[Installer] Publishing OdyTools AIO payload (net472/win-x64)" -Level "INFO"
+        & dotnet publish $aioProject -c Release --framework net472 -r win-x64 --no-self-contained -o $aioOut
+        if ($LASTEXITCODE -ne 0) { throw "Failed publishing OdyTools AIO for installer staging." }
+    }
+    foreach ($proj in $editorProjects) {
+        $name = [IO.Path]::GetFileNameWithoutExtension(([IO.Path]::GetFileName($proj)))
+        $displayName = $name -replace '\.Standalone$', ''
+        Write-Log "[Installer] Publishing $displayName (net472/win-x64)" -Level "INFO"
+        & dotnet publish $proj -c Release --framework net472 -r win-x64 --no-self-contained -o $editorsOut
+        if ($LASTEXITCODE -ne 0) {
+            Write-Log "[Installer] Failed publishing $displayName, continuing." -Level "WARN"
+            continue
+        }
+        $candidateExe = Join-Path $editorsOut "$name.exe"
+        $targetExe = Join-Path $editorsOut "$displayName.exe"
+        if (Test-Path $candidateExe) { Move-Item -LiteralPath $candidateExe -Destination $targetExe -Force }
+    }
+}
+
+function Build-OdyToolsInstaller {
+    param([string]$RepoRootPath, [string]$InstallerProjectPath)
+    $projectPath = if ([IO.Path]::IsPathRooted($InstallerProjectPath)) { $InstallerProjectPath } else { Join-Path $RepoRootPath $InstallerProjectPath }
+    if (-not (Test-Path -LiteralPath $projectPath -PathType Leaf)) {
+        Write-Log "[Installer] WiX project not found, skipping installer build." -Level "WARN" -Variables @{ Project = $projectPath }
+        return
+    }
+    Write-Log "[Installer] Building WiX installer project" -Level "INFO" -Variables @{ Project = $projectPath }
+    & dotnet build $projectPath -c Release
+    if ($LASTEXITCODE -ne 0) { throw "Failed building WiX installer project." }
+}
+
+# --- Archive ---
+function Get-DocsToCopy {
+    param([string]$AppNameForDocs)
+    $name = $AppNameForDocs
+    return @(
+        @{ Source = "LICENSE.TXT"; Dest = "LICENSE.TXT" },
+        @{ Source = "$name - Official Documentation.txt"; Dest = "$name - Official Documentation.txt" }
     )
-    $rid = $ProfileInfo.Rid
-    $framework = $ProfileInfo.Framework
-    $lastSection = $ProfileInfo.LastSection
-    if ($UsePubxmlPaths) {
-        $publishFolder = Join-Path $RepoRoot ([IO.Path]::Combine($OutputDir, "build_$BuildTimestamp"))
-        if (-not [string]::IsNullOrEmpty($lastSection)) {
-            $publishFolder = Join-Path $publishFolder ([IO.Path]::Combine($lastSection, $framework, $rid))
-        } else {
-            $publishFolder = Join-Path $publishFolder ([IO.Path]::Combine($framework, $rid))
-        }
-    } else {
-        $publishFolder = Join-Path $RepoRoot ([IO.Path]::Combine($OutputDir, "build_$BuildTimestamp", $ProjectName, $TargetFramework, $rid))
-    }
+}
+
+function New-Archive {
+    param([hashtable]$ProfileInfo, [string]$AppVersion, [string]$SevenZipPath, [string]$OutputDir, [string]$ArchiveAppName)
+    $appName = $ArchiveAppName
+    $fw = $ProfileInfo.Framework; $rid = $ProfileInfo.Rid; $lastSection = $ProfileInfo.LastSection
+    $topLevelFolder = "$appName $AppVersion-$rid"
+    $withSection = -not [string]::IsNullOrEmpty($lastSection)
+    $projectName = if ($ArchiveAppName) { $ArchiveAppName } else { "" }
+    $publishFolder = Get-PublishFolderPath -Framework $fw -Rid $rid -LastSection $lastSection -Timestamp $BuildTimestamp -ProjectName $projectName -WithLastSection:$withSection
+    $platform = Get-PlatformDisplayName $rid
+    $logPrefix = if ($appName) { "[$appName] " } else { "" }
+
+    Write-Log "${logPrefix}Creating archive for $platform" -Level "INFO"
+
     if (-not (Test-Path $publishFolder)) {
-        Write-Log "[$ProjectName] Publish folder not found: $publishFolder" -Level "ERROR"
-        throw "Publish folder not found: $publishFolder"
+        Write-Log "Publish folder not found" -Level "ERROR" -Variables @{ Path = $publishFolder }; throw "Publish folder not found"
     }
-    $topLevelFolder = "$ProjectName $Version-$rid"
-    $parentDir = Split-Path $publishFolder -Parent
-    $renamedFolder = Join-Path $parentDir $topLevelFolder
-    if (Test-Path $renamedFolder) { throw "Target folder already exists: $renamedFolder" }
-    Copy-Item -Path $publishFolder -Destination $renamedFolder -Recurse -Force
-    $docsFolder = Join-Path $renamedFolder "docs"
+
+    $renamedFolder = (Split-Path $publishFolder -Parent) + "\$topLevelFolder"
+    if (Test-Path $renamedFolder) { throw "Target folder exists: $renamedFolder" }
+    Move-Item $publishFolder $renamedFolder
+    $publishFolder = $renamedFolder
+
+    $docsFolder = Join-Path $publishFolder "docs"
     New-Item -ItemType Directory -Path $docsFolder -Force | Out-Null
-    $docFiles = @("LICENSE", "LICENSE.txt", "LICENSE.TXT", "README.md")
-    foreach ($f in $docFiles) {
-        $src = Join-Path $RepoRoot $f
-        if (Test-Path $src) { Copy-Item $src $docsFolder -Force }
+    $docsToCopy = Get-DocsToCopy -AppNameForDocs $appName
+    foreach ($f in $docsToCopy) {
+        if (Test-Path $f.Source) { Copy-Item $f.Source (Join-Path $docsFolder $f.Dest) -Force }
+        else { Write-Log "Source not found, skipping" -Level "WARN" -Variables @{ File = $f.Source } }
     }
-    $archiveFile = Join-Path $RepoRoot ([IO.Path]::Combine($OutputDir, "${ProjectName}-${Version}-${rid}.zip"))
+
+    $archiveFile = if ($appName) { "$OutputDir\$appName-$AppVersion-$rid.zip" } else { "$OutputDir\$rid.zip" }
     if (Test-Path $archiveFile) { Remove-Item $archiveFile -Force }
-    $archiveSource = Join-Path $renamedFolder "*"
-    & $script:ResolvedSevenZip "a", "-tzip", $archiveFile, $archiveSource
-    if ($LASTEXITCODE -ne 0) { throw "Archive creation failed: $archiveFile" }
-    Remove-Item $renamedFolder -Recurse -Force
+    Write-Log "${logPrefix}Compressing files..." -Level "INFO"
+
+    & $SevenZipPath a -tzip $archiveFile "$publishFolder\*"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Log "${logPrefix}Archive failed for $platform" -Level "ERROR" -Variables @{ ExitCode = $LASTEXITCODE }; throw "Archive failed: $LASTEXITCODE"
+    }
     $sizeMB = [math]::Round((Get-Item $archiveFile).Length / 1MB, 1)
-    Write-Log "[$ProjectName] Archive: $archiveFile ($sizeMB MB)" -Level "INFO"
+    Write-Log "${logPrefix}Archive created for $platform ($sizeMB MB)" -Level "INFO"
+    Write-Log "Built files preserved in dist/build_$BuildTimestamp" -Level "INFO"
 }
 
-# --- Resolve projects and mode ---
-$UsePubxmlMode = -not [string]::IsNullOrWhiteSpace($PublishProfilesDir)
-if ($UsePubxmlMode) {
-    if ([string]::IsNullOrWhiteSpace($ProjectFile)) {
-        Write-Log "-PublishProfilesDir requires -ProjectFile" -Level "ERROR"
-        throw "-PublishProfilesDir requires -ProjectFile"
+# --- Resolve projects to publish ---
+if ($BuildOdyToolsInstallerOnly -or [string]::IsNullOrWhiteSpace($ProjectFile)) {
+    if (-not $ResolvedSolutionPath) { $ResolvedSolutionPath = Resolve-SolutionPath }
+    if (-not $ResolvedSolutionPath) { throw "No solution found. Specify -SolutionPath or -ProjectFile." }
+    $ProjectsToPublish = @(Get-SolutionProjectPaths -SlnPath $ResolvedSolutionPath -Root $RepoRoot)
+    if ($ProjectsToPublish.Count -eq 0) {
+        throw "No projects found in solution (after excluding .history and vendor): $ResolvedSolutionPath"
     }
-    $absProject = if ([System.IO.Path]::IsPathRooted($ProjectFile)) { $ProjectFile } else { Join-Path $RepoRoot $ProjectFile }
-    $absProfilesDir = if ([System.IO.Path]::IsPathRooted($PublishProfilesDir)) { $PublishProfilesDir } else { Join-Path $RepoRoot $PublishProfilesDir }
-    if (-not (Test-Path $absProject)) {
-        Write-Log "Project not found: $absProject" -Level "ERROR"
-        throw "Project not found: $ProjectFile"
-    }
-    if (-not (Test-Path $absProfilesDir)) {
-        Write-Log "PublishProfilesDir not found: $absProfilesDir" -Level "ERROR"
-        throw "PublishProfilesDir not found: $PublishProfilesDir"
-    }
-    $ProjectsToPublish = @($absProject)
-    $profilesDir = $absProfilesDir
+    Write-Log "Discovered $($ProjectsToPublish.Count) project(s) from solution" -Level "INFO" -Variables @{ Solution = $ResolvedSolutionPath }
 } else {
-    if ([string]::IsNullOrWhiteSpace($ProjectFile)) {
-        $slnPath = if ([IO.Path]::IsPathRooted($SolutionPath)) { $SolutionPath } else { Join-Path $RepoRoot $SolutionPath }
-        $candidatePaths = Get-SolutionProjectPaths -SolutionPath $slnPath
-        $ProjectsToPublish = @($candidatePaths | Where-Object {
-            $p = $_
-            (Test-Path (Join-Path $RepoRoot $p)) -and (Test-IsPublishableProject -CsprojPath (Join-Path $RepoRoot $p))
-        } | ForEach-Object { Join-Path $RepoRoot $_ })
-        if ($ProjectsToPublish.Count -eq 0) {
-            Write-Log "No publishable projects found in solution (executable csproj only, excludes tests)" -Level "ERROR"
-            throw "No projects to publish"
-        }
-        Write-Log "Publishing $($ProjectsToPublish.Count) executable projects from solution" -Level "INFO"
-    } else {
-        $abs = if ([System.IO.Path]::IsPathRooted($ProjectFile)) { $ProjectFile } else { Join-Path $RepoRoot $ProjectFile }
-        if (-not (Test-Path $abs)) {
-            Write-Log "Project not found: $abs" -Level "ERROR"
-            throw "Project not found: $ProjectFile"
-        }
-        $ProjectsToPublish = @($abs)
-    }
+    $absProject = if ([IO.Path]::IsPathRooted($ProjectFile)) { $ProjectFile } else { Join-Path $RepoRoot $ProjectFile }
+    if (-not (Test-Path $absProject)) { throw "Project file not found: $absProject" }
+    $ProjectsToPublish = @((Resolve-Path -LiteralPath $absProject).Path)
 }
 
+# --- Main ---
 try {
-    Write-Log "Andastra publish started (Version=$Version, OutputDir=$OutputDir, CreateArchives=$CreateArchives, PubxmlMode=$UsePubxmlMode)" -Level "INFO"
-    Test-RequiredTools
-    $distDir = Join-Path $RepoRoot $OutputDir
-    $buildDir = Join-Path $distDir "build_$BuildTimestamp"
-    if (-not (Test-Path $distDir)) { New-Item -ItemType Directory -Path $distDir -Force | Out-Null }
-    if (-not (Test-Path $buildDir)) { New-Item -ItemType Directory -Path $buildDir -Force | Out-Null }
-
-    $successCount = 0
-    $failureCount = 0
-
-    if ($UsePubxmlMode) {
-        if (-not $CreateArchives) {
-            Write-Log "Pubxml mode typically creates archives; -CreateArchives will be required for archiving" -Level "INFO"
-        }
-        $publishProfiles = Get-ChildItem $profilesDir -Filter "*.pubxml"
-        $sortedProfiles = $publishProfiles | ForEach-Object {
-            $info = Get-PublishProfileInfoFromName -FileName $_.BaseName
-            $_ | Add-Member -NotePropertyName SortOrder -NotePropertyValue (Get-PublishProfileSortOrder -Rid $info.Rid) -Force
-            $_ | Add-Member -NotePropertyName ProfileInfo -NotePropertyValue $info -Force
-            $_
-        } | Sort-Object -Property SortOrder, { $_.ProfileInfo.Framework }, FullName
-        $total = $ProjectsToPublish.Count * $sortedProfiles.Count
-        foreach ($proj in $ProjectsToPublish) {
-            $projectName = [System.IO.Path]::GetFileNameWithoutExtension($proj)
-            foreach ($pf in $sortedProfiles) {
-                try {
-                    $info = $pf.ProfileInfo
-                    Invoke-DotnetPublishPubxml -ProfileInfo $info -ProjectFile $proj -ProjectName $projectName -ProfilesDir $profilesDir
-                    if ($CreateArchives) { New-ArchiveOne -ProfileInfo $info -Version $Version -ProjectName $projectName -UsePubxmlPaths }
-                    $successCount++
-                } catch {
-                    $failureCount++
-                    Write-Log "[$projectName] $($info.FullName): $($_.Exception.Message)" -Level "ERROR"
-                }
-            }
-        }
+    if ($BuildOdyToolsInstallerOnly) {
+        Write-Log "OdyTools installer-only build (skipping project publishes)" -Level "INFO"
+        Test-RequiredTools
+        $stagingRoot = Join-Path $RepoRoot "dist\installer\staging"
+        Publish-OdyToolsInstallerPayload -RepoRootPath $RepoRoot -StagingRoot $stagingRoot -SolutionProjectPaths $ProjectsToPublish
+        Build-OdyToolsInstaller -RepoRootPath $RepoRoot -InstallerProjectPath "installer\odytools\OdyTools.Installer.wixproj"
+        Write-Log "Installer build complete" -Level "INFO"
     } else {
-        $profiles = Get-PredefinedPublishProfiles
-        $sortedProfiles = $profiles | ForEach-Object {
-            $info = Get-PublishProfileInfo -Profile $_
-            $_ | Add-Member -NotePropertyName SortOrder -NotePropertyValue (Get-PublishProfileSortOrder -Rid $info.Rid) -Force
-            $_
-        } | Sort-Object -Property SortOrder, Name
-        $total = $ProjectsToPublish.Count * $sortedProfiles.Count
+        Write-Log "Starting release build" -Level "INFO" -Variables @{ Projects = $ProjectsToPublish.Count }
+        Test-RequiredTools
+
+        $distDir = ".\$OutputDir"
+        $buildDir = ".\$OutputDir\build_$BuildTimestamp"
+        foreach ($d in @($distDir, $buildDir)) {
+            if (-not (Test-Path $d)) { New-Item -ItemType Directory -Path $d -Force | Out-Null }
+        }
+
+        $successCount = 0
+        $failureCount = 0
+        $total = 0
+
         foreach ($proj in $ProjectsToPublish) {
-            $projectName = [System.IO.Path]::GetFileNameWithoutExtension($proj)
-            foreach ($profile in $sortedProfiles) {
-                try {
-                    $info = Get-PublishProfileInfo -Profile $profile
-                    Invoke-DotnetPublishOne -ProfileInfo $info -ProjectFile $proj -ProjectName $projectName
-                    if ($CreateArchives) { New-ArchiveOne -ProfileInfo $info -Version $Version -ProjectName $projectName }
-                    $successCount++
-                } catch {
-                    $failureCount++
-                    Write-Log "[$projectName] $($profile.Name): $($_.Exception.Message)" -Level "ERROR"
+        $projectName = Get-ProjectDisplayName -ProjectPath $proj
+        $appInfo = Get-ProjectAppInfo -ProjectPath $proj
+        $projectAppName = if (Test-IsStandaloneProject -ProjectPath $proj) { $projectName } else { $appInfo.AppName }
+        $projectVersion = $appInfo.Version
+
+        $profiles = Get-PredefinedPublishProfiles -ProjectName $projectName -SolutionDirAbsolute $Script:SolutionDirAbsolute -ProjectPath $proj -AppNameForBundle $projectAppName -IsStandaloneProject:(Test-IsStandaloneProject -ProjectPath $proj) | ForEach-Object {
+            $pi = Get-PublishProfileInfo -PublishProfile $_
+            $_ | Add-Member -NotePropertyName SortOrder -NotePropertyValue (Get-PublishProfileSortOrder $pi.Rid) -Force
+            $_ | Add-Member -NotePropertyName Framework -NotePropertyValue $pi.Framework -Force
+            $_
+        } | Sort-Object SortOrder, Framework, BaseName
+
+        $total += $profiles.Count
+        Write-Log "[$projectName] $($profiles.Count) build target(s)" -Level "INFO"
+
+        foreach ($prof in $profiles) {
+            try {
+                $pi = Get-PublishProfileInfo -PublishProfile $prof
+                Invoke-DotnetPublish -ProfileInfo $pi -ProjectFile $proj -ProjectName $projectName
+                if ($CreateArchives) {
+                    New-Archive -ProfileInfo $pi -AppVersion $projectVersion -SevenZipPath $SevenZipPath -OutputDir $OutputDir -ArchiveAppName $projectAppName
                 }
+                $successCount++
+            } catch {
+                $failureCount++
+                $ctx = @{
+                    Project = $projectName
+                    ProfileName = $pi.Name
+                    Framework = $pi.Framework
+                    RuntimeIdentifier = $pi.Rid
+                    ProjectFile = $proj
+                }
+                Write-Log "[$projectName] Build/archive failed" -Level "ERROR"
+                Write-PublishErrorDiagnostics -ErrorRecord $_ -Context $ctx
             }
         }
     }
 
-    Write-Log "Publish finished: $successCount/$total succeeded, $failureCount failed. Log: $LogFile" -Level $(if ($failureCount -eq 0) { "INFO" } else { "WARN" })
+        $msg = if ($failureCount -eq 0) { "All builds completed ($successCount/$total)" } else { "Completed with $failureCount failures ($successCount/$total)" }
+        Write-Log $msg -Level $(if ($failureCount -eq 0) { "INFO" } else { "WARN" })
+
+        if ($BuildOdyToolsInstaller) {
+            $stagingRoot = Join-Path $RepoRoot "dist\installer\staging"
+            Publish-OdyToolsInstallerPayload -RepoRootPath $RepoRoot -StagingRoot $stagingRoot -SolutionProjectPaths $ProjectsToPublish
+            Build-OdyToolsInstaller -RepoRootPath $RepoRoot -InstallerProjectPath "installer\odytools\OdyTools.Installer.wixproj"
+        }
+
+        if ($KeepLogsAndBuilds -gt 0) {
+            Remove-OldLogsAndBuilds -Keep $KeepLogsAndBuilds -RepoRootPath $RepoRoot -OutDir $OutputDir
+        }
+    }
 }
 catch {
-    Write-Log "Publish failed: $($_.Exception.Message)" -Level "ERROR" -Variables @{ LogFile = $LogFile }
+    Write-Log "Build process failed" -Level "ERROR" -Variables @{ LogFile = $LogFile }
+    Write-PublishErrorDiagnostics -ErrorRecord $_ -Context @{ LogFile = $LogFile }
     throw
 }
+
+Write-Host "Press any key to continue..."

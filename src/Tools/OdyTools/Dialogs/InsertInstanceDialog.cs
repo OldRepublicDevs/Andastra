@@ -22,7 +22,7 @@ using Module = BioWare.Common.Module;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:38
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:38
     // Original: class InsertInstanceDialog(QDialog):
     public partial class InsertInstanceDialog : Window
     {
@@ -42,7 +42,7 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:39-77
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:39-77
         // Original: def __init__(self, parent, installation, module, restype):
         public InsertInstanceDialog(Window parent, OdyInstallation installation, Module module, ResourceType restype)
         {
@@ -106,6 +106,11 @@ namespace OdyTools.Dialogs
             _okButton = new Button { Content = "OK" };
             _cancelButton = new Button { Content = "Cancel" };
             _dynamicTextLabel = new TextBlock { Text = "No resource selected", TextWrapping = Avalonia.Media.TextWrapping.Wrap };
+            _previewRenderer = new Widgets.ModelRenderer { Height = 260, MinHeight = 220 };
+            if (_installation != null)
+            {
+                _previewRenderer.Installation = _installation;
+            }
 
             // Connect events
             _reuseResourceRadio.IsCheckedChanged += (s, e) => OnResourceRadioToggled();
@@ -128,6 +133,7 @@ namespace OdyTools.Dialogs
             panel.Children.Add(_okButton);
             panel.Children.Add(_cancelButton);
             panel.Children.Add(_dynamicTextLabel);
+            panel.Children.Add(_previewRenderer);
             Content = panel;
         }
 
@@ -202,7 +208,7 @@ namespace OdyTools.Dialogs
             }
 
             // Initialize preview renderer with installation
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:67
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:67
             // Original: self.ui.previewRenderer.installation = installation
             if (_previewRenderer != null && _installation != null)
             {
@@ -210,7 +216,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:87-93
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:87-93
         // Original: def _setup_location_select(self):
         private void SetupLocationSelect()
         {
@@ -223,7 +229,7 @@ namespace OdyTools.Dialogs
             _locationSelect.Items.Add(_installation.OverridePath());
 
             // Add module capsules
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:89-92
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:89-92
             // Original: for capsule in self._module.capsules():
             // Original:     if is_rim_file(capsule.filepath()) and GlobalSettings().disableRIMSaving:
             // Original:         continue
@@ -252,7 +258,7 @@ namespace OdyTools.Dialogs
                 _locationSelect.Items.Add(capsulePath);
             }
 
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:93
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:93
             // Original: self.ui.locationSelect.setCurrentIndex(self.ui.locationSelect.count() - 1)
             // Set current selection to the last item (most recently added capsule or override path)
             if (_locationSelect.Items.Count > 0)
@@ -261,7 +267,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:95-112
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:95-112
         // Original: def _setup_resource_list(self):
         private void SetupResourceList()
         {
@@ -284,7 +290,7 @@ namespace OdyTools.Dialogs
             }
 
             // Add module resources
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:105-112
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:105-112
             // Original: for capsule in self._module.capsules():
             // Original:     for resource in (resource for resource in capsule if resource.restype() == self._restype):
             // Original:         if resource.restype() == self._restype:
@@ -328,7 +334,7 @@ namespace OdyTools.Dialogs
             _filteredResources.View.Refresh();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:117-181
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:117-181
         // Original: def accept(self):
         private async Task Accept()
         {
@@ -336,7 +342,7 @@ namespace OdyTools.Dialogs
 
             if (_resourceList?.SelectedItem == null)
             {
-                // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:131-132
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:131-132
                 // Original: BetterMessageBox(tr("Choose an instance"), tr("You must choose an instance, use the radial buttons to determine where/how to create the GIT instance."), icon=QMessageBox.Critical).exec()
                 var msgBox = MessageBoxManager.GetMessageBoxStandard(
                     Localization.Translate("Choose an instance"),
@@ -381,7 +387,7 @@ namespace OdyTools.Dialogs
             }
 
             // Add to module
-            // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:180-181
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:180-181
             // Original: assert self.filepath is not None
             // Original: self._module.add_locations(self.resname, self._restype, [self.filepath])
             // Ensure filepath is set (should always be set at this point, but defensive check)
@@ -412,7 +418,7 @@ namespace OdyTools.Dialogs
             Close();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:148-165
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:148-165
         // Original: Create new resource data based on type
         // Comprehensive implementation matching PyKotor's resource creation logic
         private byte[] CreateNewResourceData(ResourceType restype)
@@ -482,7 +488,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:167-178
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:167-178
         // Original: Save resource to file (ERF/RIM or standalone)
         // Comprehensive implementation with full error handling and support for all ERF/RIM variants
         private void SaveResourceToFile(string filepath, string resname, ResourceType restype, byte[] data)
@@ -576,7 +582,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:183-201
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:183-201
         // Original: def on_resource_radio_toggled(self):
         private void OnResourceRadioToggled()
         {
@@ -609,14 +615,14 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:203-262
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:203-262
         // Original: def on_resource_selected(self):
         private void OnResourceSelected()
         {
             if (_resourceList?.SelectedItem is FileResource resource)
             {
                 // Update dynamic text label
-                // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:207-209
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:207-209
                 // Original: summary_text: str = self.generate_resource_summary(resource)
                 // Original: self.ui.dynamicTextLabel.setText(summary_text)
                 string summaryText = GenerateResourceSummary(resource);
@@ -626,7 +632,7 @@ namespace OdyTools.Dialogs
                 }
 
                 // Update preview
-                // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:210-262
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:210-262
                 if (resource.ResType == ResourceType.UTC && _globalSettings.ShowPreviewUTC)
                 {
                     // Original: self.ui.previewRenderer.set_creature(read_utc(resource.data()))
@@ -766,7 +772,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:264-277
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:264-277
         // Original: def set_render_model(self, modelname: str):
         private void SetRenderModel(string modelName)
         {
@@ -794,7 +800,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:279-289
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:279-289
         // Original: def generate_resource_summary(self, resource: FileResource) -> str:
         private string GenerateResourceSummary(FileResource resource)
         {
@@ -852,7 +858,7 @@ namespace OdyTools.Dialogs
             return string.Join("\n", summary);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:291-297
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:291-297
         // Original: def on_resref_edited(self, text: str):
         private void OnResrefEdited(string text)
         {
@@ -862,7 +868,7 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:299-305
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:299-305
         // Original: def on_resource_filter_changed(self):
         private void OnResourceFilterChanged()
         {
@@ -886,7 +892,7 @@ namespace OdyTools.Dialogs
             _filteredResources.View.Refresh();
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/insert_instance.py:308-312
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:308-312
         // Original: def is_valid_resref(self, text: str) -> bool:
         // Original: return self._module.resource(text, self._restype) is None and ResRef.is_valid(text)
         private bool IsValidResref(string text)

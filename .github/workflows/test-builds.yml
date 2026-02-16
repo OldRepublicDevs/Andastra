@@ -12,7 +12,7 @@ on:
 
 jobs:
   test-builds:
-    name: Test Build - ${{ matrix.platform }}-${{ matrix.arch }}
+    name: Test Build - ${{ matrix.framework }}-${{ matrix.platform }}-${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -21,9 +21,9 @@ jobs:
           # Test a subset of builds for PRs
           - os: windows-latest
             framework: net48
-            platform: win7
+            platform: win
             arch: x64
-            rid: win7-x64
+            rid: win-x64
             selfcontained: false
           - os: windows-latest
             framework: net8.0
@@ -66,9 +66,9 @@ jobs:
       - name: Build
         run: |
           if [ "${{ matrix.framework }}" == "net48" ]; then
-            msbuild src/HoloPatcher/HoloPatcher.csproj /p:Configuration=Release /p:TargetFramework=${{ matrix.framework }} /p:RuntimeIdentifier=${{ matrix.rid }} /p:SelfContained=${{ matrix.selfcontained }}
+            msbuild src/OdyPatch/OdyPatch.csproj /p:Configuration=Release /p:TargetFramework=${{ matrix.framework }} /p:RuntimeIdentifier=${{ matrix.rid }} /p:SelfContained=${{ matrix.selfcontained }}
           else
-            dotnet publish src/HoloPatcher/HoloPatcher.csproj `
+            dotnet publish src/OdyPatch/OdyPatch.csproj `
               -c Release `
               -f ${{ matrix.framework }} `
               -r ${{ matrix.rid }} `
@@ -89,11 +89,11 @@ jobs:
           }
           
           $exeName = if (${{ matrix.platform }} -eq "win7" -or ${{ matrix.platform }} -eq "win") {
-            "HoloPatcher.exe"
+            "OdyPatch.exe"
           } elseif (${{ matrix.platform }} -eq "linux") {
-            "HoloPatcher"
+            "OdyPatch"
           } else {
-            "HoloPatcher"
+            "OdyPatch"
           }
           
           $exePath = Join-Path $outputDir $exeName

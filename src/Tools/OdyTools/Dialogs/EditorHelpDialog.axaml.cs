@@ -16,7 +16,16 @@ using HtmlAgilityPack;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/editor_help.py:46
+    /// <summary>One table-of-contents entry (heading) for the current document.</summary>
+    public sealed class TocEntry
+    {
+        public string Id { get; set; }
+        public string Text { get; set; }
+        public int Level { get; set; }
+        public override string ToString() => Text;
+    }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/editor_help.py:46
     // Original: class EditorHelpDialog(QDialog):
     public partial class EditorHelpDialog : Window
     {
@@ -27,6 +36,19 @@ namespace OdyTools.Dialogs
         // Dictionary to map anchor IDs to controls for scrolling
         // Key: anchor ID (without #), Value: Control to scroll to
         private readonly Dictionary<string, Control> _anchorMap = new Dictionary<string, Control>(StringComparer.OrdinalIgnoreCase);
+
+        // Help browser: left doc list, back/forward, right TOC
+        private ListBox _docListBox;
+        private ListBox _tocListBox;
+        private Button _backButton;
+        private Button _forwardButton;
+        private readonly List<string[]> _backStack = new List<string[]>();
+        private readonly List<string[]> _forwardStack = new List<string[]>();
+        private List<TocEntry> _tocEntries = new List<TocEntry>();
+        private string[] _currentFilenames = Array.Empty<string>();
+        private bool _tocSelectionFromScroll; // prevent re-entrancy when updating TOC selection from scroll
+        private bool _docListSelectionFromCode; // prevent NavigateToDoc when syncing sidebar selection
+        private IDisposable _scrollSubscription;
 
         // Expose HTML container for testing
         public Panel HtmlContainer => _htmlContainer;
@@ -73,7 +95,7 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/editor_help.py:49-82
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/editor_help.py:49-82
         // Original: def __init__(self, parent, wiki_filename):
         public EditorHelpDialog(Window parent, string wikiFilename)
             : this(parent, new[] { wikiFilename })
@@ -85,27 +107,21 @@ namespace OdyTools.Dialogs
         {
             InitializeComponent();
 
-            // Set title based on files
-            if (wikiFilenames != null && wikiFilenames.Length > 0)
-            {
-                if (wikiFilenames.Length == 1)
-                {
-                    Title = $"Help - {wikiFilenames[0]}";
-                }
-                else
-                {
-                    Title = $"Help - {wikiFilenames.Length} Documents";
-                }
-            }
-            else
-            {
-                Title = "Help";
-            }
+            // When no files specified, default to Home so the user sees the wiki index
+            if (wikiFilenames == null || wikiFilenames.Length == 0)
+                wikiFilenames = new[] { "Home.md" };
 
-            Width = 900;
-            Height = 700;
+            // Set title based on files
+            if (wikiFilenames.Length == 1)
+                Title = $"Help - {wikiFilenames[0]}";
+            else
+                Title = $"Help - {wikiFilenames.Length} Documents";
+
+            Width = 1200;
+            Height = 800;
             SetupUI();
             LoadWikiFiles(wikiFilenames);
+            InitializeHelpBrowser();
         }
 
         private void InitializeComponent()
@@ -157,6 +173,10 @@ namespace OdyTools.Dialogs
                 // Find controls from XAML
                 _scrollViewer = this.FindControl<ScrollViewer>("scrollViewer");
                 _htmlContainer = this.FindControl<Panel>("htmlContainer");
+                _docListBox = this.FindControl<ListBox>("docListBox");
+                _tocListBox = this.FindControl<ListBox>("tocListBox");
+                _backButton = this.FindControl<Button>("backButton");
+                _forwardButton = this.FindControl<Button>("forwardButton");
 
                 // If XAML doesn't have htmlContainer, create it
                 if (_htmlContainer == null && _scrollViewer != null)
@@ -174,6 +194,101 @@ namespace OdyTools.Dialogs
                 // XAML controls not available - create programmatic UI for tests
                 SetupProgrammaticUI();
             }
+        }
+
+        private void InitializeHelpBrowser()
+        {
+            if (_docListBox == null) return;
+
+            // Populate left sidebar with all wiki documents
+            var allDocs = OdyTools.Editors.EditorWikiMapping.GetAllWikiFilenames();
+            _docListBox.ItemsSource = allDocs;
+            _docListBox.SelectionChanged += (s, e) =>
+            {
+                if (_docListSelectionFromCode) return;
+                if (_docListBox.SelectedItem is string filename && !string.IsNullOrEmpty(filename))
+                    NavigateToDoc(new[] { filename }, addToBackStack: true);
+            };
+
+            if (_backButton != null)
+                _backButton.Click += (s, e) => GoBack();
+            if (_forwardButton != null)
+                _forwardButton.Click += (s, e) => GoForward();
+
+            if (_tocListBox != null)
+            {
+                _tocListBox.SelectionChanged += (s, e) =>
+                {
+                    if (_tocSelectionFromScroll) return;
+                    if (_tocListBox.SelectedItem is TocEntry entry && !string.IsNullOrEmpty(entry?.Id))
+                        ScrollToAnchor(entry.Id);
+                };
+            }
+
+            UpdateNavButtons();
+            SelectCurrentDocInSidebar();
+        }
+
+        private void SelectCurrentDocInSidebar()
+        {
+            if (_docListBox == null || _currentFilenames == null || _currentFilenames.Length != 1) return;
+            string current = _currentFilenames[0];
+            var list = _docListBox.ItemsSource as System.Collections.IEnumerable ?? _docListBox.Items as System.Collections.IEnumerable;
+            if (list == null) return;
+            foreach (var item in list)
+            {
+                if (string.Equals(item as string, current, StringComparison.OrdinalIgnoreCase))
+                {
+                    _docListSelectionFromCode = true;
+                    try { _docListBox.SelectedItem = item; }
+                    finally { _docListSelectionFromCode = false; }
+                    break;
+                }
+            }
+        }
+
+        private void UpdateNavButtons()
+        {
+            if (_backButton != null) _backButton.IsEnabled = _backStack.Count > 0;
+            if (_forwardButton != null) _forwardButton.IsEnabled = _forwardStack.Count > 0;
+        }
+
+        private void NavigateToDoc(string[] filenames, bool addToBackStack)
+        {
+            if (filenames == null || filenames.Length == 0) return;
+            if (addToBackStack && _currentFilenames != null && _currentFilenames.Length > 0)
+            {
+                _backStack.Add(_currentFilenames);
+                _forwardStack.Clear();
+            }
+            _currentFilenames = filenames;
+            LoadWikiFiles(filenames);
+            UpdateNavButtons();
+            SelectCurrentDocInSidebar();
+        }
+
+        private void GoBack()
+        {
+            if (_backStack.Count == 0) return;
+            var prev = _backStack[_backStack.Count - 1];
+            _backStack.RemoveAt(_backStack.Count - 1);
+            _forwardStack.Add(_currentFilenames);
+            _currentFilenames = prev;
+            LoadWikiFiles(prev);
+            UpdateNavButtons();
+            SelectCurrentDocInSidebar();
+        }
+
+        private void GoForward()
+        {
+            if (_forwardStack.Count == 0) return;
+            var next = _forwardStack[_forwardStack.Count - 1];
+            _forwardStack.RemoveAt(_forwardStack.Count - 1);
+            _backStack.Add(_currentFilenames);
+            _currentFilenames = next;
+            LoadWikiFiles(next);
+            UpdateNavButtons();
+            SelectCurrentDocInSidebar();
         }
 
         // Test override for wiki path (allows mocking in tests)
@@ -199,7 +314,7 @@ namespace OdyTools.Dialogs
             return _testWikiPathOverride;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/editor_help.py:19-43
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/editor_help.py:19-43
         // Original: def get_wiki_path() -> Path:
         public static string GetWikiPath()
         {
@@ -243,13 +358,21 @@ namespace OdyTools.Dialogs
                 {
                     return rootWiki;
                 }
+
+                // Check repository root wiki (e.g. when running from src/Tools/OdyTools/bin/Debug/net*)
+                var repoRootWiki = Path.Combine(currentDir, "..", "..", "..", "..", "..", "..", "..", "wiki");
+                repoRootWiki = Path.GetFullPath(repoRootWiki);
+                if (Directory.Exists(repoRootWiki))
+                {
+                    return repoRootWiki;
+                }
             }
 
-            // Fallback
+            // Fallback: current directory wiki (e.g. when run from repo root)
             return "./wiki";
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/editor_help.py:254-296
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/editor_help.py:254-296
         // Original: def load_wiki_file(self, wiki_filename: str):
         private void LoadWikiFile(string wikiFilename)
         {
@@ -274,11 +397,37 @@ namespace OdyTools.Dialogs
                     continue;
                 }
 
+                // Check for inline content first (e.g., LTR docs from PyKotor wiki)
+                string text = InlineEditorHelp.GetInlineContent(wikiFilename);
+                if (text != null)
+                {
+                    try
+                    {
+                        var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+                        string htmlBody = Markdown.ToHtml(text, pipeline);
+
+                        if (htmlBodies.Count > 0)
+                        {
+                            htmlBodies.Add("<hr style=\"margin: 48px 0;\" />");
+                        }
+
+                        htmlBodies.Add(htmlBody);
+                    }
+                    catch
+                    {
+                        htmlBodies.Add($@"
+<div>
+<h2>Error Loading Help</h2>
+<p>Could not render inline help for: <code>{wikiFilename}</code></p>
+</div>");
+                    }
+                    continue;
+                }
+
                 string filePath = Path.Combine(wikiPath, wikiFilename);
 
                 if (!File.Exists(filePath))
                 {
-                    // Add error message for this file
                     htmlBodies.Add($@"
 <div>
 <h2>Help File Not Found</h2>
@@ -290,7 +439,7 @@ namespace OdyTools.Dialogs
 
                 try
                 {
-                    string text = File.ReadAllText(filePath, Encoding.UTF8);
+                    text = File.ReadAllText(filePath, Encoding.UTF8);
                     // Convert markdown to HTML using Markdig
                     var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
                     string htmlBody = Markdown.ToHtml(text, pipeline);
@@ -320,15 +469,21 @@ namespace OdyTools.Dialogs
                 string combinedHtmlBody = string.Join("\n", htmlBodies);
                 string html = WrapHtmlWithStyles(combinedHtmlBody);
                 _htmlContent = html; // Store HTML for testing
-                
+                _currentFilenames = wikiFilenames ?? Array.Empty<string>();
+
                 // Clear anchor map before rendering new content
                 _anchorMap.Clear();
-                
+
+                _scrollSubscription?.Dispose();
+                _scrollSubscription = null;
+
                 RenderHtml(html);
+                BuildTocFromCurrentHtml();
+                SubscribeScrollForTocHighlight();
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/editor_help.py:84-252
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/editor_help.py:84-252
         // Original: def _wrap_html_with_styles(self, html_body: str) -> str:
         private string WrapHtmlWithStyles(string htmlBody)
         {
@@ -501,8 +656,68 @@ namespace OdyTools.Dialogs
 </html>";
         }
 
+        private void BuildTocFromCurrentHtml()
+        {
+            _tocEntries.Clear();
+            if (_tocListBox == null || string.IsNullOrEmpty(_htmlContent)) return;
+            try
+            {
+                var doc = new HtmlDocument();
+                doc.LoadHtml(_htmlContent);
+                var body = doc.DocumentNode.SelectSingleNode("//body") ?? doc.DocumentNode;
+                foreach (var node in body.SelectNodes("//h1|//h2|//h3|//h4|//h5|//h6") ?? Enumerable.Empty<HtmlNode>())
+                {
+                    string id = node.GetAttributeValue("id", null) ?? node.GetAttributeValue("name", null);
+                    if (string.IsNullOrEmpty(id)) continue;
+                    int level = node.Name.Length >= 2 && char.IsDigit(node.Name[1]) ? node.Name[1] - '0' : 1;
+                    string text = node.InnerText?.Trim() ?? "";
+                    if (string.IsNullOrEmpty(text)) continue;
+                    string indent = new string(' ', (level - 1) * 3);
+                    _tocEntries.Add(new TocEntry { Id = id, Text = indent + text, Level = level });
+                }
+                _tocListBox.ItemsSource = _tocEntries.ToList();
+                _tocListBox.SelectedItem = null;
+            }
+            catch { /* ignore */ }
+        }
+
+        private void SubscribeScrollForTocHighlight()
+        {
+            if (_scrollViewer == null || _tocListBox == null || _tocEntries.Count == 0) return;
+            void UpdateTocHighlight()
+            {
+                if (_anchorMap.Count == 0 || _htmlContainer == null) return;
+                double scrollY = _scrollViewer.Offset.Y;
+                TocEntry current = null;
+                double bestOffset = double.MinValue;
+                foreach (var entry in _tocEntries)
+                {
+                    if (!_anchorMap.TryGetValue(entry.Id, out var ctrl)) continue;
+                    var transform = ctrl.TransformToVisual(_htmlContainer);
+                    if (!transform.HasValue) continue;
+                    double y = transform.Value.Transform(new Point(0, 0)).Y;
+                    if (y <= scrollY + 80 && y > bestOffset)
+                    {
+                        bestOffset = y;
+                        current = entry;
+                    }
+                }
+                if (current == null && _tocEntries.Count > 0)
+                    current = _tocEntries[0];
+                if (current != null && _tocListBox.SelectedItem != current)
+                {
+                    _tocSelectionFromScroll = true;
+                    try { _tocListBox.SelectedItem = current; }
+                    finally { _tocSelectionFromScroll = false; }
+                }
+            }
+            _scrollSubscription?.Dispose();
+            _scrollSubscription = _scrollViewer.GetObservable(ScrollViewer.OffsetProperty).Subscribe(_ => UpdateTocHighlight());
+            UpdateTocHighlight();
+        }
+
         // Render HTML content to Avalonia controls
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/dialogs/editor_help.py:254-296
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/editor_help.py:254-296
         // Original: def load_wiki_file(self, wiki_filename: str) -> None: ... self.text_browser.setHtml(html)
         private void RenderHtml(string html)
         {
@@ -1083,29 +1298,24 @@ namespace OdyTools.Dialogs
                     filePath = Path.Combine(wikiPath, targetFile + ".md");
                 }
 
-                // Check if file exists in wiki directory
-                if (File.Exists(filePath))
+                // Check if file exists in wiki directory or has inline content
+                bool exists = File.Exists(filePath) || InlineEditorHelp.HasInlineContent(Path.GetFileName(filePath));
+                if (exists)
                 {
-                    // Get relative filename for dialog title
                     string wikiFilename = Path.GetFileName(filePath);
+                    if (!wikiFilename.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+                        wikiFilename += ".md";
 
-                    // Open in new EditorHelpDialog (matching PyKotor behavior)
-                    var helpDialog = new EditorHelpDialog(this, new[] { wikiFilename });
-                    helpDialog.Show();
-                    
-                    // If anchor was specified, scroll to it after dialog loads
+                    // Navigate in this window (push current to back stack)
+                    NavigateToDoc(new[] { wikiFilename }, addToBackStack: true);
+
                     if (!string.IsNullOrEmpty(anchor))
                     {
-                        // Use DispatcherTimer to wait for dialog to render before scrolling
-                        var timer = new Avalonia.Threading.DispatcherTimer
-                        {
-                            Interval = TimeSpan.FromMilliseconds(100) // 100ms delay for rendering
-                        };
+                        var timer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
                         timer.Tick += (s, e) =>
                         {
                             timer.Stop();
-                            // Scroll to anchor in the new dialog
-                            helpDialog.ScrollToAnchor(anchor);
+                            ScrollToAnchor(anchor);
                         };
                         timer.Start();
                     }

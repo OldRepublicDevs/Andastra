@@ -12,7 +12,7 @@ namespace OdyTools.Editors.LYT
     /// <summary>
     /// Graphics scene control for rendering LYT layout elements.
     /// Uses Avalonia Canvas for 2D visualization of 3D LYT data.
-    /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/lyt.py:50-52
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:50-52
     /// Original: self.scene: QGraphicsScene = QGraphicsScene()
     /// </summary>
     public class LYTGraphicsScene : Canvas
@@ -55,7 +55,7 @@ namespace OdyTools.Editors.LYT
 
         /// <summary>
         /// Clears all graphics items from the scene.
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/lyt.py:226
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:226
         /// Original: self.scene.clear()
         /// </summary>
         public void Clear()
@@ -67,7 +67,7 @@ namespace OdyTools.Editors.LYT
 
         /// <summary>
         /// Adds a graphics item to the scene.
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/lyt.py:228-234
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:228-234
         /// Original: self.scene.addItem(RoomItem(room, self))
         /// </summary>
         public void AddItem(LYTGraphicsItem item)
@@ -121,7 +121,7 @@ namespace OdyTools.Editors.LYT
 
     /// <summary>
     /// Base class for LYT graphics items rendered in the scene.
-    /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/lyt.py
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py
     /// Original: class RoomItem(QGraphicsItem), class TrackItem(QGraphicsItem), etc.
     /// </summary>
     public abstract class LYTGraphicsItem : Control
@@ -179,7 +179,7 @@ namespace OdyTools.Editors.LYT
 
     /// <summary>
     /// Graphics item for rendering LYT rooms.
-    /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/lyt.py
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py
     /// Original: class RoomItem(QGraphicsRectItem)
     /// </summary>
     public class RoomItem : LYTGraphicsItem
@@ -227,7 +227,7 @@ namespace OdyTools.Editors.LYT
 
     /// <summary>
     /// Graphics item for rendering LYT tracks.
-    /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/lyt.py
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py
     /// Original: class TrackItem(QGraphicsEllipseItem)
     /// </summary>
     public class TrackItem : LYTGraphicsItem
@@ -261,7 +261,7 @@ namespace OdyTools.Editors.LYT
 
     /// <summary>
     /// Graphics item for rendering LYT obstacles.
-    /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/lyt.py
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py
     /// Original: class ObstacleItem(QGraphicsRectItem)
     /// </summary>
     public class ObstacleItem : LYTGraphicsItem
@@ -300,7 +300,7 @@ namespace OdyTools.Editors.LYT
 
     /// <summary>
     /// Graphics item for rendering LYT door hooks.
-    /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/lyt.py
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py
     /// Original: class DoorHookItem(QGraphicsEllipseItem)
     /// </summary>
     public class DoorHookItem : LYTGraphicsItem

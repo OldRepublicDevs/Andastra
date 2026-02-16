@@ -3,7 +3,8 @@
         x:Class="OdyTools.Dialogs.Save.BifSaveDialog"
         Title="Save in BIF"
         Width="300" Height="150"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        RequestedThemeVariant="Light">
     <StackPanel Margin="10" Spacing="10">
         <Button Name="modSaveButton" Content="Save as MOD" />
         <Button Name="overrideSaveButton" Content="Save as Override" />

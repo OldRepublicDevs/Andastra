@@ -63,11 +63,11 @@ namespace OdyTools.Data
         }
     }
 
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:66
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:66
     // Original: class IndoorMap:
     public class IndoorMap
     {
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:67-81
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:67-81
         // Original: def __init__(self, rooms: list[IndoorMapRoom] | None = None, module_id: str | None = None, name: LocalizedString | None = None, lighting: Color | None = None, skybox: str | None = None, warp_point: Vector3 | None = None):
         public IndoorMap(
             List<IndoorMapRoom> rooms = null,
@@ -141,7 +141,7 @@ namespace OdyTools.Data
         /// between rooms need to be recalculated to reflect these new positions. Without this,
         /// doors might not be placed correctly, and walkmesh transitions might not connect properly.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:83-85
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:83-85
         /// Original: def rebuild_room_connections(self):
         /// </remarks>
         public void RebuildRoomConnections()
@@ -214,7 +214,7 @@ namespace OdyTools.Data
         ///
         /// This ensures the door is oriented correctly relative to both the component and the room.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:87-143
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:87-143
         /// Original: def door_insertions(self) -> list[DoorInsertion]:
         /// </remarks>
         /// <returns>A list of DoorInsertion objects representing all door placements in the module</returns>
@@ -296,7 +296,7 @@ namespace OdyTools.Data
         /// The VIS system needs to know about all rooms before it can calculate visibility between
         /// them. This method is called early in the build process to register all rooms.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:145-148
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:145-148
         /// Original: def add_rooms(self):
         /// </remarks>
         private void AddRooms()
@@ -357,7 +357,7 @@ namespace OdyTools.Data
         /// - Look up textures, lightmaps, and other resources from kit data
         /// - Ensure resources are available when needed
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:150-170
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:150-170
         /// Original: def process_room_components(self):
         /// </remarks>
         private void ProcessRoomComponents()
@@ -441,7 +441,7 @@ namespace OdyTools.Data
         /// - Models might reference textures with different casing than stored in kits
         /// - This ensures textures are found even if casing differs
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:172-192
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:172-192
         /// Original: def handle_textures(self):
         /// </remarks>
         private void HandleTextures()
@@ -472,7 +472,7 @@ namespace OdyTools.Data
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:194-365
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:194-365
         // Original: def handle_lightmaps(self, installation: OdyInstallation):
         private void HandleLightmaps(OdyInstallation installation)
         {
@@ -504,7 +504,7 @@ namespace OdyTools.Data
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:236-256
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:236-256
         // Original: def add_static_resources(self, room: IndoorMapRoom):
         private void AddStaticResources(IndoorMapRoom room)
         {
@@ -520,7 +520,7 @@ namespace OdyTools.Data
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:258-285
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:258-285
         // Original: def process_model(self, room: IndoorMapRoom, installation: OdyInstallation) -> tuple[bytes, bytes]:
         /// <summary>
         /// Processes a model for a room by applying flip, rotation, and format conversion.
@@ -531,7 +531,7 @@ namespace OdyTools.Data
         /// - Convert the model to target system format based on installation tsl property
         /// - Return processed model and material index strings.
         ///
-        /// Matching PyKotor: Tools/OdyTools/src/toolset/data/indoormap.py:258-285
+        /// Matching PyKotor: Tools/HolocronToolset/src/toolset/data/indoormap.py:258-285
         /// </summary>
         /// <param name="room">The room containing the model component to process.</param>
         /// <param name="installation">The installation to determine target format (K1 vs K2).</param>
@@ -673,7 +673,7 @@ namespace OdyTools.Data
         ///
         /// The model will still work, but that lightmap will be missing (may appear dark).
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:287-365
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:287-365
         /// Original: def process_lightmaps(self, room: IndoorMapRoom, mdl_data: bytes, installation: OdyInstallation):
         /// </remarks>
         /// <param name="room">The room whose lightmaps should be processed</param>
@@ -781,7 +781,7 @@ namespace OdyTools.Data
         /// - Updated with renamed texture references
         /// - Updated with renamed lightmap references
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:367-388
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:367-388
         /// Original: def add_model_resources(self, modelname: str, mdl_data: bytes, mdx_data: bytes):
         /// </remarks>
         /// <param name="modelname">The resource name for the model (e.g., "test01_room0")</param>
@@ -928,7 +928,7 @@ namespace OdyTools.Data
         /// </remarks>
         /// <param name="room">The room whose walkmesh should be processed</param>
         /// <returns>A processed walkmesh ready for use in the module</returns>
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:390-419
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:390-419
         // Original: def process_bwm(self, room: IndoorMapRoom) -> BWM:
         private BWM ProcessBwm(IndoorMapRoom room)
         {
@@ -957,7 +957,7 @@ namespace OdyTools.Data
             return bwm;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:421-447
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:421-447
         // Original: def remap_transitions(self, bwm: BWM, dummy_index: int, actual_index: int | None):
         private void RemapTransitions(BWM bwm, int dummyIndex, int? actualIndex)
         {
@@ -969,7 +969,7 @@ namespace OdyTools.Data
             bwm.RemapTransitions(dummyIndex, remapValue);
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:449-454
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:449-454
         // Original: def add_bwm_resource(self, modelname: str, bwm: BWM):
         private void AddBwmResource(string modelname, BWM bwm)
         {
@@ -1048,7 +1048,7 @@ namespace OdyTools.Data
         /// hooks that aren't connected to another room. These doors block passage but don't
         /// have opening animations.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:456-576
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:456-576
         /// Original: def handle_door_insertions(self, installation: OdyInstallation):
         /// </remarks>
         /// <param name="installation">The game installation (for format conversion and resource lookup)</param>
@@ -1383,7 +1383,7 @@ namespace OdyTools.Data
         /// Skybox textures are renamed using the same _texRenames mapping as room models.
         /// This ensures all textures in the module use consistent naming.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:578-608
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:578-608
         /// Original: def process_skybox(self, kits: list[Kit]):
         /// </remarks>
         /// <param name="kits">List of kits to search for skybox data</param>
@@ -1464,7 +1464,7 @@ namespace OdyTools.Data
         ///
         /// This matches Python's itertools.product(range(256), range(512)) iteration order.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:610-631
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:610-631
         /// Original: def generate_and_set_minimap(self):
         /// </remarks>
         private void GenerateAndSetMinimap()
@@ -1636,7 +1636,7 @@ namespace OdyTools.Data
         /// The game engine looks for load screens with the naming pattern "load_{module_id}".
         /// If this resource is not found, the game uses a default loading screen.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:633-653
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:633-653
         /// Original: def handle_loadscreen(self, installation: OdyInstallation):
         /// </remarks>
         /// <param name="installation">The game installation (to determine game version and path)</param>
@@ -1705,7 +1705,7 @@ namespace OdyTools.Data
         /// ARENorthAxis.NegativeY means the -Y axis points north. This is the standard orientation
         /// for KOTOR areas. The game uses this to correctly orient the minimap and compass.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:655-683
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:655-683
         /// Original: def set_area_attributes(self, minimap: MinimapData):
         /// </remarks>
         /// <param name="minimap">Minimap data containing image and world coordinates</param>
@@ -1767,7 +1767,7 @@ namespace OdyTools.Data
         /// maps where rooms are typically connected and should all be rendered. For outdoor areas
         /// with distance-based culling, visibility would be calculated based on distance.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:685-704
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:685-704
         /// Original: def set_ifo_attributes(self):
         /// </remarks>
         private void SetIfoAttributes()
@@ -1839,7 +1839,7 @@ namespace OdyTools.Data
         /// - UTD: Door templates
         /// - Other resources (scripts, placeables, etc.)
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:706-732
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:706-732
         /// Original: def finalize_module_data(self, output_path: os.PathLike | str):
         /// </remarks>
         /// <param name="outputPath">File system path where the MOD file should be written</param>
@@ -1928,7 +1928,7 @@ namespace OdyTools.Data
         /// - Doors: "{ModuleId}_dor{index:02}"
         /// - Padding: "{ModuleId}_tpad{index}"
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:734-784
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:734-784
         /// Original: def build(self, installation: OdyInstallation, kits: list[Kit], output_path: os.PathLike | str):
         /// </remarks>
         /// <param name="installation">The game installation (for format conversion and resource lookup)</param>
@@ -2008,7 +2008,7 @@ namespace OdyTools.Data
         ///
         /// This preserves all translations of the module name.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:786-827
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:786-827
         /// Original: def write(self) -> bytes:
         /// </remarks>
         /// <returns>JSON byte array containing the serialized indoor map data</returns>
@@ -2100,7 +2100,7 @@ namespace OdyTools.Data
         /// - Skip loading those rooms
         /// - Prompt for missing kit files
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:829-931
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:829-931
         /// Original: def load(self, raw: bytes, kits: list[Kit]) -> list[MissingRoomInfo]:
         /// </remarks>
         /// <param name="raw">JSON byte array containing the serialized map data</param>
@@ -2162,7 +2162,7 @@ namespace OdyTools.Data
         /// Missing kits/components are logged as warnings but don't stop the loading process.
         /// The map will load with available rooms, and missing rooms are reported to the caller.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:860-931
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:860-931
         /// Original: def _load_data(self, data: dict[str, Any], kits: list[Kit]) -> list[MissingRoomInfo]:
         /// </remarks>
         /// <param name="data">Deserialized JSON dictionary containing map data</param>
@@ -2281,7 +2281,7 @@ namespace OdyTools.Data
         /// NOTE: Other properties (Skybox, WarpPoint) are not reset here because they may have
         /// default values set in the constructor. If needed, they should be reset explicitly.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:933-937
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:933-937
         /// Original: def reset(self):
         /// </remarks>
         public void Reset()
@@ -2371,7 +2371,7 @@ namespace OdyTools.Data
         ///
         /// This ensures images are correctly positioned, rotated, and flipped.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:939-1022
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:939-1022
         /// Original: def generate_mipmap(self) -> MinimapData:
         /// </remarks>
         /// <returns>MinimapData containing the generated image and coordinate mappings</returns>
@@ -2576,7 +2576,7 @@ namespace OdyTools.Data
         /// all language/gender variants, use Write() method which produces JSON bytes with
         /// the complete data structure matching the .indoor file format specification.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:1024-1042
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:1024-1042
         /// Original: def serialize(self) -> dict[str, Any]:
         /// </remarks>
         /// <returns>Dictionary containing serialized map data</returns>
@@ -2625,7 +2625,7 @@ namespace OdyTools.Data
         /// don't persist unless the caller uses the returned values. However, this method is
         /// typically called in a loop where the bounding box is accumulated.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:1044-1056
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:1044-1056
         /// Original: def _normalize_bwm_vertices(self, bbmin: Vector3, vertex: Vector3, bbmax: Vector3):
         /// </remarks>
         /// <param name="bbmin">Bounding box minimum (updated to include vertex)</param>
@@ -2671,7 +2671,7 @@ namespace OdyTools.Data
         }
     }
 
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:41-49
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:41-49
     // Original: class DoorInsertion(NamedTuple):
     public class DoorInsertion
     {
@@ -2697,7 +2697,7 @@ namespace OdyTools.Data
         }
     }
 
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:52-57
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:52-57
     // Original: class MinimapData(NamedTuple):
     public class MinimapData
     {
@@ -2717,7 +2717,7 @@ namespace OdyTools.Data
         }
     }
 
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:60-63
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:60-63
     // Original: class MissingRoomInfo(NamedTuple):
     public class MissingRoomInfo
     {
@@ -2733,11 +2733,11 @@ namespace OdyTools.Data
         }
     }
 
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:1058
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:1058
     // Original: class IndoorMapRoom:
     public class IndoorMapRoom
     {
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:1059-1074
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:1059-1074
         // Original: def __init__(self, component: KitComponent, position: Vector3, rotation: float, *, flip_x: bool, flip_y: bool):
         public IndoorMapRoom(
             KitComponent component,
@@ -2818,7 +2818,7 @@ namespace OdyTools.Data
         /// is placed in a room, the hook positions need to be transformed to match the room's
         /// placement. This method performs that transformation.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:1076-1115
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:1076-1115
         /// Original: def hook_position(self, hook: KitComponentHook, *, world_offset: bool = True) -> Vector3:
         /// </remarks>
         /// <param name="hook">The hook whose position should be calculated</param>
@@ -2894,7 +2894,7 @@ namespace OdyTools.Data
         /// - Room positions, rotations, or flips are changed
         /// - RebuildRoomConnections() is called on the map
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:1117-1151
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:1117-1151
         /// Original: def rebuild_connections(self, rooms: list[IndoorMapRoom]):
         /// </remarks>
         /// <param name="rooms">List of all rooms in the map (including this room)</param>
@@ -2963,7 +2963,7 @@ namespace OdyTools.Data
         /// NOTE: This method does NOT set WalkmeshType to AreaModel. That is done in
         /// ProcessBwm() during the build process. This method is used for preview/editing.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:1153-1174
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:1153-1174
         /// Original: def walkmesh(self) -> BWM:
         /// </remarks>
         /// <returns>A transformed copy of the room's walkmesh</returns>
@@ -2997,7 +2997,7 @@ namespace OdyTools.Data
         /// is stored in WalkmeshOverride. This allows custom walkmeshes without modifying the
         /// original component.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:1176-1178
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:1176-1178
         /// Original: def base_walkmesh(self) -> BWM:
         /// </remarks>
         /// <returns>The base walkmesh (override if set, otherwise component's walkmesh)</returns>
@@ -3037,7 +3037,7 @@ namespace OdyTools.Data
         /// - All transitions are copied
         /// - The copy is completely independent
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:1180-1184
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:1180-1184
         /// Original: def ensure_walkmesh_override(self) -> BWM:
         /// </remarks>
         /// <returns>The walkmesh override (created if it didn't exist)</returns>
@@ -3065,7 +3065,7 @@ namespace OdyTools.Data
         /// Simply sets WalkmeshOverride to null. The next time BaseWalkmesh() is called, it will
         /// return Component.Bwm instead of the override.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:1186-1188
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:1186-1188
         /// Original: def clear_walkmesh_override(self):
         /// </remarks>
         public void ClearWalkmeshOverride()
@@ -3097,7 +3097,7 @@ namespace OdyTools.Data
         /// For full serialization including walkmesh overrides, the parent IndoorMap.Write()
         /// method handles that separately.
         ///
-        /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/data/indoormap.py:1190-1205
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:1190-1205
         /// Original: def serialize(self) -> dict[str, Any]:
         /// </remarks>
         /// <returns>Dictionary containing serialized room data</returns>

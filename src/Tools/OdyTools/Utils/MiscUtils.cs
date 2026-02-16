@@ -15,11 +15,11 @@ using BioWare.Resource.Formats.RIM;
 
 namespace OdyTools.Utils
 {
-    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/misc.py:117
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:117
     // Original: def get_nums(string_input: str) -> list[int]:
     public static class MiscUtils
     {
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/misc.py:117-140
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:117-140
         // Original: def get_nums(string_input: str) -> list[int]:
         public static List<int> GetNums(string stringInput)
         {
@@ -43,7 +43,7 @@ namespace OdyTools.Utils
             return nums;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/misc.py:143-145
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:143-145
         // Original: def open_link(link: str):
         //     url = QUrl(link)
         //     QDesktopServices.openUrl(url)
@@ -180,7 +180,7 @@ namespace OdyTools.Utils
             return Task.CompletedTask;
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/misc.py:148-153
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:148-153
         // Original: def clamp(value: float, min_value: float, max_value: float) -> float:
         public static float Clamp(float value, float minValue, float maxValue)
         {
@@ -197,7 +197,7 @@ namespace OdyTools.Utils
             return Math.Max(minValue, Math.Min(value, maxValue));
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/misc.py:221-262
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:221-262
         // Original: def get_resource_from_file(filepath, resname, restype) -> bytes:
         public static byte[] GetResourceFromFile(string filepath, string resname, BioWare.Common.ResourceType restype)
         {
@@ -211,14 +211,14 @@ namespace OdyTools.Utils
             // Check if it's an ERF type file
             if (ext == ".erf" || ext == ".mod" || ext == ".sav" || ext == ".hak")
             {
-                // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/misc.py:249-251
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:249-251
                 // Original: erf: ERF = read_erf(filepath); data = erf.get(resname, restype)
                 ERF erf = ERFAuto.ReadErf(filepath);
                 byte[] data = erf.Get(resname, restype);
                 
                 if (data == null)
                 {
-                    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/misc.py:258-260
+                    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:258-260
                     // Original: if data is None: raise ValueError("Could not find resource in RIM/ERF")
                     throw new ArgumentException($"Could not find resource '{resname}.{restype.Extension}' in ERF file '{filepath}'");
                 }
@@ -227,14 +227,14 @@ namespace OdyTools.Utils
             }
             else if (ext == ".rim")
             {
-                // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/misc.py:252-254
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:252-254
                 // Original: rim: RIM = read_rim(filepath); data = rim.get(resname, restype)
                 RIM rim = RIMAuto.ReadRim(filepath);
                 byte[] data = rim.Get(resname, restype);
                 
                 if (data == null)
                 {
-                    // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/misc.py:258-260
+                    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:258-260
                     // Original: if data is None: raise ValueError("Could not find resource in RIM/ERF")
                     throw new ArgumentException($"Could not find resource '{resname}.{restype.Extension}' in RIM file '{filepath}'");
                 }
@@ -248,7 +248,7 @@ namespace OdyTools.Utils
             }
         }
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/misc.py:25-34
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:25-34
         // Original: MODIFIER_KEY_NAMES: dict[Qt.Key, str] = { ... }
         private static readonly Dictionary<Key, string> ModifierKeyNames = new Dictionary<Key, string>
         {
@@ -267,7 +267,7 @@ namespace OdyTools.Utils
             { Key.Scroll, "SCROLLLOCK" }
         };
 
-        // Matching PyKotor implementation at Tools/OdyTools/src/toolset/utils/misc.py:185-188
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:185-188
         // Original: def get_qt_key_string_localized(key: Qt.Key | str | int | bytes) -> str:
         /// <summary>
         /// Gets a localized, user-friendly string representation of an Avalonia Key.

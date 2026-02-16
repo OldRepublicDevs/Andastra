@@ -12,7 +12,7 @@ namespace OdyTools.Dialogs
 {
     /// <summary>
     /// Dialog for choosing and navigating between DLG node references.
-    /// Matching PyKotor implementation at Tools/OdyTools/src/toolset/gui/editors/dlg/widget_windows.py:31-204
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/widget_windows.py:31-204
     /// Original: class ReferenceChooserDialog(QDialog):
     /// </summary>
     public partial class ReferenceChooserDialog : Window

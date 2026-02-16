@@ -4,11 +4,26 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         x:Class="OdyTools.Editors.OdyToolLTR"
         mc:Ignorable="d"
-        Title="LTR Editor"
+        Title="OdyToolLTR"
         Width="1180"
         Height="760"
         MinWidth="980"
-        MinHeight="680">
+        MinHeight="680"
+        RequestedThemeVariant="Light">
+  <Window.Styles>
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#F3F5F9" />
+    </Style>
+    <Style Selector="Menu">
+      <Setter Property="Background" Value="#F1F3F4" />
+      <Setter Property="Foreground" Value="#202124" />
+      <Setter Property="BorderBrush" Value="#D7DBE6" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+    <Style Selector="MenuItem">
+      <Setter Property="Foreground" Value="#202124" />
+    </Style>
+  </Window.Styles>
   <DockPanel>
     <Menu DockPanel.Dock="Top" Name="menuBar">
       <MenuItem Header="_File">
@@ -39,11 +54,11 @@
 
     <Border DockPanel.Dock="Top"
             Padding="10,8"
-            Background="{DynamicResource ThemeControlLowBrush}"
-            BorderBrush="{DynamicResource ThemeBorderBrush}"
+            Background="#FAFBFC"
+            BorderBrush="#D7DBE6"
             BorderThickness="0,0,0,1">
       <Grid ColumnDefinitions="Auto,260,Auto,Auto,*" RowDefinitions="Auto">
-        <TextBlock Grid.Column="0" Text="Find:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+        <TextBlock Grid.Column="0" Name="FindLabel" Text="Find:" VerticalAlignment="Center" Margin="0,0,8,0"/>
         <TextBox Grid.Column="1" Name="SearchBox" Watermark="Search visible rows..." VerticalAlignment="Center"/>
         <CheckBox Grid.Column="2" Name="FindMatchCaseCheck" Content="Match case" VerticalAlignment="Center" Margin="10,0,10,0"/>
         <Button Grid.Column="3" Name="actionFindNextButton" Content="Find Next (F3)" VerticalAlignment="Center"/>
@@ -59,7 +74,8 @@
     <Grid Margin="10" ColumnDefinitions="2.4*,1.25*" RowDefinitions="*">
       <Border Grid.Column="0"
               Margin="0,0,8,0"
-              BorderBrush="{DynamicResource ThemeBorderBrush}"
+              Background="#FFFFFF"
+              BorderBrush="#D7DBE6"
               BorderThickness="1"
               CornerRadius="8"
               Padding="8">
@@ -84,7 +100,7 @@
           <TabItem Header="Doubles">
             <Grid RowDefinitions="Auto,*">
               <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
-                <TextBlock Text="Previous char:" VerticalAlignment="Center"/>
+                <TextBlock Name="DoublesPrevLabel" Text="Previous char:" VerticalAlignment="Center"/>
                 <ComboBox Name="DoublePrevCombo" Width="90"/>
               </StackPanel>
               <DataGrid Name="TableDoubles"
@@ -108,7 +124,7 @@
           <TabItem Header="Triples">
             <Grid RowDefinitions="Auto,*">
               <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
-                <TextBlock Text="Previous chars:" VerticalAlignment="Center"/>
+                <TextBlock Name="TriplesPrevLabel" Text="Previous chars:" VerticalAlignment="Center"/>
                 <ComboBox Name="TriplePrev2Combo" Width="90"/>
                 <ComboBox Name="TriplePrev1Combo" Width="90"/>
               </StackPanel>
@@ -133,46 +149,46 @@
       </Border>
 
       <StackPanel Grid.Column="1" Spacing="10">
-        <Border BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10">
+        <Border Background="#FFFFFF" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="8" Padding="10">
           <StackPanel Spacing="8">
-            <TextBlock Text="Quick Edit" FontWeight="Bold"/>
-            <TextBlock Text="Applies directly to one character in the selected mode/context."
+            <TextBlock Name="QuickEditLabel" Text="Quick Edit" FontWeight="Bold" Foreground="#202124"/>
+            <TextBlock Name="QuickEditDesc" Text="Applies directly to one character in the selected mode/context."
                        FontSize="11"
-                       Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                       Foreground="#3C4043"
                        TextWrapping="Wrap"/>
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
-              <TextBlock Grid.Row="0" Grid.Column="0" Text="Mode:" VerticalAlignment="Center" Margin="0,0,8,6"/>
+              <TextBlock Grid.Row="0" Grid.Column="0" Name="QuickModeLabel" Text="Mode:" VerticalAlignment="Center" Margin="0,0,8,6"/>
               <ComboBox Grid.Row="0" Grid.Column="1" Name="QuickModeCombo" Margin="0,0,0,6"/>
-              <TextBlock Grid.Row="1" Grid.Column="0" Text="Char:" VerticalAlignment="Center" Margin="0,0,8,6"/>
+              <TextBlock Grid.Row="1" Grid.Column="0" Name="QuickCharLabel" Text="Char:" VerticalAlignment="Center" Margin="0,0,8,6"/>
               <ComboBox Grid.Row="1" Grid.Column="1" Name="QuickCharCombo" Margin="0,0,0,6"/>
-              <TextBlock Grid.Row="2" Grid.Column="0" Text="Start:" VerticalAlignment="Center" Margin="0,0,8,6"/>
+              <TextBlock Grid.Row="2" Grid.Column="0" Name="QuickStartLabel" Text="Start:" VerticalAlignment="Center" Margin="0,0,8,6"/>
               <NumericUpDown Grid.Row="2" Grid.Column="1" Name="QuickStartSpin" Minimum="0" Maximum="1" Increment="0.001" FormatString="0.0000" Margin="0,0,0,6"/>
-              <TextBlock Grid.Row="3" Grid.Column="0" Text="Middle:" VerticalAlignment="Center" Margin="0,0,8,6"/>
+              <TextBlock Grid.Row="3" Grid.Column="0" Name="QuickMiddleLabel" Text="Middle:" VerticalAlignment="Center" Margin="0,0,8,6"/>
               <NumericUpDown Grid.Row="3" Grid.Column="1" Name="QuickMiddleSpin" Minimum="0" Maximum="1" Increment="0.001" FormatString="0.0000" Margin="0,0,0,6"/>
-              <TextBlock Grid.Row="4" Grid.Column="0" Text="End:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+              <TextBlock Grid.Row="4" Grid.Column="0" Name="QuickEndLabel" Text="End:" VerticalAlignment="Center" Margin="0,0,8,0"/>
               <NumericUpDown Grid.Row="4" Grid.Column="1" Name="QuickEndSpin" Minimum="0" Maximum="1" Increment="0.001" FormatString="0.0000"/>
             </Grid>
             <Button Name="ApplyQuickButton" Content="Apply Quick Edit"/>
           </StackPanel>
         </Border>
 
-        <Border BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10">
+        <Border Background="#FFFFFF" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="8" Padding="10">
           <StackPanel Spacing="8">
-            <TextBlock Text="Distribution Tools" FontWeight="Bold"/>
-            <TextBlock Text="Operate on visible rows only (current mode and context)."
+            <TextBlock Name="DistToolsLabel" Text="Distribution Tools" FontWeight="Bold" Foreground="#202124"/>
+            <TextBlock Name="DistToolsDesc" Text="Operate on visible rows only (current mode and context)."
                        FontSize="11"
-                       Foreground="{DynamicResource ThemeForegroundLowBrush}"
+                       Foreground="#3C4043"
                        TextWrapping="Wrap"/>
             <Button Name="NormalizeVisibleButton" Content="Normalize Visible Distribution"/>
             <Button Name="UniformVisibleButton" Content="Set Visible to Uniform"/>
           </StackPanel>
         </Border>
 
-        <Border BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10">
+        <Border Background="#FFFFFF" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="8" Padding="10">
           <StackPanel Spacing="8">
-            <TextBlock Text="Name Generator Preview" FontWeight="Bold"/>
+            <TextBlock Name="NameGenLabel" Text="Name Generator Preview" FontWeight="Bold" Foreground="#202124"/>
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto">
-              <TextBlock Grid.Column="0" Text="Count:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+              <TextBlock Grid.Column="0" Name="GeneratorCountLabel" Text="Count:" VerticalAlignment="Center" Margin="0,0,8,0"/>
               <NumericUpDown Grid.Column="1" Name="GeneratorCountSpin" Minimum="1" Maximum="500" Increment="1"/>
             </Grid>
             <StackPanel Orientation="Horizontal" Spacing="8">
@@ -187,13 +203,13 @@
 
     <Border DockPanel.Dock="Bottom"
             Padding="10,6"
-            Background="{DynamicResource ThemeControlLowBrush}"
-            BorderBrush="{DynamicResource ThemeBorderBrush}"
+            Background="#E8EAED"
+            BorderBrush="#DADCE0"
             BorderThickness="0,1,0,0">
       <TextBlock Name="statusText"
                  Text="LTR status"
                  FontSize="12"
-                 Foreground="{DynamicResource ThemeForegroundLowBrush}"/>
+                 Foreground="#202124"/>
     </Border>
   </DockPanel>
 </Window>

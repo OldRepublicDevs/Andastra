@@ -4,20 +4,21 @@
         Title="Select Color"
         Width="450" Height="550"
         MinWidth="400" MinHeight="500"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        RequestedThemeVariant="Light">
     <Grid RowDefinitions="*,Auto" Margin="10">
         <Grid Grid.Row="0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="0,0,0,10">
             <!-- Color Preview Area -->
             <Border Grid.Row="0" 
                     Name="colorPreviewBorder"
                     Height="200"
-                    BorderBrush="Gray" 
+                    BorderBrush="#D7DBE6" 
                     BorderThickness="2"
                     Margin="0,0,0,10"
-                    Background="White">
+                    Background="#FFFFFF">
                 <Grid>
                     <Border Name="previewBorder" 
-                            Background="White" />
+                            Background="#FFFFFF" />
                     <!-- Checkerboard pattern for transparency -->
                     <Canvas Name="checkerboardCanvas" IsHitTestVisible="False" />
                 </Grid>
@@ -73,17 +74,17 @@
                     <TextBlock Text="Current:" Margin="0,0,0,5" />
                     <Border Name="currentColorBorder" 
                             Height="40" 
-                            BorderBrush="Gray" 
+                            BorderBrush="#D7DBE6" 
                             BorderThickness="1"
-                            Background="White" />
+                            Background="#FFFFFF" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Margin="5,0,0,0">
                     <TextBlock Text="New:" Margin="0,0,0,5" />
                     <Border Name="newColorBorder" 
                             Height="40" 
-                            BorderBrush="Gray" 
+                            BorderBrush="#D7DBE6" 
                             BorderThickness="1"
-                            Background="White" />
+                            Background="#FFFFFF" />
                 </StackPanel>
             </Grid>
         </Grid>

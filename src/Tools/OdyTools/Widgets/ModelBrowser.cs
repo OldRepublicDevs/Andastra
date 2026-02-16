@@ -19,7 +19,7 @@ namespace OdyTools.Widgets
     /// Similar to TextureBrowser but for 3D models.
     /// </summary>
     /// <remarks>
-    /// Matching PyKotor implementation concept at Tools/OdyTools/src/toolset/gui/widgets/renderer/texture_browser.py
+    /// Matching PyKotor implementation concept at Tools/HolocronToolset/src/toolset/gui/widgets/renderer/texture_browser.py
     /// This widget provides a visual browser for imported models in the LYT editor.
     /// </remarks>
     public class ModelBrowser : UserControl

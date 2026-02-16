@@ -4,7 +4,8 @@
         Title="Edit Localized String"
         Width="355" Height="214"
         MinWidth="300" MinHeight="150"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        RequestedThemeVariant="Light">
     <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="10">
         <!-- StringRef Section -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,0,10">

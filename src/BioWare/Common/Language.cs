@@ -4,8 +4,6 @@ using BioWare.Common;
 
 namespace BioWare.Common
 {
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/language.py:12-145
-    // Original: class Language(IntEnum):
     /// <summary>
     /// Language IDs recognized by both KOTOR games.
     /// Found in the TalkTable header, and CExoLocStrings (LocalizedStrings) within GFFs.

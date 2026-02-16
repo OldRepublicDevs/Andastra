@@ -50,6 +50,17 @@ namespace OdyTools.Editors.GUI
         {
             base.OnPointerPressed(e);
             var p = e.GetPosition(this);
+            string hitEdge = HitTestResizeHandle(p);
+            if (hitEdge != null)
+            {
+                _resizeHandle = true;
+                _resizeEdge = hitEdge;
+                _dragStart = (p.X, p.Y);
+                _isDragging = true;
+                e.Handled = true;
+                InvalidateVisual();
+                return;
+            }
             var node = HitTestNode(p);
             if (node != null)
             {
@@ -65,6 +76,21 @@ namespace OdyTools.Editors.GUI
                 SelectionChanged?.Invoke(null);
             }
             InvalidateVisual();
+        }
+
+        /// <summary>If the pointer is over a resize handle of the selected node, returns the edge name ("left","right","top","bottom"); otherwise null.</summary>
+        private string HitTestResizeHandle(Point p)
+        {
+            var node = SelectedNode;
+            if (node == null) return null;
+            OdyToolGUIHelpers.GetExtentValues(node, out int left, out int top, out int width, out int height);
+            double x = left * Zoom, y = top * Zoom, w = width * Zoom, h = height * Zoom;
+            double hs = Math.Max(4, 10 / Zoom);
+            if (p.X >= x - hs / 2 && p.X <= x - hs / 2 + hs && p.Y >= y + h / 2 - hs / 2 && p.Y <= y + h / 2 + hs / 2) return "left";
+            if (p.X >= x + w - hs / 2 && p.X <= x + w + hs / 2 && p.Y >= y + h / 2 - hs / 2 && p.Y <= y + h / 2 + hs / 2) return "right";
+            if (p.X >= x + w / 2 - hs / 2 && p.X <= x + w / 2 + hs / 2 && p.Y >= y - hs / 2 && p.Y <= y - hs / 2 + hs) return "top";
+            if (p.X >= x + w / 2 - hs / 2 && p.X <= x + w / 2 + hs / 2 && p.Y >= y + h - hs / 2 && p.Y <= y + h + hs / 2) return "bottom";
+            return null;
         }
 
         protected override void OnPointerMoved(PointerEventArgs e)

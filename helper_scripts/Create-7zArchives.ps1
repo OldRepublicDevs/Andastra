@@ -1,5 +1,5 @@
 # Create .7z archives for each top-level folder under a given path.
-# Usage: .\Create-7zArchives.ps1 -BasePath "dist\build_2026-02-26-02-19\OdyToolTwoDA.Standalone\net9.0"
+# Usage: .\Create-7zArchives.ps1 -BasePath "dist\build_2026-02-26-02-19\OdyTool2DA.Standalone\net9.0"
 # Archives are created in BasePath and named <folder>.7z (e.g. win-x86.7z).
 
 param(

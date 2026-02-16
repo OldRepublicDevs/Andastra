@@ -1,16 +1,16 @@
-# Build script for HoloPatcher.NET (PowerShell)
+# Build script for OdyPatch.NET (PowerShell)
 
-Write-Host "Building HoloPatcher.NET..." -ForegroundColor Green
+Write-Host "Building OdyPatch.NET..." -ForegroundColor Green
 
 # Restore dependencies
-dotnet restore HoloPatcher.sln
+dotnet restore OdyPatch.sln
 
 # Build the solution
-dotnet build HoloPatcher.sln --configuration Release
+dotnet build OdyPatch.sln --configuration Release
 
 # Run tests
 Write-Host "Running tests..." -ForegroundColor Cyan
-dotnet test HoloPatcher.sln --configuration Release --no-build
+dotnet test OdyPatch.sln --configuration Release --no-build
 
 Write-Host "Build complete!" -ForegroundColor Green
 
