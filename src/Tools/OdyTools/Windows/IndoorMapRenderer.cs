@@ -20,14 +20,10 @@ namespace OdyTools.Windows
         private UndoStack _undoStack;
         private KitComponent _cursorComponent;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder/renderer.py:206-208
-        // Original: self._bwm_surface_cache: dict[int, _BWMSurfaceCache] = {}
         // NOTE: We no longer cache *transformed* room walkmeshes (they require deepcopy + transforms).
         // Instead we cache BWM face paths/indices in local space and apply transforms cheaply.
         private readonly Dictionary<int, BWMSurfaceCache> _bwmSurfaceCache = new Dictionary<int, BWMSurfaceCache>();
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder/renderer.py:105-121
-        // Original: @dataclass(frozen=True) class _BWMSurfaceCache
         /// <summary>
         /// Precomputed geometry for a BWM in *local* space.
         /// This cache exists to avoid rebuilding transformed BWMs (deepcopy + rotate/flip/translate)
@@ -53,11 +49,6 @@ namespace OdyTools.Windows
             public Vector3 V3 { get; set; }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2491-2494
-        // Original: self.snap_to_grid: bool = False
-        // Original: self.snap_to_hooks: bool = True
-        // Original: self.grid_size: float = DEFAULT_GRID_SIZE
-        // Original: self.rotation_snap: float = float(DEFAULT_ROTATION_SNAP)
         public bool SnapToGrid { get; set; } = false;
         public bool SnapToHooks { get; set; } = true;
         public float GridSize { get; set; } = 1.0f; // DEFAULT_GRID_SIZE = 1.0

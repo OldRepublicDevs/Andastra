@@ -322,7 +322,7 @@ namespace OdyTools.Widgets
             // Item template: show DisplayText and set tooltip to Description when present (e.g. function signature)
             _listBox.ItemTemplate = new FuncDataTemplate<CompletionItem>((item, _) =>
             {
-                var textBlock = new TextBlock { Text = item.DisplayText, VerticalAlignment = Layout.VerticalAlignment.Center };
+                var textBlock = new TextBlock { Text = item.DisplayText, VerticalAlignment = VerticalAlignment.Center };
                 if (!string.IsNullOrEmpty(item.Description))
                 {
                     ToolTip.SetTip(textBlock, item.Description);

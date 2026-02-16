@@ -35,8 +35,6 @@ namespace OdyTools.Editors
         private CollectionViewSource _filteredData;
         private DataGrid _twodaTable;
         private TextBox _filterEdit;
-        private TextBox _formulaBarEdit;
-        private TextBlock _cellAddressText;
         private Panel _filterBox;
         private VerticalHeaderOption _verticalHeaderOption;
         private string _verticalHeaderColumn;
@@ -249,24 +247,6 @@ namespace OdyTools.Editors
                 _twodaTable.PointerReleased += OnGridPointerReleased;
             }
 
-            try
-            {
-                _formulaBarEdit = this.FindControl<TextBox>("formulaBarEdit");
-                _cellAddressText = this.FindControl<Avalonia.Controls.TextBlock>("cellAddressText");
-                if (_formulaBarEdit != null)
-                {
-                    _formulaBarEdit.KeyDown += (s, e) =>
-                    {
-                        if (e.Key == Key.Enter)
-                        {
-                            CommitFormulaBar();
-                            e.Handled = true;
-                        }
-                    };
-                    _formulaBarEdit.LostFocus += (s, e) => CommitFormulaBar();
-                }
-            }
-            catch { }
         }
 
         private void OnWindowPointerPressed(object sender, PointerPressedEventArgs e)
@@ -276,7 +256,7 @@ namespace OdyTools.Editors
             // If click was on a cell or column header, let the grid handle it (don't deselect)
             if (TryFindDataGridCell(e.Source) != null || TryFindDataGridColumnHeader(e.Source) != null)
                 return;
-            // Click was outside any cell/header (sidebar, formula bar, empty grid area, etc.) — clear selection
+            // Click was outside any cell/header (sidebar, empty grid area, etc.) — clear selection
             ClearGridSelection();
         }
 
@@ -524,7 +504,6 @@ namespace OdyTools.Editors
 
         private void UpdateFormulaBarAndStatus()
         {
-            UpdateFormulaBar();
             UpdateStatusBar();
         }
 
@@ -532,50 +511,6 @@ namespace OdyTools.Editors
         {
             if (_twodaTable?.CurrentColumn == null) return -1;
             return _twodaTable.Columns.IndexOf(_twodaTable.CurrentColumn);
-        }
-
-        private void UpdateFormulaBar()
-        {
-            try
-            {
-                if (_cellAddressText != null)
-                {
-                    int rowIdx = -1, colIdx = GetCurrentColumnIndex();
-                    string colName = "";
-                    if (_twodaTable?.SelectedItem is ObservableCollection<string> row)
-                    {
-                        rowIdx = _sourceData.IndexOf(row);
-                        if (colIdx >= 1 && colIdx - 1 < _columnHeaders.Count)
-                            colName = _columnHeaders[colIdx - 1];
-                    }
-                    _cellAddressText.Text = rowIdx >= 0 && colIdx >= 0
-                        ? $"R{rowIdx}, {(string.IsNullOrEmpty(colName) ? "col" + colIdx : colName)}"
-                        : "—";
-                }
-                if (_formulaBarEdit != null && _twodaTable?.SelectedItem is ObservableCollection<string> selRow)
-                {
-                    int colIdx = GetCurrentColumnIndex();
-                    if (colIdx >= 0 && colIdx < selRow.Count)
-                    {
-                        _formulaBarEdit.Text = selRow[colIdx] ?? "";
-                    }
-                }
-            }
-            catch { }
-        }
-
-        private void CommitFormulaBar()
-        {
-            if (_formulaBarEdit == null) return;
-            var row = _twodaTable?.SelectedItem as ObservableCollection<string>;
-            if (row == null) return;
-            int colIdx = GetCurrentColumnIndex();
-            if (colIdx < 0 || colIdx >= row.Count) return;
-            string newVal = _formulaBarEdit?.Text ?? "";
-            if ((row[colIdx] ?? "") == newVal) return;
-            PushState();
-            row[colIdx] = newVal;
-            UpdateStatusBar();
         }
 
         private void PushState()
@@ -999,7 +934,6 @@ namespace OdyTools.Editors
                 var addColBtn = EditorHelpers.FindControlSafe<Button>(this, "addColumnButton");
                 if (addColBtn != null) ToolTip.SetTip(addColBtn, Localization.Tr("Add column (Ctrl+Z to undo)"));
 
-                if (_formulaBarEdit != null) _formulaBarEdit.Watermark = Localization.Tr("Enter value (Enter to apply)");
             }
             catch { }
         }
@@ -2336,7 +2270,6 @@ namespace OdyTools.Editors
                 if (row != null && colIdx < row.Count)
                     row[colIdx] = "";
             }
-            if (_formulaBarEdit != null) _formulaBarEdit.Text = "";
             UpdateFormulaBarAndStatus();
         }
 

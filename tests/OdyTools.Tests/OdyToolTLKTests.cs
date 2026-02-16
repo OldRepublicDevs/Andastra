@@ -59,8 +59,8 @@ namespace OdyTools.Tests
                 await session.Dispatch(() =>
                 {
                     var tlk = new TLK(Language.English);
-                    tlk.Entries.Add(new TLKEntry("Hello", new BioWare.ResRef("sound1")));
-                    tlk.Entries.Add(new TLKEntry("World", new BioWare.ResRef("")));
+                    tlk.Entries.Add(new TLKEntry("Hello", new ResRef("sound1")));
+                    tlk.Entries.Add(new TLKEntry("World", new ResRef("")));
                     byte[] origData = TLKAuto.BytesTlk(tlk, ResourceType.TLK);
 
                     var editor = new OdyToolTLK(null, null);
@@ -83,7 +83,7 @@ namespace OdyTools.Tests
                 await session.Dispatch(() =>
                 {
                     var tlk = new TLK(Language.English);
-                    tlk.Entries.Add(new TLKEntry("Test", new BioWare.ResRef("")));
+                    tlk.Entries.Add(new TLKEntry("Test", new ResRef("")));
                     byte[] origData = TLKAuto.BytesTlk(tlk, ResourceType.TLK);
 
                     var editor = new OdyToolTLK(null, null);

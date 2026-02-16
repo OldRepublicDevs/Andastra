@@ -214,23 +214,18 @@ function Get-ProjectTargetFrameworks {
 function Get-ProjectFrameworkDependent {
     param([string]$ProjectPath)
     $tfs = Get-ProjectTargetFrameworks -ProjectPath $ProjectPath
-    if ($tfs.Count -eq 0) { return $FrameworkDependent }
-    $hasNet48 = $tfs -contains 'net48'
-    $hasNet472 = $tfs -contains 'net472'
-    if ($hasNet472 -and -not $hasNet48) { return 'net472' }
+    if ($tfs -contains 'net472') { return 'net472' }
     return $FrameworkDependent
 }
 
-# --- Data-driven profile specs (Framework, Rid, SelfContained, Platform-specific overrides) ---
+# --- Data-driven profile specs: Release = framework-dependent only (compact/slim, no self-contained) ---
 $ProfileSpecs = @(
-    @{ Framework = $FrameworkVersion; Rid = "win-x64";    SelfContained = $true },
-    @{ Framework = $FrameworkVersion; Rid = "win-x86";    SelfContained = $true },
-    @{ Framework = $FrameworkVersion; Rid = "linux-x64";  SelfContained = $true },
-    @{ Framework = $FrameworkVersion; Rid = "linux-arm64"; SelfContained = $true },
-    @{ Framework = $FrameworkVersion; Rid = "osx-x64";    SelfContained = $true; Osx = $true },
-    @{ Framework = $FrameworkVersion;  Rid = "osx-arm64";  SelfContained = $true; Osx = $true },
-    @{ Framework = $FrameworkDependent; Rid = "win-x64"; SelfContained = $false },
-    @{ Framework = $FrameworkDependent; Rid = "win-x86"; SelfContained = $false }
+    @{ Framework = $FrameworkDependent; Rid = "win-x64";    SelfContained = $false },
+    @{ Framework = $FrameworkDependent; Rid = "win-x86";    SelfContained = $false },
+    @{ Framework = $FrameworkVersion;   Rid = "linux-x64";  SelfContained = $false },
+    @{ Framework = $FrameworkVersion;   Rid = "linux-arm64"; SelfContained = $false },
+    @{ Framework = $FrameworkVersion;   Rid = "osx-x64";    SelfContained = $false; Osx = $true },
+    @{ Framework = $FrameworkVersion;   Rid = "osx-arm64";  SelfContained = $false; Osx = $true }
 )
 
 # OSX bundle defaults; CFBundleDisplayName/CFBundleExecutable are overridden per-project in New-MsBuildProperties
@@ -280,7 +275,7 @@ function Get-PredefinedPublishProfiles {
     $projectTfs = Get-ProjectTargetFrameworks -ProjectPath $ProjectPath
     $profiles = $ProfileSpecs | ForEach-Object {
         $spec = $_.Clone()
-        if (-not $spec.SelfContained) { $spec.Framework = $fdFramework }
+        if (-not $spec.SelfContained -and $spec.Rid -match '^win-') { $spec.Framework = $fdFramework }
         $name = if ($spec.SelfContained) { "$($spec.Framework)_$($spec.Rid)_selfcontained" } else { "$($spec.Framework)_$($spec.Rid)" }
         [pscustomobject]@{
             Name = $name; BaseName = $name; TargetFramework = $spec.Framework

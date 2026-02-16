@@ -96,7 +96,7 @@ namespace OdyTools.Tests
 
         private static void InvokeRevert(OdyTool2DA editor)
         {
-            typeof(OdyTool2DA).GetMethod("Revert", BindingFlags.NonPublic | BindingFlags.Instance)?.Invoke(editor, null);
+            editor.Revert();
         }
 
         private static TwoDA BuildAndParse(OdyTool2DA editor)
@@ -119,12 +119,6 @@ namespace OdyTools.Tests
         private static string GetStatusText(OdyTool2DA editor)
         {
             var tb = editor.FindControl<Avalonia.Controls.TextBlock>("statusText");
-            return tb?.Text ?? "";
-        }
-
-        private static string GetCellAddressText(OdyTool2DA editor)
-        {
-            var tb = editor.FindControl<Avalonia.Controls.TextBlock>("cellAddressText");
             return tb?.Text ?? "";
         }
 
@@ -1248,10 +1242,8 @@ namespace OdyTools.Tests
             var editor = CreateEditor();
             var sidebar = editor.FindControl<Border>("sidebarPanel");
             var table = editor.FindControl<DataGrid>("twodaTable");
-            var formula = editor.FindControl<TextBox>("formulaBarEdit");
             Assert.That(sidebar, Is.Not.Null, "Sidebar panel should exist when XAML loaded correctly.");
             Assert.That(table, Is.Not.Null, "Main 2DA table should exist when XAML loaded correctly.");
-            Assert.That(formula, Is.Not.Null, "Formula bar should exist when XAML loaded correctly.");
             editor.Close();
         }
 
@@ -1441,29 +1433,6 @@ namespace OdyTools.Tests
             var editor = CreateEditor();
             editor.Load("test.2da", "test", ResourceType.TwoDA, CreateTestTwoDABytes(1));
             Assert.That(GetEmptyStateVisible(editor), Is.False);
-            editor.Close();
-        }
-
-        [AvaloniaTest]
-        public void OdyTool2DA_FormulaBar_WhenNoSelection_ShowsDashOrEmpty()
-        {
-            var editor = CreateEditor();
-            editor.New();
-            string addr = GetCellAddressText(editor);
-            Assert.That(addr, Is.Not.Null);
-            editor.Close();
-        }
-
-        [AvaloniaTest]
-        public void OdyTool2DA_FormulaBar_WhenCellSelected_Updates()
-        {
-            byte[] data = CreateTestTwoDABytes(3);
-            var editor = CreateEditor();
-            editor.Load("test.2da", "test", ResourceType.TwoDA, data);
-            SetSelection(editor, 1);
-            SetCurrentColumn(editor, 2);
-            string addr = GetCellAddressText(editor);
-            Assert.That(addr, Is.Not.Null.And.Not.Empty);
             editor.Close();
         }
 
@@ -1790,14 +1759,5 @@ namespace OdyTools.Tests
             editor.Close();
         }
 
-        [AvaloniaTest]
-        public void OdyTool2DA_FormulaBarEdit_ExistsInXaml()
-        {
-            var editor = CreateEditor();
-            var formulaBar = editor.FindControl<TextBox>("formulaBarEdit");
-            Assert.That(formulaBar, Is.Not.Null);
-            Assert.That(formulaBar.Watermark ?? "", Does.Contain("Enter value").Or.Contain("value"));
-            editor.Close();
-        }
     }
 }

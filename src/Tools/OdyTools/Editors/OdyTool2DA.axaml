@@ -207,9 +207,7 @@
                 <MenuItem Header="Español" Name="actionLangSpanish" />
                 <MenuItem Header="Polski" Name="actionLangPolish" />
             </MenuItem>
-        </Menu>
-
-        <!-- Status bar: bottom of window, single horizontal line, minimal height (must be before Grid so DockPanel gives fill to Grid) -->
+        </Menu>        <!-- Status bar: bottom of window, single horizontal line, minimal height (must be before Grid so DockPanel gives fill to Grid) -->
         <Border DockPanel.Dock="Bottom" Background="#E8EAED" BorderBrush="#DADCE0" BorderThickness="0,1,0,0" Padding="6,2" Height="20">
             <TextBlock Name="statusText" Text="Ready | 0 rows × 0 columns" VerticalAlignment="Center" HorizontalAlignment="Left" TextTrimming="CharacterEllipsis" FontSize="10" Foreground="#202124" />
         </Border>

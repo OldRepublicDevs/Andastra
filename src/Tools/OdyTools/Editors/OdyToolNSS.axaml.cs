@@ -129,7 +129,7 @@ namespace OdyTools.Editors
             _bottomTabs = new TabControl();
             var problemsItem = new TabItem { Header = "Problems", Content = CreateProblemsPanel() };
             var outputItem = new TabItem { Header = "Output", Content = CreateOutputPanel() };
-            _bottomTabs.Items = new List<object> { problemsItem, outputItem };
+            _bottomTabs.ItemsSource = new List<object> { problemsItem, outputItem };
             _bottomPanel.Children.Add(_bottomTabs);
             _bottomPanel.IsVisible = false;
             Grid.SetRow(_bottomPanel, 1);
@@ -139,7 +139,7 @@ namespace OdyTools.Editors
 
             var statusBar = new Border
             {
-                Background = new SolidColorBrush(Color.FromRgb(240, 240, 240)),
+                Background = new SolidColorBrush(Avalonia.Media.Color.FromRgb(240, 240, 240)),
                 Padding = new Thickness(4, 2),
                 Child = new DockPanel()
             };
@@ -208,10 +208,10 @@ namespace OdyTools.Editors
             _functions.Clear();
             try
             {
-                string nwscript = ScriptUtils.GetNwscriptPath(_installation?.Path, _isTsl);
-                if (!string.IsNullOrEmpty(nwscript) && File.Exists(nwscript))
+                string nwscriptPath = ScriptUtils.GetNwscriptPath(_installation?.Path, _isTsl);
+                if (!string.IsNullOrEmpty(nwscriptPath) && File.Exists(nwscriptPath))
                 {
-                    string content = File.ReadAllText(nwscript);
+                    string content = File.ReadAllText(nwscriptPath);
                     var rx = new Regex(@"void\s+(\w+)\s*\(([^)]*)\)", RegexOptions.Multiline);
                     foreach (Match m in rx.Matches(content))
                     {
@@ -314,7 +314,7 @@ namespace OdyTools.Editors
             string sel = _codeEdit.SelectionStart != _codeEdit.SelectionEnd ? $" ({_codeEdit.SelectionEnd - _codeEdit.SelectionStart} selected)" : "";
             _statusLeft.Text = $"Ln {line}, Col {col}{sel}  |  {total} lines";
             string sig = GetSignatureHelpAtCursor();
-            string meta = "UTF-8 | " + (Text.Contains("\r\n") ? "CRLF" : "LF") + " | " + (_isTsl ? "TSL" : "K1") + " | NSS";
+            string meta = "UTF-8 | " + (_codeEdit.Text.Contains("\r\n") ? "CRLF" : "LF") + " | " + (_isTsl ? "TSL" : "K1") + " | NSS";
             if (!string.IsNullOrEmpty(sig)) meta += " | " + sig;
             _statusRight.Text = meta;
         }
@@ -424,12 +424,12 @@ namespace OdyTools.Editors
             if (result != null && result.Length > 0)
             {
                 LogToOutput("Compile succeeded.");
-                _ = MessageBoxManager.GetMessageBoxStandard("Compile", "Compilation succeeded.", ButtonEnum.Ok, Icon.Information).ShowWindowDialogAsync(this);
+                _ = MessageBoxManager.GetMessageBoxStandard("Compile", "Compilation succeeded.", ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
             }
             else
             {
                 LogToOutput("Compile failed (see messages above).");
-                _ = MessageBoxManager.GetMessageBoxStandard("Compile", "Compilation failed. Check Output panel.", ButtonEnum.Ok, Icon.Error).ShowWindowDialogAsync(this);
+                _ = MessageBoxManager.GetMessageBoxStandard("Compile", "Compilation failed. Check Output panel.", ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
             }
         }
 
@@ -471,7 +471,7 @@ namespace OdyTools.Editors
         private void RefreshProblemsList()
         {
             if (_problemsList == null) return;
-            _problemsList.Items = _problemDiagnostics.Select(d => new ProblemItem { Line = d.Line, IsError = d.IsError, Message = d.Message }).ToList();
+            _problemsList.ItemsSource = _problemDiagnostics.Select(d => new ProblemItem { Line = d.Line, IsError = d.IsError, Message = d.Message }).ToList();
         }
 
         private void LogToOutput(string message)
@@ -533,7 +533,7 @@ namespace OdyTools.Editors
             var storageProvider = (this as Window)?.StorageProvider;
             if (storageProvider == null) return;
             var filters = new List<FilePickerFileType> { new FilePickerFileType("NSS Script") { Patterns = new[] { "*.nss" } } };
-            var file = await storageProvider.SaveFilePickerAsync(new StoragePickerOptions { FileTypeChoices = filters, SuggestedFileName = (_resname ?? "script") + ".nss" });
+            var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions { FileTypeChoices = filters, SuggestedFileName = (_resname ?? "script") + ".nss" });
             if (file == null) return;
             try
             {
@@ -548,7 +548,7 @@ namespace OdyTools.Editors
             }
             catch (Exception ex)
             {
-                await MessageBoxManager.GetMessageBoxStandard("Save As", "Error: " + ex.Message, ButtonEnum.Ok, Icon.Error).ShowWindowDialogAsync(this);
+                await MessageBoxManager.GetMessageBoxStandard("Save As", "Error: " + ex.Message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
             }
         }
 
@@ -556,10 +556,10 @@ namespace OdyTools.Editors
         {
             try
             {
-                var topLevel = Avalonia.VisualTree.VisualTreeHelper.GetTopLevel(this);
+                var topLevel = GetTopLevel(this);
                 var storageProvider = topLevel?.StorageProvider ?? (this as Window)?.StorageProvider;
                 if (storageProvider == null) return;
-                var files = await storageProvider.OpenFilePickerAsync(new StoragePickerOptions
+                var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
                 {
                     FileTypeFilter = new[] { new FilePickerFileType("NSS/NCS") { Patterns = new[] { "*.nss", "*.ncs" } } },
                     AllowMultiple = false
