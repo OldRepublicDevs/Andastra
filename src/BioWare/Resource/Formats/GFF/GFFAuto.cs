@@ -28,6 +28,14 @@ namespace BioWare.Resource.Formats.GFF
         public static GFF ReadGff(object source, int offset = 0, int? size = null, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.GFF;
+            // Map plaintext GFF abstractions (e.g. DLG_XML, DLG_JSON) to GFF_XML / GFF_JSON
+            if (format.TargetMember != null && format.Contents == "plaintext")
+            {
+                if (format.Extension != null && format.Extension.IndexOf("json", StringComparison.OrdinalIgnoreCase) >= 0)
+                    format = ResourceType.GFF_JSON;
+                else if (format.Extension != null && format.Extension.IndexOf("xml", StringComparison.OrdinalIgnoreCase) >= 0)
+                    format = ResourceType.GFF_XML;
+            }
 
             if (format == ResourceType.GFF_JSON)
             {
@@ -123,6 +131,14 @@ namespace BioWare.Resource.Formats.GFF
         public static void WriteGff(GFF gff, object target, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.GFF;
+            // Map plaintext GFF abstractions (e.g. DLG_XML, DLG_JSON) to GFF_XML / GFF_JSON
+            if (format.TargetMember != null && format.Contents == "plaintext")
+            {
+                if (format.Extension != null && format.Extension.IndexOf("json", StringComparison.OrdinalIgnoreCase) >= 0)
+                    format = ResourceType.GFF_JSON;
+                else if (format.Extension != null && format.Extension.IndexOf("xml", StringComparison.OrdinalIgnoreCase) >= 0)
+                    format = ResourceType.GFF_XML;
+            }
 
             if (format == ResourceType.GFF_JSON)
             {
@@ -200,6 +216,14 @@ namespace BioWare.Resource.Formats.GFF
         public static byte[] BytesGff(GFF gff, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.GFF;
+            // Map plaintext GFF abstractions (e.g. DLG_XML, DLG_JSON) to GFF_XML / GFF_JSON
+            if (format.TargetMember != null && format.Contents == "plaintext")
+            {
+                if (format.Extension != null && format.Extension.IndexOf("json", StringComparison.OrdinalIgnoreCase) >= 0)
+                    format = ResourceType.GFF_JSON;
+                else if (format.Extension != null && format.Extension.IndexOf("xml", StringComparison.OrdinalIgnoreCase) >= 0)
+                    format = ResourceType.GFF_XML;
+            }
 
             if (format == ResourceType.GFF_JSON)
             {

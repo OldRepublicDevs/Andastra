@@ -18,8 +18,6 @@ using UTIProperty = BioWare.Resource.Formats.GFF.Generics.UTI.UTIProperty;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:572-691
-    // Original: class PropertyEditor(QDialog):
     public partial class PropertyEditorDialog : Window
     {
         private OdyInstallation _installation;
@@ -42,8 +40,6 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:573-655
-        // Original: def __init__(self, installation: OdyInstallation, uti_property: UTIProperty):
         public PropertyEditorDialog(Window parent, OdyInstallation installation, UTIProperty utiProperty)
         {
             InitializeComponent();
@@ -147,7 +143,6 @@ namespace OdyTools.Dialogs
             // This is a fallback - normally XAML will be used
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:599-655
         private void SetupUI()
         {
             if (_installation == null)
@@ -155,7 +150,6 @@ namespace OdyTools.Dialogs
                 return;
             }
 
-            // Matching PyKotor implementation: cost_table_list: 2DA | None = installation.ht_get_cache_2da(OdyInstallation.TwoDA_IPRP_COSTTABLE)
             TwoDA costTableList = _installation.HtGetCache2DA(OdyInstallation.TwoDAIprpCosttable);
             if (costTableList == null)
             {
@@ -163,21 +157,16 @@ namespace OdyTools.Dialogs
                 return;
             }
 
-            // Matching PyKotor implementation: if uti_property.cost_table != 0xFF:
             if (_utiProperty.CostTable != 0xFF)
             {
-                // Matching PyKotor implementation: costtable_resref: str | None = cost_table_list.get_cell(uti_property.cost_table, "name")
                 string costtableResref = costTableList.GetCellString(_utiProperty.CostTable, "name");
                 if (!string.IsNullOrEmpty(costtableResref))
                 {
-                    // Matching PyKotor implementation: costtable: 2DA | None = installation.ht_get_cache_2da(costtable_resref)
                     TwoDA costtable = _installation.HtGetCache2DA(costtableResref);
                     if (costtable != null && _costList != null)
                     {
-                        // Matching PyKotor implementation: for i in range(costtable.get_height()):
                         for (int i = 0; i < costtable.GetHeight(); i++)
                         {
-                            // Matching PyKotor implementation: cost_name: str | None = OdyToolUTI.cost_name(installation, uti_property.cost_table, i)
                             string costName = OdyToolUTI.CostName(_installation, _utiProperty.CostTable, i);
                             var item = new ListBoxItem { Content = costName ?? $"Cost {i}", Tag = i };
                             _costList.Items.Add(item);
@@ -186,25 +175,19 @@ namespace OdyTools.Dialogs
                 }
             }
 
-            // Matching PyKotor implementation: if uti_property.param1 != 0xFF:
             if (_utiProperty.Param1 != 0xFF && _parameterList != null)
             {
-                // Matching PyKotor implementation: param_list: 2DA | None = installation.ht_get_cache_2da(OdyInstallation.TwoDA_IPRP_PARAMTABLE)
                 TwoDA paramList = _installation.HtGetCache2DA(OdyInstallation.TwoDAIprpParamtable);
                 if (paramList != null)
                 {
-                    // Matching PyKotor implementation: paramtable_resref: str | None = param_list.get_cell(uti_property.param1, "tableresref")
                     string paramtableResref = paramList.GetCellString(_utiProperty.Param1, "tableresref");
                     if (!string.IsNullOrEmpty(paramtableResref))
                     {
-                        // Matching PyKotor implementation: paramtable: 2DA | None = installation.ht_get_cache_2da(paramtable_resref)
                         TwoDA paramtable = _installation.HtGetCache2DA(paramtableResref);
                         if (paramtable != null)
                         {
-                            // Matching PyKotor implementation: for i in range(paramtable.get_height()):
                             for (int i = 0; i < paramtable.GetHeight(); i++)
                             {
-                                // Matching PyKotor implementation: param_name: str | None = OdyToolUTI.param_name(installation, uti_property.param1, i)
                                 string paramName = OdyToolUTI.ParamName(_installation, _utiProperty.Param1, i);
                                 var item = new ListBoxItem { Content = paramName ?? $"Param {i}", Tag = i };
                                 _parameterList.Items.Add(item);
@@ -214,14 +197,12 @@ namespace OdyTools.Dialogs
                 }
             }
 
-            // Matching PyKotor implementation: upgrades: 2DA | None = installation.ht_get_cache_2da(OdyInstallation.TwoDA_UPGRADES)
             TwoDA upgrades = _installation.HtGetCache2DA(OdyInstallation.TwoDAUpgrades);
             if (_upgradeSelect != null)
             {
                 List<string> upgradeItems = new List<string>();
                 if (upgrades != null)
                 {
-                    // Matching PyKotor implementation: upgrade_items: list[str] = [upgrades.get_cell(i, "label").replace("_", " ").title() for i in range(upgrades.get_height())]
                     for (int i = 0; i < upgrades.GetHeight(); i++)
                     {
                         string label = upgrades.GetCellString(i, "label") ?? "";
@@ -233,7 +214,6 @@ namespace OdyTools.Dialogs
                 _upgradeSelect.SetItems(upgradeItems, false);
                 _upgradeSelect.SetContext(upgrades, _installation, OdyInstallation.TwoDAUpgrades);
 
-                // Matching PyKotor implementation: if uti_property.upgrade_type is not None: self.ui.upgradeSelect.setCurrentIndex(uti_property.upgrade_type + 1)
                 if (_utiProperty.UpgradeType.HasValue)
                 {
                     _upgradeSelect.SetSelectedIndex(_utiProperty.UpgradeType.Value + 1);
@@ -243,8 +223,6 @@ namespace OdyTools.Dialogs
             ReloadTextboxes();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:657-669
-        // Original: def reload_textboxes(self):
         private void ReloadTextboxes()
         {
             if (_installation == null)
@@ -252,28 +230,24 @@ namespace OdyTools.Dialogs
                 return;
             }
 
-            // Matching PyKotor implementation: property_name: str = OdyToolUTI.property_name(self._installation, self._uti_property.property_name)
             string propertyName = OdyToolUTI.GetPropertyName(_installation, _utiProperty.PropertyName);
             if (_propertyEdit != null)
             {
                 _propertyEdit.Text = propertyName ?? "";
             }
 
-            // Matching PyKotor implementation: subproperty_name: str | None = OdyToolUTI.subproperty_name(self._installation, self._uti_property.property_name, self._uti_property.subtype)
             string subpropertyName = OdyToolUTI.GetSubpropertyName(_installation, _utiProperty.PropertyName, _utiProperty.Subtype);
             if (_subpropertyEdit != null)
             {
                 _subpropertyEdit.Text = subpropertyName ?? "";
             }
 
-            // Matching PyKotor implementation: cost_name: str | None = OdyToolUTI.cost_name(self._installation, self._uti_property.cost_table, self._uti_property.cost_value)
             string costName = OdyToolUTI.CostName(_installation, _utiProperty.CostTable, _utiProperty.CostValue);
             if (_costEdit != null)
             {
                 _costEdit.Text = costName ?? "";
             }
 
-            // Matching PyKotor implementation: param_name: str | None = OdyToolUTI.param_name(self._installation, self._uti_property.param1, self._uti_property.param1_value)
             string paramName = OdyToolUTI.ParamName(_installation, _utiProperty.Param1, _utiProperty.Param1Value);
             if (_parameterEdit != null)
             {
@@ -281,25 +255,19 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:671-677
-        // Original: def select_cost(self):
         private void SelectCost()
         {
             if (_costList?.SelectedItem is ListBoxItem curItem && curItem.Tag is int costValue)
             {
-                // Matching PyKotor implementation: self._uti_property.cost_value = cur_item.data(Qt.ItemDataRole.UserRole)
                 _utiProperty.CostValue = costValue;
                 ReloadTextboxes();
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:679-685
-        // Original: def select_param(self):
         private void SelectParam()
         {
             if (_parameterList?.SelectedItem is ListBoxItem curItem && curItem.Tag is int paramValue)
             {
-                // Matching PyKotor implementation: self._uti_property.param1_value = cur_item.data(Qt.ItemDataRole.UserRole)
                 _utiProperty.Param1Value = paramValue;
                 ReloadTextboxes();
             }
@@ -357,16 +325,12 @@ namespace OdyTools.Dialogs
             return string.Join(" ", words);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:687-691
-        // Original: def uti_property(self) -> UTIProperty:
         public UTIProperty GetUtiProperty()
         {
-            // Matching PyKotor implementation: self._uti_property.upgrade_type = self.ui.upgradeSelect.currentIndex() - 1
             if (_upgradeSelect != null)
             {
                 if (_upgradeSelect.SelectedIndex == 0)
                 {
-                    // Matching PyKotor implementation: if self.ui.upgradeSelect.currentIndex() == 0: self._uti_property.upgrade_type = None
                     _utiProperty.UpgradeType = null;
                 }
                 else
@@ -377,8 +341,6 @@ namespace OdyTools.Dialogs
             return _utiProperty;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:238-244
-        // Original: if not dialog.exec(): return
         // PyKotor's QDialog.exec() is a blocking modal dialog that returns QDialog.DialogCode.Accepted (true) or Rejected (false)
         // This synchronous method provides the same behavior for compatibility with existing code
 

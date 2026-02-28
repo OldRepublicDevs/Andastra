@@ -7,8 +7,6 @@ using OdyTools.Data;
 
 namespace OdyTools.Utils
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:69-77
-    // Original: QApplication.setFont(font) - applies font globally to all Qt widgets
     // In Avalonia, fonts are applied via styles/resources to match Qt's global font behavior
     /// <summary>
     /// Helper class for applying global fonts to the Avalonia application.
@@ -18,7 +16,6 @@ namespace OdyTools.Utils
     {
         // Track the global font style so we can remove it later
         private static Style _globalFontStyle = null;
-        // Matching PyKotor implementation: QApplication.setFont(font) applies globally
         // In Avalonia, we apply fonts via Application.Styles to achieve the same effect
         /// <summary>
         /// Applies a global font to the Avalonia application based on the font string from settings.
@@ -95,7 +92,6 @@ namespace OdyTools.Utils
             }
         }
 
-        // Matching PyKotor implementation: QApplication.setFont(font) applies globally
         // In Avalonia, we apply fonts via Application.Styles to achieve the same effect
         /// <summary>
         /// Applies a global font style to all controls in the application.
@@ -116,7 +112,6 @@ namespace OdyTools.Utils
             RemoveGlobalFontStyle();
 
             // Create a style that applies to all text-based controls
-            // Matching PyKotor: QApplication.setFont() applies to all widgets
             // In Avalonia, we use a style with Selector targeting TextBlock to match text-based controls
             // Font properties are defined on TextBlock, not Control
             _globalFontStyle = new Style(x => x.OfType<TextBlock>())

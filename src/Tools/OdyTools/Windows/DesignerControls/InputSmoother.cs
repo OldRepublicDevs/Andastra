@@ -2,8 +2,6 @@ using System;
 
 namespace OdyTools.Windows.DesignerControls
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/designer_controls.py:31-76
-    // Original: class InputSmoother
     /// <summary>
     /// Provides input smoothing for mouse movements.
     ///
@@ -17,8 +15,6 @@ namespace OdyTools.Windows.DesignerControls
         private float _prevY;
         private bool _initialized;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/designer_controls.py:38-44
-        // Original: def __init__(self, smoothing_factor: float = 0.3)
         /// <summary>
         /// Initialize the smoother.
         /// </summary>
@@ -36,8 +32,6 @@ namespace OdyTools.Windows.DesignerControls
         /// </summary>
         public float SmoothingFactor => _smoothingFactor;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/designer_controls.py:49-72
-        // Original: def smooth(self, x: float, y: float) -> tuple[float, float]
         /// <summary>
         /// Apply smoothing to input values.
         /// </summary>
@@ -64,8 +58,6 @@ namespace OdyTools.Windows.DesignerControls
             return Tuple.Create(smoothedX, smoothedY);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/designer_controls.py:74-76
-        // Original: def reset(self) -> None
         /// <summary>
         /// Reset the smoother state.
         /// </summary>

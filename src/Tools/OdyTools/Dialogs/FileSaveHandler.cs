@@ -2,28 +2,27 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
+using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using BioWare.Common;
 using BioWare.Resource;
 using FileResource = BioWare.Extract.FileResource;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/generic_file_saver.py:29
-    // Original: class FileSaveHandler(Generic[T]):
     public class FileSaveHandler
     {
         private List<FileResource> _resources;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/generic_file_saver.py:30-36
-        // Original: def __init__(self, resources: Sequence[T], parent: QWidget | None = None):
         public FileSaveHandler(List<FileResource> resources)
         {
             _resources = resources ?? new List<FileResource>();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/generic_file_saver.py:50-74
-        // Original: def save_files(self, paths_to_write: dict[T, Path] | None = None) -> dict[T, Path]:
-        public Dictionary<FileResource, string> SaveFiles(Dictionary<FileResource, string> pathsToWrite = null)
+        public Dictionary<FileResource, string> SaveFiles(Dictionary<FileResource, string> pathsToWrite = null, Window parentForErrors = null)
         {
             var successfullySavedPaths = new Dictionary<FileResource, string>();
             var failedExtractions = new Dictionary<string, Exception>();
@@ -49,30 +48,44 @@ namespace OdyTools.Dialogs
 
             if (failedExtractions.Count > 0)
             {
-                HandleFailedExtractions(failedExtractions);
+                HandleFailedExtractions(failedExtractions, parentForErrors);
             }
 
             return successfullySavedPaths;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/generic_file_saver.py:76-109
-        // Original: def build_paths_to_write(self) -> dict[T, Path]:
+        /// <summary>
+        /// Prompts for save path(s) via file/folder picker, then writes files. Shows error message box on failures when parent is provided.
+        /// </summary>
+        public async Task<Dictionary<FileResource, string>> SaveFilesWithPromptAsync(Window parent)
+        {
+            if (parent?.StorageProvider == null || _resources.Count == 0)
+            {
+                return new Dictionary<FileResource, string>();
+            }
+
+            Dictionary<FileResource, string> pathsToWrite = await BuildPathsToWriteAsync(parent);
+            if (pathsToWrite == null || pathsToWrite.Count == 0)
+            {
+                return new Dictionary<FileResource, string>();
+            }
+
+            return SaveFiles(pathsToWrite, parent);
+        }
+
+        // Returns default paths without UI. Use BuildPathsToWriteAsync(parent) to prompt the user.
         private Dictionary<FileResource, string> BuildPathsToWrite()
         {
             var pathsToWrite = new Dictionary<FileResource, string>();
 
             if (_resources.Count == 1)
             {
-                // Single file - prompt for save location
-                // Will be implemented when file dialogs are available
                 var resource = _resources[0];
                 string defaultPath = $"{resource.ResName}.{resource.ResType.Extension}";
                 pathsToWrite[resource] = defaultPath;
             }
             else if (_resources.Count > 1)
             {
-                // Multiple files - prompt for folder
-                // Will be implemented when file dialogs are available
                 string folderPath = Path.GetTempPath();
                 foreach (var resource in _resources)
                 {
@@ -84,14 +97,57 @@ namespace OdyTools.Dialogs
             return pathsToWrite;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/generic_file_saver.py:200-234
-        // Original: def _handle_failed_extractions(self, failed_extractions: dict[Path, Exception]):
-        private void HandleFailedExtractions(Dictionary<string, Exception> failedExtractions)
+        private async Task<Dictionary<FileResource, string>> BuildPathsToWriteAsync(Window parent)
         {
-            // Show error message - will be implemented when MessageBox is available
-            foreach (var kvp in failedExtractions)
+            var storage = parent.StorageProvider;
+            if (storage == null) return null;
+
+            if (_resources.Count == 1)
             {
-                System.Console.WriteLine($"Failed to save {kvp.Key}: {kvp.Value}");
+                var resource = _resources[0];
+                var options = new FilePickerSaveOptions
+                {
+                    Title = "Save resource",
+                    SuggestedFileName = $"{resource.ResName}.{resource.ResType.Extension}",
+                    FileTypeChoices = new[] { new FilePickerFileType("Resource") { Patterns = new[] { "*.*" } }, new FilePickerFileType("All files") { Patterns = new[] { "*.*" } } }
+                };
+                var file = await storage.SaveFilePickerAsync(options);
+                if (file == null) return null;
+                string path = file.Path?.LocalPath ?? "";
+                if (string.IsNullOrWhiteSpace(path)) return null;
+                return new Dictionary<FileResource, string> { { resource, path } };
+            }
+
+            var folder = await storage.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Select folder to save resources" });
+            if (folder == null || folder.Count == 0) return null;
+            string folderPath = folder[0].Path?.LocalPath ?? "";
+            if (string.IsNullOrWhiteSpace(folderPath)) return null;
+
+            var paths = new Dictionary<FileResource, string>();
+            foreach (var resource in _resources)
+            {
+                paths[resource] = Path.Combine(folderPath, $"{resource.ResName}.{resource.ResType.Extension}");
+            }
+            return paths;
+        }
+
+        private void HandleFailedExtractions(Dictionary<string, Exception> failedExtractions, Window parentForErrors)
+        {
+            string message = string.Join(Environment.NewLine, failedExtractions.Select(kvp => $"{kvp.Key}: {kvp.Value.Message}"));
+            if (parentForErrors != null)
+            {
+                _ = MessageBoxManager.GetMessageBoxStandard(
+                    "Save failed",
+                    "Failed to save one or more files:" + Environment.NewLine + message,
+                    ButtonEnum.Ok,
+                    Icon.Error).ShowWindowDialogAsync(parentForErrors);
+            }
+            else
+            {
+                foreach (var kvp in failedExtractions)
+                {
+                    System.Console.WriteLine($"Failed to save {kvp.Key}: {kvp.Value}");
+                }
             }
         }
     }

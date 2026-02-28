@@ -49,13 +49,13 @@ namespace BioWare.Resource.Formats.BWM
     /// </summary>
     public class BWM : IEquatable<BWM>
     {
-        /// <summary>Gets the component of a Vector3 at axis index (0=X, 1=Y, 2=Z). Compatible with net472 and net9.0.</summary>
+        /// <summary>Gets the component of a Vector3 at axis index (0=X, 1=Y, 2=Z). Compatible with net48 and net9.0.</summary>
         private static float Vec3At(Vector3 v, int i)
         {
             switch (i) { case 0: return v.X; case 1: return v.Y; default: return v.Z; }
         }
 
-        /// <summary>Returns a new Vector3 with the component at axis index set to value. Compatible with net472 and net9.0.</summary>
+        /// <summary>Returns a new Vector3 with the component at axis index set to value. Compatible with net48 and net9.0.</summary>
         private static Vector3 Vec3SetAt(Vector3 v, int i, float value)
         {
             switch (i) { case 0: return new Vector3(value, v.Y, v.Z); case 1: return new Vector3(v.X, value, v.Z); default: return new Vector3(v.X, v.Y, value); }
@@ -1728,8 +1728,6 @@ namespace BioWare.Resource.Formats.BWM
         /// CRITICAL: This method only modifies transition indices. Vertex positions, materials, and
         /// all other face properties are preserved.
         ///
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:426-452
-        /// Original: def remap_transitions(self, bwm: BWM, dummy_index: int, actual_index: int | None):
         /// </summary>
         /// <param name="dummyIndex">The dummy transition index to remap (from kit component)</param>
         /// <param name="actualIndex">The actual transition index to remap to (room index in module), or null if no connection</param>

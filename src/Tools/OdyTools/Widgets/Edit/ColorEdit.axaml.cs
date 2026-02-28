@@ -10,8 +10,6 @@ using KotorColor = BioWare.Common.Color;
 
 namespace OdyTools.Widgets.Edit
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/color.py:9
-    // Original: class ColorEdit(QWidget):
     public partial class ColorEdit : UserControl
     {
         private KotorColor _color;
@@ -25,8 +23,6 @@ namespace OdyTools.Widgets.Edit
         {
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/color.py:10-22
-        // Original: def __init__(self, parent: QWidget):
         public ColorEdit(Control parent)
         {
             InitializeComponent();
@@ -101,14 +97,10 @@ namespace OdyTools.Widgets.Edit
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/color.py:23-37
-        // Original: def open_color_dialog(self):
         private async void OpenColorDialog()
         {
-            // Matching PyKotor: init_color: Color = Color.from_rgba_integer(self.ui.colorSpin.value())
             KotorColor initColor = KotorColor.FromRgbaInteger((int)(_colorSpin?.Value ?? 0));
 
-            // Matching PyKotor: init_qcolor: QColor = QColor(int(init_color.r * 255), int(init_color.g * 255), int(init_color.b * 255), int(init_color.a * 255))
             // Convert KotorColor (0.0-1.0 float) to Avalonia Color (0-255 byte)
             Avalonia.Media.Color initAvaloniaColor = Avalonia.Media.Color.FromArgb(
                 (byte)(initColor.A * 255),
@@ -136,18 +128,13 @@ namespace OdyTools.Widgets.Edit
                 parentWindow = desktop.MainWindow;
             }
 
-            // Matching PyKotor: dialog: QColorDialog = QColorDialog(QColor(...))
-            // Matching PyKotor: dialog.setOption(QColorDialog.ColorDialogOption.ShowAlphaChannel, on=self.allow_alpha)
             var dialog = new ColorPickerDialog(parentWindow, initAvaloniaColor, _allowAlpha);
 
-            // Matching PyKotor: if dialog.exec():
             bool result = await dialog.ShowDialogAsync(parentWindow);
             if (result)
             {
-                // Matching PyKotor: qcolor = dialog.selectedColor()
                 Avalonia.Media.Color selectedAvaloniaColor = dialog.GetSelectedColor();
 
-                // Matching PyKotor: color: Color = Color(qcolor.redF(), qcolor.greenF(), qcolor.blueF())
                 // Create KotorColor with RGB from Avalonia Color (alpha defaults to 1.0, matching PyKotor behavior)
                 KotorColor selectedColor = new KotorColor(
                     selectedAvaloniaColor.R / 255f,
@@ -155,7 +142,6 @@ namespace OdyTools.Widgets.Edit
                     selectedAvaloniaColor.B / 255f
                 );
 
-                // Matching PyKotor: if self.allow_alpha:
                 //     self.ui.colorSpin.setValue(color.rgb_integer() + (qcolor.alpha() << 24))
                 // else:
                 //     self.ui.colorSpin.setValue(color.rgb_integer())
@@ -177,8 +163,6 @@ namespace OdyTools.Widgets.Edit
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/color.py:39-50
-        // Original: def _on_color_change(self, value: int):
         private void OnColorChange(int value)
         {
             _color = KotorColor.FromRgbaInteger(value);
@@ -198,8 +182,6 @@ namespace OdyTools.Widgets.Edit
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/color.py:52-54
-        // Original: def set_color(self, color: Color):
         public void SetColor(KotorColor color)
         {
             _color = color;
@@ -209,8 +191,6 @@ namespace OdyTools.Widgets.Edit
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/color.py:56-57
-        // Original: def color(self) -> Color:
         public KotorColor GetColor()
         {
             return _color;

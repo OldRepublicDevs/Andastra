@@ -13,7 +13,6 @@ namespace OdyTools.Dialogs
     /// <summary>
     /// Dialog for previewing texture images.
     /// Displays texture preview with image and metadata.
-    /// Matching PyKotor concept: texture preview functionality in texture browser.
     /// </summary>
     public class TexturePreviewDialog : Window
     {

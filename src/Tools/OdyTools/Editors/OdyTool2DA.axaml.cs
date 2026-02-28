@@ -585,7 +585,7 @@ namespace OdyTools.Editors
             {
                 if (e.Key == Key.N) { _ = TryNewAsync(); e.Handled = true; }
                 else if (e.Key == Key.O) { _ = TryOpenAsync(); e.Handled = true; }
-                else if (e.Key == Key.S && shift) { _ = RunSaveAsAsync(null); e.Handled = true; }
+                else if (e.Key == Key.S && shift) { _ = RunSaveAsAsyncCore(null); e.Handled = true; }
                 else if (e.Key == Key.S) { Save(); e.Handled = true; }
                 else if (e.Key == Key.C) { CopySelection(); e.Handled = true; }
                 else if (e.Key == Key.X) { CutSelection(); e.Handled = true; }
@@ -743,14 +743,9 @@ namespace OdyTools.Editors
                 catch { }
             }
 
-            Bind("actionNew", async () => { if (await ConfirmDiscardUnsavedChangesAsync()) New(); });
-            Bind("actionOpen", async () => { if (await ConfirmDiscardUnsavedChangesAsync()) await RunOpenAsync(); });
-            Bind("actionSave", () => Save());
-            Bind("actionSaveAs", () => _ = RunSaveAsAsync(null));
-            Bind("actionSaveAs2DA", () => _ = RunSaveAsAsync(false));
-            Bind("actionSaveAsCSV", () => _ = RunSaveAsAsync(true));
-            Bind("actionRevert", async () => { if (await ConfirmDiscardUnsavedChangesAsync()) Revert(); });
-            Bind("actionExit", () => Close());
+            // actionNew, actionOpen, actionSave, actionRevert, actionExit wired by base Editor (actionSaveAs->RunSaveAsAsync(null))
+            Bind("actionSaveAs2DA", () => _ = RunSaveAsAsyncCore(false));
+            Bind("actionSaveAsCSV", () => _ = RunSaveAsAsyncCore(true));
             Bind("actionUndo", () => Undo());
             Bind("actionRedo", () => Redo());
             Bind("actionCopy", () => CopySelection());
@@ -1350,7 +1345,7 @@ namespace OdyTools.Editors
         }
 
         /// <summary>Opens a 2DA file from disk (File → Open). Used by standalone and when opening from toolset.</summary>
-        private async Task RunOpenAsync()
+        protected override async Task RunOpenAsync()
         {
             var storageProvider = (this as Window)?.StorageProvider;
             if (storageProvider == null) return;
@@ -1385,7 +1380,9 @@ namespace OdyTools.Editors
             }
         }
 
-        private async Task RunSaveAsAsync(bool? preferCsv)
+        protected override async Task RunSaveAsAsync() => await RunSaveAsAsyncCore(null);
+
+        private async Task RunSaveAsAsyncCore(bool? preferCsv)
         {
             var storageProvider = (this as Window)?.StorageProvider;
             if (storageProvider == null) return;
@@ -1429,7 +1426,7 @@ namespace OdyTools.Editors
 
         public override void SaveAs()
         {
-            _ = RunSaveAsAsync(null);
+            _ = RunSaveAsAsyncCore(null);
         }
 
         public void DoFilter(string text)

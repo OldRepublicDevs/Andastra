@@ -1,0 +1,57 @@
+<StackPanel xmlns="https://github.com/avaloniaui"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            x:Class="OdyTools.Editors.OdyToolUTC_ScriptsTab"
+            Spacing="6">
+  <StackPanel Orientation="Horizontal" Spacing="4">
+    <TextBlock Text="OnBlocked:" Width="100" VerticalAlignment="Center"/>
+    <ComboBox Name="onblockedEdit" IsEditable="True" VerticalAlignment="Center"/>
+  </StackPanel>
+  <StackPanel Orientation="Horizontal" Spacing="4">
+    <TextBlock Text="OnAttacked:" Width="100" VerticalAlignment="Center"/>
+    <ComboBox Name="onattackedEdit" IsEditable="True" VerticalAlignment="Center"/>
+  </StackPanel>
+  <StackPanel Orientation="Horizontal" Spacing="4">
+    <TextBlock Text="OnNotice:" Width="100" VerticalAlignment="Center"/>
+    <ComboBox Name="onnoticeEdit" IsEditable="True" VerticalAlignment="Center"/>
+  </StackPanel>
+  <StackPanel Orientation="Horizontal" Spacing="4">
+    <TextBlock Text="OnDialog:" Width="100" VerticalAlignment="Center"/>
+    <ComboBox Name="ondialogEdit" IsEditable="True" VerticalAlignment="Center"/>
+  </StackPanel>
+  <StackPanel Orientation="Horizontal" Spacing="4">
+    <TextBlock Text="OnDamaged:" Width="100" VerticalAlignment="Center"/>
+    <ComboBox Name="ondamagedEdit" IsEditable="True" VerticalAlignment="Center"/>
+  </StackPanel>
+  <StackPanel Orientation="Horizontal" Spacing="4">
+    <TextBlock Text="OnDisturbed:" Width="100" VerticalAlignment="Center"/>
+    <ComboBox Name="ondisturbedEdit" IsEditable="True" VerticalAlignment="Center"/>
+  </StackPanel>
+  <StackPanel Orientation="Horizontal" Spacing="4">
+    <TextBlock Text="OnDeath:" Width="100" VerticalAlignment="Center"/>
+    <ComboBox Name="ondeathEdit" IsEditable="True" VerticalAlignment="Center"/>
+  </StackPanel>
+  <StackPanel Orientation="Horizontal" Spacing="4">
+    <TextBlock Text="OnEndRound:" Width="100" VerticalAlignment="Center"/>
+    <ComboBox Name="onendroundEdit" IsEditable="True" VerticalAlignment="Center"/>
+  </StackPanel>
+  <StackPanel Orientation="Horizontal" Spacing="4">
+    <TextBlock Text="OnEndDialog:" Width="100" VerticalAlignment="Center"/>
+    <ComboBox Name="onenddialogEdit" IsEditable="True" VerticalAlignment="Center"/>
+  </StackPanel>
+  <StackPanel Orientation="Horizontal" Spacing="4">
+    <TextBlock Text="OnHeartbeat:" Width="100" VerticalAlignment="Center"/>
+    <ComboBox Name="onheartbeatEdit" IsEditable="True" VerticalAlignment="Center"/>
+  </StackPanel>
+  <StackPanel Orientation="Horizontal" Spacing="4">
+    <TextBlock Text="OnSpawn:" Width="100" VerticalAlignment="Center"/>
+    <ComboBox Name="onspawnEdit" IsEditable="True" VerticalAlignment="Center"/>
+  </StackPanel>
+  <StackPanel Orientation="Horizontal" Spacing="4">
+    <TextBlock Text="OnSpell:" Width="100" VerticalAlignment="Center"/>
+    <ComboBox Name="onspellEdit" IsEditable="True" VerticalAlignment="Center"/>
+  </StackPanel>
+  <StackPanel Orientation="Horizontal" Spacing="4">
+    <TextBlock Text="OnUserDefined:" Width="100" VerticalAlignment="Center"/>
+    <ComboBox Name="onuserdefinedEdit" IsEditable="True" VerticalAlignment="Center"/>
+  </StackPanel>
+</StackPanel>

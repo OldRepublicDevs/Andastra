@@ -5,8 +5,6 @@ using OdyTools.Data;
 
 namespace OdyTools.Widgets.Settings
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/preview_3d.py:13
-    // Original: class ModelRendererSettings(Settings):
     public partial class Preview3DWidget : UserControl
     {
         private ModelRendererSettings _settings;
@@ -63,7 +61,6 @@ namespace OdyTools.Widgets.Settings
 
         private void SetupValues()
         {
-            // Matching PyKotor implementation: Load values from ModelRendererSettings
             if (_utcShowByDefault != null)
             {
                 _utcShowByDefault.IsChecked = _settings.UtcShowByDefault;
@@ -74,7 +71,6 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation: Save values from UI controls to ModelRendererSettings
         public void Save()
         {
             if (_utcShowByDefault != null)

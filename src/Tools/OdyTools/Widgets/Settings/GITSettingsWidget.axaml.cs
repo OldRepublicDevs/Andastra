@@ -9,8 +9,6 @@ using OdyTools.Widgets.Edit;
 
 namespace OdyTools.Widgets.Settings
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/git.py:15
-    // Original: class GITWidget(SettingsWidget):
     public partial class GITSettingsWidget : SettingsWidget
     {
         private Button _coloursResetButton;
@@ -111,8 +109,6 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/git.py:58-60
-        // Original: def _setupColourValues(self):
         private void SetupColourValues()
         {
             // Find all ColorEdit widgets in the UI and register them
@@ -223,8 +219,6 @@ namespace OdyTools.Widgets.Settings
             return controls;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/git.py:62-64
-        // Original: def _setupBindValues(self):
         // PyKotor: for bindEdit in [widget for widget in dir(self.ui) if "BindEdit" in widget]:
         //              self._registerBind(getattr(self.ui, bindEdit), bindEdit[:-4])
         private void SetupBindValues()
@@ -305,16 +299,12 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/git.py:66-68
-        // Original: def setup_values(self):
         private void SetupValues()
         {
             SetupColourValues();
             SetupBindValues();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/git.py:70-72
-        // Original: def resetColours(self):
         private void ResetColours()
         {
             if (_settings != null && _settings is GITSettings gitSettings)
@@ -324,8 +314,6 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/git.py:74-76
-        // Original: def resetControls(self):
         private void ResetControls()
         {
             if (_settings != null && _settings is GITSettings gitSettings)

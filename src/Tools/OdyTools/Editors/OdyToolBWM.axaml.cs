@@ -1,16 +1,15 @@
 using System;
+using System.IO;
+using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
+using Avalonia.Platform.Storage;
 using BioWare.Common;
-using BioWare.Resource;
 using BioWare.Resource.Formats.BWM;
 using OdyTools.Data;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/bwm.py:38
-    // Original: class OdyToolBWM(Editor):
-    public class OdyToolBWM : Editor
+    public partial class OdyToolBWM : Editor
     {
         private BWM _bwm;
 
@@ -43,9 +42,12 @@ namespace OdyTools.Editors
             LoadBWM(_bwm);
         }
 
+        /// <summary>
+        /// Loads BWM into editor state. This editor supports open/save only; no visual walkmesh renderer is implemented.
+        /// </summary>
         private void LoadBWM(BWM bwm)
         {
-            // Load BWM data into UI renderer
+            _bwm = bwm ?? _bwm;
         }
 
         public override Tuple<byte[], byte[]> Build()
@@ -63,6 +65,35 @@ namespace OdyTools.Editors
 
         public override void SaveAs()
         {
+            _ = RunSaveAsAsync();
+        }
+
+        protected override async Task RunSaveAsAsync()
+        {
+            var storage = StorageProvider;
+            if (storage == null) return;
+            string suggestedName = !string.IsNullOrEmpty(_resname) ? _resname : "walkmesh";
+            var options = new FilePickerSaveOptions
+            {
+                Title = "Save As",
+                SuggestedFileName = suggestedName + ".wok",
+                FileTypeChoices = new[]
+                {
+                    new FilePickerFileType("Walkmesh (WOK)") { Patterns = new[] { "*.wok" } },
+                    new FilePickerFileType("Door walkmesh (DWK)") { Patterns = new[] { "*.dwk" } },
+                    new FilePickerFileType("Placeable walkmesh (PWK)") { Patterns = new[] { "*.pwk" } },
+                    new FilePickerFileType("All files") { Patterns = new[] { "*.*" } }
+                }
+            };
+            var file = await storage.SaveFilePickerAsync(options);
+            if (file == null) return;
+            string path = file.Path?.LocalPath ?? "";
+            if (string.IsNullOrWhiteSpace(path)) return;
+            _filepath = path;
+            string ext = (Path.GetExtension(path) ?? "").TrimStart('.').ToLowerInvariant();
+            _restype = ResourceType.FromExtension(ext) ?? ResourceType.WOK;
+            _resname = Path.GetFileNameWithoutExtension(path);
+            RefreshWindowTitle();
             Save();
         }
     }

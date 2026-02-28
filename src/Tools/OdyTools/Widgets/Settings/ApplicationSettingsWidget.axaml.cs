@@ -13,8 +13,6 @@ using MsBox.Avalonia.Enums;
 
 namespace OdyTools.Widgets.Settings
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:27
-    // Original: class ApplicationSettingsWidget(SettingsWidget):
     public partial class ApplicationSettingsWidget : UserControl
     {
         private Button _resetAttributesButton;
@@ -104,8 +102,6 @@ namespace OdyTools.Widgets.Settings
             PopulateAll();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:57-67
-        // Original: def update_font_label(self):
         private void UpdateFontLabel()
         {
             if (_currentFontLabel == null)
@@ -140,8 +136,6 @@ namespace OdyTools.Widgets.Settings
             _currentFontLabel.Text = "Current Font: Default";
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:69-77
-        // Original: def select_font(self): QFontDialog.getFont(current_font, self)
         private async void SelectFont()
         {
             Window parentWindow = GetParentWindow();
@@ -215,7 +209,6 @@ namespace OdyTools.Widgets.Settings
                 var selectedFont = fontDialog.SelectedFont;
 
                 // Save font as string (format: "Family|Size|Style|Weight")
-                // Matching PyKotor: self.settings.settings.setValue("GlobalFont", font.toString())
                 string fontStringToSave = $"{selectedFont.FamilyName ?? "Arial"}|{selectedFont.Size}|" +
                     $"{(selectedFont.IsItalic ? "Italic" : "Normal")}|" +
                     $"{(selectedFont.IsBold ? "700" : "400")}";
@@ -226,25 +219,20 @@ namespace OdyTools.Widgets.Settings
                 UpdateFontLabel();
 
                 // Apply the font globally to the application
-                // Matching PyKotor: QApplication.setFont(font) applies globally to all widgets
                 // In Avalonia, we apply fonts via styles to achieve the same effect
                 OdyTools.Utils.FontApplicationHelper.ApplyGlobalFont(fontStringToSave);
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:79-126
-        // Original: def populate_all(self):
         private void PopulateAll()
         {
             // Populate environment variables from settings
             PopulateEnvironmentVariables();
 
             // Populate miscellaneous settings
-            // This will be implemented when settings are fully available
+            // Settings binding (when settings are fully available)
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:97-102
-        // Original: def populate_all(self) - environment variables section
         private void PopulateEnvironmentVariables()
         {
             if (_tableWidget == null)
@@ -264,16 +252,12 @@ namespace OdyTools.Widgets.Settings
             _tableWidget.ItemsSource = _environmentVariables;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:41
-        // Original: def reset_attributes(self):
         private void ResetAttributes()
         {
             // Reset all attributes to defaults
-            // This will be implemented when settings are fully available
+            // Settings binding (when settings are fully available)
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:181-201
-        // Original: def add_environment_variable(self):
         private async void AddEnvironmentVariable()
         {
             Window parentWindow = GetParentWindow();
@@ -315,8 +299,6 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:203-236
-        // Original: def edit_environment_variable(self):
         private async void EditEnvironmentVariable()
         {
             if (_tableWidget == null || _tableWidget.SelectedItem == null)
@@ -385,8 +367,6 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:244-263
-        // Original: def remove_environment_variable(self):
         private async void RemoveEnvironmentVariable()
         {
             if (_tableWidget == null || _tableWidget.SelectedItem == null)
@@ -417,8 +397,6 @@ namespace OdyTools.Widgets.Settings
             RemoveEnvironmentVariableFromSettings(key);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:238-242
-        // Original: def remove_environment_variable_from_settings(self, key: str):
         private void RemoveEnvironmentVariableFromSettings(string key)
         {
             var envVars = _settings.AppEnvVariables;
@@ -429,8 +407,6 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:135-139
-        // Original: def save_environment_variable(self, key: str, value: str):
         private void SaveEnvironmentVariable(string key, string value)
         {
             var envVars = _settings.AppEnvVariables;

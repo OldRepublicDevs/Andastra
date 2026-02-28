@@ -7,15 +7,11 @@ using Avalonia.Threading;
 
 namespace OdyTools.Widgets
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/progressbar.py:15
-    // Original: class AnimatedProgressBar(QProgressBar):
     public class AnimatedProgressBar : ProgressBar
     {
         private DispatcherTimer _timer;
         private int _offset;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/progressbar.py:16-21
-        // Original: def __init__(self, parent=None):
         public AnimatedProgressBar()
         {
             _offset = 0;
@@ -27,8 +23,6 @@ namespace OdyTools.Widgets
             _timer.Start();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/progressbar.py:23-30
-        // Original: def update_animation(self):
         private void UpdateAnimation()
         {
             if (Maximum == Minimum)
@@ -52,8 +46,6 @@ namespace OdyTools.Widgets
             InvalidateVisual();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/progressbar.py:32-78
-        // Original: def paintEvent(self, event: QPaintEvent):
         public override void Render(DrawingContext context)
         {
             base.Render(context);
@@ -73,25 +65,18 @@ namespace OdyTools.Widgets
                 return;
             }
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/progressbar.py:56-76
-            // Original: Draw the shimmering effect (moving light)
             DrawShimmeringEffect(context, width, height, filledWidth);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/progressbar.py:56-76
-        // Original: def paintEvent - shimmering effect drawing logic
         private void DrawShimmeringEffect(DrawingContext context, double width, double height, double filledWidth)
         {
-            // Matching PyKotor: light_width: int = chunk_height * 2
             double lightWidth = height * 2; // Width of the shimmering light effect
 
-            // Matching PyKotor: light_rect: QRectF = QRectF(self._offset - light_width / 2, 0, light_width, chunk_height)
             double lightLeft = _offset - lightWidth / 2;
             double lightTop = 0;
             double lightRight = lightLeft + lightWidth;
             double lightBottom = height;
 
-            // Matching PyKotor: Adjust light position if it starts before the progress bar
             // In PyKotor: if light_rect.left() < rect.left(): light_rect.moveLeft(rect.left())
             // moveLeft moves the rectangle so its left edge is at the specified position
             if (lightLeft < 0)
@@ -100,7 +85,6 @@ namespace OdyTools.Widgets
                 lightLeft = 0;
             }
 
-            // Matching PyKotor: Adjust light position if it ends after the progress bar
             // In PyKotor: if light_rect.right() > rect.right(): light_rect.moveRight(rect.right())
             // moveRight moves the rectangle so its right edge is at the specified position
             if (lightRight > filledWidth)
@@ -126,10 +110,8 @@ namespace OdyTools.Widgets
                 lightRight = filledWidth;
             }
 
-            // Matching PyKotor: chunk_radius: float = chunk_height / 2
             double chunkRadius = height / 2;
 
-            // Matching PyKotor: Create a linear gradient for the shimmering light effect
             // QLinearGradient(light_rect.left(), 0, light_rect.right(), 0)
             // setColorAt(0, QColor(255, 255, 255, 0))  # Transparent at the edges
             // setColorAt(0.5, QColor(255, 255, 255, 150))  # Semi-transparent white in the center
@@ -142,7 +124,6 @@ namespace OdyTools.Widgets
             gradientStops.Add(new GradientStop(new Color(0, 255, 255, 255), 1.0)); // Transparent at the edges (A=0)
 
             // Create the linear gradient brush with absolute coordinates
-            // Matching PyKotor: QLinearGradient(light_rect.left(), 0, light_rect.right(), 0)
             var gradientBrush = new LinearGradientBrush
             {
                 StartPoint = new RelativePoint(new Point(lightLeft, 0), RelativeUnit.Absolute),
@@ -151,7 +132,6 @@ namespace OdyTools.Widgets
             };
 
             // Create the rectangle for the shimmering effect
-            // Matching PyKotor: painter.drawRoundedRect(light_rect, chunk_radius, chunk_radius)
             var lightRect = new Rect(lightLeft, lightTop, lightRight - lightLeft, lightBottom - lightTop);
 
             // Create a rounded rectangle geometry using StreamGeometry
@@ -207,7 +187,6 @@ namespace OdyTools.Widgets
             using (context.PushClip(filledRect))
             {
                 // Draw the shimmering effect with the gradient brush
-                // Matching PyKotor: painter.setPen(QtCore.Qt.PenStyle.NoPen) - no pen, just fill
                 // In Avalonia, we use DrawGeometry with a brush to fill the geometry
                 context.DrawGeometry(gradientBrush, null, geometry);
             }

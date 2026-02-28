@@ -1,0 +1,3 @@
+C:/GitHub/Andastra/src/KotORSaveLoadCpp/build/CMakeFiles/kotor_saveload_test.dir
+C:/GitHub/Andastra/src/KotORSaveLoadCpp/build/CMakeFiles/ALL_BUILD.dir
+C:/GitHub/Andastra/src/KotORSaveLoadCpp/build/CMakeFiles/ZERO_CHECK.dir

@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
@@ -14,11 +17,10 @@ using BioWare.Extract;
 using BioWare.Common;
 using BioWare.Resource;
 using OdyTools.Data;
+using OdyTools.Dialogs;
 
 namespace OdyTools.Widgets
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:77
-    // Original: class ResourceList(MainWindowList):
     public partial class ResourceList : UserControl
     {
         private const int SearchDebounceMilliseconds = 180;
@@ -32,34 +34,22 @@ namespace OdyTools.Widgets
         private readonly DispatcherTimer _searchDebounceTimer;
         private List<ResourceTreeNode> _rootNodes;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py
-        // Original: UI wrapper exposing controls for testing
         public ResourceListUi Ui { get; private set; }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:57
-        // Original: sig_section_changed: Signal = Signal(str)
         // Event emitted when the section combo box selection changes
         public event EventHandler<string> SectionChanged;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:80
-        // Original: sig_request_reload: Signal = Signal(str)
         // Event emitted when the reload button is clicked, passing the selected section string
         public event EventHandler<string> ReloadClicked;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:81
-        // Original: sig_request_refresh: Signal = Signal()
         // Event emitted when the refresh button is clicked
         public event EventHandler RefreshClicked;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:55
-        // Original: sig_request_open_resource: Signal = Signal(list, object)
         // Event emitted when a resource is double-clicked, passing the list of selected resources and useSpecializedEditor flag
         public event EventHandler<ResourceOpenEventArgs> ResourceDoubleClicked;
 
-        // Matching PyKotor: sig_request_extract_resource / requestExtractResource
         public event EventHandler<ExtractRequestedEventArgs> ExtractRequested;
 
-        // Matching PyKotor: Open Save Editor from context (saves widget only)
         public event EventHandler RequestOpenSaveEditor;
 
         /// <summary>When true, context menu shows "Open Save Editor" (set by MainWindow for the saves list).</summary>
@@ -146,8 +136,6 @@ namespace OdyTools.Widgets
             Content = grid;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:122-129
-        // Original: def setup_signals(self):
         private void SetupSignals()
         {
             // Create UI wrapper exposing controls for testing
@@ -184,15 +172,11 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:150-152
-        // Original: def set_installation(self, installation: OdyInstallation):
         public void SetInstallation(OdyInstallation installation)
         {
             _installation = installation;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:154-187
-        // Original: def set_resources(self, resources: list[FileResource], custom_category: str | None = None, *, clear_existing: bool = True):
         public void SetResources(List<FileResource> resources, string customCategory = null, bool clearExisting = true)
         {
             if (clearExisting)
@@ -263,8 +247,6 @@ namespace OdyTools.Widgets
             UpdateTreeView();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:189-195
-        // Original: def set_sections(self, sections: list[QStandardItem]):
         public void SetSections(List<string> sections)
         {
             if (_sectionCombo != null)
@@ -277,8 +259,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:226-227
-        // Original: def selected_resources(self) -> list[FileResource]: returns from selectedIndexes()
         public List<FileResource> SelectedResources()
         {
             var selected = new List<FileResource>();
@@ -298,8 +278,6 @@ namespace OdyTools.Widgets
             return selected;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:197-224
-        // Original: def set_resource_selection(self, resource: FileResource):
         public void SetResourceSelection(FileResource resource)
         {
             if (resource == null || _resourceTree == null)
@@ -363,16 +341,12 @@ namespace OdyTools.Widgets
             return false;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:229-232
-        // Original: def on_filter_string_updated(self):
         private void OnFilterStringUpdated()
         {
             _searchDebounceTimer.Stop();
             _searchDebounceTimer.Start();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:234-238
-        // Original: def on_section_changed(self):
         private void OnSectionChanged()
         {
             // Get the selected section string from the combo box
@@ -388,8 +362,6 @@ namespace OdyTools.Widgets
             SectionChanged?.Invoke(this, sectionData);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:240-244
-        // Original: def on_reload_clicked(self):
         private void OnReloadClicked()
         {
             // Get the selected section string from the combo box
@@ -405,8 +377,6 @@ namespace OdyTools.Widgets
             ReloadClicked?.Invoke(this, sectionData);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:246-250
-        // Original: def on_refresh_clicked(self):
         private void OnRefreshClicked()
         {
             // Clear the modules model (matching PyKotor: self._clear_modules_model())
@@ -421,21 +391,28 @@ namespace OdyTools.Widgets
             RefreshClicked?.Invoke(this, EventArgs.Empty);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:274-322
-        // Original: def on_resource_context_menu(self, point: QPoint):
+        // Extended with exhaustive context menu: Open, Open with GFF, Copy Name, Copy Path, Open Containing Folder, Extract, (Saves) Open Save Editor.
         private void OnResourceContextMenuRequested(object sender, ContextRequestedEventArgs e)
         {
             var resources = SelectedResources();
             if (resources == null || resources.Count == 0)
             {
-                e.Handled = false;
+                // No selection: show minimal context menu (Refresh for current tab)
+                var emptyMenu = new ContextMenu();
+                var refreshItem = new MenuItem { Header = "_Refresh" };
+                refreshItem.Click += (s, ev) => RefreshClicked?.Invoke(this, EventArgs.Empty);
+                emptyMenu.Items.Add(refreshItem);
+                emptyMenu.Open(_resourceTree);
+                e.Handled = true;
                 return;
             }
             var menu = new ContextMenu();
             var localResources = new List<FileResource>(resources);
             bool allGff = localResources.Count > 0 && localResources.All(r => r?.ResType != null && r.ResType.IsGff());
+            FileResource firstResource = localResources.Count > 0 ? localResources[0] : null;
+            bool hasFilePath = firstResource != null && !string.IsNullOrWhiteSpace(firstResource.FilePath) && (File.Exists(firstResource.FilePath) || Directory.Exists(Path.GetDirectoryName(firstResource.FilePath)));
 
-            var openItem = new MenuItem { Header = "Open" };
+            var openItem = new MenuItem { Header = "_Open" };
             openItem.Click += (s, ev) =>
             {
                 ResourceDoubleClicked?.Invoke(this, new ResourceOpenEventArgs(localResources, true));
@@ -444,33 +421,150 @@ namespace OdyTools.Widgets
 
             if (allGff)
             {
-                var gffItem = new MenuItem { Header = "Open with GFF Editor" };
-                gffItem.Click += (s, ev) =>
+                var openWithSubMenu = new MenuItem { Header = "Open _With" };
+                var gffEditorItem = new MenuItem { Header = "Open with _GFF Editor" };
+                gffEditorItem.Click += (s, ev) =>
                 {
                     ResourceDoubleClicked?.Invoke(this, new ResourceOpenEventArgs(localResources, false));
                 };
-                menu.Items.Add(gffItem);
+                openWithSubMenu.Items.Add(gffEditorItem);
+                var specializedItem = new MenuItem { Header = "Open with _Specialized Editor" };
+                specializedItem.Click += (s, ev) =>
+                {
+                    ResourceDoubleClicked?.Invoke(this, new ResourceOpenEventArgs(localResources, true));
+                };
+                openWithSubMenu.Items.Add(specializedItem);
+                var defaultEditorItem = new MenuItem { Header = "Open with _Default Editor" };
+                defaultEditorItem.Click += (s, ev) =>
+                {
+                    ResourceDoubleClicked?.Invoke(this, new ResourceOpenEventArgs(localResources, null));
+                };
+                openWithSubMenu.Items.Add(defaultEditorItem);
+                menu.Items.Add(openWithSubMenu);
             }
+            else
+            {
+                var openWithEditorItem = new MenuItem { Header = "Open with _Editor" };
+                openWithEditorItem.Click += (s, ev) =>
+                {
+                    ResourceDoubleClicked?.Invoke(this, new ResourceOpenEventArgs(localResources, true));
+                };
+                menu.Items.Add(openWithEditorItem);
+            }
+
+            menu.Items.Add(new Separator());
+
+            var copyNameItem = new MenuItem { Header = "Copy _Resource Name" };
+            copyNameItem.Click += (s, ev) => CopyResourceNamesToClipboard(localResources);
+            copyNameItem.IsEnabled = true;
+            menu.Items.Add(copyNameItem);
+
+            var copyPathItem = new MenuItem { Header = "Copy _Full Path" };
+            copyPathItem.Click += (s, ev) => CopyFullPathsToClipboard(localResources);
+            copyPathItem.IsEnabled = hasFilePath || localResources.Any(r => !string.IsNullOrWhiteSpace(r?.FilePath));
+            menu.Items.Add(copyPathItem);
+
+            var openFolderItem = new MenuItem { Header = "Open _Containing Folder" };
+            openFolderItem.Click += (s, ev) => OpenContainingFolder(localResources);
+            openFolderItem.IsEnabled = hasFilePath;
+            menu.Items.Add(openFolderItem);
 
             if (IsSavesWidget)
             {
                 menu.Items.Add(new Separator());
-                var saveEditorItem = new MenuItem { Header = "Open Save Editor" };
+                var saveEditorItem = new MenuItem { Header = "Open Save _Editor" };
                 saveEditorItem.Click += (s, ev) => RequestOpenSaveEditor?.Invoke(this, EventArgs.Empty);
                 menu.Items.Add(saveEditorItem);
             }
 
             menu.Items.Add(new Separator());
-            var extractItem = new MenuItem { Header = "Extract..." };
+            var extractItem = new MenuItem { Header = "_Extract..." };
             extractItem.Click += (s, ev) => ExtractRequested?.Invoke(this, new ExtractRequestedEventArgs(localResources));
             menu.Items.Add(extractItem);
+
+            var detailsItem = new MenuItem { Header = "_Details..." };
+            detailsItem.Click += (s, ev) => ShowResourceDetails(localResources);
+            menu.Items.Add(detailsItem);
 
             menu.Open(_resourceTree);
             e.Handled = true;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:416-418
-        // Original: def on_resource_double_clicked(self):
+        private async void CopyResourceNamesToClipboard(List<FileResource> resources)
+        {
+            if (resources == null || resources.Count == 0) return;
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel?.Clipboard == null) return;
+            string text = string.Join(Environment.NewLine, resources.Select(r => r != null ? $"{r.ResName}.{r.ResType?.Extension ?? ""}" : ""));
+            await topLevel.Clipboard.SetTextAsync(text ?? "");
+        }
+
+        private async void CopyFullPathsToClipboard(List<FileResource> resources)
+        {
+            if (resources == null || resources.Count == 0) return;
+            var paths = resources.Where(r => r != null && !string.IsNullOrWhiteSpace(r.FilePath)).Select(r => r.FilePath).ToList();
+            if (paths.Count == 0) return;
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel?.Clipboard == null) return;
+            string text = string.Join(Environment.NewLine, paths);
+            await topLevel.Clipboard.SetTextAsync(text);
+        }
+
+        private void ShowResourceDetails(List<FileResource> resources)
+        {
+            if (resources == null || resources.Count == 0) return;
+            var parent = TopLevel.GetTopLevel(this) as Window;
+            var dialog = new LoadFromLocationResultDialog(parent, resources, _installation);
+            dialog.Title = resources.Count == 1 ? "Resource Details" : $"{resources.Count} Resources";
+            dialog.Show();
+        }
+
+        private static void OpenContainingFolder(List<FileResource> resources)
+        {
+            if (resources == null || resources.Count == 0) return;
+            string path = null;
+            foreach (var r in resources)
+            {
+                if (r == null || string.IsNullOrWhiteSpace(r.FilePath)) continue;
+                if (File.Exists(r.FilePath))
+                {
+                    path = Path.GetDirectoryName(r.FilePath);
+                    break;
+                }
+                var dir = Path.GetDirectoryName(r.FilePath);
+                if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                {
+                    path = dir;
+                    break;
+                }
+            }
+            if (string.IsNullOrEmpty(path) || !Directory.Exists(path)) return;
+            try
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "explorer.exe",
+                        Arguments = "\"" + path.Replace("\"", "\\\"") + "\"",
+                        UseShellExecute = true
+                    });
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    Process.Start("open", path);
+                }
+                else
+                {
+                    Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"OpenContainingFolder: {ex.Message}");
+            }
+        }
+
         private void OnResourceDoubleClicked()
         {
             // Get the selected resources from the tree view
@@ -487,8 +581,6 @@ namespace OdyTools.Widgets
             ResourceDoubleClicked?.Invoke(this, args);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:131-133
-        // Original: def hide_reload_button(self):
         public void HideReloadButton()
         {
             if (_reloadButton != null)
@@ -497,8 +589,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:135-138
-        // Original: def hide_section(self):
         public void HideSection()
         {
             if (_sectionCombo != null)
@@ -512,8 +602,6 @@ namespace OdyTools.Widgets
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:478
-    // Original: class ResourceModel(QStandardItemModel):
     public class ResourceModel
     {
         private readonly Dictionary<string, ResourceCategoryItem> _categoryItems = new Dictionary<string, ResourceCategoryItem>();
@@ -613,8 +701,6 @@ namespace OdyTools.Widgets
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:69
-    // Original: class ResourceStandardItem(QStandardItem):
     public class ResourceStandardItem
     {
         public FileResource Resource { get; set; }
@@ -650,8 +736,6 @@ namespace OdyTools.Widgets
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py
-    // Original: UI wrapper class exposing all controls for testing
     public class ResourceListUi
     {
         public ComboBox SectionCombo { get; set; }
@@ -661,8 +745,6 @@ namespace OdyTools.Widgets
         public TreeView ResourceTree { get; set; }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:55
-    // Original: sig_request_open_resource: Signal = Signal(list, object)
     // Event arguments for ResourceDoubleClicked event, containing the list of resources and useSpecializedEditor flag
     public class ResourceOpenEventArgs : EventArgs
     {
@@ -676,7 +758,6 @@ namespace OdyTools.Widgets
         }
     }
 
-    // Matching PyKotor: sig_request_extract_resource
     public class ExtractRequestedEventArgs : EventArgs
     {
         public List<FileResource> Resources { get; }
@@ -707,7 +788,7 @@ namespace OdyTools.Widgets
 
             if (_lazyChildrenLoader != null && ChildCount > 0)
             {
-                // Placeholder child keeps the expander visible without eagerly creating all rows.
+                // One temporary row keeps the expander visible until children are loaded (replaced when lazy load runs).
                 Children.Add(new ResourceTreeNode("Loading...", false, null, 0, null));
             }
         }

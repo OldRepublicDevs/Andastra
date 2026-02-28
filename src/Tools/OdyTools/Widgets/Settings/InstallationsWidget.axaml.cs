@@ -6,12 +6,8 @@ using OdyTools.Data;
 
 namespace OdyTools.Widgets.Settings
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py:38
-    // Original: class InstallationsWidget(QWidget):
     public partial class InstallationsWidget : UserControl
     {
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py:39
-        // Original: sig_settings_edited: ClassVar[Signal] = Signal()
         // Event emitted when installations are edited
         public event EventHandler SettingsEdited;
 
@@ -61,8 +57,6 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py:57-62
-        // Original: def setup_values(self):
         private void SetupValues()
         {
             if (_pathList != null)
@@ -86,8 +80,6 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py:64-74
-        // Original: def setup_signals(self):
         private void SetupSignals()
         {
             if (_addPathButton != null)
@@ -116,17 +108,12 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py:76-87
-        // Original: def save(self):
         public void Save()
         {
             if (_pathList == null) return;
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py:76-87
-            // Original: def save(self): installations: dict[str, dict[str, str]] = {}
             Dictionary<string, Dictionary<string, object>> installations = new Dictionary<string, Dictionary<string, object>>();
 
-            // Matching PyKotor implementation: for row in range(self.installations_model.rowCount()):
             foreach (var item in _pathList.Items)
             {
                 string itemText = item?.ToString() ?? "";
@@ -154,21 +141,16 @@ namespace OdyTools.Widgets.Settings
                 }
             }
 
-            // Matching PyKotor implementation: self.settings.settings.setValue("installations", installations)
             _settings.SetInstallations(installations);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py:89-94
-        // Original: def add_new_installation(self):
         private void AddNewInstallation()
         {
             if (_pathList != null)
             {
-                // Matching PyKotor implementation: item: QStandardItem = QStandardItem(tr("New"))
                 string newName = "New";
                 _pathList.Items.Add(newName);
                 
-                // Matching PyKotor implementation: item.setData({"path": "", "tsl": False})
                 _installationData[newName] = new Dictionary<string, object>
                 {
                     { "name", newName },
@@ -176,13 +158,10 @@ namespace OdyTools.Widgets.Settings
                     { "tsl", false }
                 };
                 
-                // Matching PyKotor implementation: self.sig_settings_edited.emit()
                 SettingsEdited?.Invoke(this, EventArgs.Empty);
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py:96-102
-        // Original: def remove_selected_installation(self):
         private void RemoveSelectedInstallation()
         {
             if (_pathList?.SelectedItem != null)
@@ -196,7 +175,6 @@ namespace OdyTools.Widgets.Settings
                     _installationData.Remove(selectedName);
                 }
                 
-                // Matching PyKotor implementation: self.sig_settings_edited.emit()
                 SettingsEdited?.Invoke(this, EventArgs.Empty);
             }
             if (_pathList?.SelectedItem == null && _pathFrame != null)
@@ -205,8 +183,6 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py:107-119
-        // Original: def update_installation(self):
         private void UpdateInstallation()
         {
             if (_pathList?.SelectedItem == null)
@@ -220,7 +196,6 @@ namespace OdyTools.Widgets.Settings
                 return;
             }
 
-            // Matching PyKotor implementation: index: QModelIndex = self.ui.pathList.selectedIndexes()[0]
             // Get or create installation data
             if (!_installationData.ContainsKey(selectedName))
             {
@@ -234,19 +209,16 @@ namespace OdyTools.Widgets.Settings
 
             var data = _installationData[selectedName];
             
-            // Matching PyKotor implementation: data["path"] = self.ui.pathDirEdit.text()
             if (_pathDirEdit != null)
             {
                 data["path"] = _pathDirEdit.Text ?? "";
             }
             
-            // Matching PyKotor implementation: data["tsl"] = self.ui.pathTslCheckbox.isChecked()
             if (_pathTslCheckbox != null)
             {
                 data["tsl"] = _pathTslCheckbox.IsChecked ?? false;
             }
 
-            // Matching PyKotor implementation: item.setText(self.ui.pathNameEdit.text())
             if (_pathNameEdit != null)
             {
                 string newName = _pathNameEdit.Text ?? "";
@@ -276,12 +248,9 @@ namespace OdyTools.Widgets.Settings
                 }
             }
 
-            // Matching PyKotor implementation: self.sig_settings_edited.emit()
             SettingsEdited?.Invoke(this, EventArgs.Empty);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py:121-133
-        // Original: def installation_selected(self):
         private void InstallationSelected()
         {
             if (_pathList?.SelectedItem != null && _pathFrame != null)
@@ -290,25 +259,20 @@ namespace OdyTools.Widgets.Settings
                 
                 string selectedName = _pathList.SelectedItem.ToString();
                 
-                // Matching PyKotor implementation: item_text: str = item.text()
-                // Matching PyKotor implementation: item_data: dict[str, Any] = item.data()
                 if (_installationData.ContainsKey(selectedName))
                 {
                     var itemData = _installationData[selectedName];
                     
-                    // Matching PyKotor implementation: self.ui.pathNameEdit.setText(item_text)
                     if (_pathNameEdit != null)
                     {
                         _pathNameEdit.Text = selectedName;
                     }
                     
-                    // Matching PyKotor implementation: self.ui.pathDirEdit.setText(item_data["path"])
                     if (_pathDirEdit != null)
                     {
                         _pathDirEdit.Text = itemData.ContainsKey("path") ? itemData["path"]?.ToString() ?? "" : "";
                     }
                     
-                    // Matching PyKotor implementation: self.ui.pathTslCheckbox.setChecked(bool(item_data["tsl"]))
                     if (_pathTslCheckbox != null)
                     {
                         bool tslValue = false;

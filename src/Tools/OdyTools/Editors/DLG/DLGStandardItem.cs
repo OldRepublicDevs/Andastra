@@ -8,8 +8,6 @@ using BioWare.Resource.Formats.GFF.Generics.DLG;
 
 /// <summary>
 /// Represents a standard item in the DLG tree model.
-/// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:52-100
-/// Original: class DLGStandardItem(QStandardItem):
 /// </summary>
 
 namespace OdyTools.Editors.DLG
@@ -22,7 +20,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Gets the link associated with this item, or null if the reference is no longer valid.
-        /// Matching PyKotor implementation: property link(self) -> DLGLink | None
         /// </summary>
         public DLGLink Link
         {
@@ -101,8 +98,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Inserts a child item at the specified index.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:162-175
-        /// Original: def insertRow(self, row: int, item: DLGStandardItem):
         /// </summary>
         /// <param name="index">The index at which to insert the child.</param>
         /// <param name="child">The child item to insert.</param>
@@ -138,7 +133,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Gets the child item at the specified row and column.
-        /// Matching PyKotor implementation: def child(self, row: int, column: int = 0) -> QStandardItem | None
         /// </summary>
         public DLGStandardItem Child(int row, int column = 0)
         {
@@ -151,7 +145,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Gets whether this item has children.
-        /// Matching PyKotor implementation: def hasChildren(self) -> bool
         /// </summary>
         public bool HasChildren()
         {

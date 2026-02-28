@@ -19,7 +19,6 @@ namespace OdyTools.Widgets
     /// Similar to TextureBrowser but for 3D models.
     /// </summary>
     /// <remarks>
-    /// Matching PyKotor implementation concept at Tools/HolocronToolset/src/toolset/gui/widgets/renderer/texture_browser.py
     /// This widget provides a visual browser for imported models in the LYT editor.
     /// </remarks>
     public class ModelBrowser : UserControl
@@ -121,7 +120,7 @@ namespace OdyTools.Widgets
                         Margin = new Thickness(4)
                     };
 
-                    // Model icon (placeholder - could be enhanced with actual model preview)
+                    // Model list item: icon indicates MDL type; 3D preview would require dedicated renderer
                     var iconBorder = new Border
                     {
                         Width = 48,
@@ -342,10 +341,17 @@ namespace OdyTools.Widgets
         {
             if (_modelList?.SelectedItem is string modelName)
             {
-                // Double-tap could trigger model preview or usage
-                // TODO: STUB - For now, just ensure it's selected
                 SelectedModel = modelName;
                 ModelSelected?.Invoke(this, modelName);
+                // Scroll the selected item into view so it is visible
+                if (_modelList != null)
+                {
+                    try
+                    {
+                        _modelList.ScrollIntoView(modelName);
+                    }
+                    catch { /* ListBox may not support ScrollIntoView in all themes */ }
+                }
             }
         }
     }

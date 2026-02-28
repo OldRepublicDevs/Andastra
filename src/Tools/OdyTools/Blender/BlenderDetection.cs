@@ -11,7 +11,6 @@ namespace OdyTools.Blender
 {
     /// <summary>
     /// Blender installation detection for Windows, macOS, and Linux.
-    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/blender/detection.py
     /// </summary>
     public static class BlenderDetection
     {

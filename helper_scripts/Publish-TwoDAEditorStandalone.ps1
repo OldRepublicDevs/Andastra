@@ -1,9 +1,9 @@
 # Publish OdyTool2DA.Standalone to a single Windows EXE (no DLLs or other files).
-# Uses .NET 9.0; single-file publish is not supported for .NET Framework (net472).
+# Uses .NET 9.0; single-file publish is not supported for .NET Framework (net48).
 # Run from repo root: .\helper_scripts\Publish-TwoDAEditorStandalone.ps1
 
 param(
-    [ValidateSet("net9.0", "net472")]
+    [ValidateSet("net9.0", "net48")]
     [string]$TargetFramework = "net9.0",
     [ValidateSet("win-x64", "win-x86")]
     [string]$Runtime = "win-x64",
@@ -19,9 +19,9 @@ if (-not (Test-Path $ProjectPath)) {
     Write-Error "Project not found: $ProjectPath"
 }
 
-# Single-file with no DLLs is only supported on .NET Core/5+ (net9.0). net472 would produce exe + many DLLs.
-if ($TargetFramework -eq "net472") {
-    Write-Host "Publishing for net472: output will be exe + DLLs (single-file is not supported on .NET Framework)." -ForegroundColor Yellow
+# Single-file with no DLLs is only supported on .NET Core/5+ (net9.0). net48 would produce exe + many DLLs.
+if ($TargetFramework -eq "net48") {
+    Write-Host "Publishing for net48: output will be exe + DLLs (single-file is not supported on .NET Framework)." -ForegroundColor Yellow
     $SelfContained = $false
     $PublishSingleFile = $false
 } else {

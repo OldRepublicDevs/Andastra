@@ -6,8 +6,6 @@ namespace OdyTools.Editors.Actions
 {
     // Action for adding a root node to the DLG dialog graph
     // Tracks the created link and item for undo/redo
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:846-856
-    // Original: def add_root_node(self):
     public class AddRootNodeAction : IDLGAction
     {
         private DLGLink _link;
@@ -27,7 +25,6 @@ namespace OdyTools.Editors.Actions
             }
 
             // Use the model to add the root node (this performs the actual operation)
-            // Matching PyKotor: self.model.add_root_node() creates new DLGEntry, DLGLink, and DLGStandardItem
             _item = editor.Model.AddRootNode();
             if (_item == null || _item.Link == null)
             {
@@ -54,7 +51,6 @@ namespace OdyTools.Editors.Actions
             }
 
             // Remove link from CoreDlg and model
-            // Matching PyKotor: undo would remove the starter link
             editor.CoreDlg.Starters.Remove(_link);
             editor.Model.RemoveStarter(_link);
 

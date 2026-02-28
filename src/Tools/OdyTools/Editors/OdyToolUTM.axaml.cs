@@ -2,7 +2,10 @@ using BioWare.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using BioWare;
@@ -22,53 +25,40 @@ using UTMItem = BioWare.Resource.Formats.GFF.Generics.UTM.UTMItem;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:27
-    // Original: class OdyToolUTM(Editor):
-    public class OdyToolUTM : Editor
+    public partial class OdyToolUTM : Editor
     {
         private UTM _utm;
 
         // UI Controls - Basic
         private LocalizedStringEdit _nameEdit;
-        // Matching PyKotor implementation: Expose nameEdit for testing (Python uses editor.ui.nameEdit)
         public LocalizedStringEdit NameEdit => _nameEdit;
         private Button _nameEditBtn;
         private TextBox _tagEdit;
-        // Matching PyKotor implementation: Expose tagEdit for testing (Python uses editor.ui.tagEdit)
         public TextBox TagEdit => _tagEdit;
         private Button _tagGenerateBtn;
         private TextBox _resrefEdit;
-        // Matching PyKotor implementation: Expose resrefEdit for testing
         public TextBox ResrefEdit => _resrefEdit;
         private Button _resrefGenerateBtn;
         private NumericUpDown _idSpin;
-        // Matching PyKotor implementation: Expose idSpin for testing
         public NumericUpDown IdSpin => _idSpin;
         private Button _inventoryButton;
 
         // UI Controls - Pricing
         private NumericUpDown _markUpSpin;
-        // Matching PyKotor implementation: Expose markUpSpin for testing
         public NumericUpDown MarkUpSpin => _markUpSpin;
         private NumericUpDown _markDownSpin;
-        // Matching PyKotor implementation: Expose markDownSpin for testing
         public NumericUpDown MarkDownSpin => _markDownSpin;
 
-        // UI Controls - Store
-        private TextBox _onOpenEdit;
-        // Matching PyKotor implementation: Expose onOpenEdit for testing
-        public TextBox OnOpenEdit => _onOpenEdit;
+        // UI Controls - Store (editable combo with prefilled script resnames, matching vendor utm.py)
+        private ComboBox _onOpenEdit;
+        public ComboBox OnOpenEdit => _onOpenEdit;
         private ComboBox _storeFlagSelect;
-        // Matching PyKotor implementation: Expose storeFlagSelect for testing
         public ComboBox StoreFlagSelect => _storeFlagSelect;
 
         // UI Controls - Comments
         private TextBox _commentsEdit;
-        // Matching PyKotor implementation: Expose commentsEdit for testing
         public TextBox CommentsEdit => _commentsEdit;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:28-68
-        // Original: def __init__(self, parent, installation):
         public OdyToolUTM(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTM", "merchant",
                 new[] { ResourceType.UTM, ResourceType.BTM },
@@ -105,7 +95,8 @@ namespace OdyTools.Editors
                 _inventoryButton = this.FindControl<Button>("inventoryButton");
                 _markUpSpin = this.FindControl<NumericUpDown>("markUpSpin");
                 _markDownSpin = this.FindControl<NumericUpDown>("markDownSpin");
-                _onOpenEdit = this.FindControl<TextBox>("onOpenEdit");
+                _onOpenEdit = this.FindControl<ComboBox>("onOpenEdit");
+                if (_onOpenEdit != null) { _onOpenEdit.IsEditable = true; SetupScriptComboBoxContextMenu(_onOpenEdit, "OnOpenStore"); }
                 _storeFlagSelect = this.FindControl<ComboBox>("storeFlagSelect");
                 // Ensure ComboBox has items populated (even if loaded from XAML)
                 if (_storeFlagSelect != null && _storeFlagSelect.Items.Count == 0)
@@ -141,8 +132,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:70-74
-        // Original: def _setup_signals(self):
         private void SetupSignals()
         {
             if (_tagGenerateBtn != null)
@@ -163,14 +152,90 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:76-93
-        // Original: def _setup_installation(self, installation):
         private void SetupInstallation(OdyInstallation installation)
         {
             _installation = installation;
             if (_nameEdit != null)
             {
                 _nameEdit.SetInstallation(installation);
+            }
+        }
+
+        private void PopulateScriptComboBoxes()
+        {
+            if (_installation == null || _onOpenEdit == null) return;
+            try
+            {
+                var relevantResources = _installation.GetRelevantResources(ResourceType.NCS, FilepathPublic);
+                var resnames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                if (relevantResources != null)
+                {
+                    foreach (var res in relevantResources)
+                    {
+                        if (res != null && !string.IsNullOrEmpty(res.ResName))
+                            resnames.Add(res.ResName.ToLowerInvariant());
+                    }
+                }
+                var sorted = resnames.OrderBy(s => s, StringComparer.OrdinalIgnoreCase).ToList();
+                _onOpenEdit.Items.Clear();
+                foreach (string r in sorted)
+                    _onOpenEdit.Items.Add(r);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Failed to populate script combo box: {ex.Message}");
+            }
+        }
+
+        private void SetupScriptComboBoxContextMenu(ComboBox comboBox, string scriptTypeName)
+        {
+            if (comboBox == null) return;
+            var contextMenu = new ContextMenu();
+            var openInEditorItem = new MenuItem { Header = "Open in OdyToolNSS", IsEnabled = false };
+            openInEditorItem.Click += (sender, e) => OpenScriptInEditor(comboBox, scriptTypeName);
+            contextMenu.Items.Add(openInEditorItem);
+            void UpdateOpenEnabled(object s, EventArgs e)
+            {
+                string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
+                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
+            }
+            comboBox.SelectionChanged += UpdateOpenEnabled;
+            contextMenu.Opened += (s, e) => UpdateOpenEnabled(s, e);
+            comboBox.ContextMenu = contextMenu;
+        }
+
+        private void OpenScriptInEditor(ComboBox comboBox, string scriptTypeName)
+        {
+            if (comboBox == null || _installation == null) return;
+            string scriptName = comboBox.Text?.Trim();
+            if (string.IsNullOrEmpty(scriptName)) return;
+            try
+            {
+                var resourceResult = _installation.Resource(scriptName, ResourceType.NSS, null);
+                var resourceType = ResourceType.NSS;
+                if (resourceResult == null)
+                {
+                    resourceResult = _installation.Resource(scriptName, ResourceType.NCS, null);
+                    resourceType = ResourceType.NCS;
+                }
+                if (resourceResult == null)
+                {
+                    System.Console.WriteLine($"Script '{scriptName}' not found in installation.");
+                    return;
+                }
+                byte[] data = resourceResult.Data;
+                if (data == null && !string.IsNullOrEmpty(resourceResult.FilePath) && System.IO.File.Exists(resourceResult.FilePath))
+                    data = System.IO.File.ReadAllBytes(resourceResult.FilePath);
+                if (data == null)
+                {
+                    System.Console.WriteLine($"No data for script '{scriptName}'.");
+                    return;
+                }
+                WindowUtils.OpenResourceEditor(resourceResult.FilePath, scriptName, resourceType, data, _installation, this);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"OpenScriptInEditor failed: {ex.Message}");
             }
         }
 
@@ -254,7 +319,8 @@ namespace OdyTools.Editors
             var storePanel = new StackPanel { Orientation = Orientation.Vertical };
 
             var onOpenLabel = new TextBlock { Text = "OnOpenStore:" };
-            _onOpenEdit = new TextBox { MaxLength = 16 };
+            _onOpenEdit = new ComboBox { IsEditable = true };
+            SetupScriptComboBoxContextMenu(_onOpenEdit, "OnOpenStore");
             var storeLabel = new TextBlock { Text = "Store:" };
             _storeFlagSelect = new ComboBox();
             _storeFlagSelect.Items.Add("Only Buy");
@@ -283,22 +349,16 @@ namespace OdyTools.Editors
             Content = scrollViewer;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:95-105
-        // Original: def load(self, filepath, resref, restype, data):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
-            // Matching PyKotor implementation: utm: UTM = read_utm(data); self._loadUTM(utm)
             var gff = GFF.FromBytes(data);
             _utm = UTMHelpers.ConstructUtm(gff);
             LoadUTM(_utm);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:107-136
-        // Original: def _loadUTM(self, utm: UTM):
         private void LoadUTM(UTM utm)
         {
-            // Matching PyKotor implementation: self._utm = utm
             _utm = utm;
 
             // Basic
@@ -332,7 +392,6 @@ namespace OdyTools.Editors
             }
             if (_storeFlagSelect != null)
             {
-                // Matching PyKotor implementation: self.ui.storeFlagSelect.setCurrentIndex((int(utm.can_buy) + int(utm.can_sell) * 2) - 1)
                 int index = (utm.CanBuy ? 1 : 0) + (utm.CanSell ? 2 : 0) - 1;
                 if (index >= 0 && index < _storeFlagSelect.Items.Count)
                 {
@@ -345,28 +404,22 @@ namespace OdyTools.Editors
             {
                 _commentsEdit.Text = utm.Comment;
             }
+
+            PopulateScriptComboBoxes();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:138-173
-        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
-            // Matching PyKotor implementation: utm: UTM = deepcopy(self._utm)
             var utm = CopyUTM(_utm);
 
             // Basic - read from UI controls (matching Python which always reads from UI)
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:155-167
             utm.Name = _nameEdit?.GetLocString() ?? utm.Name ?? LocalizedString.FromInvalid();
             utm.Tag = _tagEdit?.Text ?? utm.Tag ?? "";
-            // Matching PyKotor implementation: utm.resref = ResRef(self.ui.resrefEdit.text())
             // Python always reads from UI, even if empty (creates blank ResRef)
             utm.ResRef = _resrefEdit != null ? new ResRef(_resrefEdit.Text ?? "") : utm.ResRef;
-            // Matching PyKotor implementation: utm.id = self.ui.idSpin.value()
             // Python always reads from UI, even if 0
             // Note: NumericUpDown.Value is decimal?, but Python's QSpinBox.value() always returns an int
-            // Matching PyKotor implementation: Python always reads from UI without null checks
             // Python: utm.id = self.ui.idSpin.value() - always returns int, never None
-            // Matching PyKotor implementation: Python always reads from UI
             // Python: utm.id = self.ui.idSpin.value() - always returns int, never None
             if (_idSpin != null)
             {
@@ -377,7 +430,6 @@ namespace OdyTools.Editors
                 var value = _idSpin.Value;
                 utm.Id = value.HasValue ? (int)value.Value : 0;
             }
-            // Matching PyKotor implementation: utm.mark_up = self.ui.markUpSpin.value()
             if (_markUpSpin != null && _markUpSpin.Value.HasValue)
             {
                 utm.MarkUp = (int)_markUpSpin.Value.Value;
@@ -386,7 +438,6 @@ namespace OdyTools.Editors
             {
                 utm.MarkUp = 0;
             }
-            // Matching PyKotor implementation: utm.mark_down = self.ui.markDownSpin.value()
             if (_markDownSpin != null && _markDownSpin.Value.HasValue)
             {
                 utm.MarkDown = (int)_markDownSpin.Value.Value;
@@ -395,12 +446,9 @@ namespace OdyTools.Editors
             {
                 utm.MarkDown = 0;
             }
-            // Matching PyKotor implementation: utm.on_open = ResRef(self.ui.onOpenEdit.text())
             // Python always reads from UI, even if empty (creates blank ResRef)
             utm.OnOpenScript = _onOpenEdit != null ? new ResRef(_onOpenEdit.Text ?? "") : utm.OnOpenScript;
 
-            // Matching PyKotor implementation: utm.can_buy = bool((self.ui.storeFlagSelect.currentIndex() + 1) & 1)
-            // Matching PyKotor implementation: utm.can_sell = bool((self.ui.storeFlagSelect.currentIndex() + 1) & 2)
             // Python always reads from UI without null checks - currentIndex() returns -1 if nothing selected
             // In Avalonia, SelectedIndex can be 0 (first item), so we need to check for >= 0, not > 0
             int index = -1;
@@ -414,19 +462,15 @@ namespace OdyTools.Editors
             utm.CanSell = (flagValue & 2) != 0;
 
             // Comments
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:167
             utm.Comment = _commentsEdit?.Text ?? utm.Comment ?? "";
 
             // Build GFF
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:169-173
             var game = _installation?.Game ?? Game.K2;
             var gff = UTMHelpers.DismantleUtm(utm, game);
             byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTM);
             return Tuple.Create(data, new byte[0]);
         }
 
-        // Matching PyKotor implementation: Deep copy helper
-        // Original: utm: UTM = deepcopy(self._utm)
         private UTM CopyUTM(UTM source)
         {
             // Deep copy LocalizedString objects (they're reference types)
@@ -477,8 +521,6 @@ namespace OdyTools.Editors
             return dict;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:175-177
-        // Original: def new(self):
         public override void New()
         {
             base.New();
@@ -486,8 +528,6 @@ namespace OdyTools.Editors
             LoadUTM(_utm);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:179-182
-        // Original: def change_name(self):
         private void ChangeName()
         {
             if (_installation == null) return;
@@ -502,8 +542,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:184-187
-        // Original: def generate_tag(self):
         private void GenerateTag()
         {
             if (string.IsNullOrEmpty(_resrefEdit?.Text))
@@ -516,8 +554,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:189-193
-        // Original: def generate_resref(self):
         private void GenerateResref()
         {
             if (_resrefEdit != null)
@@ -526,49 +562,36 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:195-221
-        // Original: def open_inventory(self):
         private void OpenInventory()
         {
             if (_installation == null) return;
 
-            // Matching PyKotor implementation: capsules: list[Capsule] = []
             var capsules = new List<Capsule>();
 
             try
             {
-                // Matching PyKotor implementation: root: str = Module.filepath_to_root(self._filepath)
                 string root = null;
                 if (!string.IsNullOrEmpty(base._filepath))
                 {
                     root = Module.FilepathToRoot(base._filepath);
                 }
 
-                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:199-205
-                // Original: case_root = root.casefold()
-                // Original: module_names: CaseInsensitiveDict[str] = self._installation.module_names()
-                // Original: filepath_str = str(self._filepath)
-                // Original: capsulesPaths: list[str] = [path for path in module_names if case_root in path and path != filepath_str]
-                // Original: capsules.extend([Capsule(self._installation.module_path() / path) for path in capsulesPaths])
                 if (root != null)
                 {
                     string caseRoot = root.ToLowerInvariant();
                     var moduleNames = _installation.ModuleNames();
                     string filepathStr = base._filepath ?? "";
                     string filepathFilename = !string.IsNullOrEmpty(filepathStr) ? System.IO.Path.GetFileName(filepathStr) : "";
-                    
+
                     foreach (var kvp in moduleNames)
                     {
                         // kvp.Key is the module filename (e.g., "danm13.rim"), kvp.Value is the area name
-                        // Matching PyKotor: for path in module_names - iterates over keys (filenames)
                         string moduleFilename = kvp.Key;
                         string moduleFilenameLower = moduleFilename.ToLowerInvariant();
-                        
+
                         // Check if root is contained in module filename and it's not the same as the current filepath
-                        // Matching PyKotor: case_root in path and path != filepath_str
                         if (moduleFilenameLower.Contains(caseRoot) && moduleFilename != filepathFilename)
                         {
-                            // Matching PyKotor implementation: Capsule(self._installation.module_path() / path)
                             string fullModulePath = System.IO.Path.Combine(_installation.ModulePath(), moduleFilename);
                             if (File.Exists(fullModulePath))
                             {
@@ -588,19 +611,16 @@ namespace OdyTools.Editors
             }
             catch (Exception ex)
             {
-                // Matching PyKotor implementation: print(format_exception_with_variables(e, message="This exception has been suppressed."))
                 System.Console.WriteLine($"Exception suppressed: {ex.Message}");
             }
 
             // Convert UTMItem list to InventoryItem list for the dialog
-            // Matching PyKotor implementation: inventoryEditor = InventoryEditor(..., self._utm.inventory, ...)
             var inventoryItems = new List<InventoryItem>();
             foreach (var utmItem in _utm.Items)
             {
                 inventoryItems.Add(new InventoryItem(utmItem.ResRef));
             }
 
-            // Matching PyKotor implementation: inventoryEditor = InventoryEditor(...)
             var inventoryEditor = new InventoryDialog(
                 this,
                 _installation,
@@ -615,7 +635,6 @@ namespace OdyTools.Editors
 
             if (inventoryEditor.ShowDialog())
             {
-                // Matching PyKotor implementation: self._utm.inventory = inventoryEditor.inventory
                 // Convert InventoryItem list back to UTMItem list
                 _utm.Items.Clear();
                 if (inventoryEditor.Inventory != null)
@@ -634,6 +653,29 @@ namespace OdyTools.Editors
 
         public override void SaveAs()
         {
+            _ = RunSaveAsAsync();
+        }
+
+        protected override async Task RunSaveAsAsync()
+        {
+            var storage = StorageProvider;
+            if (storage == null) return;
+            string suggestedName = !string.IsNullOrEmpty(_resname) ? _resname : "store";
+            var options = new FilePickerSaveOptions
+            {
+                Title = "Save As",
+                SuggestedFileName = suggestedName + ".utm",
+                FileTypeChoices = new[] { new FilePickerFileType("Store (UTM)") { Patterns = new[] { "*.utm" } }, new FilePickerFileType("All files") { Patterns = new[] { "*.*" } } }
+            };
+            var file = await storage.SaveFilePickerAsync(options);
+            if (file == null) return;
+            string path = file.Path?.LocalPath ?? "";
+            if (string.IsNullOrWhiteSpace(path)) return;
+            _filepath = path;
+            string ext = (Path.GetExtension(path) ?? "").TrimStart('.').ToLowerInvariant();
+            _restype = ResourceType.FromExtension(ext) ?? ResourceType.UTM;
+            _resname = Path.GetFileNameWithoutExtension(path);
+            RefreshWindowTitle();
             Save();
         }
     }

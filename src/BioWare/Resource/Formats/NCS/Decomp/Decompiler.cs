@@ -1,6 +1,9 @@
+// Copyright 2021-2025 NCSDecomp
+// Licensed under the Business Source License 1.1 (BSL 1.1).
+// See LICENSE.txt file in the project root for full license information.
 //
 // Decompiler settings and utilities - UI is in Decomp project (Avalonia)
-//
+// Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java
 using System;
 using System.Collections.Generic;
 using System.IO;

@@ -1,5 +1,8 @@
-// Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/RoundTripUtil.java:23-167
-// Original: public class RoundTripUtil
+// Copyright 2021-2025 NCSDecomp
+// Licensed under the Business Source License 1.1 (BSL 1.1).
+// See LICENSE.txt file in the project root for full license information.
+//
+// Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/RoundTripUtil.java
 using System;
 using System.IO;
 using System.Text;
@@ -16,7 +19,7 @@ namespace BioWare.Resource.Formats.NCS.Decomp
     /// </para>
     /// <para>
     /// The round-trip process:
-    /// 1. Compile NSS to NCS (done externally via nwnnsscomp)
+    /// 1. Compile NSS to NCS (via built-in NCSAuto/NCSCompiler when available; otherwise external nwnnsscomp)
     /// 2. Decompile NCS back to NSS (using FileDecompiler)
     /// </para>
     /// This matches the exact logic in NCSDecompCLIRoundTripTest.runDecompile().

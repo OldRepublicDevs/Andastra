@@ -10,8 +10,6 @@ using MsBox.Avalonia.Enums;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/asyncloader.py:112
-    // Original: class AsyncLoader(QDialog, Generic[T]):
     public class AsyncLoaderDialog : Window
     {
         private string _title;
@@ -28,8 +26,6 @@ namespace OdyTools.Dialogs
         private bool _realtimeProgress;
         private bool _startImmediately;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/asyncloader.py:116-184
-        // Original: def __init__(self, parent, title, task, error_title=None, ...):
         public AsyncLoaderDialog(Window parent = null, string title = "Loading...", Func<object> task = null, string errorTitle = null, bool startImmediately = true, bool realtimeProgress = false)
         {
             InitializeComponent();
@@ -140,15 +136,11 @@ namespace OdyTools.Dialogs
             _taskProgressText = this.FindControl<TextBlock>("taskProgressText");
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/asyncloader.py:242-243
-        // Original: def start_worker(self):
         public void StartWorker()
         {
             Task.Run(() => RunTasks());
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/asyncloader.py:336-351
-        // Original: def run(self) in AsyncWorker:
         private void RunTasks()
         {
             object result = null;
@@ -173,15 +165,11 @@ namespace OdyTools.Dialogs
             Dispatcher.UIThread.Post(() => OnCompleted());
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/asyncloader.py:251-256
-        // Original: def _on_successful(self, result: Any):
         private void OnSuccessful(object result)
         {
             _result = result;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/asyncloader.py:258-267
-        // Original: def _on_failed(self, error: Exception):
         private void OnFailed(Exception error)
         {
             _errors.Add(error);
@@ -192,8 +180,6 @@ namespace OdyTools.Dialogs
             System.Console.WriteLine($"AsyncLoader error: {error}");
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/asyncloader.py:269-275
-        // Original: def _on_completed(self):
         private void OnCompleted()
         {
             if (_error != null)
@@ -207,8 +193,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/asyncloader.py:277-287
-        // Original: def _show_error_dialog(self):
         private void ShowErrorDialog()
         {
             if (string.IsNullOrWhiteSpace(_errorTitle))
@@ -235,8 +219,6 @@ namespace OdyTools.Dialogs
             errorBox.ShowAsync();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/asyncloader.py:289-306
-        // Original: def _on_progress(self, value, task_type):
         private void OnProgress(int value, string taskType)
         {
             if (taskType == "increment")
@@ -274,8 +256,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/asyncloader.py:235-240
-        // Original: def progress_callback_api(self, data, mtype):
         public void ProgressCallbackApi(int data, string mtype)
         {
             OnProgress(data, mtype);

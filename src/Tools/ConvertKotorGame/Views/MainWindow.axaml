@@ -1,0 +1,148 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:ConvertKotorGame.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        x:Class="ConvertKotorGame.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Width="980"
+        Height="640"
+        MinWidth="860"
+        MinHeight="520"
+        Title="ConvertKotorGame">
+  <Design.DataContext>
+    <vm:MainWindowViewModel />
+  </Design.DataContext>
+
+  <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto" Margin="10">
+    <Grid Grid.Row="0" ColumnDefinitions="40,*,Auto" Margin="0,0,0,4">
+      <TextBlock Grid.Column="0"
+                 Text="K1"
+                 VerticalAlignment="Center"
+                 FontWeight="Bold" />
+
+      <ComboBox Grid.Column="1"
+                IsEditable="True"
+                HorizontalAlignment="Stretch"
+                MinWidth="0"
+                ItemsSource="{Binding K1Options}"
+                SelectedItem="{Binding K1Path, Mode=TwoWay}"
+                Text="{Binding K1Path, Mode=TwoWay}" />
+
+      <Button Grid.Column="2"
+              Content="Browse"
+              Command="{Binding BrowseK1Command}"
+              Margin="8,0,0,0"
+              Padding="12,4" />
+    </Grid>
+
+    <Grid Grid.Row="1" ColumnDefinitions="40,*,Auto" Margin="0,0,0,4">
+      <TextBlock Grid.Column="0"
+                 Text="TSL"
+                 VerticalAlignment="Center"
+                 FontWeight="Bold" />
+
+      <ComboBox Grid.Column="1"
+                IsEditable="True"
+                HorizontalAlignment="Stretch"
+                MinWidth="0"
+                ItemsSource="{Binding TslOptions}"
+                SelectedItem="{Binding TslPath, Mode=TwoWay}"
+                Text="{Binding TslPath, Mode=TwoWay}" />
+
+      <Button Grid.Column="2"
+              Content="Browse"
+              Command="{Binding BrowseTslCommand}"
+              Margin="8,0,0,0"
+              Padding="12,4" />
+    </Grid>
+
+    <Grid Grid.Row="2" ColumnDefinitions="40,*,Auto" Margin="0,0,0,4">
+      <TextBlock Grid.Column="0"
+                 Text="Out"
+                 VerticalAlignment="Center"
+                 FontWeight="Bold" />
+
+      <TextBox Grid.Column="1"
+               HorizontalAlignment="Stretch"
+               MinWidth="0"
+               Text="{Binding OutputPath, Mode=TwoWay}"
+               Watermark="Output folder path (created if needed)" />
+
+      <Button Grid.Column="2"
+              Content="Browse"
+              Command="{Binding BrowseOutputCommand}"
+              Margin="8,0,0,0"
+              Padding="12,4" />
+    </Grid>
+
+    <TextBlock Grid.Row="3"
+               Text="{Binding DetectionDetailsText}"
+               Margin="0,0,0,8"
+               TextWrapping="Wrap" />
+
+    <Grid Grid.Row="4" RowDefinitions="Auto,*" Margin="0,0,0,8">
+      <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,4">
+        <TextBlock Grid.Column="0"
+                   Text="Log verbosity:"
+                   VerticalAlignment="Center"
+                   Margin="0,0,8,0" />
+        <ComboBox Grid.Column="1"
+                  ItemsSource="{Binding LogVerbosityOptions}"
+                  SelectedItem="{Binding LogVerbosity, Mode=TwoWay}"
+                  HorizontalAlignment="Left"
+                  MinWidth="120"
+                  Width="120" />
+      </Grid>
+      <Border Grid.Row="1"
+              BorderBrush="#D0D0D0"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="6">
+        <ListBox ItemsSource="{Binding DisplayedLogs}">
+        <ListBox.ItemTemplate>
+          <DataTemplate>
+            <TextBlock Text="{Binding Message}"
+                       Foreground="{Binding Foreground}"
+                       TextWrapping="Wrap" />
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+        </ListBox>
+      </Border>
+    </Grid>
+
+    <Grid Grid.Row="5" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+      <ProgressBar Grid.Column="0"
+                   Minimum="0"
+                   Maximum="{Binding ProgressMaximum}"
+                   Value="{Binding ProgressValue}"
+                   Height="18"
+                   VerticalAlignment="Center" />
+
+      <Button Grid.Column="1"
+              Content="K1 → TSL"
+              Command="{Binding ConvertK1ToTslCommand}"
+              IsEnabled="{Binding CanConvert}"
+              Padding="14,4" />
+
+      <Button Grid.Column="2"
+              Content="TSL → K1"
+              Command="{Binding ConvertTslToK1Command}"
+              IsEnabled="{Binding CanConvert}"
+              Padding="14,4" />
+    </Grid>
+
+    <StackPanel Grid.Row="6" Orientation="Horizontal" Margin="0,8,0,0" Spacing="8">
+      <Button Content="Open Convert Directory"
+              Command="{Binding OpenConvertDirectoryCommand}"
+              IsEnabled="{Binding CanOpenConvertDirectory}"
+              Padding="12,4" />
+
+      <Button Content="Start Game"
+              Command="{Binding StartGameCommand}"
+              IsEnabled="{Binding CanStartGame}"
+              Padding="12,4" />
+    </StackPanel>
+  </Grid>
+</Window>

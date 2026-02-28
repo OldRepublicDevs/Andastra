@@ -1,7 +1,10 @@
 using System;
+using System.IO;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform.Storage;
 using BioWare.Resource.Formats.TPC;
 using BioWare.Common;
 using BioWare.Resource;
@@ -9,8 +12,6 @@ using OdyTools.Data;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tpc.py:48
-    // Original: class OdyToolTPC(Editor):
     public partial class OdyToolTPC : Editor
     {
         private TPC _tpc;
@@ -43,9 +44,12 @@ namespace OdyTools.Editors
             LoadTPC(_tpc);
         }
 
+        /// <summary>
+        /// Loads TPC into editor state. This editor supports open/save only; texture preview/editing UI can be added later.
+        /// </summary>
         private void LoadTPC(TPC tpc)
         {
-            // Load TPC data into UI
+            _tpc = tpc ?? _tpc;
         }
 
         public override Tuple<byte[], byte[]> Build()
@@ -63,6 +67,34 @@ namespace OdyTools.Editors
 
         public override void SaveAs()
         {
+            _ = RunSaveAsAsync();
+        }
+
+        protected override async Task RunSaveAsAsync()
+        {
+            var storage = StorageProvider;
+            if (storage == null) return;
+            string suggestedName = !string.IsNullOrEmpty(_resname) ? _resname : "texture";
+            var options = new FilePickerSaveOptions
+            {
+                Title = "Save As",
+                SuggestedFileName = suggestedName + ".tpc",
+                FileTypeChoices = new[]
+                {
+                    new FilePickerFileType("Texture (TPC)") { Patterns = new[] { "*.tpc" } },
+                    new FilePickerFileType("TGA") { Patterns = new[] { "*.tga" } },
+                    new FilePickerFileType("All files") { Patterns = new[] { "*.*" } }
+                }
+            };
+            var file = await storage.SaveFilePickerAsync(options);
+            if (file == null) return;
+            string path = file.Path?.LocalPath ?? "";
+            if (string.IsNullOrWhiteSpace(path)) return;
+            _filepath = path;
+            string ext = (Path.GetExtension(path) ?? "").TrimStart('.').ToLowerInvariant();
+            _restype = ResourceType.FromExtension(ext) ?? ResourceType.TPC;
+            _resname = Path.GetFileNameWithoutExtension(path);
+            RefreshWindowTitle();
             Save();
         }
     }

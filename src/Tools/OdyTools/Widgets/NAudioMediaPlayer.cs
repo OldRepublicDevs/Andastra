@@ -11,8 +11,10 @@ namespace OdyTools.Widgets
     public sealed class NAudioMediaPlayer : IMediaPlayer, IDisposable
     {
         private string _filePath;
+        private Stream _ownedStream; // for in-memory WAV via SetSourceFromBytes
         private AudioFileReader _reader;
         private WaveOutEvent _waveOut;
+        private WaveStream _readerStream; // WaveFileReader when using _ownedStream
         private float _volume = 0.75f;
         private bool _isMuted;
         private double _playbackRate = 1.0;
@@ -26,21 +28,62 @@ namespace OdyTools.Widgets
 
         public void SetSource(string filePath)
         {
+            Stop();
+            DisposeOwnedStream();
             if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
             {
-                Stop();
                 _filePath = null;
                 return;
             }
-
-            Stop();
             _filePath = filePath;
             InitReader();
+        }
+
+        /// <summary>
+        /// Sets the playback source from in-memory WAV bytes. Cross-platform; no temp files.
+        /// </summary>
+        public void SetSourceFromBytes(byte[] wavBytes)
+        {
+            Stop();
+            DisposeReader();
+            DisposeOwnedStream();
+            _filePath = null;
+            if (wavBytes != null && wavBytes.Length > 0)
+            {
+                _ownedStream = new MemoryStream(wavBytes);
+                InitReader();
+            }
+        }
+
+        private void DisposeOwnedStream()
+        {
+            if (_ownedStream != null)
+            {
+                try { _ownedStream.Dispose(); }
+                catch { }
+                _ownedStream = null;
+            }
         }
 
         private void InitReader()
         {
             DisposeReader();
+            if (_ownedStream != null)
+            {
+                try
+                {
+                    _readerStream = new WaveFileReader(_ownedStream);
+                    _waveOut = new WaveOutEvent();
+                    _waveOut.Init(_readerStream);
+                    _waveOut.PlaybackStopped += OnPlaybackStopped;
+                }
+                catch
+                {
+                    DisposeReader();
+                    throw;
+                }
+                return;
+            }
             if (string.IsNullOrEmpty(_filePath) || !File.Exists(_filePath))
                 return;
 
@@ -79,6 +122,12 @@ namespace OdyTools.Widgets
                 catch { }
                 _reader = null;
             }
+            if (_readerStream != null)
+            {
+                try { _readerStream.Dispose(); }
+                catch { }
+                _readerStream = null;
+            }
         }
 
         private void OnPlaybackStopped(object sender, StoppedEventArgs e)
@@ -88,7 +137,8 @@ namespace OdyTools.Widgets
 
         public void Play()
         {
-            if (string.IsNullOrEmpty(_filePath) || !File.Exists(_filePath))
+            bool hasSource = (_ownedStream != null) || (!string.IsNullOrEmpty(_filePath) && File.Exists(_filePath));
+            if (!hasSource)
                 return;
             if (_waveOut == null)
                 InitReader();
@@ -117,18 +167,27 @@ namespace OdyTools.Widgets
                 _waveOut?.Stop();
                 if (_reader != null)
                     _reader.Position = 0;
+                if (_readerStream != null)
+                    _readerStream.Position = 0;
             }
             catch { }
         }
 
+        private WaveStream GetCurrentStream()
+        {
+            if (_reader != null) return _reader;
+            return _readerStream;
+        }
+
         public void SetPosition(TimeSpan position)
         {
-            if (_reader == null) return;
+            var stream = GetCurrentStream();
+            if (stream == null) return;
             try
             {
-                var pos = (long)(position.TotalSeconds * _reader.WaveFormat.AverageBytesPerSecond);
-                pos = Math.Max(0, Math.Min(pos, _reader.Length));
-                _reader.Position = pos;
+                var pos = (long)(position.TotalSeconds * stream.WaveFormat.AverageBytesPerSecond);
+                pos = Math.Max(0, Math.Min(pos, stream.Length));
+                stream.Position = pos;
             }
             catch { }
         }
@@ -137,10 +196,11 @@ namespace OdyTools.Widgets
         {
             get
             {
-                if (_reader == null) return TimeSpan.Zero;
+                var stream = GetCurrentStream();
+                if (stream == null) return TimeSpan.Zero;
                 try
                 {
-                    return TimeSpan.FromSeconds((double)_reader.Position / _reader.WaveFormat.AverageBytesPerSecond);
+                    return TimeSpan.FromSeconds((double)stream.Position / stream.WaveFormat.AverageBytesPerSecond);
                 }
                 catch { return TimeSpan.Zero; }
             }
@@ -150,10 +210,11 @@ namespace OdyTools.Widgets
         {
             get
             {
-                if (_reader == null) return TimeSpan.Zero;
+                var stream = GetCurrentStream();
+                if (stream == null) return TimeSpan.Zero;
                 try
                 {
-                    return _reader.TotalTime;
+                    return stream.TotalTime;
                 }
                 catch { return TimeSpan.Zero; }
             }
@@ -195,6 +256,7 @@ namespace OdyTools.Widgets
             if (_disposed) return;
             _disposed = true;
             DisposeReader();
+            DisposeOwnedStream();
         }
     }
 }

@@ -13,8 +13,6 @@ using OdyTools.Widgets;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utw.py:23
-    // Original: class OdyToolUTW(Editor):
     public partial class OdyToolUTW : Editor
     {
         private const int MinEditorWidth = 400;
@@ -46,8 +44,6 @@ namespace OdyTools.Editors
         // UI Controls - Comments
         private TextBox _commentsEdit;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utw.py:24-63
-        // Original: def __init__(self, parent, installation):
         public OdyToolUTW(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTW", "waypoint",
                 new[] { ResourceType.UTW },
@@ -139,8 +135,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utw.py:65-68
-        // Original: def _setup_signals(self):
         private void SetupSignals()
         {
             if (_tagGenerateButton != null)
@@ -176,8 +170,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utw.py:70-72
-        // Original: def _setup_installation(self, installation: OdyInstallation):
         private void SetupInstallation(OdyInstallation installation)
         {
             _nameEdit?.SetInstallation(installation);
@@ -282,12 +274,7 @@ namespace OdyTools.Editors
                 }
                 catch { }
             }
-            Bind("actionNew", () => New());
-            Bind("actionOpen", () => { });
-            Bind("actionSave", () => Save());
-            Bind("actionSaveAs", () => _ = RunSaveAsAsync());
-            Bind("actionRevert", () => Revert());
-            Bind("actionExit", () => Close());
+            // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
             Bind("actionUndo", () => Undo());
             Bind("actionRedo", () => Redo());
             Bind("actionFind", () => ShowFindDialog());
@@ -375,7 +362,7 @@ namespace OdyTools.Editors
             finally { _undoRedoInProgress = false; }
         }
 
-        private void Revert()
+        public override void Revert()
         {
             if (_revert == null || _revert.Length == 0) return;
             try
@@ -391,7 +378,7 @@ namespace OdyTools.Editors
             }
         }
 
-        private async Task RunSaveAsAsync()
+        protected override async Task RunSaveAsAsync()
         {
             var storageProvider = (this as Window)?.StorageProvider;
             if (storageProvider == null) return;
@@ -480,8 +467,6 @@ namespace OdyTools.Editors
             if (e.Key == Key.F3) { FindNextMatch(); e.Handled = true; }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utw.py:74-84
-        // Original: def load(self, filepath, resref, restype, data):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
@@ -495,8 +480,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utw.py:86-113
-        // Original: def _loadUTW(self, utw: UTW):
         private void LoadUTW(UTW utw)
         {
             _utw = utw;
@@ -536,8 +519,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utw.py:115-150
-        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
             // Matching Python: utw: UTW = deepcopy(self._utw)
@@ -622,8 +603,6 @@ namespace OdyTools.Editors
             return copy;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utw.py:152-154
-        // Original: def new(self):
         public override void New()
         {
             base.New();
@@ -633,13 +612,9 @@ namespace OdyTools.Editors
             UpdateStatusBar();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utw.py:156-160
-        // Original: def change_name(self):
         // Note: Name change is handled by LocalizedStringEdit's edit button
 
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utw.py:171-174
-        // Original: def generate_tag(self):
         private void GenerateTag()
         {
             if (_resrefEdit != null && string.IsNullOrEmpty(_resrefEdit.Text))
@@ -652,8 +627,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utw.py:176-180
-        // Original: def generate_resref(self):
         private void GenerateResref()
         {
             if (_resrefEdit != null)

@@ -1,5 +1,5 @@
 # Run OdyTool2DA.Standalone (2DA editor) from repo root.
-# Builds and runs for net9.0 only to avoid net472 restore/type-forwarder issues.
+# Builds and runs for net9.0 only to avoid net48 restore/type-forwarder issues.
 # Usage from repo root: .\helper_scripts\Run-OdyTool2DAStandalone.ps1
 
 $ErrorActionPreference = "Stop"

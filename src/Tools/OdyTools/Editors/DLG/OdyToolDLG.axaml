@@ -1,11 +1,16 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:dlg="clr-namespace:OdyTools.Editors.DLG"
-        x:Class="OdyTools.Editors.DLG.OdyToolDLG"
-        Title="DLGEditor"
-        MinWidth="944" MinHeight="619"
-        Width="1400" Height="900"
-        RequestedThemeVariant="Light">
+<!-- User-visible strings (Text, Header, Content, Watermark, ToolTip.Tip) are set at runtime by ApplyDLGLocalization() in code-behind for full localization. -->
+<Window
+  x:Class="OdyTools.Editors.DLG.OdyToolDLG"
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:dlg="clr-namespace:OdyTools.Editors.DLG"
+  xmlns:widgets="clr-namespace:OdyTools.Widgets.Edit"
+  Title=""
+  Width="1400"
+  Height="900"
+  MinWidth="944"
+  MinHeight="619"
+  RequestedThemeVariant="Light">
   <Window.Styles>
     <Style Selector="Window">
       <Setter Property="Background" Value="#F3F5F9" />
@@ -19,276 +24,1107 @@
     <Style Selector="MenuItem">
       <Setter Property="Foreground" Value="#202124" />
     </Style>
+    <Style Selector="TextBlock.error">
+      <Setter Property="Foreground" Value="#C5221F" />
+    </Style>
   </Window.Styles>
-  <!-- Layout matches PyKotor Tools/HolocronToolset/src/ui/editors/dlg.ui -->
   <ContentControl x:Name="contentRoot">
-    <DockPanel LastChildFill="True" Margin="2">
-      <!-- Menu bar (menubar) -->
-      <Menu DockPanel.Dock="Top" x:Name="menubar">
-        <MenuItem Header="File" x:Name="menuFile">
-          <MenuItem Header="New" x:Name="actionNew"/>
-          <MenuItem Header="Open" x:Name="actionOpen"/>
-          <MenuItem Header="Save" x:Name="actionSave"/>
-          <MenuItem Header="Save As" x:Name="actionSaveAs"/>
-          <MenuItem Header="Revert" x:Name="actionRevert"/>
-          <Separator/>
-          <MenuItem Header="Exit" x:Name="actionExit"/>
+    <Grid Margin="2">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="140" MinHeight="120"/>
+        <RowDefinition Height="4"/>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="4"/>
+        <RowDefinition Height="140" MinHeight="100"/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="220" MinWidth="180"/>
+        <ColumnDefinition Width="4"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="4"/>
+        <ColumnDefinition Width="420" MinWidth="400"/>
+      </Grid.ColumnDefinitions>
+      <!--  Menu bar (menubar) - spans all columns  -->
+      <Menu x:Name="menubar" Grid.Row="0" Grid.ColumnSpan="5">
+        <MenuItem x:Name="menuFile" Header="File">
+          <MenuItem x:Name="actionNew" Header="New" />
+          <MenuItem x:Name="actionOpen" Header="Open" />
+          <MenuItem x:Name="actionSave" Header="Save" />
+          <MenuItem x:Name="actionSaveAs" Header="Save As" />
+          <MenuItem x:Name="actionRevert" Header="Revert" />
+          <Separator />
+          <MenuItem x:Name="menuRecentFiles" Header="_Recent Files" />
+          <Separator />
+          <MenuItem x:Name="actionDLGSettings" Header="DLG Settings..." />
+          <Separator />
+          <MenuItem x:Name="actionExit" Header="Exit" />
         </MenuItem>
-        <MenuItem Header="Tools" x:Name="menuTools">
-          <MenuItem Header="Find (_F)" x:Name="actionFind"/>
-          <MenuItem Header="Reload Tree" x:Name="actionReloadTree"/>
-          <MenuItem Header="Unfocus Tree" x:Name="actionUnfocus" IsEnabled="False"/>
+        <MenuItem x:Name="menuEdit" Header="Edit">
+          <MenuItem x:Name="actionUndo" Header="Undo" InputGesture="Ctrl+Z" />
+          <MenuItem x:Name="actionRedo" Header="Redo" InputGesture="Ctrl+Y" />
+        </MenuItem>
+        <MenuItem x:Name="menuTools" Header="Tools">
+          <MenuItem x:Name="actionReloadTree" Header="Reload Tree" />
+          <MenuItem
+            x:Name="actionUnfocus"
+            Header="Unfocus Tree"
+            IsEnabled="False" />
+        </MenuItem>
+        <MenuItem x:Name="menuView" Header="View">
+          <MenuItem
+            x:Name="viewFileGlobals"
+            Header="File Globals"
+            ToggleType="CheckBox"
+            IsChecked="True" />
+          <MenuItem
+            x:Name="viewNodeFields"
+            Header="Node Fields"
+            ToggleType="CheckBox"
+            IsChecked="True" />
+          <MenuItem
+            x:Name="viewOrphanedNodes"
+            Header="Orphaned Nodes"
+            ToggleType="CheckBox"
+            IsChecked="True" />
+          <MenuItem
+            x:Name="viewJournalNode"
+            Header="Journal / Node"
+            ToggleType="CheckBox"
+            IsChecked="True" />
         </MenuItem>
       </Menu>
 
-      <!-- Find bar (inserted at index 0 in PyKotor setup_extra_widgets). Second row: suggestion chips. -->
-      <StackPanel DockPanel.Dock="Top" Margin="2" x:Name="findBar" IsVisible="False">
+      <!--  Go-to bar (vendor setup_extra_widgets). Ctrl+G toggles.  -->
+      <StackPanel
+        x:Name="goToBar"
+        Grid.Row="1"
+        Grid.ColumnSpan="5"
+        Margin="2"
+        IsVisible="False"
+        Orientation="Horizontal"
+        Spacing="4">
+        <TextBox
+          x:Name="goToInput"
+          MinWidth="150"
+          ToolTip.Tip="Enter node ID to jump. Ctrl+G toggles. Escape to close."
+          Watermark="Go to node ID..." />
+        <Button x:Name="goToButton" Content="Go" />
+      </StackPanel>
+      <!--  Find bar (inserted at index 0 in PyKotor setup_extra_widgets). Second row: suggestion chips.  -->
+      <StackPanel
+        x:Name="findBar"
+        Grid.Row="2"
+        Grid.ColumnSpan="5"
+        Margin="2"
+        IsVisible="False">
         <StackPanel Orientation="Horizontal" Spacing="4">
-          <TextBox x:Name="findInput" Watermark="Find... (e.g. text, speaker:tag, strref:123, AND/OR)" MinWidth="200" ToolTip.Tip="Query: plain text, or speaker:value, listener:value, strref:123, quest:value, AND/OR. Ctrl+F toggles bar. Escape to close."/>
-          <Button x:Name="findButton" Content="Find"/>
-          <Button x:Name="backButton" Content="Back"/>
-          <TextBlock x:Name="resultsLabel" VerticalAlignment="Center"/>
+          <TextBox
+            x:Name="findInput"
+            MinWidth="200"
+            ToolTip.Tip="Query: plain text, or speaker:value, listener:value, strref:123, quest:value, AND/OR. Ctrl+F toggles bar. Escape to close."
+            Watermark="Find... (e.g. text, speaker:tag, strref:123, AND/OR)" />
+          <Button x:Name="findButton" Content="Find" />
+          <Button x:Name="backButton" Content="Back" />
+          <TextBlock x:Name="resultsLabel" VerticalAlignment="Center" />
         </StackPanel>
-        <StackPanel x:Name="findSuggestionsPanel" Orientation="Horizontal" Margin="0,4,0,0" Spacing="0"/>
+        <StackPanel
+          x:Name="findSuggestionsPanel"
+          Margin="0,4,0,0"
+          Orientation="Horizontal"
+          Spacing="0" />
       </StackPanel>
 
-      <!-- Top dock: File Globals (topDockWidget) - matches gridLayout_5 -->
-      <Border DockPanel.Dock="Top" BorderThickness="0,0,0,1" Padding="4" MinHeight="120" x:Name="topDockWidget">
-        <Grid ColumnDefinitions="Auto,*,*,Auto">
-          <!-- Column 0: Checkboxes (gridLayout_4) -->
-          <StackPanel Grid.Column="0" Margin="10,10,10,0" Spacing="2">
-            <CheckBox x:Name="unequipHandsCheckbox" Content="Unequip Hands"/>
-            <CheckBox x:Name="unequipAllCheckbox" Content="Unequip All"/>
-            <CheckBox x:Name="skippableCheckbox" Content="Skippable"/>
-            <CheckBox x:Name="animatedCutCheckbox" Content="Animated Cut"/>
-            <CheckBox x:Name="oldHitCheckbox" Content="Old Hit Check"/>
+      <!--  Top dock: File Globals (topDockWidget) - dockable; vendor: right-click Menu to reopen  -->
+      <Border
+        x:Name="topDockWidget"
+        Grid.Row="3"
+        Grid.ColumnSpan="5"
+        MinHeight="120"
+        Padding="4"
+        BorderThickness="0,0,0,1"
+        ClipToBounds="True"
+        Background="#F3F5F9">
+        <StackPanel>
+          <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+            <TextBlock
+              VerticalAlignment="Center"
+              FontWeight="SemiBold"
+              Text="File Globals" />
+            <Button
+              x:Name="topDockFloatBtn"
+              Margin="8,0,0,0"
+              Padding="4,0"
+              Content="⬜"
+              FontSize="10"
+              ToolTip.Tip="Float (detach) panel" />
           </StackPanel>
-          <!-- Column 1: Conversation type, delays, voId (gridLayout_3) -->
-          <StackPanel Grid.Column="1" Margin="4" Spacing="3" MinWidth="200">
-            <StackPanel Orientation="Horizontal" Spacing="4">
-              <TextBlock Text="Conversation Type:" VerticalAlignment="Center" MinWidth="140"/>
-              <ComboBox x:Name="conversationSelect" MinWidth="120">
-                <ComboBoxItem Content="Human"/>
-                <ComboBoxItem Content="Computer"/>
-                <ComboBoxItem Content="Other"/>
-              </ComboBox>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="4">
-              <TextBlock Text="Computer Type:" VerticalAlignment="Center" MinWidth="140"/>
-              <ComboBox x:Name="computerSelect" MinWidth="120">
-                <ComboBoxItem Content="Modern"/>
-                <ComboBoxItem Content="Ancient"/>
-              </ComboBox>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="4">
-              <TextBlock Text="Delay before Reply:" VerticalAlignment="Center" MinWidth="140"/>
-              <NumericUpDown x:Name="replyDelaySpin" Minimum="-2147483648" Maximum="2147483647" MinWidth="80"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="4">
-              <TextBlock Text="Delay before Entry:" VerticalAlignment="Center" MinWidth="140"/>
-              <NumericUpDown x:Name="entryDelaySpin" Minimum="-2147483648" Maximum="2147483647" MinWidth="80"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="4">
-              <TextBlock Text="Voiceover ID:" VerticalAlignment="Center" MinWidth="140"/>
-              <TextBox x:Name="voIdEdit" MinWidth="160"/>
-            </StackPanel>
-          </StackPanel>
-          <!-- Column 2: On Abort, On End, Camera Model, Ambient Track (gridLayout_2) -->
-          <StackPanel Grid.Column="2" Margin="4" Spacing="3" MinWidth="200">
-            <StackPanel Orientation="Horizontal" Spacing="4">
-              <TextBlock Text="Conversation Aborts:" VerticalAlignment="Center" MinWidth="140"/>
-              <ComboBox x:Name="onAbortCombo" IsEditable="True" MinWidth="160"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="4">
-              <TextBlock Text="Conversation Ends:" VerticalAlignment="Center" MinWidth="140"/>
-              <ComboBox x:Name="onEndEdit" IsEditable="True" MinWidth="160"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="4">
-              <TextBlock Text="Camera Model:" VerticalAlignment="Center" MinWidth="140"/>
-              <ComboBox x:Name="cameraModelSelect" IsEditable="True" MinWidth="160"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="4">
-              <TextBlock Text="Ambient Track:" VerticalAlignment="Center" MinWidth="140"/>
-              <ComboBox x:Name="ambientTrackCombo" IsEditable="True" MinWidth="160"/>
-            </StackPanel>
-          </StackPanel>
-          <!-- Column 3: Cutscene Model / Stunt list (verticalLayout with stuntList) -->
-          <StackPanel Grid.Column="3" Margin="4" MinWidth="180">
-            <TextBlock Text="Cutscene Model" HorizontalAlignment="Center" Margin="0,0,0,4"/>
-            <ListBox x:Name="stuntList" MinHeight="80" ToolTip.Tip="Dialogue Stunts list"/>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4" Margin="0,4">
-              <Button x:Name="addStuntButton" Content="Add"/>
-              <Button x:Name="editStuntButton" Content="Edit"/>
-              <Button x:Name="removeStuntButton" Content="Remove"/>
-            </StackPanel>
-          </StackPanel>
-        </Grid>
-      </Border>
-
-      <!-- Left dock: Orphaned Nodes and Pinned Items (from editor.py setup_left_dock_widget) -->
-      <Border DockPanel.Dock="Left" BorderThickness="0,0,1,0" Padding="4" Width="220" MinWidth="180" x:Name="leftDockWidget">
-        <StackPanel Spacing="4">
-          <TextBlock Text="Orphaned Nodes" FontWeight="SemiBold"/>
-          <dlg:DLGListWidget x:Name="orphanedNodesList" MinHeight="100"/>
-          <TextBlock Text="Pinned Items" FontWeight="SemiBold"/>
-          <dlg:DLGListWidget x:Name="pinnedItemsList" MinHeight="100" SelectionMode="Multiple"/>
+          <Border x:Name="topDockContent">
+            <Grid ColumnDefinitions="Auto,*,*,Auto" RowDefinitions="Auto,*">
+              <Grid
+                Grid.Row="1"
+                Grid.ColumnSpan="4"
+                ColumnDefinitions="Auto,*,*,Auto">
+                <!--  Column 0: Checkboxes (gridLayout_4)  -->
+                <StackPanel
+                  Grid.Column="0"
+                  Margin="10,10,10,0"
+                  Spacing="2">
+                  <CheckBox x:Name="unequipHandsCheckbox" Content="Unequip Hands" />
+                  <CheckBox x:Name="unequipAllCheckbox" Content="Unequip All" />
+                  <CheckBox
+                    x:Name="skippableCheckbox"
+                    Content="Skippable"
+                    ToolTip.Tip="Skippable (GFF: Skippable): BYTE. When checked, the player can skip dialogue lines. Default 1. When unchecked, dialogue is unskippable (e.g. cutscenes)." />
+                  <CheckBox x:Name="animatedCutCheckbox" Content="Animated Cut" />
+                  <CheckBox x:Name="oldHitCheckbox" Content="Old Hit Check" />
+                </StackPanel>
+                <!--  Column 1: Conversation type, delays, voId (gridLayout_3)  -->
+                <StackPanel
+                  Grid.Column="1"
+                  MinWidth="200"
+                  Margin="4"
+                  Spacing="3">
+                  <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock
+                      MinWidth="140"
+                      VerticalAlignment="Center"
+                      Text="Conversation Type:" />
+                    <ComboBox
+                      x:Name="conversationSelect"
+                      MinWidth="120"
+                      ToolTip.Tip="ConversationType: 0=Human (cinematic, voice), 1=Computer (terminal UI), 2=Other (bark strings). Engine uses ReadFieldINT.">
+                      <ComboBoxItem Content="Human" />
+                      <ComboBoxItem Content="Computer" />
+                      <ComboBoxItem Content="Type 3" />
+                      <ComboBoxItem Content="Type 4" />
+                      <ComboBoxItem Content="Type 5" />
+                    </ComboBox>
+                  </StackPanel>
+                  <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock
+                      MinWidth="140"
+                      VerticalAlignment="Center"
+                      Text="Computer Type:" />
+                    <ComboBox
+                      x:Name="computerSelect"
+                      MinWidth="120"
+                      ToolTip.Tip="ComputerType (GFF: ComputerType): BYTE. 0=Modern (green terminal), 1=Ancient (orange/red). Used when ConversationType is Computer.">
+                      <ComboBoxItem Content="Modern" />
+                      <ComboBoxItem Content="Ancient" />
+                    </ComboBox>
+                  </StackPanel>
+                  <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock
+                      MinWidth="140"
+                      VerticalAlignment="Center"
+                      Text="Delay before Reply:" />
+                    <NumericUpDown
+                      x:Name="replyDelaySpin"
+                      MinWidth="80"
+                      Maximum="2147483647"
+                      Minimum="0"
+                      ToolTip.Tip="DelayReply: Default delay in ms before player reply options appear. DWORD. Used when node Delay is 0xFFFFFFFF." />
+                  </StackPanel>
+                  <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock
+                      MinWidth="140"
+                      VerticalAlignment="Center"
+                      Text="Delay before Entry:" />
+                    <NumericUpDown
+                      x:Name="entryDelaySpin"
+                      MinWidth="80"
+                      Maximum="2147483647"
+                      Minimum="0"
+                      ToolTip.Tip="DelayEntry: Default delay in ms before NPC entry lines appear. DWORD. Used when node Delay is 0xFFFFFFFF." />
+                  </StackPanel>
+                  <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock
+                      MinWidth="140"
+                      VerticalAlignment="Center"
+                      Text="Voiceover ID:" />
+                    <TextBox
+                      x:Name="voIdEdit"
+                      MinWidth="160"
+                      ToolTip.Tip="VoiceoverID: Optional ID for voice-over tracking. Leave blank for default." />
+                  </StackPanel>
+                </StackPanel>
+                <!--  Column 2: On Abort, On End, Camera Model, Ambient Track (gridLayout_2)  -->
+                <StackPanel
+                  Grid.Column="2"
+                  MinWidth="200"
+                  Margin="4"
+                  Spacing="3">
+                  <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock
+                      MinWidth="140"
+                      VerticalAlignment="Center"
+                      Text="Conversation Aborts:" />
+                    <ComboBox
+                      x:Name="onAbortCombo"
+                      MinWidth="160"
+                      IsEditable="True"
+                      ToolTip.Tip="EndConverAbort (GFF: EndConverAbort): Script run when the conversation is aborted (player exits early). ResRef of .ncs." />
+                  </StackPanel>
+                  <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock
+                      MinWidth="140"
+                      VerticalAlignment="Center"
+                      Text="Conversation Ends:" />
+                    <ComboBox
+                      x:Name="onEndEdit"
+                      MinWidth="160"
+                      IsEditable="True"
+                      ToolTip.Tip="EndConversation (GFF: EndConversation): Script run when the conversation ends normally. ResRef of .ncs." />
+                  </StackPanel>
+                  <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock
+                      MinWidth="140"
+                      VerticalAlignment="Center"
+                      Text="Camera Model:" />
+                    <ComboBox
+                      x:Name="cameraModelSelect"
+                      MinWidth="160"
+                      IsEditable="True"
+                      ToolTip.Tip="CameraModel (GFF: CameraModel): ResRef of MDL defining camera positions for cinematic dialogue. Required for Animated/Static camera angles." />
+                  </StackPanel>
+                  <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock
+                      MinWidth="140"
+                      VerticalAlignment="Center"
+                      Text="Ambient Track:" />
+                    <ComboBox
+                      x:Name="ambientTrackCombo"
+                      MinWidth="160"
+                      IsEditable="True"
+                      ToolTip.Tip="AmbientTrack (GFF: AmbientTrack): ResRef of background music loop during dialogue. Leave blank for default." />
+                  </StackPanel>
+                </StackPanel>
+                <!--  Column 3: Cutscene Model / Stunt list (verticalLayout with stuntList)  -->
+                <StackPanel
+                  Grid.Column="3"
+                  MinWidth="180"
+                  Margin="4">
+                  <TextBlock
+                    Margin="0,0,0,4"
+                    HorizontalAlignment="Center"
+                    Text="Cutscene Model"
+                    ToolTip.Tip="Stunt list: map participant tags to custom model ResRefs for cutscene dialogue. Add/Edit/Remove entries below." />
+                  <ListBox
+                    x:Name="stuntList"
+                    MinHeight="80"
+                    ToolTip.Tip="StuntList: Custom models for dialogue participants. Each stunt maps Participant tag to StuntModel ResRef. Used for cutscenes with non-standard character models (e.g. droids, creatures). Participant must match a creature/npc tag in the dialogue." />
+                  <StackPanel
+                    Margin="0,4"
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="4">
+                    <Button x:Name="addStuntButton" Content="Add" />
+                    <Button x:Name="editStuntButton" Content="Edit" />
+                    <Button x:Name="removeStuntButton" Content="Remove" />
+                  </StackPanel>
+                </StackPanel>
+              </Grid>
+            </Grid>
+          </Border>
         </StackPanel>
       </Border>
 
-      <!-- Right dock: Node Fields (rightDockWidget / scrollArea_rightDock) -->
-      <Border DockPanel.Dock="Right" BorderThickness="1,0,0,0" Padding="4" Width="320" MinWidth="280" x:Name="rightDockWidget">
-        <ScrollViewer x:Name="scrollArea_rightDock" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-          <StackPanel Spacing="6" Margin="0,0,2,0">
-            <!-- Comments (commentsEdit) -->
-            <TextBox x:Name="commentsEdit" Watermark="Comments" AcceptsReturn="True" MinHeight="60"/>
-            <!-- Script #1 (script1Param1Panel = K2-only ActionParam1 row) -->
-            <StackPanel Spacing="2">
-              <StackPanel Orientation="Horizontal" Spacing="4">
-                <TextBlock Text="Script #1:" VerticalAlignment="Center" MinWidth="100"/>
-                <ComboBox x:Name="script1ResrefEdit" IsEditable="True" MinWidth="150"/>
-              </StackPanel>
-              <StackPanel Orientation="Horizontal" Spacing="2" x:Name="script1Param1Panel">
-                <NumericUpDown x:Name="script1Param1Spin" Minimum="-2147483648" Maximum="2147483647" Width="40"/>
-                <NumericUpDown x:Name="script1Param2Spin" Minimum="-2147483648" Maximum="2147483647" Width="40"/>
-                <NumericUpDown x:Name="script1Param3Spin" Minimum="-2147483648" Maximum="2147483647" Width="40"/>
-                <NumericUpDown x:Name="script1Param4Spin" Minimum="-2147483648" Maximum="2147483647" Width="40"/>
-                <NumericUpDown x:Name="script1Param5Spin" Minimum="-2147483648" Maximum="2147483647" Width="40"/>
-                <TextBox x:Name="script1Param6Edit" MinWidth="60"/>
-              </StackPanel>
-            </StackPanel>
-            <!-- Script #2 -->
-            <StackPanel Spacing="2">
-              <StackPanel Orientation="Horizontal" Spacing="4">
-                <TextBlock Text="Script #2:" VerticalAlignment="Center" MinWidth="100"/>
-                <ComboBox x:Name="script2ResrefEdit" IsEditable="True" MinWidth="150"/>
-              </StackPanel>
-              <StackPanel Orientation="Horizontal" Spacing="2">
-                <NumericUpDown x:Name="script2Param1Spin" Minimum="-2147483648" Maximum="2147483647" Width="40"/>
-                <NumericUpDown x:Name="script2Param2Spin" Minimum="-2147483648" Maximum="2147483647" Width="40"/>
-                <NumericUpDown x:Name="script2Param3Spin" Minimum="-2147483648" Maximum="2147483647" Width="40"/>
-                <NumericUpDown x:Name="script2Param4Spin" Minimum="-2147483648" Maximum="2147483647" Width="40"/>
-                <NumericUpDown x:Name="script2Param5Spin" Minimum="-2147483648" Maximum="2147483647" Width="40"/>
-                <TextBox x:Name="script2Param6Edit" MinWidth="60"/>
-              </StackPanel>
-            </StackPanel>
-            <!-- Conditional #1 -->
-            <StackPanel Spacing="2">
-              <StackPanel Orientation="Horizontal" Spacing="4">
-                <TextBlock Text="Conditional #1:" VerticalAlignment="Center" MinWidth="100"/>
-                <ComboBox x:Name="condition1ResrefEdit" IsEditable="True" MinWidth="150"/>
-                <CheckBox x:Name="condition1NotCheckbox" Content="Not" VerticalAlignment="Center"/>
-              </StackPanel>
-              <StackPanel Orientation="Horizontal" Spacing="2">
-                <NumericUpDown x:Name="condition1Param1Spin" Minimum="-2147483648" Maximum="2147483647" Width="40"/>
-                <NumericUpDown x:Name="condition1Param2Spin" Minimum="-2147483648" Maximum="2147483647" Width="40"/>
-                <NumericUpDown x:Name="condition1Param3Spin" Minimum="-2147483648" Maximum="2147483647" Width="40"/>
-                <NumericUpDown x:Name="condition1Param4Spin" Minimum="-2147483648" Maximum="2147483647" Width="40"/>
-                <NumericUpDown x:Name="condition1Param5Spin" Minimum="-2147483648" Maximum="2147483647" Width="40"/>
-                <TextBox x:Name="condition1Param6Edit" MinWidth="60"/>
-              </StackPanel>
-            </StackPanel>
-            <!-- Conditional #2 -->
-            <StackPanel Spacing="2">
-              <StackPanel Orientation="Horizontal" Spacing="4">
-                <TextBlock Text="Conditional #2:" VerticalAlignment="Center" MinWidth="100"/>
-                <ComboBox x:Name="condition2ResrefEdit" IsEditable="True" MinWidth="150"/>
-                <CheckBox x:Name="condition2NotCheckbox" Content="Not" VerticalAlignment="Center"/>
-              </StackPanel>
-              <StackPanel Orientation="Horizontal" Spacing="2">
-                <NumericUpDown x:Name="condition2Param1Spin" Minimum="-2147483648" Maximum="2147483647" Width="40"/>
-                <NumericUpDown x:Name="condition2Param2Spin" Minimum="-2147483648" Maximum="2147483647" Width="40"/>
-                <NumericUpDown x:Name="condition2Param3Spin" Minimum="-2147483648" Maximum="2147483647" Width="40"/>
-                <NumericUpDown x:Name="condition2Param4Spin" Minimum="-2147483648" Maximum="2147483647" Width="40"/>
-                <NumericUpDown x:Name="condition2Param5Spin" Minimum="-2147483648" Maximum="2147483647" Width="40"/>
-                <TextBox x:Name="condition2Param6Edit" MinWidth="60"/>
-              </StackPanel>
-            </StackPanel>
-            <!-- Current Animations -->
-            <TextBlock Text="Current Animations" HorizontalAlignment="Center"/>
-            <ListBox x:Name="animsList" MinHeight="60"/>
-            <StackPanel Orientation="Horizontal" Spacing="4">
-              <Button x:Name="addAnimButton" Content="Add"/>
-              <Button x:Name="removeAnimButton" Content="Remove"/>
-              <Button x:Name="editAnimButton" Content="Edit"/>
-            </StackPanel>
-            <!-- Emotion / Expression -->
-            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
-              <TextBlock Text="Emotion:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,4"/>
-              <ComboBox x:Name="emotionSelect" Grid.Row="0" Grid.Column="1" Margin="0,0,0,4"/>
-              <TextBlock Text="Expression:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,4"/>
-              <ComboBox x:Name="expressionSelect" Grid.Row="1" Grid.Column="1" Margin="0,0,0,4"/>
-            </Grid>
-            <!-- Sound / Voice -->
-            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
-              <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,4">
-                <TextBlock Text="Sound:" HorizontalAlignment="Center"/>
-                <CheckBox x:Name="soundCheckbox" Content="Exists" ToolTip.Tip="'SoundExists' field"/>
-              </StackPanel>
-              <StackPanel Grid.Row="0" Grid.Column="1" Spacing="4" Margin="0,0,0,4">
-                <ComboBox x:Name="soundComboBox"/>
-                <Button x:Name="soundButton" Content="Play"/>
-              </StackPanel>
-              <TextBlock Text="Voice:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,4"/>
-              <StackPanel Grid.Row="1" Grid.Column="1" Spacing="4" Margin="0,0,0,4">
-                <ComboBox x:Name="voiceComboBox"/>
-                <Button x:Name="voiceButton" Content="Play"/>
-              </StackPanel>
-            </Grid>
-            <!-- Camera -->
-            <StackPanel Spacing="2">
-              <TextBlock Text="Camera ID:"/>
-              <NumericUpDown x:Name="cameraIdSpin" Minimum="-2147483648" Maximum="2147483647"/>
-              <TextBlock Text="Camera Animation:"/>
-              <NumericUpDown x:Name="cameraAnimSpin"/>
-              <TextBlock Text="Camera Angle:"/>
-              <ComboBox x:Name="cameraAngleSelect"/>
-              <TextBlock Text="Camera Video Effect:"/>
-              <ComboBox x:Name="cameraEffectSelect"/>
-            </StackPanel>
-            <!-- Other: Node Unskippable, Node ID, Delay, Logic, Wait Flags, Fade Type -->
-            <StackPanel Spacing="2">
-              <CheckBox x:Name="nodeUnskippableCheckbox" Content="Node Unskippable" HorizontalAlignment="Center"/>
-              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
-                <TextBlock Text="Node ID:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,2"/>
-                <NumericUpDown x:Name="nodeIdSpin" Grid.Row="0" Grid.Column="1" Margin="0,0,0,2"/>
-                <TextBlock Text="Alien Race Node:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,2"/>
-                <NumericUpDown x:Name="alienRaceNodeSpin" Grid.Row="1" Grid.Column="1" Margin="0,0,0,2"/>
-                <TextBlock Text="Post Proc Node:" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,2"/>
-                <NumericUpDown x:Name="postProcSpin" Grid.Row="2" Grid.Column="1" Margin="0,0,0,2"/>
-                <TextBlock Text="Delay:" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,2"/>
-                <NumericUpDown x:Name="delaySpin" Grid.Row="3" Grid.Column="1" Margin="0,0,0,2"/>
-                <TextBlock Text="Logic:" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,2"/>
-                <NumericUpDown x:Name="logicSpin" Minimum="0" Maximum="1" Grid.Row="4" Grid.Column="1" Margin="0,0,0,2"/>
-                <TextBlock Text="Wait Flags:" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,2"/>
-                <NumericUpDown x:Name="waitFlagSpin" Grid.Row="5" Grid.Column="1" Margin="0,0,0,2"/>
-                <TextBlock Text="Fade Type:" Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,2"/>
-                <NumericUpDown x:Name="fadeTypeSpin" Grid.Row="6" Grid.Column="1" Margin="0,0,0,2"/>
-              </Grid>
-            </StackPanel>
+      <!--  Horizontal splitter between top dock and main area  -->
+      <GridSplitter
+        Grid.Row="4"
+        Grid.ColumnSpan="5"
+        Height="4"
+        Background="#D7DBE6"
+        ResizeDirection="Rows" />
+
+      <!--  Left dock: Orphaned Nodes and Pinned Items (dockable)  -->
+      <Border
+        x:Name="leftDockWidget"
+        Grid.Row="5"
+        Grid.Column="0"
+        MinWidth="180"
+        Padding="4"
+        BorderThickness="0,0,1,0"
+        ClipToBounds="True"
+        Background="#F3F5F9">
+        <StackPanel Spacing="4">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock FontWeight="SemiBold" Text="Orphaned Nodes &amp; Pinned Items" />
+            <Button
+              x:Name="leftDockFloatBtn"
+              Margin="8,0,0,0"
+              Padding="4,0"
+              Content="⬜"
+              FontSize="10"
+              ToolTip.Tip="Float (detach) panel" />
           </StackPanel>
-        </ScrollViewer>
+          <Border x:Name="leftDockContent">
+            <StackPanel Spacing="4">
+              <TextBlock FontWeight="SemiBold" Text="Orphaned Nodes" />
+              <dlg:DLGListWidget x:Name="orphanedNodesList" MinHeight="100" />
+              <TextBlock FontWeight="SemiBold" Text="Pinned Items" />
+              <dlg:DLGListWidget
+                x:Name="pinnedItemsList"
+                MinHeight="100"
+                SelectionMode="Multiple" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
       </Border>
 
-      <!-- Bottom dock: Journal / Node fields (dockWidget / gridLayout) -->
-      <Border DockPanel.Dock="Bottom" BorderThickness="0,1,0,0" Padding="4" MinHeight="100" x:Name="dockWidget">
-        <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto">
-          <TextBlock Text="Listener Tag:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,4"/>
-          <TextBox x:Name="listenerEdit" Grid.Row="0" Grid.Column="1" MinWidth="150" MaxWidth="250" Margin="0,0,0,4"/>
-          <TextBlock Text="Quest:" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" Margin="8,0,8,4"/>
-          <TextBox x:Name="questEdit" Grid.Row="0" Grid.Column="3" MinWidth="150" MaxWidth="250" Margin="0,0,0,4"/>
-          <TextBlock x:Name="speakerEditLabel" Text="Speaker Tag:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,4"/>
-          <TextBox x:Name="speakerEdit" Grid.Row="1" Grid.Column="1" MinWidth="150" MaxWidth="250" Margin="0,0,0,4"/>
-          <TextBlock Text="Quest Entry:" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" Margin="8,0,8,4"/>
-          <NumericUpDown x:Name="questEntrySpin" Grid.Row="1" Grid.Column="3" MinWidth="150" MaxWidth="250" Margin="0,0,0,4"/>
-          <TextBlock Text="Plot XP Percentage" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,4"/>
-          <NumericUpDown x:Name="plotXpSpin" Grid.Row="2" Grid.Column="1" MinWidth="150" MaxWidth="250" Margin="0,0,0,4"/>
-          <TextBlock Text="Plot Index:" Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" Margin="8,0,8,4"/>
-          <ComboBox x:Name="plotIndexCombo" Grid.Row="2" Grid.Column="3" MinWidth="150" Margin="0,0,0,4"/>
-        </Grid>
+      <!--  Vertical splitter between left dock and center  -->
+      <GridSplitter
+        Grid.Row="5"
+        Grid.Column="1"
+        Width="4"
+        Background="#D7DBE6"
+        ResizeDirection="Columns" />
+
+      <!--  Right dock: Node Fields (dockable)  -->
+      <Border
+        x:Name="rightDockWidget"
+        Grid.Row="5"
+        Grid.Column="4"
+        MinWidth="400"
+        Padding="4"
+        BorderThickness="1,0,0,0"
+        ClipToBounds="True"
+        Background="#F3F5F9">
+        <DockPanel LastChildFill="True">
+          <StackPanel Margin="0,0,0,4" Orientation="Horizontal" DockPanel.Dock="Top">
+            <TextBlock FontWeight="SemiBold" Text="Node Fields" />
+            <Button
+              x:Name="rightDockFloatBtn"
+              Margin="8,0,0,0"
+              Padding="4,0"
+              Content="⬜"
+              FontSize="10"
+              ToolTip.Tip="Float (detach) panel" />
+          </StackPanel>
+          <Border x:Name="rightDockContent" MinHeight="0">
+            <ScrollViewer
+              x:Name="scrollArea_rightDock"
+              HorizontalAlignment="Stretch"
+              VerticalAlignment="Stretch"
+              HorizontalScrollBarVisibility="Auto"
+              VerticalScrollBarVisibility="Auto">
+              <StackPanel Margin="0,0,2,0" Spacing="6">
+                <!--  Resolved text preview  -->
+                <Border
+                  x:Name="nodeTextPreviewBorder"
+                  Background="#F5F5F5"
+                  BorderBrush="#E0E0E0"
+                  BorderThickness="1"
+                  CornerRadius="4"
+                  Padding="8,6"
+                  IsVisible="False">
+                  <StackPanel Spacing="2">
+                    <TextBlock
+                      FontSize="10"
+                      FontWeight="SemiBold"
+                      Foreground="#9E9E9E"
+                      Text="NODE TEXT" />
+                    <TextBlock
+                      x:Name="nodeTextPreviewLabel"
+                      FontSize="13"
+                      Foreground="#212121"
+                      TextWrapping="Wrap"
+                      MaxHeight="80"
+                      Text="" />
+                  </StackPanel>
+                </Border>
+                <!--  Comments (commentsEdit) - vendor QPlainTextEdit: multi-line, developer notes  -->
+                <TextBox
+                  x:Name="commentsEdit"
+                  MinHeight="60"
+                  AcceptsReturn="True"
+                  TextWrapping="Wrap"
+                  ToolTip.Tip="Comment (GFF: Comment): Developer-only notes stored in the node. The game ignores this field entirely. Use it to document your dialogue structure, tag nodes for scripting, or leave notes for other modders. Comments are preserved when saving the DLG."
+                  Watermark="Comments" />
+                <!--  Script #1 (script1Param1Panel = K2-only ActionParam1 row)  -->
+                <StackPanel Spacing="2">
+                  <Grid ColumnDefinitions="Auto,*" ColumnSpacing="4">
+                    <TextBlock
+                      Grid.Column="0"
+                      MinWidth="100"
+                      VerticalAlignment="Center"
+                      Text="Script #1:" />
+                    <ComboBox
+                      x:Name="script1ResrefEdit"
+                      Grid.Column="1"
+                      MinWidth="120"
+                      HorizontalAlignment="Stretch"
+                      IsEditable="True"
+                      ToolTip.Tip="Script (GFF: Script): Action script run when this node is reached. Executes after text/voice plays. Use for granting items, updating variables, or triggering cutscenes. ResRef must be a valid .ncs script. Params below are passed as (int int int int int string)." />
+                  </Grid>
+                  <StackPanel
+                    x:Name="script1Param1Panel"
+                    Orientation="Horizontal"
+                    Spacing="2">
+                    <NumericUpDown
+                      x:Name="script1Param1Spin"
+                      Width="40"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="ActionParam1: First integer for action script. INT32 range." />
+                    <NumericUpDown
+                      x:Name="script1Param2Spin"
+                      Width="40"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="ActionParam2: Second integer for action script. INT32 range." />
+                    <NumericUpDown
+                      x:Name="script1Param3Spin"
+                      Width="40"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="ActionParam3: Third integer for action script. INT32 range." />
+                    <NumericUpDown
+                      x:Name="script1Param4Spin"
+                      Width="40"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="ActionParam4: Fourth integer for action script. INT32 range." />
+                    <NumericUpDown
+                      x:Name="script1Param5Spin"
+                      Width="40"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="ActionParam5: Fifth integer for action script. INT32 range." />
+                    <TextBox
+                      x:Name="script1Param6Edit"
+                      MinWidth="60"
+                      ToolTip.Tip="ActionParamStrA: String argument for action script. Use for ResRefs, tags, or custom text." />
+                  </StackPanel>
+                </StackPanel>
+                <!--  Script #2 (K2/TSL only)  -->
+                <StackPanel x:Name="script2Panel" Spacing="2">
+                  <Grid ColumnDefinitions="Auto,*" ColumnSpacing="4">
+                    <TextBlock
+                      Grid.Column="0"
+                      MinWidth="100"
+                      VerticalAlignment="Center"
+                      Text="Script #2:" />
+                    <ComboBox
+                      x:Name="script2ResrefEdit"
+                      Grid.Column="1"
+                      MinWidth="120"
+                      HorizontalAlignment="Stretch"
+                      IsEditable="True"
+                      ToolTip.Tip="Script2 (GFF: Script2): Secondary action script. KotOR supports two scripts per node; both run when the node is reached. Same param structure as Script. Use for modular or conditional logic." />
+                  </Grid>
+                  <StackPanel Orientation="Horizontal" Spacing="2">
+                    <NumericUpDown
+                      x:Name="script2Param1Spin"
+                      Width="40"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="ActionParam1b: First integer for Script2. INT32 range." />
+                    <NumericUpDown
+                      x:Name="script2Param2Spin"
+                      Width="40"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="ActionParam2b: Second integer for Script2. INT32 range." />
+                    <NumericUpDown
+                      x:Name="script2Param3Spin"
+                      Width="40"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="ActionParam3b: Third integer for Script2. INT32 range." />
+                    <NumericUpDown
+                      x:Name="script2Param4Spin"
+                      Width="40"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="ActionParam4b: Fourth integer for Script2. INT32 range." />
+                    <NumericUpDown
+                      x:Name="script2Param5Spin"
+                      Width="40"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="ActionParam5b: Fifth integer for Script2. INT32 range." />
+                    <TextBox
+                      x:Name="script2Param6Edit"
+                      MinWidth="60"
+                      ToolTip.Tip="ActionParamStrB: String argument for Script2." />
+                  </StackPanel>
+                </StackPanel>
+                <!--  Conditional #1  -->
+                <StackPanel Spacing="2">
+                  <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="4">
+                    <TextBlock
+                      Grid.Column="0"
+                      MinWidth="100"
+                      VerticalAlignment="Center"
+                      Text="Conditional #1:" />
+                    <ComboBox
+                      x:Name="condition1ResrefEdit"
+                      Grid.Column="1"
+                      MinWidth="120"
+                      HorizontalAlignment="Stretch"
+                      IsEditable="True"
+                      ToolTip.Tip="Active (GFF: Active): Condition script that determines if this link is shown. Must return TRUE (non-zero) for the link to appear. Empty = always show. Params below are passed to the script. Logic combines with Condition #2 (AND/OR)." />
+                    <CheckBox
+                      x:Name="condition1NotCheckbox"
+                      Grid.Column="2"
+                      VerticalAlignment="Center"
+                      Content="Not"
+                      ToolTip.Tip="Not (GFF: Not): Inverts the Active condition result. When checked, the link is shown only when the script returns FALSE. Use for hide-if-met logic." />
+                  </Grid>
+                  <StackPanel Orientation="Horizontal" Spacing="2">
+                    <NumericUpDown
+                      x:Name="condition1Param1Spin"
+                      Width="40"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="Param1: First integer for Active condition script. INT32 range." />
+                    <NumericUpDown
+                      x:Name="condition1Param2Spin"
+                      Width="40"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="Param2: Second integer for Active condition script. INT32 range." />
+                    <NumericUpDown
+                      x:Name="condition1Param3Spin"
+                      Width="40"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="Param3: Third integer for Active condition script. INT32 range." />
+                    <NumericUpDown
+                      x:Name="condition1Param4Spin"
+                      Width="40"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="Param4: Fourth integer for Active condition script. INT32 range." />
+                    <NumericUpDown
+                      x:Name="condition1Param5Spin"
+                      Width="40"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="Param5: Fifth integer for Active condition script. INT32 range." />
+                    <TextBox
+                      x:Name="condition1Param6Edit"
+                      MinWidth="60"
+                      ToolTip.Tip="ParamStrA: String argument for Active condition script." />
+                  </StackPanel>
+                </StackPanel>
+                <!--  Conditional #2 (K2/TSL only)  -->
+                <StackPanel x:Name="condition2Panel" Spacing="2">
+                  <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="4">
+                    <TextBlock
+                      Grid.Column="0"
+                      MinWidth="100"
+                      VerticalAlignment="Center"
+                      Text="Conditional #2:" />
+                    <ComboBox
+                      x:Name="condition2ResrefEdit"
+                      Grid.Column="1"
+                      MinWidth="120"
+                      HorizontalAlignment="Stretch"
+                      IsEditable="True"
+                      ToolTip.Tip="Active2 (GFF: Active2): Second condition script for links. Combined with Condition #1 via Logic (AND/OR). KotOR 2 extension. Params use Param1b-5b, ParamStrB." />
+                    <CheckBox
+                      x:Name="condition2NotCheckbox"
+                      Grid.Column="2"
+                      VerticalAlignment="Center"
+                      Content="Not"
+                      ToolTip.Tip="Not (GFF: Not): Inverts the Active2 condition result. When checked, the link is shown only when the script returns FALSE. Same as Condition #1 Not." />
+                  </Grid>
+                  <StackPanel Orientation="Horizontal" Spacing="2">
+                    <NumericUpDown
+                      x:Name="condition2Param1Spin"
+                      Width="40"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="Param1b: First integer for Active2 condition script. INT32 range." />
+                    <NumericUpDown
+                      x:Name="condition2Param2Spin"
+                      Width="40"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="Param2b: Second integer for Active2. INT32 range." />
+                    <NumericUpDown
+                      x:Name="condition2Param3Spin"
+                      Width="40"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="Param3b: Third integer for Active2. INT32 range." />
+                    <NumericUpDown
+                      x:Name="condition2Param4Spin"
+                      Width="40"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="Param4b: Fourth integer for Active2. INT32 range." />
+                    <NumericUpDown
+                      x:Name="condition2Param5Spin"
+                      Width="40"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="Param5b: Fifth integer for Active2. INT32 range." />
+                    <TextBox
+                      x:Name="condition2Param6Edit"
+                      MinWidth="60"
+                      ToolTip.Tip="ParamStrB: String argument for Active2 condition script." />
+                  </StackPanel>
+                </StackPanel>
+                <!--  Current Animations  -->
+                <TextBlock HorizontalAlignment="Center" Text="Current Animations" />
+                <ListBox x:Name="animsList" MinHeight="60" />
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                  <Button x:Name="addAnimButton" Content="Add" />
+                  <Button x:Name="removeAnimButton" Content="Remove" />
+                  <Button x:Name="editAnimButton" Content="Edit" />
+                </StackPanel>
+                <!--  Emotion / Expression (K2/TSL only) - vendor: ComboBox2DA emotionSelect, expressionSelect  -->
+                <Grid x:Name="emotionExpressionPanel" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+                  <TextBlock
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Margin="0,0,8,4"
+                    VerticalAlignment="Center"
+                    Text="Emotion:" />
+                  <widgets:ComboBox2DA
+                    x:Name="emotionSelect"
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Margin="0,0,0,4"
+                    ToolTip.Tip="Emotion (GFF: Emotion): Emotion ID from emotions.2da. Plays on the speaker. Used for gesture/emotion animations during dialogue." />
+                  <TextBlock
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Margin="0,0,8,4"
+                    VerticalAlignment="Center"
+                    Text="Expression:" />
+                  <widgets:ComboBox2DA
+                    x:Name="expressionSelect"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="0,0,0,4"
+                    ToolTip.Tip="FacialAnim (GFF: FacialAnim): Expression ID from expressions.2da. Plays on the speaker during this node. Index into the 2DA row." />
+                </Grid>
+                <!--  Sound / Voice  -->
+                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+                  <StackPanel
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Margin="0,0,8,4">
+                    <TextBlock HorizontalAlignment="Center" Text="Sound:" />
+                    <CheckBox
+                      x:Name="soundCheckbox"
+                      Content="Exists"
+                      ToolTip.Tip="SoundExists (GFF: SoundExists): BYTE. When checked (0x80), the engine treats the Sound/VO as present and waits for playback. Default 0x80. Affects WaitFlags and timing." />
+                  </StackPanel>
+                  <StackPanel
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Margin="0,0,0,4"
+                    Spacing="4">
+                    <ComboBox x:Name="soundComboBox" ToolTip.Tip="Sound (GFF: Sound): ResRef of a WAV played during this node. Overrides VO_ResRef if both exist. Used for ambient or non-voice sounds." />
+                    <Button x:Name="soundButton" Content="Play" />
+                  </StackPanel>
+                  <TextBlock
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Margin="0,0,8,4"
+                    VerticalAlignment="Center"
+                    Text="Voice:" />
+                  <StackPanel
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="0,0,0,4"
+                    Spacing="4">
+                    <ComboBox x:Name="voiceComboBox" ToolTip.Tip="VO_ResRef (GFF: VO_ResRef): Voice-over WAV ResRef. Plays when this node is reached. Used if Sound is empty." />
+                    <Button x:Name="voiceButton" Content="Play" />
+                  </StackPanel>
+                </Grid>
+                <!--  Camera  -->
+                <StackPanel Spacing="2">
+                  <TextBlock Text="Camera ID:" />
+                  <NumericUpDown
+                    x:Name="cameraIdSpin"
+                    Maximum="2147483647"
+                    Minimum="-2147483648">
+                    <ToolTip.Tip>
+                      <TextBlock TextWrapping="Wrap" MaxWidth="340">
+                        <Bold>CameraID (GFF: CameraID):</Bold>
+                        <Run Text=" Index of a static camera in the CameraModel. Only used when Camera Angle is Static Camera (6). Engine ignores this when angle is not 6. INT32."/>
+                      </TextBlock>
+                    </ToolTip.Tip>
+                  </NumericUpDown>
+                  <TextBlock Text="Camera Animation:" />
+                  <NumericUpDown
+                    x:Name="cameraAnimSpin"
+                    Maximum="65535"
+                    Minimum="1200"
+                    ToolTip.Tip="CameraAnimation: Index into CameraModel for animated cutscene cameras. WORD 0-65535. Used when CameraAngle is Animated Camera (4)." />
+                  <TextBlock Text="Camera Angle:" />
+                  <ComboBox x:Name="cameraAngleSelect">
+                    <ToolTip.Tip>
+                      <TextBlock TextWrapping="Wrap" MaxWidth="340">
+                        <Bold>CameraAngle (GFF: CameraAngle):</Bold>
+                        <Run Text=" DWORD"/>
+                        <LineBreak/>
+                        <Run Text="0=Auto, 1=Face, 2=Shoulder, 3=Wide Shot, 4=Animated Camera, 5=unused, 6=Static Camera."/>
+                        <LineBreak/>
+                        <Run Text="Only angle 6 uses CameraID."/>
+                      </TextBlock>
+                    </ToolTip.Tip>
+                  </ComboBox>
+                  <TextBlock Text="Camera Video Effect:" />
+                  <widgets:ComboBox2DA x:Name="cameraEffectSelect" ToolTip.Tip="CamVidEffect (GFF: CamVidEffect): Video effect ID from videoeffects.2da. INT32. -1 = no effect. Applied during this node's camera shot." />
+                </StackPanel>
+                <!--  Other: Node Unskippable, Node ID, Delay, Logic, Wait Flags, Fade Type - vendor min/max and tooltips  -->
+                <StackPanel Spacing="2">
+                  <CheckBox
+                    x:Name="nodeUnskippableCheckbox"
+                    HorizontalAlignment="Center"
+                    Content="Node Unskippable"
+                    ToolTip.Tip="NodeUnskippable: When checked, the player cannot skip this node's voice/text. Use for critical story moments. Overrides file-level Skippable." />
+                  <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                    <TextBlock
+                      x:Name="nodeIdLabel"
+                      Grid.Row="0"
+                      Grid.Column="0"
+                      Margin="0,0,8,2"
+                      VerticalAlignment="Center"
+                      Text="Node ID:" />
+                    <NumericUpDown
+                      x:Name="nodeIdSpin"
+                      Grid.Row="0"
+                      Grid.Column="1"
+                      Margin="0,0,0,2"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="NodeID (GFF: NodeID): Unique identifier for this node. Used by scripts and external references. INT32. Modders can use this to target specific nodes in scripts." />
+                    <TextBlock
+                      x:Name="alienRaceNodeLabel"
+                      Grid.Row="1"
+                      Grid.Column="0"
+                      Margin="0,0,8,2"
+                      VerticalAlignment="Center"
+                      Text="Alien Race Node:" />
+                    <NumericUpDown
+                      x:Name="alienRaceNodeSpin"
+                      Grid.Row="1"
+                      Grid.Column="1"
+                      Margin="0,0,0,2"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="AlienRaceNode (GFF: AlienRaceNode): Index for alien-race-specific dialogue variants. Used with alien language/translation systems. INT32." />
+                    <TextBlock
+                      x:Name="postProcLabel"
+                      Grid.Row="2"
+                      Grid.Column="0"
+                      Margin="0,0,8,2"
+                      VerticalAlignment="Center"
+                      Text="Post Proc Node:" />
+                    <NumericUpDown
+                      x:Name="postProcSpin"
+                      Grid.Row="2"
+                      Grid.Column="1"
+                      Margin="0,0,0,2"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="PostProcNode (GFF: PostProcNode): Post-processing node index for special dialogue effects. INT32. See PostProcOwner at file level." />
+                    <TextBlock
+                      Grid.Row="3"
+                      Grid.Column="0"
+                      Margin="0,0,8,2"
+                      VerticalAlignment="Center"
+                      Text="Delay:" />
+                    <NumericUpDown
+                      x:Name="delaySpin"
+                      Grid.Row="3"
+                      Grid.Column="1"
+                      Margin="0,0,0,2"
+                      Maximum="2147483647"
+                      Minimum="-1"
+                      ToolTip.Tip="Delay (GFF: Delay): Milliseconds before text appears. DWORD. 0xFFFFFFFF (-1) = auto-calculated from voice/sound or DelayEntry/DelayReply." />
+                    <TextBlock
+                      x:Name="logicLabel"
+                      Grid.Row="4"
+                      Grid.Column="0"
+                      Margin="0,0,8,2"
+                      VerticalAlignment="Center"
+                      Text="Logic:" />
+                    <NumericUpDown
+                      x:Name="logicSpin"
+                      Grid.Row="4"
+                      Grid.Column="1"
+                      Margin="0,0,0,2"
+                      Maximum="2147483647"
+                      Minimum="-2147483648"
+                      ToolTip.Tip="Logic (GFF: Logic): For links, combines Condition #1 and #2: 0=AND (both must pass), 1=OR (either passes). KotOR 2 extension. INT32." />
+                    <TextBlock
+                      Grid.Row="5"
+                      Grid.Column="0"
+                      Margin="0,0,8,2"
+                      VerticalAlignment="Center"
+                      Text="Wait Flags:" />
+                    <NumericUpDown
+                      x:Name="waitFlagSpin"
+                      Grid.Row="5"
+                      Grid.Column="1"
+                      Margin="0,0,0,2"
+                      Maximum="2147483647"
+                      Minimum="0"
+                      ToolTip.Tip="WaitFlags (GFF: WaitFlags): Bitmask controlling when the dialogue advances. DWORD. Bit 2=wait for sound/VO; bit 4=use explicit Delay; bit 0x10=Delay is set." />
+                    <TextBlock
+                      Grid.Row="6"
+                      Grid.Column="0"
+                      Margin="0,0,8,2"
+                      VerticalAlignment="Center"
+                      Text="Fade Type:" />
+                    <NumericUpDown
+                      x:Name="fadeTypeSpin"
+                      Grid.Row="6"
+                      Grid.Column="1"
+                      Margin="0,0,0,2"
+                      Maximum="255"
+                      Minimum="0"
+                      ToolTip.Tip="FadeType (GFF: FadeType): Screen fade for this node. BYTE 0-255. 0=None, 1=FadeIn, 2=FadeOut. Values 1-2 clear FadeDelay/FadeLength." />
+                  </Grid>
+                </StackPanel>
+              </StackPanel>
+            </ScrollViewer>
+          </Border>
+        </DockPanel>
       </Border>
 
-      <!-- Central: Dialog tree (dialogTree) - fills remaining space -->
-      <TreeView x:Name="dialogTree" Margin="2"/>
-    </DockPanel>
+      <!--  Vertical splitter between center and right dock  -->
+      <GridSplitter
+        Grid.Row="5"
+        Grid.Column="3"
+        Width="4"
+        Background="#D7DBE6"
+        ResizeDirection="Columns" />
+
+      <!--  Central workspace: Flat / Tree / Graph tabs sharing the same model state.  -->
+      <Border
+        Grid.Row="5"
+        Grid.Column="2"
+        Background="#F3F5F9"
+        ClipToBounds="True">
+        <TabControl
+          x:Name="dialogViewTabs"
+          Margin="2"
+          SelectedIndex="1">
+          <TabItem x:Name="flatTab" Header="Flat">
+            <Grid Margin="6" ColumnDefinitions="*,*,*" RowDefinitions="Auto,*" ColumnSpacing="8">
+              <TextBlock
+                Grid.Row="0"
+                Grid.Column="0"
+                FontWeight="SemiBold"
+                Text="StartingList" />
+              <TextBlock
+                Grid.Row="0"
+                Grid.Column="1"
+                FontWeight="SemiBold"
+                Text="EntryList" />
+              <TextBlock
+                Grid.Row="0"
+                Grid.Column="2"
+                FontWeight="SemiBold"
+                Text="ReplyList" />
+              <ListBox
+                x:Name="flatStartingList"
+                Grid.Row="1"
+                Grid.Column="0"
+                Margin="0,4,0,0" />
+              <ListBox
+                x:Name="flatEntryList"
+                Grid.Row="1"
+                Grid.Column="1"
+                Margin="0,4,0,0" />
+              <ListBox
+                x:Name="flatReplyList"
+                Grid.Row="1"
+                Grid.Column="2"
+                Margin="0,4,0,0" />
+            </Grid>
+          </TabItem>
+          <TabItem x:Name="treeTab" Header="Tree">
+            <TreeView
+              x:Name="dialogTree"
+              Margin="2" />
+          </TabItem>
+          <TabItem x:Name="graphTab" Header="Graph">
+            <Grid Margin="6" RowDefinitions="Auto,*" ColumnDefinitions="*">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <Button x:Name="graphFitButton" Content="Fit" ToolTip.Tip="Fit all nodes in view (Ctrl+0)" />
+                <Button x:Name="graphAutoLayoutButton" Content="Auto Layout" ToolTip.Tip="Automatically arrange all nodes" />
+                <Border Width="1" Background="#D7DBE6" Margin="4,2" />
+                <Button x:Name="graphZoomInButton" Content="+" FontWeight="Bold" MinWidth="28" ToolTip.Tip="Zoom In (Ctrl+=)" />
+                <TextBlock
+                  x:Name="graphZoomLabel"
+                  VerticalAlignment="Center"
+                  MinWidth="42"
+                  TextAlignment="Center"
+                  Text="100%" />
+                <Button x:Name="graphZoomOutButton" Content="-" FontWeight="Bold" MinWidth="28" ToolTip.Tip="Zoom Out (Ctrl+-)" />
+                <Border Width="1" Background="#D7DBE6" Margin="4,2" />
+                <TextBlock
+                  x:Name="graphStatusText"
+                  VerticalAlignment="Center"
+                  Foreground="#5F6368"
+                  Text="Graph view ready" />
+              </StackPanel>
+              <Border
+                Grid.Row="1"
+                Margin="0,6,0,0"
+                BorderBrush="#D7DBE6"
+                BorderThickness="1">
+                <Grid
+                  x:Name="graphCanvas"
+                  Background="#FFFFFF"
+                  ClipToBounds="True" />
+              </Border>
+            </Grid>
+          </TabItem>
+        </TabControl>
+      </Border>
+
+      <!--  Horizontal splitter between main area and bottom dock  -->
+      <GridSplitter
+        Grid.Row="6"
+        Grid.ColumnSpan="5"
+        Height="4"
+        Background="#D7DBE6"
+        ResizeDirection="Rows" />
+
+      <!--  Bottom dock: Journal / Node fields (dockable)  -->
+      <Border
+        x:Name="dockWidget"
+        Grid.Row="7"
+        Grid.ColumnSpan="5"
+        MinHeight="100"
+        Padding="4"
+        BorderThickness="0,1,0,0"
+        ClipToBounds="True"
+        Background="#F3F5F9">
+        <StackPanel>
+          <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+            <TextBlock FontWeight="SemiBold" Text="Journal / Node" />
+            <Button
+              x:Name="bottomDockFloatBtn"
+              Margin="8,0,0,0"
+              Padding="4,0"
+              Content="⬜"
+              FontSize="10"
+              ToolTip.Tip="Float (detach) panel" />
+          </StackPanel>
+          <Border x:Name="bottomDockContent">
+            <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto">
+              <TextBlock
+                Grid.Row="0"
+                Grid.Column="0"
+                Margin="0,0,8,4"
+                VerticalAlignment="Center"
+                Text="Listener Tag:" />
+              <TextBox
+                x:Name="listenerEdit"
+                Grid.Row="0"
+                Grid.Column="1"
+                MinWidth="150"
+                MaxWidth="250"
+                Margin="0,0,0,4" />
+              <TextBlock
+                Grid.Row="0"
+                Grid.Column="2"
+                Margin="8,0,8,4"
+                VerticalAlignment="Center"
+                Text="Quest:" />
+              <TextBox
+                x:Name="questEdit"
+                Grid.Row="0"
+                Grid.Column="3"
+                MinWidth="150"
+                MaxWidth="250"
+                Margin="0,0,0,4" />
+              <TextBlock
+                x:Name="speakerEditLabel"
+                Grid.Row="1"
+                Grid.Column="0"
+                Margin="0,0,8,4"
+                VerticalAlignment="Center"
+                Text="Speaker Tag:" />
+              <TextBox
+                x:Name="speakerEdit"
+                Grid.Row="1"
+                Grid.Column="1"
+                MinWidth="150"
+                MaxWidth="250"
+                Margin="0,0,0,4" />
+              <TextBlock
+                Grid.Row="1"
+                Grid.Column="2"
+                Margin="8,0,8,4"
+                VerticalAlignment="Center"
+                Text="Quest Entry:" />
+              <NumericUpDown
+                x:Name="questEntrySpin"
+                Grid.Row="1"
+                Grid.Column="3"
+                MinWidth="150"
+                MaxWidth="250"
+                Margin="0,0,0,4" />
+              <TextBlock
+                Grid.Row="2"
+                Grid.Column="0"
+                Margin="0,0,8,4"
+                VerticalAlignment="Center"
+                Text="Plot XP Percentage" />
+              <NumericUpDown
+                x:Name="plotXpSpin"
+                Grid.Row="2"
+                Grid.Column="1"
+                MinWidth="150"
+                MaxWidth="250"
+                Margin="0,0,0,4"
+                FormatString="0.##"
+                Increment="0.01"
+                Maximum="100"
+                Minimum="0"
+                ToolTip.Tip="PlotXPPercentage: Float 0-100. Percentage of plot XP granted when this node is reached." />
+              <TextBlock
+                Grid.Row="2"
+                Grid.Column="2"
+                Margin="8,0,8,4"
+                VerticalAlignment="Center"
+                Text="Plot Index:" />
+              <widgets:ComboBox2DA
+                x:Name="plotIndexCombo"
+                Grid.Row="2"
+                Grid.Column="3"
+                MinWidth="150"
+                Margin="0,0,0,4"
+                ToolTip.Tip="PlotIndex: Index into plot.2da. -1 = None." />
+            </Grid>
+          </Border>
+        </StackPanel>
+      </Border>
+
+      <!--  Status bar with tips (vendor: status_bar, tip_label). Double-click to view all tips.  -->
+      <Border
+        x:Name="statusBar"
+        Grid.Row="8"
+        Grid.ColumnSpan="5"
+        Height="24"
+        Padding="6,4"
+        Background="#E8EAED"
+        BorderThickness="0,1,0,0">
+        <TextBlock
+          x:Name="tipLabel"
+          VerticalAlignment="Center"
+          FontSize="11"
+          Foreground="#5F6368"
+          ToolTip.Tip="Double-click to view all tips." />
+      </Border>
+    </Grid>
   </ContentControl>
 </Window>

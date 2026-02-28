@@ -7,12 +7,8 @@ using OdyTools.Utils;
 
 namespace OdyTools.NET
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_init.py:151
-    // Original: def main_init():
     public static class MainInit
     {
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_init.py:18-27
-        // Original: def is_frozen() -> bool:
         public static bool IsFrozen()
         {
             string entryAssembly = Assembly.GetEntryAssembly()?.Location;
@@ -24,8 +20,6 @@ namespace OdyTools.NET
             return !File.Exists(entryAssembly);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/misc.py:172-182
-        // Original: def is_debug_mode() -> bool:
         /// <summary>
         /// Determines if the application is running in debug mode.
         /// Checks for debugger attachment, environment variables, and frozen state.
@@ -57,12 +51,9 @@ namespace OdyTools.NET
             return ret;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_init.py:30-44
-        // Original: def on_app_crash(etype, exc, tback):
         /// <summary>
         /// Handles uncaught exceptions.
         /// This function should be called when an uncaught exception occurs, set to AppDomain.CurrentDomain.UnhandledException.
-        /// Matching PyKotor: Uses RobustLogger().critical("Uncaught exception", exc_info=(etype, exc, tback))
         /// </summary>
         /// <param name="exception">The uncaught exception</param>
         public static void OnAppCrash(Exception exception)
@@ -73,7 +64,6 @@ namespace OdyTools.NET
             }
 
             // Get log directory and create logger with log file path
-            // Matching PyKotor implementation: RobustLogger() automatically uses get_log_directory()
             RobustLogger logger;
             try
             {
@@ -90,13 +80,10 @@ namespace OdyTools.NET
                 System.Diagnostics.Debug.WriteLine($"Failed to setup log file path: {ex.Message}");
             }
 
-            // Matching PyKotor: RobustLogger().critical("Uncaught exception", exc_info=(etype, exc, tback))
             // Use Critical() method as in PyKotor, with excInfo=true to include full exception details
             logger.Critical("Uncaught exception", excInfo: true, exception: exception);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_init.py:147-148
-        // Original: def is_running_from_temp() -> bool:
         public static bool IsRunningFromTemp()
         {
             string entryAssembly = Assembly.GetEntryAssembly()?.Location;
@@ -108,8 +95,6 @@ namespace OdyTools.NET
             return entryAssembly.StartsWith(tempPath, StringComparison.OrdinalIgnoreCase);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_init.py:151-185
-        // Original: def main_init():
         public static void Initialize()
         {
             // Set up exception handling

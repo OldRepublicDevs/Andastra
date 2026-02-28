@@ -4,7 +4,7 @@ using System.IO;
 namespace BioWare.Utility
 {
     /// <summary>
-    /// Helper class that provides Path.GetRelativePath on both net9.0 and net472.
+    /// Helper class that provides Path.GetRelativePath on both net9.0 and net48.
     /// </summary>
     internal static class PathHelper
     {

@@ -4,8 +4,6 @@ using OdyTools.Data;
 
 namespace OdyTools.Data
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:307
-    // Original: class ApplicationSettings(Settings):
     /// <summary>
     /// Application-level settings for the OdyTools.
     /// Manages environment variables, font settings, and application attributes.
@@ -13,8 +11,6 @@ namespace OdyTools.Data
     /// </summary>
     public class ApplicationSettings : Settings
     {
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:311-313
-        // Original: app_env_variables: SettingsProperty[dict[str, str]] = Settings.addSetting("EnvironmentVariables", {...})
         /// <summary>
         /// Environment variables to be set before application initialization.
         /// Default includes Windows-specific Qt multimedia settings if on Windows.
@@ -34,8 +30,6 @@ namespace OdyTools.Data
             set => SetValue("EnvironmentVariables", value);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:315-322
-        // Original: MISC_SETTINGS: ClassVar[dict[str, MiscSetting]] = {...}
         /// <summary>
         /// Miscellaneous settings that can be changed without restarting.
         /// Note: These are Qt-specific and don't directly apply to Avalonia, but are maintained for compatibility.
@@ -46,8 +40,6 @@ namespace OdyTools.Data
             // for compatibility and potential future use
         };
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:324-342
-        // Original: REQUIRES_RESTART: ClassVar[dict[str, Qt.ApplicationAttribute | None]] = {...}
         /// <summary>
         /// Application attributes that require a restart to take effect.
         /// Note: These are Qt-specific (AA_*) and don't apply to Avalonia, but are maintained for compatibility.
@@ -58,15 +50,11 @@ namespace OdyTools.Data
             // These don't apply to Avalonia but are maintained for structure compatibility
         };
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:308-309
-        // Original: def __init__(self): super().__init__("Application")
         public ApplicationSettings() : base("Application")
         {
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:295-305
-    // Original: class MiscSetting:
     /// <summary>
     /// Represents a miscellaneous setting with getter, setter, and type information.
     /// Used for settings that can be changed without restarting the application.

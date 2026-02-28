@@ -7,7 +7,9 @@
         RequestedThemeVariant="Light">
     <Grid RowDefinitions="*,*,Auto" Margin="10">
         <!-- TPC Options -->
-        <Expander Header="TPC Options" Grid.Row="0" IsExpanded="True" Margin="0,0,0,10">
+        <Expander Header="TPC Options" Grid.Row="0" IsExpanded="True" Margin="0,0,0,10"
+                  HorizontalAlignment="Stretch"
+                  HorizontalContentAlignment="Stretch">
             <StackPanel Spacing="5" Margin="5">
                 <CheckBox Name="tpcDecompileCheckbox" Content="Decompile" />
                 <CheckBox Name="tpcTxiCheckbox" Content="Extract TXI" />
@@ -15,7 +17,9 @@
         </Expander>
 
         <!-- MDL Options -->
-        <Expander Header="MDL Options" Grid.Row="1" IsExpanded="True" Margin="0,0,0,10">
+        <Expander Header="MDL Options" Grid.Row="1" IsExpanded="True" Margin="0,0,0,10"
+                  HorizontalAlignment="Stretch"
+                  HorizontalContentAlignment="Stretch">
             <StackPanel Spacing="5" Margin="5">
                 <CheckBox Name="mdlDecompileCheckbox" Content="Decompile" IsEnabled="False" ToolTip.Tip="Decompile feature is not available." />
                 <CheckBox Name="mdlTexturesCheckbox" Content="Extract Textures" />

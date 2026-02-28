@@ -24,8 +24,6 @@ using GFFAuto = BioWare.Resource.Formats.GFF.GFFAuto;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:45
-    // Original: class OdyToolUTI(Editor):
     public partial class OdyToolUTI : Editor
     {
         private const int MinEditorWidth = 700;
@@ -70,7 +68,6 @@ namespace OdyTools.Editors
         // UI Controls - Comments
         private TextBox _commentsEdit;
 
-        // Matching PyKotor implementation: Expose UI controls for testing
         public LocalizedStringEdit NameEdit => _nameEdit;
         public LocalizedStringEdit DescEdit => _descEdit;
         public TextBox TagEdit => _tagEdit;
@@ -161,8 +158,6 @@ namespace OdyTools.Editors
         public TextBox CommentsEdit => _commentsEdit;
         public Image IconLabel => _iconLabel;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:46-87
-        // Original: def __init__(self, parent, installation):
         public OdyToolUTI(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTI", "item",
                 new[] { ResourceType.UTI },
@@ -272,8 +267,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:89-106
-        // Original: def _setup_signals(self):
         private void SetupProgrammaticUI()
         {
             var scrollViewer = new ScrollViewer();
@@ -466,12 +459,7 @@ namespace OdyTools.Editors
                 }
                 catch { }
             }
-            Bind("actionNew", () => New());
-            Bind("actionOpen", () => { });
-            Bind("actionSave", () => Save());
-            Bind("actionSaveAs", () => _ = RunSaveAsAsync());
-            Bind("actionRevert", () => Revert());
-            Bind("actionExit", () => Close());
+            // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
             Bind("actionUndo", () => Undo());
             Bind("actionRedo", () => Redo());
             Bind("actionFind", () => ShowFindDialog());
@@ -548,7 +536,7 @@ namespace OdyTools.Editors
             finally { _undoRedoInProgress = false; }
         }
 
-        private void Revert()
+        public override void Revert()
         {
             if (_revert == null || _revert.Length == 0) return;
             try
@@ -564,7 +552,7 @@ namespace OdyTools.Editors
             }
         }
 
-        private async Task RunSaveAsAsync()
+        protected override async Task RunSaveAsAsync()
         {
             var storageProvider = (this as Window)?.StorageProvider;
             if (storageProvider == null) return;
@@ -643,8 +631,6 @@ namespace OdyTools.Editors
             if (e.Key == Key.F3) { FindNextMatch(); e.Handled = true; }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:155-196
-        // Original: def load(self, filepath, resref, restype, data):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
@@ -658,8 +644,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:89-105
-        // Original: def _setup_signals(self):
         private void SetupSignals()
         {
             if (_tagGenerateBtn != null)
@@ -699,11 +683,7 @@ namespace OdyTools.Editors
                 _baseSelect.SelectionChanged += (s, e) => UpdateIcon();
             }
             // Note: Name and Description editing is handled by LocalizedStringEdit's built-in edit button
-            // Matching PyKotor: LocalizedStringLineEdit has its own edit button that opens LocalizedStringDialog
             
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:98-99
-            // Original: self.ui.availablePropertyList.doubleClicked.connect(self.on_available_property_list_double_clicked)
-            // Original: self.ui.assignedPropertiesList.doubleClicked.connect(self.on_assigned_property_list_double_clicked)
             if (_availablePropertyList != null)
             {
                 _availablePropertyList.DoubleTapped += (s, e) => OnAvailablePropertyListDoubleClicked();
@@ -713,8 +693,6 @@ namespace OdyTools.Editors
                 _assignedPropertiesList.DoubleTapped += (s, e) => OnAssignedPropertyListDoubleClicked();
             }
             
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:82
-            // Original: QShortcut("Del", self).activated.connect(self.on_del_shortcut)
             // Note: In Avalonia, we handle KeyDown event instead of QShortcut
             this.KeyDown += (s, e) =>
             {
@@ -726,19 +704,15 @@ namespace OdyTools.Editors
             };
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:167-196
-        // Original: def _loadUTI(self, uti):
         private void LoadUTI(UTI uti)
         {
             _uti = uti;
 
             // Basic
-            // Matching PyKotor implementation: self.ui.nameEdit.set_locstring(uti.name)
             if (_nameEdit != null)
             {
                 _nameEdit.SetLocString(uti.Name);
             }
-            // Matching PyKotor implementation: self.ui.descEdit.set_locstring(uti.description)
             if (_descEdit != null)
             {
                 _descEdit.SetLocString(uti.Description);
@@ -816,19 +790,12 @@ namespace OdyTools.Editors
             UpdateIcon();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:197-230
-        // Original: def build(self) -> tuple[bytes, bytes]:
-        // Original: uti: UTI = deepcopy(self._uti)
         public override Tuple<byte[], byte[]> Build()
         {
-            // Matching PyKotor implementation: deepcopy(self._uti) to preserve original values
             // Since C# 7.3 doesn't have deepcopy, manually copy the UTI
             var uti = CopyUTI(_uti);
 
             // Basic - read from UI controls (matching Python which always reads from UI)
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:210-211
-            // Original: uti.name = self.ui.nameEdit.locstring()
-            // Original: uti.description = self.ui.descEdit.locstring()
             if (_nameEdit != null)
             {
                 uti.Name = _nameEdit.GetLocString();
@@ -853,7 +820,6 @@ namespace OdyTools.Editors
             uti.TextureVariation = _textureVarSpin?.Value != null ? (int)_textureVarSpin.Value : uti.TextureVariation;
 
             // Properties - read from UI list
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:215-221
             uti.Properties.Clear();
             if (_assignedPropertiesList?.Items != null)
             {
@@ -879,11 +845,9 @@ namespace OdyTools.Editors
             }
 
             // Comments
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:224
             uti.Comment = _commentsEdit?.Text ?? "";
 
             // Build GFF
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:226-230
             Game game = _installation?.Game ?? Game.K2;
             var gff = UTIHelpers.DismantleUti(uti, game);
             byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTI);
@@ -891,8 +855,6 @@ namespace OdyTools.Editors
         }
 
 
-        // Matching PyKotor implementation: deepcopy equivalent for C# 7.3
-        // Original: uti: UTI = deepcopy(self._uti)
         private UTI CopyUTI(UTI source)
         {
             // Deep copy LocalizedString objects (they're reference types)
@@ -976,8 +938,6 @@ namespace OdyTools.Editors
             return dict;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:232-234
-        // Original: def new(self):
         public override void New()
         {
             base.New();
@@ -988,8 +948,6 @@ namespace OdyTools.Editors
             UpdateStatusBar();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:236-240
-        // Original: def change_name(self):
         // Note: Name editing is now handled by LocalizedStringEdit's built-in edit button
         // The widget opens LocalizedStringDialog internally, so this method is no longer needed
         // However, we keep it for backwards compatibility if needed elsewhere
@@ -999,8 +957,6 @@ namespace OdyTools.Editors
             // This method is kept for compatibility but is no longer called
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:242-246
-        // Original: def change_desc(self):
         // Note: Description editing is now handled by LocalizedStringEdit's built-in edit button
         // The widget opens LocalizedStringDialog internally, so this method is no longer needed
         // However, we keep it for backwards compatibility if needed elsewhere
@@ -1010,8 +966,6 @@ namespace OdyTools.Editors
             // This method is kept for compatibility but is no longer called
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:248-252
-        // Original: def generate_tag(self):
         private void GenerateTag()
         {
             if (string.IsNullOrEmpty(_resrefEdit?.Text))
@@ -1024,8 +978,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:254-258
-        // Original: def generate_resref(self):
         private void GenerateResref()
         {
             if (_resrefEdit != null)
@@ -1034,26 +986,20 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:260-268
-        // Original: def edit_selected_property(self):
         private async System.Threading.Tasks.Task EditSelectedProperty()
         {
-            // Matching PyKotor implementation: if not self.ui.assignedPropertiesList.selectedItems(): return
             if (_assignedPropertiesList?.SelectedItem == null)
             {
                 return;
             }
 
-            // Matching PyKotor implementation: uti_property: UTIProperty = self.ui.assignedPropertiesList.selectedItems()[0].data(Qt.ItemDataRole.UserRole)
             if (!(_assignedPropertiesList.SelectedItem is PropertyListItem selectedItem) || selectedItem.Property == null)
             {
                 return;
             }
 
-            // Matching PyKotor implementation: dialog = PropertyEditor(self._installation, uti_property)
             var dialog = new PropertyEditorDialog(this, _installation, selectedItem.Property);
             
-            // Matching PyKotor implementation: if not dialog.exec(): return
             // Use ShowDialogAsync for proper modal dialog handling
             var resultObj = await dialog.ShowDialogAsync(this);
             bool result = resultObj is bool b ? b : false;
@@ -1062,26 +1008,18 @@ namespace OdyTools.Editors
                 return;
             }
             
-            // Matching PyKotor implementation: self.ui.assignedPropertiesList.selectedItems()[0].setData(Qt.ItemDataRole.UserRole, dialog.uti_property())
-            // Matching PyKotor implementation: self.ui.assignedPropertiesList.selectedItems()[0].setText(self.property_summary(dialog.uti_property()))
             UTIProperty updatedProperty = dialog.GetUtiProperty();
             selectedItem.Property = updatedProperty;
             selectedItem.Text = PropertySummary(updatedProperty);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:270-301
-        // Original: def add_selected_property(self):
         private void AddSelectedProperty()
         {
-            // Matching PyKotor implementation: if not self.ui.availablePropertyList.selectedItems(): return
             if (_availablePropertyList?.SelectedItem == null)
             {
                 return;
             }
 
-            // Matching PyKotor implementation: item: QTreeWidgetItem = self.ui.availablePropertyList.selectedItems()[0]
-            // Matching PyKotor implementation: property_id: int = item.data(0, Qt.ItemDataRole.UserRole)
-            // Matching PyKotor implementation: subtype_id: int = item.data(0, Qt.ItemDataRole.UserRole + 1)
             if (_availablePropertyList.SelectedItem is TreeViewItem selectedItem && selectedItem.Tag is PropertyTreeItemData itemData)
             {
                 int propertyId = itemData.PropertyIndex;
@@ -1090,8 +1028,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:280-301
-        // Original: def _add_property_main(self, property_id: int, subtype_id: int):
         private void AddPropertyMain(int propertyId, int subtypeId)
         {
             if (_installation == null)
@@ -1099,44 +1035,31 @@ namespace OdyTools.Editors
                 return;
             }
 
-            // Matching PyKotor implementation: itemprops: TwoDA | None = self._installation.ht_get_cache_2da(OdyInstallation.TwoDA_ITEM_PROPERTIES)
             TwoDA itemProps = _installation.HtGetCache2DA(OdyInstallation.TwoDAItemProperties);
             if (itemProps == null)
             {
                 return;
             }
 
-            // Matching PyKotor implementation: uti_property = UTIProperty()
             var utiProperty = new UTIProperty();
-            // Matching PyKotor implementation: uti_property.property_name = property_id
             utiProperty.PropertyName = propertyId;
-            // Matching PyKotor implementation: uti_property.subtype = subtype_id
             utiProperty.Subtype = subtypeId;
 
-            // Matching PyKotor implementation: uti_property.cost_table = itemprops.get_row(property_id).get_integer("costtableresref", 255)
             TwoDARow propertyRow = itemProps.GetRow(propertyId);
             int? costTableNullable = propertyRow.GetInteger("costtableresref", 255);
             utiProperty.CostTable = costTableNullable ?? 255;
             
-            // Matching PyKotor implementation: uti_property.cost_value = 0
             utiProperty.CostValue = 0;
             
-            // Matching PyKotor implementation: uti_property.param1 = itemprops.get_row(property_id).get_integer("param1resref", 255)
             int? param1Nullable = propertyRow.GetInteger("param1resref", 255);
             utiProperty.Param1 = param1Nullable ?? 255;
             
-            // Matching PyKotor implementation: uti_property.param1_value = 0
             utiProperty.Param1Value = 0;
             
-            // Matching PyKotor implementation: uti_property.chance_appear = 100
             utiProperty.ChanceAppear = 100;
 
-            // Matching PyKotor implementation: text: str = self.property_summary(uti_property)
             string text = PropertySummary(utiProperty);
             
-            // Matching PyKotor implementation: item = QListWidgetItem(text)
-            // Matching PyKotor implementation: item.setData(Qt.ItemDataRole.UserRole, uti_property)
-            // Matching PyKotor implementation: self.ui.assignedPropertiesList.addItem(item)
             var listItem = new PropertyListItem { Text = text, Property = utiProperty };
             if (_assignedPropertiesList != null)
             {
@@ -1144,8 +1067,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:303-307
-        // Original: def remove_selected_property(self):
         private void RemoveSelectedProperty()
         {
             if (_assignedPropertiesList?.SelectedItem != null)
@@ -1154,8 +1075,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:309-330
-        // Original: def property_summary(self, uti_property):
         private string PropertySummary(UTIProperty prop)
         {
             if (_installation == null)
@@ -1163,39 +1082,30 @@ namespace OdyTools.Editors
                 return $"Property {prop.PropertyName}: Subtype {prop.Subtype}";
             }
 
-            // Matching PyKotor implementation: prop_name: str = OdyToolUTI.property_name(self._installation, uti_property.property_name)
             string propName = GetPropertyName(_installation, prop.PropertyName);
             
-            // Matching PyKotor implementation: subprop_name: str | None = OdyToolUTI.subproperty_name(self._installation, uti_property.property_name, uti_property.subtype)
             string subpropName = GetSubpropertyName(_installation, prop.PropertyName, prop.Subtype);
             
-            // Matching PyKotor implementation: cost_name: str | None = OdyToolUTI.cost_name(self._installation, uti_property.cost_table, uti_property.cost_value)
             string costName = CostName(_installation, prop.CostTable, prop.CostValue);
 
-            // Matching PyKotor implementation: if cost_name and subprop_name: return f"{prop_name}: {subprop_name} [{cost_name}]"
             if (!string.IsNullOrEmpty(costName) && !string.IsNullOrEmpty(subpropName))
             {
                 return $"{propName}: {subpropName} [{costName}]";
             }
             
-            // Matching PyKotor implementation: if subprop_name: return f"{prop_name}: {subprop_name}"
             if (!string.IsNullOrEmpty(subpropName))
             {
                 return $"{propName}: {subpropName}";
             }
             
-            // Matching PyKotor implementation: if cost_name: return f"{prop_name}: [{cost_name}]"
             if (!string.IsNullOrEmpty(costName))
             {
                 return $"{propName}: [{costName}]";
             }
             
-            // Matching PyKotor implementation: return f"{prop_name}"
             return propName;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:488-514
-        // Original: @staticmethod def cost_name(installation: OdyInstallation, cost: int, value: int) -> str | None:
         public static string CostName(OdyInstallation installation, int cost, int value)
         {
             TwoDA costTableList = installation.HtGetCache2DA(OdyInstallation.TwoDAIprpCosttable);
@@ -1235,8 +1145,6 @@ namespace OdyTools.Editors
             return null;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:516-557
-        // Original: @staticmethod def param_name(installation: OdyInstallation, paramtable: int, param: int) -> str | None:
         public static string ParamName(OdyInstallation installation, int paramtable, int param)
         {
             // Get the IPRP_PARAMTABLE TwoDA
@@ -1283,8 +1191,6 @@ namespace OdyTools.Editors
             return null;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:427-435
-        // Original: def on_update_icon(self, *args, **kwargs):
         private void UpdateIcon()
         {
             if (_installation == null)
@@ -1292,26 +1198,19 @@ namespace OdyTools.Editors
                 return;
             }
 
-            // Matching PyKotor implementation: base_item: int = self.ui.baseSelect.currentIndex()
             int baseItem = _baseSelect?.SelectedIndex ?? 0;
             
-            // Matching PyKotor implementation: model_variation: int = self.ui.modelVarSpin.value()
             int modelVariation = _modelVarSpin?.Value != null ? (int)_modelVarSpin.Value : 0;
             
-            // Matching PyKotor implementation: texture_variation: int = self.ui.textureVarSpin.value()
             int textureVariation = _textureVarSpin?.Value != null ? (int)_textureVarSpin.Value : 0;
 
-            // Matching PyKotor implementation: pixmap: QPixmap | None = self._installation.get_item_icon(base_item, model_variation, texture_variation)
             var bitmap = _installation.GetItemIcon(baseItem, modelVariation, textureVariation);
             
-            // Matching PyKotor implementation: if pixmap is not None:
-            // Matching PyKotor implementation: self.ui.iconLabel.setPixmap(pixmap)
             if (bitmap != null && _iconLabel != null)
             {
                 _iconLabel.Source = bitmap;
             }
             
-            // Matching PyKotor implementation: self.ui.iconLabel.setToolTip(self._generate_icon_tooltip(as_html=True))
             if (_iconLabel != null)
             {
                 string tooltip = GenerateIconTooltip(true);
@@ -1319,8 +1218,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:332-352
-        // Original: def _generate_icon_tooltip(self, *, as_html: bool = False) -> str:
         private string GenerateIconTooltip(bool asHtml = false)
         {
             if (_installation == null)
@@ -1328,30 +1225,22 @@ namespace OdyTools.Editors
                 return "";
             }
 
-            // Matching PyKotor implementation: base_item: int = self.ui.baseSelect.currentIndex()
             int baseItem = _baseSelect?.SelectedIndex ?? 0;
             
-            // Matching PyKotor implementation: model_variation: int = self.ui.modelVarSpin.value()
             int modelVariation = _modelVarSpin?.Value != null ? (int)_modelVarSpin.Value : 0;
             
-            // Matching PyKotor implementation: texture_variation: int = self.ui.textureVarSpin.value()
             int textureVariation = _textureVarSpin?.Value != null ? (int)_textureVarSpin.Value : 0;
 
-            // Matching PyKotor implementation: base_item_name: str = self._installation.get_item_base_name(base_item)
             string baseItemName = _installation.GetItemBaseName(baseItem);
             
-            // Matching PyKotor implementation: model_var_name: str = self._installation.get_model_var_name(model_variation)
             string modelVarName = _installation.GetModelVarName(modelVariation);
             
-            // Matching PyKotor implementation: texture_var_name: str = self._installation.get_texture_var_name(texture_variation)
             string textureVarName = _installation.GetTextureVarName(textureVariation);
             
-            // Matching PyKotor implementation: icon_path: str = self._installation.get_item_icon_path(base_item, model_variation, texture_variation)
             string iconPath = _installation.GetItemIconPath(baseItem, modelVariation, textureVariation);
 
             if (asHtml)
             {
-                // Matching PyKotor implementation: tooltip = f"<b>Base Item:</b> {base_item_name} (ID: {base_item})<br>" ...
                 return $"<b>Base Item:</b> {baseItemName} (ID: {baseItem})<br>" +
                        $"<b>Model Variation:</b> {modelVarName} (ID: {modelVariation})<br>" +
                        $"<b>Texture Variation:</b> {textureVarName} (ID: {textureVariation})<br>" +
@@ -1359,7 +1248,6 @@ namespace OdyTools.Editors
             }
             else
             {
-                // Matching PyKotor implementation: tooltip = f"Base Item: {base_item_name} (ID: {base_item})\n" ...
                 return $"Base Item: {baseItemName} (ID: {baseItem})\n" +
                        $"Model Variation: {modelVarName} (ID: {modelVariation})\n" +
                        $"Texture Variation: {textureVarName} (ID: {textureVariation})\n" +
@@ -1367,8 +1255,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:106-154
-        // Original: def _setup_installation(self, installation):
         private void SetupInstallation(OdyInstallation installation)
         {
             if (installation == null)
@@ -1388,11 +1274,9 @@ namespace OdyTools.Editors
                 _descEdit.SetInstallation(installation);
             }
 
-            // Matching PyKotor implementation: required: list[str] = [OdyInstallation.TwoDA_BASEITEMS, OdyInstallation.TwoDA_ITEM_PROPERTIES]
             var required = new List<string> { OdyInstallation.TwoDABaseitems, OdyInstallation.TwoDAItemProperties };
             installation.HtBatchCache2DA(required);
 
-            // Matching PyKotor implementation: baseitems: TwoDA | None = installation.ht_get_cache_2da(OdyInstallation.TwoDA_BASEITEMS)
             TwoDA baseitems = installation.HtGetCache2DA(OdyInstallation.TwoDABaseitems);
             if (baseitems == null)
             {
@@ -1400,7 +1284,6 @@ namespace OdyTools.Editors
             }
             else
             {
-                // Matching PyKotor implementation: self.ui.baseSelect.set_items(baseitems.get_column("label"))
                 if (_baseSelect != null)
                 {
                     _baseSelect.Items.Clear();
@@ -1412,7 +1295,6 @@ namespace OdyTools.Editors
                 }
             }
 
-            // Matching PyKotor implementation: self.ui.availablePropertyList.clear()
             if (_availablePropertyList == null)
             {
                 System.Console.WriteLine("AvailablePropertyList is null - cannot populate properties");
@@ -1421,7 +1303,6 @@ namespace OdyTools.Editors
 
             _availablePropertyList.Items.Clear();
 
-            // Matching PyKotor implementation: item_properties: TwoDA | None = installation.ht_get_cache_2da(OdyInstallation.TwoDA_ITEM_PROPERTIES)
             TwoDA itemProperties = installation.HtGetCache2DA(OdyInstallation.TwoDAItemProperties);
             if (itemProperties == null)
             {
@@ -1431,13 +1312,10 @@ namespace OdyTools.Editors
 
             if (itemProperties != null)
             {
-                // Matching PyKotor implementation: for i in range(item_properties.get_height()):
                 for (int i = 0; i < itemProperties.GetHeight(); i++)
                 {
-                    // Matching PyKotor implementation: prop_name: str = OdyToolUTI.property_name(installation, i)
                     string propName = GetPropertyName(installation, i);
                     
-                    // Matching PyKotor implementation: item = QTreeWidgetItem([prop_name])
                     var item = new TreeViewItem
                     {
                         Header = propName
@@ -1445,7 +1323,6 @@ namespace OdyTools.Editors
                     // Store property index and subproperty index in Tag (using a simple object)
                     item.Tag = new PropertyTreeItemData { PropertyIndex = i, SubPropertyIndex = i };
 
-                    // Matching PyKotor implementation: subtype_resname: str = item_properties.get_cell(i, "subtyperesref")
                     string subtypeResname = itemProperties.GetCellString(i, "subtyperesref") ?? "";
                     if (string.IsNullOrEmpty(subtypeResname))
                     {
@@ -1457,7 +1334,6 @@ namespace OdyTools.Editors
                         continue;
                     }
 
-                    // Matching PyKotor implementation: subtype: TwoDA | None = installation.ht_get_cache_2da(subtype_resname)
                     TwoDA subtype = installation.HtGetCache2DA(subtypeResname);
                     if (subtype == null)
                     {
@@ -1469,25 +1345,19 @@ namespace OdyTools.Editors
                         continue;
                     }
 
-                    // Matching PyKotor implementation: for j in range(subtype.get_height()):
                     var childItems = new List<TreeViewItem>();
                     for (int j = 0; j < subtype.GetHeight(); j++)
                     {
-                        // Matching PyKotor implementation: name: None | str = OdyToolUTI.subproperty_name(installation, i, j)
                         string name = GetSubpropertyName(installation, i, j);
                         if (string.IsNullOrEmpty(name) || string.IsNullOrWhiteSpace(name))
                         {
-                            // Matching PyKotor implementation: if not name or not name.strip(): continue
                             continue;
                         }
 
-                        // Matching PyKotor implementation: child = QTreeWidgetItem([name])
                         var child = new TreeViewItem
                         {
                             Header = name
                         };
-                        // Matching PyKotor implementation: child.setData(0, Qt.ItemDataRole.UserRole, i)
-                        // Matching PyKotor implementation: child.setData(0, Qt.ItemDataRole.UserRole + 1, j)
                         child.Tag = new PropertyTreeItemData { PropertyIndex = i, SubPropertyIndex = j };
                         childItems.Add(child);
                     }
@@ -1507,11 +1377,8 @@ namespace OdyTools.Editors
             public int SubPropertyIndex { get; set; }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:451-464
-        // Original: @staticmethod def property_name(installation: OdyInstallation, prop: int) -> str:
         public static string GetPropertyName(OdyInstallation installation, int prop)
         {
-            // Matching PyKotor implementation: properties: TwoDA | None = installation.ht_get_cache_2da(OdyInstallation.TwoDA_ITEM_PROPERTIES)
             TwoDA properties = installation.HtGetCache2DA(OdyInstallation.TwoDAItemProperties);
             if (properties == null)
             {
@@ -1519,7 +1386,6 @@ namespace OdyTools.Editors
                 return "Unknown";
             }
 
-            // Matching PyKotor implementation: stringref: int | None = properties.get_row(prop).get_integer("name")
             TwoDARow row = properties.GetRow(prop);
             int? stringrefNullable = row.GetInteger("name");
             if (!stringrefNullable.HasValue)
@@ -1529,16 +1395,12 @@ namespace OdyTools.Editors
             }
             int stringref = stringrefNullable.Value;
 
-            // Matching PyKotor implementation: return installation.talktable().string(stringref)
             return installation.GetStringFromStringRef(stringref);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:466-485
-        // Original: @staticmethod def subproperty_name(installation: OdyInstallation, prop: int, subprop: int) -> None | str:
         [CanBeNull]
         public static string GetSubpropertyName(OdyInstallation installation, int prop, int subprop)
         {
-            // Matching PyKotor implementation: properties: TwoDA | None = installation.ht_get_cache_2da(OdyInstallation.TwoDA_ITEM_PROPERTIES)
             TwoDA properties = installation.HtGetCache2DA(OdyInstallation.TwoDAItemProperties);
             if (properties == null)
             {
@@ -1546,7 +1408,6 @@ namespace OdyTools.Editors
                 return null;
             }
 
-            // Matching PyKotor implementation: subtype_resname: str | None = properties.get_cell(prop, "subtyperesref")
             TwoDARow propRow = properties.GetRow(prop);
             string subtypeResname = propRow.GetString("subtyperesref") ?? "";
             if (string.IsNullOrEmpty(subtypeResname))
@@ -1555,26 +1416,21 @@ namespace OdyTools.Editors
                 return null;
             }
 
-            // Matching PyKotor implementation: subproperties: TwoDA | None = installation.ht_get_cache_2da(subtype_resname)
             TwoDA subproperties = installation.HtGetCache2DA(subtypeResname);
             if (subproperties == null)
             {
                 return null;
             }
 
-            // Matching PyKotor implementation: header_strref: Literal["name", "string_ref"] = "name" if "name" in subproperties.get_headers() else "string_ref"
             string headerStrref = subproperties.GetHeaders().Contains("name") ? "name" : "string_ref";
 
-            // Matching PyKotor implementation: name_strref: int | None = subproperties.get_row(subprop).get_integer(header_strref)
             TwoDARow subpropRow = subproperties.GetRow(subprop);
             int? nameStrrefNullable = subpropRow.GetInteger(headerStrref);
             if (nameStrrefNullable.HasValue)
             {
-                // Matching PyKotor implementation: return installation.talktable().string(name_strref)
                 return installation.GetStringFromStringRef(nameStrrefNullable.Value);
             }
 
-            // Matching PyKotor implementation: return subproperties.get_cell(subprop, "label") if name_strref is None else installation.talktable().string(name_strref)
             return subpropRow.GetString("label") ?? "";
         }
 
@@ -1590,13 +1446,8 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:437-441
-        // Original: def on_available_property_list_double_clicked(self):
         private void OnAvailablePropertyListDoubleClicked()
         {
-            // Matching PyKotor implementation: for item in self.ui.availablePropertyList.selectedItems():
-            // Matching PyKotor implementation:     if item.childCount() != 0: continue
-            // Matching PyKotor implementation:     self.add_selected_property()
             if (_availablePropertyList?.SelectedItem is TreeViewItem selectedItem)
             {
                 // Check if it's a leaf node (no children)
@@ -1610,20 +1461,13 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:443-444
-        // Original: def on_assigned_property_list_double_clicked(self):
         private async void OnAssignedPropertyListDoubleClicked()
         {
-            // Matching PyKotor implementation: self.edit_selected_property()
             await EditSelectedProperty();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:446-449
-        // Original: def on_del_shortcut(self):
         private void OnDelShortcut()
         {
-            // Matching PyKotor implementation: if not self.ui.assignedPropertiesList.hasFocus(): return
-            // Matching PyKotor implementation: self.remove_selected_property()
             if (_assignedPropertiesList != null && _assignedPropertiesList.IsFocused)
             {
                 RemoveSelectedProperty();

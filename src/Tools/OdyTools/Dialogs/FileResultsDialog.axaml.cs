@@ -13,19 +13,13 @@ using FileResource = BioWare.Extract.FileResource;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:194
-    // Original: class FileResults(QDialog):
     public partial class FileResultsDialog : Window
     {
         private OdyInstallation _installation;
         private FileResource _selection;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:227-228
-        // Original: self.ui = Ui_Dialog(); self.ui.setupUi(self)
         public FileResultsDialogUi Ui { get; private set; }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:195
-        // Original: sig_searchresults_selected = Signal(FileResource)
         public event Action<FileResource> SearchResultsSelected;
 
         // Public parameterless constructor for XAML
@@ -33,8 +27,6 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:197-252
-        // Original: def __init__(self, parent, results, installation):
         public FileResultsDialog(Window parent, IEnumerable<FileResource> results, OdyInstallation installation)
         {
             InitializeComponent();
@@ -98,8 +90,6 @@ namespace OdyTools.Dialogs
                 return;
             }
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:227-228
-            // Original: self.ui = Ui_Dialog(); self.ui.setupUi(self)
             // Find all controls from XAML and expose via Ui property
             // Use try-catch to handle cases where XAML controls might not be available (e.g., in tests)
             Ui = new FileResultsDialogUi();
@@ -131,8 +121,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:243-252
-        // Original: Populate results list
         private void PopulateResults(IEnumerable<FileResource> results)
         {
             if (Ui?.ResultList == null)
@@ -167,8 +155,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:254-271
-        // Original: def accept(self):
         public void Accept()
         {
             if (Ui?.ResultList?.SelectedItem is FileResourceResultItem item)
@@ -179,15 +165,12 @@ namespace OdyTools.Dialogs
             Close();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:273-297
-        // Original: def open(self):
         private void Open()
         {
             if (Ui?.ResultList?.SelectedItem is FileResourceResultItem item)
             {
                 FileResource resource = item.Resource;
                 
-                // Matching PyKotor: open_resource_editor(resource, installation=self.installation, parent_window=self.window().parent())
                 // Note: PyKotor's open() method does NOT emit the signal - only accept() does
                 // Note: Dialog does NOT close on open (unlike accept method) - matches PyKotor behavior
                 Window parentWindow = this.Parent as Window ?? this;
@@ -202,8 +185,6 @@ namespace OdyTools.Dialogs
         public FileResource Selection => _selection;
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:227-228
-    // Original: self.ui = Ui_Dialog() - UI wrapper class exposing all controls
     public class FileResultsDialogUi
     {
         public ListBox ResultList { get; set; }

@@ -1,0 +1,64 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="OdyTools.Dialogs.DLGSettingsDialog"
+        Title="DLG Settings"
+        Width="620"
+        Height="520"
+        MinWidth="500"
+        MinHeight="400"
+        WindowStartupLocation="CenterOwner"
+        RequestedThemeVariant="Light">
+  <Window.Styles>
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#F3F5F9" />
+    </Style>
+    <Style Selector="TextBlock.error">
+      <Setter Property="Foreground" Value="#C5221F" />
+    </Style>
+  </Window.Styles>
+  <Grid RowDefinitions="*,Auto">
+    <ScrollViewer Grid.Row="0" Margin="10">
+      <StackPanel Spacing="12">
+        <TextBlock Text="Configure how the DLG editor gets TLK and 2DA data. Choose an installation and/or set manual paths; both can be set at once. The selected installation is used first; manual paths are used when no installation is selected or as fallback for specific files."
+                   TextWrapping="Wrap" MaxWidth="560" />
+        <!-- Installation selector (single source; no separate "mode" combo) -->
+        <StackPanel Spacing="6">
+          <TextBlock Text="Installation (from main OdyTools settings):" FontWeight="Bold" />
+          <ComboBox x:Name="installationCombo" MinWidth="300" />
+          <TextBlock Text="(None) = use only manual paths below. Manual paths are also used as fallback when the installation is missing a file."
+                     TextWrapping="Wrap" FontSize="12" Foreground="#555" MaxWidth="560" Margin="0,0,0,4" />
+        </StackPanel>
+        <!-- Manual TLK/2DA paths (always visible; no duplicated logic) -->
+        <StackPanel Spacing="8">
+          <TextBlock Text="Manual paths (TLK and 2DA):" FontWeight="Bold" />
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="0,4,0,0">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="TLK (dialog.tlk):" VerticalAlignment="Center" Margin="0,0,8,4" />
+            <TextBox Grid.Row="0" Grid.Column="1" x:Name="tlkPathEdit" Watermark="Full path to dialog.tlk" Margin="0,0,0,4" />
+            <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" x:Name="tlkBrowseBtn" Content="Browse for dialog.tlk..." HorizontalAlignment="Left" Margin="0,0,0,8" />
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Female TLK (dialogf.tlk):" VerticalAlignment="Center" Margin="0,0,8,4" />
+            <TextBox Grid.Row="2" Grid.Column="1" x:Name="femaleTlkPathEdit" Watermark="Optional" Margin="0,0,0,4" />
+            <Button Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" x:Name="femaleTlkBrowseBtn" Content="Browse for dialogf.tlk..." HorizontalAlignment="Left" Margin="0,0,0,8" />
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="2DA directory:" VerticalAlignment="Center" Margin="0,0,8,4" />
+            <TextBox Grid.Row="4" Grid.Column="1" x:Name="override2DADirEdit" Watermark="Folder containing dialoganimations.2da, emotions.2da, etc." Margin="0,0,0,4" />
+            <Button Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" x:Name="twoDADirBrowseBtn" Content="Browse for 2DA folder..." HorizontalAlignment="Left" Margin="0,0,0,8" />
+            <TextBlock Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Text="Optional: override specific 2DA files (leave empty to use directory above):" FontWeight="SemiBold" Margin="0,8,0,4" />
+            <TextBlock Grid.Row="7" Grid.Column="0" Text="dialoganimations.2da:" VerticalAlignment="Center" Margin="0,0,8,4" />
+            <TextBox Grid.Row="7" Grid.Column="1" x:Name="pathDialogAnimsEdit" Watermark="Optional full path" Margin="0,0,0,4" />
+            <TextBlock Grid.Row="8" Grid.Column="0" Text="emotions.2da:" VerticalAlignment="Center" Margin="0,0,8,4" />
+            <TextBox Grid.Row="8" Grid.Column="1" x:Name="pathEmotionsEdit" Watermark="Optional full path" Margin="0,0,0,4" />
+            <TextBlock Grid.Row="9" Grid.Column="0" Text="expressions.2da:" VerticalAlignment="Center" Margin="0,0,8,4" />
+            <TextBox Grid.Row="9" Grid.Column="1" x:Name="pathExpressionsEdit" Watermark="Optional full path" Margin="0,0,0,4" />
+            <TextBlock Grid.Row="10" Grid.Column="0" Text="videoeffects.2da:" VerticalAlignment="Center" Margin="0,0,8,4" />
+            <TextBox Grid.Row="10" Grid.Column="1" x:Name="pathVideoEffectsEdit" Watermark="Optional full path" Margin="0,0,0,4" />
+            <TextBlock Grid.Row="11" Grid.Column="0" Text="plot.2da:" VerticalAlignment="Center" Margin="0,0,8,4" />
+            <TextBox Grid.Row="11" Grid.Column="1" x:Name="pathPlotEdit" Watermark="Optional full path" Margin="0,0,0,4" />
+          </Grid>
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="10">
+      <Button x:Name="okButton" Content="OK" Width="80" />
+      <Button x:Name="cancelButton" Content="Cancel" Width="80" />
+    </StackPanel>
+  </Grid>
+</Window>

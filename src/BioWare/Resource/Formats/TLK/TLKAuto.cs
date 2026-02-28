@@ -1,5 +1,9 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.Json;
+using System.Xml.Linq;
 using BioWare.Common;
 using BioWare.Resource;
 
@@ -18,15 +22,57 @@ namespace BioWare.Resource.Formats.TLK
         /// </summary>
         public static void WriteTlk(TLK tlk, string target, ResourceType fileFormat)
         {
+            if (tlk == null) throw new ArgumentNullException(nameof(tlk));
+            if (string.IsNullOrWhiteSpace(target)) throw new ArgumentNullException(nameof(target));
+
             if (fileFormat == ResourceType.TLK)
             {
                 var writer = new TLKBinaryWriter(tlk);
                 byte[] data = writer.Write();
                 File.WriteAllBytes(target, data);
             }
+            else if (fileFormat == ResourceType.TLK_JSON)
+            {
+                var payload = new TlkSerializableModel
+                {
+                    Language = tlk.Language.ToString(),
+                    Entries = tlk.Entries.Select(e => new TlkSerializableEntry
+                    {
+                        Text = e.Text ?? string.Empty,
+                        Voiceover = e.Voiceover?.ToString() ?? string.Empty,
+                        TextPresent = e.TextPresent,
+                        SoundPresent = e.SoundPresent,
+                        SoundLengthPresent = e.SoundLengthPresent,
+                        SoundLength = e.SoundLength
+                    }).ToList()
+                };
+                var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(target, json, Encoding.UTF8);
+            }
+            else if (fileFormat == ResourceType.TLK_XML)
+            {
+                var doc = new XDocument(
+                    new XElement("tlk",
+                        new XAttribute("language", tlk.Language.ToString()),
+                        new XElement("entries",
+                            tlk.Entries.Select((e, i) =>
+                                new XElement("entry",
+                                    new XAttribute("id", i),
+                                    new XAttribute("voiceover", e.Voiceover?.ToString() ?? string.Empty),
+                                    new XAttribute("textPresent", e.TextPresent),
+                                    new XAttribute("soundPresent", e.SoundPresent),
+                                    new XAttribute("soundLengthPresent", e.SoundLengthPresent),
+                                    new XAttribute("soundLength", e.SoundLength),
+                                    new XElement("text", e.Text ?? string.Empty)
+                                ))
+                        )
+                    )
+                );
+                doc.Save(target);
+            }
             else
             {
-                throw new ArgumentException("Unsupported format specified; use TLK or TLK_XML.");
+                throw new ArgumentException("Unsupported format specified; use TLK, TLK_XML, or TLK_JSON.", nameof(fileFormat));
             }
         }
 
@@ -36,8 +82,57 @@ namespace BioWare.Resource.Formats.TLK
         /// </summary>
         public static byte[] BytesTlk(TLK tlk, ResourceType fileFormat)
         {
-            var writer = new TLKBinaryWriter(tlk);
-            return writer.Write();
+            if (tlk == null) throw new ArgumentNullException(nameof(tlk));
+
+            if (fileFormat == null || fileFormat == ResourceType.TLK)
+            {
+                var writer = new TLKBinaryWriter(tlk);
+                return writer.Write();
+            }
+            if (fileFormat == ResourceType.TLK_JSON)
+            {
+                var payload = new TlkSerializableModel
+                {
+                    Language = tlk.Language.ToString(),
+                    Entries = tlk.Entries.Select(e => new TlkSerializableEntry
+                    {
+                        Text = e.Text ?? string.Empty,
+                        Voiceover = e.Voiceover?.ToString() ?? string.Empty,
+                        TextPresent = e.TextPresent,
+                        SoundPresent = e.SoundPresent,
+                        SoundLengthPresent = e.SoundLengthPresent,
+                        SoundLength = e.SoundLength
+                    }).ToList()
+                };
+                return Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true }));
+            }
+            if (fileFormat == ResourceType.TLK_XML)
+            {
+                var doc = new XDocument(
+                    new XElement("tlk",
+                        new XAttribute("language", tlk.Language.ToString()),
+                        new XElement("entries",
+                            tlk.Entries.Select((e, i) =>
+                                new XElement("entry",
+                                    new XAttribute("id", i),
+                                    new XAttribute("voiceover", e.Voiceover?.ToString() ?? string.Empty),
+                                    new XAttribute("textPresent", e.TextPresent),
+                                    new XAttribute("soundPresent", e.SoundPresent),
+                                    new XAttribute("soundLengthPresent", e.SoundLengthPresent),
+                                    new XAttribute("soundLength", e.SoundLength),
+                                    new XElement("text", e.Text ?? string.Empty)
+                                ))
+                        )
+                    )
+                );
+                using (var ms = new MemoryStream())
+                {
+                    doc.Save(ms);
+                    return ms.ToArray();
+                }
+            }
+
+            throw new ArgumentException("Unsupported format specified; use TLK, TLK_XML, or TLK_JSON.", nameof(fileFormat));
         }
 
         /// <summary>
@@ -54,17 +149,159 @@ namespace BioWare.Resource.Formats.TLK
         /// </summary>
         public static TLK ReadTlk(object source)
         {
-            if (source is string filepath)
+            return ReadTlk(source, null);
+        }
+
+        /// <summary>
+        /// Reads a TLK file from file path, byte array, or stream in TLK/TLK_XML/TLK_JSON format.
+        /// </summary>
+        public static TLK ReadTlk(object source, ResourceType fileFormat)
+        {
+            ResourceType format = ResolveFormat(source, fileFormat);
+            if (format == ResourceType.TLK)
             {
-                var reader = new TLKBinaryReader(filepath);
-                return reader.Load();
+                if (source is string filepath)
+                {
+                    var reader = new TLKBinaryReader(filepath);
+                    return reader.Load();
+                }
+                if (source is byte[] data)
+                {
+                    var reader = new TLKBinaryReader(data);
+                    return reader.Load();
+                }
+                if (source is Stream stream)
+                {
+                    using (var ms = new MemoryStream())
+                    {
+                        stream.CopyTo(ms);
+                        var reader = new TLKBinaryReader(ms.ToArray());
+                        return reader.Load();
+                    }
+                }
             }
-            if (source is byte[] data)
+            else if (format == ResourceType.TLK_JSON)
             {
-                var reader = new TLKBinaryReader(data);
-                return reader.Load();
+                string json = ReadText(source);
+                var model = JsonSerializer.Deserialize<TlkSerializableModel>(json) ?? new TlkSerializableModel();
+                return DeserializeModel(model);
             }
-            throw new ArgumentException("Source must be string or byte[]");
+            else if (format == ResourceType.TLK_XML)
+            {
+                string xml = ReadText(source);
+                var doc = XDocument.Parse(xml);
+                var root = doc.Root;
+                var model = new TlkSerializableModel
+                {
+                    Language = root?.Attribute("language")?.Value ?? Language.English.ToString()
+                };
+                var entries = root?.Element("entries")?.Elements("entry") ?? Enumerable.Empty<XElement>();
+                foreach (var entry in entries)
+                {
+                    model.Entries.Add(new TlkSerializableEntry
+                    {
+                        Text = entry.Element("text")?.Value ?? string.Empty,
+                        Voiceover = entry.Attribute("voiceover")?.Value ?? string.Empty,
+                        TextPresent = ParseBool(entry.Attribute("textPresent")?.Value, true),
+                        SoundPresent = ParseBool(entry.Attribute("soundPresent")?.Value, true),
+                        SoundLengthPresent = ParseBool(entry.Attribute("soundLengthPresent")?.Value, true),
+                        SoundLength = ParseFloat(entry.Attribute("soundLength")?.Value, 0f)
+                    });
+                }
+                return DeserializeModel(model);
+            }
+
+            throw new ArgumentException("Source must be string, byte[], or Stream");
+        }
+
+        private static ResourceType ResolveFormat(object source, ResourceType explicitFormat)
+        {
+            if (explicitFormat != null)
+            {
+                return explicitFormat;
+            }
+
+            if (source is string path)
+            {
+                if (path.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) return ResourceType.TLK_JSON;
+                if (path.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)) return ResourceType.TLK_XML;
+                return ResourceType.TLK;
+            }
+
+            if (source is byte[] data && data.Length > 0)
+            {
+                byte first = data.FirstOrDefault(b => !char.IsWhiteSpace((char)b));
+                if (first == (byte)'{') return ResourceType.TLK_JSON;
+                if (first == (byte)'<') return ResourceType.TLK_XML;
+                return ResourceType.TLK;
+            }
+
+            return ResourceType.TLK;
+        }
+
+        private static string ReadText(object source)
+        {
+            if (source is string path) return File.ReadAllText(path, Encoding.UTF8);
+            if (source is byte[] bytes) return Encoding.UTF8.GetString(bytes);
+            if (source is Stream stream)
+            {
+                using (var sr = new StreamReader(stream, Encoding.UTF8, true, 1024, leaveOpen: true))
+                {
+                    return sr.ReadToEnd();
+                }
+            }
+            throw new ArgumentException("Source must be string, byte[], or Stream");
+        }
+
+        private static TLK DeserializeModel(TlkSerializableModel model)
+        {
+            Language language = Language.English;
+            if (!string.IsNullOrWhiteSpace(model.Language))
+            {
+                Enum.TryParse(model.Language, true, out language);
+            }
+            var tlk = new TLK(language);
+            foreach (var entry in model.Entries)
+            {
+                var tlkEntry = new TLKEntry(entry.Text ?? string.Empty, new ResRef(entry.Voiceover ?? string.Empty))
+                {
+                    TextPresent = entry.TextPresent,
+                    SoundPresent = entry.SoundPresent,
+                    SoundLengthPresent = entry.SoundLengthPresent,
+                    SoundLength = entry.SoundLength
+                };
+                tlk.Entries.Add(tlkEntry);
+            }
+            return tlk;
+        }
+
+        private static bool ParseBool(string value, bool defaultValue)
+        {
+            bool parsed;
+            return bool.TryParse(value, out parsed) ? parsed : defaultValue;
+        }
+
+        private static float ParseFloat(string value, float defaultValue)
+        {
+            float parsed;
+            return float.TryParse(value, out parsed) ? parsed : defaultValue;
+        }
+
+        private sealed class TlkSerializableModel
+        {
+            public string Language { get; set; } = "English";
+            public System.Collections.Generic.List<TlkSerializableEntry> Entries { get; set; } =
+                new System.Collections.Generic.List<TlkSerializableEntry>();
+        }
+
+        private sealed class TlkSerializableEntry
+        {
+            public string Text { get; set; } = string.Empty;
+            public string Voiceover { get; set; } = string.Empty;
+            public bool TextPresent { get; set; } = true;
+            public bool SoundPresent { get; set; } = true;
+            public bool SoundLengthPresent { get; set; } = true;
+            public float SoundLength { get; set; }
         }
     }
 }

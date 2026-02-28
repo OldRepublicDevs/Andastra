@@ -185,7 +185,11 @@ namespace Andastra.Runtime.Core.Video
             {
                 // Create temporary file for BIK data
                 tempMoviePath = Path.Combine(Path.GetTempPath(), string.Format("andastra_movie_{0}.bik", Guid.NewGuid().ToString("N")));
+#if NET48 || NET462
+                await System.Threading.Tasks.Task.Run(() => File.WriteAllBytes(tempMoviePath, movieData));
+#else
                 await File.WriteAllBytesAsync(tempMoviePath, movieData);
+#endif
 
                 // Create BIK decoder
                 // Based on k1_win_gog_swkotor.exe: 0x004053e0 @ 0x004053e0 (movie initialization)

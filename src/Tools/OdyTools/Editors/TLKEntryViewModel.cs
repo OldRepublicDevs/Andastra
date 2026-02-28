@@ -5,8 +5,6 @@ using BioWare.Resource.Formats.TLK;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py
-    // Original: QStandardItem model with text and sound columns
     public class TLKEntryViewModel : INotifyPropertyChanged
     {
         private string _text;

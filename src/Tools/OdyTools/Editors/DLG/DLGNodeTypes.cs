@@ -7,7 +7,6 @@ namespace OdyTools.Editors.DLG
 {
     /// <summary>
     /// Categories of dialogue nodes.
-    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/node_types.py:14-20
     /// </summary>
     public enum NodeCategory
     {
@@ -18,7 +17,6 @@ namespace OdyTools.Editors.DLG
 
     /// <summary>
     /// Visual styles for nodes.
-    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/node_types.py:22-31
     /// </summary>
     public enum NodeStyle
     {
@@ -32,7 +30,6 @@ namespace OdyTools.Editors.DLG
 
     /// <summary>
     /// Rule for validating node connections.
-    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/node_types.py:33-40
     /// </summary>
     public class NodeValidationRule
     {
@@ -44,7 +41,6 @@ namespace OdyTools.Editors.DLG
 
     /// <summary>
     /// Metadata about a node type.
-    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/node_types.py:43-54
     /// </summary>
     public class NodeTypeInfo
     {
@@ -60,7 +56,6 @@ namespace OdyTools.Editors.DLG
 
     /// <summary>
     /// Registry of available node types and validation rules.
-    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/node_types.py:57-254
     /// </summary>
     public static class NodeTypes
     {
@@ -151,7 +146,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Get type information for a node category.
-        /// Matching PyKotor: @classmethod def get_type_info(cls, category: NodeCategory) -> NodeTypeInfo
         /// </summary>
         public static NodeTypeInfo GetTypeInfo(NodeCategory category)
         {
@@ -160,7 +154,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Validate a connection between two nodes.
-        /// Matching PyKotor: @classmethod def validate_connection(cls, source_node: DLGNode, target_node: DLGNode) -> tuple[bool, str]
         /// </summary>
         public static (bool isValid, string errorMessage) ValidateConnection(DLGNode sourceNode, DLGNode targetNode)
         {
@@ -207,7 +200,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Validate a node's current state.
-        /// Matching PyKotor: @classmethod def validate_node(cls, node: DLGNode) -> tuple[bool, list[str]]
         /// </summary>
         public static (bool isValid, List<string> errors) ValidateNode(DLGNode node)
         {
@@ -253,7 +245,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Determine the category of a node.
-        /// Matching PyKotor: @classmethod def get_node_category(cls, node: DLGNode) -> NodeCategory
         /// </summary>
         public static NodeCategory GetNodeCategory(DLGNode node)
         {
@@ -270,7 +261,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Get the visual style for a node.
-        /// Matching PyKotor: @classmethod def get_node_style(cls, node: DLGNode, link: DLGLink | None = None) -> NodeStyle
         /// </summary>
         public static NodeStyle GetNodeStyle(DLGNode node, DLGLink link = null)
         {

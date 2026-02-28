@@ -85,8 +85,8 @@
                 <MenuItem Header="_Go to Struct ID..." Name="actionGoToStructId" HotKey="Ctrl+G" />
             </MenuItem>
             <MenuItem Header="_View">
-                <MenuItem Header="Zoom _In" Name="actionZoomIn" HotKey="Ctrl+Plus" />
-                <MenuItem Header="Zoom _Out" Name="actionZoomOut" HotKey="Ctrl+Minus" />
+                <MenuItem Header="Zoom _In" Name="actionZoomIn" HotKey="Ctrl+OemPlus" />
+                <MenuItem Header="Zoom _Out" Name="actionZoomOut" HotKey="Ctrl+OemMinus" />
                 <MenuItem Header="_Normal Size" Name="actionZoomNormal" HotKey="Ctrl+0" />
                 <Separator />
                 <MenuItem Header="Search _Actions..." Name="actionSearchActions" HotKey="Ctrl+Shift+P" />
@@ -129,16 +129,16 @@
             <Grid Name="rightPanel" Grid.Column="1" RowDefinitions="Auto,Auto,*" Margin="0" MinWidth="220">
                 <!-- Properties header -->
                 <Border Grid.Row="0" Background="#E8EAED" BorderBrush="#D7DBE6" BorderThickness="0,0,0,1" Padding="8,6">
-                    <TextBlock Text="Properties" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center" Foreground="#202124" />
+                    <TextBlock Name="propertiesHeader" Text="Properties" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center" Foreground="#202124" />
                 </Border>
                 <Border Name="fieldBox" Grid.Row="1" BorderBrush="#D7DBE6" BorderThickness="1" Padding="10" Margin="6,6,6,10" IsEnabled="False" Background="#FAFBFC" CornerRadius="4">
                     <Grid RowDefinitions="Auto,Auto">
                         <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,5">
-                            <TextBlock Text="Label:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#202124" />
+                            <TextBlock Name="labelLabel" Text="Label:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#202124" />
                             <TextBox Name="labelEdit" Grid.Column="1" MaxLength="16" Foreground="#202124" />
                         </Grid>
                         <Grid Grid.Row="1" ColumnDefinitions="Auto,*">
-                            <TextBlock Text="Type:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#202124" />
+                            <TextBlock Name="typeLabel" Text="Type:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#202124" />
                             <ComboBox Name="typeCombo" Grid.Column="1" Foreground="#202124">
                                 <ComboBoxItem Content="UInt8" />
                                 <ComboBoxItem Content="Int8" />
@@ -172,7 +172,7 @@
             <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Name="statusText" Text="OdyToolGFF" VerticalAlignment="Center" Grid.Column="0" Foreground="#202124" />
                 <StackPanel Orientation="Horizontal" Spacing="8" Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Text="Zoom:" VerticalAlignment="Center" Foreground="#3C4043" Margin="0,0,4,0" />
+                    <TextBlock Name="zoomLabel" Text="Zoom:" VerticalAlignment="Center" Foreground="#3C4043" Margin="0,0,4,0" />
                     <ComboBox Name="zoomCombo" MinWidth="72" />
                 </StackPanel>
             </Grid>

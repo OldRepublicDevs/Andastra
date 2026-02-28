@@ -1717,7 +1717,6 @@ namespace BioWare.Tools
 
             // Write all models (MDL/MDX) that aren't components or skyboxes
             // This ensures we extract all models referenced by the module, not just room components
-            // Reference: Tools/HolocronToolset/src/toolset/gui/windows/main.py extractAllModuleModels
             string modelsDir = Path.Combine(kitDir, "models");
             Directory.CreateDirectory(modelsDir);
             foreach (var kvp in allModels)

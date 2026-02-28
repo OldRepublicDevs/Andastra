@@ -4,14 +4,14 @@ using System.IO;
 namespace KotorDiff
 {
     /// <summary>
-    /// Path extension methods that work on all target frameworks (e.g. net472 and net9.0).
+    /// Path extension methods that work on all target frameworks (e.g. net48 and net9.0).
     /// Use these instead of Path.GetRelativePath so the same API works on .NET Framework.
     /// </summary>
     internal static class PathExtensions
     {
         /// <summary>
         /// Returns a relative path from <paramref name="basePath"/> to <paramref name="path"/>.
-        /// Same semantics as Path.GetRelativePath; provided as an extension for net472 compatibility.
+        /// Same semantics as Path.GetRelativePath; provided as an extension for net48 compatibility.
         /// </summary>
         public static string GetRelativePath(this string basePath, string path)
         {

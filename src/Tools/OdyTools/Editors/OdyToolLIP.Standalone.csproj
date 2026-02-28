@@ -1,49 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="Standalone\OdyTools.Standalone.Editor.props" />
   <PropertyGroup>
+    <OdyToolsStandaloneDefine>LIP_STANDALONE</OdyToolsStandaloneDefine>
     <_OdyToolsRoot>$([System.IO.Path]::GetDirectoryName('$(MSBuildProjectDirectory)'))</_OdyToolsRoot>
   </PropertyGroup>
-  <PropertyGroup>
-    <LangVersion>7.3</LangVersion>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
-    <Platforms>x86;x64;arm64</Platforms>
-    <UseAppHost>true</UseAppHost>
-    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <IsPackable>false</IsPackable>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
-    <TargetFrameworks>net9.0;net472</TargetFrameworks>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <OutputType>WinExe</OutputType>
-    <Nullable>disable</Nullable>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(RuntimeIdentifier)'=='' OR $(RuntimeIdentifier.StartsWith('win'))">
-    <OutputType>WinExe</OutputType>
-  </PropertyGroup>
-  <PropertyGroup Condition="!$(RuntimeIdentifier.StartsWith('win')) AND '$(RuntimeIdentifier)'!=''">
-    <OutputType>Exe</OutputType>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject>OdyTools.Editors.Standalone.EditorStandaloneHost.EditorStandaloneProgram</StartupObject>
-    <DefineConstants>$(DefineConstants);LIP_STANDALONE</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
-    <AppConfig>$(MSBuildProjectDirectory)\app.config</AppConfig>
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\BioWare\BioWare.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Markdig" Version="0.44.0" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
-  </ItemGroup>
+  <Import Project="Standalone\OdyTools.Standalone.Editor.props" />
   <ItemGroup>
     <Compile Include="Standalone\EditorStandaloneHost\EditorStandaloneProgram.cs" />
     <Compile Include="Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml.cs" />
@@ -55,22 +16,20 @@
     <Compile Include="$(_OdyToolsRoot)\Common\CollectionViewSource.cs" />
     <Compile Include="$(_OdyToolsRoot)\Data\OdyInstallation.cs" />
     <Compile Include="$(_OdyToolsRoot)\Data\Settings.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Data\IEditorInstallationSettings.cs" />
     <Compile Include="$(_OdyToolsRoot)\Data\GlobalSettings.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\PathUtils.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\InlineEditorHelp.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\EditorInstallationSettingsDialogBase.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Common\Localization.cs" />
   </ItemGroup>
   <ItemGroup>
     <AvaloniaXaml Remove="**\*.axaml" />
     <AvaloniaXaml Remove="*OdyTool*.axaml" />
-    <AvaloniaXaml Include="Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml" />
+    <AvaloniaXaml Include="Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml" Link="EditorStandaloneHost/EditorStandaloneApp.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml" />
   </ItemGroup>
-  <!-- Force executable and entry point. Debug=Exe for console. -->
-  <PropertyGroup>
-    <OutputType Condition="'$(Configuration)' == 'Debug'">Exe</OutputType>
-    <OutputType Condition="'$(Configuration)' != 'Debug'">WinExe</OutputType>
-    <StartupObject>OdyTools.Editors.Standalone.EditorStandaloneHost.EditorStandaloneProgram</StartupObject>
-  </PropertyGroup>
 </Project>

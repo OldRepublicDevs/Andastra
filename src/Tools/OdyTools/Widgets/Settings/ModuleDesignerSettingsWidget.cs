@@ -10,8 +10,6 @@ using BioWare.Common;
 
 namespace OdyTools.Widgets.Settings
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:20
-    // Original: class ModuleDesignerWidget(SettingsWidget):
     public partial class ModuleDesignerSettingsWidget : UserControl
     {
         private ModuleDesignerSettings _settings;
@@ -124,8 +122,6 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:76-84
-        // Original: def _load3dBindValues(self):
         private void Load3dBindValues()
         {
             if (_moveCameraSensitivity3dEdit != null)
@@ -179,8 +175,6 @@ namespace OdyTools.Widgets.Settings
             RegisterBindIfExists("resetCameraView3dBind", _settings.ResetCameraView3dBind);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:86-93
-        // Original: def _loadFcBindValues(self):
         private void LoadFcBindValues()
         {
             if (_flySpeedFcEdit != null)
@@ -214,8 +208,6 @@ namespace OdyTools.Widgets.Settings
             RegisterBindIfExists("moveCameraToCursorFcBind", _settings.MoveCameraToCursorFcBind);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:95-102
-        // Original: def _load2dBindValues(self):
         private void Load2dBindValues()
         {
             if (_moveCameraSensitivity2dEdit != null)
@@ -243,8 +235,6 @@ namespace OdyTools.Widgets.Settings
             RegisterBindIfExists("duplicateObject2dBind", _settings.DuplicateObject2dBind);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:104-107
-        // Original: def _loadColourValues(self):
         private void LoadColourValues()
         {
             // Load all material colour widgets
@@ -298,8 +288,6 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:109-114
-        // Original: def setup_values(self):
         private void SetupValues()
         {
             if (_fovSpin != null)
@@ -312,8 +300,6 @@ namespace OdyTools.Widgets.Settings
             LoadColourValues();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:116-129
-        // Original: def save(self):
         public void Save()
         {
             if (_fovSpin != null)
@@ -383,32 +369,24 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:131-133
-        // Original: def resetControls3d(self):
         private void ResetControls3d()
         {
             _settings.ResetControls3d();
             Load3dBindValues();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:135-137
-        // Original: def resetControlsFc(self):
         private void ResetControlsFc()
         {
             _settings.ResetControlsFc();
             LoadFcBindValues();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:139-141
-        // Original: def resetControls2d(self):
         private void ResetControls2d()
         {
             _settings.ResetControls2d();
             Load2dBindValues();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:143-145
-        // Original: def resetColours(self):
         private void ResetColours()
         {
             _settings.ResetMaterialColors();

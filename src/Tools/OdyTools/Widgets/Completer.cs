@@ -34,8 +34,6 @@ namespace OdyTools.Widgets
         public override string ToString() => DisplayText;
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:469-473
-    // Original: QCompleter equivalent for Avalonia
     // Provides autocompletion functionality similar to Qt's QCompleter
     /// <summary>
     /// Provides autocompletion functionality for code editors.
@@ -59,7 +57,6 @@ namespace OdyTools.Widgets
         /// </summary>
         public event Action<string> CompletionSelected;
 
-        // Matching PyKotor: QCompleter.CompletionMode
         public enum CompletionMode
         {
             PopupCompletion,  // Show popup with completions
@@ -67,7 +64,6 @@ namespace OdyTools.Widgets
             UnfilteredPopupCompletion  // Show all completions in popup
         }
 
-        // Matching PyKotor: QCompleter.setWidget()
         /// <summary>
         /// Sets the widget that this completer is associated with.
         /// </summary>
@@ -76,7 +72,6 @@ namespace OdyTools.Widgets
             _widget = widget;
         }
 
-        // Matching PyKotor: QCompleter.widget()
         /// <summary>
         /// Gets the widget associated with this completer.
         /// </summary>
@@ -85,7 +80,6 @@ namespace OdyTools.Widgets
             return _widget;
         }
 
-        // Matching PyKotor: QCompleter.setCompletionMode()
         /// <summary>
         /// Sets the completion mode (PopupCompletion, InlineCompletion, etc.).
         /// </summary>
@@ -94,7 +88,6 @@ namespace OdyTools.Widgets
             _completionMode = mode;
         }
 
-        // Matching PyKotor: QCompleter.setCaseSensitivity()
         /// <summary>
         /// Sets whether completion matching is case-sensitive.
         /// </summary>
@@ -103,7 +96,6 @@ namespace OdyTools.Widgets
             _caseSensitive = caseSensitive;
         }
 
-        // Matching PyKotor: QCompleter.setWrapAround()
         /// <summary>
         /// Sets whether completion wraps around when navigating.
         /// </summary>
@@ -112,7 +104,6 @@ namespace OdyTools.Widgets
             _wrapAround = wrapAround;
         }
 
-        // Matching PyKotor: QCompleter.setModel() equivalent
         /// <summary>
         /// Sets the completion model (list of completion strings). Display and insert text are the same.
         /// </summary>
@@ -131,7 +122,6 @@ namespace OdyTools.Widgets
             _completionList = _completionItems.Select(i => i.DisplayText).ToList();
         }
 
-        // Matching PyKotor: QCompleter.model() equivalent
         /// <summary>
         /// Gets the completion model (display strings).
         /// </summary>
@@ -140,7 +130,6 @@ namespace OdyTools.Widgets
             return _completionList ?? new List<string>();
         }
 
-        // Matching PyKotor: QCompleter.setCompletionPrefix()
         /// <summary>
         /// Sets the completion prefix (the text to match against).
         /// </summary>
@@ -149,7 +138,6 @@ namespace OdyTools.Widgets
             _completionPrefix = prefix ?? "";
         }
 
-        // Matching PyKotor: QCompleter.completionPrefix()
         /// <summary>
         /// Gets the current completion prefix.
         /// </summary>
@@ -158,7 +146,6 @@ namespace OdyTools.Widgets
             return _completionPrefix ?? "";
         }
 
-        // Matching PyKotor: QCompleter.completionCount()
         /// <summary>
         /// Gets the number of available completions for the current prefix.
         /// </summary>
@@ -172,7 +159,6 @@ namespace OdyTools.Widgets
             return GetFilteredCompletionsList().Count;
         }
 
-        // Matching PyKotor: QCompleter.currentCompletion()
         /// <summary>
         /// Gets the currently selected completion display string.
         /// </summary>
@@ -220,7 +206,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor: QCompleter.popup()
         /// <summary>
         /// Gets the popup widget used for displaying completions.
         /// </summary>
@@ -233,7 +218,6 @@ namespace OdyTools.Widgets
             return _popup;
         }
 
-        // Matching PyKotor: QCompleter.complete()
         /// <summary>
         /// Shows the completion popup at the specified rectangle.
         /// </summary>

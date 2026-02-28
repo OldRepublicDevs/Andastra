@@ -1,5 +1,3 @@
-// Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:28-241
-// Original: public class SetDestinations extends PrunedDepthFirstAdapter
 using System;
 using System.Collections.Generic;
 using BioWare.Resource.Formats.NCS.Decomp.Analysis;
@@ -9,8 +7,6 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
 {
     public class SetDestinations : PrunedDepthFirstAdapter
     {
-        // Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:29-36
-        // Original: private NodeAnalysisData nodedata; private SubroutineAnalysisData subdata; private Node.Node destination; private int currentPos; private Node.Node ast; private int actionarg; private Hashtable<Node, ArrayList<Node>> origins; private boolean deadcode;
         private NodeAnalysisData nodedata;
         private SubroutineAnalysisData subdata;
         private Node.Node destination;
@@ -20,8 +16,6 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
         private Dictionary<object, object> origins;
         private bool deadcode;
 
-        // Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:38-45
-        // Original: public SetDestinations(Node.Node ast, NodeAnalysisData nodedata, SubroutineAnalysisData subdata) { this.nodedata = nodedata; this.currentPos = 0; this.ast = ast; this.subdata = subdata; this.actionarg = 0; this.origins = new Hashtable<>(1); }
         public SetDestinations(Node.Node ast, NodeAnalysisData nodedata, SubroutineAnalysisData subdata)
         {
             this.nodedata = nodedata;
@@ -32,8 +26,6 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
             this.origins = new Dictionary<object, object>();
         }
 
-        // Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:47-53
-        // Original: public void done() { this.nodedata = null; this.subdata = null; this.destination = null; this.ast = null; this.origins = null; }
         public virtual void Done()
         {
             this.nodedata = null;
@@ -42,16 +34,11 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
             this.ast = null;
             this.origins = null;
         }
-
-        // Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:55-57
-        // Original: public Hashtable<Node, ArrayList<Node>> getOrigins() { return this.origins; }
         public virtual Dictionary<object, object> GetOrigins()
         {
             return this.origins;
         }
 
-        // Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:59-69
-        // Original: @Override public void outAConditionalJumpCommand(AConditionalJumpCommand node) { ... if (this.destination == null) { throw new RuntimeException(...); } else { ... } }
         public override void OutAConditionalJumpCommand(AConditionalJumpCommand node)
         {
             int pos = NodeUtils.GetJumpDestinationPos(node);
@@ -67,8 +54,6 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
             }
         }
 
-        // Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:71-86
-        // Original: @Override public void outAJumpCommand(AJumpCommand node) { ... if (this.destination == null) { throw new RuntimeException(...); } else { ... } }
         public override void OutAJumpCommand(AJumpCommand node)
         {
             int pos = NodeUtils.GetJumpDestinationPos(node);
@@ -90,8 +75,6 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
             }
         }
 
-        // Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:88-98
-        // Original: @Override public void outAJumpToSubroutine(AJumpToSubroutine node) { ... if (this.destination == null) { throw new RuntimeException(...); } else { ... } }
         public override void OutAJumpToSubroutine(AJumpToSubroutine node)
         {
             int pos = NodeUtils.GetJumpDestinationPos(node);
@@ -107,8 +90,6 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
             }
         }
 
-        // Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:100-108
-        // Original: private void addDestination(Node.Node origin, Node.Node destination)
         private void AddDestination(Node.Node origin, Node.Node destination)
         {
             object originsListObj = this.origins.ContainsKey(destination) ? this.origins[destination] : null;
@@ -153,8 +134,6 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
                 }
             }
 
-            // Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:127-159
-            // Original: @Override public void caseAProgram(AProgram node)
             public override void CaseAProgram(AProgram node)
             {
                 this.InAProgram(node);
@@ -167,7 +146,6 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
                 int cur = temp.Length / 2;
                 int min = 0;
                 int max = temp.Length - 1;
-                // Matching Java for loop: for (boolean done = ...; !done; done = done || ...)
                 bool done = this.parent.destination != null || cur >= temp.Length;
                 while (!done)
                 {
@@ -192,15 +170,12 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
                         min = cur;
                         cur = (cur + max) / 2;
                     }
-                    // Update expression from Java for loop: done = done || SetDestinations.this.destination != null || cur > max
                     done = done || this.parent.destination != null || cur > max;
                 }
 
                 this.OutAProgram(node);
             }
 
-            // Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:162-188
-            // Original: @Override public void caseACommandBlock(ACommandBlock node)
             public override void CaseACommandBlock(ACommandBlock node)
             {
                 this.InACommandBlock(node);
@@ -208,7 +183,6 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
                 int cur = temp.Length / 2;
                 int min = 0;
                 int max = temp.Length - 1;
-                // Matching Java for loop: for (boolean done = ...; !done; done = done || ...)
                 bool done = this.parent.destination != null || cur >= temp.Length;
                 while (!done)
                 {
@@ -233,7 +207,6 @@ namespace BioWare.Resource.Formats.NCS.Decomp.Utils
                         min = cur;
                         cur = (cur + max) / 2;
                     }
-                    // Update expression from Java for loop: done = done || SetDestinations.this.destination != null || cur > max
                     done = done || this.parent.destination != null || cur > max;
                 }
             }

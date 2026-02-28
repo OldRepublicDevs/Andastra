@@ -4,11 +4,8 @@ using Newtonsoft.Json;
 
 namespace OdyTools.Utils
 {
-    // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/github.py
     // Data structures for GitHub API responses
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/github.py:243-248
-    // Original: @dataclass class LinksData(AbstractAPIResult):
     public class LinksData
     {
         [JsonProperty("self")]
@@ -21,8 +18,6 @@ namespace OdyTools.Utils
         public string Html { get; set; }
     }
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/github.py:251-262
-    // Original: @dataclass class ContentInfoData(AbstractAPIResult):
     public class ContentInfoData
     {
         [JsonProperty("name")]
@@ -56,8 +51,6 @@ namespace OdyTools.Utils
         public LinksData Links { get; set; }
     }
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/github.py:417-436
-    // Original: @dataclass class UserInfoData(AbstractAPIResult):
     public class UserInfoData
     {
         [JsonProperty("login")]
@@ -115,8 +108,6 @@ namespace OdyTools.Utils
         public bool SiteAdmin { get; set; }
     }
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/github.py:410-414
-    // Original: @dataclass class CommitTreeInfo(AbstractAPIResult):
     public class CommitTreeInfo
     {
         [JsonProperty("sha")]
@@ -126,8 +117,6 @@ namespace OdyTools.Utils
         public string Url { get; set; }
     }
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/github.py:488-492
-    // Original: @dataclass class BranchInfoData(AbstractAPIResult):
     public class BranchInfoData
     {
         [JsonProperty("name")]
@@ -140,8 +129,6 @@ namespace OdyTools.Utils
         public bool Protected { get; set; }
     }
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/github.py:319-399
-    // Original: @dataclass class ForkContentsData(AbstractAPIResult):
     public class ForkContentsData
     {
         [JsonProperty("id")]
@@ -382,8 +369,6 @@ namespace OdyTools.Utils
         public string DefaultBranch { get; set; }
     }
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/github.py:402-408
-    // Original: @dataclass class RepoIndexData(ForkContentsData):
     public class RepoIndexData : ForkContentsData
     {
         [JsonProperty("temp_clone_token")]
@@ -402,8 +387,6 @@ namespace OdyTools.Utils
         public int SubscribersCount { get; set; }
     }
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/github.py:504-519
-    // Original: @dataclass class CompleteRepoData(AbstractAPIResult):
     public class CompleteRepoData
     {
         [JsonProperty("repo_info")]
@@ -422,8 +405,6 @@ namespace OdyTools.Utils
         public List<TreeInfoData> Tree { get; set; }
     }
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/github.py:494-502
-    // Original: @dataclass class TreeInfoData(AbstractAPIResult):
     public class TreeInfoData
     {
         [JsonProperty("path")]

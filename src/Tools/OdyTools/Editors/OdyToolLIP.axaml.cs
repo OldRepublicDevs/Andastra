@@ -11,16 +11,12 @@ using OdyTools.Data;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lip/lip_editor.py:41
-    // Original: class OdyToolLIP(Editor):
     public partial class OdyToolLIP : Editor
     {
         private const int MinEditorWidth = 480;
         private const int MinEditorHeight = 400;
         private const int UndoMaxLevels = 30;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lip/lip_editor.py:131
-        // Original: self.lip: Optional[LIP] = None; self.duration: float = 0.0
         private LIP _lip;
         private float _duration;
 
@@ -32,8 +28,6 @@ namespace OdyTools.Editors
         private bool _findMatchCase;
         private int _lastFindIndex = -1;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lip/lip_editor.py:44-132
-        // Original: def __init__(self, parent: QWidget | None = None, installation: OdyInstallation | None = None):
         public OdyToolLIP(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolLIP", "lip",
                 new[] { ResourceType.LIP, ResourceType.LIP_XML, ResourceType.LIP_JSON },
@@ -110,12 +104,7 @@ namespace OdyTools.Editors
                 }
                 catch { }
             }
-            Bind("actionNew", () => New());
-            Bind("actionOpen", () => { });
-            Bind("actionSave", () => Save());
-            Bind("actionSaveAs", () => _ = RunSaveAsAsync());
-            Bind("actionRevert", () => Revert());
-            Bind("actionExit", () => Close());
+            // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
             Bind("actionUndo", () => Undo());
             Bind("actionRedo", () => Redo());
             Bind("actionFind", () => ShowFindDialog());
@@ -197,7 +186,7 @@ namespace OdyTools.Editors
             finally { _undoRedoInProgress = false; }
         }
 
-        private void Revert()
+        public override void Revert()
         {
             if (_revert == null || _revert.Length == 0) return;
             try
@@ -213,7 +202,7 @@ namespace OdyTools.Editors
             }
         }
 
-        private async Task RunSaveAsAsync()
+        protected override async Task RunSaveAsAsync()
         {
             var storageProvider = (this as Window)?.StorageProvider;
             if (storageProvider == null) return;
@@ -313,8 +302,6 @@ namespace OdyTools.Editors
             if (e.Key == Key.F3) { FindNextMatch(); e.Handled = true; }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lip/lip_editor.py:481-497
-        // Original: def load(self, filepath: os.PathLike | str, resref: str, restype: ResourceType, data: bytes):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
@@ -328,14 +315,14 @@ namespace OdyTools.Editors
             }
         }
 
+        /// <summary>
+        /// Loads LIP into editor state. UI binding for keyframes/duration can be expanded when additional fields are added.
+        /// </summary>
         private void LoadLIP(LIP lip)
         {
-            // Load LIP data into UI
-            // This will be expanded when full UI is implemented
+            _lip = lip ?? _lip;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lip/lip_editor.py:499-504
-        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
             if (_lip == null)
@@ -349,8 +336,6 @@ namespace OdyTools.Editors
             return Tuple.Create(data, new byte[0]);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lip/lip_editor.py:506-510
-        // Original: def new(self):
         public override void New()
         {
             base.New();
@@ -382,8 +367,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lip/lip_editor.py:312-326
-        // Original: def add_keyframe(self):
         // Helper method for tests to add keyframes
         public void AddKeyframe(float time, LIPShape shape)
         {
@@ -398,8 +381,6 @@ namespace OdyTools.Editors
             // The duration property is separate from the max keyframe time
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lip/lip_editor.py:328-352
-        // Original: def update_keyframe(self):
         // Helper method for tests to update keyframes
         public void UpdateKeyframe(int index, float time, LIPShape shape)
         {
@@ -413,8 +394,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lip/lip_editor.py:354-367
-        // Original: def delete_keyframe(self):
         // Helper method for tests to delete keyframes
         public void DeleteKeyframe(int index)
         {

@@ -6,8 +6,6 @@ using Avalonia.Media;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:69-77
-    // Original: QFontDialog.getFont() - provides font selection dialog
     public partial class FontDialog : Window
     {
         private ComboBox _fontFamilyComboBox;
@@ -26,8 +24,6 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:69-77
-        // Original: def select_font(self): QFontDialog.getFont(current_font, self)
         public FontDialog(Window parent)
         {
             InitializeComponent();
@@ -73,7 +69,6 @@ namespace OdyTools.Dialogs
             _fontSizeComboBox = new ComboBox { MinWidth = 100, IsEditable = true };
             PopulateFontSizes();
             _fontSizeComboBox.SelectionChanged += (s, e) => UpdatePreview();
-            // Matching PyKotor implementation: SizeWidget._size_line_edit.textEdited.connect(self._text_edited)
             // PyQt's textEdited signal fires when user types in QLineEdit (not when programmatically set)
             // In Avalonia ComboBox, SelectionChanged already handles user selections
             // Note: TextChanged doesn't exist on ComboBox in Avalonia - use SelectionChanged instead
@@ -146,7 +141,6 @@ namespace OdyTools.Dialogs
             {
                 PopulateFontSizes();
                 _fontSizeComboBox.SelectionChanged += (s, e) => UpdatePreview();
-                // Matching PyKotor implementation: SizeWidget._size_line_edit.textEdited.connect(self._text_edited)
                 // PyQt's textEdited signal fires when user types in QLineEdit (not when programmatically set)
                 // In Avalonia ComboBox, SelectionChanged already handles user selections
                 // Note: TextChanged doesn't exist on ComboBox in Avalonia - use SelectionChanged instead
@@ -214,7 +208,6 @@ namespace OdyTools.Dialogs
             _fontSizeComboBox.SelectedItem = "12";
         }
 
-        // Matching PyKotor implementation - sets initial font from QApplication.font()
         public void SetCurrentFont(FontInfo currentFont)
         {
             if (currentFont == null)
@@ -356,7 +349,6 @@ namespace OdyTools.Dialogs
     }
 
     // Helper class to hold font information
-    // Matching PyKotor QFont structure
     public class FontInfo
     {
         public string FamilyName { get; set; } = "Arial";

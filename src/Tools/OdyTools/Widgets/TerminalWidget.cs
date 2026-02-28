@@ -12,8 +12,6 @@ using Avalonia.Threading;
 
 namespace OdyTools.Widgets
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:19
-    // Original: class TerminalWidget(QWidget):
     public partial class TerminalWidget : UserControl
     {
         private TextBox _terminalOutput;
@@ -128,8 +126,6 @@ namespace OdyTools.Widgets
             WritePrompt();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:74-106
-        // Original: def _apply_terminal_theme(self):
         private void ApplyTerminalTheme()
         {
             if (_terminalOutput != null)
@@ -139,16 +135,12 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:108-114
-        // Original: def _setup_process(self):
         private void SetupProcess()
         {
-            // Initialize process - will be created when needed
+            // Initialize process (created when needed)
             _process = null;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:116-121
-        // Original: def _get_prompt(self) -> str:
         private string GetPrompt()
         {
             string cwd = Directory.GetCurrentDirectory();
@@ -159,8 +151,6 @@ namespace OdyTools.Widgets
             return $"{cwd}$ ";
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:123-144
-        // Original: def _write_output(self, text: str):
         private void WriteOutput(string text)
         {
             if (_terminalOutput != null)
@@ -171,8 +161,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:149-153
-        // Original: def _write_prompt(self):
         private void WritePrompt()
         {
             _prompt = GetPrompt();
@@ -180,8 +168,6 @@ namespace OdyTools.Widgets
             MarkPromptStart();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:155-157
-        // Original: def _mark_prompt_start(self):
         private void MarkPromptStart()
         {
             if (_terminalOutput != null)
@@ -190,8 +176,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:159-164
-        // Original: def _get_current_command(self) -> str:
         private string GetCurrentCommand()
         {
             if (_terminalOutput == null)
@@ -208,8 +192,6 @@ namespace OdyTools.Widgets
             return text.Substring(_promptStartPos).Trim();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:166-171
-        // Original: def _clear_current_command(self):
         private void ClearCurrentCommand()
         {
             if (_terminalOutput == null)
@@ -225,8 +207,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:173-176
-        // Original: def _replace_current_command(self, text: str):
         private void ReplaceCurrentCommand(string text)
         {
             ClearCurrentCommand();
@@ -237,8 +217,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:178-252
-        // Original: def _handle_key_press(self, event: QKeyEvent):
         private void OnKeyDown(object sender, KeyEventArgs e)
         {
             if (_terminalOutput == null)
@@ -374,8 +352,6 @@ namespace OdyTools.Widgets
             // For all other keys, allow default handling
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:254-285
-        // Original: def _execute_command(self, command: str):
         private void ExecuteCommand(string command)
         {
             // Handle built-in commands
@@ -401,13 +377,9 @@ namespace OdyTools.Widgets
             }
 
             // Execute external command
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:274-285
-            // Original: Execute external command using QProcess
             ExecuteExternalCommand(command);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:328-355
-        // Original: def _change_directory(self, path: str):
         private void ChangeDirectory(string path)
         {
             try
@@ -453,8 +425,6 @@ namespace OdyTools.Widgets
             WritePrompt();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:357-374
-        // Original: def _show_help(self):
         private void ShowHelp()
         {
             string helpText = @"
@@ -476,8 +446,6 @@ You can also run any system command directly.
             WritePrompt();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:376-380
-        // Original: def clear(self):
         private void ClearTerminal()
         {
             if (_terminalOutput != null)
@@ -488,8 +456,6 @@ You can also run any system command directly.
             }
         }
 
-        // Matching PyKotor implementation pattern for terminal exit behavior
-        // Original: Terminal exit should close/hide the terminal panel
         // Based on industry-standard IDE terminal behavior (VS Code, Visual Studio, etc.)
         private void HandleExitCommand()
         {
@@ -550,8 +516,6 @@ You can also run any system command directly.
             IsVisible = false;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:274-285
-        // Original: def _execute_command - external command execution
         private void ExecuteExternalCommand(string command)
         {
             try
@@ -595,7 +559,6 @@ You can also run any system command directly.
                 _process.EnableRaisingEvents = true;
 
                 // Determine shell and command based on platform
-                // Matching PyKotor: if sys.platform == "win32": shell = os.environ.get('COMSPEC', 'cmd.exe')
                 if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 {
                     string shell = Environment.GetEnvironmentVariable("COMSPEC") ?? "cmd.exe";
@@ -615,7 +578,6 @@ You can also run any system command directly.
                 _process.BeginErrorReadLine();
 
                 // Wait a bit to see if process starts successfully
-                // Matching PyKotor: if not self.process.waitForStarted(3000):
                 if (_process.HasExited && _process.ExitCode != 0)
                 {
                     WriteOutput("Error: Failed to start process\n");
@@ -631,8 +593,6 @@ You can also run any system command directly.
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:287-299
-        // Original: def _handle_stdout(self):
         private void OnProcessOutputDataReceived(object sender, DataReceivedEventArgs e)
         {
             if (e.Data != null)
@@ -645,8 +605,6 @@ You can also run any system command directly.
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:301-313
-        // Original: def _handle_stderr(self):
         private void OnProcessErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
             if (e.Data != null)
@@ -660,8 +618,6 @@ You can also run any system command directly.
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:316-326
-        // Original: def _handle_process_finished(self, exit_code: int, exit_status):
         private void OnProcessExited(object sender, EventArgs e)
         {
             // Dispatch to UI thread
@@ -670,7 +626,6 @@ You can also run any system command directly.
                 if (_process != null)
                 {
                     int exitCode = _process.ExitCode;
-                    // Matching PyKotor: if exit_code != 0: write exit code message
                     if (exitCode != 0)
                     {
                         WriteOutput($"\nProcess exited with code {exitCode}\n");

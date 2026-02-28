@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Media;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -11,30 +11,36 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using AmColor = Avalonia.Media.Color;
+using Avalonia.Controls.Templates;
 using Avalonia.Threading;
-using BioWare;
 using BioWare.Common;
 using BioWare.Extract;
 using BioWare.Common.Logger;
 using BioWare.Resource;
-using BioWare.Resource.Formats.GFF.Generics.CNV;
 using BioWare.Resource.Formats.GFF.Generics.DLG;
+using BioWare.Resource.Formats.GFF.Generics.DLG.IO;
 using BioWare.Resource.Formats.TwoDA;
 using DLGType = BioWare.Resource.Formats.GFF.Generics.DLG.DLG;
 using DLGHelper = BioWare.Resource.Formats.GFF.Generics.DLG.DLGHelper;
 using CNVHelper = BioWare.Resource.Formats.GFF.Generics.CNV.CNVHelper;
+using OdyTools.Common;
 using OdyTools.Data;
 using OdyTools.Dialogs;
+using OdyTools.Widgets;
+using OdyTools.Widgets.Edit;
 using OdyTools.Dialogs.Edit;
+using OdyTools.Editors;
 using OdyTools.Editors.Actions;
+using Avalonia.Controls.Documents;
 using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
+using Avalonia.Controls.Primitives;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 
 namespace OdyTools.Editors.DLG
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:88
-    // Original: class OdyToolDLG(Editor):
     // DLG (Dialogue) format is Aurora Engine format used by:
     // - Neverwinter Nights: Enhanced Edition (Aurora) - nwmain.exe: Uses base DLG format
     // - KotOR 1 (Odyssey) - k1_win_gog_swkotor.exe: Uses base DLG format
@@ -47,22 +53,14 @@ namespace OdyTools.Editors.DLG
     //   (no K2-specific fields). This editor supports both DLG and CNV files for Eclipse games.
     //   CNV files are automatically converted to DLG for editing, and can be saved back as CNV.
     //   Ghidra analysis: daorigins.exe, DragonAge2.exe, MassEffect.exe use "conversation" strings
-    public class OdyToolDLG : Editor
+    public partial class OdyToolDLG : Editor
     {
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:116
-        // Original: self.core_dlg: DLG = DLG()
         private DLGType _coreDlg;
         private DLGModel _model;
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:117
-        // Original: self.undo_stack: QUndoStack = QUndoStack()
         private DLGActionHistory _actionHistory;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:152
-        // Original: self.keys_down: set[int] = set()
         private HashSet<Key> _keysDown = new HashSet<Key>();
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:113
-        // Original: self._copy: DLGLink | None = None
         private DLGLink _copy;
 
         /// <summary>
@@ -82,8 +80,6 @@ namespace OdyTools.Editors.DLG
         }
 
         // UI Controls - Animations
-        // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui:966-992
-        // Original: QListWidget animsList, QPushButton addAnimButton, removeAnimButton, editAnimButton
         private ListBox _animsList;
         private Button _addAnimButton;
         private Button _removeAnimButton;
@@ -99,7 +95,20 @@ namespace OdyTools.Editors.DLG
         // Public properties for menu actions (for testing)
         public MenuItem ActionReloadTree => _actionReloadTree;
         private TextBox _commentsEdit;
-        private Panel _leftDockWidget;
+        private Border _nodeTextPreviewBorder;
+        private TextBlock _nodeTextPreviewLabel;
+        private Control _leftDockWidget;
+        private Control _topDockWidget;
+        private Control _rightDockWidget;
+        private Control _dockWidget; // bottom
+        private Border _topDockContent;
+        private Border _leftDockContent;
+        private Border _rightDockContent;
+        private Border _bottomDockContent;
+        private readonly WindowHolder _topDockFloatWindow = new WindowHolder();
+        private readonly WindowHolder _leftDockFloatWindow = new WindowHolder();
+        private readonly WindowHolder _rightDockFloatWindow = new WindowHolder();
+        private readonly WindowHolder _bottomDockFloatWindow = new WindowHolder();
         private DLGListWidget _orphanedNodesList;
         private DLGListWidget _pinnedItemsList;
 
@@ -110,47 +119,94 @@ namespace OdyTools.Editors.DLG
         private MenuItem _actionSave;
         private MenuItem _actionSaveAs;
         private MenuItem _actionRevert;
+        private MenuItem _actionDLGSettings;
         private MenuItem _actionExit;
+
+        // Edit menu actions (undo/redo)
+        private MenuItem _actionUndo;
+        private MenuItem _actionRedo;
 
         // Tools menu actions
         private MenuItem _actionFind;
         private MenuItem _actionReloadTree;
         private MenuItem _actionUnfocus;
+        private MenuItem _viewFileGlobals;
+        private MenuItem _viewNodeFields;
+        private MenuItem _viewOrphanedNodes;
+        private MenuItem _viewJournalNode;
 
         private int _currentResultIndex = 0;
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:122-123
-        // Original: self.search_results: list[DLGStandardItem] = [], self.current_search_text: str = ""
         private List<DLGStandardItem> _searchResults = new List<DLGStandardItem>();
         private string _currentSearchText = "";
 
-        /// <summary>MIME format for DLG drag-and-drop (tree to pinned list). Matching PyKotor application/x-qabstractitemmodeldatalist.</summary>
         private const string DlgMimeFormat = "application/x-odytools-dlg-mime";
         private static readonly DataFormat<string> DlgMimeDataFormat = DataFormat.CreateStringPlatformFormat(DlgMimeFormat);
 
         // Search UI Controls
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:451-465
-        // Original: self.find_bar: QWidget, self.find_input: QLineEdit, self.find_button: QPushButton, self.back_button: QPushButton, self.results_label: QLabel
         private Panel _findBar;
         private TextBox _findInput;
         private Button _findButton;
         private Button _backButton;
         private TextBlock _resultsLabel;
         private Panel _findSuggestionsPanel;
+        private Panel _goToBar;
+        private TextBox _goToInput;
+        private Button _goToButton;
         private List<string> _findSuggestions = new List<string>();
+        private TextBlock _tipLabel;
+        private DispatcherTimer _statusBarTipTimer;
+        private static readonly string[] _tips = new[]
+        {
+            "Use the 'View' and 'Settings' menu to customize dlg editor settings. All of your changes will be saved for next time you load the editor.",
+            "Tip: Drag and Drop is supported, even between different DLGs!",
+            "Tip: Accidentally closed a side widget? Right click the Menu to reopen the dock panels.",
+            "Tip: Hold CTRL and scroll to change the text size.",
+            "Tip: Hold ALT and scroll to change the indentation.",
+            "Tip: Hold CTRL+SHIFT and scroll to change the vertical spacing.",
+            "Tip: 'Delete all references' will delete all EntriesList/RepliesList/StartingList links to the node, leaving it orphaned.",
+            "Tip: Drag any item to the left dockpanel to pin it for easy access",
+            "Tip: Orphaned Nodes will automatically be added to the top left list, drag back in to reintegrate.",
+            "Tip: Use ':' after an attribute name in the search bar to filter items by specific properties, e.g., 'is_child:1'.",
+            "Tip: Combine keywords with AND/OR in the search bar to refine your search results, such as 'script1:k_swg AND listener:PLAYER'",
+            "Tip: Use double quotes to search for exact phrases in item descriptions, such as '\"urgent task\"'.",
+            "Tip: Search for attributes without a value after ':' to find items where any non-null property exists, e.g., 'assigned:'.",
+            "Tip: Double-click me to view all tips."
+        };
         private Point? _dragStartPosition;
         private bool _dragStarted;
 
+        private sealed class FlatNodeRow
+        {
+            public DLGLink Link { get; set; }
+            public DLGNode Node { get; set; }
+            public string Display { get; set; }
+            public Control Visual { get; set; }
+            public override string ToString() => Display ?? string.Empty;
+        }
+
         // UI Controls - Link widgets
-        // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-        // Original: QComboBox condition1ResrefEdit, condition2ResrefEdit, QSpinBox logicSpin, QTreeView dialogTree
         private ComboBox _condition1ResrefEdit;
         private ComboBox _condition2ResrefEdit;
         private NumericUpDown _logicSpin;
         private TreeView _dialogTree;
+        private TabControl _dialogViewTabs;
+        private ListBox _flatStartingList;
+        private ListBox _flatEntryList;
+        private ListBox _flatReplyList;
+        private Button _graphFitButton;
+        private Button _graphAutoLayoutButton;
+        private Button _graphZoomInButton;
+        private Button _graphZoomOutButton;
+        private TextBlock _graphZoomLabel;
+        private TextBlock _graphStatusText;
+        private Panel _graphCanvas;
+        private DlgGraphScene _graphScene;
+        private bool _isSyncingViewSelection;
+        private bool _suppressTreeSelectionHandler;
+        private DLGLink _selectedLink;
+        private Dictionary<string, Point> _graphManualPositions = new Dictionary<string, Point>(StringComparer.OrdinalIgnoreCase);
 
         // Condition parameter widgets (K2-specific, but available in UI for all games)
-        // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-        // Original: QSpinBox condition1Param1Spin, condition1Param2Spin, etc., QCheckBox condition1NotCheckbox, condition2NotCheckbox
         private NumericUpDown _condition1Param1Spin;
         private NumericUpDown _condition1Param2Spin;
         private NumericUpDown _condition1Param3Spin;
@@ -167,31 +223,34 @@ namespace OdyTools.Editors.DLG
         private CheckBox _condition2NotCheckbox;
 
         // UI Controls - Node widgets (Quest/Plot)
-        // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-        // Original: QLineEdit questEdit, QSpinBox questEntrySpin, QComboBox plotIndexCombo, QDoubleSpinBox plotXpSpin
         private TextBox _questEdit;
         private NumericUpDown _questEntrySpin;
-        private ComboBox _plotIndexCombo;
+        private ComboBox2DA _plotIndexCombo;
         private NumericUpDown _plotXpSpin;
 
         // UI Controls - Speaker widgets
-        // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-        // Original: QLineEdit speakerEdit, QLabel speakerEditLabel
         private TextBox _speakerEdit;
         private TextBlock _speakerEditLabel;
 
         // UI Controls - Listener widget
-        // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-        // Original: QLineEdit listenerEdit
         private TextBox _listenerEdit;
 
         // UI Controls - Script widgets
-        // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-        // Original: QComboBox script1ResrefEdit, script2ResrefEdit
         private ComboBox _script1ResrefEdit;
         private ComboBox _script2ResrefEdit;
         private NumericUpDown _script1Param1Spin;
+        private NumericUpDown _script1Param2Spin;
+        private NumericUpDown _script1Param3Spin;
+        private NumericUpDown _script1Param4Spin;
+        private NumericUpDown _script1Param5Spin;
         private StackPanel _script1Param1Panel;
+        private StackPanel _script2Panel;
+        private StackPanel _condition2Panel;
+        private Control _emotionExpressionPanel;
+        private Control _nodeIdLabel;
+        private Control _alienRaceNodeLabel;
+        private Control _postProcLabel;
+        private Control _logicLabel;
         private NumericUpDown _script2Param1Spin;
         private NumericUpDown _script2Param2Spin;
         private NumericUpDown _script2Param3Spin;
@@ -207,31 +266,22 @@ namespace OdyTools.Editors.DLG
         private Button _voiceButton;
 
         // UI Controls - Node timing widgets
-        // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-        // Original: QSpinBox delaySpin, waitFlagSpin, fadeTypeSpin
         private NumericUpDown _delaySpin;
-        // Original: QLineEdit voIdEdit (row 4, column 1 in file properties grid)
         private TextBox _voIdEdit;
 
         // UI Controls - Camera widgets
-        // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui:1112-1151
-        // Original: QSpinBox cameraIdSpin, cameraAnimSpin, QComboBox cameraAngleSelect, cameraEffectSelect
         private NumericUpDown _cameraIdSpin;
         private NumericUpDown _cameraAnimSpin;
         private NumericUpDown _nodeIdSpin;
         private NumericUpDown _alienRaceNodeSpin;
         private NumericUpDown _postProcSpin;
         private ComboBox _cameraAngleSelect;
-        private ComboBox _cameraEffectSelect;
-        private ComboBox _emotionSelect;
-        private ComboBox _expressionSelect;
-        // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-        // Original: QComboBox ambientTrackCombo
+        private ComboBox2DA _cameraEffectSelect;
+        private ComboBox2DA _emotionSelect;
+        private ComboBox2DA _expressionSelect;
         private ComboBox _ambientTrackCombo;
 
         // UI Controls - File-level checkboxes
-        // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-        // Original: QCheckBox unequipHandsCheckbox, unequipAllCheckbox, skippableCheckbox, animatedCutCheckbox, oldHitCheckbox
         private CheckBox _unequipHandsCheckbox;
         private CheckBox _unequipAllCheckbox;
         private CheckBox _skippableCheckbox;
@@ -241,9 +291,6 @@ namespace OdyTools.Editors.DLG
         private CheckBox _nodeUnskippableCheckbox;
 
         // UI Controls - File-level properties (conversation type, computer type, delays, scripts, camera)
-        // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-        // Original: QComboBox conversationSelect, computerSelect, onAbortCombo, onEndEdit, ambientTrackCombo, cameraModelSelect
-        // Original: QSpinBox entryDelaySpin, replyDelaySpin
         private ComboBox _conversationSelect;
         private ComboBox _computerSelect;
         private NumericUpDown _entryDelaySpin;
@@ -255,33 +302,25 @@ namespace OdyTools.Editors.DLG
         // Flag to track if node is loaded into UI (prevents updates during loading)
         private bool _nodeLoadedIntoUi = false;
 
+        /// <summary>DLGStandardItem for the node currently shown in the right panel (Node Fields). Used by Add/Remove/Edit Animation when tree selection is unavailable.</summary>
+        private DLGStandardItem _currentNodeItem = null;
+
         // Flag to track if editor is in focus mode (showing only a specific node and its children)
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:152
-        // Original: self._focused: bool = False
         private bool _focused = false;
 
-        // Sound player for playing audio files
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/base.py:80
-        // Original: self.media_player: EditorMedia = EditorMedia(self)
-        private global::System.Media.SoundPlayer _soundPlayer;
-        private MemoryStream _soundStream;
+        // Cross-platform sound player for WAV playback (replaces Windows-only SoundPlayer)
+        private NAudioMediaPlayer _soundPlayer;
 
         // Reference history for navigation
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:148-150
-        // Original: self.dialog_references: ReferenceChooserDialog | None = None
-        // Original: self.reference_history: list[tuple[list[weakref.ref[DLGLink]], str]] = []
-        // Original: self.current_reference_index: int = -1
         private ReferenceChooserDialog _dialogReferences;
         private List<Tuple<List<WeakReference<DLGLink>>, string>> _referenceHistory = new List<Tuple<List<WeakReference<DLGLink>>, string>>();
         private int _currentReferenceIndex = -1;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:101-177
-        // Original: def __init__(self, parent: QWidget | None = None, installation: OdyInstallation | None = None):
         /// <summary>Parameterless constructor for Avalonia XAML runtime loader (e.g. standalone avares).</summary>
         public OdyToolDLG() : this(null, null) { }
 
         public OdyToolDLG(Window parent = null, OdyInstallation installation = null)
-            : base(parent, "OdyToolDLG", "dialog",
+            : base(parent, Localization.Tr("DLG Editor"), "dialog",
                 new[] { ResourceType.DLG, ResourceType.CNV },
                 new[] { ResourceType.DLG, ResourceType.CNV },
                 installation)
@@ -289,8 +328,9 @@ namespace OdyTools.Editors.DLG
             _coreDlg = new DLGType();
             _model = new DLGModel(this);
             _actionHistory = new DLGActionHistory(this);
-            _soundPlayer = new global::System.Media.SoundPlayer();
+            _soundPlayer = new NAudioMediaPlayer();
             InitializeComponent();
+            ApplyInstallationFromDLGSettings();
             UpdateUIForGame(); // Update UI visibility based on game type
             UpdateTreeView();
             New();
@@ -302,12 +342,16 @@ namespace OdyTools.Editors.DLG
             if (EnsureBindingsFromXaml())
             {
                 WireEventHandlersFromXaml();
+                SetupStatusBarTips();
                 InitializeCameraWidgets();
+                SetupTslEmotionsAndExpressions();
             }
             else
             {
                 SetupUI();
+                SetupStatusBarTips();
                 InitializeCameraWidgets();
+                SetupTslEmotionsAndExpressions();
             }
         }
 
@@ -319,29 +363,68 @@ namespace OdyTools.Editors.DLG
             _dialogTree = EditorHelpers.FindControlSafe<TreeView>(this, "dialogTree");
             if (_dialogTree == null)
                 return false;
+            _dialogViewTabs = EditorHelpers.FindControlSafe<TabControl>(this, "dialogViewTabs");
+            _flatStartingList = EditorHelpers.FindControlSafe<ListBox>(this, "flatStartingList");
+            _flatEntryList = EditorHelpers.FindControlSafe<ListBox>(this, "flatEntryList");
+            _flatReplyList = EditorHelpers.FindControlSafe<ListBox>(this, "flatReplyList");
+            _graphFitButton = EditorHelpers.FindControlSafe<Button>(this, "graphFitButton");
+            _graphAutoLayoutButton = EditorHelpers.FindControlSafe<Button>(this, "graphAutoLayoutButton");
+            _graphZoomInButton = EditorHelpers.FindControlSafe<Button>(this, "graphZoomInButton");
+            _graphZoomOutButton = EditorHelpers.FindControlSafe<Button>(this, "graphZoomOutButton");
+            _graphZoomLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "graphZoomLabel");
+            _graphStatusText = EditorHelpers.FindControlSafe<TextBlock>(this, "graphStatusText");
+            _graphCanvas = EditorHelpers.FindControlSafe<Panel>(this, "graphCanvas");
 
             _findBar = EditorHelpers.FindControlSafe<Panel>(this, "findBar");
             _findInput = EditorHelpers.FindControlSafe<TextBox>(this, "findInput");
+            _goToBar = EditorHelpers.FindControlSafe<Panel>(this, "goToBar");
+            _goToInput = EditorHelpers.FindControlSafe<TextBox>(this, "goToInput");
+            _goToButton = EditorHelpers.FindControlSafe<Button>(this, "goToButton");
             _findButton = EditorHelpers.FindControlSafe<Button>(this, "findButton");
             _backButton = EditorHelpers.FindControlSafe<Button>(this, "backButton");
             _resultsLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "resultsLabel");
             _findSuggestionsPanel = EditorHelpers.FindControlSafe<Panel>(this, "findSuggestionsPanel");
+            _tipLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "tipLabel");
 
-            _leftDockWidget = EditorHelpers.FindControlSafe<Panel>(this, "leftDockWidget");
+            _leftDockWidget = EditorHelpers.FindControlSafe<Control>(this, "leftDockWidget");
+            _topDockWidget = EditorHelpers.FindControlSafe<Control>(this, "topDockWidget");
+            _rightDockWidget = EditorHelpers.FindControlSafe<Control>(this, "rightDockWidget");
+            _dockWidget = EditorHelpers.FindControlSafe<Control>(this, "dockWidget");
+            _topDockContent = EditorHelpers.FindControlSafe<Border>(this, "topDockContent");
+            _leftDockContent = EditorHelpers.FindControlSafe<Border>(this, "leftDockContent");
+            _rightDockContent = EditorHelpers.FindControlSafe<Border>(this, "rightDockContent");
+            _bottomDockContent = EditorHelpers.FindControlSafe<Border>(this, "bottomDockContent");
             _orphanedNodesList = EditorHelpers.FindControlSafe<DLGListWidget>(this, "orphanedNodesList");
             _pinnedItemsList = EditorHelpers.FindControlSafe<DLGListWidget>(this, "pinnedItemsList");
-            if (_orphanedNodesList != null) { _orphanedNodesList.Editor = this; _orphanedNodesList.UseHoverText = false; }
-            if (_pinnedItemsList != null) { _pinnedItemsList.Editor = this; _pinnedItemsList.SelectionMode = SelectionMode.Multiple; }
+            if (_orphanedNodesList != null)
+            {
+                _orphanedNodesList.Editor = this;
+                _orphanedNodesList.UseHoverText = false;
+                _orphanedNodesList.UseWordWrap = true;
+            }
+            if (_pinnedItemsList != null)
+            {
+                _pinnedItemsList.Editor = this;
+                _pinnedItemsList.SelectionMode = SelectionMode.Multiple;
+                _pinnedItemsList.UseWordWrap = true;
+            }
 
             _actionNew = EditorHelpers.FindControlSafe<MenuItem>(this, "actionNew");
             _actionOpen = EditorHelpers.FindControlSafe<MenuItem>(this, "actionOpen");
             _actionSave = EditorHelpers.FindControlSafe<MenuItem>(this, "actionSave");
             _actionSaveAs = EditorHelpers.FindControlSafe<MenuItem>(this, "actionSaveAs");
             _actionRevert = EditorHelpers.FindControlSafe<MenuItem>(this, "actionRevert");
+            _actionDLGSettings = EditorHelpers.FindControlSafe<MenuItem>(this, "actionDLGSettings");
             _actionExit = EditorHelpers.FindControlSafe<MenuItem>(this, "actionExit");
+            _actionUndo = EditorHelpers.FindControlSafe<MenuItem>(this, "actionUndo");
+            _actionRedo = EditorHelpers.FindControlSafe<MenuItem>(this, "actionRedo");
             _actionFind = EditorHelpers.FindControlSafe<MenuItem>(this, "actionFind");
             _actionReloadTree = EditorHelpers.FindControlSafe<MenuItem>(this, "actionReloadTree");
             _actionUnfocus = EditorHelpers.FindControlSafe<MenuItem>(this, "actionUnfocus");
+            _viewFileGlobals = EditorHelpers.FindControlSafe<MenuItem>(this, "viewFileGlobals");
+            _viewNodeFields = EditorHelpers.FindControlSafe<MenuItem>(this, "viewNodeFields");
+            _viewOrphanedNodes = EditorHelpers.FindControlSafe<MenuItem>(this, "viewOrphanedNodes");
+            _viewJournalNode = EditorHelpers.FindControlSafe<MenuItem>(this, "viewJournalNode");
 
             _voIdEdit = EditorHelpers.FindControlSafe<TextBox>(this, "voIdEdit");
             _ambientTrackCombo = EditorHelpers.FindControlSafe<ComboBox>(this, "ambientTrackCombo");
@@ -363,9 +446,22 @@ namespace OdyTools.Editors.DLG
             _removeStuntButton = EditorHelpers.FindControlSafe<Button>(this, "removeStuntButton");
 
             _commentsEdit = EditorHelpers.FindControlSafe<TextBox>(this, "commentsEdit");
+            _nodeTextPreviewBorder = EditorHelpers.FindControlSafe<Border>(this, "nodeTextPreviewBorder");
+            _nodeTextPreviewLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "nodeTextPreviewLabel");
             _script1ResrefEdit = EditorHelpers.FindControlSafe<ComboBox>(this, "script1ResrefEdit");
             _script1Param1Spin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "script1Param1Spin");
+            _script1Param2Spin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "script1Param2Spin");
+            _script1Param3Spin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "script1Param3Spin");
+            _script1Param4Spin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "script1Param4Spin");
+            _script1Param5Spin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "script1Param5Spin");
             _script1Param1Panel = EditorHelpers.FindControlSafe<StackPanel>(this, "script1Param1Panel");
+            _script2Panel = EditorHelpers.FindControlSafe<StackPanel>(this, "script2Panel");
+            _condition2Panel = EditorHelpers.FindControlSafe<StackPanel>(this, "condition2Panel");
+            _emotionExpressionPanel = EditorHelpers.FindControlSafe<Control>(this, "emotionExpressionPanel");
+            _nodeIdLabel = EditorHelpers.FindControlSafe<Control>(this, "nodeIdLabel");
+            _alienRaceNodeLabel = EditorHelpers.FindControlSafe<Control>(this, "alienRaceNodeLabel");
+            _postProcLabel = EditorHelpers.FindControlSafe<Control>(this, "postProcLabel");
+            _logicLabel = EditorHelpers.FindControlSafe<Control>(this, "logicLabel");
             _script2ResrefEdit = EditorHelpers.FindControlSafe<ComboBox>(this, "script2ResrefEdit");
             _script2Param1Spin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "script2Param1Spin");
             _script2Param2Spin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "script2Param2Spin");
@@ -394,8 +490,8 @@ namespace OdyTools.Editors.DLG
             _addAnimButton = EditorHelpers.FindControlSafe<Button>(this, "addAnimButton");
             _removeAnimButton = EditorHelpers.FindControlSafe<Button>(this, "removeAnimButton");
             _editAnimButton = EditorHelpers.FindControlSafe<Button>(this, "editAnimButton");
-            _emotionSelect = EditorHelpers.FindControlSafe<ComboBox>(this, "emotionSelect");
-            _expressionSelect = EditorHelpers.FindControlSafe<ComboBox>(this, "expressionSelect");
+            _emotionSelect = EditorHelpers.FindControlSafe<ComboBox2DA>(this, "emotionSelect");
+            _expressionSelect = EditorHelpers.FindControlSafe<ComboBox2DA>(this, "expressionSelect");
             _soundCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "soundCheckbox");
             _soundComboBox = EditorHelpers.FindControlSafe<ComboBox>(this, "soundComboBox");
             _voiceComboBox = EditorHelpers.FindControlSafe<ComboBox>(this, "voiceComboBox");
@@ -404,7 +500,7 @@ namespace OdyTools.Editors.DLG
             _cameraIdSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "cameraIdSpin");
             _cameraAnimSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "cameraAnimSpin");
             _cameraAngleSelect = EditorHelpers.FindControlSafe<ComboBox>(this, "cameraAngleSelect");
-            _cameraEffectSelect = EditorHelpers.FindControlSafe<ComboBox>(this, "cameraEffectSelect");
+            _cameraEffectSelect = EditorHelpers.FindControlSafe<ComboBox2DA>(this, "cameraEffectSelect");
             _nodeUnskippableCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "nodeUnskippableCheckbox");
             _nodeIdSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "nodeIdSpin");
             _alienRaceNodeSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "alienRaceNodeSpin");
@@ -418,10 +514,11 @@ namespace OdyTools.Editors.DLG
             _listenerEdit = EditorHelpers.FindControlSafe<TextBox>(this, "listenerEdit");
             _questEdit = EditorHelpers.FindControlSafe<TextBox>(this, "questEdit");
             _questEntrySpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "questEntrySpin");
-            _plotIndexCombo = EditorHelpers.FindControlSafe<ComboBox>(this, "plotIndexCombo");
+            _plotIndexCombo = EditorHelpers.FindControlSafe<ComboBox2DA>(this, "plotIndexCombo");
             _plotXpSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "plotXpSpin");
             return true;
         }
+        private static readonly string[] allCameraEffects = new[] { "None (0)", "Effect 1", "Effect 2", "Effect 3" };
 
         /// <summary>
         /// Wires event handlers when UI is loaded from XAML. Does not create controls.
@@ -439,6 +536,15 @@ namespace OdyTools.Editors.DLG
             }
             if (_findButton != null) _findButton.Click += (s, e) => HandleFind();
             if (_backButton != null) _backButton.Click += (s, e) => HandleBack();
+            if (_goToInput != null)
+            {
+                _goToInput.KeyDown += (s, e) =>
+                {
+                    if (e.Key == Key.Enter || e.Key == Key.Return) { HandleGoTo(); e.Handled = true; }
+                    else if (e.Key == Key.Escape) { HideGoToBar(); e.Handled = true; }
+                };
+            }
+            if (_goToButton != null) _goToButton.Click += (s, e) => HandleGoTo();
             SetupCompleter();
             PopulateFindSuggestionChips();
 
@@ -447,17 +553,511 @@ namespace OdyTools.Editors.DLG
 
             SetupPinnedListDragDrop();
             SetupTreeViewDragSource();
+            SetupGraphView();
+            WireFlatViewHandlers();
 
             if (_dialogTree != null)
             {
-                _dialogTree.SelectionChanged += (s, e) => OnSelectionChanged();
+                _dialogTree.SelectionChanged += (s, e) =>
+                {
+                    if (_suppressTreeSelectionHandler)
+                    {
+                        return;
+                    }
+                    SyncSelectionFromTree();
+                };
                 _dialogTree.KeyDown += (s, e) => OnKeyDownFromTreeView(e);
+                _dialogTree.DoubleTapped += OnDialogTreeDoubleTapped;
             }
             SetupDialogTreeContextMenu();
 
             WireFilePropertyHandlers();
             WireNodeUpdateHandlers();
             WireButtonHandlers();
+            SetupDockablePanels();
+            if (_installation != null)
+            {
+                SetupFileContextMenus();
+            }
+            SetupDockablePanels();
+        }
+
+        /// <summary>
+        /// Sets up View menu toggles and float/dock buttons for panels.
+        /// </summary>
+        private void SetupDockablePanels()
+        {
+            if (_viewFileGlobals != null && _topDockWidget != null)
+            {
+                _viewFileGlobals.Click += (s, e) =>
+                {
+                    _topDockWidget.IsVisible = !_topDockWidget.IsVisible;
+                    _viewFileGlobals.IsChecked = _topDockWidget.IsVisible;
+                };
+            }
+            if (_viewNodeFields != null && _rightDockWidget != null)
+            {
+                _viewNodeFields.Click += (s, e) =>
+                {
+                    _rightDockWidget.IsVisible = !_rightDockWidget.IsVisible;
+                    _viewNodeFields.IsChecked = _rightDockWidget.IsVisible;
+                };
+            }
+            if (_viewOrphanedNodes != null && _leftDockWidget != null)
+            {
+                _viewOrphanedNodes.Click += (s, e) =>
+                {
+                    _leftDockWidget.IsVisible = !_leftDockWidget.IsVisible;
+                    _viewOrphanedNodes.IsChecked = _leftDockWidget.IsVisible;
+                };
+            }
+            if (_viewJournalNode != null && _dockWidget != null)
+            {
+                _viewJournalNode.Click += (s, e) =>
+                {
+                    _dockWidget.IsVisible = !_dockWidget.IsVisible;
+                    _viewJournalNode.IsChecked = _dockWidget.IsVisible;
+                };
+            }
+
+            var topFloatBtn = EditorHelpers.FindControlSafe<Button>(this, "topDockFloatBtn");
+            var leftFloatBtn = EditorHelpers.FindControlSafe<Button>(this, "leftDockFloatBtn");
+            var rightFloatBtn = EditorHelpers.FindControlSafe<Button>(this, "rightDockFloatBtn");
+            var bottomFloatBtn = EditorHelpers.FindControlSafe<Button>(this, "bottomDockFloatBtn");
+
+            if (topFloatBtn != null && _topDockContent != null)
+                topFloatBtn.Click += (s, e) => ToggleFloatPanel("top", _topDockContent, _topDockWidget, _topDockFloatWindow, topFloatBtn, Localization.Tr("File Globals"));
+            if (leftFloatBtn != null && _leftDockContent != null)
+                leftFloatBtn.Click += (s, e) => ToggleFloatPanel("left", _leftDockContent, _leftDockWidget, _leftDockFloatWindow, leftFloatBtn, Localization.Tr("Orphaned Nodes & Pinned Items"));
+            if (rightFloatBtn != null && _rightDockContent != null)
+                rightFloatBtn.Click += (s, e) => ToggleFloatPanel("right", _rightDockContent, _rightDockWidget, _rightDockFloatWindow, rightFloatBtn, Localization.Tr("Node Fields"));
+            if (bottomFloatBtn != null && _bottomDockContent != null)
+                bottomFloatBtn.Click += (s, e) => ToggleFloatPanel("bottom", _bottomDockContent, _dockWidget, _bottomDockFloatWindow, bottomFloatBtn, Localization.Tr("Journal / Node"));
+
+            ApplyDLGLocalization();
+        }
+
+        /// <summary>
+        /// Applies localized strings to all DLG editor UI (menus, labels, buttons, tooltips, watermarks).
+        /// Call after controls are loaded so nothing is hardcoded at runtime.
+        /// </summary>
+        private void ApplyDLGLocalization()
+        {
+            Title = Localization.Tr("DLG Editor");
+            var menuFile = EditorHelpers.FindControlSafe<MenuItem>(this, "menuFile");
+            var menuEdit = EditorHelpers.FindControlSafe<MenuItem>(this, "menuEdit");
+            var menuTools = EditorHelpers.FindControlSafe<MenuItem>(this, "menuTools");
+            var menuView = EditorHelpers.FindControlSafe<MenuItem>(this, "menuView");
+            if (menuFile != null) menuFile.Header = Localization.Tr("File");
+            if (menuEdit != null) menuEdit.Header = Localization.Tr("Edit");
+            if (_actionUndo != null) _actionUndo.Header = Localization.Tr("Undo");
+            if (_actionRedo != null) _actionRedo.Header = Localization.Tr("Redo");
+            if (menuTools != null) menuTools.Header = Localization.Tr("Tools");
+            if (menuView != null) menuView.Header = Localization.Tr("View");
+            if (_actionNew != null) _actionNew.Header = Localization.Tr("New");
+            if (_actionOpen != null) _actionOpen.Header = Localization.Tr("Open");
+            if (_actionSave != null) _actionSave.Header = Localization.Tr("Save");
+            if (_actionSaveAs != null) _actionSaveAs.Header = Localization.Tr("Save As");
+            if (_actionRevert != null) _actionRevert.Header = Localization.Tr("Revert");
+            var menuRecentFiles = EditorHelpers.FindControlSafe<MenuItem>(this, "menuRecentFiles");
+            if (menuRecentFiles != null) menuRecentFiles.Header = Localization.Tr("_Recent Files");
+            if (_actionDLGSettings != null) _actionDLGSettings.Header = Localization.Tr("DLG Settings...");
+            if (_actionExit != null) _actionExit.Header = Localization.Tr("Exit");
+            if (_actionReloadTree != null) _actionReloadTree.Header = Localization.Tr("Reload Tree");
+            if (_actionUnfocus != null) _actionUnfocus.Header = Localization.Tr("Unfocus Tree");
+            if (_viewFileGlobals != null) _viewFileGlobals.Header = Localization.Tr("File Globals");
+            if (_viewNodeFields != null) _viewNodeFields.Header = Localization.Tr("Node Fields");
+            if (_viewOrphanedNodes != null) _viewOrphanedNodes.Header = Localization.Tr("Orphaned Nodes");
+            if (_viewJournalNode != null) _viewJournalNode.Header = Localization.Tr("Journal / Node");
+            if (_goToInput != null) { _goToInput.Watermark = Localization.Tr("Go to node ID..."); ToolTip.SetTip(_goToInput, Localization.Tr("Enter node ID to jump. Ctrl+G toggles. Escape to close.")); }
+            if (_goToButton != null) _goToButton.Content = Localization.Tr("Go");
+            if (_findInput != null) { _findInput.Watermark = Localization.Tr("Find... (e.g. text, speaker:tag, strref:123, AND/OR)"); ToolTip.SetTip(_findInput, Localization.Tr("Query: plain text, or speaker:value, listener:value, strref:123, quest:value, AND/OR. Ctrl+F toggles bar. Escape to close.")); }
+            if (_findButton != null) _findButton.Content = Localization.Tr("Find");
+            if (_backButton != null) _backButton.Content = Localization.Tr("Back");
+            TrySetTextBlockInParent(_topDockWidget, "File Globals", Localization.Tr("File Globals"));
+            if (_unequipHandsCheckbox != null) _unequipHandsCheckbox.Content = Localization.Tr("Unequip Hands");
+            if (_unequipAllCheckbox != null) _unequipAllCheckbox.Content = Localization.Tr("Unequip All");
+            if (_skippableCheckbox != null) { _skippableCheckbox.Content = Localization.Tr("Skippable"); ToolTip.SetTip(_skippableCheckbox, Localization.Tr("Skippable (GFF: Skippable): BYTE. When checked, the player can skip dialogue lines. Default 1. When unchecked, dialogue is unskippable (e.g. cutscenes).")); }
+            if (_animatedCutCheckbox != null) _animatedCutCheckbox.Content = Localization.Tr("Animated Cut");
+            if (_oldHitCheckbox != null) _oldHitCheckbox.Content = Localization.Tr("Old Hit Check");
+            TrySetTextBlockInParent(_topDockWidget, "Conversation Type:", Localization.Tr("Conversation Type:"));
+            TrySetTextBlockInParent(_topDockWidget, "Computer Type:", Localization.Tr("Computer Type:"));
+            TrySetTextBlockInParent(_topDockWidget, "Delay before Reply:", Localization.Tr("Delay before Reply:"));
+            TrySetTextBlockInParent(_topDockWidget, "Delay before Entry:", Localization.Tr("Delay before Entry:"));
+            TrySetTextBlockInParent(_topDockWidget, "Voiceover ID:", Localization.Tr("Voiceover ID:"));
+            TrySetTextBlockInParent(_topDockWidget, "Conversation Aborts:", Localization.Tr("Conversation Aborts:"));
+            TrySetTextBlockInParent(_topDockWidget, "Conversation Ends:", Localization.Tr("Conversation Ends:"));
+            TrySetTextBlockInParent(_topDockWidget, "Camera Model:", Localization.Tr("Camera Model:"));
+            TrySetTextBlockInParent(_topDockWidget, "Ambient Track:", Localization.Tr("Ambient Track:"));
+            TrySetTextBlockInParent(_topDockWidget, "Cutscene Model", Localization.Tr("Cutscene Model"));
+            // Localize Conversation Type and Computer Type combo items (order matches AXAML)
+            if (_conversationSelect != null)
+            {
+                var convKeys = new[] { "Human", "Computer", "Type 3", "Type 4", "Type 5" };
+                for (int i = 0; i < _conversationSelect.Items.Count && i < convKeys.Length; i++)
+                {
+                    if (_conversationSelect.Items[i] is ComboBoxItem cbi)
+                        cbi.Content = Localization.Tr(convKeys[i]);
+                }
+                ToolTip.SetTip(_conversationSelect, Localization.Tr("ConversationType: 0=Human (cinematic, voice), 1=Computer (terminal UI), 2=Other (bark strings). Engine uses ReadFieldINT."));
+            }
+            if (_computerSelect != null)
+            {
+                var compKeys = new[] { "Modern", "Ancient" };
+                for (int i = 0; i < _computerSelect.Items.Count && i < compKeys.Length; i++)
+                {
+                    if (_computerSelect.Items[i] is ComboBoxItem cbi)
+                        cbi.Content = Localization.Tr(compKeys[i]);
+                }
+                ToolTip.SetTip(_computerSelect, Localization.Tr("ComputerType (GFF: ComputerType): BYTE. 0=Modern (green terminal), 1=Ancient (orange/red). Used when ConversationType is Computer."));
+            }
+            if (_addStuntButton != null) _addStuntButton.Content = Localization.Tr("Add");
+            if (_editStuntButton != null) _editStuntButton.Content = Localization.Tr("Edit");
+            if (_removeStuntButton != null) _removeStuntButton.Content = Localization.Tr("Remove");
+            TrySetTextBlockInParent(_leftDockWidget, "Orphaned Nodes & Pinned Items", Localization.Tr("Orphaned Nodes & Pinned Items"));
+            TrySetTextBlockInParent(_leftDockWidget, "Orphaned Nodes", Localization.Tr("Orphaned Nodes"));
+            TrySetTextBlockInParent(_leftDockWidget, "Pinned Items", Localization.Tr("Pinned Items"));
+            TrySetTextBlockInParent(_rightDockWidget, "Node Fields", Localization.Tr("Node Fields"));
+            if (_commentsEdit != null) { _commentsEdit.Watermark = Localization.Tr("Comments"); ToolTip.SetTip(_commentsEdit, Localization.Tr("Comment (GFF: Comment): Developer-only notes stored in the node. The game ignores this field entirely. Use it to document your dialogue structure, tag nodes for scripting, or leave notes for other modders. Comments are preserved when saving the DLG.")); }
+            TrySetTextBlockInParent(_rightDockWidget, "Script #1:", Localization.Tr("Script #1:"));
+            TrySetTextBlockInParent(_rightDockWidget, "Script #2:", Localization.Tr("Script #2:"));
+            TrySetTextBlockInParent(_rightDockWidget, "Conditional #1:", Localization.Tr("Conditional #1:"));
+            if (_condition1NotCheckbox != null) { _condition1NotCheckbox.Content = Localization.Tr("Not"); ToolTip.SetTip(_condition1NotCheckbox, Localization.Tr("Not (GFF: Not): Inverts the Active condition result. When checked, the link is shown only when the script returns FALSE. Use for hide-if-met logic.")); }
+            TrySetTextBlockInParent(_rightDockWidget, "Conditional #2:", Localization.Tr("Conditional #2:"));
+            if (_condition2NotCheckbox != null) { _condition2NotCheckbox.Content = Localization.Tr("Not"); ToolTip.SetTip(_condition2NotCheckbox, Localization.Tr("Not (GFF: Not): Inverts the Active2 condition result. When checked, the link is shown only when the script returns FALSE. Same as Condition #1 Not.")); }
+            TrySetTextBlockInParent(_rightDockWidget, "Current Animations", Localization.Tr("Current Animations"));
+            if (_addAnimButton != null) _addAnimButton.Content = Localization.Tr("Add");
+            if (_removeAnimButton != null) _removeAnimButton.Content = Localization.Tr("Remove");
+            if (_editAnimButton != null) _editAnimButton.Content = Localization.Tr("Edit");
+            TrySetTextBlockInParent(_rightDockWidget, "Emotion:", Localization.Tr("Emotion:"));
+            TrySetTextBlockInParent(_rightDockWidget, "Expression:", Localization.Tr("Expression:"));
+            TrySetTextBlockInParent(_rightDockWidget, "Sound:", Localization.Tr("Sound:"));
+            if (_soundCheckbox != null) { _soundCheckbox.Content = Localization.Tr("Exists"); ToolTip.SetTip(_soundCheckbox, Localization.Tr("SoundExists (GFF: SoundExists): BYTE. When checked (0x80), the engine treats the Sound/VO as present and waits for playback. Default 0x80. Affects WaitFlags and timing.")); }
+            if (_soundButton != null) _soundButton.Content = Localization.Tr("Play");
+            TrySetTextBlockInParent(_rightDockWidget, "Voice:", Localization.Tr("Voice:"));
+            if (_voiceButton != null) _voiceButton.Content = Localization.Tr("Play");
+            TrySetTextBlockInParent(_rightDockWidget, "Camera ID:", Localization.Tr("Camera ID:"));
+            TrySetTextBlockInParent(_rightDockWidget, "Camera Animation:", Localization.Tr("Camera Animation:"));
+            TrySetTextBlockInParent(_rightDockWidget, "Camera Angle:", Localization.Tr("Camera Angle:"));
+            TrySetTextBlockInParent(_rightDockWidget, "Camera Video Effect:", Localization.Tr("Camera Video Effect:"));
+            if (_nodeUnskippableCheckbox != null) { _nodeUnskippableCheckbox.Content = Localization.Tr("Node Unskippable"); ToolTip.SetTip(_nodeUnskippableCheckbox, Localization.Tr("NodeUnskippable: When checked, the player cannot skip this node's voice/text. Use for critical story moments. Overrides file-level Skippable.")); }
+            TrySetTextBlockInParent(_rightDockWidget, "Node ID:", Localization.Tr("Node ID:"));
+            TrySetTextBlockInParent(_rightDockWidget, "Alien Race Node:", Localization.Tr("Alien Race Node:"));
+            TrySetTextBlockInParent(_rightDockWidget, "Post Proc Node:", Localization.Tr("Post Proc Node:"));
+            TrySetTextBlockInParent(_rightDockWidget, "Delay:", Localization.Tr("Delay:"));
+            TrySetTextBlockInParent(_rightDockWidget, "Logic:", Localization.Tr("Logic:"));
+            TrySetTextBlockInParent(_rightDockWidget, "Wait Flags:", Localization.Tr("Wait Flags:"));
+            TrySetTextBlockInParent(_rightDockWidget, "Fade Type:", Localization.Tr("Fade Type:"));
+            TrySetTextBlockInParent(_dockWidget, "Journal / Node", Localization.Tr("Journal / Node"));
+            TrySetTextBlockInParent(_dockWidget, "Listener Tag:", Localization.Tr("Listener Tag:"));
+            TrySetTextBlockInParent(_dockWidget, "Quest:", Localization.Tr("Quest:"));
+            TrySetTextBlockInParent(_dockWidget, "Speaker Tag:", Localization.Tr("Speaker Tag:"));
+            TrySetTextBlockInParent(_dockWidget, "Quest Entry:", Localization.Tr("Quest Entry:"));
+            TrySetTextBlockInParent(_dockWidget, "Plot XP Percentage", Localization.Tr("Plot XP Percentage"));
+            TrySetTextBlockInParent(_dockWidget, "Plot Index:", Localization.Tr("Plot Index:"));
+            // Exhaustive tooltips for File Globals and Node Fields (localized; AXAML strings are overwritten at runtime)
+            if (_replyDelaySpin != null) ToolTip.SetTip(_replyDelaySpin, Localization.Tr("DelayReply: Default delay in ms before player reply options appear. DWORD. Used when node Delay is 0xFFFFFFFF."));
+            if (_entryDelaySpin != null) ToolTip.SetTip(_entryDelaySpin, Localization.Tr("DelayEntry: Default delay in ms before NPC entry lines appear. DWORD. Used when node Delay is 0xFFFFFFFF."));
+            if (_voIdEdit != null) ToolTip.SetTip(_voIdEdit, Localization.Tr("VoiceoverID: Optional ID for voice-over tracking. Leave blank for default."));
+            if (_onAbortCombo != null) ToolTip.SetTip(_onAbortCombo, Localization.Tr("EndConverAbort (GFF: EndConverAbort): Script run when the conversation is aborted (player exits early). ResRef of .ncs."));
+            if (_onEndEdit != null) ToolTip.SetTip(_onEndEdit, Localization.Tr("EndConversation (GFF: EndConversation): Script run when the conversation ends normally. ResRef of .ncs."));
+            if (_cameraModelSelect != null) ToolTip.SetTip(_cameraModelSelect, Localization.Tr("CameraModel (GFF: CameraModel): ResRef of MDL defining camera positions for cinematic dialogue. Required for Animated/Static camera angles."));
+            if (_ambientTrackCombo != null) ToolTip.SetTip(_ambientTrackCombo, Localization.Tr("AmbientTrack (GFF: AmbientTrack): ResRef of background music loop during dialogue. Leave blank for default."));
+            if (_stuntList != null) ToolTip.SetTip(_stuntList, Localization.Tr("StuntList: Custom models for dialogue participants. Each stunt maps Participant tag to StuntModel ResRef. Used for cutscenes with non-standard character models (e.g. droids, creatures). Participant must match a creature/npc tag in the dialogue."));
+            if (_script1ResrefEdit != null) ToolTip.SetTip(_script1ResrefEdit, Localization.Tr("Script (GFF: Script): Action script run when this node is reached. Executes after text/voice plays. Use for granting items, updating variables, or triggering cutscenes. ResRef must be a valid .ncs script. Params below are passed as (int int int int int string)."));
+            if (_script2ResrefEdit != null) ToolTip.SetTip(_script2ResrefEdit, Localization.Tr("Script2 (GFF: Script2): Secondary action script. KotOR supports two scripts per node; both run when the node is reached. Same param structure as Script. Use for modular or conditional logic."));
+            if (_condition1ResrefEdit != null) ToolTip.SetTip(_condition1ResrefEdit, Localization.Tr("Active (GFF: Active): Condition script that determines if this link is shown. Must return TRUE (non-zero) for the link to appear. Empty = always show. Params below are passed to the script. Logic combines with Condition #2 (AND/OR)."));
+            if (_condition2ResrefEdit != null) ToolTip.SetTip(_condition2ResrefEdit, Localization.Tr("Active2 (GFF: Active2): Second condition script for links. Combined with Condition #1 via Logic (AND/OR). KotOR 2 extension. Params use Param1b-5b, ParamStrB."));
+            SetToolTipSafe(_script1Param1Spin, "ActionParam1: First integer for action script. INT32 range.");
+            SetToolTipSafe(EditorHelpers.FindControlSafe<NumericUpDown>(this, "script1Param2Spin"), "ActionParam2: Second integer for action script. INT32 range.");
+            SetToolTipSafe(EditorHelpers.FindControlSafe<NumericUpDown>(this, "script1Param3Spin"), "ActionParam3: Third integer for action script. INT32 range.");
+            SetToolTipSafe(EditorHelpers.FindControlSafe<NumericUpDown>(this, "script1Param4Spin"), "ActionParam4: Fourth integer for action script. INT32 range.");
+            SetToolTipSafe(EditorHelpers.FindControlSafe<NumericUpDown>(this, "script1Param5Spin"), "ActionParam5: Fifth integer for action script. INT32 range.");
+            if (_script1Param6Edit != null) ToolTip.SetTip(_script1Param6Edit, Localization.Tr("ActionParamStrA: String argument for action script. Use for ResRefs, tags, or custom text."));
+            SetToolTipSafe(_script2Param1Spin, "ActionParam1b: First integer for Script2. INT32 range.");
+            SetToolTipSafe(_script2Param2Spin, "ActionParam2b: Second integer for Script2. INT32 range.");
+            SetToolTipSafe(_script2Param3Spin, "ActionParam3b: Third integer for Script2. INT32 range.");
+            SetToolTipSafe(_script2Param4Spin, "ActionParam4b: Fourth integer for Script2. INT32 range.");
+            SetToolTipSafe(_script2Param5Spin, "ActionParam5b: Fifth integer for Script2. INT32 range.");
+            if (_script2Param6Edit != null) ToolTip.SetTip(_script2Param6Edit, Localization.Tr("ActionParamStrB: String argument for Script2."));
+            SetToolTipSafe(_condition1Param1Spin, "Param1: First integer for Active condition script. INT32 range.");
+            SetToolTipSafe(_condition1Param2Spin, "Param2: Second integer for Active condition script. INT32 range.");
+            SetToolTipSafe(_condition1Param3Spin, "Param3: Third integer for Active condition script. INT32 range.");
+            SetToolTipSafe(_condition1Param4Spin, "Param4: Fourth integer for Active condition script. INT32 range.");
+            SetToolTipSafe(_condition1Param5Spin, "Param5: Fifth integer for Active condition script. INT32 range.");
+            if (_condition1Param6Edit != null) ToolTip.SetTip(_condition1Param6Edit, Localization.Tr("ParamStrA: String argument for Active condition script."));
+            SetToolTipSafe(_condition2Param1Spin, "Param1b: First integer for Active2 condition script. INT32 range.");
+            SetToolTipSafe(_condition2Param2Spin, "Param2b: Second integer for Active2. INT32 range.");
+            SetToolTipSafe(_condition2Param3Spin, "Param3b: Third integer for Active2. INT32 range.");
+            SetToolTipSafe(_condition2Param4Spin, "Param4b: Fourth integer for Active2. INT32 range.");
+            SetToolTipSafe(_condition2Param5Spin, "Param5b: Fifth integer for Active2. INT32 range.");
+            if (_condition2Param6Edit != null) ToolTip.SetTip(_condition2Param6Edit, Localization.Tr("ParamStrB: String argument for Active2 condition script."));
+            if (_emotionSelect != null) ToolTip.SetTip(_emotionSelect, Localization.Tr("Emotion (GFF: Emotion): Emotion ID from emotions.2da. Plays on the speaker. Used for gesture/emotion animations during dialogue."));
+            if (_expressionSelect != null) ToolTip.SetTip(_expressionSelect, Localization.Tr("FacialAnim (GFF: FacialAnim): Expression ID from expressions.2da. Plays on the speaker during this node. Index into the 2DA row."));
+            if (_soundComboBox != null) ToolTip.SetTip(_soundComboBox, Localization.Tr("Sound (GFF: Sound): ResRef of a WAV played during this node. Overrides VO_ResRef if both exist. Used for ambient or non-voice sounds."));
+            if (_voiceComboBox != null) ToolTip.SetTip(_voiceComboBox, Localization.Tr("VO_ResRef (GFF: VO_ResRef): Voice-over WAV ResRef. Plays when this node is reached. Used if Sound is empty."));
+            if (_cameraEffectSelect != null) ToolTip.SetTip(_cameraEffectSelect, Localization.Tr("CamVidEffect (GFF: CamVidEffect): Video effect ID from videoeffects.2da. INT32. -1 = no effect. Applied during this node's camera shot."));
+            if (_nodeIdSpin != null) ToolTip.SetTip(_nodeIdSpin, Localization.Tr("NodeID (GFF: NodeID): Unique identifier for this node. Used by scripts and external references. INT32. Modders can use this to target specific nodes in scripts."));
+            if (_alienRaceNodeSpin != null) ToolTip.SetTip(_alienRaceNodeSpin, Localization.Tr("AlienRaceNode (GFF: AlienRaceNode): Index for alien-race-specific dialogue variants. Used with alien language/translation systems. INT32."));
+            if (_postProcSpin != null) ToolTip.SetTip(_postProcSpin, Localization.Tr("PostProcNode (GFF: PostProcNode): Post-processing node index for special dialogue effects. INT32. See PostProcOwner at file level."));
+            if (_delaySpin != null) ToolTip.SetTip(_delaySpin, Localization.Tr("Delay (GFF: Delay): Milliseconds before text appears. DWORD. 0xFFFFFFFF (-1) = auto-calculated from voice/sound or DelayEntry/DelayReply."));
+            if (_logicSpin != null) ToolTip.SetTip(_logicSpin, Localization.Tr("Logic (GFF: Logic): For links, combines Condition #1 and #2: 0=AND (both must pass), 1=OR (either passes). KotOR 2 extension. INT32."));
+            if (_waitFlagSpin != null) ToolTip.SetTip(_waitFlagSpin, Localization.Tr("WaitFlags (GFF: WaitFlags): Bitmask controlling when the dialogue advances. DWORD. Bit 2=wait for sound/VO; bit 4=use explicit Delay; bit 0x10=Delay is set."));
+            if (_fadeTypeSpin != null) ToolTip.SetTip(_fadeTypeSpin, Localization.Tr("FadeType (GFF: FadeType): Screen fade for this node. BYTE 0-255. 0=None, 1=FadeIn, 2=FadeOut. Values 1-2 clear FadeDelay/FadeLength."));
+            if (_plotXpSpin != null) ToolTip.SetTip(_plotXpSpin, Localization.Tr("PlotXPPercentage: Float 0-100. Percentage of plot XP granted when this node is reached."));
+            if (_plotIndexCombo != null) ToolTip.SetTip(_plotIndexCombo, Localization.Tr("PlotIndex: Index into plot.2da. -1 = None."));
+            var topFloatBtn = EditorHelpers.FindControlSafe<Button>(this, "topDockFloatBtn");
+            var leftFloatBtn = EditorHelpers.FindControlSafe<Button>(this, "leftDockFloatBtn");
+            var rightFloatBtn = EditorHelpers.FindControlSafe<Button>(this, "rightDockFloatBtn");
+            var bottomFloatBtn = EditorHelpers.FindControlSafe<Button>(this, "bottomDockFloatBtn");
+            if (topFloatBtn != null) ToolTip.SetTip(topFloatBtn, Localization.Tr("Float (detach) panel"));
+            if (leftFloatBtn != null) ToolTip.SetTip(leftFloatBtn, Localization.Tr("Float (detach) panel"));
+            if (rightFloatBtn != null) ToolTip.SetTip(rightFloatBtn, Localization.Tr("Float (detach) panel"));
+            if (bottomFloatBtn != null) ToolTip.SetTip(bottomFloatBtn, Localization.Tr("Float (detach) panel"));
+            if (_tipLabel != null) ToolTip.SetTip(_tipLabel, Localization.Tr("Double-click to view all tips."));
+        }
+
+        private static void TrySetTextBlockInParent(Control parent, string currentText, string newText)
+        {
+            if (parent == null || string.IsNullOrEmpty(currentText)) return;
+            var tb = parent.GetVisualDescendants().OfType<TextBlock>().FirstOrDefault(t => t.Text == currentText);
+            if (tb != null) tb.Text = newText;
+        }
+
+        private static void SetToolTipSafe(Control control, string localizationKey)
+        {
+            if (control != null) ToolTip.SetTip(control, Localization.Tr(localizationKey));
+        }
+
+        /// <summary>
+        /// Toggles a panel between docked and floating. Vendor: QDockWidget float/dock behavior.
+        /// </summary>
+        private void ToggleFloatPanel(string id, Border contentHost, Control dockHost, WindowHolder floatWindowHolder, Button floatBtn, string title)
+        {
+            if (contentHost == null || dockHost == null) return;
+            if (floatWindowHolder.Value != null && floatWindowHolder.Value.IsVisible)
+            {
+                DockPanelBack(contentHost, dockHost, floatWindowHolder);
+                floatBtn.Content = "\u25A1"; // empty square = float
+                ToolTip.SetTip(floatBtn, Localization.Tr("Float (detach) panel"));
+            }
+            else
+            {
+                FloatPanel(contentHost, dockHost, floatWindowHolder, floatBtn, title);
+                floatBtn.Content = "\u25A3"; // filled square = dock
+                ToolTip.SetTip(floatBtn, Localization.Tr("Dock (reattach) panel"));
+            }
+        }
+
+        private void FloatPanel(Border contentHost, Control dockHost, WindowHolder floatWindowHolder, Button floatBtn, string title)
+        {
+            var child = contentHost.Child;
+            if (child == null) return;
+            contentHost.Child = null;
+            double w = 320;
+            double h = 200;
+            if (dockHost != null)
+            {
+                w = Math.Max(320, dockHost.Bounds.Width);
+                h = Math.Max(200, dockHost.Bounds.Height);
+                dockHost.IsVisible = false;
+            }
+            var floatWindow = new Window
+            {
+                Title = title,
+                Width = w,
+                Height = h,
+                WindowStartupLocation = WindowStartupLocation.Manual,
+                Content = new Border { Child = child, Padding = new Thickness(8) }
+            };
+            floatWindow.Closed += (s, e) =>
+            {
+                DockPanelBack(contentHost, dockHost, floatWindowHolder);
+                floatBtn.Content = "\u25A1";
+                ToolTip.SetTip(floatBtn, Localization.Tr("Float (detach) panel"));
+            };
+            floatWindowHolder.Value = floatWindow;
+
+            // Defer Show so the window opens after the button click is fully processed.
+            // Showing immediately can cause the window to close instantly (focus/owner handling).
+            var ownerWindow = this;
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (floatWindowHolder.Value != floatWindow) return;
+                try
+                {
+                    // Position near the owner so the window doesn't appear at (0,0)
+                    if (ownerWindow is Window owner)
+                    {
+                        var pos = owner.Position;
+                        floatWindow.Position = new PixelPoint(pos.X + 40, pos.Y + 40);
+                    }
+                    floatWindow.Show(ownerWindow);
+                }
+                catch (InvalidOperationException)
+                {
+                    // Owner may have been closed; show without owner
+                    floatWindow.Show();
+                }
+            }, DispatcherPriority.Loaded);
+        }
+
+        private void DockPanelBack(Border contentHost, Control dockHost, WindowHolder floatWindowHolder)
+        {
+            var floatWindow = floatWindowHolder.Value;
+            if (floatWindow == null) return;
+            var winContent = floatWindow.Content as Border;
+            var child = winContent?.Child;
+            if (child != null)
+            {
+                winContent.Child = null;
+                contentHost.Child = child;
+            }
+            if (dockHost != null)
+                dockHost.IsVisible = true;
+            // Clear holder before Close() so the Closed handler doesn't re-enter
+            floatWindowHolder.Value = null;
+            floatWindow.Close();
+        }
+
+        private sealed class WindowHolder
+        {
+            public Window Value;
+        }
+
+        /// <summary>
+        /// Sets up right-click file context menus on script/condition/sound/voice/onEnd/onAbort/camera/ambient controls.
+        /// </summary>
+        private void SetupFileContextMenus()
+        {
+            var searchOrder = new[] { SearchLocation.CHITIN, SearchLocation.OVERRIDE, SearchLocation.MODULES, SearchLocation.RIMS };
+            SetupFileContextMenuForControl(_script1ResrefEdit, new[] { ResourceType.NSS, ResourceType.NCS }, searchOrder, true, "script");
+            SetupFileContextMenuForControl(_script2ResrefEdit, new[] { ResourceType.NSS, ResourceType.NCS }, searchOrder, true, "script");
+            SetupFileContextMenuForControl(_condition1ResrefEdit, new[] { ResourceType.NSS, ResourceType.NCS }, searchOrder, true, "script");
+            SetupFileContextMenuForControl(_condition2ResrefEdit, new[] { ResourceType.NSS, ResourceType.NCS }, searchOrder, true, "script");
+            SetupFileContextMenuForControl(_onAbortCombo, new[] { ResourceType.NSS, ResourceType.NCS }, searchOrder, true, "script");
+            SetupFileContextMenuForControl(_onEndEdit, new[] { ResourceType.NSS, ResourceType.NCS }, searchOrder, true, "script");
+            SetupFileContextMenuForControl(_cameraModelSelect, new[] { ResourceType.MDL }, new[] { SearchLocation.CHITIN, SearchLocation.OVERRIDE }, false, null);
+            SetupFileContextMenuForControl(_ambientTrackCombo, new[] { ResourceType.WAV, ResourceType.MP3 }, new[] { SearchLocation.MUSIC }, false, null);
+            SetupFileContextMenuForControl(_soundComboBox, new[] { ResourceType.WAV, ResourceType.MP3 }, new[] { SearchLocation.SOUND, SearchLocation.VOICE }, false, null);
+            SetupFileContextMenuForControl(_voiceComboBox, new[] { ResourceType.WAV, ResourceType.MP3 }, new[] { SearchLocation.VOICE }, false, null);
+        }
+
+        private void SetupFileContextMenuForControl(Control control, ResourceType[] resourceTypes, SearchLocation[] order, bool enableFindRefs, string referenceSearchType)
+        {
+            if (control == null || _installation == null || resourceTypes == null || resourceTypes.Length == 0)
+            {
+                return;
+            }
+            control.ContextRequested += (sender, e) =>
+            {
+                string widgetText = (control as ComboBox)?.Text?.Trim() ?? (control as TextBox)?.Text?.Trim() ?? "";
+                var menu = new ContextMenu();
+                var fileSubMenu = new MenuItem { Header = Localization.Tr("File...") };
+                int locationCount = 0;
+                var flatLocations = new List<LocationResult>();
+                foreach (var restype in resourceTypes)
+                {
+                    var query = new ResourceIdentifier(widgetText, restype);
+                    var locations = _installation.Locations(new List<ResourceIdentifier> { query }, order);
+                    if (locations != null && locations.ContainsKey(query) && locations[query].Count > 0)
+                    {
+                        foreach (var loc in locations[query])
+                        {
+                            locationCount++;
+                            flatLocations.Add(loc);
+                            var displayPath = System.IO.Path.GetFileName(loc.FilePath) ?? loc.FilePath;
+                            var subItem = new MenuItem { Header = displayPath };
+                            subItem.Click += (s, ev) =>
+                            {
+                                try
+                                {
+                                    var fr = loc.FileResource ?? new FileResource(widgetText, restype, loc.Size, loc.Offset, loc.FilePath);
+                                    var dialog = new LoadFromLocationResultDialog(this, new List<FileResource> { fr }, _installation);
+                                    dialog.Title = displayPath;
+                                    dialog.Show();
+                                }
+                                catch (Exception ex)
+                                {
+                                    System.Console.WriteLine($"Open location: {ex.Message}");
+                                }
+                            };
+                            fileSubMenu.Items.Add(subItem);
+                        }
+                    }
+                }
+                if (locationCount > 0)
+                {
+                    var detailsItem = new MenuItem { Header = Localization.Tr("Details...") };
+                    detailsItem.Click += (s, ev) =>
+                    {
+                        var resources = flatLocations.Select(loc => loc.FileResource ?? new FileResource(widgetText, resourceTypes[0], loc.Size, loc.Offset, loc.FilePath)).ToList();
+                        var dialog = new LoadFromLocationResultDialog(this, resources, _installation);
+                        dialog.Title = string.Format(Localization.Tr("{0} file(s) located"), locationCount);
+                        dialog.Show();
+                    };
+                    fileSubMenu.Items.Add(new Separator());
+                    fileSubMenu.Items.Add(detailsItem);
+                }
+                else
+                {
+                    fileSubMenu.Header = Localization.Tr("0 file(s) located");
+                    fileSubMenu.IsEnabled = false;
+                }
+                menu.Items.Add(fileSubMenu);
+                if (locationCount > 0 && fileSubMenu.Header is string h && h == Localization.Tr("File..."))
+                {
+                    fileSubMenu.Header = string.Format(Localization.Tr("{0} file(s) located"), locationCount);
+                }
+                if (enableFindRefs && !string.IsNullOrWhiteSpace(widgetText))
+                {
+                    menu.Items.Add(new Separator());
+                    var findRefItem = new MenuItem { Header = Localization.Tr("Find References...") };
+                    findRefItem.Click += (s, ev) => FindReferencesToResref(widgetText.Trim(), referenceSearchType ?? "resref");
+                    menu.Items.Add(findRefItem);
+                }
+                menu.Open(control);
+                e.Handled = true;
+            };
+        }
+
+        private void FindReferencesToResref(string searchText, string searchType)
+        {
+            if (_installation == null || string.IsNullOrWhiteSpace(searchText))
+            {
+                return;
+            }
+            var results = new List<FileResource>();
+            var overrideList = _installation.OverrideResources() ?? new List<FileResource>();
+            foreach (var fileRes in overrideList.Where(r => r != null && (r.ResType == ResourceType.NSS || r.ResType == ResourceType.NCS)))
+            {
+                try
+                {
+                    var rr = _installation.Resource(fileRes.ResName, fileRes.ResType, new[] { SearchLocation.OVERRIDE });
+                    if (rr?.Data == null)
+                    {
+                        continue;
+                    }
+                    string content = System.Text.Encoding.UTF8.GetString(rr.Data);
+                    if (content.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        results.Add(fileRes);
+                    }
+                }
+                catch
+                {
+                    // Skip
+                }
+            }
+            if (results.Count == 0)
+            {
+                MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No references found"), string.Format(Localization.Tr("No references found for '{0}'."), searchText),
+                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowAsync();
+                return;
+            }
+            var dialog = new LoadFromLocationResultDialog(this, results, _installation);
+            dialog.Title = string.Format(Localization.Tr("{0} reference(s) found for '{1}'"), results.Count, searchText);
+            dialog.Show();
         }
 
         private void WireFilePropertyHandlers()
@@ -470,7 +1070,10 @@ namespace OdyTools.Editors.DLG
             if (_replyDelaySpin != null) _replyDelaySpin.ValueChanged += (s, e) => OnFilePropertyChanged();
             if (_onAbortCombo != null) _onAbortCombo.LostFocus += (s, e) => OnFilePropertyChanged();
             if (_onEndEdit != null) _onEndEdit.LostFocus += (s, e) => OnFilePropertyChanged();
-            if (_cameraModelSelect != null) _cameraModelSelect.LostFocus += (s, e) => OnFilePropertyChanged();
+            if (_cameraModelSelect != null)
+            {
+                _cameraModelSelect.LostFocus += (s, e) => { OnFilePropertyChanged(); UpdateCameraWidgetState(); };
+            }
             if (_unequipHandsCheckbox != null) { _unequipHandsCheckbox.Checked += (s, e) => OnFilePropertyChanged(); _unequipHandsCheckbox.Unchecked += (s, e) => OnFilePropertyChanged(); }
             if (_unequipAllCheckbox != null) { _unequipAllCheckbox.Checked += (s, e) => OnFilePropertyChanged(); _unequipAllCheckbox.Unchecked += (s, e) => OnFilePropertyChanged(); }
             if (_skippableCheckbox != null) { _skippableCheckbox.Checked += (s, e) => OnFilePropertyChanged(); _skippableCheckbox.Unchecked += (s, e) => OnFilePropertyChanged(); }
@@ -491,7 +1094,8 @@ namespace OdyTools.Editors.DLG
             if (_condition2Param6Edit != null) _condition2Param6Edit.LostFocus += (s, e) => OnNodeUpdate();
             WireCheck(_condition2NotCheckbox);
             WireCombo(_script1ResrefEdit); WireCombo(_script2ResrefEdit);
-            WireSpin(_script1Param1Spin); WireSpin(_script2Param1Spin); WireSpin(_script2Param2Spin); WireSpin(_script2Param3Spin); WireSpin(_script2Param4Spin); WireSpin(_script2Param5Spin);
+            WireSpin(_script1Param1Spin); WireSpin(_script1Param2Spin); WireSpin(_script1Param3Spin); WireSpin(_script1Param4Spin); WireSpin(_script1Param5Spin);
+            WireSpin(_script2Param1Spin); WireSpin(_script2Param2Spin); WireSpin(_script2Param3Spin); WireSpin(_script2Param4Spin); WireSpin(_script2Param5Spin);
             if (_script1Param6Edit != null) _script1Param6Edit.LostFocus += (s, e) => OnNodeUpdate();
             if (_script2Param6Edit != null) _script2Param6Edit.LostFocus += (s, e) => OnNodeUpdate();
             WireSpin(_cameraIdSpin); WireSpin(_cameraAnimSpin);
@@ -501,6 +1105,7 @@ namespace OdyTools.Editors.DLG
             if (_expressionSelect != null) _expressionSelect.SelectionChanged += (s, e) => OnNodeUpdate();
             WireSpin(_nodeIdSpin); WireSpin(_alienRaceNodeSpin); WireSpin(_postProcSpin); WireSpin(_delaySpin); WireSpin(_waitFlagSpin); WireSpin(_fadeTypeSpin);
             WireCheck(_nodeUnskippableCheckbox);
+            WireCheck(_soundCheckbox);
             if (_speakerEdit != null) _speakerEdit.LostFocus += (s, e) => OnNodeUpdate();
             if (_listenerEdit != null) _listenerEdit.LostFocus += (s, e) => OnNodeUpdate();
             if (_questEdit != null) _questEdit.LostFocus += (s, e) => OnNodeUpdate();
@@ -519,6 +1124,7 @@ namespace OdyTools.Editors.DLG
             if (_addStuntButton != null) _addStuntButton.Click += (s, e) => OnAddStuntClicked();
             if (_editStuntButton != null) _editStuntButton.Click += (s, e) => OnEditStuntClicked();
             if (_removeStuntButton != null) _removeStuntButton.Click += (s, e) => OnRemoveStuntClicked();
+            if (_stuntList != null) _stuntList.DoubleTapped += OnStuntListDoubleTapped;
         }
 
         private void InitializeCameraWidgets()
@@ -530,60 +1136,32 @@ namespace OdyTools.Editors.DLG
                 return;
             }
             // Initialize camera widgets (code path when XAML not used)
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui:1112-1151
             _cameraIdSpin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = -1 };
             _cameraIdSpin.ValueChanged += (s, e) => OnNodeUpdate();
 
-            _cameraAnimSpin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _cameraAnimSpin = new NumericUpDown { Minimum = 1200, Maximum = 65535, Value = 1200 };
             _cameraAnimSpin.ValueChanged += (s, e) => OnNodeUpdate();
 
             _cameraAngleSelect = new ComboBox();
-            // Camera angle options: 0-7 (matching Python implementation)
-            // 0 = Default, 1-6 = Various angles, 7 = Custom
-            _cameraAngleSelect.Items.Add("Default (0)");
-            _cameraAngleSelect.Items.Add("Angle 1");
-            _cameraAngleSelect.Items.Add("Angle 2");
-            _cameraAngleSelect.Items.Add("Angle 3");
-            _cameraAngleSelect.Items.Add("Angle 4");
-            _cameraAngleSelect.Items.Add("Angle 5");
-            _cameraAngleSelect.Items.Add("Angle 6");
-            _cameraAngleSelect.Items.Add("Custom (7)");
+            // Camera angle options: 0-6 (localized)
+            // Vendor dlg.ui: Auto(0), Face(1), Shoulder(2), Wide Shot(3), Animated Camera(4), (DO NOT USE)(5), Static Camera(6)
+            _cameraAngleSelect.Items.Add(Localization.Tr("Auto"));
+            _cameraAngleSelect.Items.Add(Localization.Tr("Face"));
+            _cameraAngleSelect.Items.Add(Localization.Tr("Shoulder"));
+            _cameraAngleSelect.Items.Add(Localization.Tr("Wide Shot"));
+            _cameraAngleSelect.Items.Add(Localization.Tr("Animated Camera"));
+            _cameraAngleSelect.Items.Add(Localization.Tr("(DO NOT USE THIS ENTRY)"));
+            _cameraAngleSelect.Items.Add(Localization.Tr("Static Camera"));
             _cameraAngleSelect.SelectedIndex = 0;
             _cameraAngleSelect.SelectionChanged += (s, e) => OnNodeUpdate();
 
-            _cameraEffectSelect = new ComboBox();
-            // Camera effect options (matching Python implementation)
-            _cameraEffectSelect.Items.Add("None (0)");
-            _cameraEffectSelect.Items.Add("Effect 1");
-            _cameraEffectSelect.Items.Add("Effect 2");
-            _cameraEffectSelect.Items.Add("Effect 3");
-            _cameraEffectSelect.SelectedIndex = 0;
+            _cameraEffectSelect = new ComboBox2DA();
             _cameraEffectSelect.SelectionChanged += (s, e) => OnNodeUpdate();
 
-            // Original: QComboBox emotionSelect (KotOR 2)
-            _emotionSelect = new ComboBox();
-            _emotionSelect.Items.Add("0 (None)");
-            _emotionSelect.Items.Add("1 (Happy)");
-            _emotionSelect.Items.Add("2 (Sad)");
-            _emotionSelect.Items.Add("3 (Angry)");
-            _emotionSelect.Items.Add("4 (Surprised)");
-            _emotionSelect.Items.Add("5 (Fear)");
-            _emotionSelect.Items.Add("6 (Disgust)");
-            _emotionSelect.Items.Add("7 (Neutral)");
-            _emotionSelect.SelectedIndex = 0;
+            _emotionSelect = new ComboBox2DA();
             _emotionSelect.SelectionChanged += (s, e) => OnNodeUpdate();
 
-            // Original: QComboBox expressionSelect (KotOR 2)
-            _expressionSelect = new ComboBox();
-            _expressionSelect.Items.Add("0 (None)");
-            _expressionSelect.Items.Add("1 (Smile)");
-            _expressionSelect.Items.Add("2 (Frown)");
-            _expressionSelect.Items.Add("3 (Scowl)");
-            _expressionSelect.Items.Add("4 (Shock)");
-            _expressionSelect.Items.Add("5 (Terror)");
-            _expressionSelect.Items.Add("6 (Wince)");
-            _expressionSelect.Items.Add("7 (Blink)");
-            _expressionSelect.SelectedIndex = 0;
+            _expressionSelect = new ComboBox2DA();
             _expressionSelect.SelectionChanged += (s, e) => OnNodeUpdate();
         }
 
@@ -592,59 +1170,206 @@ namespace OdyTools.Editors.DLG
         /// </summary>
         private void PopulateCameraAndEmotionComboItems()
         {
+            // Vendor dlg.ui: Auto, Face, Shoulder, Wide Shot, Animated Camera, (DO NOT USE THIS ENTRY), Static Camera (localized)
             if (_cameraAngleSelect != null && _cameraAngleSelect.Items.Count == 0)
             {
-                _cameraAngleSelect.Items.Add("Default (0)");
-                _cameraAngleSelect.Items.Add("Angle 1");
-                _cameraAngleSelect.Items.Add("Angle 2");
-                _cameraAngleSelect.Items.Add("Angle 3");
-                _cameraAngleSelect.Items.Add("Angle 4");
-                _cameraAngleSelect.Items.Add("Angle 5");
-                _cameraAngleSelect.Items.Add("Angle 6");
-                _cameraAngleSelect.Items.Add("Custom (7)");
+                _cameraAngleSelect.Items.Add(Localization.Tr("Auto"));
+                _cameraAngleSelect.Items.Add(Localization.Tr("Face"));
+                _cameraAngleSelect.Items.Add(Localization.Tr("Shoulder"));
+                _cameraAngleSelect.Items.Add(Localization.Tr("Wide Shot"));
+                _cameraAngleSelect.Items.Add(Localization.Tr("Animated Camera"));
+                _cameraAngleSelect.Items.Add(Localization.Tr("(DO NOT USE THIS ENTRY)"));
+                _cameraAngleSelect.Items.Add(Localization.Tr("Static Camera"));
                 _cameraAngleSelect.SelectedIndex = 0;
             }
-            if (_cameraEffectSelect != null && _cameraEffectSelect.Items.Count == 0)
+            // emotion, expression, cameraEffect, plotIndex are populated by SetupTslEmotionsAndExpressions
+        }
+
+        /// <summary>
+        /// True when an installation is selected in File → DLG Settings and we have that installation; otherwise we rely only on manual paths from DLG Settings.
+        /// </summary>
+        private bool UseInstallationForResources()
+        {
+            var dlgSettings = new DLGSettings();
+            return dlgSettings.UseInstallation(true) && _installation != null;
+        }
+
+        /// <summary>
+        /// Populates emotion, expression, cameraEffect, plotIndex ComboBox2DAs from 2DA files when installation available.
+        /// Matching vendor: editor.py _setup_tsl_emotions_and_expressions, _setup_installation (vid_effects, plot2DA).
+        /// </summary>
+        private void SetupTslEmotionsAndExpressions()
+        {
+            bool useInstallation = UseInstallationForResources();
+            var installation = useInstallation ? Installation : null;
+            var dlgSettings = new DLGSettings();
+            var customFolders = dlgSettings.GetCustom2DAFolders();
+            if (_emotionSelect != null)
             {
-                _cameraEffectSelect.Items.Add("None (0)");
-                _cameraEffectSelect.Items.Add("Effect 1");
-                _cameraEffectSelect.Items.Add("Effect 2");
-                _cameraEffectSelect.Items.Add("Effect 3");
-                _cameraEffectSelect.SelectedIndex = 0;
+                _emotionSelect.Items.Clear();
+                if (installation != null)
+                {
+                    var emotions = installation.Get2DAWithCustomFolders(OdyInstallation.TwoDAEmotions, customFolders);
+                    if (emotions != null)
+                    {
+                        _emotionSelect.SetContext(emotions, installation, OdyInstallation.TwoDAEmotions);
+                        var labels = emotions.GetColumn("label");
+                        if (labels != null) _emotionSelect.SetItems(labels, sortAlphabetically: false);
+                    }
+                }
+                else
+                {
+                    var path = dlgSettings.Resolve2DAPath(OdyInstallation.TwoDAEmotions);
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        var emotions = TwoDAFileHelper.LoadFromPath(path);
+                        if (emotions != null)
+                        {
+                            _emotionSelect.SetContext(emotions, null, OdyInstallation.TwoDAEmotions);
+                            var labels = emotions.GetColumn("label");
+                            if (labels != null) _emotionSelect.SetItems(labels, sortAlphabetically: false);
+                        }
+                    }
+                }
+                if (_emotionSelect.Items.Count == 0)
+                {
+                    _emotionSelect.SetItems(new[] { "0 (None)", "1 (Happy)", "2 (Sad)", "3 (Angry)", "4 (Surprised)", "5 (Fear)", "6 (Disgust)", "7 (Neutral)" }, sortAlphabetically: false, cleanupStrings: false);
+                }
             }
-            if (_emotionSelect != null && _emotionSelect.Items.Count == 0)
+            if (_expressionSelect != null)
             {
-                _emotionSelect.Items.Add("0 (None)");
-                _emotionSelect.Items.Add("1 (Happy)");
-                _emotionSelect.Items.Add("2 (Sad)");
-                _emotionSelect.Items.Add("3 (Angry)");
-                _emotionSelect.Items.Add("4 (Surprised)");
-                _emotionSelect.Items.Add("5 (Fear)");
-                _emotionSelect.Items.Add("6 (Disgust)");
-                _emotionSelect.Items.Add("7 (Neutral)");
-                _emotionSelect.SelectedIndex = 0;
+                _expressionSelect.Items.Clear();
+                if (installation != null)
+                {
+                    var expressions = installation.Get2DAWithCustomFolders(OdyInstallation.TwoDAExpressions, customFolders);
+                    if (expressions != null)
+                    {
+                        _expressionSelect.SetContext(expressions, installation, OdyInstallation.TwoDAExpressions);
+                        var labels = expressions.GetColumn("label");
+                        if (labels != null) _expressionSelect.SetItems(labels, sortAlphabetically: false);
+                    }
+                }
+                else
+                {
+                    var path = dlgSettings.Resolve2DAPath(OdyInstallation.TwoDAExpressions);
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        var expressions = TwoDAFileHelper.LoadFromPath(path);
+                        if (expressions != null)
+                        {
+                            _expressionSelect.SetContext(expressions, null, OdyInstallation.TwoDAExpressions);
+                            var labels = expressions.GetColumn("label");
+                            if (labels != null) _expressionSelect.SetItems(labels, sortAlphabetically: false);
+                        }
+                    }
+                }
+                if (_expressionSelect.Items.Count == 0)
+                {
+                    _expressionSelect.SetItems(new[] { "0 (None)", "1 (Smile)", "2 (Frown)", "3 (Scowl)", "4 (Shock)", "5 (Terror)", "6 (Wince)", "7 (Blink)" }, sortAlphabetically: false, cleanupStrings: false);
+                }
             }
-            if (_expressionSelect != null && _expressionSelect.Items.Count == 0)
+            if (_cameraEffectSelect != null)
             {
-                _expressionSelect.Items.Add("0 (None)");
-                _expressionSelect.Items.Add("1 (Smile)");
-                _expressionSelect.Items.Add("2 (Frown)");
-                _expressionSelect.Items.Add("3 (Scowl)");
-                _expressionSelect.Items.Add("4 (Shock)");
-                _expressionSelect.Items.Add("5 (Terror)");
-                _expressionSelect.Items.Add("6 (Wince)");
-                _expressionSelect.Items.Add("7 (Blink)");
-                _expressionSelect.SelectedIndex = 0;
+                _cameraEffectSelect.Items.Clear();
+                if (installation != null)
+                {
+                    var vidEffects = installation.Get2DAWithCustomFolders(OdyInstallation.TwoDAVideoEffects, customFolders);
+                    if (vidEffects != null)
+                    {
+                        _cameraEffectSelect.SetContext(vidEffects, installation, OdyInstallation.TwoDAVideoEffects);
+                        _cameraEffectSelect.AddItem("[Unset]", -1);
+                        var labels = vidEffects.GetColumn("label");
+                        if (labels != null)
+                        {
+                            for (int i = 0; i < labels.Count; i++)
+                            {
+                                var l = (labels[i] ?? "").Replace("VIDEO_EFFECT_", "").Replace("_", " ");
+                                if (!string.IsNullOrWhiteSpace(l))
+                                    _cameraEffectSelect.AddItem(l, i);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    var path = dlgSettings.Resolve2DAPath(OdyInstallation.TwoDAVideoEffects);
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        var vidEffects = TwoDAFileHelper.LoadFromPath(path);
+                        if (vidEffects != null)
+                        {
+                            _cameraEffectSelect.SetContext(vidEffects, null, OdyInstallation.TwoDAVideoEffects);
+                            _cameraEffectSelect.AddItem("[Unset]", -1);
+                            var labels = vidEffects.GetColumn("label");
+                            if (labels != null)
+                            {
+                                for (int i = 0; i < labels.Count; i++)
+                                {
+                                    var l = (labels[i] ?? "").Replace("VIDEO_EFFECT_", "").Replace("_", " ");
+                                    if (!string.IsNullOrWhiteSpace(l))
+                                        _cameraEffectSelect.AddItem(l, i);
+                                }
+                            }
+                        }
+                    }
+                }
+                if (_cameraEffectSelect.Items.Count == 0)
+                {
+                    _cameraEffectSelect.AddItem("[Unset]", -1);
+                    _cameraEffectSelect.SetItems(allCameraEffects, sortAlphabetically: false, cleanupStrings: false);
+                }
             }
-            if (_plotIndexCombo != null && _plotIndexCombo.Items.Count == 0)
+            if (_plotIndexCombo != null)
             {
-                _plotIndexCombo.Items.Add("0 (No Plot)");
-                _plotIndexCombo.Items.Add("1 (Plot 1)");
-                _plotIndexCombo.Items.Add("2 (Plot 2)");
-                _plotIndexCombo.Items.Add("3 (Plot 3)");
-                _plotIndexCombo.Items.Add("4 (Plot 4)");
-                _plotIndexCombo.Items.Add("5 (Plot 5)");
-                _plotIndexCombo.SelectedIndex = 0;
+                _plotIndexCombo.Items.Clear();
+                if (installation != null)
+                {
+                    var plot2da = installation.Get2DAWithCustomFolders(OdyInstallation.TwoDAPlot, customFolders);
+                    if (plot2da != null)
+                    {
+                        _plotIndexCombo.SetContext(plot2da, installation, OdyInstallation.TwoDAPlot);
+                        _plotIndexCombo.AddItem("[None]", -1);
+                        var labels = plot2da.GetColumn("label");
+                        if (labels != null)
+                        {
+                            for (int i = 0; i < labels.Count; i++)
+                            {
+                                var s = (labels[i] ?? "").ToLowerInvariant();
+                                var titled = string.IsNullOrEmpty(s) ? s : char.ToUpperInvariant(s[0]) + s.Substring(1);
+                                _plotIndexCombo.AddItem(titled, i);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    var path = dlgSettings.Resolve2DAPath(OdyInstallation.TwoDAPlot);
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        var plot2da = TwoDAFileHelper.LoadFromPath(path);
+                        if (plot2da != null)
+                        {
+                            _plotIndexCombo.SetContext(plot2da, null, OdyInstallation.TwoDAPlot);
+                            _plotIndexCombo.AddItem("[None]", -1);
+                            var labels = plot2da.GetColumn("label");
+                            if (labels != null)
+                            {
+                                for (int idx = 0; idx < labels.Count; idx++)
+                                {
+                                    var s = (labels[idx]?.ToString() ?? "").ToLowerInvariant();
+                                    var titled = string.IsNullOrEmpty(s) ? s : char.ToUpperInvariant(s[0]) + s.Substring(1);
+                                    _plotIndexCombo.AddItem(titled, idx);
+                                }
+                            }
+                        }
+                    }
+                }
+                if (_plotIndexCombo.Items.Count == 0)
+                {
+                    _plotIndexCombo.AddItem("[None]", -1);
+                    for (int i = 0; i <= 5; i++)
+                        _plotIndexCombo.AddItem(i == 0 ? "No Plot" : $"Plot {i}", i);
+                }
             }
         }
 
@@ -662,10 +1387,12 @@ namespace OdyTools.Editors.DLG
             dockPanel.Children.Add(panel);
             DockPanel.SetDock(panel, Dock.Bottom);
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:436-467
-            // Original: def setup_extra_widgets(self):
             // Find bar - must be added first (before dialog tree) to match PyKotor layout
-            // Matching PyKotor: self.ui.verticalLayout_main.insertWidget(0, self.find_bar)
+            SetupGoToBar();
+            if (_goToBar != null)
+            {
+                panel.Children.Insert(0, _goToBar);
+            }
             SetupFindBar();
             if (_findBar != null)
             {
@@ -673,12 +1400,8 @@ namespace OdyTools.Editors.DLG
             }
 
             // Initialize file-level properties (root DLG fields)
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui:1587-1603
-            // Original: QLineEdit voIdEdit (row 4, column 1 in file properties grid)
             _voIdEdit = new TextBox();
             _voIdEdit.LostFocus += (s, e) => OnFilePropertyChanged();
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-            // Original: QComboBox ambientTrackCombo
             _ambientTrackCombo = new ComboBox { IsEditable = true };
             _ambientTrackCombo.LostFocus += (s, e) => OnFilePropertyChanged();
             var filePropertiesPanel = new StackPanel();
@@ -693,8 +1416,6 @@ namespace OdyTools.Editors.DLG
             filePropertiesPanel.Children.Add(ambientTrackPanel);
 
             // Initialize conversation type combo box
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-            // Original: QComboBox conversationSelect
             _conversationSelect = new ComboBox();
             _conversationSelect.Items.Add("Human");
             _conversationSelect.Items.Add("Computer");
@@ -707,8 +1428,6 @@ namespace OdyTools.Editors.DLG
             filePropertiesPanel.Children.Add(conversationPanel);
 
             // Initialize computer type combo box
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-            // Original: QComboBox computerSelect
             _computerSelect = new ComboBox();
             _computerSelect.Items.Add("Modern");
             _computerSelect.Items.Add("Ancient");
@@ -720,8 +1439,6 @@ namespace OdyTools.Editors.DLG
             filePropertiesPanel.Children.Add(computerPanel);
 
             // Initialize entry delay spin box
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-            // Original: QSpinBox entryDelaySpin
             _entryDelaySpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Width = 120 };
             _entryDelaySpin.ValueChanged += (s, e) => OnFilePropertyChanged();
             var entryDelayPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal };
@@ -730,8 +1447,6 @@ namespace OdyTools.Editors.DLG
             filePropertiesPanel.Children.Add(entryDelayPanel);
 
             // Initialize reply delay spin box
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-            // Original: QSpinBox replyDelaySpin
             _replyDelaySpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Width = 120 };
             _replyDelaySpin.ValueChanged += (s, e) => OnFilePropertyChanged();
             var replyDelayPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal };
@@ -740,8 +1455,6 @@ namespace OdyTools.Editors.DLG
             filePropertiesPanel.Children.Add(replyDelayPanel);
 
             // Initialize on abort combo box (ResRef)
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-            // Original: QComboBox onAbortCombo
             _onAbortCombo = new ComboBox { IsEditable = true };
             _onAbortCombo.LostFocus += (s, e) => OnFilePropertyChanged();
             var onAbortPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal };
@@ -750,8 +1463,6 @@ namespace OdyTools.Editors.DLG
             filePropertiesPanel.Children.Add(onAbortPanel);
 
             // Initialize on end combo box (ResRef)
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-            // Original: QComboBox onEndEdit
             _onEndEdit = new ComboBox { IsEditable = true };
             _onEndEdit.LostFocus += (s, e) => OnFilePropertyChanged();
             var onEndPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal };
@@ -760,8 +1471,6 @@ namespace OdyTools.Editors.DLG
             filePropertiesPanel.Children.Add(onEndPanel);
 
             // Initialize camera model combo box (ResRef)
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-            // Original: QComboBox cameraModelSelect
             _cameraModelSelect = new ComboBox { IsEditable = true };
             _cameraModelSelect.LostFocus += (s, e) => OnFilePropertyChanged();
             var cameraModelPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal };
@@ -770,8 +1479,6 @@ namespace OdyTools.Editors.DLG
             filePropertiesPanel.Children.Add(cameraModelPanel);
 
             // Initialize file-level checkboxes
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-            // Original: QCheckBox unequipHandsCheckbox, unequipAllCheckbox, skippableCheckbox, animatedCutCheckbox, oldHitCheckbox
             _unequipHandsCheckbox = new CheckBox { Content = "Unequip Hands" };
             _unequipHandsCheckbox.Checked += (s, e) => OnFilePropertyChanged();
             _unequipHandsCheckbox.Unchecked += (s, e) => OnFilePropertyChanged();
@@ -800,12 +1507,10 @@ namespace OdyTools.Editors.DLG
             panel.Children.Add(filePropertiesPanel);
 
             // Initialize dialog tree view
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
             _dialogTree = new TreeView();
-            _dialogTree.SelectionChanged += (s, e) => OnSelectionChanged();
-            // Matching PyKotor implementation: tree view calls back to editor's keyPressEvent with is_tree_view_call=True
-            // This ensures key events are handled correctly when the tree view has focus
+            _dialogTree.SelectionChanged += (s, e) => SyncSelectionFromTree();
             _dialogTree.KeyDown += (s, e) => OnKeyDownFromTreeView(e);
+            _dialogTree.DoubleTapped += OnDialogTreeDoubleTapped;
 
             // Setup context menu for dialog tree
             SetupDialogTreeContextMenu();
@@ -813,8 +1518,6 @@ namespace OdyTools.Editors.DLG
             panel.Children.Add(_dialogTree);
 
             // Setup left dock widget (orphaned nodes and pinned items lists)
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:694-733
-            // Original: def setup_left_dock_widget(self):
             SetupLeftDockWidget();
             if (_leftDockWidget != null)
             {
@@ -822,7 +1525,6 @@ namespace OdyTools.Editors.DLG
             }
 
             // Initialize link condition widgets
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
             _condition1ResrefEdit = new ComboBox { IsEditable = true };
             _condition1ResrefEdit.LostFocus += (s, e) => OnNodeUpdate();
             _condition2ResrefEdit = new ComboBox { IsEditable = true };
@@ -831,8 +1533,6 @@ namespace OdyTools.Editors.DLG
             _logicSpin.ValueChanged += (s, e) => OnNodeUpdate();
 
             // Initialize condition parameter widgets (K2-specific fields, but available in UI)
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-            // Original: QSpinBox condition1Param1Spin, condition1Param2Spin, etc., QCheckBox condition1NotCheckbox
             _condition1Param1Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
             _condition1Param1Spin.ValueChanged += (s, e) => OnNodeUpdate();
             _condition1Param2Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
@@ -905,21 +1605,17 @@ namespace OdyTools.Editors.DLG
             panel.Children.Add(linkPanel);
 
             // Initialize script parameter widgets (K2-specific)
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-            // Original: QSpinBox script1Param1Spin
             // K2-specific: ActionParam1 field only exists in KotOR 2 (k2_win_gog_aspyr_swkotor2.exe: 0x005ea880)
             // Aurora (NWN) and Eclipse (DA/ME) use base DLG format without K2 extensions
             _script1Param1Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
             _script1Param1Spin.ValueChanged += (s, e) => OnNodeUpdate();
 
             _script1Param1Panel = new StackPanel();
-            _script1Param1Panel.Children.Add(new TextBlock { Text = "Script1 Param1 (K2 only):" });
+            _script1Param1Panel.Children.Add(new TextBlock { Text = Localization.Tr("Script1 Param1 (K2 only):") });
             _script1Param1Panel.Children.Add(_script1Param1Spin);
             panel.Children.Add(_script1Param1Panel);
 
             // Initialize script2 parameter widgets (K2-specific)
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-            // Original: QSpinBox script2Param1Spin, script2Param2Spin, script2Param3Spin, script2Param4Spin, script2Param5Spin
             // K2-specific: ActionParam1b, ActionParam2b, ActionParam3b, ActionParam4b, ActionParam5b fields only exist in KotOR 2 (k2_win_gog_aspyr_swkotor2.exe: 0x005ea880)
             // Aurora (NWN) and Eclipse (DA/ME) use base DLG format without K2 extensions
             _script2Param1Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
@@ -951,10 +1647,6 @@ namespace OdyTools.Editors.DLG
             panel.Children.Add(script2ParamPanel);
 
             // Initialize node timing widgets
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-            // Original: QSpinBox delaySpin, waitFlagSpin, fadeTypeSpin
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:416-419
-            // Original: self.ui.delaySpin.valueChanged.connect(self.on_node_update), self.ui.waitFlagSpin.valueChanged.connect(self.on_node_update), self.ui.fadeTypeSpin.valueChanged.connect(self.on_node_update)
             _delaySpin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = -1 };
             _delaySpin.ValueChanged += (s, e) => OnNodeUpdate();
 
@@ -992,13 +1684,10 @@ namespace OdyTools.Editors.DLG
             panel.Children.Add(cameraPanel);
 
             // Initialize sound combo box
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:360
-            // Original: self.ui.soundComboBox.currentTextChanged.connect(self.on_node_update)
             _soundComboBox = new ComboBox { IsEditable = true };
             _soundComboBox.LostFocus += (s, e) => OnNodeUpdate();
 
-            // Original: QCheckBox soundCheckbox
-            _soundCheckbox = new CheckBox { Content = "Sound Exists" };
+            _soundCheckbox = new CheckBox { Content = Localization.Tr("Exists") };
             _soundCheckbox.Checked += (s, e) => OnNodeUpdate();
             _soundCheckbox.Unchecked += (s, e) => OnNodeUpdate();
 
@@ -1009,8 +1698,6 @@ namespace OdyTools.Editors.DLG
             panel.Children.Add(soundPanel);
 
             // Initialize voice combo box
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:365
-            // Original: self.ui.voiceComboBox.currentTextChanged.connect(self.on_node_update)
             _voiceComboBox = new ComboBox { IsEditable = true };
             _voiceComboBox.LostFocus += (s, e) => OnNodeUpdate();
             var voicePanel = new StackPanel();
@@ -1019,8 +1706,6 @@ namespace OdyTools.Editors.DLG
             panel.Children.Add(voicePanel);
 
             // Initialize listener text box
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:374
-            // Original: self.ui.listenerEdit.textEdited.connect(self.on_node_update)
             _listenerEdit = new TextBox();
             _listenerEdit.LostFocus += (s, e) => OnNodeUpdate();
             var listenerPanel = new StackPanel();
@@ -1029,10 +1714,6 @@ namespace OdyTools.Editors.DLG
             panel.Children.Add(listenerPanel);
 
             // Initialize quest widgets
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-            // Original: QLineEdit questEdit, QSpinBox questEntrySpin
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:407, 408
-            // Original: self.ui.questEdit.textEdited.connect(self.on_node_update), self.ui.questEntrySpin.valueChanged.connect(self.on_node_update)
             _questEdit = new TextBox();
             _questEdit.LostFocus += (s, e) => OnNodeUpdate();
             var questPanel = new StackPanel();
@@ -1047,7 +1728,6 @@ namespace OdyTools.Editors.DLG
             questEntryPanel.Children.Add(_questEntrySpin);
             panel.Children.Add(questEntryPanel);
 
-            // Original: QSpinBox nodeIdSpin (KotOR 2)
             _nodeIdSpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
             _nodeIdSpin.ValueChanged += (s, e) => OnNodeUpdate();
             var nodeIdPanel = new StackPanel();
@@ -1055,7 +1735,6 @@ namespace OdyTools.Editors.DLG
             nodeIdPanel.Children.Add(_nodeIdSpin);
             panel.Children.Add(nodeIdPanel);
 
-            // Original: QSpinBox alienRaceNodeSpin (KotOR 2)
             _alienRaceNodeSpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
             _alienRaceNodeSpin.ValueChanged += (s, e) => OnNodeUpdate();
             var alienRacePanel = new StackPanel();
@@ -1063,7 +1742,6 @@ namespace OdyTools.Editors.DLG
             alienRacePanel.Children.Add(_alienRaceNodeSpin);
             panel.Children.Add(alienRacePanel);
 
-            // Original: QSpinBox postProcSpin (KotOR 2)
             _postProcSpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
             _postProcSpin.ValueChanged += (s, e) => OnNodeUpdate();
             var postProcPanel = new StackPanel();
@@ -1071,7 +1749,6 @@ namespace OdyTools.Editors.DLG
             postProcPanel.Children.Add(_postProcSpin);
             panel.Children.Add(postProcPanel);
 
-            // Original: QCheckBox nodeUnskippableCheckbox (KotOR 2)
             _nodeUnskippableCheckbox = new CheckBox { Content = "Unskippable" };
             _nodeUnskippableCheckbox.Checked += (s, e) => OnNodeUpdate();
             _nodeUnskippableCheckbox.Unchecked += (s, e) => OnNodeUpdate();
@@ -1080,10 +1757,6 @@ namespace OdyTools.Editors.DLG
             panel.Children.Add(unskippablePanel);
 
             // Initialize plot widgets
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui
-            // Original: QComboBox plotIndexCombo, QDoubleSpinBox plotXpSpin
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:405-406
-            // Original: self.ui.plotIndexCombo.currentIndexChanged.connect(self.on_node_update), self.ui.plotXpSpin.valueChanged.connect(self.on_node_update)
             // VERIFIED: PlotXpPercentage field aligns with k2_win_gog_aspyr_swkotor2.exe DLG format
             // - Field name "PlotXPPercentage" confirmed in k2_win_gog_aspyr_swkotor2.exe string table @ 0x007c35cc (DialogueManager.cs:1098)
             // - Field type: float (matches GFF Single type, default 1.0f in DLGNode.cs)
@@ -1092,15 +1765,7 @@ namespace OdyTools.Editors.DLG
             // - Round-trip tested: TestDlgEditorManipulatePlotXpRoundtrip verifies 0,25,50,75,100 values
             // - Cross-format consistency: Also implemented in CNV format (CNVHelper.cs)
             // Ghidra project: C:\Users\boden\Andastra Ghidra Project.gpr
-            _plotIndexCombo = new ComboBox();
-            // Plot index values 0-5 (matching Python implementation)
-            _plotIndexCombo.Items.Add("0 (No Plot)");
-            _plotIndexCombo.Items.Add("1 (Plot 1)");
-            _plotIndexCombo.Items.Add("2 (Plot 2)");
-            _plotIndexCombo.Items.Add("3 (Plot 3)");
-            _plotIndexCombo.Items.Add("4 (Plot 4)");
-            _plotIndexCombo.Items.Add("5 (Plot 5)");
-            _plotIndexCombo.SelectedIndex = 0;
+            _plotIndexCombo = new ComboBox2DA();
             _plotIndexCombo.SelectionChanged += (s, e) => OnNodeUpdate();
             var plotIndexPanel = new StackPanel();
             plotIndexPanel.Children.Add(new TextBlock { Text = "Plot Index:" });
@@ -1115,10 +1780,6 @@ namespace OdyTools.Editors.DLG
             panel.Children.Add(plotXpPanel);
 
             // Initialize script1 and script2 combo boxes
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui:170, 374
-            // Original: QComboBox script1ResrefEdit, script2ResrefEdit
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:347
-            // Original: self.ui.script1ResrefEdit.currentTextChanged.connect(self.on_node_update), self.ui.script2ResrefEdit.currentTextChanged.connect(self.on_node_update)
             _script1ResrefEdit = new ComboBox { IsEditable = true };
             _script1ResrefEdit.LostFocus += (s, e) => OnNodeUpdate();
             var script1Panel = new StackPanel();
@@ -1134,8 +1795,6 @@ namespace OdyTools.Editors.DLG
             panel.Children.Add(script2Panel);
 
             // Initialize animation UI controls
-            // Matching PyKotor implementation at Tools/OdyTools/src/ui/editors/dlg.ui:966-992
-            // Original: QListWidget animsList, QPushButton addAnimButton, removeAnimButton, editAnimButton
             _animsList = new ListBox
             {
                 Height = 150,
@@ -1151,7 +1810,6 @@ namespace OdyTools.Editors.DLG
             _editAnimButton = new Button { Content = "Edit" };
             _editAnimButton.Click += (s, e) => OnEditAnimClicked();
 
-            // Matching PyKotor UI layout: verticalLayout_anims with label, list, buttons
             var animPanel = new StackPanel
             {
                 Margin = new Thickness(0, 10, 0, 0),
@@ -1186,7 +1844,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Sets up the context menu for the dialog tree.
-        /// Matching PyKotor implementation that uses dynamic context menu creation via _get_link_context_menu.
         /// </summary>
         private void SetupDialogTreeContextMenu()
         {
@@ -1229,14 +1886,20 @@ namespace OdyTools.Editors.DLG
                 }
                 else
                 {
-                    // No item selected - show empty context menu or menu for adding root node
+                    // No item selected - show Add Entry or Reset Tree (matching PyKotor: if not self._focused: add_entry else: reset_tree)
                     var contextMenu = new ContextMenu();
-                    var addEntryItem = new MenuItem
+                    if (!_focused)
                     {
-                        Header = "Add Entry"
-                    };
-                    addEntryItem.Click += (s, args) => _model.AddRootNode();
-                    contextMenu.Items.Add(addEntryItem);
+                        var addEntryItem = new MenuItem { Header = Localization.Tr("Add Entry") };
+                        addEntryItem.Click += (s, args) => AddRootNode();
+                        contextMenu.Items.Add(addEntryItem);
+                    }
+                    else
+                    {
+                        var resetTreeItem = new MenuItem { Header = Localization.Tr("Reset Tree") };
+                        resetTreeItem.Click += (s, args) => LoadDLG(_coreDlg);
+                        contextMenu.Items.Add(resetTreeItem);
+                    }
                     contextMenu.Open(_dialogTree);
                     e.Handled = true;
                 }
@@ -1245,8 +1908,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Gets the context menu for a dialog tree item.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1711-1875
-        /// Original: def _get_link_context_menu(self, source_widget: DLGListWidget | DLGTreeView, item: DLGStandardItem | DLGListWidgetItem) -> _QMenu:
         /// </summary>
         /// <param name="sourceWidget">The source widget (TreeView or DLGListWidget).</param>
         /// <param name="item">The item to get the context menu for.</param>
@@ -1261,8 +1922,8 @@ namespace OdyTools.Editors.DLG
         }
 
         /// <summary>
-        /// Handles context menu request for orphaned/pinned list widgets. Shows same menu as tree when an item is selected.
-        /// Matching PyKotor: on_list_context_menu.
+        /// Handles context menu request for orphaned/pinned list widgets. Shows same menu as tree when an item is selected,
+        /// plus list-specific items: Jump to Tree, Insert Orphan at Selected Point (orphaned only), Unpin, Clear List.
         /// </summary>
         private void OnListWidgetContextRequested(object sender, ContextRequestedEventArgs e)
         {
@@ -1277,16 +1938,39 @@ namespace OdyTools.Editors.DLG
                 return;
             }
             var menu = GetLinkContextMenu(list, item);
-            if (menu != null)
+            if (menu == null)
             {
-                menu.Open(list);
-                e.Handled = true;
+                return;
             }
+            menu.Items.Add(new Separator());
+            var jumpToTreeItem = new MenuItem { Header = Localization.Tr("Jump to Tree") };
+            jumpToTreeItem.Click += (s, ev) => JumpToNode(item.Link);
+            menu.Items.Add(jumpToTreeItem);
+            bool isOrphanedList = list == _orphanedNodesList;
+            bool treeHasSelection = _dialogTree?.SelectedItem != null;
+            if (isOrphanedList && treeHasSelection)
+            {
+                var insertOrphanItem = new MenuItem { Header = Localization.Tr("Insert Orphan at Selected Point") };
+                insertOrphanItem.Click += (s, ev) => RestoreOrphanedNode(item);
+                menu.Items.Add(insertOrphanItem);
+            }
+            menu.Items.Add(new Separator());
+            var unpinItem = new MenuItem { Header = Localization.Tr("Unpin") };
+            unpinItem.Click += (s, ev) =>
+            {
+                list.RemoveItem(item);
+            };
+            menu.Items.Add(unpinItem);
+            menu.Items.Add(new Separator());
+            var clearListItem = new MenuItem { Header = Localization.Tr("Clear List") };
+            clearListItem.Click += (s, ev) => list.Clear();
+            menu.Items.Add(clearListItem);
+            menu.Open(list);
+            e.Handled = true;
         }
 
         /// <summary>
         /// Gets the context menu for a list widget item (orphaned or pinned list).
-        /// Matching PyKotor: same menu as tree, built from link.
         /// </summary>
         public ContextMenu GetLinkContextMenu(Control sourceWidget, DLGListWidgetItem listItem)
         {
@@ -1316,14 +2000,14 @@ namespace OdyTools.Editors.DLG
             var menu = new ContextMenu();
             var menuItems = new List<MenuItem>();
 
-            var editTextItem = new MenuItem { Header = "Edit Text" };
+            var editTextItem = new MenuItem { Header = Localization.Tr("Edit Text") };
             editTextItem.Click += (s, e) =>
             {
                 Control sourceWidgetForEdit = sourceWidget ?? _dialogTree;
                 List<object> indexes = null;
                 if (sourceWidgetForEdit == _dialogTree)
                 {
-                    indexes = GetSelectedIndexesFromTreeView(_dialogTree);
+                    indexes = OdyToolDLG.GetSelectedIndexesFromTreeView(_dialogTree);
                 }
                 else if (sourceWidgetForEdit is DLGListWidget listWidget)
                 {
@@ -1333,38 +2017,51 @@ namespace OdyTools.Editors.DLG
             };
             menuItems.Add(editTextItem);
 
-            var focusItem = new MenuItem { Header = "Focus" };
+            var focusItem = new MenuItem { Header = Localization.Tr("Focus") };
             focusItem.Click += (s, e) => FocusOnNode(link);
             focusItem.IsEnabled = link.Node?.Links != null && link.Node.Links.Count > 0;
             focusItem.IsVisible = notAnOrphan;
             menuItems.Add(focusItem);
 
-            var findReferencesItem = new MenuItem { Header = "Find References" };
+            var findReferencesItem = new MenuItem { Header = Localization.Tr("Find References") };
             findReferencesItem.Click += (s, e) => FindReferences(link);
             findReferencesItem.IsVisible = notAnOrphan;
             menuItems.Add(findReferencesItem);
 
+            // Find References in Installation (dialog resref) - matching PyKotor: find_installation_refs_action
+            string dialogResref = _resname?.Trim();
+            var findInstallationRefsItem = new MenuItem { Header = Localization.Tr("Find References in Installation...") };
+            findInstallationRefsItem.Click += (s, e) =>
+            {
+                if (!string.IsNullOrEmpty(dialogResref))
+                {
+                    FindDialogReferencesInInstallation(dialogResref);
+                }
+            };
+            findInstallationRefsItem.IsVisible = notAnOrphan && _installation != null && !string.IsNullOrEmpty(dialogResref);
+            menuItems.Add(findInstallationRefsItem);
+
             int refCount = CountItemRefs(link?.Node);
             bool isCopy = refCount > 1;
-            var jumpToOriginalItem = new MenuItem { Header = "Jump to Original" };
+            var jumpToOriginalItem = new MenuItem { Header = Localization.Tr("Jump to Original") };
             jumpToOriginalItem.Click += (s, e) => JumpToOriginal();
             jumpToOriginalItem.IsVisible = notAnOrphan && sourceWidget is TreeView && isCopy;
             menuItems.Add(jumpToOriginalItem);
 
             bool pinned = IsPinned(link);
-            var pinItem = new MenuItem { Header = "Pin" };
+            var pinItem = new MenuItem { Header = Localization.Tr("Pin") };
             pinItem.Click += (s, e) => PinItem(link);
             pinItem.IsVisible = !pinned;
             menuItems.Add(pinItem);
-            var unpinItem = new MenuItem { Header = "Unpin" };
+            var unpinItem = new MenuItem { Header = Localization.Tr("Unpin") };
             unpinItem.Click += (s, e) => UnpinItem(link);
             unpinItem.IsVisible = pinned;
             menuItems.Add(unpinItem);
 
-            var playMenu = new MenuItem { Header = "Play" };
+            var playMenu = new MenuItem { Header = Localization.Tr("Play") };
             var playSubMenuItems = new List<MenuItem>();
             string soundResrefForEnable = link?.Node?.Sound?.ToString() ?? "";
-            var playSoundItem = new MenuItem { Header = "Play Sound" };
+            var playSoundItem = new MenuItem { Header = Localization.Tr("Play Sound") };
             playSoundItem.Click += (s, e) =>
             {
                 if (!string.IsNullOrEmpty(soundResrefForEnable))
@@ -1375,7 +2072,7 @@ namespace OdyTools.Editors.DLG
             playSoundItem.IsEnabled = !string.IsNullOrWhiteSpace(soundResrefForEnable);
             playSubMenuItems.Add(playSoundItem);
             string voiceResrefForEnable = link?.Node?.VoResRef?.ToString() ?? "";
-            var playVoiceItem = new MenuItem { Header = "Play Voice" };
+            var playVoiceItem = new MenuItem { Header = Localization.Tr("Play Voice") };
             playVoiceItem.Click += (s, e) =>
             {
                 if (!string.IsNullOrEmpty(voiceResrefForEnable))
@@ -1405,11 +2102,11 @@ namespace OdyTools.Editors.DLG
             menuItems.Add(copyNodeItem);
 
             var copyGffPathItem = new MenuItem { Header = "Copy GFF Path" };
-            copyGffPathItem.Click += (s, e) =>
+            copyGffPathItem.Click += async (s, e) =>
             {
                 if (link?.Node != null)
                 {
-                    CopyPath(link.Node);
+                    await CopyPath(link.Node);
                 }
             };
             copyGffPathItem.IsVisible = notAnOrphan;
@@ -1419,14 +2116,14 @@ namespace OdyTools.Editors.DLG
 
             if (sourceWidget is TreeView && treeItem != null)
             {
-                var expandToRootItem = new MenuItem { Header = "Expand to Root" };
+                var expandToRootItem = new MenuItem { Header = Localization.Tr("Expand to Root") };
                 expandToRootItem.Click += (s, e) => ExpandToRoot(treeItem);
                 menuItems.Add(expandToRootItem);
 
-                var expandAllChildrenItem = new MenuItem { Header = "Expand All Children" };
+                var expandAllChildrenItem = new MenuItem { Header = Localization.Tr("Expand All Children") };
                 expandAllChildrenItem.Click += (s, e) =>
                 {
-                    var tvi = FindTreeViewItem(_dialogTree.ItemsSource as System.Collections.IEnumerable, treeItem);
+                    var tvi = FindTreeViewItem(_dialogTree.ItemsSource, treeItem);
                     if (tvi != null)
                     {
                         SetExpandRecursivelyInternal(treeItem, tvi, new HashSet<DLGNode>(), true, 11, 0, true);
@@ -1434,10 +2131,10 @@ namespace OdyTools.Editors.DLG
                 };
                 menuItems.Add(expandAllChildrenItem);
 
-                var collapseAllChildrenItem = new MenuItem { Header = "Collapse All Children" };
+                var collapseAllChildrenItem = new MenuItem { Header = Localization.Tr("Collapse All Children") };
                 collapseAllChildrenItem.Click += (s, e) =>
                 {
-                    var tvi = FindTreeViewItem(_dialogTree.ItemsSource as System.Collections.IEnumerable, treeItem);
+                    var tvi = FindTreeViewItem(_dialogTree.ItemsSource, treeItem);
                     if (tvi != null)
                     {
                         SetExpandRecursivelyInternal(treeItem, tvi, new HashSet<DLGNode>(), false, 11, 0, true);
@@ -1455,43 +2152,42 @@ namespace OdyTools.Editors.DLG
                 }
                 else
                 {
-                    string copiedNodeType = _copy.Node is DLGEntry ? "Entry" : "Reply";
-                    pasteLinkItem.Header = $"Paste {copiedNodeType} from Clipboard as Link";
-                    pasteNewItem.Header = $"Paste {copiedNodeType} from Clipboard as Deep Copy";
-                    if (nodeType == copiedNodeType)
+                    pasteLinkItem.Header = _copy.Node is DLGEntry ? Localization.Tr("Paste Entry from Clipboard as Link") : Localization.Tr("Paste Reply from Clipboard as Link");
+                    pasteNewItem.Header = _copy.Node is DLGEntry ? Localization.Tr("Paste Entry from Clipboard as Deep Copy") : Localization.Tr("Paste Reply from Clipboard as Deep Copy");
+                    if (nodeType == _copy.Node?.GetType().Name)
                     {
                         pasteLinkItem.IsEnabled = false;
                         pasteNewItem.IsEnabled = false;
                     }
                 }
-                pasteLinkItem.Click += (s, e) => _model.PasteItem(treeItem, _copy, asNewBranches: false);
-                pasteNewItem.Click += (s, e) => _model.PasteItem(treeItem, _copy, asNewBranches: true);
+                pasteLinkItem.Click += (s, e) => _actionHistory.Apply(new PasteItemAction(treeItem, null, _copy, false));
+                pasteNewItem.Click += (s, e) => _actionHistory.Apply(new PasteItemAction(treeItem, null, _copy, true));
                 menuItems.Add(pasteLinkItem);
                 menuItems.Add(pasteNewItem);
                 menuItems.Add(new MenuItem { Header = "-" });
 
-                var addNodeItem = new MenuItem { Header = $"Add {otherNodeType}" };
-                addNodeItem.Click += (s, e) => _model.AddChildToItem(treeItem, null);
+                var addNodeItem = new MenuItem { Header = otherNodeType == "Entry" ? Localization.Tr("Add Entry") : Localization.Tr("Add Reply") };
+                addNodeItem.Click += (s, e) => AddChildToParentItem(treeItem);
                 menuItems.Add(addNodeItem);
                 menuItems.Add(new MenuItem { Header = "-" });
 
-                var moveUpItem = new MenuItem { Header = "Move Up" };
+                var moveUpItem = new MenuItem { Header = Localization.Tr("Move Up") };
                 moveUpItem.Click += (s, e) => { _model.ShiftItem(treeItem, -1); UpdateTreeView(); };
                 menuItems.Add(moveUpItem);
-                var moveDownItem = new MenuItem { Header = "Move Down" };
+                var moveDownItem = new MenuItem { Header = Localization.Tr("Move Down") };
                 moveDownItem.Click += (s, e) => { _model.ShiftItem(treeItem, 1); UpdateTreeView(); };
                 menuItems.Add(moveDownItem);
                 menuItems.Add(new MenuItem { Header = "-" });
 
-                var removeLinkItem = new MenuItem { Header = $"Remove {nodeType}" };
-                removeLinkItem.Click += (s, e) => RemoveLink(treeItem);
+                var removeLinkItem = new MenuItem { Header = nodeType == "Entry" ? Localization.Tr("Remove Entry") : Localization.Tr("Remove Reply") };
+                removeLinkItem.Click += (s, e) => RemoveLink(treeItem);  // undoable via RemoveLinkAction
                 menuItems.Add(removeLinkItem);
                 menuItems.Add(new MenuItem { Header = "-" });
             }
 
             var deleteAllReferencesItem = new MenuItem
             {
-                Header = $"Delete ALL References to {nodeType}"
+                Header = nodeType == "Entry" ? Localization.Tr("Delete ALL References to Entry") : Localization.Tr("Delete ALL References to Reply")
             };
             deleteAllReferencesItem.Click += (s, e) =>
             {
@@ -1513,8 +2209,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Checks the clipboard for a JSON node and sets _copy if found.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1465-1478
-        /// Original: def _check_clipboard_for_json_node(self):
         /// </summary>
         private async Task CheckClipboardForJsonNodeAsync()
         {
@@ -1526,7 +2220,6 @@ namespace OdyTools.Editors.DLG
                     return;
                 }
 
-                // Matching PyKotor: clipboard_text: str = cb.text()
                 // Avalonia clipboard access is async, so we use GetTextAsync
                 string clipboardText = await topLevel.Clipboard.GetTextAsync();
                 if (string.IsNullOrEmpty(clipboardText))
@@ -1534,98 +2227,262 @@ namespace OdyTools.Editors.DLG
                     return;
                 }
 
-                // Matching PyKotor: node_data: dict[str | int, Any] = json.loads(clipboard_text)
-                // Matching PyKotor: if isinstance(node_data, dict) and "type" in node_data: self._copy = DLGLink.from_dict(node_data)
-                Dictionary<string, object> nodeData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(clipboardText);
+                Dictionary<string, object> nodeData = JsonSerializer.Deserialize<Dictionary<string, object>>(clipboardText);
                 if (nodeData != null && nodeData.ContainsKey("type"))
                 {
                     // Parse the JSON data into a DLGLink
-                    // Matching PyKotor: self._copy = DLGLink.from_dict(node_data)
                     Dictionary<string, object> nodeMap = new Dictionary<string, object>();
                     _copy = DLGLink.FromDict(nodeData, nodeMap);
                 }
             }
-            catch (System.Text.Json.JsonException)
+            catch (JsonException)
             {
-                // Matching PyKotor: except json.JSONDecodeError: ...
                 // Silently ignore JSON decode errors (clipboard doesn't contain valid JSON)
             }
             catch (Exception)
             {
-                // Matching PyKotor: except Exception: self._logger.exception("Invalid JSON node on clipboard.")
                 // Silently ignore clipboard errors
             }
         }
 
         /// <summary>
-        /// Removes a link from the parent node.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:620-634
-        /// Original: def remove_link(self, item: DLGStandardItem):
+        /// Removes a link from the parent node and records the action for undo/redo.
         /// </summary>
         /// <param name="item">The item whose link should be removed.</param>
         private void RemoveLink(DLGStandardItem item)
         {
             if (item == null || item.Link == null)
-            {
                 return;
-            }
+            var action = new RemoveLinkAction(this, item);
+            _actionHistory.Apply(action);
+        }
 
+        /// <summary>
+        /// Performs the actual removal of a link (used by RemoveLinkAction.Apply and internally). Does not record undo.
+        /// </summary>
+        internal void RemoveLinkInternal(DLGStandardItem item)
+        {
+            if (item == null || item.Link == null)
+                return;
             var parent = item.Parent;
             if (parent == null)
             {
-                // Remove from root items
+                _coreDlg?.Starters?.Remove(item.Link);
+                _coreDlg?.Touch();
                 _model.RemoveStarter(item.Link);
             }
             else
             {
-                // Remove from parent's children
                 if (parent.Link?.Node != null)
                 {
                     parent.Link.Node.Links.Remove(item.Link);
+                    _coreDlg?.Touch();
                     parent.RemoveChild(item);
                 }
+                if (_model.LinkToItems != null && _model.LinkToItems.ContainsKey(item.Link))
+                    _model.LinkToItems.Remove(item.Link);
+                if (item.Link.Node != null && _model.NodeToItems != null && _model.NodeToItems.ContainsKey(item.Link.Node))
+                {
+                    var list = _model.NodeToItems[item.Link.Node];
+                    for (int i = list.Count - 1; i >= 0; i--)
+                    {
+                        if (list[i] == item)
+                        {
+                            list.RemoveAt(i);
+                            break;
+                        }
+                    }
+                }
             }
-
             UpdateTreeView();
         }
 
         /// <summary>
+        /// Restores an orphaned node by inserting it at the currently selected tree position.
+        /// </summary>
+        /// <param name="orphanListItem">The list item from the orphaned nodes list (its Link is the orphan to restore).</param>
+        public void RestoreOrphanedNode(DLGListWidgetItem orphanListItem)
+        {
+            if (orphanListItem?.Link == null)
+            {
+                return;
+            }
+            DLGStandardItem selectedTreeItem = GetSelectedTreeItem();
+            if (selectedTreeItem == null)
+            {
+                MessageBoxManager.GetMessageBoxStandard(
+                    Localization.Tr("No target specified"),
+                    Localization.Tr("Select a position in the tree to insert this orphan at then try again."),
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Info).ShowWindowAsync();
+                return;
+            }
+            DLGLink oldLink = orphanListItem.Link;
+            DLGStandardItem targetParent;
+            int intendedRow;
+            if (oldLink.Node.GetType() == selectedTreeItem.Link?.Node?.GetType())
+            {
+                targetParent = selectedTreeItem.Parent;
+                intendedRow = selectedTreeItem.GetIndex();
+                if (intendedRow < 0)
+                {
+                    intendedRow = 0;
+                }
+            }
+            else
+            {
+                targetParent = selectedTreeItem;
+                intendedRow = 0;
+            }
+            string newLinkPath = targetParent == null
+                ? $"StartingList\\{intendedRow}"
+                : (targetParent.Link?.Node?.Path() ?? "?");
+            Tuple<string, string, string> paths = GetItemDlgPaths(orphanListItem);
+            string linkParentPath = paths?.Item1 ?? "";
+            string linkPartialPath = paths?.Item2 ?? "";
+            string linkedToPath = paths?.Item3 ?? "";
+            string linkFullPath = string.IsNullOrEmpty(linkParentPath) ? linkPartialPath : $"{linkParentPath}\\{linkPartialPath}";
+            string confirmMessage = string.Format(Localization.Tr("The orphan '{0}' (originally linked from {1}) will be newly linked from {2} with this action. Continue?"), linkedToPath, linkFullPath, newLinkPath);
+            var confirm = MessageBoxManager.GetMessageBoxStandard(
+                Localization.Tr("Restore Orphaned Node"),
+                confirmMessage,
+                ButtonEnum.YesNo,
+                MsBox.Avalonia.Enums.Icon.Question);
+            async void ShowAndHandle()
+            {
+                var result = await confirm.ShowWindowAsync();
+                if (result != ButtonResult.Yes)
+                {
+                    return;
+                }
+                var nodeMap = new Dictionary<string, object>();
+                Dictionary<string, object> linkDict = oldLink.ToDict(nodeMap);
+                DLGLink newLink = DLGLink.FromDict(linkDict, nodeMap);
+                _actionHistory.Apply(new RestoreOrphanAction(targetParent, intendedRow, newLink, orphanListItem));
+            }
+            ShowAndHandle();
+        }
+
+        /// <summary>
+        /// Finds references to the given dialog resref in the installation (UTC, UTP, UTD that reference this DLG).
+        /// </summary>
+        public void FindDialogReferencesInInstallation(string dialogResref)
+        {
+            if (_installation == null || string.IsNullOrWhiteSpace(dialogResref))
+            {
+                return;
+            }
+            var results = new List<FileResource>();
+            string resrefLower = dialogResref.Trim().ToLowerInvariant();
+            var typesToSearch = new[] { ResourceType.UTC, ResourceType.UTP, ResourceType.UTD };
+            List<FileResource> overrideList = null;
+            try
+            {
+                overrideList = _installation.OverrideResources();
+            }
+            catch
+            {
+                overrideList = new List<FileResource>();
+            }
+            foreach (var restype in typesToSearch)
+            {
+                foreach (var fileRes in overrideList.Where(r => r != null && r.ResType == restype))
+                {
+                    try
+                    {
+                        var rr = _installation.Resource(fileRes.ResName, restype, new[] { SearchLocation.OVERRIDE });
+                        byte[] data = rr?.Data;
+                        if (data == null || data.Length == 0)
+                        {
+                            continue;
+                        }
+                        string convResref = null;
+                        if (restype == ResourceType.UTC)
+                        {
+                            var utc = ResourceAutoHelpers.ReadUtc(data);
+                            convResref = utc?.Conversation?.ToString()?.Trim().ToLowerInvariant();
+                        }
+                        else if (restype == ResourceType.UTP)
+                        {
+                            var utp = ResourceAutoHelpers.ReadUtp(data);
+                            convResref = utp?.Conversation?.ToString()?.Trim().ToLowerInvariant();
+                        }
+                        else if (restype == ResourceType.UTD)
+                        {
+                            var utd = ResourceAutoHelpers.ReadUtd(data);
+                            convResref = utd?.Conversation?.ToString()?.Trim().ToLowerInvariant();
+                        }
+                        if (convResref == resrefLower && fileRes != null)
+                        {
+                            results.Add(fileRes);
+                        }
+                    }
+                    catch
+                    {
+                        // Skip malformed resources
+                    }
+                }
+            }
+            if (results.Count == 0)
+            {
+                MessageBoxManager.GetMessageBoxStandard(
+                    Localization.Tr("No references found"),
+                    string.Format(Localization.Tr("No references found for dialog '{0}'."), dialogResref),
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                return;
+            }
+            var dialog = new LoadFromLocationResultDialog(this, results, _installation);
+            dialog.Title = string.Format(Localization.Tr("{0} reference(s) found for dialog '{1}'"), results.Count, dialogResref);
+            dialog.Show();
+        }
+
+        /// <summary>
+        /// Gets the currently selected tree item (DLGStandardItem) from the dialog tree, or null.
+        /// </summary>
+        private DLGStandardItem GetSelectedTreeItem()
+        {
+            if (_dialogTree?.SelectedItem == null)
+            {
+                return null;
+            }
+            if (_dialogTree.SelectedItem is TreeViewItem tvi && tvi.Tag is DLGStandardItem dlgItem)
+            {
+                return dlgItem;
+            }
+            if (_dialogTree.SelectedItem is DLGStandardItem direct)
+            {
+                return direct;
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Sets up the left dock widget containing orphaned nodes and pinned items lists.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:694-733
-        /// Original: def setup_left_dock_widget(self):
         /// </summary>
         private void SetupLeftDockWidget()
         {
-            // Create the left dock widget container
-            // Matching PyKotor: self.left_dock_widget: QDockWidget = QDockWidget("Orphaned Nodes and Pinned Items", self)
+            // Create the left dock widget container (only used when content is built in code, not AXAML)
             // In Avalonia, we use a StackPanel instead of QDockWidget
-            _leftDockWidget = new StackPanel
+            var leftPanel = new StackPanel
             {
                 Orientation = Avalonia.Layout.Orientation.Vertical
             };
 
-            // Orphaned Nodes List
-            // Matching PyKotor: self.orphaned_nodes_list: DLGListWidget = DLGListWidget(self)
-            _orphanedNodesList = new DLGListWidget(this);
-            // Matching PyKotor: self.orphaned_nodes_list.use_hover_text = False
-            _orphanedNodesList.UseHoverText = false;
-            // Note: Avalonia ListBox doesn't have setWordWrap, setItemDelegate, setDragEnabled, etc.
-            // These are Qt-specific features. In Avalonia, we'll configure what's available.
-            // The drag and drop functionality would need to be implemented using Avalonia's drag and drop API if needed.
+            // Orphaned Nodes List: word wrap, custom item template, and drag source (drag to tree to restore)
+            _orphanedNodesList = new DLGListWidget(this)
+            {
+                UseHoverText = false,
+                UseWordWrap = true
+            };
 
-            // Pinned Items List
-            // Matching PyKotor: self.pinned_items_list: DLGListWidget = DLGListWidget(self)
-            _pinnedItemsList = new DLGListWidget(this);
-            // Matching PyKotor: self.pinned_items_list.setWordWrap(True)
-            // Matching PyKotor: self.pinned_items_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
-            // Matching PyKotor: self.pinned_items_list.setAcceptDrops(True)
-            // Matching PyKotor: self.pinned_items_list.setDragEnabled(True)
-            // Matching PyKotor: self.pinned_items_list.setDropIndicatorShown(True)
-            // Matching PyKotor: self.pinned_items_list.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
-            // Note: Avalonia ListBox selection mode is controlled via SelectionMode property
+            // Pinned Items List: same features, multi-selection, drop target for pinning from tree
+            _pinnedItemsList = new DLGListWidget(this)
+            {
+                UseWordWrap = true
+            };
             _pinnedItemsList.SelectionMode = SelectionMode.Multiple;
 
-            // Context menu for list widgets (orphaned and pinned). Matching PyKotor: on_list_context_menu.
             _orphanedNodesList.ContextRequested += OnListWidgetContextRequested;
             _pinnedItemsList.ContextRequested += OnListWidgetContextRequested;
 
@@ -1633,18 +2490,14 @@ namespace OdyTools.Editors.DLG
             SetupTreeViewDragSource();
 
             // Add labels and lists to the layout
-            // Matching PyKotor: self.left_dock_layout.addWidget(QLabel("Orphaned Nodes"))
-            _leftDockWidget.Children.Add(new TextBlock { Text = "Orphaned Nodes" });
-            // Matching PyKotor: self.left_dock_layout.addWidget(self.orphaned_nodes_list)
-            _leftDockWidget.Children.Add(_orphanedNodesList);
-            // Matching PyKotor: self.left_dock_layout.addWidget(QLabel("Pinned Items"))
-            _leftDockWidget.Children.Add(new TextBlock { Text = "Pinned Items" });
-            // Matching PyKotor: self.left_dock_layout.addWidget(self.pinned_items_list)
-            _leftDockWidget.Children.Add(_pinnedItemsList);
+            leftPanel.Children.Add(new TextBlock { Text = "Orphaned Nodes" });
+            leftPanel.Children.Add(_orphanedNodesList);
+            leftPanel.Children.Add(new TextBlock { Text = "Pinned Items" });
+            leftPanel.Children.Add(_pinnedItemsList);
+
+            _leftDockWidget = leftPanel;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1135-1171
-        // Original: def load(self, filepath: os.PathLike | str, resref: str, restype: ResourceType, data: bytes | bytearray):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
@@ -1655,27 +2508,26 @@ namespace OdyTools.Editors.DLG
                 var cnv = CNVHelper.ReadCnv(data);
                 _coreDlg = CNVHelper.ToDlg(cnv);
             }
+            else if (restype == ResourceType.DLG_TWINE_HTML || restype == ResourceType.DLG_TWINE_JSON)
+            {
+                string content = Encoding.UTF8.GetString(data);
+                _coreDlg = Twine.ReadTwineFromContent(content);
+            }
             else
             {
-                _coreDlg = DLGHelper.ReadDlg(data);
+                // DLG, DLG_XML, or DLG_JSON (plaintext); pass restype so XML/JSON are read correctly
+                _coreDlg = DLGHelper.ReadDlg(data, 0, -1, restype);
             }
             LoadDLG(_coreDlg);
-            // Matching PyKotor implementation: self.refresh_stunt_list() after _load_dlg
             RefreshStuntList();
             UpdateUIForGame(); // Update UI visibility after loading (game may have changed)
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1193-1227
-        // Original: def _load_dlg(self, dlg: DLG):
         /// <summary>
         /// Loads a dialog tree into the UI view.
-        /// Made internal for test access (matching Python _load_dlg which tests access directly).
         /// </summary>
         public void LoadDLG(DLGType dlg)
         {
-            // Matching PyKotor implementation: Reset focus state and background color when loading
-            // Original: if "(Light)" in GlobalSettings().selectedTheme or GlobalSettings().selectedTheme == "Native":
-            //           self.ui.dialogTree.setStyleSheet("")
             if (_dialogTree != null)
             {
                 _dialogTree.Background = null; // Reset background color
@@ -1685,45 +2537,26 @@ namespace OdyTools.Editors.DLG
             _coreDlg = dlg;
             _model.ResetModel();
 
-            // Matching PyKotor: Create items for each starter and load them recursively
-            // Original: for start in dlg.starters:
-            //              item = DLGStandardItem(link=start)
-            //              self.model.appendRow(item)
-            //              self.model.load_dlg_item_rec(item)
             foreach (DLGLink start in dlg.Starters)
             {
-                var item = new DLGStandardItem(start);
                 _model.AddStarter(start);
-                // Get the item that was added and load it recursively
-                var rootItems = _model.GetRootItems();
-                if (rootItems.Count > 0)
-                {
-                    var addedItem = rootItems[rootItems.Count - 1];
-                    _model.LoadDlgItemRec(addedItem);
-                }
             }
 
             // Load file-level properties (root DLG fields)
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1149
-            // Original: self.ui.voIdEdit.setText(dlg.vo_id)
             if (_voIdEdit != null)
             {
                 _voIdEdit.Text = dlg.VoId ?? string.Empty;
             }
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py
-            // Original: self.ui.ambientTrackCombo.set_combo_box_text(str(dlg.ambient_track))
             if (_ambientTrackCombo != null)
             {
                 string ambientTrackText = dlg.AmbientTrack.ToString();
                 _ambientTrackCombo.Text = ambientTrackText;
             }
+            if (_cameraModelSelect != null)
+            {
+                _cameraModelSelect.Text = dlg.CameraModel?.ToString() ?? string.Empty;
+            }
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1155-1161
-            // Original: self.ui.skippableCheckbox.setChecked(dlg.skippable)
-            // Original: self.ui.animatedCutCheckbox.setChecked(bool(dlg.animated_cut))
-            // Original: self.ui.oldHitCheckbox.setChecked(dlg.old_hit_check)
-            // Original: self.ui.unequipHandsCheckbox.setChecked(dlg.unequip_hands)
-            // Original: self.ui.unequipAllCheckbox.setChecked(dlg.unequip_items)
             if (_skippableCheckbox != null)
             {
                 _skippableCheckbox.IsChecked = dlg.Skippable;
@@ -1747,15 +2580,40 @@ namespace OdyTools.Editors.DLG
 
             // Clear undo/redo history when loading a dialog
             _actionHistory.Clear();
+            _graphManualPositions = LoadGraphLayout();
             UpdateTreeView();
             RefreshStuntList();
-            // Populate orphaned nodes list (nodes not reachable from Starters). Matching PyKotor Holocron DLG editor.
+            // Populate orphaned nodes list (nodes not reachable from Starters).
             PopulateOrphanedNodesList();
+            // Pre-fill Script #1/2 and Conditional #1/2 with NSS resources scoped to this DLG (override + same module + chitin).
+            PopulateScriptAndConditionCombos();
+        }
+
+        /// <summary>
+        /// Populates Script #1, Script #2, Conditional #1, and Conditional #2 combos with ResourceType.NSS resrefs
+        /// from the installation, scoped to the open DLG (override + same module + chitin, or override + chitin if DLG is in override/chitin).
+        /// </summary>
+        private void PopulateScriptAndConditionCombos()
+        {
+            if (_installation == null) return;
+
+            var relevant = _installation.GetRelevantResources(ResourceType.NSS, FilepathPublic);
+            var resnames = relevant
+                .Select(r => r?.ResName?.Trim())
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Select(s => s.ToLowerInvariant())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(s => s, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (_script1ResrefEdit != null) _script1ResrefEdit.ItemsSource = resnames;
+            if (_script2ResrefEdit != null) _script2ResrefEdit.ItemsSource = resnames;
+            if (_condition1ResrefEdit != null) _condition1ResrefEdit.ItemsSource = resnames;
+            if (_condition2ResrefEdit != null) _condition2ResrefEdit.ItemsSource = resnames;
         }
 
         /// <summary>
         /// Populates the orphaned nodes list with links whose target node is not reachable from Starters.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py (orphaned list population).
         /// </summary>
         private void PopulateOrphanedNodesList()
         {
@@ -1800,14 +2658,14 @@ namespace OdyTools.Editors.DLG
             var allLinks = new List<DLGLink>();
             if (_coreDlg.Starters != null)
                 allLinks.AddRange(_coreDlg.Starters);
-            foreach (var entry in _coreDlg.AllEntries())
+            foreach (var entry in _coreDlg.EntryList)
             {
                 if (entry?.Links != null)
                 {
                     allLinks.AddRange(entry.Links);
                 }
             }
-            foreach (var reply in _coreDlg.AllReplies())
+            foreach (var reply in _coreDlg.ReplyList)
             {
                 if (reply?.Links != null)
                 {
@@ -1832,16 +2690,17 @@ namespace OdyTools.Editors.DLG
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1229-1254
-        // Original: def build(self) -> tuple[bytes, byte[]]:
         public override Tuple<byte[], byte[]> Build()
         {
-            // Save file-level properties (root DLG fields) from UI to CoreDlg
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1233
-            // Original: self.core_dlg.vo_id = self.ui.voIdEdit.text()
+            // Sync file-level properties (root DLG fields) from UI to CoreDlg before writing
             if (_voIdEdit != null)
             {
                 _coreDlg.VoId = _voIdEdit.Text ?? string.Empty;
+            }
+            if (_cameraModelSelect != null)
+            {
+                string cameraText = _cameraModelSelect.Text?.Trim() ?? string.Empty;
+                _coreDlg.CameraModel = ResRef.IsValid(cameraText) ? new ResRef(cameraText) : ResRef.FromBlank();
             }
 
             // Handle CNV format by converting DLG to CNV
@@ -1859,6 +2718,14 @@ namespace OdyTools.Editors.DLG
                 return Tuple.Create(cnvData, new byte[0]);
             }
 
+            // Handle Twine format (HTML or JSON)
+            if (_restype == ResourceType.DLG_TWINE_HTML || _restype == ResourceType.DLG_TWINE_JSON)
+            {
+                string format = _restype == ResourceType.DLG_TWINE_JSON ? "json" : "html";
+                byte[] twineData = Twine.BytesTwine(_coreDlg, format);
+                return Tuple.Create(twineData, new byte[0]);
+            }
+
             // Detect game from installation - supports all engines (Odyssey K1/K2, Aurora NWN, Eclipse DA/DA2/ME)
             // BioWareGame-specific format handling:
             // - K2 (TSL): Extended DLG format with K2-specific fields (ActionParam1-5, Script2, etc.)
@@ -1868,7 +2735,6 @@ namespace OdyTools.Editors.DLG
             BioWareGame gameToUseDlg = _installation?.Game ?? BioWareGame.K2;
 
             // For Eclipse games, use K1 format (no K2-specific fields)
-            // Matching PyKotor: Eclipse games don't have K2 extensions
             if (gameToUseDlg.IsEclipse())
             {
                 gameToUseDlg = BioWareGame.K1; // Use K1 format for Eclipse (no K2-specific fields)
@@ -1879,32 +2745,48 @@ namespace OdyTools.Editors.DLG
                 gameToUseDlg = BioWareGame.K1; // Use K1 format for Aurora (base DLG, no K2 extensions)
             }
 
-            byte[] data = DLGHelper.BytesDlg(_coreDlg, gameToUseDlg, ResourceType.DLG);
+            ResourceType outputFormat = (_restype == ResourceType.DLG_XML || _restype == ResourceType.DLG_JSON) ? _restype : ResourceType.DLG;
+            byte[] data = DLGHelper.BytesDlg(_coreDlg, gameToUseDlg, outputFormat);
             return Tuple.Create(data, new byte[0]);
         }
 
         /// <summary>
         /// Updates UI visibility based on game type.
-        /// K2-specific controls are only shown for KotOR 2 (TSL).
-        /// Aurora (NWN) and Eclipse (DA/ME) use base DLG format without K2 extensions.
+        /// K2/TSL-specific controls are only shown for KotOR 2 (TSL).
+        /// Aurora (NWN), K1, and Eclipse (DA/ME) use base DLG format without K2 extensions.
         /// </summary>
         private void UpdateUIForGame()
         {
             BioWareGame currentGame = _installation?.Game ?? BioWareGame.K2;
             bool isK2 = currentGame.IsK2();
 
-            // Show/hide K2-specific controls
-            // K2-specific: Script1Param1 (ActionParam1) only exists in KotOR 2 (k2_win_gog_aspyr_swkotor2.exe: 0x005ea880)
-            // Aurora (NWN) and Eclipse (DA/ME) use base DLG format without K2 extensions
-            // Matching PyKotor: K2-specific widgets are shown/hidden based on game type
+            // Script #1: only ActionParam1 row is K2-specific (Param2–5 and ParamStrA exist in K1)
             if (_script1Param1Panel != null)
-            {
                 _script1Param1Panel.IsVisible = isK2;
-            }
+
+            // Script #2: entire block (Script2, ActionParam1b–5b, ParamStrB) is K2-only
+            if (_script2Panel != null)
+                _script2Panel.IsVisible = isK2;
+
+            // Conditional #2: entire block (Active2, Not2, Param1b–5b, ParamStrB, Logic) is K2-only
+            if (_condition2Panel != null)
+                _condition2Panel.IsVisible = isK2;
+
+            // Emotion / Expression: emotions.2da and expressions.2da are TSL-specific
+            if (_emotionExpressionPanel != null)
+                _emotionExpressionPanel.IsVisible = isK2;
+
+            // Node ID, Alien Race Node, Post Proc Node, Logic: K2-only node/link fields
+            if (_nodeIdLabel != null) _nodeIdLabel.IsVisible = isK2;
+            if (_nodeIdSpin != null) _nodeIdSpin.IsVisible = isK2;
+            if (_alienRaceNodeLabel != null) _alienRaceNodeLabel.IsVisible = isK2;
+            if (_alienRaceNodeSpin != null) _alienRaceNodeSpin.IsVisible = isK2;
+            if (_postProcLabel != null) _postProcLabel.IsVisible = isK2;
+            if (_postProcSpin != null) _postProcSpin.IsVisible = isK2;
+            if (_logicLabel != null) _logicLabel.IsVisible = isK2;
+            if (_logicSpin != null) _logicSpin.IsVisible = isK2;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1256-1260
-        // Original: def new(self):
         public override void New()
         {
             base.New();
@@ -1919,32 +2801,127 @@ namespace OdyTools.Editors.DLG
 
         public override void SaveAs()
         {
+            _ = RunSaveAsAsync();
+        }
+
+        /// <summary>Returns the default file extension for the given dialogue resource type (e.g. .dlg, .dlg.xml, .cnv).</summary>
+        private static string GetDefaultExtensionForRestype(ResourceType restype)
+        {
+            if (restype == ResourceType.CNV) return ".cnv";
+            if (restype == ResourceType.DLG_XML) return ".dlg.xml";
+            if (restype == ResourceType.DLG_JSON) return ".dlg.json";
+            if (restype == ResourceType.DLG_TWINE_HTML) return ".twine.html";
+            if (restype == ResourceType.DLG_TWINE_JSON) return ".twine.json";
+            return ".dlg";
+        }
+
+        /// <summary>Parses a dialogue file path into resname and ResourceType. Used for Open, Save As, and Revert.</summary>
+        private static (string resname, ResourceType restype) GetResnameAndRestypeFromPath(string filePath)
+        {
+            string baseName = Path.GetFileName(filePath);
+            if (string.IsNullOrEmpty(baseName)) return (Path.GetFileNameWithoutExtension(filePath), ResourceType.DLG);
+            if (baseName.EndsWith(".dlg.xml", StringComparison.OrdinalIgnoreCase))
+                return (baseName.Substring(0, baseName.Length - 9), ResourceType.DLG_XML);
+            if (baseName.EndsWith(".dlg.json", StringComparison.OrdinalIgnoreCase))
+                return (baseName.Substring(0, baseName.Length - 10), ResourceType.DLG_JSON);
+            if (baseName.EndsWith(".twine.html", StringComparison.OrdinalIgnoreCase))
+                return (baseName.Substring(0, baseName.Length - 11), ResourceType.DLG_TWINE_HTML);
+            if (baseName.EndsWith(".twine.json", StringComparison.OrdinalIgnoreCase))
+                return (baseName.Substring(0, baseName.Length - 11), ResourceType.DLG_TWINE_JSON);
+            string resname = Path.GetFileNameWithoutExtension(filePath);
+            string ext = (Path.GetExtension(filePath) ?? "").TrimStart('.').ToLowerInvariant();
+            ResourceType restype = ext == "cnv" ? ResourceType.CNV : ResourceType.DLG;
+            return (resname, restype);
+        }
+
+        protected override async Task RunSaveAsAsync()
+        {
+            var storageProvider = (this as Window)?.StorageProvider;
+            if (storageProvider == null) return;
+            string suggestedName = string.IsNullOrEmpty(_resname) ? "dialog" : _resname;
+            string defaultExt = GetDefaultExtensionForRestype(_restype ?? ResourceType.DLG);
+            var options = new FilePickerSaveOptions
+            {
+                Title = Localization.Tr("Save Dialogue As"),
+                SuggestedFileName = suggestedName + defaultExt,
+                FileTypeChoices = new[]
+                {
+                    new FilePickerFileType(Localization.Tr("All dialogue formats (DLG, XML, JSON, CNV, Twine)"))
+                    {
+                        Patterns = new[] { "*.dlg", "*.dlg.xml", "*.dlg.json", "*.cnv", "*.twine.html", "*.twine.json" }
+                    },
+                    new FilePickerFileType(Localization.Tr("DLG Files")) { Patterns = new[] { "*.dlg" } },
+                    new FilePickerFileType(Localization.Tr("DLG XML (plaintext)")) { Patterns = new[] { "*.dlg.xml" } },
+                    new FilePickerFileType(Localization.Tr("DLG JSON (plaintext)")) { Patterns = new[] { "*.dlg.json" } },
+                    new FilePickerFileType(Localization.Tr("CNV Files")) { Patterns = new[] { "*.cnv" } },
+                    new FilePickerFileType(Localization.Tr("Twine HTML")) { Patterns = new[] { "*.twine.html" } },
+                    new FilePickerFileType(Localization.Tr("Twine JSON")) { Patterns = new[] { "*.twine.json" } },
+                    new FilePickerFileType(Localization.Tr("All files")) { Patterns = new[] { "*.*" } }
+                }
+            };
+            var file = await storageProvider.SaveFilePickerAsync(options);
+            if (file == null) return;
+            string path = file.Path?.LocalPath ?? "";
+            if (string.IsNullOrWhiteSpace(path)) return;
+            _filepath = path;
+            var (resname, restype) = GetResnameAndRestypeFromPath(path);
+            _resname = resname;
+            _restype = restype;
+            RefreshWindowTitle();
             Save();
+        }
+
+        /// <summary>Override for custom DLG open (file picker only; module browser is separate).</summary>
+        protected override async Task RunOpenAsync()
+        {
+            if (!await ConfirmDiscardUnsavedChangesAsync()) return;
+            await OpenFileAsync();
         }
 
         /// <summary>
         /// Opens a file dialog to select and load a DLG file.
         /// </summary>
-        private async void OpenFile()
+        private async Task OpenFileAsync()
         {
             var topLevel = GetTopLevel(this);
-            if (topLevel == null)
-            {
-                return;
-            }
+            if (topLevel == null) return;
 
             var options = new FilePickerOpenOptions
             {
-                Title = "Open DLG File",
+                Title = Localization.Tr("Open Dialogue File"),
                 AllowMultiple = false,
                 FileTypeFilter = new List<FilePickerFileType>
                 {
-                    new FilePickerFileType("DLG Files")
+                    new FilePickerFileType(Localization.Tr("All dialogue formats (DLG, XML, JSON, CNV, Twine)"))
+                    {
+                        Patterns = new List<string> { "*.dlg", "*.dlg.xml", "*.dlg.json", "*.cnv", "*.twine.html", "*.twine.json" }
+                    },
+                    new FilePickerFileType(Localization.Tr("DLG Files"))
                     {
                         Patterns = new List<string> { "*.dlg" },
                         MimeTypes = new List<string> { "application/octet-stream" }
                     },
-                    new FilePickerFileType("All Files")
+                    new FilePickerFileType(Localization.Tr("DLG XML (plaintext)"))
+                    {
+                        Patterns = new List<string> { "*.dlg.xml" }
+                    },
+                    new FilePickerFileType(Localization.Tr("DLG JSON (plaintext)"))
+                    {
+                        Patterns = new List<string> { "*.dlg.json" }
+                    },
+                    new FilePickerFileType(Localization.Tr("CNV Files"))
+                    {
+                        Patterns = new List<string> { "*.cnv" }
+                    },
+                    new FilePickerFileType(Localization.Tr("Twine HTML"))
+                    {
+                        Patterns = new List<string> { "*.twine.html" }
+                    },
+                    new FilePickerFileType(Localization.Tr("Twine JSON"))
+                    {
+                        Patterns = new List<string> { "*.twine.json" }
+                    },
+                    new FilePickerFileType(Localization.Tr("All Files"))
                     {
                         Patterns = new List<string> { "*" },
                         MimeTypes = new List<string> { "application/octet-stream" }
@@ -1967,8 +2944,8 @@ namespace OdyTools.Editors.DLG
             try
             {
                 var data = File.ReadAllBytes(filePath);
-                var fileName = Path.GetFileNameWithoutExtension(filePath);
-                Load(filePath, fileName, ResourceType.DLG, data);
+                var (resname, restype) = GetResnameAndRestypeFromPath(filePath);
+                Load(filePath, resname, restype, data);
             }
             catch (Exception ex)
             {
@@ -1976,10 +2953,8 @@ namespace OdyTools.Editors.DLG
             }
         }
 
-        /// <summary>
-        /// Reverts changes by reloading the current DLG from its original source.
-        /// </summary>
-        private void RevertChanges()
+        /// <summary>Override: revert by re-reading from disk (or New if no file).</summary>
+        public override void Revert()
         {
             if (string.IsNullOrEmpty(_filepath))
             {
@@ -1993,8 +2968,8 @@ namespace OdyTools.Editors.DLG
                 if (File.Exists(_filepath))
                 {
                     var data = File.ReadAllBytes(_filepath);
-                    var fileName = Path.GetFileNameWithoutExtension(_filepath);
-                    Load(_filepath, fileName, ResourceType.DLG, data);
+                    var (resname, restype) = GetResnameAndRestypeFromPath(_filepath);
+                    Load(_filepath, resname, restype, data);
                 }
                 else
                 {
@@ -2004,15 +2979,13 @@ namespace OdyTools.Editors.DLG
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to revert DLG file: {ex.Message}");
+                Console.WriteLine($"Failed to revert dialogue file: {ex.Message}");
                 New();
             }
         }
 
         /// <summary>
         /// Refreshes the stunt list UI from the core DLG stunts.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2621-2627
-        /// Original: def refresh_stunt_list(self):
         /// </summary>
         public void RefreshStuntList()
         {
@@ -2021,14 +2994,8 @@ namespace OdyTools.Editors.DLG
                 return;
             }
 
-            // Matching PyKotor implementation: self.ui.stuntList.clear()
             _stuntList.Items.Clear();
 
-            // Matching PyKotor implementation: for stunt in self.core_dlg.stunts:
-            // Original: text: str = f"{stunt.stunt_model} ({stunt.participant})"
-            // Original: item = QListWidgetItem(text)
-            // Original: item.setData(Qt.ItemDataRole.UserRole, stunt)
-            // Original: self.ui.stuntList.addItem(item)
             foreach (DLGStunt stunt in _coreDlg.Stunts)
             {
                 string text = $"{stunt.StuntModel} ({stunt.Participant})";
@@ -2037,48 +3004,81 @@ namespace OdyTools.Editors.DLG
             }
         }
 
-        private void OnAddStuntClicked()
+        private async void OnAddStuntClicked()
         {
             if (_coreDlg == null)
+            {
+                await MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Cutscene Model"),
+                    Localization.Tr("Open a DLG file first."),
+                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
                 return;
-            _coreDlg.Stunts.Add(new DLGStunt());
-            RefreshStuntList();
-            OnNodeUpdate();
+            }
+            var dialog = new DialogModelDialog(this, null);
+            bool result = await dialog.ShowDialog<bool>(this);
+            if (result)
+            {
+                _actionHistory.Apply(new AddStuntAction(dialog.GetStunt()));
+            }
         }
 
-        private void OnEditStuntClicked()
+        private async void OnEditStuntClicked()
         {
-            if (_stuntList?.SelectedItem is ListBoxItem item && item.Tag is DLGStunt)
+            if (_coreDlg == null)
             {
-                // TODO: open stunt edit dialog; for now just ensure selection is visible
-                OnNodeUpdate();
+                await MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Cutscene Model"),
+                    Localization.Tr("Open a DLG file first."),
+                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                return;
+            }
+            if (!(_stuntList?.SelectedItem is ListBoxItem selItem) || !(selItem.Tag is DLGStunt stunt))
+            {
+                await MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Cutscene Model"),
+                    Localization.Tr("Select a stunt from the list first, or use Add to create one."),
+                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                return;
+            }
+            var dialog = new DialogModelDialog(this, stunt);
+            string oldParticipant = stunt.Participant ?? "";
+            string oldStuntModelStr = stunt.StuntModel?.ToString() ?? "";
+            bool result = await dialog.ShowDialog<bool>(this);
+            if (result)
+            {
+                DLGStunt updated = dialog.GetStunt();
+                _actionHistory.Apply(new EditStuntAction(stunt, oldParticipant, oldStuntModelStr, updated.Participant ?? "", updated.StuntModel?.ToString() ?? ""));
+            }
+        }
+
+        private async void OnRemoveStuntClicked()
+        {
+            if (_coreDlg == null)
+            {
+                await MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Cutscene Model"),
+                    Localization.Tr("Open a DLG file first."),
+                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                return;
+            }
+            if (_stuntList?.SelectedItem is ListBoxItem item && item.Tag is DLGStunt stunt)
+            {
+                _actionHistory.Apply(new RemoveStuntAction(this, stunt));
             }
             else
             {
-                BlinkWindow();
+                await MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Cutscene Model"),
+                    Localization.Tr("Select a stunt from the list first, or use Add to create one."),
+                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
             }
         }
 
-        private void OnRemoveStuntClicked()
+        private void OnStuntListDoubleTapped(object sender, TappedEventArgs e)
         {
-            if (_stuntList?.SelectedItem is ListBoxItem item && item.Tag is DLGStunt stunt && _coreDlg != null)
+            if (_stuntList?.SelectedItem != null)
             {
-                _coreDlg.Stunts.Remove(stunt);
-                RefreshStuntList();
-                OnNodeUpdate();
-            }
-            else
-            {
-                BlinkWindow();
+                OnEditStuntClicked();
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2759-2781
-        // Original: def refresh_anim_list(self): ... Refreshes the animations list
         /// <summary>
         /// Refreshes the animations list based on the currently selected node.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2759-2781
-        /// Original: def refresh_anim_list(self): ... self.ui.animsList.clear() ... for anim in item.link.node.animations: ...
         /// </summary>
         public void RefreshAnimList()
         {
@@ -2087,26 +3087,30 @@ namespace OdyTools.Editors.DLG
                 return;
             }
 
-            // Matching PyKotor: self.ui.animsList.clear()
             _animsList.Items.Clear();
 
-            // Get animations 2DA for name lookup
-            // Matching PyKotor: animations_2da: TwoDA | None = self._installation.ht_get_cache_2da(OdyInstallation.TwoDA_DIALOG_ANIMS)
+            // Resolve dialoganimations.2da: installation (CHITIN, OVERRIDE) + custom folders from File → DLG Settings, then manual path fallback
             TwoDA animations2da = null;
-            if (_installation != null)
+            var dlgSettings = new DLGSettings();
+            var customFolders = dlgSettings.GetCustom2DAFolders();
+            if (UseInstallationForResources())
             {
-                animations2da = _installation.HtGetCache2DA(OdyInstallation.TwoDADialogAnims);
+                animations2da = _installation.Get2DAWithCustomFolders(OdyInstallation.TwoDADialogAnims, customFolders);
+            }
+            if (animations2da == null)
+            {
+                var path = dlgSettings.Resolve2DAPath(OdyInstallation.TwoDADialogAnims);
+                if (!string.IsNullOrEmpty(path))
+                    animations2da = TwoDAFileHelper.LoadFromPath(path);
             }
 
             if (animations2da == null)
             {
-                // Matching PyKotor: RobustLogger().error(f"refreshAnimList: {OdyInstallation.TwoDA_DIALOG_ANIMS}.2da not found, the Animation List will not function!!")
-                System.Console.WriteLine($"RefreshAnimList: {OdyInstallation.TwoDADialogAnims}.2da not found, the Animation List will not function!!");
+                System.Console.WriteLine($"RefreshAnimList: {OdyInstallation.TwoDADialogAnims} not found. In File → DLG Settings choose an installation and/or set the 2DA directory or dialoganimations.2da path under Manual paths.");
                 return;
             }
 
             // Get selected item from dialog tree
-            // Matching PyKotor: for index in self.ui.dialogTree.selectedIndexes():
             var selectedItem = _dialogTree?.SelectedItem;
             if (selectedItem == null)
             {
@@ -2129,13 +3133,6 @@ namespace OdyTools.Editors.DLG
                 return;
             }
 
-            // Matching PyKotor: for anim in item.link.node.animations:
-            // Original: name: str = str(anim.animation_id)
-            // Original: if animations_2da.get_height() > anim.animation_id: name = animations_2da.get_cell(anim.animation_id, "name")
-            // Original: text: str = f"{name} ({anim.participant})"
-            // Original: anim_item = QListWidgetItem(text)
-            // Original: anim_item.setData(Qt.ItemDataRole.UserRole, anim)
-            // Original: self.ui.animsList.addItem(anim_item)
             foreach (DLGAnimation anim in dlgItem.Link.Node.Animations)
             {
                 string name = anim.AnimationId.ToString();
@@ -2155,18 +3152,20 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Handles the Add Animation button click.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py
         /// </summary>
-        private void OnAddAnimClicked()
+        private async void OnAddAnimClicked()
         {
-            DLGStandardItem selectedItem = GetSelectedItemFromTreeView();
+            DLGStandardItem selectedItem = GetSelectedItemFromTreeView() ?? _currentNodeItem;
             if (selectedItem?.Link?.Node == null)
             {
+                await MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Current Animations"),
+                    Localization.Tr("Select a dialogue node in the tree first, or ensure the node whose fields are shown in the right panel has a valid link."),
+                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
                 return;
             }
 
             var dialog = new DialogAnimationDialog(this, _installation, null);
-            bool result = dialog.ShowDialog(this);
+            bool result = await dialog.ShowDialog<bool>(this);
             if (result)
             {
                 var newAnim = dialog.GetAnimation();
@@ -2181,13 +3180,22 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Handles the Remove Animation button click.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py
         /// </summary>
-        private void OnRemoveAnimClicked()
+        private async void OnRemoveAnimClicked()
         {
-            DLGStandardItem selectedItem = GetSelectedItemFromTreeView();
-            if (selectedItem?.Link?.Node == null || _animsList?.SelectedItem == null)
+            DLGStandardItem selectedItem = GetSelectedItemFromTreeView() ?? _currentNodeItem;
+            if (selectedItem?.Link?.Node == null)
             {
+                await MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Current Animations"),
+                    Localization.Tr("Select a dialogue node in the tree first."),
+                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                return;
+            }
+            if (_animsList?.SelectedItem == null)
+            {
+                await MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Current Animations"),
+                    Localization.Tr("Select an animation in the list to remove."),
+                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
                 return;
             }
 
@@ -2201,20 +3209,29 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Handles the Edit Animation button click.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py
         /// </summary>
-        private void OnEditAnimClicked()
+        private async void OnEditAnimClicked()
         {
-            DLGStandardItem selectedItem = GetSelectedItemFromTreeView();
-            if (selectedItem?.Link?.Node == null || _animsList?.SelectedItem == null)
+            DLGStandardItem selectedItem = GetSelectedItemFromTreeView() ?? _currentNodeItem;
+            if (selectedItem?.Link?.Node == null)
             {
+                await MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Current Animations"),
+                    Localization.Tr("Select a dialogue node in the tree first."),
+                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                return;
+            }
+            if (_animsList?.SelectedItem == null)
+            {
+                await MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Current Animations"),
+                    Localization.Tr("Select an animation in the list to edit."),
+                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
                 return;
             }
 
             if (_animsList.SelectedItem is ListBoxItem item && item.Tag is DLGAnimation anim)
             {
                 var dialog = new DialogAnimationDialog(this, _installation, anim);
-                bool result = dialog.ShowDialog(this);
+                bool result = await dialog.ShowDialog<bool>(this);
                 if (result)
                 {
                     // Animation is updated in-place by the dialog
@@ -2239,18 +3256,20 @@ namespace OdyTools.Editors.DLG
                 return _model.LinkToItems[link][0];
             }
 
-            return null;
+            return _model.MaterializeItemForLink(link);
         }
 
         // Properties for tests
         public DLGType CoreDlg => _coreDlg;
         public DLGModel Model => _model;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/node_editor.py:1170-1184
-        // Original: def undo(self): / def redo(self):
         // Undo/redo functionality for DLG editor
         // Based on QUndoStack pattern from PyKotor implementation
 
+        // --- Undo/Redo (Edit menu, Ctrl+Z / Ctrl+Y) ---
+        // Undoable: Add/remove starter, move starter, add root node, add child node, remove link (tree or starter),
+        // paste (link or deep copy), delete node everywhere, restore orphan, stunts add/remove/edit.
+        // Not undoable: File globals or node field edits (LostFocus/ValueChanged sync).
         /// <summary>
         /// Gets whether undo is available.
         /// </summary>
@@ -2354,15 +3373,12 @@ namespace OdyTools.Editors.DLG
             _model.SelectedIndex = newIndex;
         }
 
-        // Matching PyKotor implementation: Expose UI controls for testing
-        // Original: editor.ui.animsList, editor.ui.addAnimButton, etc.
         public ListBox AnimsList => _animsList;
         public Button AddAnimButton => _addAnimButton;
         public Button RemoveAnimButton => _removeAnimButton;
         public Button EditAnimButton => _editAnimButton;
 
         // Expose link widgets for testing
-        // Matching PyKotor implementation: editor.ui.condition1ResrefEdit, etc.
         public ComboBox Condition1ResrefEdit => _condition1ResrefEdit;
         public ComboBox Condition2ResrefEdit => _condition2ResrefEdit;
         public ComboBox Script1ResrefEdit => _script1ResrefEdit;
@@ -2371,7 +3387,6 @@ namespace OdyTools.Editors.DLG
         public TreeView DialogTree => _dialogTree;
 
         // Expose condition parameter widgets for testing
-        // Matching PyKotor implementation: editor.ui.condition1Param1Spin, etc.
         public NumericUpDown Condition1Param1Spin => _condition1Param1Spin;
         public NumericUpDown Condition1Param2Spin => _condition1Param2Spin;
         public NumericUpDown Condition1Param3Spin => _condition1Param3Spin;
@@ -2388,7 +3403,6 @@ namespace OdyTools.Editors.DLG
         public CheckBox Condition2NotCheckbox => _condition2NotCheckbox;
 
         // Expose quest widgets for testing
-        // Matching PyKotor implementation: editor.ui.questEdit, editor.ui.questEntrySpin
         public TextBox QuestEdit => _questEdit;
         public NumericUpDown QuestEntrySpin => _questEntrySpin;
         public ComboBox PlotIndexCombo => _plotIndexCombo;
@@ -2398,7 +3412,6 @@ namespace OdyTools.Editors.DLG
         public NumericUpDown FadeTypeSpin => _fadeTypeSpin;
 
         // Expose camera widgets for testing
-        // Matching PyKotor implementation: editor.ui.cameraIdSpin, editor.ui.cameraAnimSpin, editor.ui.cameraAngleSelect, editor.ui.cameraEffectSelect
         public NumericUpDown CameraIdSpin => _cameraIdSpin;
         public NumericUpDown CameraAnimSpin => _cameraAnimSpin;
         public ComboBox CameraAngleSelect => _cameraAngleSelect;
@@ -2407,27 +3420,22 @@ namespace OdyTools.Editors.DLG
         public ComboBox ExpressionSelect => _expressionSelect;
 
         // Expose speaker widgets for testing
-        // Matching PyKotor implementation: editor.ui.speakerEdit, editor.ui.speakerEditLabel
         public TextBox SpeakerEdit => _speakerEdit;
         public TextBlock SpeakerEditLabel => _speakerEditLabel;
 
         // Expose listener widget for testing
         // Expose comments widget for testing
-        // Matching PyKotor implementation: editor.ui.commentsEdit
         public TextBox CommentsEdit => _commentsEdit;
 
-        // Matching PyKotor implementation: editor.ui.listenerEdit
         public TextBox ListenerEdit => _listenerEdit;
 
         // Expose find/search widgets for testing
-        // Matching PyKotor implementation: editor.find_input, editor.show_find_bar(), editor.handle_find()
         public TextBox FindInput => _findInput;
         public Button FindButton => _findButton;
         public TextBlock ResultsLabel => _resultsLabel;
 
 
         // File-level properties exposed for testing
-        // Matching PyKotor implementation - expose UI controls for testing
         public ComboBox ConversationSelect => _conversationSelect;
         public ComboBox ComputerSelect => _computerSelect;
         public NumericUpDown EntryDelaySpin => _entryDelaySpin;
@@ -2444,17 +3452,14 @@ namespace OdyTools.Editors.DLG
         public CheckBox UnequipAllCheckbox => _unequipAllCheckbox;
 
         // Expose left dock widget for testing
-        // Matching PyKotor implementation: editor.left_dock_widget, editor.orphaned_nodes_list, editor.pinned_items_list
-        public Panel LeftDockWidget => _leftDockWidget;
+        public Control LeftDockWidget => _leftDockWidget;
         public DLGListWidget OrphanedNodesList => _orphanedNodesList;
         public DLGListWidget PinnedItemsList => _pinnedItemsList;
 
         // Expose script widgets for testing
-        // Matching PyKotor implementation: editor.ui.script1Param1Spin
         public NumericUpDown Script1Param1Spin => _script1Param1Spin;
 
         // Expose script2 parameter widgets for testing
-        // Matching PyKotor implementation: editor.ui.script2Param1Spin, script2Param2Spin, etc.
         public NumericUpDown Script2Param1Spin => _script2Param1Spin;
         public NumericUpDown Script2Param2Spin => _script2Param2Spin;
         public NumericUpDown Script2Param3Spin => _script2Param3Spin;
@@ -2462,11 +3467,9 @@ namespace OdyTools.Editors.DLG
         public NumericUpDown Script2Param5Spin => _script2Param5Spin;
 
         // Expose sound widget for testing
-        // Matching PyKotor implementation: editor.ui.soundComboBox
         public ComboBox SoundComboBox => _soundComboBox;
 
         // Expose voice widget for testing
-        // Matching PyKotor implementation: editor.ui.voiceComboBox
         public ComboBox VoiceComboBox => _voiceComboBox;
         public CheckBox SoundCheckbox => _soundCheckbox;
         public NumericUpDown NodeIdSpin => _nodeIdSpin;
@@ -2481,8 +3484,10 @@ namespace OdyTools.Editors.DLG
         {
             _nodeLoadedIntoUi = false;
 
+            _currentNodeItem = null;
             if (_dialogTree?.SelectedItem == null)
             {
+                _selectedLink = null;
                 // Clear UI when nothing is selected
                 if (_condition1ResrefEdit != null)
                 {
@@ -2562,36 +3567,32 @@ namespace OdyTools.Editors.DLG
                 }
                 if (_plotIndexCombo != null)
                 {
-                    _plotIndexCombo.SelectedIndex = 0;
+                    _plotIndexCombo.SetSelectedIndex(0);
                 }
                 if (_plotXpSpin != null)
                 {
                     _plotXpSpin.Value = 0;
                 }
-                if (_script1Param1Spin != null)
+                if (_script1ResrefEdit != null)
                 {
-                    _script1Param1Spin.Value = 0;
+                    _script1ResrefEdit.Text = string.Empty;
                 }
-                if (_script2Param1Spin != null)
+                if (_script2ResrefEdit != null)
                 {
-                    _script2Param1Spin.Value = 0;
+                    _script2ResrefEdit.Text = string.Empty;
                 }
-                if (_script2Param2Spin != null)
-                {
-                    _script2Param2Spin.Value = 0;
-                }
-                if (_script2Param3Spin != null)
-                {
-                    _script2Param3Spin.Value = 0;
-                }
-                if (_script2Param4Spin != null)
-                {
-                    _script2Param4Spin.Value = 0;
-                }
-                if (_script2Param5Spin != null)
-                {
-                    _script2Param5Spin.Value = 0;
-                }
+                if (_script1Param1Spin != null) _script1Param1Spin.Value = 0;
+                if (_script1Param2Spin != null) _script1Param2Spin.Value = 0;
+                if (_script1Param3Spin != null) _script1Param3Spin.Value = 0;
+                if (_script1Param4Spin != null) _script1Param4Spin.Value = 0;
+                if (_script1Param5Spin != null) _script1Param5Spin.Value = 0;
+                if (_script1Param6Edit != null) _script1Param6Edit.Text = string.Empty;
+                if (_script2Param1Spin != null) _script2Param1Spin.Value = 0;
+                if (_script2Param2Spin != null) _script2Param2Spin.Value = 0;
+                if (_script2Param3Spin != null) _script2Param3Spin.Value = 0;
+                if (_script2Param4Spin != null) _script2Param4Spin.Value = 0;
+                if (_script2Param5Spin != null) _script2Param5Spin.Value = 0;
+                if (_script2Param6Edit != null) _script2Param6Edit.Text = string.Empty;
                 if (_speakerEdit != null)
                 {
                     _speakerEdit.Text = string.Empty;
@@ -2601,25 +3602,78 @@ namespace OdyTools.Editors.DLG
                 {
                     _speakerEditLabel.IsVisible = false;
                 }
+                UpdateNodeTextPreview();
             }
 
             // Get selected item from tree
             var selectedItem = _dialogTree.SelectedItem;
             if (selectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItem)
             {
+                _selectedLink = dlgItem?.Link;
+                _currentNodeItem = dlgItem;
                 LoadLinkIntoUI(dlgItem);
             }
             else if (selectedItem is DLGStandardItem dlgItemDirect)
             {
+                _selectedLink = dlgItemDirect?.Link;
+                _currentNodeItem = dlgItemDirect;
                 LoadLinkIntoUI(dlgItemDirect);
             }
 
+            UpdateNodeTextPreview();
             _nodeLoadedIntoUi = true;
+        }
+
+        private void UpdateNodeTextPreview()
+        {
+            if (_nodeTextPreviewBorder == null || _nodeTextPreviewLabel == null)
+                return;
+
+            var node = _selectedLink?.Node;
+            if (node == null)
+            {
+                _nodeTextPreviewBorder.IsVisible = false;
+                return;
+            }
+
+            string resolved = GetResolvedNodeText(node);
+            if (string.IsNullOrWhiteSpace(resolved))
+            {
+                _nodeTextPreviewLabel.Text = "<no text>";
+                _nodeTextPreviewLabel.Foreground = new SolidColorBrush(AmColor.Parse("#B0BEC5"));
+                _nodeTextPreviewLabel.FontStyle = FontStyle.Italic;
+            }
+            else
+            {
+                _nodeTextPreviewLabel.Text = resolved;
+                _nodeTextPreviewLabel.Foreground = new SolidColorBrush(AmColor.Parse("#212121"));
+                _nodeTextPreviewLabel.FontStyle = FontStyle.Normal;
+            }
+            _nodeTextPreviewBorder.IsVisible = true;
+        }
+
+        /// <summary>
+        /// Syncs selection from the tree view to _selectedLink, flat lists, and graph.
+        /// Called when the tree selection changes.
+        /// </summary>
+        private void SyncSelectionFromTree()
+        {
+            if (_isSyncingViewSelection) return;
+            _isSyncingViewSelection = true;
+            try
+            {
+                OnSelectionChanged();
+                SyncFlatSelection(_selectedLink);
+                SyncGraphSelection(_selectedLink);
+            }
+            finally
+            {
+                _isSyncingViewSelection = false;
+            }
         }
 
         /// <summary>
         /// Loads link properties into UI controls.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2364-2454
         /// </summary>
         private void LoadLinkIntoUI(DLGStandardItem item)
         {
@@ -2632,10 +3686,6 @@ namespace OdyTools.Editors.DLG
             var node = link.Node;
 
             // Load condition1
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2364-2454
-            // Original: self.ui.condition1ResrefEdit.set_combo_box_text(str(item.link.active1))
-            // Original: self.ui.condition1Param1Spin.setValue(item.link.active1_param1)
-            // Original: self.ui.condition1NotCheckbox.setChecked(item.link.active1_not)
             if (_condition1ResrefEdit != null)
             {
                 _condition1ResrefEdit.Text = link.Active1?.ToString() ?? string.Empty;
@@ -2670,10 +3720,6 @@ namespace OdyTools.Editors.DLG
             }
 
             // Load condition2
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2364-2454
-            // Original: self.ui.condition2ResrefEdit.set_combo_box_text(str(item.link.active2))
-            // Original: self.ui.condition2Param1Spin.setValue(item.link.active2_param1)
-            // Original: self.ui.condition2NotCheckbox.setChecked(item.link.active2_not)
             if (_condition2ResrefEdit != null)
             {
                 _condition2ResrefEdit.Text = link.Active2?.ToString() ?? string.Empty;
@@ -2708,17 +3754,12 @@ namespace OdyTools.Editors.DLG
             }
 
             // Load logic (0 = AND/false, 1 = OR/true)
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2364-2454
-            // Original: self.ui.logicSpin.setValue(1 if item.link.logic else 0)
             if (_logicSpin != null)
             {
                 _logicSpin.Value = link.Logic ? 1 : 0;
             }
 
             // Load speaker field from node (only for Entry nodes)
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2397-2405
-            // Original: if isinstance(item.link.node, DLGEntry): self.ui.speakerEditLabel.setVisible(True), self.ui.speakerEdit.setVisible(True), self.ui.speakerEdit.setText(item.link.node.speaker)
-            // Original: elif isinstance(item.link.node, DLGReply): self.ui.speakerEditLabel.setVisible(False), self.ui.speakerEdit.setVisible(False)
             if (node is DLGEntry entry)
             {
                 if (_speakerEditLabel != null)
@@ -2744,16 +3785,12 @@ namespace OdyTools.Editors.DLG
             }
 
             // Load listener field from node
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2407
-            // Original: self.ui.listenerEdit.setText(item.link.node.listener)
             if (_listenerEdit != null && node != null)
             {
                 _listenerEdit.Text = node.Listener ?? string.Empty;
             }
 
             // Load quest fields from node
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2433-2434
-            // Original: self.ui.questEdit.setText(item.link.node.quest), self.ui.questEntrySpin.setValue(item.link.node.quest_entry or 0)
             if (_questEdit != null && node != null)
             {
                 _questEdit.Text = node.Quest ?? string.Empty;
@@ -2764,12 +3801,10 @@ namespace OdyTools.Editors.DLG
                 _questEntrySpin.Value = node.QuestEntry ?? 0;
             }
 
-            // Load plot fields from node
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2431-2432
-            // Original: self.ui.plotIndexCombo.setCurrentIndex(item.link.node.plot_index), self.ui.plotXpSpin.setValue(item.link.node.plot_xp_percentage)
+            // Load plot fields from node (ComboBox2DA: use SetSelectedIndex)
             if (_plotIndexCombo != null && node != null)
             {
-                _plotIndexCombo.SelectedIndex = node.PlotIndex;
+                _plotIndexCombo.SetSelectedIndex(node.PlotIndex);
             }
 
             if (_plotXpSpin != null && node != null)
@@ -2778,8 +3813,6 @@ namespace OdyTools.Editors.DLG
             }
 
             // Load script1 and script2 ResRefs
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2409, 2416
-            // Original: self.ui.script1ResrefEdit.set_combo_box_text(str(item.link.node.script1)), self.ui.script2ResrefEdit.set_combo_box_text(str(item.link.node.script2))
             if (_script1ResrefEdit != null && node != null)
             {
                 _script1ResrefEdit.Text = node.Script1?.ToString() ?? string.Empty;
@@ -2789,17 +3822,33 @@ namespace OdyTools.Editors.DLG
                 _script2ResrefEdit.Text = node.Script2?.ToString() ?? string.Empty;
             }
 
-            // Load script1 param1
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2410
-            // Original: self.ui.script1Param1Spin.setValue(item.link.node.script1_param1)
+            // Load script1 params (GFF: Script, ActionParam1-5, ActionParamStrA)
             if (_script1Param1Spin != null && node != null)
             {
                 _script1Param1Spin.Value = node.Script1Param1;
             }
+            if (_script1Param2Spin != null && node != null)
+            {
+                _script1Param2Spin.Value = node.Script1Param2;
+            }
+            if (_script1Param3Spin != null && node != null)
+            {
+                _script1Param3Spin.Value = node.Script1Param3;
+            }
+            if (_script1Param4Spin != null && node != null)
+            {
+                _script1Param4Spin.Value = node.Script1Param4;
+            }
+            if (_script1Param5Spin != null && node != null)
+            {
+                _script1Param5Spin.Value = node.Script1Param5;
+            }
+            if (_script1Param6Edit != null && node != null)
+            {
+                _script1Param6Edit.Text = node.Script1Param6 ?? string.Empty;
+            }
 
-            // Load script2 params (K2-specific)
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py
-            // Original: self.ui.script2Param1Spin.setValue(item.link.node.script2_param1), etc.
+            // Load script2 params (GFF: Script2, ActionParam1b-5b, ActionParamStrB)
             if (_script2Param1Spin != null && node != null)
             {
                 _script2Param1Spin.Value = node.Script2Param1;
@@ -2820,10 +3869,12 @@ namespace OdyTools.Editors.DLG
             {
                 _script2Param5Spin.Value = node.Script2Param5;
             }
+            if (_script2Param6Edit != null && node != null)
+            {
+                _script2Param6Edit.Text = node.Script2Param6 ?? string.Empty;
+            }
 
             // Load delay, wait flags, and fade type from node
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2446-2449
-            // Original: self.ui.delaySpin.setValue(item.link.node.delay), self.ui.waitFlagSpin.setValue(item.link.node.wait_flags), self.ui.fadeTypeSpin.setValue(item.link.node.fade_type)
             if (_delaySpin != null && node != null)
             {
                 _delaySpin.Value = node.Delay;
@@ -2840,72 +3891,78 @@ namespace OdyTools.Editors.DLG
             }
 
             // Load sound ResRef from node
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2425
-            // Original: self.ui.soundComboBox.set_combo_box_text(str(item.link.node.sound))
             if (_soundComboBox != null && node != null)
             {
                 _soundComboBox.Text = node.Sound?.ToString() ?? string.Empty;
             }
 
-            // Original: self.ui.soundCheckbox.setChecked(item.link.node.sound_exists)
             if (_soundCheckbox != null && node != null)
             {
                 _soundCheckbox.IsChecked = node.SoundExists != 0;
             }
 
-            // Original: self.ui.emotionSelect.setCurrentIndex(item.link.node.emotion_id)
             if (_emotionSelect != null && node != null)
             {
-                _emotionSelect.SelectedIndex = Math.Min(Math.Max(node.EmotionId, 0), _emotionSelect.Items.Count - 1);
+                _emotionSelect.SetSelectedIndex(node.EmotionId);
             }
 
-            // Original: self.ui.expressionSelect.setCurrentIndex(item.link.node.facial_id)
             if (_expressionSelect != null && node != null)
             {
-                _expressionSelect.SelectedIndex = Math.Min(Math.Max(node.FacialId, 0), _expressionSelect.Items.Count - 1);
+                _expressionSelect.SetSelectedIndex(node.FacialId);
             }
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2508
-            // Original: self.refresh_anim_list()
+            // Load camera fields from node
+            if (_cameraIdSpin != null && node != null)
+            {
+                _cameraIdSpin.Value = node.CameraId ?? -1;
+            }
+            if (_cameraAnimSpin != null && node != null)
+            {
+                _cameraAnimSpin.Value = node.CameraAnim ?? 0;
+            }
+            if (_cameraAngleSelect != null && node != null)
+            {
+                _cameraAngleSelect.SelectedIndex = Math.Max(0, Math.Min(6, node.CameraAngle));
+            }
+            if (_cameraEffectSelect != null && node != null)
+            {
+                _cameraEffectSelect.SetSelectedIndex(node.CameraEffect ?? -1);
+            }
+
             RefreshAnimList();
 
-            // Original: self.ui.nodeIdSpin.setValue(item.link.node.node_id)
             if (_nodeIdSpin != null && node != null)
             {
                 _nodeIdSpin.Value = node.NodeId;
             }
 
-            // Original: self.ui.alienRaceNodeSpin.setValue(item.link.node.alien_race_node)
             if (_alienRaceNodeSpin != null && node != null)
             {
                 _alienRaceNodeSpin.Value = node.AlienRaceNode;
             }
 
-            // Original: self.ui.postProcSpin.setValue(item.link.node.post_proc_node)
             if (_postProcSpin != null && node != null)
             {
                 _postProcSpin.Value = node.PostProcNode;
             }
 
-            // Original: self.ui.nodeUnskippableCheckbox.setChecked(item.link.node.unskippable)
             if (_nodeUnskippableCheckbox != null && node != null)
             {
                 _nodeUnskippableCheckbox.IsChecked = node.Unskippable;
             }
 
             // Load voice ResRef from node
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2429
-            // Original: self.ui.voiceComboBox.set_combo_box_text(str(item.link.node.vo_resref))
             if (_voiceComboBox != null && node != null)
             {
                 _voiceComboBox.Text = node.VoResRef?.ToString() ?? string.Empty;
             }
+
+            HandleSoundChecked();
+            UpdateCameraWidgetState();
         }
 
         /// <summary>
         /// Updates node properties based on UI selections.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2456-2491
-        /// Original: def on_node_update(self, *args, **kwargs):
         /// </summary>
         public void OnNodeUpdate()
         {
@@ -2940,10 +3997,6 @@ namespace OdyTools.Editors.DLG
             var node = link.Node;
 
             // Update condition1
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2477-2484
-            // Original: item.link.active1 = ResRef(self.ui.condition1ResrefEdit.currentText())
-            // Original: item.link.active1_param1 = self.ui.condition1Param1Spin.value()
-            // Original: item.link.active1_not = self.ui.condition1NotCheckbox.isChecked()
             if (_condition1ResrefEdit != null)
             {
                 string text = _condition1ResrefEdit.Text ?? string.Empty;
@@ -2979,10 +4032,6 @@ namespace OdyTools.Editors.DLG
             }
 
             // Update condition2
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2485-2492
-            // Original: item.link.active2 = ResRef(self.ui.condition2ResrefEdit.currentText())
-            // Original: item.link.active2_param1 = self.ui.condition2Param1Spin.value()
-            // Original: item.link.active2_not = self.ui.condition2NotCheckbox.isChecked()
             if (_condition2ResrefEdit != null)
             {
                 string text = _condition2ResrefEdit.Text ?? string.Empty;
@@ -3018,32 +4067,24 @@ namespace OdyTools.Editors.DLG
             }
 
             // Update logic (0 = AND/false, 1 = OR/true)
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2493
-            // Original: item.link.logic = bool(self.ui.logicSpin.value())
             if (_logicSpin != null)
             {
                 link.Logic = _logicSpin.Value.HasValue && _logicSpin.Value.Value != 0;
             }
 
             // Update speaker field in node (only for Entry nodes)
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2523
-            // Original: if isinstance(item.link.node, DLGEntry): item.link.node.speaker = self.ui.speakerEdit.text()
             if (_speakerEdit != null && node is DLGEntry entry)
             {
                 entry.Speaker = _speakerEdit.Text ?? string.Empty;
             }
 
             // Update listener field in node
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2495
-            // Original: item.link.node.listener = self.ui.listenerEdit.text()
             if (_listenerEdit != null && node != null)
             {
                 node.Listener = _listenerEdit.Text ?? string.Empty;
             }
 
             // Update quest fields in node
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2521-2522
-            // Original: item.link.node.quest = self.ui.questEdit.text(), item.link.node.quest_entry = self.ui.questEntrySpin.value()
             if (_questEdit != null && node != null)
             {
                 node.Quest = _questEdit.Text ?? string.Empty;
@@ -3055,8 +4096,6 @@ namespace OdyTools.Editors.DLG
             }
 
             // Update plot fields in node
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2519-2520
-            // Original: item.link.node.plot_index = self.ui.plotIndexCombo.currentIndex(), item.link.node.plot_xp_percentage = self.ui.plotXpSpin.value()
             if (_plotIndexCombo != null && node != null)
             {
                 node.PlotIndex = _plotIndexCombo.SelectedIndex;
@@ -3064,20 +4103,46 @@ namespace OdyTools.Editors.DLG
 
             if (_plotXpSpin != null && node != null)
             {
-                node.PlotXpPercentage = _plotXpSpin.Value.HasValue ? (int)_plotXpSpin.Value.Value : 0;
+                node.PlotXpPercentage = _plotXpSpin.Value.HasValue ? (float)_plotXpSpin.Value.Value : 0f;
             }
 
-            // Update script1 param1
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2499
-            // Original: item.link.node.script1_param1 = self.ui.script1Param1Spin.value()
+            // Update script1 ResRef and params (GFF: Script, ActionParam1-5, ActionParamStrA)
+            if (_script1ResrefEdit != null && node != null)
+            {
+                string script1Text = _script1ResrefEdit.Text?.Trim() ?? string.Empty;
+                node.Script1 = string.IsNullOrEmpty(script1Text) ? ResRef.FromBlank() : new ResRef(script1Text);
+            }
             if (_script1Param1Spin != null && node != null)
             {
                 node.Script1Param1 = _script1Param1Spin.Value.HasValue ? (int)_script1Param1Spin.Value.Value : 0;
             }
+            if (_script1Param2Spin != null && node != null)
+            {
+                node.Script1Param2 = _script1Param2Spin.Value.HasValue ? (int)_script1Param2Spin.Value.Value : 0;
+            }
+            if (_script1Param3Spin != null && node != null)
+            {
+                node.Script1Param3 = _script1Param3Spin.Value.HasValue ? (int)_script1Param3Spin.Value.Value : 0;
+            }
+            if (_script1Param4Spin != null && node != null)
+            {
+                node.Script1Param4 = _script1Param4Spin.Value.HasValue ? (int)_script1Param4Spin.Value.Value : 0;
+            }
+            if (_script1Param5Spin != null && node != null)
+            {
+                node.Script1Param5 = _script1Param5Spin.Value.HasValue ? (int)_script1Param5Spin.Value.Value : 0;
+            }
+            if (_script1Param6Edit != null && node != null)
+            {
+                node.Script1Param6 = _script1Param6Edit.Text ?? string.Empty;
+            }
 
-            // Update script2 params (K2-specific)
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py
-            // Original: item.link.node.script2_param1 = self.ui.script2Param1Spin.value(), etc.
+            // Update script2 ResRef and params (GFF: Script2, ActionParam1b-5b, ActionParamStrB)
+            if (_script2ResrefEdit != null && node != null)
+            {
+                string script2Text = _script2ResrefEdit.Text?.Trim() ?? string.Empty;
+                node.Script2 = string.IsNullOrEmpty(script2Text) ? ResRef.FromBlank() : new ResRef(script2Text);
+            }
             if (_script2Param1Spin != null && node != null)
             {
                 node.Script2Param1 = _script2Param1Spin.Value.HasValue ? (int)_script2Param1Spin.Value.Value : 0;
@@ -3098,10 +4163,12 @@ namespace OdyTools.Editors.DLG
             {
                 node.Script2Param5 = _script2Param5Spin.Value.HasValue ? (int)_script2Param5Spin.Value.Value : 0;
             }
+            if (_script2Param6Edit != null && node != null)
+            {
+                node.Script2Param6 = _script2Param6Edit.Text ?? string.Empty;
+            }
 
             // Update delay, wait flags, and fade type in node
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2538-2540
-            // Original: item.link.node.delay = self.ui.delaySpin.value(), item.link.node.wait_flags = self.ui.waitFlagSpin.value(), item.link.node.fade_type = self.ui.fadeTypeSpin.value()
             if (_delaySpin != null && node != null)
             {
                 node.Delay = _delaySpin.Value.HasValue ? (int)_delaySpin.Value.Value : -1;
@@ -3118,59 +4185,48 @@ namespace OdyTools.Editors.DLG
             }
 
             // Update sound ResRef in node
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2513
-            // Original: item.link.node.sound = ResRef(self.ui.soundComboBox.currentText())
             if (_soundComboBox != null && node != null)
             {
                 string soundText = _soundComboBox.Text ?? string.Empty;
                 node.Sound = string.IsNullOrEmpty(soundText) ? ResRef.FromBlank() : new ResRef(soundText);
             }
 
-            // Original: item.link.node.sound_exists = self.ui.soundCheckbox.isChecked()
             if (_soundCheckbox != null && node != null)
             {
                 node.SoundExists = _soundCheckbox.IsChecked == true ? 1 : 0;
             }
 
-            // Original: item.link.node.emotion_id = self.ui.emotionSelect.currentIndex()
             if (_emotionSelect != null && node != null)
             {
                 node.EmotionId = _emotionSelect?.SelectedIndex ?? 0;
             }
 
-            // Original: item.link.node.facial_id = self.ui.expressionSelect.currentIndex()
             if (_expressionSelect != null && node != null)
             {
                 node.FacialId = _expressionSelect?.SelectedIndex ?? 0;
             }
 
-            // Original: item.link.node.node_id = self.ui.nodeIdSpin.value()
             if (_nodeIdSpin != null && node != null)
             {
                 node.NodeId = (int)(_nodeIdSpin.Value ?? 0);
             }
 
-            // Original: item.link.node.alien_race_node = self.ui.alienRaceNodeSpin.value()
             if (_alienRaceNodeSpin != null && node != null)
             {
                 node.AlienRaceNode = (int)(_alienRaceNodeSpin.Value ?? 0);
             }
 
-            // Original: item.link.node.post_proc_node = self.ui.postProcSpin.value()
             if (_postProcSpin != null && node != null)
             {
                 node.PostProcNode = (int)(_postProcSpin.Value ?? 0);
             }
 
-            // Original: item.link.node.unskippable = self.ui.nodeUnskippableCheckbox.isChecked()
             if (_nodeUnskippableCheckbox != null && node != null)
             {
                 node.Unskippable = _nodeUnskippableCheckbox.IsChecked == true;
             }
 
             // Update voice ResRef in node
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2517
-            // Original: item.link.node.vo_resref = ResRef(self.ui.voiceComboBox.currentText())
             if (_voiceComboBox != null && node != null)
             {
                 string voiceText = _voiceComboBox.Text ?? string.Empty;
@@ -3178,8 +4234,6 @@ namespace OdyTools.Editors.DLG
             }
 
             // Update camera properties in node
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2524-2527
-            // Original: item.link.node.camera_id = self.ui.cameraIdSpin.value(), item.link.node.camera_anim = self.ui.cameraAnimSpin.value(), item.link.node.camera_angle = self.ui.cameraAngleSelect.currentIndex(), item.link.node.camera_effect = self.ui.cameraEffectSelect.currentIndex()
             if (_cameraIdSpin != null && node != null)
             {
                 node.CameraId = _cameraIdSpin.Value.HasValue ? (int?)_cameraIdSpin.Value.Value : null;
@@ -3197,12 +4251,12 @@ namespace OdyTools.Editors.DLG
 
             if (_cameraEffectSelect != null && node != null)
             {
-                node.CameraEffect = _cameraEffectSelect.SelectedIndex >= 0 ? (int?)_cameraEffectSelect.SelectedIndex : null;
+                // ComboBox2DA.SelectedIndex returns row index (can be -1 for [Unset])
+                int idx = _cameraEffectSelect.SelectedIndex;
+                node.CameraEffect = idx;
             }
 
             // Handle camera ID and angle interaction (matching Python logic)
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2529-2532
-            // Original: if item.link.node.camera_id >= 0 and item.link.node.camera_angle == 0: self.ui.cameraAngleSelect.setCurrentIndex(6), elif item.link.node.camera_id == -1 and item.link.node.camera_angle == 7: self.ui.cameraAngleSelect.setCurrentIndex(0)
             if (_cameraIdSpin != null && _cameraAngleSelect != null && node != null)
             {
                 int? cameraId = _cameraIdSpin.Value.HasValue ? (int?)_cameraIdSpin.Value.Value : null;
@@ -3218,12 +4272,119 @@ namespace OdyTools.Editors.DLG
                     node.CameraAngle = 0;
                 }
             }
+
+            // Vendor parity: Update dependent UI state (handle_sound_checked, cameraAnimSpin enable/disable, Static Camera error)
+            HandleSoundChecked();
+            UpdateCameraWidgetState();
+            _selectedLink = item.Link;
+            RefreshAllViews();
+        }
+
+        /// <summary>Vendor: handle_sound_checked. Disables sound button when Exists is not checked.</summary>
+        private void HandleSoundChecked()
+        {
+            if (_soundButton == null || _soundCheckbox == null) return;
+            bool exists = _soundCheckbox.IsChecked == true;
+            _soundButton.IsEnabled = exists;
+            ToolTip.SetTip(_soundButton, exists ? "" : Localization.Tr("Exists must be checked."));
+        }
+
+        /// <summary>Creates a styled ToolTip for the Camera ID field with proper wrapping and formatting.</summary>
+        private static TextBlock CreateCameraIdStyledTooltip()
+        {
+            var tb = new TextBlock
+            {
+                TextWrapping = TextWrapping.Wrap,
+                MaxWidth = 340
+            };
+            tb.Inlines.Add(new Run(Localization.Tr("CameraID (GFF: CameraID):")) { FontWeight = FontWeight.Bold });
+            tb.Inlines.Add(new Run(" " + Localization.Tr("Index of a static camera in the CameraModel. Only used when Camera Angle is Static Camera (6). Engine ignores this when angle is not 6. INT32.")));
+            return tb;
+        }
+
+        /// <summary>Creates a styled ToolTip for the Camera Angle field with proper wrapping and formatting.</summary>
+        private static TextBlock CreateCameraAngleStyledTooltip()
+        {
+            var tb = new TextBlock
+            {
+                TextWrapping = TextWrapping.Wrap,
+                MaxWidth = 340
+            };
+            tb.Inlines.Add(new Run(Localization.Tr("CameraAngle (GFF: CameraAngle):")) { FontWeight = FontWeight.Bold });
+            tb.Inlines.Add(new Run(" " + Localization.Tr("DWORD")));
+            tb.Inlines.Add(new LineBreak());
+            tb.Inlines.Add(new Run(Localization.Tr("0=Auto, 1=Face, 2=Shoulder, 3=Wide Shot, 4=Animated Camera, 5=unused, 6=Static Camera.")));
+            tb.Inlines.Add(new LineBreak());
+            tb.Inlines.Add(new Run(Localization.Tr("Only angle 6 uses CameraID.")));
+            return tb;
+        }
+
+        /// <summary>Vendor parity: cameraAnimSpin enable/disable based on CameraModel and CameraAngle; Static Camera + CameraID -1 error styling. Camera ID enabled only when angle is Static Camera (6).</summary>
+        private void UpdateCameraWidgetState()
+        {
+            string cameraModelText = _cameraModelSelect?.Text?.Trim() ?? "";
+            int cameraAngleIndex = _cameraAngleSelect?.SelectedIndex ?? 0;
+            int cameraId = (int)(_cameraIdSpin?.Value ?? -1);
+            // Vendor: 0=Auto, 1=Face, 2=Shoulder, 3=Wide Shot, 4=Animated Camera, 5=DO NOT USE, 6=Static Camera
+            const int AnimatedCameraIndex = 4;
+            const int StaticCameraIndex = 6;
+
+            // Camera ID: only enabled when Camera Angle is Static Camera (6); show tooltip when disabled
+            bool cameraIdEnabled = cameraAngleIndex == StaticCameraIndex;
+            if (_cameraIdSpin != null)
+            {
+                _cameraIdSpin.IsEnabled = cameraIdEnabled;
+            }
+
+            // cameraAnimSpin: disable when CameraModel empty or CameraAngle not "Animated Camera"
+            if (_cameraAnimSpin != null)
+            {
+                if (string.IsNullOrEmpty(cameraModelText))
+                {
+                    _cameraAnimSpin.IsEnabled = false;
+                    ToolTip.SetTip(_cameraAnimSpin, Localization.Tr("You must setup your custom `CameraModel` first (in the 'File Globals' dockpanel at the top.)"));
+                }
+                else if (cameraAngleIndex != AnimatedCameraIndex)
+                {
+                    _cameraAnimSpin.IsEnabled = false;
+                    ToolTip.SetTip(_cameraAnimSpin, Localization.Tr("CameraAngle must be set to 'Animated' to use this feature."));
+                }
+                else
+                {
+                    _cameraAnimSpin.IsEnabled = true;
+                    ToolTip.SetTip(_cameraAnimSpin, Localization.Tr("CameraAnimation: Index into the CameraModel for animated cutscene cameras. WORD 0-65535. Used when CameraAngle is Animated Camera (4). Leave 0 for default."));
+                }
+            }
+
+            // Static Camera + CameraID -1: show error tooltip. When Camera ID is disabled, show why-it's-greyed-out tooltip.
+            bool staticCameraError = cameraId == -1 && cameraAngleIndex == StaticCameraIndex;
+            if (_cameraIdSpin != null)
+            {
+                object cameraIdTip;
+                if (!cameraIdEnabled)
+                    cameraIdTip = Localization.Tr("Camera ID is only used when Camera Angle is set to Static Camera (6).");
+                else if (staticCameraError)
+                    cameraIdTip = Localization.Tr("A Camera ID must be defined for Static Cameras.");
+                else
+                    cameraIdTip = CreateCameraIdStyledTooltip();
+                ToolTip.SetTip(_cameraIdSpin, cameraIdTip);
+            }
+            if (_cameraAngleSelect != null)
+            {
+                object cameraAngleTip = staticCameraError
+                    ? (object)Localization.Tr("A Camera ID must be defined for Static Cameras.")
+                    : CreateCameraAngleStyledTooltip();
+                ToolTip.SetTip(_cameraAngleSelect, cameraAngleTip);
+            }
+            // Avalonia: use Classes for error styling (requires .error style in XAML)
+            if (_cameraIdSpin != null)
+                _cameraIdSpin.Classes.Set("error", staticCameraError);
+            if (_cameraAngleSelect != null)
+                _cameraAngleSelect.Classes.Set("error", staticCameraError);
         }
 
         /// <summary>
         /// Updates file-level properties (root DLG fields) based on UI changes.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1233
-        /// Original: self.core_dlg.vo_id = self.ui.voIdEdit.text() (called during build, but we update immediately for consistency)
         /// </summary>
         private void OnFilePropertyChanged()
         {
@@ -3232,12 +4393,15 @@ namespace OdyTools.Editors.DLG
                 return;
             }
 
-            // Update VO ID from UI
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1233
-            // Original: self.core_dlg.vo_id = self.ui.voIdEdit.text()
+            // Update file-level (root) fields from UI
             if (_voIdEdit != null)
             {
                 _coreDlg.VoId = _voIdEdit.Text ?? string.Empty;
+            }
+            if (_cameraModelSelect != null)
+            {
+                string cameraText = _cameraModelSelect.Text?.Trim() ?? string.Empty;
+                _coreDlg.CameraModel = ResRef.IsValid(cameraText) ? new ResRef(cameraText) : ResRef.FromBlank();
             }
         }
 
@@ -3251,21 +4415,969 @@ namespace OdyTools.Editors.DLG
                 return;
             }
 
-            var treeItems = new List<TreeViewItem>();
-            foreach (var rootItem in _model.GetRootItems())
+            _suppressTreeSelectionHandler = true;
+            try
             {
-                var treeItem = CreateTreeViewItem(rootItem);
-                treeItems.Add(treeItem);
+                var treeItems = new List<TreeViewItem>();
+                foreach (var rootView in DlgTreeItemView.CreateRoots(_coreDlg))
+                {
+                    var treeItem = CreateTreeViewItem(rootView);
+                    treeItems.Add(treeItem);
+                }
+                _dialogTree.ItemsSource = treeItems;
+                // Refresh orphaned nodes list when tree structure changes (paste, delete, undo, etc.).
+                PopulateOrphanedNodesList();
+                PopulateFlatLists();
+                RefreshGraphView();
+                if (_selectedLink != null)
+                {
+                    var item = FindItemForLink(_selectedLink);
+                    if (item != null)
+                    {
+                        SelectTreeViewItem(item);
+                    }
+                    SyncFlatSelection(_selectedLink);
+                    SyncGraphSelection(_selectedLink);
+                }
             }
-            _dialogTree.ItemsSource = treeItems;
-            // Refresh orphaned nodes list when tree structure changes (paste, delete, undo, etc.).
-            PopulateOrphanedNodesList();
+            finally
+            {
+                _suppressTreeSelectionHandler = false;
+            }
+        }
+
+        /// <summary>
+        /// Refreshes all center views (Tree, Flat, Graph) while preserving current selection.
+        /// </summary>
+        public void RefreshAllViews()
+        {
+            UpdateTreeView();
+            OnSelectionChanged();
+        }
+
+        private void SetupGraphView()
+        {
+            if (_graphCanvas == null)
+            {
+                return;
+            }
+            _graphScene = new DlgGraphScene();
+            _graphCanvas.Children.Add(_graphScene);
+            _graphScene.NodeSelected += tag =>
+            {
+                if (_isSyncingViewSelection) return;
+                if (tag is DLGLink link)
+                {
+                    _isSyncingViewSelection = true;
+                    try
+                    {
+                        _selectedLink = link;
+                        _suppressTreeSelectionHandler = true;
+                        try
+                        {
+                            var item = FindItemForLink(link);
+                            if (item != null) SelectTreeViewItem(item);
+                        }
+                        finally
+                        {
+                            _suppressTreeSelectionHandler = false;
+                        }
+                        SyncFlatSelection(link);
+                        OnSelectionChanged();
+                    }
+                    finally
+                    {
+                        _isSyncingViewSelection = false;
+                    }
+                }
+            };
+            _graphScene.NodePositionCommitted += (key, point) =>
+            {
+                if (!string.IsNullOrEmpty(key))
+                {
+                    _graphManualPositions[key] = point;
+                    SaveGraphLayout();
+                }
+            };
+            _graphScene.ContextRequested += (s, e) =>
+            {
+                if (!e.TryGetPosition(_graphScene, out Point pos))
+                {
+                    return;
+                }
+                var tag = _graphScene.GetNodeTagAt(pos);
+                if (tag is DLGLink link)
+                {
+                    _isSyncingViewSelection = true;
+                    try
+                    {
+                        _selectedLink = link;
+                        _suppressTreeSelectionHandler = true;
+                        try
+                        {
+                            var treeItem = FindItemForLink(link);
+                            if (treeItem != null) SelectTreeViewItem(treeItem);
+                        }
+                        finally
+                        {
+                            _suppressTreeSelectionHandler = false;
+                        }
+                        SyncFlatSelection(link);
+                        OnSelectionChanged();
+                    }
+                    finally
+                    {
+                        _isSyncingViewSelection = false;
+                    }
+                    var menu = GetLinkContextMenuCore(_graphScene, link, FindItemForLink(link));
+                    if (menu != null)
+                    {
+                        menu.Open(_graphScene);
+                        e.Handled = true;
+                    }
+                }
+                else
+                {
+                    // Right-click on empty area: unselect any node and show add-node context menu
+                    _suppressTreeSelectionHandler = true;
+                    try
+                    {
+                        _selectedLink = null;
+                        if (_dialogTree != null) _dialogTree.SelectedItem = null;
+                        if (_flatStartingList != null) _flatStartingList.SelectedItem = null;
+                        if (_flatEntryList != null) _flatEntryList.SelectedItem = null;
+                        if (_flatReplyList != null) _flatReplyList.SelectedItem = null;
+                        if (_graphScene != null) _graphScene.SetSelectedNodeKey(null);
+                        OnSelectionChanged();
+                    }
+                    finally
+                    {
+                        _suppressTreeSelectionHandler = false;
+                    }
+
+                    var contextMenu = new ContextMenu();
+                    var addStartingItem = new MenuItem { Header = Localization.Tr("Add Starting Node") };
+                    addStartingItem.Click += (_, __) => AddRootNode();
+                    contextMenu.Items.Add(addStartingItem);
+                    var addEntryItem = new MenuItem { Header = Localization.Tr("Add Entry Node") };
+                    addEntryItem.Click += (_, __) => AddRootNode();
+                    contextMenu.Items.Add(addEntryItem);
+                    var addReplyItem = new MenuItem { Header = Localization.Tr("Add Reply Node") };
+                    addReplyItem.Click += (_, __) =>
+                    {
+                        AddRootNode();
+                        var roots = _model?.GetRootItems();
+                        if (roots != null && roots.Count > 0)
+                        {
+                            var lastRoot = roots[roots.Count - 1];
+                            AddChildToParentItem(lastRoot);
+                        }
+                    };
+                    contextMenu.Items.Add(addReplyItem);
+                    contextMenu.Open(_graphScene);
+                    e.Handled = true;
+                }
+            };
+            _graphScene.KeyDown += (s, e) => HandleKeyDown(e, isTreeViewCall: true);
+            _graphScene.DoubleTapped += (s, e) =>
+            {
+                Point pos = e.GetPosition(_graphScene);
+                var tag = _graphScene.GetNodeTagAt(pos);
+                if (tag is DLGLink link)
+                {
+                    _selectedLink = link;
+                    _isSyncingViewSelection = true;
+                    try
+                    {
+                        _suppressTreeSelectionHandler = true;
+                        try
+                        {
+                            var treeItem = FindItemForLink(link);
+                            if (treeItem != null) SelectTreeViewItem(treeItem);
+                        }
+                        finally { _suppressTreeSelectionHandler = false; }
+                        SyncFlatSelection(link);
+                        OnSelectionChanged();
+                    }
+                    finally { _isSyncingViewSelection = false; }
+                    var indexes = GetSelectedIndexesFromCurrentLink();
+                    if (indexes.Count > 0)
+                        EditText(null, indexes, _graphScene);
+                }
+            };
+            if (_graphFitButton != null)
+            {
+                _graphFitButton.Click += (s, e) => _graphScene?.FitToContent();
+            }
+            if (_graphAutoLayoutButton != null)
+            {
+                _graphAutoLayoutButton.Click += (s, e) =>
+                {
+                    if (_graphScene == null) return;
+                    _graphScene.AutoLayout(keepPinned: false);
+                    _graphManualPositions.Clear();
+                    foreach (var kvp in _graphScene.ExportNodePositions(pinnedOnly: false))
+                    {
+                        _graphManualPositions[kvp.Key] = kvp.Value;
+                    }
+                    SaveGraphLayout();
+                };
+            }
+            _graphScene.LinkDragCompletedOnNode += (sourceTag, targetTag, screenPos) =>
+            {
+                OnGraphLinkDragToNode(sourceTag, targetTag, screenPos);
+            };
+            _graphScene.LinkDragCompletedOnEmpty += (sourceTag, worldPos) =>
+            {
+                OnGraphLinkDragToEmpty(sourceTag, worldPos);
+            };
+            _graphScene.ZoomChanged += () => UpdateGraphZoomLabel();
+            if (_graphZoomInButton != null)
+                _graphZoomInButton.Click += (s, e) => { _graphScene?.ZoomIn(); UpdateGraphZoomLabel(); };
+            if (_graphZoomOutButton != null)
+                _graphZoomOutButton.Click += (s, e) => { _graphScene?.ZoomOut(); UpdateGraphZoomLabel(); };
+        }
+
+        private void UpdateGraphZoomLabel()
+        {
+            if (_graphZoomLabel != null && _graphScene != null)
+                _graphZoomLabel.Text = (int)(_graphScene.Zoom * 100) + "%";
+        }
+
+        private void OnGraphLinkDragToNode(object sourceTag, object targetTag, Point screenPos)
+        {
+            var sourceLink = sourceTag as DLGLink;
+            var targetLink = targetTag as DLGLink;
+            if (sourceLink?.Node == null || targetLink?.Node == null)
+                return;
+
+            bool sourceIsEntry = sourceLink.Node is DLGEntry;
+            bool targetIsEntry = targetLink.Node is DLGEntry;
+            string sourceType = sourceIsEntry ? "Entry" : "Reply";
+            string targetType = targetIsEntry ? "Entry" : "Reply";
+
+            if (sourceIsEntry == targetIsEntry)
+            {
+                string msg = $"Cannot link two {sourceType} nodes. {sourceType} nodes can only connect to {(sourceIsEntry ? "Reply" : "Entry")} nodes.";
+                _ = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
+                    Localization.Tr("Invalid Link"),
+                    msg,
+                    MsBox.Avalonia.Enums.ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Warning).ShowWindowDialogAsync(this);
+                return;
+            }
+
+            var sourceItem = FindItemForLink(sourceLink);
+            if (sourceItem == null) return;
+
+            var newLink = new DLGLink(targetLink.Node);
+            newLink.ListIndex = sourceItem.Link.Node.Links.Count;
+            sourceItem.Link.Node.Links.Add(newLink);
+            _coreDlg?.Touch();
+            var newItem = new DLGStandardItem(newLink);
+            sourceItem.AddChild(newItem);
+            if (_model != null)
+            {
+                if (!_model.LinkToItems.ContainsKey(newLink))
+                    _model.LinkToItems[newLink] = new List<DLGStandardItem>();
+                if (!_model.LinkToItems[newLink].Contains(newItem))
+                    _model.LinkToItems[newLink].Add(newItem);
+                if (newLink.Node != null)
+                {
+                    if (!_model.NodeToItems.ContainsKey(newLink.Node))
+                        _model.NodeToItems[newLink.Node] = new List<DLGStandardItem>();
+                    if (!_model.NodeToItems[newLink.Node].Contains(newItem))
+                        _model.NodeToItems[newLink.Node].Add(newItem);
+                }
+            }
+            UpdateTreeView();
+            SelectTreeViewItem(newItem);
+        }
+
+        private void OnGraphLinkDragToEmpty(object sourceTag, Point worldPos)
+        {
+            var sourceLink = sourceTag as DLGLink;
+            if (sourceLink?.Node == null) return;
+
+            bool sourceIsEntry = sourceLink.Node is DLGEntry;
+            string childType = sourceIsEntry ? "Reply" : "Entry";
+
+            var contextMenu = new ContextMenu();
+            var newLinkedItem = new MenuItem { Header = Localization.Tr($"New Linked {childType} Here") };
+            newLinkedItem.Click += (_, __) =>
+            {
+                var sourceItem = FindItemForLink(sourceLink);
+                if (sourceItem == null) return;
+                AddChildToParentItem(sourceItem);
+
+                var lastChild = sourceItem.Children?.LastOrDefault();
+                if (lastChild?.Link?.Node != null && _graphScene != null)
+                {
+                    string key = GetNodeKey(lastChild.Link.Node);
+                    _graphScene.SetNodePosition(key, worldPos);
+                    _graphManualPositions[key] = worldPos;
+                    SaveGraphLayout();
+                    RefreshGraphView();
+                }
+            };
+            contextMenu.Items.Add(newLinkedItem);
+            contextMenu.Open(_graphScene);
+        }
+
+        private void WireFlatViewHandlers()
+        {
+            var flatTemplate = new FuncDataTemplate<FlatNodeRow>((row, _) =>
+            {
+                if (row?.Visual != null)
+                    return row.Visual;
+                return new TextBlock { Text = row?.Display ?? "" };
+            }, true);
+            if (_flatStartingList != null) _flatStartingList.ItemTemplate = flatTemplate;
+            if (_flatEntryList != null) _flatEntryList.ItemTemplate = flatTemplate;
+            if (_flatReplyList != null) _flatReplyList.ItemTemplate = flatTemplate;
+
+            void OnFlatSelectionChanged(object s, EventArgs e)
+            {
+                if (_isSyncingViewSelection) return;
+                var list = s as ListBox;
+                var row = list?.SelectedItem as FlatNodeRow;
+                if (row?.Link == null) return;
+                _isSyncingViewSelection = true;
+                try
+                {
+                    _selectedLink = row.Link;
+                    _suppressTreeSelectionHandler = true;
+                    try
+                    {
+                        var item = FindItemForLink(row.Link);
+                        if (item != null) SelectTreeViewItem(item);
+                    }
+                    finally
+                    {
+                        _suppressTreeSelectionHandler = false;
+                    }
+                    SyncGraphSelection(row.Link);
+                    OnSelectionChanged();
+                }
+                finally
+                {
+                    _isSyncingViewSelection = false;
+                }
+            }
+            if (_flatStartingList != null)
+            {
+                _flatStartingList.SelectionChanged += OnFlatSelectionChanged;
+                _flatStartingList.ContextRequested += OnFlatListContextRequested;
+                _flatStartingList.KeyDown += (s, e) => HandleKeyDown(e, isTreeViewCall: true);
+                _flatStartingList.DoubleTapped += OnFlatListDoubleTapped;
+            }
+            if (_flatEntryList != null)
+            {
+                _flatEntryList.SelectionChanged += OnFlatSelectionChanged;
+                _flatEntryList.ContextRequested += OnFlatListContextRequested;
+                _flatEntryList.KeyDown += (s, e) => HandleKeyDown(e, isTreeViewCall: true);
+                _flatEntryList.DoubleTapped += OnFlatListDoubleTapped;
+            }
+            if (_flatReplyList != null)
+            {
+                _flatReplyList.SelectionChanged += OnFlatSelectionChanged;
+                _flatReplyList.ContextRequested += OnFlatListContextRequested;
+                _flatReplyList.KeyDown += (s, e) => HandleKeyDown(e, isTreeViewCall: true);
+                _flatReplyList.DoubleTapped += OnFlatListDoubleTapped;
+            }
+        }
+
+        private void OnFlatListDoubleTapped(object sender, TappedEventArgs e)
+        {
+            var list = sender as ListBox;
+            if (list == null) return;
+            var row = list.SelectedItem as FlatNodeRow;
+            if (row?.Link == null) return;
+            _selectedLink = row.Link;
+            _isSyncingViewSelection = true;
+            try
+            {
+                _suppressTreeSelectionHandler = true;
+                try
+                {
+                    var treeItem = FindItemForLink(row.Link);
+                    if (treeItem != null) SelectTreeViewItem(treeItem);
+                }
+                finally { _suppressTreeSelectionHandler = false; }
+                SyncGraphSelection(row.Link);
+                OnSelectionChanged();
+            }
+            finally { _isSyncingViewSelection = false; }
+            var indexes = GetSelectedIndexesFromCurrentLink();
+            if (indexes.Count > 0)
+                EditText(null, indexes, list);
+        }
+
+        private void OnFlatListContextRequested(object sender, ContextRequestedEventArgs e)
+        {
+            var list = sender as ListBox;
+            if (list == null) return;
+            var row = list.SelectedItem as FlatNodeRow;
+            if (row?.Link == null)
+            {
+                e.Handled = true;
+                return;
+            }
+            _isSyncingViewSelection = true;
+            try
+            {
+                _selectedLink = row.Link;
+                _suppressTreeSelectionHandler = true;
+                try
+                {
+                    var treeItem = FindItemForLink(row.Link);
+                    if (treeItem != null) SelectTreeViewItem(treeItem);
+                }
+                finally
+                {
+                    _suppressTreeSelectionHandler = false;
+                }
+                SyncGraphSelection(row.Link);
+                OnSelectionChanged();
+            }
+            finally
+            {
+                _isSyncingViewSelection = false;
+            }
+            var menuItem = FindItemForLink(row.Link);
+            var menu = GetLinkContextMenuCore(list, row.Link, menuItem);
+            if (menu != null)
+            {
+                menu.Open(list);
+                e.Handled = true;
+            }
+        }
+
+        private void PopulateFlatLists()
+        {
+            if (_coreDlg == null)
+            {
+                return;
+            }
+
+            _isSyncingViewSelection = true;
+            try
+            {
+                var nodeLinkMap = BuildNodeToLinkMap();
+
+                var starters = new List<FlatNodeRow>();
+                if (_coreDlg.Starters != null)
+                {
+                    foreach (var link in _coreDlg.Starters)
+                    {
+                        if (link?.Node == null) continue;
+                        starters.Add(BuildFlatRow(link.Node, link, "S", AmColor.Parse(DlgGraphColors.StarterHex)));
+                    }
+                }
+                if (_flatStartingList != null) _flatStartingList.ItemsSource = starters;
+
+                var entries = new List<FlatNodeRow>();
+                foreach (var entry in _coreDlg.EntryList)
+                {
+                    if (entry == null) continue;
+                    nodeLinkMap.TryGetValue(entry, out DLGLink entryLink);
+                    entries.Add(BuildFlatRow(entry, entryLink, "E", AmColor.Parse(DlgGraphColors.EntryHex)));
+                }
+                if (_flatEntryList != null) _flatEntryList.ItemsSource = entries;
+
+                var replies = new List<FlatNodeRow>();
+                foreach (var reply in _coreDlg.ReplyList)
+                {
+                    if (reply == null) continue;
+                    nodeLinkMap.TryGetValue(reply, out DLGLink replyLink);
+                    replies.Add(BuildFlatRow(reply, replyLink, "R", AmColor.Parse(DlgGraphColors.ReplyHex)));
+                }
+                if (_flatReplyList != null) _flatReplyList.ItemsSource = replies;
+            }
+            finally
+            {
+                _isSyncingViewSelection = false;
+            }
+        }
+
+        private FlatNodeRow BuildFlatRow(DLGNode node, DLGLink link, string typePrefix, AmColor pillColor)
+        {
+            string idx = node.ListIndex >= 0 ? node.ListIndex.ToString() : "?";
+            string text = GetNodePreviewText(node);
+            bool isEmpty = string.IsNullOrWhiteSpace(text);
+            if (isEmpty) text = "<empty>";
+            string display = typePrefix + idx + ": " + text;
+
+            var pill = new Border
+            {
+                Background = new SolidColorBrush(pillColor),
+                CornerRadius = new CornerRadius(3),
+                Padding = new Thickness(4, 1, 4, 1),
+                VerticalAlignment = VerticalAlignment.Center,
+                Child = new TextBlock
+                {
+                    Text = typePrefix + idx,
+                    FontSize = 10,
+                    FontWeight = FontWeight.SemiBold,
+                    Foreground = Brushes.White
+                }
+            };
+
+            var textBlock = new TextBlock
+            {
+                Text = text,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                VerticalAlignment = VerticalAlignment.Center,
+                Foreground = isEmpty
+                    ? new SolidColorBrush(AmColor.Parse("#B0BEC5"))
+                    : new SolidColorBrush(AmColor.Parse("#212121")),
+                FontStyle = isEmpty ? FontStyle.Italic : FontStyle.Normal
+            };
+
+            var panel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 6
+            };
+            panel.Children.Add(pill);
+
+            bool hasScript = (node.Script1 != null && !node.Script1.IsBlank())
+                          || (node.Script2 != null && !node.Script2.IsBlank());
+            bool hasCond = (link?.Active1 != null && !link.Active1.IsBlank())
+                        || (link?.Active2 != null && !link.Active2.IsBlank());
+            if (hasScript)
+            {
+                var badge = new TextBlock
+                {
+                    Text = "S",
+                    FontSize = 9,
+                    FontWeight = FontWeight.Bold,
+                    Foreground = new SolidColorBrush(AmColor.Parse("#6A1B9A")),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(0, 0, 2, 0)
+                };
+                ToolTip.SetTip(badge, "Has script");
+                panel.Children.Add(badge);
+            }
+            if (hasCond)
+            {
+                var badge = new TextBlock
+                {
+                    Text = "?",
+                    FontSize = 9,
+                    FontWeight = FontWeight.Bold,
+                    Foreground = new SolidColorBrush(AmColor.Parse("#E65100")),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(0, 0, 2, 0)
+                };
+                ToolTip.SetTip(badge, "Has condition");
+                panel.Children.Add(badge);
+            }
+
+            panel.Children.Add(textBlock);
+
+            return new FlatNodeRow
+            {
+                Link = link,
+                Node = node,
+                Display = display,
+                Visual = panel
+            };
+        }
+
+        private Dictionary<DLGNode, DLGLink> BuildNodeToLinkMap()
+        {
+            var map = new Dictionary<DLGNode, DLGLink>();
+            if (_coreDlg?.Starters == null) return map;
+            var seen = new HashSet<DLGLink>();
+            var queue = new Queue<DLGLink>();
+            foreach (var s in _coreDlg.Starters)
+            {
+                if (s != null && !seen.Contains(s))
+                {
+                    seen.Add(s);
+                    queue.Enqueue(s);
+                }
+            }
+            while (queue.Count > 0)
+            {
+                var link = queue.Dequeue();
+                if (link?.Node != null && !map.ContainsKey(link.Node))
+                {
+                    map[link.Node] = link;
+                }
+                if (link?.Node?.Links != null)
+                {
+                    foreach (var child in link.Node.Links)
+                    {
+                        if (child != null && !seen.Contains(child))
+                        {
+                            seen.Add(child);
+                            queue.Enqueue(child);
+                        }
+                    }
+                }
+            }
+            return map;
+        }
+
+        private void RefreshGraphView()
+        {
+            if (_graphScene == null || _coreDlg == null)
+            {
+                return;
+            }
+
+            if (_graphManualPositions == null || _graphManualPositions.Count == 0)
+            {
+                _graphManualPositions = LoadGraphLayout();
+            }
+
+            var nodes = new Dictionary<string, DlgGraphNodeData>(StringComparer.OrdinalIgnoreCase);
+            var edges = new List<DlgGraphEdgeData>();
+
+            if (_coreDlg.Starters != null)
+            {
+                foreach (var starter in _coreDlg.Starters)
+                {
+                    BuildGraphNodesAndEdges(starter, nodes, edges);
+                    if (starter?.Node != null)
+                    {
+                        string k = GetNodeKey(starter.Node);
+                        if (!string.IsNullOrEmpty(k) && nodes.ContainsKey(k))
+                            nodes[k].Kind = DlgGraphNodeKind.Starter;
+                    }
+                }
+            }
+
+            foreach (var entry in _coreDlg.EntryList)
+            {
+                EnsureGraphNode(nodes, entry);
+            }
+            foreach (var reply in _coreDlg.ReplyList)
+            {
+                EnsureGraphNode(nodes, reply);
+            }
+
+            _graphScene.SetGraph(nodes.Values.ToList(), edges, _graphManualPositions);
+            _graphScene.SetSelectedNodeKey(GetNodeKey((_selectedLink ?? GetSelectedItemFromTreeView()?.Link)?.Node));
+            UpdateGraphZoomLabel();
+            if (_graphStatusText != null)
+            {
+                int entries = 0, replies = 0, starters = 0;
+                foreach (var n in nodes.Values)
+                {
+                    switch (n.Kind)
+                    {
+                        case DlgGraphNodeKind.Starter: starters++; break;
+                        case DlgGraphNodeKind.Reply: replies++; break;
+                        default: entries++; break;
+                    }
+                }
+                int conditionalEdges = 0;
+                foreach (var e in edges)
+                    if (e.HasCondition) conditionalEdges++;
+                string status = $"{starters} Starters, {entries} Entries, {replies} Replies  |  {edges.Count} Edges ({conditionalEdges} conditional)";
+                if (_graphScene.OrphanCount > 0)
+                    status += $"  |  {_graphScene.OrphanCount} orphan(s)";
+                _graphStatusText.Text = status;
+            }
+        }
+
+        private void SyncGraphSelection(DLGLink link)
+        {
+            if (_graphScene != null && link?.Node != null)
+            {
+                string key = GetNodeKey(link.Node);
+                _graphScene.SetSelectedNodeKey(key);
+                _graphScene.CenterOnNode(key);
+            }
+        }
+
+        private void SyncFlatSelection(DLGLink link)
+        {
+            if (link?.Node == null) return;
+            bool wasAlreadySyncing = _isSyncingViewSelection;
+            _isSyncingViewSelection = true;
+            try
+            {
+                if (_flatStartingList?.ItemsSource is System.Collections.IEnumerable startItems)
+                {
+                    foreach (FlatNodeRow row in startItems)
+                    {
+                        if (row?.Link == link)
+                        {
+                            _flatStartingList.SelectedItem = row;
+                            if (_flatEntryList != null) _flatEntryList.SelectedItem = null;
+                            if (_flatReplyList != null) _flatReplyList.SelectedItem = null;
+                            return;
+                        }
+                    }
+                }
+                if (_flatEntryList?.ItemsSource is System.Collections.IEnumerable entryItems)
+                {
+                    foreach (FlatNodeRow row in entryItems)
+                    {
+                        if (row?.Node == link.Node)
+                        {
+                            if (_flatStartingList != null) _flatStartingList.SelectedItem = null;
+                            _flatEntryList.SelectedItem = row;
+                            if (_flatReplyList != null) _flatReplyList.SelectedItem = null;
+                            return;
+                        }
+                    }
+                }
+                if (_flatReplyList?.ItemsSource is System.Collections.IEnumerable replyItems)
+                {
+                    foreach (FlatNodeRow row in replyItems)
+                    {
+                        if (row?.Node == link.Node)
+                        {
+                            if (_flatStartingList != null) _flatStartingList.SelectedItem = null;
+                            if (_flatEntryList != null) _flatEntryList.SelectedItem = null;
+                            _flatReplyList.SelectedItem = row;
+                            return;
+                        }
+                    }
+                }
+                if (_flatStartingList != null) _flatStartingList.SelectedItem = null;
+                if (_flatEntryList != null) _flatEntryList.SelectedItem = null;
+                if (_flatReplyList != null) _flatReplyList.SelectedItem = null;
+            }
+            finally
+            {
+                _isSyncingViewSelection = wasAlreadySyncing;
+            }
+        }
+
+        private void BuildGraphNodesAndEdges(
+            DLGLink start,
+            Dictionary<string, DlgGraphNodeData> nodes,
+            List<DlgGraphEdgeData> edges)
+        {
+            if (start?.Node == null)
+            {
+                return;
+            }
+
+            var queue = new Queue<DLGLink>();
+            var seenLinks = new HashSet<DLGLink>();
+            queue.Enqueue(start);
+
+            while (queue.Count > 0)
+            {
+                var link = queue.Dequeue();
+                if (link?.Node == null || seenLinks.Contains(link))
+                {
+                    continue;
+                }
+                seenLinks.Add(link);
+
+                EnsureGraphNode(nodes, link.Node, link);
+                string fromKey = GetNodeKey(link.Node);
+                if (link.Node.Links == null)
+                {
+                    continue;
+                }
+
+                foreach (var child in link.Node.Links)
+                {
+                    if (child?.Node == null)
+                    {
+                        continue;
+                    }
+                    EnsureGraphNode(nodes, child.Node, child);
+                    string toKey = GetNodeKey(child.Node);
+                    bool hasCond = (child.Active1 != null && !child.Active1.IsBlank())
+                                || (child.Active2 != null && !child.Active2.IsBlank());
+                    edges.Add(new DlgGraphEdgeData { FromKey = fromKey, ToKey = toKey, HasCondition = hasCond });
+                    queue.Enqueue(child);
+                }
+            }
+        }
+
+        private void EnsureGraphNode(
+            Dictionary<string, DlgGraphNodeData> nodes,
+            DLGNode node,
+            DLGLink preferredLink = null)
+        {
+            if (node == null)
+            {
+                return;
+            }
+            string key = GetNodeKey(node);
+            if (string.IsNullOrEmpty(key))
+            {
+                return;
+            }
+            if (nodes.ContainsKey(key))
+            {
+                return;
+            }
+
+            var link = preferredLink ?? ResolveRepresentativeLink(node);
+            var badges = DlgGraphNodeBadges.None;
+            if (node.Script1 != null && !node.Script1.IsBlank()) badges |= DlgGraphNodeBadges.HasScript;
+            if (node.Script2 != null && !node.Script2.IsBlank()) badges |= DlgGraphNodeBadges.HasScript;
+            if (link != null && link.Active1 != null && !link.Active1.IsBlank()) badges |= DlgGraphNodeBadges.HasCondition;
+            if (link != null && link.Active2 != null && !link.Active2.IsBlank()) badges |= DlgGraphNodeBadges.HasCondition;
+            if (node.Sound != null && !node.Sound.IsBlank()) badges |= DlgGraphNodeBadges.HasSound;
+            if (node.VoResRef != null && !node.VoResRef.IsBlank()) badges |= DlgGraphNodeBadges.HasVoice;
+
+            nodes[key] = new DlgGraphNodeData
+            {
+                Key = key,
+                Title = GetNodeTitle(node),
+                Subtitle = GetNodePreviewText(node),
+                Tag = link,
+                Kind = node is DLGReply ? DlgGraphNodeKind.Reply : DlgGraphNodeKind.Entry,
+                Badges = badges,
+                ChildCount = node.Links?.Count ?? 0
+            };
+        }
+
+        private static string GetNodeKey(DLGNode node)
+        {
+            if (node == null) return "";
+            if (node is DLGEntry) return "E" + node.ListIndex;
+            if (node is DLGReply) return "R" + node.ListIndex;
+            return "";
+        }
+
+        /// <summary>
+        /// Resolves the display string for a node: TLK text when StringRef != -1 (and Installation available),
+        /// otherwise custom substring when StringRef == -1. Used so tree/flat/graph show the correct text.
+        /// </summary>
+        public string GetResolvedNodeText(DLGNode node)
+        {
+            if (node?.Text == null) return "";
+            if (Installation != null)
+            {
+                return Installation.String(node.Text, "") ?? "";
+            }
+            if (node.Text.StringRef == -1)
+            {
+                string custom = node.Text.GetString(0, Gender.Male) ?? "";
+                return custom;
+            }
+            return $"(strref: {node.Text.StringRef})";
+        }
+
+        private string GetNodePreviewText(DLGNode node)
+        {
+            string text = GetResolvedNodeText(node);
+            return string.IsNullOrEmpty(text) ? "<empty>" : text;
+        }
+
+        private static string GetNodeTitle(DLGNode node)
+        {
+            if (node == null) return "";
+            return GetNodeKey(node);
+        }
+
+        private DLGLink ResolveRepresentativeLink(DLGNode node)
+        {
+            if (node == null || _coreDlg?.Starters == null) return null;
+            var seen = new HashSet<DLGLink>();
+            var queue = new Queue<DLGLink>();
+            foreach (var s in _coreDlg.Starters)
+            {
+                if (s != null && !seen.Contains(s))
+                {
+                    seen.Add(s);
+                    queue.Enqueue(s);
+                }
+            }
+            while (queue.Count > 0)
+            {
+                var link = queue.Dequeue();
+                if (link?.Node == node) return link;
+                if (link?.Node?.Links != null)
+                {
+                    foreach (var child in link.Node.Links)
+                    {
+                        if (child != null && !seen.Contains(child))
+                        {
+                            seen.Add(child);
+                            queue.Enqueue(child);
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        private string BuildGraphLayoutSettingsKey()
+        {
+            string raw = FilepathPublic ?? "unsaved";
+            raw = raw.ToLowerInvariant();
+            foreach (char ch in Path.GetInvalidFileNameChars())
+            {
+                raw = raw.Replace(ch, '_');
+            }
+            raw = raw.Replace('\\', '_').Replace('/', '_').Replace(':', '_');
+            return "graph_layouts." + raw;
+        }
+
+        private Dictionary<string, Point> LoadGraphLayout()
+        {
+            var result = new Dictionary<string, Point>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                var settings = new DLGSettings();
+                string raw = settings.Get(BuildGraphLayoutSettingsKey(), "");
+                if (string.IsNullOrWhiteSpace(raw))
+                {
+                    return result;
+                }
+                var dto = JsonSerializer.Deserialize<Dictionary<string, GraphPoint>>(raw);
+                if (dto == null)
+                {
+                    return result;
+                }
+                foreach (var kvp in dto)
+                {
+                    if (kvp.Value == null)
+                    {
+                        continue;
+                    }
+                    result[kvp.Key] = new Point(kvp.Value.X, kvp.Value.Y);
+                }
+            }
+            catch
+            {
+                // Ignore malformed persisted layout.
+            }
+            return result;
+        }
+
+        private void SaveGraphLayout()
+        {
+            try
+            {
+                var settings = new DLGSettings();
+                var dto = new Dictionary<string, GraphPoint>(StringComparer.OrdinalIgnoreCase);
+                foreach (var kvp in _graphManualPositions)
+                {
+                    dto[kvp.Key] = new GraphPoint { X = kvp.Value.X, Y = kvp.Value.Y };
+                }
+                settings.Set(BuildGraphLayoutSettingsKey(), JsonSerializer.Serialize(dto));
+            }
+            catch
+            {
+                // Ignore persistence errors.
+            }
+        }
+
+        private sealed class GraphPoint
+        {
+            public double X { get; set; }
+            public double Y { get; set; }
         }
 
         /// <summary>
         /// Updates a specific tree view item's header without rebuilding the entire tree.
         /// This is an optimized version that only updates the specified item.
-        /// Matching PyKotor implementation: Updates item.setData() for DisplayRole
         /// </summary>
         /// <param name="item">The DLGStandardItem to update.</param>
         /// <param name="formattedText">The formatted HTML text to display.</param>
@@ -3297,6 +5409,12 @@ namespace OdyTools.Editors.DLG
                     string plainTooltip = System.Text.RegularExpressions.Regex.Replace(tooltipText, "<.*?>", "");
                     ToolTip.SetTip(treeItem, plainTooltip);
                 }
+
+                // Force the tree item and tree to re-render so the new header is visible (Avalonia may not refresh otherwise)
+                treeItem.InvalidateMeasure();
+                treeItem.InvalidateVisual();
+                _dialogTree?.InvalidateMeasure();
+                _dialogTree?.InvalidateVisual();
             }
             else
             {
@@ -3304,6 +5422,16 @@ namespace OdyTools.Editors.DLG
                 // This can happen if the tree hasn't been built yet or the item was removed
                 UpdateTreeView();
             }
+        }
+
+        /// <summary>
+        /// Updates item presentation across all center views (tree, flat, graph).
+        /// </summary>
+        public void UpdateItemPresentation(DLGStandardItem item, string formattedText, string tooltipText = null)
+        {
+            UpdateTreeViewItemHeader(item, formattedText, tooltipText);
+            PopulateFlatLists();
+            RefreshGraphView();
         }
 
         /// <summary>
@@ -3330,14 +5458,74 @@ namespace OdyTools.Editors.DLG
         /// <summary>
         /// Creates a TreeViewItem from a DLGStandardItem, recursively creating children.
         /// </summary>
+        private static readonly string LazyChildPlaceholder = "\u2026";
+
         private TreeViewItem CreateTreeViewItem(DLGStandardItem item)
         {
             var treeItem = new TreeViewItem
             {
-                Header = GetItemDisplayText(item),
+                Header = BuildRichTreeHeader(item),
                 Tag = item,
-                IsExpanded = true
+                IsExpanded = false
             };
+
+            // Lazy tree expansion: do not recursively materialize entire tree up front.
+            if (item != null && item.RowCount > 0)
+            {
+                treeItem.ItemsSource = new List<TreeViewItem>
+                {
+                    new TreeViewItem { Header = LazyChildPlaceholder }
+                };
+                treeItem.Expanded += (_, __) => EnsureTreeChildrenMaterialized(treeItem, item);
+            }
+            return treeItem;
+        }
+
+        private TreeViewItem CreateTreeViewItem(DlgTreeItemView itemView)
+        {
+            var link = itemView?.Link;
+            DLGStandardItem backingItem = FindItemForLink(link);
+            if (backingItem == null && link != null)
+            {
+                backingItem = new DLGStandardItem(link);
+            }
+
+            var treeItem = new TreeViewItem
+            {
+                Header = BuildRichTreeHeader(backingItem),
+                Tag = backingItem,
+                IsExpanded = false
+            };
+
+            if (itemView != null && itemView.Children.Count > 0)
+            {
+                treeItem.ItemsSource = new List<TreeViewItem>
+                {
+                    new TreeViewItem { Header = LazyChildPlaceholder }
+                };
+                treeItem.Expanded += (_, __) => EnsureTreeChildrenMaterialized(treeItem, itemView);
+            }
+
+            return treeItem;
+        }
+
+        private void EnsureTreeChildrenMaterialized(TreeViewItem treeItem, DLGStandardItem item)
+        {
+            if (treeItem == null || item == null)
+            {
+                return;
+            }
+            if (!(treeItem.ItemsSource is List<TreeViewItem> existing))
+            {
+                return;
+            }
+            bool isPlaceholderState = existing.Count == 1
+                && existing[0] != null
+                && string.Equals(existing[0].Header as string, LazyChildPlaceholder, StringComparison.Ordinal);
+            if (!isPlaceholderState)
+            {
+                return;
+            }
 
             var childItems = new List<TreeViewItem>();
             foreach (var child in item.Children)
@@ -3345,8 +5533,177 @@ namespace OdyTools.Editors.DLG
                 childItems.Add(CreateTreeViewItem(child));
             }
             treeItem.ItemsSource = childItems;
+        }
 
-            return treeItem;
+        private void EnsureTreeChildrenMaterialized(TreeViewItem treeItem, DlgTreeItemView itemView)
+        {
+            if (treeItem == null || itemView == null)
+            {
+                return;
+            }
+            if (!(treeItem.ItemsSource is List<TreeViewItem> existing))
+            {
+                return;
+            }
+            bool isPlaceholderState = existing.Count == 1
+                && existing[0] != null
+                && string.Equals(existing[0].Header as string, LazyChildPlaceholder, StringComparison.Ordinal);
+            if (!isPlaceholderState)
+            {
+                return;
+            }
+
+            var childItems = new List<TreeViewItem>();
+            foreach (var child in itemView.Children)
+            {
+                childItems.Add(CreateTreeViewItem(child));
+            }
+            treeItem.ItemsSource = childItems;
+        }
+
+        private Control BuildRichTreeHeader(DLGStandardItem item)
+        {
+            var link = item?.Link;
+            var node = link?.Node;
+            if (node == null)
+                return new TextBlock { Text = "Unknown" };
+
+            bool isEntry = node is DLGEntry;
+            bool isStarter = false;
+            if (_coreDlg?.Starters != null)
+            {
+                foreach (var s in _coreDlg.Starters)
+                    if (s?.Node == node) { isStarter = true; break; }
+            }
+
+            string typeLabel = isStarter ? "S" : isEntry ? "E" : "R";
+            string indexLabel = node.ListIndex >= 0 ? node.ListIndex.ToString() : "?";
+            AmColor pillBg, pillFg;
+            if (isStarter)
+            {
+                pillBg = AmColor.Parse(DlgGraphColors.StarterHex);
+                pillFg = Colors.White;
+            }
+            else if (isEntry)
+            {
+                pillBg = AmColor.Parse(DlgGraphColors.EntryHex);
+                pillFg = Colors.White;
+            }
+            else
+            {
+                pillBg = AmColor.Parse(DlgGraphColors.ReplyHex);
+                pillFg = Colors.White;
+            }
+
+            var pill = new Border
+            {
+                Background = new SolidColorBrush(pillBg),
+                CornerRadius = new CornerRadius(3),
+                Padding = new Thickness(5, 1, 5, 1),
+                VerticalAlignment = VerticalAlignment.Center,
+                Child = new TextBlock
+                {
+                    Text = typeLabel + indexLabel,
+                    FontSize = 11,
+                    FontWeight = FontWeight.SemiBold,
+                    Foreground = new SolidColorBrush(pillFg)
+                }
+            };
+
+            string text = GetResolvedNodeText(node);
+            bool isEmpty = string.IsNullOrWhiteSpace(text);
+            if (isEmpty) text = "<empty>";
+            if (text.Length > 90) text = text.Substring(0, 87) + "...";
+
+            var textBlock = new TextBlock
+            {
+                Text = text,
+                VerticalAlignment = VerticalAlignment.Center,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                MaxWidth = 600,
+                Foreground = isEmpty
+                    ? new SolidColorBrush(AmColor.Parse("#B0BEC5"))
+                    : new SolidColorBrush(AmColor.Parse("#212121")),
+                FontStyle = isEmpty ? FontStyle.Italic : FontStyle.Normal
+            };
+
+            var panel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 6
+            };
+            panel.Children.Add(pill);
+
+            var badges = BuildTreeBadgePanel(node, link);
+            if (badges != null)
+                panel.Children.Add(badges);
+
+            panel.Children.Add(textBlock);
+
+            if (isEmpty)
+            {
+                var warnBorder = new Border
+                {
+                    Background = new SolidColorBrush(AmColor.Parse("#FFF8E1")),
+                    CornerRadius = new CornerRadius(2),
+                    Padding = new Thickness(2, 0),
+                    Child = panel
+                };
+                return warnBorder;
+            }
+
+            return panel;
+        }
+
+        private StackPanel BuildTreeBadgePanel(DLGNode node, DLGLink link)
+        {
+            var icons = new List<(string symbol, AmColor color, string tip)>();
+
+            bool hasScript = (node.Script1 != null && !node.Script1.IsBlank())
+                          || (node.Script2 != null && !node.Script2.IsBlank());
+            bool hasCond = (link?.Active1 != null && !link.Active1.IsBlank())
+                        || (link?.Active2 != null && !link.Active2.IsBlank());
+            bool hasSound = node.Sound != null && !node.Sound.IsBlank();
+            bool hasVoice = node.VoResRef != null && !node.VoResRef.IsBlank();
+
+            if (hasScript) icons.Add(("S", AmColor.Parse("#6A1B9A"), "Has script"));
+            if (hasCond)   icons.Add(("?", AmColor.Parse("#E65100"), "Has condition"));
+            if (hasSound)  icons.Add(("\u266A", AmColor.Parse("#00695C"), "Has sound"));
+            if (hasVoice)  icons.Add(("\u25B6", AmColor.Parse("#0277BD"), "Has voice"));
+
+            if (icons.Count == 0) return null;
+
+            var panel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 2,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            foreach (var (symbol, color, tip) in icons)
+            {
+                var badge = new Border
+                {
+                    Width = 16,
+                    Height = 16,
+                    CornerRadius = new CornerRadius(8),
+                    Background = new SolidColorBrush(AmColor.FromArgb(30, color.R, color.G, color.B)),
+                    BorderBrush = new SolidColorBrush(color),
+                    BorderThickness = new Thickness(1),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Child = new TextBlock
+                    {
+                        Text = symbol,
+                        FontSize = 9,
+                        FontWeight = FontWeight.Bold,
+                        Foreground = new SolidColorBrush(color),
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center
+                    }
+                };
+                ToolTip.SetTip(badge, tip);
+                panel.Children.Add(badge);
+            }
+            return panel;
         }
 
         /// <summary>
@@ -3372,7 +5729,7 @@ namespace OdyTools.Editors.DLG
             }
             var node = link.Node;
             string nodeType = node is DLGEntry ? "Entry" : "Reply";
-            string text = node.Text?.GetString(0, Gender.Male) ?? "";
+            string text = GetResolvedNodeText(node);
             if (string.IsNullOrEmpty(text))
             {
                 text = "<empty>";
@@ -3382,18 +5739,25 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Handles key press events from the dialog tree view.
-        /// Matching PyKotor implementation: tree view calls back to editor's keyPressEvent with is_tree_view_call=True
         /// </summary>
         private void OnKeyDownFromTreeView(KeyEventArgs e)
         {
             HandleKeyDown(e, isTreeViewCall: true);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2021-2138
-        // Original: def keyPressEvent(self, event: QKeyEvent, *, is_tree_view_call: bool = False):
+        /// <summary>
+        /// Handles double-click on the dialog tree. Vendor: doubleClicked -> edit_text.
+        /// Opens LocalizedStringDialog to edit the selected node's text.
+        /// </summary>
+        private void OnDialogTreeDoubleTapped(object sender, TappedEventArgs e)
+        {
+            if (_dialogTree == null) return;
+            var indexes = OdyToolDLG.GetSelectedIndexesFromTreeView(_dialogTree);
+            EditText(null, indexes, _dialogTree);
+        }
+
         /// <summary>
         /// Handles key press events for the DLG editor.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2021-2138
         /// </summary>
         protected override void OnKeyDown(KeyEventArgs e)
         {
@@ -3403,7 +5767,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Internal key handling method that implements the full PyKotor keyPressEvent logic.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2021-2138
         /// </summary>
         /// <param name="e">The key event arguments.</param>
         /// <param name="isTreeViewCall">True if this call originated from the tree view's key handler.</param>
@@ -3413,45 +5776,41 @@ namespace OdyTools.Editors.DLG
             // Avalonia doesn't have IsRepeat property - track manually via _keysDown
             bool isAutoRepeat = _keysDown.Contains(key);
 
-            // Matching PyKotor implementation: if not is_tree_view_call: check focus
-            // Original: if not is_tree_view_call: if not self.ui.dialogTree.hasFocus(): super().keyPressEvent(event); return
             if (!isTreeViewCall)
             {
-                // If dialog tree doesn't have focus, let parent handle the event
-                if (_dialogTree == null || !_dialogTree.IsFocused)
+                // Only handle when a node view has focus (tree, flat lists, or graph)
+                bool nodeViewFocused = (_dialogTree != null && _dialogTree.IsFocused)
+                    || (_flatStartingList != null && _flatStartingList.IsFocused)
+                    || (_flatEntryList != null && _flatEntryList.IsFocused)
+                    || (_flatReplyList != null && _flatReplyList.IsFocused)
+                    || (_graphScene != null && _graphScene.IsFocused);
+                if (!nodeViewFocused)
                 {
-                    // Don't handle the event - let it propagate to parent
                     return;
                 }
                 // If dialog tree has focus, the tree view's key handler will call us back with isTreeViewCall=true
-                // This prevents double handling of the same event
-                return;
+                if (_dialogTree != null && _dialogTree.IsFocused)
+                {
+                    return;
+                }
             }
 
-            // Matching PyKotor implementation: selected_index = self.ui.dialogTree.currentIndex()
             // Get the selected item from the tree view
             DLGStandardItem selectedItem = GetSelectedItemFromTreeView();
 
-            // Matching PyKotor implementation: if not selected_index.isValid(): return
-            // Matching PyKotor implementation: if selected_item is None: handle Insert key
-            // Original: selected_item: DLGStandardItem | None = self.model.itemFromIndex(selected_index)
-            // Original: if selected_item is None: if key == Qt.Key.Key_Insert: self.model.add_root_node(); return
             if (selectedItem == null)
             {
                 // If no valid selection but tree has focus, allow Insert key to add root node
                 if (key == Key.Insert)
                 {
-                    // Matching PyKotor implementation: self.model.add_root_node()
                     AddRootNode();
                     e.Handled = true;
                 }
                 return;
             }
 
-            // Matching PyKotor implementation: if event.isAutoRepeat() or key in self.keys_down:
             if (isAutoRepeat || _keysDown.Contains(key))
             {
-                // Matching PyKotor implementation: handle arrow keys even on auto-repeat
                 if (key == Key.Up || key == Key.Down)
                 {
                     _keysDown.Add(key);
@@ -3461,185 +5820,207 @@ namespace OdyTools.Editors.DLG
                 return; // Ignore auto-repeat events and prevent multiple executions on single key
             }
 
-            // Matching PyKotor implementation: if not self.keys_down:
             if (_keysDown.Count == 0)
             {
                 _keysDown.Add(key);
 
-                // Matching PyKotor implementation: if key in (Qt.Key.Key_Delete, Qt.Key.Key_Backspace):
-                if (key == Key.Delete || key == Key.Back)
+                if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && key == Key.Z)
                 {
-                    // Matching PyKotor implementation: self.model.remove_link(selected_item)
-                    RemoveSelectedLink();
+                    Undo();
                     e.Handled = true;
                     return;
                 }
-                // Matching PyKotor implementation: elif key in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
+                if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && (key == Key.Y || (key == Key.Z && e.KeyModifiers.HasFlag(KeyModifiers.Shift))))
+                {
+                    Redo();
+                    e.Handled = true;
+                    return;
+                }
+                if (key == Key.Delete || key == Key.Back)
+                {
+                    // When tree has a selection, remove that link; otherwise remove selected starter (file globals list)
+                    if (selectedItem != null)
+                        RemoveLink(selectedItem);
+                    else
+                        RemoveSelectedLink();
+                    e.Handled = true;
+                    return;
+                }
                 else if (key == Key.Enter || key == Key.Return)
                 {
-                    // Matching PyKotor implementation: edit_text based on focus
-                    // Original: if self.ui.dialogTree.hasFocus(): self.edit_text(event, self.ui.dialogTree.selectedIndexes(), self.ui.dialogTree)
-                    // Original: elif self.orphaned_nodes_list.hasFocus(): self.edit_text(event, self.orphaned_nodes_list.selectedIndexes(), self.orphaned_nodes_list)
-                    // Original: elif self.pinned_items_list.hasFocus(): self.edit_text(event, self.pinned_items_list.selectedIndexes(), self.pinned_items_list)
-                    // Original: elif self.find_bar.hasFocus() or self.find_input.hasFocus(): self.handle_find()
 
                     // Check which widget has focus and call edit_text with appropriate parameters
                     if (_dialogTree != null && _dialogTree.IsFocused)
                     {
-                        // Get selected indexes from dialog tree
-                        var selectedIndexes = GetSelectedIndexesFromTreeView(_dialogTree);
+                        var selectedIndexes = OdyToolDLG.GetSelectedIndexesFromTreeView(_dialogTree);
                         EditText(e, selectedIndexes, _dialogTree);
                     }
                     else if (_orphanedNodesList != null && _orphanedNodesList.IsFocused)
                     {
-                        // Get selected indexes from orphaned nodes list
                         var selectedIndexes = GetSelectedIndexesFromListWidget(_orphanedNodesList);
                         EditText(e, selectedIndexes, _orphanedNodesList);
                     }
                     else if (_pinnedItemsList != null && _pinnedItemsList.IsFocused)
                     {
-                        // Get selected indexes from pinned items list
                         var selectedIndexes = GetSelectedIndexesFromListWidget(_pinnedItemsList);
                         EditText(e, selectedIndexes, _pinnedItemsList);
                     }
+                    else if (_flatStartingList != null && _flatStartingList.IsFocused)
+                    {
+                        var selectedIndexes = GetSelectedIndexesFromCurrentLink();
+                        EditText(e, selectedIndexes, _flatStartingList);
+                    }
+                    else if (_flatEntryList != null && _flatEntryList.IsFocused)
+                    {
+                        var selectedIndexes = GetSelectedIndexesFromCurrentLink();
+                        EditText(e, selectedIndexes, _flatEntryList);
+                    }
+                    else if (_flatReplyList != null && _flatReplyList.IsFocused)
+                    {
+                        var selectedIndexes = GetSelectedIndexesFromCurrentLink();
+                        EditText(e, selectedIndexes, _flatReplyList);
+                    }
+                    else if (_graphScene != null && _graphScene.IsFocused)
+                    {
+                        var selectedIndexes = GetSelectedIndexesFromCurrentLink();
+                        EditText(e, selectedIndexes, _graphScene);
+                    }
                     else if ((_findBar != null && _findBar.IsFocused) || (_findInput != null && _findInput.IsFocused))
                     {
-                        // Matching PyKotor: elif self.find_bar.hasFocus() or self.find_input.hasFocus(): self.handle_find()
                         HandleFind();
                     }
                     else
                     {
-                        // Fallback to basic case (dialogTree)
-                        var selectedIndexes = GetSelectedIndexesFromTreeView(_dialogTree);
+                        var selectedIndexes = OdyToolDLG.GetSelectedIndexesFromTreeView(_dialogTree);
+                        if (selectedIndexes.Count == 0) selectedIndexes = GetSelectedIndexesFromCurrentLink();
                         EditText(e, selectedIndexes, _dialogTree);
                     }
                     e.Handled = true;
                     return;
                 }
-                // Matching PyKotor implementation: elif key == Qt.Key.Key_F:
                 else if (key == Key.F)
                 {
-                    // Matching PyKotor implementation: self.focus_on_node(selected_item.link)
                     FocusOnSelectedNode();
                     e.Handled = true;
                     return;
                 }
-                // Matching PyKotor implementation: elif key == Qt.Key.Key_Insert:
                 else if (key == Key.Insert)
                 {
-                    // Matching PyKotor implementation: self.model.add_child_to_item(selected_item)
                     AddChildToSelectedItem();
                     e.Handled = true;
                     return;
                 }
-                // Matching PyKotor implementation: elif key == Qt.Key.Key_P:
                 else if (key == Key.P)
                 {
-                    // Matching PyKotor implementation: play sound or blink window
                     PlaySoundOrBlink();
+                    e.Handled = true;
+                    return;
+                }
+                else if (key == Key.Home)
+                {
+                    _graphScene?.CenterOnStarters();
+                    UpdateGraphZoomLabel();
                     e.Handled = true;
                     return;
                 }
                 return;
             }
 
-            // Matching PyKotor implementation: self.keys_down.add(key)
             _keysDown.Add(key);
 
-            // Matching PyKotor implementation: self._handle_shift_item_keybind(selected_index, selected_item, key)
             HandleShiftItemKeybind(selectedItem, key);
 
-            // Matching PyKotor implementation: handle modifier key combinations
             if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
             {
-                // Matching PyKotor implementation: Ctrl+G (show_go_to_bar) - commented out in Python
                 if (key == Key.G)
                 {
-                    // Matching PyKotor implementation: self.show_go_to_bar() - commented out
-                    // ShowGoToBar();
+                    ShowGoToBar();
                     e.Handled = true;
                     return;
                 }
-                // Matching PyKotor implementation: Ctrl+F
                 else if (key == Key.F)
                 {
-                    // Matching PyKotor implementation: self.show_find_bar()
                     ShowFindBar();
                     e.Handled = true;
                     return;
                 }
-                // Matching PyKotor implementation: Ctrl+C
                 else if (key == Key.C)
                 {
                     if (e.KeyModifiers.HasFlag(KeyModifiers.Alt))
                     {
-                        // Matching PyKotor implementation: self.copy_path(selected_item.link.node)
                         CopyPath();
                     }
                     else
                     {
-                        // Matching PyKotor implementation: self.model.copy_link_and_node(selected_item.link)
                         CopyLinkAndNode();
                     }
                     e.Handled = true;
                     return;
                 }
-                // Matching PyKotor implementation: Ctrl+Enter or Ctrl+Return
                 else if (key == Key.Enter || key == Key.Return)
                 {
-                    // Matching PyKotor implementation: self.jump_to_original(selected_item)
                     JumpToOriginal();
                     e.Handled = true;
                     return;
                 }
-                // Matching PyKotor implementation: Ctrl+V
                 else if (key == Key.V)
                 {
-                    // Matching PyKotor implementation: paste logic
                     PasteItem(e.KeyModifiers.HasFlag(KeyModifiers.Alt));
                     e.Handled = true;
                     return;
                 }
-                // Matching PyKotor implementation: Ctrl+Delete
                 else if (key == Key.Delete)
                 {
                     if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
                     {
-                        // Matching PyKotor implementation: self.model.delete_node_everywhere(selected_item.link.node)
                         DeleteNodeEverywhere();
                     }
                     else
                     {
-                        // Matching PyKotor implementation: self.model.delete_selected_node()
                         DeleteSelectedNode();
                     }
                     e.Handled = true;
                     return;
                 }
+                else if (key == Key.OemPlus || key == Key.Add)
+                {
+                    _graphScene?.ZoomIn();
+                    UpdateGraphZoomLabel();
+                    e.Handled = true;
+                    return;
+                }
+                else if (key == Key.OemMinus || key == Key.Subtract)
+                {
+                    _graphScene?.ZoomOut();
+                    UpdateGraphZoomLabel();
+                    e.Handled = true;
+                    return;
+                }
+                else if (key == Key.D0 || key == Key.NumPad0)
+                {
+                    _graphScene?.FitToContent();
+                    UpdateGraphZoomLabel();
+                    e.Handled = true;
+                    return;
+                }
             }
 
-            // Matching PyKotor implementation: Shift+Enter/Return combinations
             if (e.KeyModifiers.HasFlag(KeyModifiers.Shift) && (key == Key.Enter || key == Key.Return))
             {
                 if (e.KeyModifiers.HasFlag(KeyModifiers.Alt))
                 {
-                    // Matching PyKotor implementation: set_expand_recursively(..., expand=False, maxdepth=-1)
                     SetExpandRecursively(false, -1);
                 }
                 else
                 {
-                    // Matching PyKotor implementation: set_expand_recursively(..., expand=True)
                     SetExpandRecursively(true, 0);
                 }
                 e.Handled = true;
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2139-2147
-        // Original: def keyReleaseEvent(self, event: QKeyEvent):
         /// <summary>
         /// Handles key release events for the DLG editor.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2139-2147
         /// </summary>
         protected override void OnKeyUp(KeyEventArgs e)
         {
@@ -3647,18 +6028,14 @@ namespace OdyTools.Editors.DLG
 
             Key key = e.Key;
 
-            // Matching PyKotor implementation: if key in self.keys_down: self.keys_down.remove(key)
             if (_keysDown.Contains(key))
             {
                 _keysDown.Remove(key);
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1985-2019
-        // Original: def _handle_shift_item_keybind(self, selected_index, selected_item, key):
         /// <summary>
         /// Handles shift+arrow key combinations for moving items.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1985-2019
         /// </summary>
         /// <param name="selectedItem">The currently selected DLGStandardItem.</param>
         /// <param name="key">The key that was pressed.</param>
@@ -3669,55 +6046,23 @@ namespace OdyTools.Editors.DLG
                 return;
             }
 
-            // Matching PyKotor implementation: handle Shift+Up/Down combinations
             // Note: The method checks keys_down set to determine if Shift is held
-            // Original: if self.keys_down in ({Qt.Key.Key_Shift, Qt.Key.Key_Up}, {Qt.Key.Key_Shift, Qt.Key.Key_Up, Qt.Key.Key_Alt}):
             if (key == Key.Up && (_keysDown.Contains(Key.LeftShift) || _keysDown.Contains(Key.RightShift)))
             {
-                // Matching PyKotor implementation: shift_item(selected_item, -1, no_selection_update=True)
-                // Get current index from model
-                int currentIndex = _model.SelectedIndex;
-                if (currentIndex > 0)
-                {
-                    _model.MoveStarter(currentIndex, currentIndex - 1);
-                    _model.SelectedIndex = currentIndex - 1;
-                    // Update tree view selection to match
-                    var rootItems = _model.GetRootItems();
-                    if (currentIndex - 1 >= 0 && currentIndex - 1 < rootItems.Count)
-                    {
-                        SelectTreeItem(rootItems[currentIndex - 1]);
-                    }
-                }
+                MoveItemUp();
             }
             else if (key == Key.Down && (_keysDown.Contains(Key.LeftShift) || _keysDown.Contains(Key.RightShift)))
             {
-                // Matching PyKotor implementation: shift_item(selected_item, 1, no_selection_update=True)
-                int currentIndex = _model.SelectedIndex;
-                if (currentIndex >= 0 && currentIndex < _model.RowCount - 1)
-                {
-                    _model.MoveStarter(currentIndex, currentIndex + 1);
-                    _model.SelectedIndex = currentIndex + 1;
-                    // Update tree view selection to match
-                    var rootItems = _model.GetRootItems();
-                    if (currentIndex + 1 >= 0 && currentIndex + 1 < rootItems.Count)
-                    {
-                        SelectTreeItem(rootItems[currentIndex + 1]);
-                    }
-                }
+                MoveItemDown();
             }
-            // Matching PyKotor implementation: handle arrow keys for scrolling (even without Shift)
-            // Original: elif above_index.isValid() and key == Qt.Key.Key_Up and not self.ui.dialogTree.visualRect(above_index).contains(view_port.rect()):
             // Note: Avalonia TreeView doesn't have direct indexAbove/indexBelow methods, so we handle scrolling via selection changes
             // The tree view will automatically scroll to show the selected item
         }
 
         // Helper methods for key press actions - these will be fully implemented as the UI is completed
-        // Matching PyKotor implementation patterns
 
         /// <summary>
         /// Adds a root node to the dialog.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2041-2043
-        /// Original: if key == Qt.Key.Key_Insert: self.model.add_root_node()
         /// Creates a new DLGEntry node, wraps it in a DLGLink, adds it as a starter, and selects it in the tree view.
         /// The operation is recorded in the action history for undo/redo support.
         /// </summary>
@@ -3733,7 +6078,6 @@ namespace OdyTools.Editors.DLG
             if (newItem != null)
             {
                 // Select the newly added root node in the tree view
-                // Matching PyKotor: After adding root node, it would be selected in the tree
                 SelectTreeViewItem(newItem);
 
                 // Update the model's selected index to track the new selection
@@ -3756,7 +6100,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Removes the selected link.
-        /// Matching PyKotor implementation: self.model.remove_link(selected_item)
         /// </summary>
         private void RemoveSelectedLink()
         {
@@ -3772,15 +6115,12 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Edits the text of the selected dialog node(s).
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1349-1437
-        /// Original: def edit_text(self, e: QMouseEvent | QKeyEvent | None = None, indexes: list[QModelIndex] | None = None, source_widget: DLGListWidget | DLGTreeView | None = None)
         /// </summary>
         /// <param name="e">The key or mouse event that triggered the edit (optional).</param>
         /// <param name="indexes">List of selected indexes (optional, will be determined from sourceWidget if not provided).</param>
         /// <param name="sourceWidget">The widget that triggered the edit (optional, defaults to dialogTree).</param>
         private async void EditText(KeyEventArgs e = null, List<object> indexes = null, Control sourceWidget = null)
         {
-            // Matching PyKotor implementation: if not indexes: self.blink_window(); return
             // If no indexes provided, try to get them from sourceWidget
             if (indexes == null || indexes.Count == 0)
             {
@@ -3788,7 +6128,7 @@ namespace OdyTools.Editors.DLG
                 {
                     if (sourceWidget == _dialogTree)
                     {
-                        indexes = GetSelectedIndexesFromTreeView(_dialogTree);
+                        indexes = OdyToolDLG.GetSelectedIndexesFromTreeView(_dialogTree);
                     }
                     else if (sourceWidget is DLGListWidget listWidget)
                     {
@@ -3801,36 +6141,38 @@ namespace OdyTools.Editors.DLG
                 {
                     if (_dialogTree != null)
                     {
-                        indexes = GetSelectedIndexesFromTreeView(_dialogTree);
+                        indexes = OdyToolDLG.GetSelectedIndexesFromTreeView(_dialogTree);
                     }
                 }
             }
 
-            // Matching PyKotor: if not indexes: self.blink_window(); return
             if (indexes == null || indexes.Count == 0)
             {
-                // Matching PyKotor: blink_window()
                 BlinkWindow();
                 return;
             }
 
-            // Matching PyKotor implementation: Check if parent widget is valid before creating dialog
-            // Matching PyKotor: if self._installation is None: RobustLogger().error("Cannot edit text: installation is not set"); continue
-            if (_installation == null)
+            // When no installation is selected we need a TLK path from File → DLG Settings (Manual paths).
+            string tlkPathOverride = null;
+            string femaleTlkPathOverride = null;
+            if (!UseInstallationForResources())
             {
-                // Matching PyKotor: RobustLogger().error("Cannot edit text: installation is not set")
-                new RobustLogger().Error("Cannot edit text: installation is not set");
-                return;
+                var dlgSettings = new DLGSettings();
+                tlkPathOverride = dlgSettings.TlkPath("")?.Trim();
+                if (string.IsNullOrWhiteSpace(tlkPathOverride))
+                {
+                    new RobustLogger().Error(Localization.Tr("Cannot edit text: set the TLK path in File → DLG Settings (Manual paths), or choose an installation that provides dialog.tlk."));
+                    return;
+                }
+                femaleTlkPathOverride = dlgSettings.FemaleTlkPath("")?.Trim();
             }
 
-            // Matching PyKotor implementation: for index in indexes:
             // Process each selected index
             foreach (var indexObj in indexes)
             {
                 DLGStandardItem item = null;
 
                 // Determine the model and item based on source widget
-                // Matching PyKotor: model_to_use: DLGListWidget | QAbstractItemModel | None = source_widget if isinstance(source_widget, DLGListWidget) else index.model()
                 if (sourceWidget is DLGListWidget listWidget)
                 {
                     // Get item from list widget
@@ -3870,14 +6212,17 @@ namespace OdyTools.Editors.DLG
                         item = selectedDlgItemDirect;
                     }
                 }
+                else
+                {
+                    // Flat list or graph: indexes are DLGStandardItem from GetSelectedIndexesFromCurrentLink
+                    item = indexObj as DLGStandardItem;
+                }
 
-                // Matching PyKotor implementation: if item is None: continue
                 if (item == null)
                 {
                     continue;
                 }
 
-                // Matching PyKotor implementation: if item.link is None: continue
                 if (item.Link == null)
                 {
                     continue;
@@ -3885,7 +6230,6 @@ namespace OdyTools.Editors.DLG
 
                 try
                 {
-                    // Matching PyKotor implementation: parent_widget validation and fallback logic
                     // Get parent window for dialog
                     Window parentWindow = this;
                     try
@@ -3921,11 +6265,10 @@ namespace OdyTools.Editors.DLG
                         }
                     }
 
-                    // Matching PyKotor implementation: dialog = LocalizedStringDialog(parent_widget, self._installation, item.link.node.text)
-                    var dialog = new LocalizedStringDialog(parentWindow, _installation, item.Link.Node.Text);
+                    LocalizedStringDialog dialog = UseInstallationForResources()
+                        ? new LocalizedStringDialog(parentWindow, _installation, item.Link.Node.Text)
+                        : new LocalizedStringDialog(parentWindow, tlkPathOverride, femaleTlkPathOverride, item.Link.Node.Text);
 
-                    // Matching PyKotor implementation: dialog_result: bool | int = False
-                    // Matching PyKotor: dialog_result = dialog.exec()
                     bool dialogResult = false;
                     try
                     {
@@ -3934,42 +6277,40 @@ namespace OdyTools.Editors.DLG
                     }
                     catch (Exception exc)
                     {
-                        // Matching PyKotor: RobustLogger().exception(f"Error executing LocalizedStringDialog: {exc.__class__.__name__}: {exc}")
                         new RobustLogger().Exception($"Error executing LocalizedStringDialog: {exc.GetType().Name}: {exc}", exc);
                         continue; // Continue to next item
                     }
 
-                    // Matching PyKotor implementation: if not dialog_result: continue
                     if (!dialogResult)
                     {
                         // User cancelled the dialog
                         continue; // Continue to next item
                     }
 
-                    // Matching PyKotor implementation: item.link.node.text = dialog.locstring
                     // Access dialog.LocString before cleanup
                     item.Link.Node.Text = dialog.LocString;
 
-                    // Matching PyKotor implementation: if isinstance(item, DLGStandardItem): self.model.update_item_display_text(item)
-                    // Matching PyKotor implementation: elif isinstance(source_widget, DLGListWidget): source_widget.update_item(item)
                     if (item is DLGStandardItem standardItem)
                     {
                         _model.UpdateItemDisplayText(standardItem);
+                        // Rebuild tree so the node header shows the new text (in-place header update may not refresh in Avalonia)
+                        if (sourceWidget == _dialogTree || sourceWidget == null)
+                        {
+                            UpdateTreeView();
+                            SelectTreeViewItem(standardItem);
+                        }
                     }
                     else if (sourceWidget is DLGListWidget listWidgetForUpdate && indexObj is DLGListWidgetItem listWidgetItem)
                     {
                         listWidgetForUpdate.UpdateItem(listWidgetItem);
                     }
-
-                    // Restore selection after tree view update (only for tree view)
-                    if (sourceWidget == _dialogTree || sourceWidget == null)
+                    else if (sourceWidget == _dialogTree || sourceWidget == null)
                     {
                         SelectTreeViewItem(item);
                     }
                 }
                 catch (Exception exc)
                 {
-                    // Matching PyKotor: RobustLogger().exception(f"Error creating LocalizedStringDialog: {exc.__class__.__name__}: {exc}")
                     new RobustLogger().Exception($"Error creating LocalizedStringDialog: {exc.GetType().Name}: {exc}", exc);
                     continue; // Continue to next item
                 }
@@ -3981,38 +6322,46 @@ namespace OdyTools.Editors.DLG
         /// Helper method to extract DLGStandardItem objects from TreeView selection.
         /// </summary>
         /// <summary>
+        /// Gets the DLGStandardItem for a link (from tree item tag). Used when selection comes from flat list or graph.
+        /// </summary>
+        private DLGStandardItem GetStandardItemForLink(DLGLink link)
+        {
+            return FindItemForLink(link);
+        }
+
+        /// <summary>
+        /// Gets selected indexes (one DLGStandardItem) from current _selectedLink for use when focus is on flat list or graph.
+        /// </summary>
+        private List<object> GetSelectedIndexesFromCurrentLink()
+        {
+            var list = new List<object>();
+            var item = GetStandardItemForLink(_selectedLink);
+            if (item != null) list.Add(item);
+            return list;
+        }
+
+        /// <summary>
         /// Gets the selected DLGStandardItem from the dialog tree view.
-        /// Matching PyKotor implementation: self.model.itemFromIndex(selected_index)
         /// </summary>
         /// <returns>The selected DLGStandardItem, or null if no valid selection.</returns>
         private DLGStandardItem GetSelectedItemFromTreeView()
         {
-            if (_dialogTree == null)
+            if (_dialogTree != null)
             {
-                return null;
+                var selectedItem = _dialogTree.SelectedItem;
+                if (selectedItem != null)
+                {
+                    if (selectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItem)
+                        return dlgItem;
+                    if (selectedItem is DLGStandardItem dlgItemDirect)
+                        return dlgItemDirect;
+                }
             }
-
-            // Get selected item from tree view
-            var selectedItem = _dialogTree.SelectedItem;
-            if (selectedItem == null)
-            {
-                return null;
-            }
-
-            // Extract DLGStandardItem from TreeViewItem.Tag or return directly if it's already a DLGStandardItem
-            if (selectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItem)
-            {
-                return dlgItem;
-            }
-            else if (selectedItem is DLGStandardItem dlgItemDirect)
-            {
-                return dlgItemDirect;
-            }
-
-            return null;
+            // Fallback when selection came from flat list or graph
+            return GetStandardItemForLink(_selectedLink);
         }
 
-        private List<object> GetSelectedIndexesFromTreeView(TreeView treeView)
+        private static List<object> GetSelectedIndexesFromTreeView(TreeView treeView)
         {
             var indexes = new List<object>();
             if (treeView == null)
@@ -4054,7 +6403,6 @@ namespace OdyTools.Editors.DLG
             }
 
             // Get selected items from list widget
-            // Matching PyKotor: selectedIndexes() returns list of QModelIndex
             // In Avalonia, we get selected items directly
             var selectedItems = listWidget.SelectedItems;
             if (selectedItems != null)
@@ -4081,7 +6429,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Focuses on the selected node.
-        /// Matching PyKotor implementation: self.focus_on_node(selected_item.link)
         /// </summary>
         private void FocusOnSelectedNode()
         {
@@ -4110,8 +6457,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Focuses the dialog tree on a specific link node.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1512-1531
-        /// Original: def focus_on_node(self, link: DLGLink | None) -> DLGStandardItem | None:
         /// </summary>
         /// <param name="link">The link to focus on, or null to clear focus.</param>
         /// <returns>The focused item, or null if link is null.</returns>
@@ -4122,9 +6467,6 @@ namespace OdyTools.Editors.DLG
                 return null;
             }
 
-            // Matching PyKotor implementation: Set background color for light themes
-            // Original: if "(Light)" in GlobalSettings().selectedTheme or GlobalSettings().selectedTheme == "Native":
-            //           self.ui.dialogTree.setStyleSheet("QTreeView { background: #FFFFEE; }")
             if (_dialogTree != null)
             {
                 var settings = new GlobalSettings();
@@ -4154,8 +6496,6 @@ namespace OdyTools.Editors.DLG
             if (rootItems.Count > 0)
             {
                 focusedItem = rootItems[0];
-                // Recursively load the item and its children
-                _model.LoadDlgItemRec(focusedItem);
             }
 
             // Update the tree view
@@ -4182,58 +6522,43 @@ namespace OdyTools.Editors.DLG
         }
 
         /// <summary>
-        /// Adds a child to the selected item.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2021-2138
-        /// Original: self.model.add_child_to_item(selected_item)
+        /// Adds a child node to the given parent item and records the action for undo/redo. Used by context menu "Add Entry/Reply" and Insert key.
+        /// </summary>
+        private void AddChildToParentItem(DLGStandardItem parentItem)
+        {
+            if (parentItem == null || parentItem.Link == null)
+                return;
+            int childIndex = parentItem.Link.Node != null ? parentItem.Link.Node.Links.Count : -1;
+            var action = new AddChildToItemAction(parentItem, childIndex);
+            _actionHistory.Apply(action);
+            if (action.ChildItem != null)
+                SelectTreeViewItem(action.ChildItem);
+        }
+
+        /// <summary>
+        /// Adds a child to the selected item (used by Insert key).
         /// </summary>
         private void AddChildToSelectedItem()
         {
             if (_dialogTree?.SelectedItem == null)
-            {
                 return;
-            }
-
-            // Get selected item from tree
             DLGStandardItem selectedItem = null;
             var treeSelectedItem = _dialogTree.SelectedItem;
             if (treeSelectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItem)
-            {
                 selectedItem = dlgItem;
-            }
             else if (treeSelectedItem is DLGStandardItem dlgItemDirect)
-            {
                 selectedItem = dlgItemDirect;
-            }
-
             if (selectedItem == null || selectedItem.Link == null)
-            {
                 return;
-            }
-
-            // Create and apply action (the action will perform the operation via the model)
-            int childIndex = selectedItem.Link.Node != null ? selectedItem.Link.Node.Links.Count : -1;
-            var action = new AddChildToItemAction(selectedItem, childIndex);
-            _actionHistory.Apply(action);
-
-            // Get the newly created child item from the action
-            DLGStandardItem newChildItem = action.ChildItem;
-
-            if (newChildItem != null)
-            {
-                // Select the newly added child in the tree view
-                SelectTreeViewItem(newChildItem);
-            }
+            AddChildToParentItem(selectedItem);
         }
 
         /// <summary>
         /// Blinks the window to indicate an error or invalid action.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/base.py:725-734
-        /// Original: def blink_window(self, *, sound: bool = True):
         /// </summary>
         /// <param name="sound">Whether to play a sound effect when blinking. Defaults to true.</param>
         private void BlinkWindow(bool sound = true)
         {
-            // Matching PyKotor implementation: if sound: self.play_sound("dr_metal_lock")
             if (sound)
             {
                 try
@@ -4242,16 +6567,14 @@ namespace OdyTools.Editors.DLG
                 }
                 catch
                 {
-                    // Suppress exceptions when playing sound fails (matching PyKotor: with suppress(Exception))
+                    // Suppress exceptions when playing sound fails
                 }
             }
 
-            // Matching PyKotor implementation: self.setWindowOpacity(0.7)
-            // Matching PyKotor: QTimer.singleShot(125, lambda: self.setWindowOpacity(1))
             double originalOpacity = Opacity;
             Opacity = 0.7;
 
-            // Restore opacity after 125ms (matching PyKotor timing)
+            // Restore opacity after 125ms
             DispatcherTimer timer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(125)
@@ -4266,34 +6589,20 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Plays a sound resource.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/base.py:771-797
-        /// Original: def play_sound(self, resname: str, order: list[SearchLocation] | None = None) -> bool:
         /// </summary>
         /// <param name="resname">The resource name of the sound to play (without extension).</param>
         /// <param name="searchOrder">The ordered list of locations to search for the sound. If null, uses default order.</param>
         /// <returns>True if the sound was played successfully, false otherwise.</returns>
         private bool PlaySound(string resname, SearchLocation[] searchOrder = null)
         {
-            // Matching PyKotor implementation: if not resname or not resname.strip() or self._installation is None:
-            // Matching PyKotor: self.blink_window(sound=False); return False
             if (string.IsNullOrWhiteSpace(resname) || _installation == null)
             {
                 BlinkWindow(sound: false);
                 return false;
             }
 
-            // Matching PyKotor implementation: self.media_player.player.stop()
-            try
-            {
-                _soundPlayer?.Stop();
-            }
-            catch
-            {
-                // Ignore errors when stopping
-            }
+            _soundPlayer?.Stop();
 
-            // Matching PyKotor implementation: data = self._installation.sound(resname, order)
-            // Default search order matching PyKotor: [MUSIC, VOICE, SOUND, OVERRIDE, CHITIN]
             if (searchOrder == null || searchOrder.Length == 0)
             {
                 searchOrder = new[]
@@ -4308,27 +6617,22 @@ namespace OdyTools.Editors.DLG
 
             byte[] soundData = _installation.Sound(resname.Trim(), searchOrder);
 
-            // Matching PyKotor implementation: if not data: self.blink_window(sound=False); return False
             if (soundData == null || soundData.Length == 0)
             {
                 BlinkWindow(sound: false);
                 return false;
             }
 
-            // Matching PyKotor implementation: return self.play_byte_source_media(data)
             return PlayByteSourceMedia(soundData);
         }
 
         /// <summary>
         /// Plays audio from byte array data.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/base.py:736-772
-        /// Original: def play_byte_source_media(self, data: bytes | None) -> bool:
         /// </summary>
         /// <param name="data">The audio data bytes (WAV format).</param>
         /// <returns>True if playback started successfully, false otherwise.</returns>
         private bool PlayByteSourceMedia(byte[] data)
         {
-            // Matching PyKotor implementation: if not data: self.blink_window(); return False
             if (data == null || data.Length == 0)
             {
                 BlinkWindow();
@@ -4340,25 +6644,14 @@ namespace OdyTools.Editors.DLG
                 // Stop any currently playing sound
                 _soundPlayer?.Stop();
 
-                // Dispose previous stream if it exists
-                if (_soundStream != null)
-                {
-                    _soundStream.Dispose();
-                    _soundStream = null;
-                }
-
-                // Create a new memory stream for the sound data
-                // Note: The stream must remain alive while the sound is playing
-                // Matching PyKotor's QBuffer approach which keeps the buffer alive
-                _soundStream = new MemoryStream(data);
-                _soundPlayer.Stream = _soundStream;
+                // Set source from WAV bytes (cross-platform; NAudio owns the buffer)
+                _soundPlayer.SetSourceFromBytes(data);
                 _soundPlayer.Play();
 
                 return true;
             }
             catch (Exception)
             {
-                // Matching PyKotor: blink_window on error
                 BlinkWindow();
                 return false;
             }
@@ -4366,21 +6659,9 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Plays sound or blinks window.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2071-2079
-        /// Original: elif key == Qt.Key.Key_P: sound_resname = self.ui.soundComboBox.currentText().strip() ...
         /// </summary>
         private void PlaySoundOrBlink()
         {
-            // Matching PyKotor implementation:
-            // sound_resname: str = self.ui.soundComboBox.currentText().strip()
-            // voice_resname: str = self.ui.voiceComboBox.currentText().strip()
-            // if sound_resname:
-            //     self.play_sound(sound_resname, [SearchLocation.SOUND, SearchLocation.VOICE])
-            // elif voice_resname:
-            //     self.play_sound(voice_resname, [SearchLocation.VOICE])
-            // else:
-            //     self.blink_window()
-
             // Get sound and voice resource names from UI combo boxes
             string soundResname = _soundComboBox?.Text?.Trim() ?? string.Empty;
             string voiceResname = _voiceComboBox?.Text?.Trim() ?? string.Empty;
@@ -4418,23 +6699,11 @@ namespace OdyTools.Editors.DLG
                 // Ignore errors during cleanup
             }
 
-            try
-            {
-                _soundStream?.Dispose();
-            }
-            catch
-            {
-                // Ignore errors during cleanup
-            }
-
             base.OnClosed(e);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:436-467
-        // Original: def setup_extra_widgets(self):
         /// <summary>
         /// Sets up the menu bar with File and Tools menus.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/uic/qtpy/editors/dlg.py
         /// </summary>
         private void SetupMenuBar(DockPanel dockPanel)
         {
@@ -4443,16 +6712,17 @@ namespace OdyTools.Editors.DLG
             DockPanel.SetDock(menuBar, Dock.Top);
 
             // File menu
-            var fileMenu = new MenuItem { Header = "_File" };
+            var fileMenu = new MenuItem { Header = Localization.Tr("File"), Name = "menuFile" };
             menuBar.Items.Add(fileMenu);
 
-            // File menu actions
-            _actionNew = new MenuItem { Header = "_New" };
-            _actionOpen = new MenuItem { Header = "_Open" };
-            _actionSave = new MenuItem { Header = "_Save" };
-            _actionSaveAs = new MenuItem { Header = "Save _As" };
-            _actionRevert = new MenuItem { Header = "_Revert" };
-            _actionExit = new MenuItem { Header = "E_xit" };
+            // File menu actions (Name set so base Editor can wire New/Open/Save/SaveAs/Revert/Exit)
+            _actionNew = new MenuItem { Header = Localization.Tr("New"), Name = "actionNew" };
+            _actionOpen = new MenuItem { Header = Localization.Tr("Open"), Name = "actionOpen" };
+            _actionSave = new MenuItem { Header = Localization.Tr("Save"), Name = "actionSave" };
+            _actionSaveAs = new MenuItem { Header = Localization.Tr("Save As"), Name = "actionSaveAs" };
+            _actionRevert = new MenuItem { Header = Localization.Tr("Revert"), Name = "actionRevert" };
+            _actionDLGSettings = new MenuItem { Header = Localization.Tr("DLG Settings..."), Name = "actionDLGSettings" };
+            _actionExit = new MenuItem { Header = Localization.Tr("Exit"), Name = "actionExit" };
 
             fileMenu.Items.Add(_actionNew);
             fileMenu.Items.Add(_actionOpen);
@@ -4461,16 +6731,26 @@ namespace OdyTools.Editors.DLG
             fileMenu.Items.Add(new Separator());
             fileMenu.Items.Add(_actionRevert);
             fileMenu.Items.Add(new Separator());
+            fileMenu.Items.Add(_actionDLGSettings);
+            fileMenu.Items.Add(new Separator());
             fileMenu.Items.Add(_actionExit);
 
+            // Edit menu (undo/redo)
+            var editMenu = new MenuItem { Header = Localization.Tr("Edit"), Name = "menuEdit" };
+            menuBar.Items.Add(editMenu);
+            _actionUndo = new MenuItem { Header = Localization.Tr("Undo"), Name = "actionUndo" };
+            _actionRedo = new MenuItem { Header = Localization.Tr("Redo"), Name = "actionRedo" };
+            editMenu.Items.Add(_actionUndo);
+            editMenu.Items.Add(_actionRedo);
+
             // Tools menu
-            var toolsMenu = new MenuItem { Header = "_Tools" };
+            var toolsMenu = new MenuItem { Header = Localization.Tr("Tools"), Name = "menuTools" };
             menuBar.Items.Add(toolsMenu);
 
             // Tools menu actions
-            _actionFind = new MenuItem { Header = "_Find" };
-            _actionReloadTree = new MenuItem { Header = "_Reload Tree" };
-            _actionUnfocus = new MenuItem { Header = "_Unfocus Tree" };
+            _actionFind = new MenuItem { Header = Localization.Tr("Find"), Name = "actionFind" };
+            _actionReloadTree = new MenuItem { Header = Localization.Tr("Reload Tree"), Name = "actionReloadTree" };
+            _actionUnfocus = new MenuItem { Header = Localization.Tr("Unfocus Tree"), Name = "actionUnfocus" };
             _actionUnfocus.IsEnabled = false;
 
             toolsMenu.Items.Add(_actionFind);
@@ -4482,18 +6762,14 @@ namespace OdyTools.Editors.DLG
         }
 
         /// <summary>
-        /// Sets up event handlers for menu actions.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:304-306
+        /// Sets up event handlers for menu actions. File New/Open/Save/SaveAs/Revert/Settings/Exit wired by base Editor.
         /// </summary>
         private void SetupMenuActionHandlers()
         {
-            // File menu actions
-            _actionNew.Click += (s, e) => New();
-            _actionOpen.Click += (s, e) => OpenFile();
-            _actionSave.Click += (s, e) => Save();
-            _actionSaveAs.Click += (s, e) => SaveAs();
-            _actionRevert.Click += (s, e) => RevertChanges();
-            _actionExit.Click += (s, e) => Close();
+            // Edit menu actions (undo/redo)
+            if (_actionUndo != null) _actionUndo.Click += (s, e) => Undo();
+            if (_actionRedo != null) _actionRedo.Click += (s, e) => Redo();
+            RefreshEditMenuState();
 
             // Tools menu actions
             if (_actionFind != null) _actionFind.Click += (s, e) => ShowFindBar();
@@ -4501,9 +6777,82 @@ namespace OdyTools.Editors.DLG
             _actionUnfocus.Click += (s, e) => UnfocusTree();
         }
 
+        /// <summary>Called when undo/redo stack changes so Edit menu items can update IsEnabled.</summary>
+        internal void NotifyActionHistoryChanged()
+        {
+            RefreshEditMenuState();
+        }
+
+        private void RefreshEditMenuState()
+        {
+            if (_actionUndo != null) _actionUndo.IsEnabled = CanUndo;
+            if (_actionRedo != null) _actionRedo.IsEnabled = CanRedo;
+        }
+
+        /// <summary>Name of the Settings menu action for base Editor to wire.</summary>
+        protected override string SettingsMenuActionName => "actionDLGSettings";
+
+        /// <summary>
+        /// Opens the DLG Settings dialog (File -> DLG Settings). Persists installation vs manual paths and all manual path fields.
+        /// </summary>
+        protected override async Task ShowSettingsDialogAsync()
+        {
+            var dialog = new Dialogs.DLGSettingsDialog();
+            var result = await dialog.ShowDialog<bool?>(this);
+            if (result == true)
+            {
+                ApplyInstallationFromDLGSettings();
+                SetupTslEmotionsAndExpressions();
+                RefreshAnimList();
+            }
+        }
+
+        /// <summary>
+        /// Resolves installation from File → DLG Settings and sets _installation.
+        /// When no installation is selected, sets _installation to null (manual paths only).
+        /// When an installation is selected, creates OdyInstallation from GlobalSettings; if none is selected but the combo is "use installation", preserves the installation passed from the app (e.g. when opening DLG from main window).
+        /// </summary>
+        private void ApplyInstallationFromDLGSettings()
+        {
+            var dlgSettings = new DLGSettings();
+            if (!dlgSettings.UseInstallation(true))
+            {
+                _installation = null;
+                return;
+            }
+            string name = dlgSettings.SelectedInstallationName("")?.Trim();
+            if (string.IsNullOrEmpty(name))
+            {
+                // Preserve installation passed from constructor (e.g. main app active installation)
+                // so 2DA/TLK lookup works without requiring user to open DLG Settings first.
+                return;
+            }
+            try
+            {
+                var installations = new GlobalSettings().Installations();
+                if (installations == null || !installations.ContainsKey(name))
+                {
+                    _installation = null;
+                    return;
+                }
+                var installData = installations[name];
+                string path = installData != null && installData.ContainsKey("path") ? installData["path"]?.ToString()?.Trim() : null;
+                bool tsl = installData != null && installData.ContainsKey("tsl") && installData["tsl"] is bool tslVal && tslVal;
+                if (string.IsNullOrEmpty(path) || !System.IO.Directory.Exists(path))
+                {
+                    _installation = null;
+                    return;
+                }
+                _installation = new OdyInstallation(path, name, tsl);
+            }
+            catch
+            {
+                _installation = null;
+            }
+        }
+
         /// <summary>
         /// Reloads the dialog tree from the current core DLG.
-        /// Matching PyKotor implementation: self.ui.actionReloadTree.triggered.connect(lambda: self._load_dlg(self.core_dlg))
         /// </summary>
         private void ReloadTree()
         {
@@ -4512,7 +6861,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Unfocuses the current tree selection.
-        /// Matching PyKotor implementation for unfocus tree action.
         /// </summary>
         private void UnfocusTree()
         {
@@ -4525,31 +6873,53 @@ namespace OdyTools.Editors.DLG
         }
 
         /// <summary>
+        /// Sets up the go-to bar UI controls. Matching vendor: go_to_bar, goToInput, goToButton.
+        /// </summary>
+        private void SetupGoToBar()
+        {
+            _goToBar = new StackPanel
+            {
+                Orientation = Avalonia.Layout.Orientation.Horizontal,
+                IsVisible = false,
+                Margin = new Thickness(2),
+                Spacing = 4
+            };
+            _goToInput = new TextBox
+            {
+                Watermark = "Go to node ID...",
+                MinWidth = 150
+            };
+            _goToInput.KeyDown += (s, e) =>
+            {
+                if (e.Key == Key.Enter || e.Key == Key.Return) { HandleGoTo(); e.Handled = true; }
+                else if (e.Key == Key.Escape) { HideGoToBar(); e.Handled = true; }
+            };
+            _goToButton = new Button { Content = "Go" };
+            _goToButton.Click += (s, e) => HandleGoTo();
+            _goToBar.Children.Add(_goToInput);
+            _goToBar.Children.Add(_goToButton);
+        }
+
+        /// <summary>
         /// Sets up the find bar UI controls.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:451-467
         /// </summary>
         private void SetupFindBar()
         {
-            // Matching PyKotor: self.find_bar: QWidget = QWidget(self)
-            // Matching PyKotor: self.find_bar.setVisible(False)
             _findBar = new Panel
             {
                 IsVisible = false
             };
 
-            // Matching PyKotor: self.find_layout: QHBoxLayout = QHBoxLayout(self.find_bar)
             var findLayout = new StackPanel
             {
                 Orientation = Avalonia.Layout.Orientation.Horizontal
             };
             _findBar.Children.Add(findLayout);
 
-            // Matching PyKotor: self.find_input: QLineEdit = QLineEdit(self.find_bar)
             _findInput = new TextBox
             {
                 Watermark = "Find in dialog..."
             };
-            // Matching PyKotor: self.find_input.returnPressed.connect(self.handle_find)
             _findInput.KeyDown += (s, e) =>
             {
                 if (e.Key == Key.Enter || e.Key == Key.Return) { HandleFind(); e.Handled = true; }
@@ -4557,27 +6927,20 @@ namespace OdyTools.Editors.DLG
             };
             findLayout.Children.Add(_findInput);
 
-            // Matching PyKotor: self.back_button: QPushButton = QPushButton("", self.find_bar)
-            // Matching PyKotor: self.back_button.setIcon(q_style.standardIcon(QStyle.StandardPixmap.SP_ArrowBack))
             _backButton = new Button
             {
                 Content = "←"
             };
-            // Matching PyKotor: self.back_button.clicked.connect(self.handle_back)
             _backButton.Click += (s, e) => HandleBack();
             findLayout.Children.Add(_backButton);
 
-            // Matching PyKotor: self.find_button: QPushButton = QPushButton("", self.find_bar)
-            // Matching PyKotor: self.find_button.setIcon(q_style.standardIcon(QStyle.StandardPixmap.SP_ArrowForward))
             _findButton = new Button
             {
                 Content = "→"
             };
-            // Matching PyKotor: self.find_button.clicked.connect(self.handle_find)
             _findButton.Click += (s, e) => HandleFind();
             findLayout.Children.Add(_findButton);
 
-            // Matching PyKotor: self.results_label: QLabel = QLabel(self.find_bar)
             _resultsLabel = new TextBlock
             {
                 Text = "",
@@ -4586,18 +6949,14 @@ namespace OdyTools.Editors.DLG
             };
             findLayout.Children.Add(_resultsLabel);
 
-            // Matching PyKotor: self.setup_completer()
             SetupCompleter();
             _findSuggestionsPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 0) };
             _findBar.Children.Add(_findSuggestionsPanel);
             PopulateFindSuggestionChips();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:469-485
-        // Original: def setup_completer(self):
         /// <summary>
         /// Sets up the autocompleter for the find input.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:469-485
         /// </summary>
         private void SetupCompleter()
         {
@@ -4606,12 +6965,9 @@ namespace OdyTools.Editors.DLG
                 return;
             }
 
-            // Matching PyKotor: temp_entry: DLGEntry = DLGEntry()
-            // Matching PyKotor: temp_link: DLGLink = DLGLink(temp_entry)
             var tempEntry = new DLGEntry();
             var tempLink = new DLGLink(tempEntry);
 
-            // Matching PyKotor: entry_attributes: set[str] = {attr[0] for attr in temp_entry.__dict__.items() if not attr[0].startswith("_") and not callable(attr[1]) and not isinstance(attr[1], list)}
             var entryAttributes = new HashSet<string>();
             var entryType = typeof(DLGEntry);
             foreach (var prop in entryType.GetProperties())
@@ -4622,7 +6978,6 @@ namespace OdyTools.Editors.DLG
                 }
             }
 
-            // Matching PyKotor: link_attributes: set[str] = {attr[0] for attr in temp_link.__dict__.items() if not attr[0].startswith("_") and not callable(attr[1]) and not isinstance(attr[1], (DLGEntry, DLGReply))}
             var linkAttributes = new HashSet<string>();
             var linkType = typeof(DLGLink);
             foreach (var prop in linkType.GetProperties())
@@ -4637,7 +6992,6 @@ namespace OdyTools.Editors.DLG
                 }
             }
 
-            // Matching PyKotor: suggestions: list[str] = [f"{key}:" for key in [*entry_attributes, *link_attributes, "stringref", "strref"]]
             var suggestions = new List<string>();
             foreach (var attr in entryAttributes)
             {
@@ -4652,12 +7006,10 @@ namespace OdyTools.Editors.DLG
             suggestions.Add("AND");
             suggestions.Add("OR");
             _findSuggestions = suggestions;
-
-            // Matching PyKotor: find_input completer with suggestions; we use suggestion chips (PopulateFindSuggestionChips) and ToolTip/Watermark.
         }
 
         /// <summary>
-        /// Hides the find bar. Matching PyKotor: find_bar.setVisible(False).
+        /// Hides the find bar.
         /// </summary>
         public void HideFindBar()
         {
@@ -4669,7 +7021,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Populates the find suggestion chips (speaker:, listener:, strref:, AND, OR, etc.) so user can click to append to find input.
-        /// Matching PyKotor completer idea; Avalonia uses buttons instead of dropdown completer.
         /// </summary>
         private void PopulateFindSuggestionChips()
         {
@@ -4701,29 +7052,145 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Shows the find bar.
-        /// Matching PyKotor implementation: self.show_find_bar()
-        /// Original: def show_find_bar(self): self.find_bar.setVisible(True); self.find_input.setFocus()
         /// </summary>
         public void ShowFindBar()
         {
-            // Matching PyKotor: self.find_bar.setVisible(True)
             if (_findBar != null)
             {
                 _findBar.IsVisible = true;
             }
 
-            // Matching PyKotor: self.find_input.setFocus()
             if (_findInput != null)
             {
                 _findInput.Focus();
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:500-511
-        // Original: def handle_find(self):
+        /// <summary>Shows the go-to bar. Matching vendor: show_go_to_bar().</summary>
+        public void ShowGoToBar()
+        {
+            if (_goToBar != null) _goToBar.IsVisible = true;
+            if (_goToInput != null) _goToInput.Focus();
+        }
+
+        /// <summary>Hides the go-to bar.</summary>
+        public void HideGoToBar()
+        {
+            if (_goToBar != null) _goToBar.IsVisible = false;
+        }
+
+        /// <summary>Sets up status bar tips. Matching vendor: status_bar, tip_label, status_bar_anim_timer (30s).</summary>
+        private void SetupStatusBarTips()
+        {
+            if (_tipLabel == null)
+            {
+                if (EnsureBindingsFromXaml())
+                {
+                    _tipLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "tipLabel");
+                }
+                if (_tipLabel == null)
+                {
+                    var statusBar = new Border
+                    {
+                        BorderThickness = new Thickness(0, 1, 0, 0),
+                        Background = new SolidColorBrush(Avalonia.Media.Color.Parse("#E8EAED")),
+                        Padding = new Thickness(6, 4),
+                        Height = 24,
+                        Child = _tipLabel = new TextBlock { VerticalAlignment = VerticalAlignment.Center, FontSize = 11 }
+                    };
+                    DockPanel.SetDock(statusBar, Dock.Bottom);
+                    var content = Content as ContentControl;
+                    var dock = content?.Content as DockPanel ?? Content as DockPanel;
+                    if (dock != null)
+                        dock.Children.Add(statusBar);
+                }
+            }
+            if (_tipLabel != null)
+            {
+                ToolTip.SetTip(_tipLabel, Localization.Tr("Double-click to view all tips."));
+                _tipLabel.DoubleTapped += (s, e) => ShowAllTipsDialog();
+                ShowScrollingTip();
+                _statusBarTipTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+                _statusBarTipTimer.Tick += (s, e) => ShowScrollingTip();
+                _statusBarTipTimer.Start();
+            }
+        }
+
+        /// <summary>Shows a random tip. Matching vendor: show_scrolling_tip().</summary>
+        private void ShowScrollingTip()
+        {
+            if (_tipLabel != null && _tips != null && _tips.Length > 0)
+            {
+                var r = new Random();
+                _tipLabel.Text = Localization.Tr(_tips[r.Next(_tips.Length)]);
+            }
+        }
+
+        /// <summary>Shows dialog with all tips. Matching vendor: show_all_tips(). Theme matches OdyToolDLG.axaml (light).</summary>
+        private void ShowAllTipsDialog()
+        {
+            if (_tips == null || _tips.Length == 0) return;
+            var bgBrush = new SolidColorBrush(Avalonia.Media.Color.Parse("#F3F5F9"));
+            var fgBrush = new SolidColorBrush(Avalonia.Media.Color.Parse("#202124"));
+            var content = new TextBlock
+            {
+                Text = string.Join("\n• ", _tips),
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(12),
+                FontSize = 12,
+                Foreground = fgBrush
+            };
+            var dlg = new Window
+            {
+                Title = Localization.Tr("All Tips"),
+                Width = 700,
+                Height = 400,
+                RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Light,
+                Background = bgBrush,
+                Content = new ScrollViewer
+                {
+                    Content = content,
+                    HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+                    VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+                    Background = bgBrush
+                }
+            };
+            dlg.Show(this);
+        }
+
+        /// <summary>Handles go-to: jumps to node by NodeID. Matching vendor: handle_go_to().</summary>
+        public void HandleGoTo()
+        {
+            string inputText = _goToInput?.Text?.Trim() ?? "";
+            CustomGoToFunction(inputText);
+            HideGoToBar();
+        }
+
+        /// <summary>Jumps to the node with the given NodeID. Vendor: custom_go_to_function.</summary>
+        private void CustomGoToFunction(string inputText)
+        {
+            if (string.IsNullOrEmpty(inputText) || _coreDlg == null || _model == null) return;
+            if (!int.TryParse(inputText, out int nodeId)) return;
+            DLGNode targetNode = null;
+            foreach (var entry in _coreDlg.EntryList)
+            {
+                if (entry.NodeId == nodeId) { targetNode = entry; break; }
+            }
+            if (targetNode == null)
+            {
+                foreach (var reply in _coreDlg.ReplyList)
+                {
+                    if (reply.NodeId == nodeId) { targetNode = reply; break; }
+                }
+            }
+            if (targetNode != null && _model.NodeToItems.TryGetValue(targetNode, out var items) && items.Count > 0)
+            {
+                SelectTreeItem(items[0]);
+            }
+        }
+
         /// <summary>
         /// Handles the find button click or Enter key press in the find input.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:500-511
         /// </summary>
         public void HandleFind()
         {
@@ -4734,65 +7201,47 @@ namespace OdyTools.Editors.DLG
 
             string inputText = _findInput.Text ?? "";
 
-            // Matching PyKotor: if not self.search_results or input_text != self.current_search_text:
             if (_searchResults == null || _searchResults.Count == 0 || inputText != _currentSearchText)
             {
-                // Matching PyKotor: self.search_results = self.find_item_matching_display_text(input_text)
                 _searchResults = FindItemMatchingDisplayText(inputText);
                 _currentSearchText = inputText;
                 _currentResultIndex = 0;
             }
 
-            // Matching PyKotor: if not self.search_results: self.results_label.setText("No results found"); return
             if (_searchResults == null || _searchResults.Count == 0)
             {
                 if (_resultsLabel != null)
                 {
-                    _resultsLabel.Text = "No results found";
+                    _resultsLabel.Text = Localization.Tr("No results found");
                 }
                 return;
             }
 
-            // Matching PyKotor: self.current_result_index = (self.current_result_index + 1) % len(self.search_results)
             _currentResultIndex = (_currentResultIndex + 1) % _searchResults.Count;
-
-            // Matching PyKotor: self.highlight_result(self.search_results[self.current_result_index])
             HighlightResult(_searchResults[_currentResultIndex]);
-
-            // Matching PyKotor: self.update_results_label()
             UpdateResultsLabel();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:513-518
-        // Original: def handle_back(self):
         /// <summary>
         /// Handles the back button click to navigate to previous search result.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:513-518
         /// </summary>
         private void HandleBack()
         {
-            // Matching PyKotor: if not self.search_results: return
             if (_searchResults == null || _searchResults.Count == 0)
             {
                 return;
             }
 
-            // Matching PyKotor: self.current_result_index = (self.current_result_index - 1 + len(self.search_results)) % len(self.search_results)
             _currentResultIndex = (_currentResultIndex - 1 + _searchResults.Count) % _searchResults.Count;
 
-            // Matching PyKotor: self.highlight_result(self.search_results[self.current_result_index])
             HighlightResult(_searchResults[_currentResultIndex]);
 
-            // Matching PyKotor: self.update_results_label()
             UpdateResultsLabel();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:525-569
-        // Original: def parse_query(self, input_text: str) -> list[tuple[str, str | None, Literal["AND", "OR", None]]]:
         /// <summary>
         /// Parses a search query string into conditions with operators.
         /// Supports attribute searches (e.g., "speaker:TestSpeaker"), text searches, and AND/OR operators.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:525-569
         /// </summary>
         private List<Tuple<string, string, string>> ParseQuery(string inputText)
         {
@@ -4804,7 +7253,6 @@ namespace OdyTools.Editors.DLG
             }
 
             // Pattern to match quoted strings or whitespace-separated tokens
-            // Matching PyKotor: pattern = r'("[^"]*"|\S+)'
             var quotedStringPattern = new Regex(@"""[^""]*""");
             var tokens = new List<string>();
 
@@ -4868,7 +7316,7 @@ namespace OdyTools.Editors.DLG
                     conditions.Add(Tuple.Create(key, value ?? "", logicalOperator));
                     logicalOperator = null;
                 }
-                else if (nextIndex.HasValue && (tokens[nextIndex.Value].ToUpperInvariant() == "AND" || tokens[nextIndex.Value].ToUpperInvariant() == "OR"))
+                else if (nextIndex.HasValue && (tokens[nextIndex.Value].Equals("AND", StringComparison.InvariantCultureIgnoreCase) || tokens[nextIndex.Value].ToUpperInvariant() == "OR"))
                 {
                     // Text search with operator
                     conditions.Add(Tuple.Create(tokens[i], "", logicalOperator));
@@ -4893,12 +7341,9 @@ namespace OdyTools.Editors.DLG
             return conditions;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:571-657
-        // Original: def find_item_matching_display_text(self, input_text: str) -> list[DLGStandardItem]:
         /// <summary>
         /// Finds all items matching the search text with full query parsing and attribute search support.
         /// Supports attribute searches (e.g., "speaker:TestSpeaker"), text searches, and AND/OR operators.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:571-657
         /// </summary>
         private List<DLGStandardItem> FindItemMatchingDisplayText(string inputText)
         {
@@ -4914,7 +7359,6 @@ namespace OdyTools.Editors.DLG
             string searchTextLower = inputText.ToLowerInvariant();
 
             // Helper to check if a condition matches an item
-            // Matching PyKotor: def condition_matches(key: str, value: str | None, operator: Literal["AND", "OR", None], item: DLGStandardItem) -> bool:
             bool ConditionMatches(string key, string value, string op, DLGStandardItem item)
             {
                 if (item?.Link?.Node == null)
@@ -4927,13 +7371,10 @@ namespace OdyTools.Editors.DLG
                 object sentinel = new object();
 
                 // Get attribute value from link or node using reflection
-                // Matching PyKotor: link_value: Any = getattr(item.link, key, sentinel)
-                // Matching PyKotor: node_value: Any = getattr(item.link.node, key, sentinel)
                 object linkValue = GetAttributeValue(link, key, sentinel);
                 object nodeValue = GetAttributeValue(node, key, sentinel);
 
                 // Helper to check value match
-                // Matching PyKotor: def check_value(attr_value: Any, search_value: str | None) -> bool:
                 bool CheckValue(object attrValue, string searchValue)
                 {
                     if (ReferenceEquals(attrValue, sentinel))
@@ -4998,12 +7439,10 @@ namespace OdyTools.Editors.DLG
                     {
                         if (int.TryParse(value, out int strref))
                         {
-                            // Matching PyKotor: return int(value.strip()) in item.link.node.text._substrings or stringref match
                             if (node.Text != null)
                             {
                                 if (node.Text.StringRef == strref)
                                     return true;
-                                // PyKotor also checks _substrings; BioWare LocalizedString.ToDictionary() has "substrings" key
                                 try
                                 {
                                     var dict = node.Text.ToDictionary();
@@ -5016,19 +7455,16 @@ namespace OdyTools.Editors.DLG
                         }
                         return false;
                     }
-                    return node.Text != null && !string.IsNullOrEmpty(node.Text.GetString(0, Gender.Male));
+                    return node.Text != null && !string.IsNullOrEmpty(GetResolvedNodeText(node));
                 }
 
                 return false;
             }
 
             // Helper to evaluate all conditions for an item
-            // Matching PyKotor: def evaluate_conditions(item: DLGStandardItem) -> bool:
             bool EvaluateConditions(DLGStandardItem item)
             {
                 // Always check text match first
-                // Matching PyKotor: item_text: str = item.text().lower()
-                // Matching PyKotor: if input_text.lower() in item_text: return True
                 string itemText = GetItemDisplayText(item).ToLowerInvariant();
                 if (itemText.Contains(searchTextLower))
                 {
@@ -5042,8 +7478,6 @@ namespace OdyTools.Editors.DLG
                 }
 
                 // Evaluate conditions with AND/OR logic
-                // Matching PyKotor: result: bool = not conditions
-                // In Python, "not conditions" means False when conditions list has items, True when empty
                 bool result = conditions.Count == 0;
                 foreach (var condition in conditions)
                 {
@@ -5052,8 +7486,6 @@ namespace OdyTools.Editors.DLG
                     string op = condition.Item3;
 
                     bool matches = ConditionMatches(key, value, op, item);
-
-                    // Matching PyKotor logic: apply operator if present, otherwise set result directly
                     if (op == "AND")
                     {
                         result = result && matches;
@@ -5073,7 +7505,6 @@ namespace OdyTools.Editors.DLG
             }
 
             // Recursive search function
-            // Matching PyKotor: def search_item(item: DLGStandardItem):
             void SearchItem(DLGStandardItem item)
             {
                 if (item == null)
@@ -5094,20 +7525,16 @@ namespace OdyTools.Editors.DLG
             }
 
             // Search all root items
-            // Matching PyKotor: def search_children(parent_item: DLGStandardItem):
-            // Matching PyKotor: search_children(cast("DLGStandardItem", self.model.invisibleRootItem()))
             var rootItems = _model.GetRootItems();
             foreach (var rootItem in rootItems)
             {
                 SearchItem(rootItem);
             }
 
-            // Matching PyKotor: return list({*matching_items}) - remove duplicates
             return new List<DLGStandardItem>(new HashSet<DLGStandardItem>(matchingItems));
         }
 
         // Helper method to get attribute value using reflection
-        // Matching PyKotor: getattr(obj, key, sentinel) behavior
         // Handles case-insensitive property/field lookup and converts ResRef to string
         private object GetAttributeValue(object obj, string key, object sentinel)
         {
@@ -5205,11 +7632,8 @@ namespace OdyTools.Editors.DLG
             return input;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:659-676
-        // Original: def highlight_result(self, item: DLGStandardItem):
         /// <summary>
         /// Highlights and scrolls to the specified search result item.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:659-676
         /// </summary>
         private void HighlightResult(DLGStandardItem item)
         {
@@ -5218,19 +7642,13 @@ namespace OdyTools.Editors.DLG
                 return;
             }
 
-            // Matching PyKotor: index: QModelIndex = self.model.indexFromItem(item)
-            // Matching PyKotor: parent: QModelIndex = index.parent()
-            // Matching PyKotor: while parent.isValid(): self.ui.dialogTree.expand(parent); parent = parent.parent()
             // Expand all parents to make the item visible
             ExpandParents(item);
 
-            // Matching PyKotor: self.ui.dialogTree.setCurrentIndex(index)
-            // Matching PyKotor: self.ui.dialogTree.setFocus()
             // Select the item in the tree
             _dialogTree.SelectedItem = item;
             _dialogTree.Focus();
 
-            // Matching PyKotor: self.ui.dialogTree.scrollTo(index, QAbstractItemView.ScrollHint.PositionAtCenter)
             // Scroll to the item (Avalonia TreeView handles this automatically when selecting)
             // Note: Avalonia doesn't have explicit scrollTo, but selection should scroll into view
         }
@@ -5253,11 +7671,8 @@ namespace OdyTools.Editors.DLG
         }
 
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:678-679
-        // Original: def update_results_label(self):
         /// <summary>
         /// Updates the results label to show current position in search results.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:678-679
         /// </summary>
         private void UpdateResultsLabel()
         {
@@ -5266,7 +7681,6 @@ namespace OdyTools.Editors.DLG
                 return;
             }
 
-            // Matching PyKotor: self.results_label.setText(f"{self.current_result_index + 1} / {len(self.search_results)}")
             if (_searchResults == null || _searchResults.Count == 0)
             {
                 _resultsLabel.Text = "";
@@ -5279,8 +7693,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Copies the path of the selected node.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1439-1463
-        /// Original: def copy_path(self, node_or_link: DLGNode | DLGLink | None):
         /// </summary>
         private async void CopyPath()
         {
@@ -5312,7 +7724,6 @@ namespace OdyTools.Editors.DLG
             }
 
             // Find all paths to the target node
-            // Matching PyKotor: paths: list[PureWindowsPath] = self.core_dlg.find_paths(node_or_link)
             List<string> paths;
             try
             {
@@ -5320,24 +7731,19 @@ namespace OdyTools.Editors.DLG
             }
             catch (Exception ex)
             {
-                // Matching PyKotor: if no paths or error, log and blink window
                 new RobustLogger().Error($"Failed to find paths for node: {ex.Message}", true, ex);
                 BlinkWindow();
                 return;
             }
 
-            // Matching PyKotor: if not paths: RobustLogger().error("No paths available."), self.blink_window(), return
             if (paths == null || paths.Count == 0)
             {
-                // Matching PyKotor: No paths available - log error and blink window
                 new RobustLogger().Error("No paths available.");
                 BlinkWindow();
                 return;
             }
 
             // Format the path(s) for clipboard
-            // Matching PyKotor: if len(paths) == 1: path: str = str(paths[0])
-            // Matching PyKotor: else: path = "\n".join(f"  {i + 1}. {p}" for i, p in enumerate(paths))
             string pathText;
             if (paths.Count == 1)
             {
@@ -5355,9 +7761,6 @@ namespace OdyTools.Editors.DLG
             }
 
             // Copy to clipboard
-            // Matching PyKotor: cb: QClipboard | None = QApplication.clipboard()
-            // Matching PyKotor: if cb is None: return
-            // Matching PyKotor: cb.setText(path)
             // Note: PyKotor doesn't catch clipboard errors, but in C# we should handle them gracefully
             // Matching OdyToolTPC pattern: Show error message when clipboard copy fails
             try
@@ -5372,8 +7775,8 @@ namespace OdyTools.Editors.DLG
                     // Clipboard not available - show error message
                     // Matching OdyToolTPC pattern: QMessageBox.critical when clipboard is unavailable
                     var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                        "Copy Failed",
-                        "Clipboard is not available. Unable to copy path to clipboard.",
+                        Localization.Tr("Copy Failed"),
+                        Localization.Tr("Clipboard is not available. Unable to copy path to clipboard."),
                         ButtonEnum.Ok,
                         MsBox.Avalonia.Enums.Icon.Error);
                     await msgBox.ShowAsync();
@@ -5384,8 +7787,8 @@ namespace OdyTools.Editors.DLG
                 // Matching OdyToolTPC pattern: QMessageBox.critical when clipboard copy fails
                 // Show error message to user when clipboard operation fails
                 var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Copy Failed",
-                    $"Failed to copy path to clipboard:\n{ex.Message}",
+                    Localization.Tr("Copy Failed"),
+                    string.Format(Localization.Tr("Failed to copy path to clipboard:\n{0}"), ex.Message),
                     ButtonEnum.Ok,
                     MsBox.Avalonia.Enums.Icon.Error);
                 await msgBox.ShowAsync();
@@ -5394,7 +7797,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Copies the link and node.
-        /// Matching PyKotor implementation: self.model.copy_link_and_node(selected_item.link)
         /// </summary>
         private async void CopyLinkAndNode()
         {
@@ -5403,7 +7805,6 @@ namespace OdyTools.Editors.DLG
                 DLGLink link = _model.GetStarterAt(_model.SelectedIndex);
                 if (link != null)
                 {
-                    // Matching PyKotor implementation: self.model.copy_link_and_node(selected_item.link)
                     // Note: CopyLinkAndNode on the model will also set _copy via SetCopyLink
                     await _model.CopyLinkAndNode(link, this);
                 }
@@ -5412,7 +7813,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Returns how many tree items reference the given node (1 = only one reference, &gt;1 = "copy").
-        /// Matching PyKotor: used to show "Jump to Original" only when the node is referenced in more than one place.
         /// </summary>
         private int CountItemRefs(DLGNode node)
         {
@@ -5444,7 +7844,6 @@ namespace OdyTools.Editors.DLG
         }
 
         /// <summary>
-        /// Adds the given link to the pinned items list. Matching PyKotor pinned items behavior.
         /// </summary>
         private void PinItem(DLGLink link)
         {
@@ -5520,7 +7919,6 @@ namespace OdyTools.Editors.DLG
         }
 
         /// <summary>
-        /// Enables drop on pinned items list. Matching PyKotor: setAcceptDrops(True), setDragDropMode(DragDrop).
         /// Dropped data (from tree drag or clipboard-style MIME) is parsed and the link is pinned.
         /// </summary>
         private void SetupPinnedListDragDrop()
@@ -5613,7 +8011,6 @@ namespace OdyTools.Editors.DLG
         }
 
         /// <summary>
-        /// Enables drag from dialog tree. Matching PyKotor: setDragEnabled(True). Selected item is serialized to MIME and dragged.
         /// </summary>
         private void SetupTreeViewDragSource()
         {
@@ -5624,10 +8021,265 @@ namespace OdyTools.Editors.DLG
             _dialogTree.AddHandler(PointerPressedEvent, OnTreeViewPointerPressed, Avalonia.Interactivity.RoutingStrategies.Tunnel);
             _dialogTree.AddHandler(PointerMovedEvent, OnTreeViewPointerMoved, Avalonia.Interactivity.RoutingStrategies.Tunnel);
             _dialogTree.AddHandler(PointerReleasedEvent, OnTreeViewPointerReleased, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+            SetupTreeViewDropTarget();
+        }
+
+        /// <summary>Vendor: DropPosition - above, below, or on top of target.</summary>
+        private enum DropPosition { Above, Below, OnTopOf, Invalid }
+
+        /// <summary>Vendor: DropTarget.determine_drop_target + is_valid_drop.</summary>
+        private (TreeViewItem targetItem, DropPosition position, int row, DLGStandardItem parentItem) DetermineDropTarget(Point pos)
+        {
+            // Smaller leniency = larger OnTopOf zone (drop as child). 0.1 = top/bottom 10% for Above/Below, middle 80% for OnTopOf.
+            // Cross-type drops (Reply into Entry, Entry into Reply) require OnTopOf; same-type reorder uses Above/Below.
+            const double leniency = 0.1;
+            var hit = FindTreeViewItemAtPoint(_dialogTree.ItemsSource as System.Collections.IEnumerable, pos);
+            if (hit.targetItem == null || hit.dlgItem == null)
+            {
+                return (null, DropPosition.Invalid, -1, null);
+            }
+            var treeItem = hit.targetItem;
+            var dlgItem = hit.dlgItem;
+            double relY = hit.relativeY;
+            double itemHeight = hit.itemHeight;
+            double leniencyHeight = itemHeight * leniency;
+            double upperThreshold = leniencyHeight;
+            double lowerThreshold = itemHeight - leniencyHeight;
+
+            var parentTreeItem = treeItem.Parent as TreeViewItem;
+            var parentItems = parentTreeItem?.ItemsSource as System.Collections.IEnumerable ?? _dialogTree?.ItemsSource as System.Collections.IEnumerable;
+            var parentDlg = parentTreeItem?.Tag as DLGStandardItem;
+            int row = GetRowIndex(parentItems, treeItem);
+
+            if (relY <= upperThreshold)
+            {
+                return (treeItem, DropPosition.Above, row, parentDlg);
+            }
+            if (relY >= lowerThreshold)
+            {
+                return (treeItem, DropPosition.Below, row + 1, parentDlg);
+            }
+            return (treeItem, DropPosition.OnTopOf, 0, dlgItem);
+        }
+
+        private (TreeViewItem targetItem, DLGStandardItem dlgItem, double relativeY, double itemHeight) FindTreeViewItemAtPoint(System.Collections.IEnumerable items, Point pointRelativeToTree)
+        {
+            if (items == null || _dialogTree == null) return (null, null, 0, 0);
+            TreeViewItem deepest = null;
+            DLGStandardItem deepestDlg = null;
+            double deepestRelY = 0;
+            double deepestHeight = 0;
+
+            void Search(System.Collections.IEnumerable list)
+            {
+                if (list == null) return;
+                foreach (TreeViewItem child in list)
+                {
+                    if (child == null) continue;
+                    var topLeft = child.TranslatePoint(new Point(0, 0), _dialogTree);
+                    if (topLeft == null) continue;
+                    double w = child.Bounds.Width;
+                    double h = Math.Max(1, child.Bounds.Height);
+                    var rect = new Rect(topLeft.Value.X, topLeft.Value.Y, w, h);
+                    if (!rect.Contains(pointRelativeToTree)) continue;
+
+                    double relY = pointRelativeToTree.Y - topLeft.Value.Y;
+                    var saved = deepest;
+                    Search(child.ItemsSource as System.Collections.IEnumerable);
+                    if (deepest == saved && child.Tag is DLGStandardItem dlg)
+                    {
+                        deepest = child;
+                        deepestDlg = dlg;
+                        deepestRelY = relY;
+                        deepestHeight = h;
+                    }
+                    return;
+                }
+            }
+            Search(items);
+            return (deepest, deepestDlg, deepestRelY, deepestHeight);
+        }
+
+        private int GetRowIndex(System.Collections.IEnumerable items, TreeViewItem target)
+        {
+            if (items == null || target == null) return -1;
+            int i = 0;
+            foreach (TreeViewItem t in items)
+            {
+                if (t == target) return i;
+                i++;
+            }
+            return -1;
+        }
+
+        private bool IsValidDrop(DLGLink draggedLink, DropPosition position, DLGStandardItem targetParentOrItem)
+        {
+            if (draggedLink?.Node == null || targetParentOrItem?.Link?.Node == null) return false;
+            var draggedNode = draggedLink.Node;
+            var targetNode = targetParentOrItem.Link.Node;
+            bool sameType = (draggedNode is DLGReply && targetNode is DLGReply) || (draggedNode is DLGEntry && targetNode is DLGEntry);
+            if (position == DropPosition.OnTopOf)
+            {
+                return !sameType; // Drop as child: Reply into Entry or Entry into Reply
+            }
+            if (!sameType)
+            {
+                return true; // Above/Below with different types: treat as drop-as-child (first/last)
+            }
+            return true; // Same type: reorder between siblings
+        }
+
+        private void SetupTreeViewDropTarget()
+        {
+            if (_dialogTree == null) return;
+            DragDrop.SetAllowDrop(_dialogTree, true);
+            _dialogTree.AddHandler(DragDrop.DragOverEvent, OnTreeViewDragOver, Avalonia.Interactivity.RoutingStrategies.Bubble);
+            _dialogTree.AddHandler(DragDrop.DropEvent, OnTreeViewDrop, Avalonia.Interactivity.RoutingStrategies.Bubble);
+        }
+
+        private void OnTreeViewDragOver(object sender, DragEventArgs e)
+        {
+            if (e.DataTransfer == null || !e.DataTransfer.Contains(DlgMimeDataFormat) || _model == null)
+            {
+                e.DragEffects = DragDropEffects.None;
+                return;
+            }
+            string json = null;
+            try { json = e.DataTransfer.TryGetValue(DlgMimeDataFormat); } catch { }
+            if (string.IsNullOrEmpty(json))
+            {
+                e.DragEffects = DragDropEffects.None;
+                return;
+            }
+            var pos = e.GetPosition(_dialogTree);
+            var (targetItem, position, row, parentItem) = DetermineDropTarget(pos);
+            if (position == DropPosition.Invalid || targetItem?.Tag == null)
+            {
+                e.DragEffects = DragDropEffects.None;
+                return;
+            }
+            DLGLink draggedLink = null;
+            try
+            {
+                var parsed = _model.ParseMimeData(json);
+                if (parsed != null && parsed.Count > 0 && parsed[0].TryGetValue("roles", out object ro) && ro is Dictionary<string, object> roles)
+                {
+                    if (roles.TryGetValue("261", out object linkJson) && linkJson != null)
+                    {
+                        var linkEl = JsonDocument.Parse(linkJson.ToString()).RootElement;
+                        if (linkEl.TryGetProperty("key", out var k) && k.GetString()?.StartsWith("link-") == true)
+                        {
+                            var hashStr = k.GetString().Substring(5);
+                            if (int.TryParse(hashStr, out int hash))
+                            {
+                                draggedLink = FindLinkByHashInDlg(hash);
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+            if (draggedLink == null)
+            {
+                e.DragEffects = DragDropEffects.None;
+                return;
+            }
+            DLGStandardItem validationTarget = position == DropPosition.OnTopOf ? parentItem : targetItem?.Tag as DLGStandardItem;
+            if (!IsValidDrop(draggedLink, position, validationTarget))
+            {
+                e.DragEffects = DragDropEffects.None;
+                return;
+            }
+            e.DragEffects = DragDropEffects.Move | DragDropEffects.Copy;
+        }
+
+        private void OnTreeViewDrop(object sender, DragEventArgs e)
+        {
+            if (e.DataTransfer == null || !e.DataTransfer.Contains(DlgMimeDataFormat) || _model == null)
+                return;
+            string json = null;
+            try { json = e.DataTransfer.TryGetValue(DlgMimeDataFormat); } catch { }
+            if (string.IsNullOrEmpty(json)) return;
+            var pos = e.GetPosition(_dialogTree);
+            var (targetItem, position, row, parentItem) = DetermineDropTarget(pos);
+            if (position == DropPosition.Invalid || targetItem?.Tag == null) return;
+
+            DLGLink draggedLink = null;
+            DLGStandardItem draggedItem = null;
+            try
+            {
+                var parsed = _model.ParseMimeData(json);
+                if (parsed != null && parsed.Count > 0 && parsed[0].TryGetValue("roles", out object ro) && ro is Dictionary<string, object> roles)
+                {
+                    if (roles.TryGetValue("261", out object linkJson) && linkJson != null)
+                    {
+                        var linkEl = JsonDocument.Parse(linkJson.ToString()).RootElement;
+                        if (linkEl.TryGetProperty("key", out var k) && k.GetString()?.StartsWith("link-") == true)
+                        {
+                            var hashStr = k.GetString().Substring(5);
+                            if (int.TryParse(hashStr, out int hash))
+                            {
+                                draggedLink = FindLinkByHashInDlg(hash);
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+            if (draggedLink == null) return;
+
+            draggedItem = _model.LinkToItems.TryGetValue(draggedLink, out var itemList) && itemList?.Count > 0 ? itemList[0] : null;
+            DLGStandardItem dropParent;
+            int insertRow;
+            var targetDlg = targetItem?.Tag as DLGStandardItem;
+            bool crossType = targetDlg?.Link?.Node != null && draggedLink?.Node != null &&
+                !((draggedLink.Node is DLGReply && targetDlg.Link.Node is DLGReply) || (draggedLink.Node is DLGEntry && targetDlg.Link.Node is DLGEntry));
+            if (position == DropPosition.OnTopOf)
+            {
+                dropParent = parentItem;
+                insertRow = 0;
+            }
+            else if (crossType)
+            {
+                // Cross-type (Reply into Entry or vice versa): Above = first child, Below = last child
+                dropParent = targetDlg;
+                insertRow = position == DropPosition.Above ? 0 : (targetDlg?.RowCount ?? 0);
+            }
+            else
+            {
+                dropParent = parentItem;
+                insertRow = row;
+            }
+
+            if (draggedItem != null)
+            {
+                _model.MoveItemToIndex(draggedItem, insertRow, dropParent);
+            }
+            else
+            {
+                _actionHistory.Apply(new PasteItemAction(dropParent, insertRow, draggedLink, false));
+            }
+            SelectTreeViewItem(draggedItem ?? (_model.LinkToItems.TryGetValue(draggedLink, out var lst) && lst?.Count > 0 ? lst[0] : null));
+        }
+
+        /// <summary>Returns true if the pointer event source is the scrollbar (or a descendant of it), so we do not start a drag or change selection when the user is interacting with the scrollbar.</summary>
+        private static bool IsPointerOverScrollBar(Visual source, Visual treeView)
+        {
+            for (var v = source as Visual; v != null && v != treeView; v = v.GetVisualParent())
+            {
+                if (v is ScrollBar)
+                    return true;
+            }
+            return false;
         }
 
         private void OnTreeViewPointerPressed(object sender, PointerPressedEventArgs e)
         {
+            if (IsPointerOverScrollBar(e.Source as Visual, _dialogTree))
+            {
+                _dragStartPosition = null;
+                return;
+            }
             _dragStartPosition = e.GetPosition(_dialogTree);
             _dragStarted = false;
         }
@@ -5665,9 +8317,23 @@ namespace OdyTools.Editors.DLG
         }
 
         /// <summary>
+        /// Starts a drag operation from a list widget (orphaned or pinned list). Uses the same MIME format as tree drag so drops on tree or pinned list work.
+        /// </summary>
+        public void StartDragFromListWidget(DLGListWidgetItem listItem, PointerEventArgs e)
+        {
+            if (listItem?.Link == null || _model == null)
+            {
+                return;
+            }
+            var tempItem = new DLGStandardItem(listItem.Link);
+            string mime = _model.MimeData(new[] { tempItem });
+            var dataTransfer = new DataTransfer();
+            dataTransfer.Add(DataTransferItem.Create(DlgMimeDataFormat, mime));
+            _ = DragDrop.DoDragDropAsync(e, dataTransfer, DragDropEffects.Copy | DragDropEffects.Move);
+        }
+
+        /// <summary>
         /// Jumps to the original node of a copied item.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1489-1510
-        /// Original: def jump_to_original(self, copied_item: DLGStandardItem):
         /// Searches through the entire dialog tree to find the original node that matches the copied item's node,
         /// then expands the tree and selects the original item.
         /// </summary>
@@ -5701,7 +8367,6 @@ namespace OdyTools.Editors.DLG
             DLGLink selectedLink = selectedItem.Link;
 
             // Perform breadth-first search through the entire dialog tree to find the original node
-            // Matching PyKotor: items: deque[DLGStandardItem | QStandardItem | None] = deque([self.model.item(i, 0) for i in range(self.model.rowCount())])
             var items = new Queue<DLGStandardItem>();
             var rootItems = _model.GetRootItems();
             foreach (var rootItem in rootItems)
@@ -5719,7 +8384,6 @@ namespace OdyTools.Editors.DLG
                 }
 
                 // Check if this item's node matches the source node
-                // Matching PyKotor: if item.link.node == source_node:
                 // Also check that this is a different link (not the same one we started with)
                 // This ensures we find a different reference to the same node (the "original")
                 if (item.Link.Node == sourceNode && item.Link != selectedLink)
@@ -5729,7 +8393,6 @@ namespace OdyTools.Editors.DLG
                 }
 
                 // Add all children to the queue for breadth-first search
-                // Matching PyKotor: items.extend([item.child(i, 0) for i in range(item.rowCount())])
                 foreach (var child in item.Children)
                 {
                     items.Enqueue(child);
@@ -5771,21 +8434,17 @@ namespace OdyTools.Editors.DLG
             if (foundItem != null)
             {
                 // Expand to root and select the found item
-                // Matching PyKotor: self.expand_to_root(item), self.ui.dialogTree.setCurrentIndex(item.index())
                 ExpandToRoot(foundItem);
                 HighlightResult(foundItem);
             }
             else
             {
-                // Matching PyKotor: self._logger.error(f"Failed to find original node for node {source_node!r}")
                 new RobustLogger().Error($"Failed to find original node for node {sourceNode}");
             }
         }
 
         /// <summary>
         /// Expands all parent items to make the specified item visible.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1480-1487
-        /// Original: def expand_to_root(self, item: DLGStandardItem):
         /// </summary>
         /// <param name="item">The item whose parents should be expanded.</param>
         private void ExpandToRoot(DLGStandardItem item)
@@ -5806,8 +8465,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Finds references to the specified item.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1891
-        /// Original: def find_references(self, item: DLGStandardItem | DLGListWidgetItem):
         /// </summary>
         public void FindReferences(DLGStandardItem item)
         {
@@ -5836,7 +8493,6 @@ namespace OdyTools.Editors.DLG
             string itemHtml = GetItemDisplayTextFromLink(link);
 
             // Increment reference index
-            // Matching PyKotor: self.current_reference_index += 1
             _currentReferenceIndex++;
 
             // Find all items that link to the same node as link
@@ -5855,21 +8511,17 @@ namespace OdyTools.Editors.DLG
             }
 
             // Add to history and show dialog
-            // Matching PyKotor: self.reference_history.append((references, item_html))
-            // Matching PyKotor: self.show_reference_dialog(references, item_html)
             _referenceHistory.Add(Tuple.Create(references, itemHtml));
             ShowReferenceDialog(references, itemHtml);
         }
 
         /// <summary>
         /// Pastes an item.
-        /// Matching PyKotor implementation: self.model.paste_item(selected_item, as_new_branches=...)
         /// </summary>
         private void PasteItem(bool asNewBranches)
         {
             if (_copy == null)
             {
-                // Matching PyKotor implementation: print("No node/link copy in memory or on clipboard.")
                 // Show message to user when MessageBox is available
                 return;
             }
@@ -5904,11 +8556,7 @@ namespace OdyTools.Editors.DLG
                 }
             }
 
-            // Call the model's paste_item method
-            _model.PasteItem(selectedItem, _copy, asNewBranches: asNewBranches);
-
-            // Update the tree view
-            UpdateTreeView();
+            _actionHistory.Apply(new PasteItemAction(selectedItem, null, _copy, asNewBranches));
 
             // Select the newly pasted item if possible
             if (selectedItem != null && selectedItem.Children.Count > 0)
@@ -5920,7 +8568,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Deletes the selected node.
-        /// Matching PyKotor implementation: self.model.delete_selected_node()
         /// </summary>
         private void DeleteSelectedNode()
         {
@@ -5936,7 +8583,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Deletes the node everywhere.
-        /// Matching PyKotor implementation: self.model.delete_node_everywhere(selected_item.link.node)
         /// </summary>
         private void DeleteNodeEverywhere()
         {
@@ -5962,17 +8608,11 @@ namespace OdyTools.Editors.DLG
                 return;
             }
 
-            // Delete the node everywhere using the model
-            _model.DeleteNodeEverywhere(link.Node);
-
-            // Update tree view after deletion
-            UpdateTreeView();
+            _actionHistory.Apply(new DeleteNodeEverywhereAction(this, link.Node));
         }
 
         /// <summary>
         /// Sets expand recursively for tree items.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1674-1709
-        /// Original: def set_expand_recursively(self, item: DLGStandardItem, seen_nodes: set[DLGNode], *, expand: bool, maxdepth: int = 11, depth: int = 0, is_root: bool = True)
         /// </summary>
         /// <param name="expand">True to expand all items, false to collapse all items.</param>
         /// <param name="maxDepth">Maximum depth to expand/collapse. Use -1 for unlimited depth.</param>
@@ -6028,8 +8668,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Internal recursive method to expand/collapse tree items.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1674-1709
-        /// Original: def set_expand_recursively(self, item: DLGStandardItem, seen_nodes: set[DLGNode], *, expand: bool, maxdepth: int = 11, depth: int = 0, is_root: bool = True)
         /// </summary>
         /// <param name="item">The DLGStandardItem to process.</param>
         /// <param name="treeItem">The corresponding TreeViewItem.</param>
@@ -6047,19 +8685,16 @@ namespace OdyTools.Editors.DLG
             int depth,
             bool isRoot)
         {
-            // Matching PyKotor: if depth > maxdepth >= 0: return
             if (maxDepth >= 0 && depth > maxDepth)
             {
                 return;
             }
 
-            // Matching PyKotor: if not isinstance(item, DLGStandardItem): return
             if (item == null)
             {
                 return;
             }
 
-            // Matching PyKotor: if item.link is None: return
             if (item.Link == null)
             {
                 return;
@@ -6067,20 +8702,16 @@ namespace OdyTools.Editors.DLG
 
             DLGLink link = item.Link;
 
-            // Matching PyKotor: if link.node in seen_nodes: return
             if (link.Node != null && seenNodes.Contains(link.Node))
             {
                 return;
             }
 
-            // Matching PyKotor: seen_nodes.add(link.node)
             if (link.Node != null)
             {
                 seenNodes.Add(link.Node);
             }
 
-            // Matching PyKotor: if expand: self.ui.dialogTree.expand(item_index)
-            // Matching PyKotor: elif not is_root: self.ui.dialogTree.collapse(item_index)
             if (expand)
             {
                 treeItem.IsExpanded = true;
@@ -6090,12 +8721,6 @@ namespace OdyTools.Editors.DLG
                 treeItem.IsExpanded = false;
             }
 
-            // Matching PyKotor: for row in range(item.rowCount()):
-            // Matching PyKotor:     child_item: DLGStandardItem = cast("DLGStandardItem", item.child(row))
-            // Matching PyKotor:     if child_item is None: continue
-            // Matching PyKotor:     child_index: QModelIndex = child_item.index()
-            // Matching PyKotor:     if not child_index.isValid(): continue
-            // Matching PyKotor:     self.set_expand_recursively(child_item, seen_nodes, expand=expand, maxdepth=maxdepth, depth=depth + 1, is_root=False)
             if (treeItem.ItemsSource != null)
             {
                 foreach (TreeViewItem childTreeItem in treeItem.ItemsSource as System.Collections.IEnumerable)
@@ -6206,20 +8831,16 @@ namespace OdyTools.Editors.DLG
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:152
-        // Original: self.keys_down: set[int] = set()
         // Expose for testing
         public HashSet<Key> KeysDown => _keysDown;
 
         /// <summary>
         /// Gets whether the editor is in focus mode (showing only a specific node and its children).
-        /// Matching PyKotor implementation: self._focused
         /// </summary>
         public bool Focused => _focused;
 
         /// <summary>
         /// Gets the current reference index for navigation.
-        /// Matching PyKotor implementation: self.current_reference_index
         /// </summary>
         public int CurrentReferenceIndex => _currentReferenceIndex;
 
@@ -6230,8 +8851,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Gets the dialog paths for an item (link parent path, link path, linked to path).
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1908-1916
-        /// Original: def get_item_dlg_paths(self, item: DLGStandardItem | DLGListWidgetItem) -> tuple[str, str, str]:
         /// </summary>
         /// <param name="item">The item to get paths for (DLGStandardItem or DLGListWidgetItem).</param>
         /// <returns>Tuple of (link_parent_path, link_path, linked_to_path).</returns>
@@ -6273,8 +8892,7 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Shows the reference dialog with the specified references.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1918-1929
-        /// Original: def show_reference_dialog(self, references: list[weakref.ref[DLGLink]], item_html: str):
+        /// Creates a new dialog each time the previous one was closed (Avalonia does not allow re-showing a closed window).
         /// </summary>
         /// <param name="references">List of weak references to DLG links.</param>
         /// <param name="itemHtml">HTML text describing the item being referenced.</param>
@@ -6284,6 +8902,7 @@ namespace OdyTools.Editors.DLG
             {
                 _dialogReferences = new ReferenceChooserDialog(references, this, itemHtml);
                 _dialogReferences.ItemChosen += OnReferenceChosen;
+                _dialogReferences.Closed += (s, __) => _dialogReferences = null;
             }
             else
             {
@@ -6298,8 +8917,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Handles when a reference is chosen from the dialog.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1931-1936
-        /// Original: def on_reference_chosen(self, item: DLGListWidgetItem):
         /// </summary>
         /// <param name="sender">The sender of the event.</param>
         /// <param name="item">The selected DLG list widget item.</param>
@@ -6313,8 +8930,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Jumps to the specified node by highlighting it in the tree.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1938-1947
-        /// Original: def jump_to_node(self, link: DLGLink | None):
         /// </summary>
         /// <param name="link">The link to jump to.</param>
         public void JumpToNode(DLGLink link)
@@ -6338,8 +8953,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Navigates back in the reference history.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1949-1953
-        /// Original: def navigate_back(self):
         /// </summary>
         public void NavigateBack()
         {
@@ -6353,8 +8966,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Navigates forward in the reference history.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1955-1959
-        /// Original: def navigate_forward(self):
         /// </summary>
         public void NavigateForward()
         {

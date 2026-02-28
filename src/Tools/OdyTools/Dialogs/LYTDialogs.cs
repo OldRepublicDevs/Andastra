@@ -9,8 +9,6 @@ using BioWare.Resource.Formats.LYT;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/lyt_dialogs.py:15
-    // Original: class RoomPropertiesDialog(QDialog):
     public class RoomPropertiesDialog : Window
     {
         private LYTRoom _room;
@@ -19,8 +17,6 @@ namespace OdyTools.Dialogs
         private NumericUpDown _ySpin;
         private NumericUpDown _zSpin;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/lyt_dialogs.py:16-88
-        // Original: def __init__(self, room: LYTRoom, parent=None):
         public RoomPropertiesDialog(LYTRoom room, Window parent = null)
         {
             _room = room ?? throw new ArgumentNullException(nameof(room));
@@ -79,8 +75,6 @@ namespace OdyTools.Dialogs
             Content = mainPanel;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/lyt_dialogs.py:74-88
-        // Original: def accept(self):
         private void Accept()
         {
             try
@@ -89,7 +83,6 @@ namespace OdyTools.Dialogs
                 if (string.IsNullOrEmpty(model))
                 {
                     // Show error message dialog
-                    // Matching PyKotor implementation: Shows error message when model name is empty
                     // Located via string references: QMessageBox usage in PyKotor dialogs
                     // Original implementation: Shows warning message box to user when validation fails
                     var errorDialog = new Window
@@ -140,8 +133,6 @@ namespace OdyTools.Dialogs
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/lyt_dialogs.py:91
-    // Original: class TrackPropertiesDialog(QDialog):
     public class TrackPropertiesDialog : Window
     {
         private LYTTrack _track;
@@ -150,8 +141,6 @@ namespace OdyTools.Dialogs
         private NumericUpDown _ySpin;
         private NumericUpDown _zSpin;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/lyt_dialogs.py:92-149
-        // Original: def __init__(self, rooms: list[LYTRoom], track: LYTTrack, parent=None):
         public TrackPropertiesDialog(LYTTrack track, Window parent = null)
         {
             _track = track ?? throw new ArgumentNullException(nameof(track));
@@ -210,8 +199,6 @@ namespace OdyTools.Dialogs
             Content = mainPanel;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/lyt_dialogs.py:150-164
-        // Original: def accept(self):
         private void Accept()
         {
             try

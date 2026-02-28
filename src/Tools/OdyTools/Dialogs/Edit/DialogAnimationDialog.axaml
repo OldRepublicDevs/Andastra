@@ -1,0 +1,169 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:widgets="clr-namespace:OdyTools.Widgets.Edit"
+        x:Class="OdyTools.Dialogs.Edit.DialogAnimationDialog"
+        Title="Edit Animation"
+        Width="780"
+        Height="720"
+        MinWidth="560"
+        MinHeight="500"
+        WindowStartupLocation="CenterOwner"
+        RequestedThemeVariant="Light">
+  <Window.Styles>
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#F3F5F9" />
+    </Style>
+    <Style Selector="TextBlock.error">
+      <Setter Property="Foreground" Value="#C5221F" />
+    </Style>
+    <Style Selector="Border.helpBorder">
+      <Setter Property="Background" Value="#E8ECF1" />
+      <Setter Property="BorderBrush" Value="#D7DBE6" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="8" />
+    </Style>
+    <Style Selector="DataGrid#anim2daGrid">
+      <Setter Property="Background" Value="#FFFFFF" />
+      <Setter Property="BorderBrush" Value="#D7DBE6" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="GridLinesVisibility" Value="All" />
+      <Setter Property="HorizontalGridLinesBrush" Value="#E4E8F1" />
+      <Setter Property="VerticalGridLinesBrush" Value="#E4E8F1" />
+      <Setter Property="CanUserResizeColumns" Value="True" />
+      <Setter Property="CanUserReorderColumns" Value="False" />
+      <Setter Property="SelectionMode" Value="Single" />
+      <Setter Property="HeadersVisibility" Value="Column" />
+    </Style>
+    <Style Selector="DataGrid#anim2daGrid DataGridColumnHeader">
+      <Setter Property="Padding" Value="4,2" />
+      <Setter Property="MinHeight" Value="22" />
+      <Setter Property="Background" Value="#E8EAED" />
+      <Setter Property="Foreground" Value="#202124" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="DataGrid#anim2daGrid DataGridCell">
+      <Setter Property="Padding" Value="4,1" />
+      <Setter Property="MinHeight" Value="20" />
+      <Setter Property="Foreground" Value="#202124" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="DataGrid#anim2daGrid DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+      <Setter Property="Fill" Value="#D2E3FC" />
+    </Style>
+  </Window.Styles>
+  <Grid RowDefinitions="Auto,*,Auto">
+    <!-- Header / explanation -->
+    <Border Grid.Row="0" Classes="helpBorder" Margin="10,10,10,6">
+      <TextBlock x:Name="helpText"
+                 Text="Dialogue animations are played on the participant (e.g. speaker or listener) during this node. The animation is chosen by row index from dialoganimations.2da; the name column is the MDL animation name used by the engine. Participant is usually a creature tag (e.g. PLAYER) or leave blank for default."
+                 TextWrapping="Wrap"
+                 MaxWidth="740" />
+    </Border>
+
+    <ScrollViewer Grid.Row="1" Margin="10,0">
+      <StackPanel Spacing="12">
+
+        <!-- Section: 2DA source and contents -->
+        <TextBlock Text="dialoganimations.2da" FontWeight="SemiBold" />
+        <StackPanel Spacing="4">
+          <TextBlock x:Name="anim2daSourceText"
+                     Text="Source: (not loaded)"
+                     TextWrapping="Wrap"
+                     Foreground="#5F6368"
+                     FontSize="12" />
+          <TextBlock x:Name="anim2daStatsText"
+                     Text=""
+                     TextWrapping="Wrap"
+                     Foreground="#5F6368"
+                     FontSize="12" />
+        </StackPanel>
+        <Border BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="4"
+                MaxHeight="220" ClipToBounds="True">
+          <DataGrid x:Name="anim2daGrid"
+                    AutoGenerateColumns="False"
+                    IsReadOnly="True"
+                    MaxHeight="218" />
+        </Border>
+
+        <!-- Section: Choose animation -->
+        <TextBlock Text="Animation" FontWeight="SemiBold" />
+        <TextBlock x:Name="animSectionHelp"
+                   Text="Select the animation from the dropdown, enter the row index, or type a name to search. The dropdown is populated from the 2DA above."
+                   TextWrapping="Wrap"
+                   Foreground="#5F6368"
+                   MaxWidth="740" />
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0,4,0,0">
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="Animation (dropdown):" VerticalAlignment="Center" Margin="0,0,8,6" />
+          <widgets:ComboBox2DA x:Name="animationSelect"
+                               Grid.Row="0" Grid.Column="1"
+                               MinWidth="220"
+                               MaxDropDownHeight="300"
+                               Margin="0,0,0,6"
+                               ToolTip.Tip="Select an animation by name. Entries come from dialoganimations.2da (name column). Row index is stored in the DLG." />
+          <TextBlock Grid.Row="1" Grid.Column="0" Text="Row index (0–N):" VerticalAlignment="Center" Margin="0,0,8,6" />
+          <NumericUpDown x:Name="animationIndexSpin"
+                         Grid.Row="1" Grid.Column="1"
+                         Minimum="0"
+                         Maximum="65535"
+                         Margin="0,0,0,6"
+                         ToolTip.Tip="2DA row index. Must match a row in dialoganimations.2da. Changing this updates the dropdown selection; changing the dropdown updates this." />
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Filter / search name:" VerticalAlignment="Center" Margin="0,0,8,6" />
+          <TextBox x:Name="animationFilterBox"
+                   Grid.Row="2" Grid.Column="1"
+                   Watermark="Type to filter list or set by name..."
+                   Margin="0,0,0,6"
+                   ToolTip.Tip="Type part of an animation name to narrow the list, or enter exact name and use 'Apply name' to set selection." />
+          <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+            <Button x:Name="applyNameButton" Content="Apply name to selection" />
+            <Button x:Name="clearFilterButton" Content="Clear filter" />
+          </StackPanel>
+        </Grid>
+
+        <!-- Section: Participant -->
+        <TextBlock Text="Participant" FontWeight="SemiBold" Margin="0,8,0,0" />
+        <TextBlock Text="Creature tag that receives this animation (e.g. PLAYER, NPC tag). Leave blank for default/owner. The engine applies the selected animation to this participant when the node plays."
+                   TextWrapping="Wrap"
+                   Foreground="#5F6368"
+                   MaxWidth="740" />
+        <Grid ColumnDefinitions="Auto,*" Margin="0,4,0,0">
+          <TextBlock Grid.Column="0" Text="Participant:" VerticalAlignment="Center" Margin="0,0,8,0" />
+          <TextBox x:Name="participantEdit"
+                   Grid.Column="1"
+                   Watermark="e.g. PLAYER or leave blank"
+                   ToolTip.Tip="Participant (GFF): Tag of the creature that plays this animation. Empty = default participant for the node." />
+        </Grid>
+
+        <!-- Section: Current row stats (2DA details) -->
+        <TextBlock x:Name="statsSectionTitle" Text="Selected animation (2DA row details)" FontWeight="SemiBold" Margin="0,12,0,0" />
+        <TextBlock x:Name="statsSectionHelp"
+                   Text="Details for the currently selected 2DA row. Keyframe/duration data lives in the model (MDL) files, not in the 2DA; the 2DA only maps index to animation name."
+                   TextWrapping="Wrap"
+                   Foreground="#5F6368"
+                   MaxWidth="740" />
+        <Border x:Name="statsBorder" Classes="helpBorder" Margin="0,4,0,0" Padding="8">
+          <StackPanel x:Name="statsPanel" Spacing="4">
+            <TextBlock x:Name="statsSummary" Text="Load a DLG with an installation (or set 2DA path in DLG Settings) to see animation list and row details." TextWrapping="Wrap" />
+            <StackPanel x:Name="statsDetailsPanel" Spacing="2" />
+          </StackPanel>
+        </Border>
+
+        <!-- Quick reference -->
+        <Border Classes="helpBorder" Margin="0,8,0,0">
+          <StackPanel Spacing="4">
+            <TextBlock Text="Quick reference" FontWeight="SemiBold" />
+            <TextBlock Text="• Animation ID (GFF): Stored as WORD; equals the row index in dialoganimations.2da." TextWrapping="Wrap" />
+            <TextBlock Text="• Participant (GFF): String; creature tag. Empty string is valid." TextWrapping="Wrap" />
+            <TextBlock Text="• Common names: pause01, talk_01, listen_01, etc. The 2DA name is the MDL animation name." TextWrapping="Wrap" />
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- Buttons -->
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="10">
+      <Button x:Name="okButton" Content="OK" Width="80" />
+      <Button x:Name="cancelButton" Content="Cancel" Width="80" />
+    </StackPanel>
+  </Grid>
+</Window>

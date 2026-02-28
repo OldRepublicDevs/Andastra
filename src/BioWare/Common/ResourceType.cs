@@ -443,6 +443,9 @@ namespace BioWare.Common
         public static readonly ResourceType TLK_JSON = new ResourceType(50027, "tlk.json", "Talk Tables", "plaintext", targetMember: "TLK", name: "TLK_JSON");
         public static readonly ResourceType LIP_JSON = new ResourceType(50028, "lip.json", "Lips", "plaintext", targetMember: "LIP", name: "LIP_JSON");
         public static readonly ResourceType RES_XML = new ResourceType(50029, "res.xml", "Save Data", "plaintext", targetMember: "RES", name: "RES_XML");
+        public static readonly ResourceType DLG_JSON = new ResourceType(50030, "dlg.json", "Dialogs", "plaintext", targetMember: "DLG", name: "DLG_JSON");
+        public static readonly ResourceType DLG_TWINE_HTML = new ResourceType(50031, "twine.html", "Dialogs", "plaintext", name: "DLG_TWINE_HTML");
+        public static readonly ResourceType DLG_TWINE_JSON = new ResourceType(50032, "twine.json", "Dialogs", "plaintext", name: "DLG_TWINE_JSON");
     }
 }
 

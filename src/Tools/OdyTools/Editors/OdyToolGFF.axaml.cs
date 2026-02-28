@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Input;
@@ -25,8 +23,6 @@ using OdyTools.Data;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/gff.py:47
-    // Original: class OdyToolGFF(Editor):
     public partial class OdyToolGFF : Editor
     {
         private const int MinEditorWidth = 400;
@@ -36,6 +32,8 @@ namespace OdyTools.Editors
         private GFF _gff;
         private TreeView _treeView;
         private Panel _fieldBox;
+        /// <summary>When loaded from XAML, the Border named 'fieldBox' (has IsEnabled=False by default). We toggle this so the properties panel enables.</summary>
+        private Control _fieldBoxBorder;
         private ComboBox _typeCombo;
         private TextBox _labelEdit;
         private Panel _pages;
@@ -76,6 +74,8 @@ namespace OdyTools.Editors
         private readonly List<byte[]> _undoStack = new List<byte[]>();
         private readonly List<byte[]> _redoStack = new List<byte[]>();
         private bool _undoRedoInProgress;
+        /// <summary>True while LoadItem is programmatically syncing controls; suppresses UpdateData/TypeChanged/SubstringEdited feedback.</summary>
+        private bool _loadingItem;
         private string _findQuery = "";
         private string _replaceText = "";
         private bool _findMatchCase;
@@ -100,8 +100,6 @@ namespace OdyTools.Editors
         private int _zoomIndex = 2; // 1.0 = 100%
         private static readonly IBrush PropertyPanelForeground = new SolidColorBrush(Avalonia.Media.Color.FromRgb(0x21, 0x21, 0x21));
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/gff.py:48-81
-        // Original: def __init__(self, parent, installation):
         public OdyToolGFF(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolGFF", "none",
                 GetSupportedTypes(),
@@ -177,28 +175,28 @@ namespace OdyTools.Editors
             mainSplitter.Children.Add(rightPanel);
 
             _fieldBox = new StackPanel { IsEnabled = false };
-            _labelEdit = new TextBox { Watermark = "Label", MaxLength = 16, Foreground = PropertyPanelForeground };
+            _labelEdit = new TextBox { Watermark = Localization.Tr("Label"), MaxLength = 16, Foreground = PropertyPanelForeground };
             _typeCombo = new ComboBox { Foreground = PropertyPanelForeground };
             _typeCombo.ItemsSource = Enum.GetValues(typeof(GFFFieldType)).Cast<GFFFieldType>().Select(t => t.ToString()).ToList();
 
             _intSpin = new NumericUpDown { Foreground = PropertyPanelForeground };
             _intPage = new StackPanel();
-            _intPage.Children.Add(new TextBlock { Text = "Value:", Foreground = PropertyPanelForeground });
+            _intPage.Children.Add(new TextBlock { Text = Localization.Tr("Value:"), Foreground = PropertyPanelForeground });
             _intPage.Children.Add(_intSpin);
 
             _floatSpin = new NumericUpDown { Foreground = PropertyPanelForeground };
             _floatPage = new StackPanel();
-            _floatPage.Children.Add(new TextBlock { Text = "Value:", Foreground = PropertyPanelForeground });
+            _floatPage.Children.Add(new TextBlock { Text = Localization.Tr("Value:"), Foreground = PropertyPanelForeground });
             _floatPage.Children.Add(_floatSpin);
 
             _lineEdit = new TextBox { Foreground = PropertyPanelForeground, MaxLength = 16 };
             _linePage = new StackPanel();
-            _linePage.Children.Add(new TextBlock { Text = "ResRef:", Foreground = PropertyPanelForeground });
+            _linePage.Children.Add(new TextBlock { Text = Localization.Tr("ResRef:"), Foreground = PropertyPanelForeground });
             _linePage.Children.Add(_lineEdit);
 
             _textEdit = new TextBox { AcceptsReturn = true, Foreground = PropertyPanelForeground };
             _textPage = new StackPanel();
-            _textPage.Children.Add(new TextBlock { Text = "Text:", Foreground = PropertyPanelForeground });
+            _textPage.Children.Add(new TextBlock { Text = Localization.Tr("Text:"), Foreground = PropertyPanelForeground });
             _textPage.Children.Add(_textEdit);
 
             var vec3Panel = new StackPanel { Orientation = Orientation.Horizontal };
@@ -209,7 +207,7 @@ namespace OdyTools.Editors
             vec3Panel.Children.Add(_yVec3Spin);
             vec3Panel.Children.Add(_zVec3Spin);
             _vector3Page = new StackPanel();
-            _vector3Page.Children.Add(new TextBlock { Text = "X, Y, Z:", Foreground = PropertyPanelForeground });
+            _vector3Page.Children.Add(new TextBlock { Text = Localization.Tr("X, Y, Z:"), Foreground = PropertyPanelForeground });
             _vector3Page.Children.Add(vec3Panel);
 
             var vec4Panel = new StackPanel { Orientation = Orientation.Horizontal };
@@ -222,7 +220,7 @@ namespace OdyTools.Editors
             vec4Panel.Children.Add(_zVec4Spin);
             vec4Panel.Children.Add(_wVec4Spin);
             _vector4Page = new StackPanel();
-            _vector4Page.Children.Add(new TextBlock { Text = "X, Y, Z, W:", Foreground = PropertyPanelForeground });
+            _vector4Page.Children.Add(new TextBlock { Text = Localization.Tr("X, Y, Z, W:"), Foreground = PropertyPanelForeground });
             _vector4Page.Children.Add(vec4Panel);
 
             _stringrefSpin = new NumericUpDown { Minimum = -1, Foreground = PropertyPanelForeground };
@@ -230,15 +228,15 @@ namespace OdyTools.Editors
             _substringList = new ListBox();
             _substringLangCombo = new ComboBox { ItemsSource = Enum.GetNames(typeof(Language)), Foreground = PropertyPanelForeground };
             _substringGenderCombo = new ComboBox { ItemsSource = Enum.GetNames(typeof(Gender)), Foreground = PropertyPanelForeground };
-            _addSubstringButton = new Button { Content = "Add Substring" };
-            _removeSubstringButton = new Button { Content = "Remove Substring" };
+            _addSubstringButton = new Button { Content = Localization.Tr("Add Substring") };
+            _removeSubstringButton = new Button { Content = Localization.Tr("Remove Substring") };
             _substringEdit = new TextBox { AcceptsReturn = true, Foreground = PropertyPanelForeground };
             _substringPage = new StackPanel();
-            _substringPage.Children.Add(new TextBlock { Text = "StringRef:", Foreground = PropertyPanelForeground });
+            _substringPage.Children.Add(new TextBlock { Text = Localization.Tr("StringRef:"), Foreground = PropertyPanelForeground });
             _substringPage.Children.Add(_stringrefSpin);
-            _substringPage.Children.Add(new TextBlock { Text = "TLK preview:", Foreground = PropertyPanelForeground });
+            _substringPage.Children.Add(new TextBlock { Text = Localization.Tr("TLK preview:"), Foreground = PropertyPanelForeground });
             _substringPage.Children.Add(_tlkTextEdit);
-            _substringPage.Children.Add(new TextBlock { Text = "Substrings:", Foreground = PropertyPanelForeground });
+            _substringPage.Children.Add(new TextBlock { Text = Localization.Tr("Substrings:"), Foreground = PropertyPanelForeground });
             _substringPage.Children.Add(_substringList);
             var substringButtonRow = new StackPanel { Orientation = Orientation.Horizontal };
             substringButtonRow.Children.Add(_substringLangCombo);
@@ -246,12 +244,12 @@ namespace OdyTools.Editors
             substringButtonRow.Children.Add(_addSubstringButton);
             substringButtonRow.Children.Add(_removeSubstringButton);
             _substringPage.Children.Add(substringButtonRow);
-            _substringPage.Children.Add(new TextBlock { Text = "Substring text:", Foreground = PropertyPanelForeground });
+            _substringPage.Children.Add(new TextBlock { Text = Localization.Tr("Substring text:"), Foreground = PropertyPanelForeground });
             _substringPage.Children.Add(_substringEdit);
 
             _binaryHexLabel = new TextBlock { TextWrapping = Avalonia.Media.TextWrapping.Wrap, Foreground = PropertyPanelForeground };
-            _copyBinaryButton = new Button { Content = "Copy Binary Data" };
-            _convertBinaryButton = new Button { Content = "Convert value...", IsVisible = false };
+            _copyBinaryButton = new Button { Content = Localization.Tr("Copy Binary Data") };
+            _convertBinaryButton = new Button { Content = Localization.Tr("Convert value..."), IsVisible = false };
             _blankPage = new StackPanel();
             _blankPage.Children.Add(_binaryHexLabel);
             _blankPage.Children.Add(_copyBinaryButton);
@@ -262,9 +260,9 @@ namespace OdyTools.Editors
 
             if (_fieldBox is Panel fieldBoxPanel)
             {
-                fieldBoxPanel.Children.Add(new TextBlock { Text = "Label:", Foreground = PropertyPanelForeground });
+                fieldBoxPanel.Children.Add(new TextBlock { Text = Localization.Tr("Label:"), Foreground = PropertyPanelForeground });
                 fieldBoxPanel.Children.Add(_labelEdit);
-                fieldBoxPanel.Children.Add(new TextBlock { Text = "Type:", Foreground = PropertyPanelForeground });
+                fieldBoxPanel.Children.Add(new TextBlock { Text = Localization.Tr("Type:"), Foreground = PropertyPanelForeground });
                 fieldBoxPanel.Children.Add(_typeCombo);
                 fieldBoxPanel.Children.Add(_pagesControl);
             }
@@ -273,7 +271,7 @@ namespace OdyTools.Editors
 
             // When XAML doesn't load, build full layout with menu so the window has File/Edit/View/Tools/Language like OdyTool2DA.
             var menu = BuildProgrammaticMenu();
-            _statusText = new TextBlock { Text = "OdyToolGFF", VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, Foreground = PropertyPanelForeground };
+            _statusText = new TextBlock { Text = Localization.Tr("OdyToolGFF"), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, Foreground = PropertyPanelForeground };
             _zoomCombo = new ComboBox { MinWidth = 72 };
             _zoomCombo.ItemsSource = TreeZoomFactors.Select(z => $"{(int)(z * 100)}%").ToList();
             _zoomCombo.SelectedIndex = _zoomIndex;
@@ -365,8 +363,8 @@ namespace OdyTools.Editors
             menu.Items.Add(editMenu);
 
             var viewMenu = new MenuItem { Header = "_View", Name = "menuView" };
-            viewMenu.Items.Add(new MenuItem { Header = "Zoom _In", Name = "actionZoomIn", HotKey = KeyGesture.Parse("Ctrl+Plus") });
-            viewMenu.Items.Add(new MenuItem { Header = "Zoom _Out", Name = "actionZoomOut", HotKey = KeyGesture.Parse("Ctrl+Minus") });
+            viewMenu.Items.Add(new MenuItem { Header = "Zoom _In", Name = "actionZoomIn", HotKey = KeyGesture.Parse("Ctrl+OemPlus") });
+            viewMenu.Items.Add(new MenuItem { Header = "Zoom _Out", Name = "actionZoomOut", HotKey = KeyGesture.Parse("Ctrl+OemMinus") });
             viewMenu.Items.Add(new MenuItem { Header = "_Normal Size", Name = "actionZoomNormal", HotKey = KeyGesture.Parse("Ctrl+0") });
             viewMenu.Items.Add(new Separator());
             viewMenu.Items.Add(new MenuItem { Header = "Search _Actions...", Name = "actionSearchActions", HotKey = KeyGesture.Parse("Ctrl+Shift+P") });
@@ -402,9 +400,11 @@ namespace OdyTools.Editors
             {
                 _treeView = this.FindControl<TreeView>("treeView");
                 var fieldBoxBorder = this.FindControl<Border>("fieldBox");
-                if (fieldBoxBorder != null && fieldBoxBorder.Child is Panel fieldBoxPanel)
+                if (fieldBoxBorder != null)
                 {
-                    _fieldBox = fieldBoxPanel;
+                    _fieldBoxBorder = fieldBoxBorder;
+                    if (fieldBoxBorder.Child is Panel fieldBoxPanel)
+                        _fieldBox = fieldBoxPanel;
                 }
                 _typeCombo = this.FindControl<ComboBox>("typeCombo");
                 _labelEdit = this.FindControl<TextBox>("labelEdit");
@@ -450,22 +450,22 @@ namespace OdyTools.Editors
         {
             _intSpin = new NumericUpDown { Foreground = PropertyPanelForeground };
             _intPage = new StackPanel();
-            _intPage.Children.Add(new TextBlock { Text = "Value:", Foreground = PropertyPanelForeground });
+            _intPage.Children.Add(new TextBlock { Text = Localization.Tr("Value:"), Foreground = PropertyPanelForeground });
             _intPage.Children.Add(_intSpin);
 
             _floatSpin = new NumericUpDown { Foreground = PropertyPanelForeground };
             _floatPage = new StackPanel();
-            _floatPage.Children.Add(new TextBlock { Text = "Value:", Foreground = PropertyPanelForeground });
+            _floatPage.Children.Add(new TextBlock { Text = Localization.Tr("Value:"), Foreground = PropertyPanelForeground });
             _floatPage.Children.Add(_floatSpin);
 
             _lineEdit = new TextBox { Foreground = PropertyPanelForeground, MaxLength = 16 };
             _linePage = new StackPanel();
-            _linePage.Children.Add(new TextBlock { Text = "ResRef:", Foreground = PropertyPanelForeground });
+            _linePage.Children.Add(new TextBlock { Text = Localization.Tr("ResRef:"), Foreground = PropertyPanelForeground });
             _linePage.Children.Add(_lineEdit);
 
             _textEdit = new TextBox { AcceptsReturn = true, Foreground = PropertyPanelForeground };
             _textPage = new StackPanel();
-            _textPage.Children.Add(new TextBlock { Text = "Text:", Foreground = PropertyPanelForeground });
+            _textPage.Children.Add(new TextBlock { Text = Localization.Tr("Text:"), Foreground = PropertyPanelForeground });
             _textPage.Children.Add(_textEdit);
 
             var vec3Panel = new StackPanel { Orientation = Orientation.Horizontal };
@@ -476,7 +476,7 @@ namespace OdyTools.Editors
             vec3Panel.Children.Add(_yVec3Spin);
             vec3Panel.Children.Add(_zVec3Spin);
             _vector3Page = new StackPanel();
-            _vector3Page.Children.Add(new TextBlock { Text = "X, Y, Z:", Foreground = PropertyPanelForeground });
+            _vector3Page.Children.Add(new TextBlock { Text = Localization.Tr("X, Y, Z:"), Foreground = PropertyPanelForeground });
             _vector3Page.Children.Add(vec3Panel);
 
             var vec4Panel = new StackPanel { Orientation = Orientation.Horizontal };
@@ -489,7 +489,7 @@ namespace OdyTools.Editors
             vec4Panel.Children.Add(_zVec4Spin);
             vec4Panel.Children.Add(_wVec4Spin);
             _vector4Page = new StackPanel();
-            _vector4Page.Children.Add(new TextBlock { Text = "X, Y, Z, W:", Foreground = PropertyPanelForeground });
+            _vector4Page.Children.Add(new TextBlock { Text = Localization.Tr("X, Y, Z, W:"), Foreground = PropertyPanelForeground });
             _vector4Page.Children.Add(vec4Panel);
 
             _stringrefSpin = new NumericUpDown { Minimum = -1, Foreground = PropertyPanelForeground };
@@ -497,15 +497,15 @@ namespace OdyTools.Editors
             _substringList = new ListBox();
             _substringLangCombo = new ComboBox { ItemsSource = Enum.GetNames(typeof(Language)), Foreground = PropertyPanelForeground };
             _substringGenderCombo = new ComboBox { ItemsSource = Enum.GetNames(typeof(Gender)), Foreground = PropertyPanelForeground };
-            _addSubstringButton = new Button { Content = "Add Substring" };
-            _removeSubstringButton = new Button { Content = "Remove Substring" };
+            _addSubstringButton = new Button { Content = Localization.Tr("Add Substring") };
+            _removeSubstringButton = new Button { Content = Localization.Tr("Remove Substring") };
             _substringEdit = new TextBox { AcceptsReturn = true, Foreground = PropertyPanelForeground };
             _substringPage = new StackPanel();
-            _substringPage.Children.Add(new TextBlock { Text = "StringRef:", Foreground = PropertyPanelForeground });
+            _substringPage.Children.Add(new TextBlock { Text = Localization.Tr("StringRef:"), Foreground = PropertyPanelForeground });
             _substringPage.Children.Add(_stringrefSpin);
-            _substringPage.Children.Add(new TextBlock { Text = "TLK preview:", Foreground = PropertyPanelForeground });
+            _substringPage.Children.Add(new TextBlock { Text = Localization.Tr("TLK preview:"), Foreground = PropertyPanelForeground });
             _substringPage.Children.Add(_tlkTextEdit);
-            _substringPage.Children.Add(new TextBlock { Text = "Substrings:", Foreground = PropertyPanelForeground });
+            _substringPage.Children.Add(new TextBlock { Text = Localization.Tr("Substrings:"), Foreground = PropertyPanelForeground });
             _substringPage.Children.Add(_substringList);
             var substringButtonRow = new StackPanel { Orientation = Orientation.Horizontal };
             substringButtonRow.Children.Add(_substringLangCombo);
@@ -513,12 +513,12 @@ namespace OdyTools.Editors
             substringButtonRow.Children.Add(_addSubstringButton);
             substringButtonRow.Children.Add(_removeSubstringButton);
             _substringPage.Children.Add(substringButtonRow);
-            _substringPage.Children.Add(new TextBlock { Text = "Substring text:", Foreground = PropertyPanelForeground });
+            _substringPage.Children.Add(new TextBlock { Text = Localization.Tr("Substring text:"), Foreground = PropertyPanelForeground });
             _substringPage.Children.Add(_substringEdit);
 
             _binaryHexLabel = new TextBlock { TextWrapping = Avalonia.Media.TextWrapping.Wrap, Foreground = PropertyPanelForeground };
-            _copyBinaryButton = new Button { Content = "Copy Binary Data" };
-            _convertBinaryButton = new Button { Content = "Convert value...", IsVisible = false };
+            _copyBinaryButton = new Button { Content = Localization.Tr("Copy Binary Data") };
+            _convertBinaryButton = new Button { Content = Localization.Tr("Convert value..."), IsVisible = false };
             _blankPage = new StackPanel();
             _blankPage.Children.Add(_binaryHexLabel);
             _blankPage.Children.Add(_copyBinaryButton);
@@ -539,6 +539,7 @@ namespace OdyTools.Editors
 
             Opened += (s, e) =>
             {
+                RefreshLocalizedStrings();
                 UpdateStatusBar();
                 _treeView?.Focus();
             };
@@ -580,12 +581,7 @@ namespace OdyTools.Editors
                 }
                 catch { }
             }
-            Bind("actionNew", () => New());
-            Bind("actionOpen", async () => { if (await ConfirmDiscardUnsavedChangesAsync()) await RunOpenAsync(); });
-            Bind("actionSave", () => Save());
-            Bind("actionSave_As", () => _ = RunSaveAsAsync());
-            Bind("actionRevert", () => Revert());
-            Bind("actionExit", () => Close());
+            // actionNew, actionOpen, actionSave, actionSave_As, actionRevert, actionExit wired by base Editor
             Bind("actionUndo", () => Undo());
             Bind("actionRedo", () => Redo());
             Bind("actionFind", () => ShowFindDialog());
@@ -623,7 +619,58 @@ namespace OdyTools.Editors
 
         private void RefreshLocalizedStrings()
         {
-            // GFF editor menu headers could be localized here; for now no-op so language switch applies app-wide.
+            void SetMenuHeader(string name, string key)
+            {
+                var c = this.FindControl<MenuItem>(name);
+                if (c != null) c.Header = Localization.Tr(key);
+            }
+            SetMenuHeader("menuFile", "File");
+            SetMenuHeader("actionNew", "New");
+            SetMenuHeader("actionOpen", "Open");
+            SetMenuHeader("actionSave", "Save");
+            SetMenuHeader("actionSave_As", "Save _As");
+            SetMenuHeader("actionRevert", "Revert to _Saved");
+            SetMenuHeader("actionExit", "E_xit");
+            SetMenuHeader("menuEdit", "Edit");
+            SetMenuHeader("actionUndo", "_Undo");
+            SetMenuHeader("actionRedo", "_Redo");
+            SetMenuHeader("actionFind", "_Find in Tree...");
+            SetMenuHeader("actionUseSelectionForFind", "Use Selection for _Find");
+            SetMenuHeader("actionReplace", "_Replace in Tree...");
+            SetMenuHeader("actionFindNext", "Find _Next");
+            SetMenuHeader("actionFindPrevious", "Find _Previous");
+            SetMenuHeader("actionGoToSelection", "_Go to Selection");
+            SetMenuHeader("actionMoveNodeUp", "Move _Up");
+            SetMenuHeader("actionMoveNodeDown", "Move _Down");
+            SetMenuHeader("actionSortChildren", "_Sort Children");
+            SetMenuHeader("actionInsertSiblingBefore", "Insert Sibling _Before");
+            SetMenuHeader("actionInsertSiblingAfter", "Insert Sibling _After");
+            SetMenuHeader("actionCutNode", "_Cut Node");
+            SetMenuHeader("actionCopyNode", "_Copy Node");
+            SetMenuHeader("actionPasteNode", "_Paste Node");
+            SetMenuHeader("actionDuplicateNode", "_Duplicate Node");
+            SetMenuHeader("actionExpandAll", "E_xpand All");
+            SetMenuHeader("actionCollapseAll", "_Collapse All");
+            SetMenuHeader("actionGoToStructId", "_Go to Struct ID...");
+            SetMenuHeader("menuView", "View");
+            SetMenuHeader("actionZoomIn", "Zoom _In");
+            SetMenuHeader("actionZoomOut", "Zoom _Out");
+            SetMenuHeader("actionZoomNormal", "_Normal Size");
+            SetMenuHeader("actionSearchActions", "Search _Actions...");
+            SetMenuHeader("actionResetLayout", "_Reset Layout");
+            SetMenuHeader("menuTools", "Tools");
+            SetMenuHeader("actionConvertValue", "_Convert value...");
+            SetMenuHeader("actionSetTLK", "Set TLK");
+            SetMenuHeader("menuLanguage", "Language");
+            var propertiesHeader = this.FindControl<TextBlock>("propertiesHeader");
+            if (propertiesHeader != null) propertiesHeader.Text = Localization.Tr("Properties");
+            var labelLabel = this.FindControl<TextBlock>("labelLabel");
+            if (labelLabel != null) labelLabel.Text = Localization.Tr("Label:");
+            var typeLabel = this.FindControl<TextBlock>("typeLabel");
+            if (typeLabel != null) typeLabel.Text = Localization.Tr("Type:");
+            var zoomLabel = this.FindControl<TextBlock>("zoomLabel");
+            if (zoomLabel != null) zoomLabel.Text = Localization.Tr("Zoom:");
+            if (_statusText != null) UpdateStatusBar();
         }
 
         private void ApplyTreeZoom()
@@ -658,25 +705,25 @@ namespace OdyTools.Editors
         {
             var actions = new (string Label, Action Run)[]
             {
-                ("Find in Tree...", () => ShowFindDialog()),
-                ("Replace in Tree...", () => ShowReplaceDialog()),
-                ("Go to Struct ID...", () => ShowGoToStructIdDialog()),
-                ("Use Selection for Find", () => UseSelectionForFind()),
-                ("Go to Selection", () => GoToSelection()),
-                ("Expand All", () => ExpandAll()),
-                ("Collapse All", () => CollapseAll()),
-                ("Sort Children", () => SortChildren()),
-                ("Revert to Saved", () => Revert()),
+                (Localization.Tr("Find in Tree..."), () => ShowFindDialog()),
+                (Localization.Tr("Replace in Tree..."), () => ShowReplaceDialog()),
+                (Localization.Tr("Go to Struct ID..."), () => ShowGoToStructIdDialog()),
+                (Localization.Tr("Use Selection for Find"), () => UseSelectionForFind()),
+                (Localization.Tr("Go to Selection"), () => GoToSelection()),
+                (Localization.Tr("Expand All"), () => ExpandAll()),
+                (Localization.Tr("Collapse All"), () => CollapseAll()),
+                (Localization.Tr("Sort Children"), () => SortChildren()),
+                (Localization.Tr("Revert to Saved"), () => Revert()),
             };
-            var dialog = new Window { Title = "Search Actions", Width = 400, Height = 320, WindowStartupLocation = WindowStartupLocation.CenterOwner };
+            var dialog = new Window { Title = Localization.Tr("Search Actions"), Width = 400, Height = 320, WindowStartupLocation = WindowStartupLocation.CenterOwner };
             var stack = new StackPanel { Margin = new Avalonia.Thickness(12) };
-            var searchBox = new TextBox { Watermark = "Type to filter actions...", Margin = new Avalonia.Thickness(0, 0, 0, 8) };
+            var searchBox = new TextBox { Watermark = Localization.Tr("Type to filter actions..."), Margin = new Avalonia.Thickness(0, 0, 0, 8) };
             var listBox = new ListBox { MinHeight = 200 };
             listBox.ItemsSource = actions.Select(a => a.Label).ToList();
             listBox.SelectedIndex = 0;
             stack.Children.Add(searchBox);
             stack.Children.Add(listBox);
-            var runBtn = new Button { Content = "Run", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, Margin = new Avalonia.Thickness(0, 8, 0, 0) };
+            var runBtn = new Button { Content = Localization.Tr("Run"), HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, Margin = new Avalonia.Thickness(0, 8, 0, 0) };
             stack.Children.Add(runBtn);
             dialog.Content = stack;
             void RunSelected()
@@ -715,24 +762,7 @@ namespace OdyTools.Editors
             UpdateStatusBar();
         }
 
-        // PropertyListEditor parity: Revert to Saved discards all changes and clears undo/redo.
-        private void Revert()
-        {
-            if (_revert == null || _revert.Length == 0) return;
-            try
-            {
-                Load(_filepath ?? "", _resname ?? "", _restype ?? ResourceType.GFF, _revert);
-                _undoStack.Clear();
-                _redoStack.Clear();
-                UpdateStatusBar();
-            }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine($"Revert failed: {ex}");
-            }
-        }
-
-        private async System.Threading.Tasks.Task RunSaveAsAsync()
+        protected override async System.Threading.Tasks.Task RunSaveAsAsync()
         {
             var storageProvider = (this as Window)?.StorageProvider;
             if (storageProvider == null) return;
@@ -740,13 +770,13 @@ namespace OdyTools.Editors
             var ext = _restype != null ? _restype.Extension : "gff";
             var options = new FilePickerSaveOptions
             {
-                Title = "Save GFF As",
+                Title = Localization.Tr("Save GFF As"),
                 SuggestedFileName = suggestedName + "." + ext,
                 FileTypeChoices = new[]
                 {
-                    new FilePickerFileType("GFF (binary)") { Patterns = new[] { "*.gff", "*.are", "*.dlg", "*.git", "*.ifo", "*.jrl", "*.pth", "*.utc", "*.utd", "*.ute", "*.uti", "*.utm", "*.utp", "*.uts", "*.utt", "*.utw" } },
-                    new FilePickerFileType("GFF XML") { Patterns = new[] { "*.gff.xml", "*.xml" } },
-                    new FilePickerFileType("GFF JSON") { Patterns = new[] { "*.gff.json", "*.json" } }
+                    new FilePickerFileType(Localization.Tr("GFF (binary)")) { Patterns = new[] { "*.gff", "*.are", "*.dlg", "*.git", "*.ifo", "*.jrl", "*.pth", "*.utc", "*.utd", "*.ute", "*.uti", "*.utm", "*.utp", "*.uts", "*.utt", "*.utw" } },
+                    new FilePickerFileType(Localization.Tr("GFF XML")) { Patterns = new[] { "*.gff.xml", "*.xml" } },
+                    new FilePickerFileType(Localization.Tr("GFF JSON")) { Patterns = new[] { "*.gff.json", "*.json" } }
                 }
             };
             var file = await storageProvider.SaveFilePickerAsync(options);
@@ -764,20 +794,20 @@ namespace OdyTools.Editors
         }
 
         /// <summary>Opens a GFF file from disk (File → Open). Used by standalone and when opening from toolset.</summary>
-        private async System.Threading.Tasks.Task RunOpenAsync()
+        protected override async System.Threading.Tasks.Task RunOpenAsync()
         {
             var storageProvider = (this as Window)?.StorageProvider;
             if (storageProvider == null) return;
             var options = new FilePickerOpenOptions
             {
-                Title = "Open GFF",
+                Title = Localization.Tr("Open GFF"),
                 AllowMultiple = false,
                 FileTypeFilter = new[]
                 {
-                    new FilePickerFileType("GFF (binary)") { Patterns = new[] { "*.gff", "*.are", "*.dlg", "*.git", "*.ifo", "*.jrl", "*.pth", "*.utc", "*.utd", "*.ute", "*.uti", "*.utm", "*.utp", "*.uts", "*.utt", "*.utw" } },
-                    new FilePickerFileType("GFF XML") { Patterns = new[] { "*.gff.xml", "*.xml" } },
-                    new FilePickerFileType("GFF JSON") { Patterns = new[] { "*.gff.json", "*.json" } },
-                    new FilePickerFileType("All files") { Patterns = new[] { "*.*" } }
+                    new FilePickerFileType(Localization.Tr("GFF (binary)")) { Patterns = new[] { "*.gff", "*.are", "*.dlg", "*.git", "*.ifo", "*.jrl", "*.pth", "*.utc", "*.utd", "*.ute", "*.uti", "*.utm", "*.utp", "*.uts", "*.utt", "*.utw" } },
+                    new FilePickerFileType(Localization.Tr("GFF XML")) { Patterns = new[] { "*.gff.xml", "*.xml" } },
+                    new FilePickerFileType(Localization.Tr("GFF JSON")) { Patterns = new[] { "*.gff.json", "*.json" } },
+                    new FilePickerFileType(Localization.Tr("All files")) { Patterns = new[] { "*.*" } }
                 }
             };
             var files = await storageProvider.OpenFilePickerAsync(options);
@@ -798,7 +828,7 @@ namespace OdyTools.Editors
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine("GFF Open failed: " + ex);
-                var box = MessageBoxManager.GetMessageBoxStandard("Open GFF", "Could not open file: " + ex.Message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error);
+                var box = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Open GFF"), Localization.Tr("Could not open file: ") + ex.Message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error);
                 await box.ShowWindowDialogAsync(this as Window);
             }
         }
@@ -807,9 +837,9 @@ namespace OdyTools.Editors
         private void ShowSetTLKInfo()
         {
             string msg = _installation != null
-                ? "TLK resolution uses the current installation's dialog.tlk for LocalizedString preview. Change the installation in the main window to use a different TLK."
-                : "No installation is set. Open a GFF from the main window with an installation to use TLK resolution for LocalizedString (string ref) preview.";
-            var box = MessageBoxManager.GetMessageBoxStandard("Set TLK", msg, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info);
+                ? Localization.Tr("TLK resolution uses the current installation's dialog.tlk for LocalizedString preview. Change the installation in the main window to use a different TLK.")
+                : Localization.Tr("No installation is set. Open a GFF from the main window with an installation to use TLK resolution for LocalizedString (string ref) preview.");
+            var box = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Set TLK"), msg, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info);
             _ = box.ShowWindowDialogAsync(this as Window);
         }
 
@@ -990,7 +1020,7 @@ namespace OdyTools.Editors
             GFFFieldType? nestedType = node.FieldType;
             if (nestedType == GFFFieldType.List)
             {
-                var addStruct = new MenuItem { Header = "Add Struct" };
+                var addStruct = new MenuItem { Header = Localization.Tr("Add Struct") };
                 var listNode = node;
                 addStruct.Click += (s, ev) => RunAfterMenuClose(() => AddNode(listNode));
                 menu.Items.Add(addStruct);
@@ -999,10 +1029,10 @@ namespace OdyTools.Editors
             {
                 var addMenu = new MenuItem { Header = "Add" };
                 var parentNode = node;
-                var addStruct = new MenuItem { Header = "Struct" };
-                addStruct.Click += (s, ev) => RunAfterMenuClose(() => InsertNode(parentNode, "New Struct", GFFFieldType.Struct, new GFFStruct()));
-                var addList = new MenuItem { Header = "List" };
-                addList.Click += (s, ev) => RunAfterMenuClose(() => InsertNode(parentNode, "New List", GFFFieldType.List, new GFFList()));
+                var addStruct = new MenuItem { Header = Localization.Tr("Struct") };
+                addStruct.Click += (s, ev) => RunAfterMenuClose(() => InsertNode(parentNode, Localization.Tr("New Struct"), GFFFieldType.Struct, new GFFStruct()));
+                var addList = new MenuItem { Header = Localization.Tr("List") };
+                addList.Click += (s, ev) => RunAfterMenuClose(() => InsertNode(parentNode, Localization.Tr("New List"), GFFFieldType.List, new GFFList()));
                 addMenu.Items.Add(addStruct);
                 addMenu.Items.Add(addList);
                 addMenu.Items.Add(new Separator());
@@ -1021,52 +1051,52 @@ namespace OdyTools.Editors
                 }
                 menu.Items.Add(addMenu);
             }
-            var remove = new MenuItem { Header = "Remove" };
+            var remove = new MenuItem { Header = Localization.Tr("Remove") };
             var nodeToRemove = node;
             remove.Click += (s, ev) => RunAfterMenuClose(() => RemoveNode(nodeToRemove));
             menu.Items.Add(remove);
             var parent = GetParentOf(node);
             if (parent != null && parent.Children.IndexOf(node) > 0)
             {
-                var moveUp = new MenuItem { Header = "Move Up" };
+                var moveUp = new MenuItem { Header = Localization.Tr("Move Up") };
                 moveUp.Click += (s, ev) => RunAfterMenuClose(() => MoveNodeUp());
                 menu.Items.Add(moveUp);
             }
             if (parent != null && parent.Children.IndexOf(node) >= 0 && parent.Children.IndexOf(node) < parent.Children.Count - 1)
             {
-                var moveDown = new MenuItem { Header = "Move Down" };
+                var moveDown = new MenuItem { Header = Localization.Tr("Move Down") };
                 moveDown.Click += (s, ev) => RunAfterMenuClose(() => MoveNodeDown());
                 menu.Items.Add(moveDown);
             }
             if (parent != null)
             {
-                var insertBefore = new MenuItem { Header = "Insert Sibling Before" };
+                var insertBefore = new MenuItem { Header = Localization.Tr("Insert Sibling Before") };
                 insertBefore.Click += (s, ev) => RunAfterMenuClose(() => InsertSiblingBefore());
                 menu.Items.Add(insertBefore);
-                var insertAfter = new MenuItem { Header = "Insert Sibling After" };
+                var insertAfter = new MenuItem { Header = Localization.Tr("Insert Sibling After") };
                 insertAfter.Click += (s, ev) => RunAfterMenuClose(() => InsertSiblingAfter());
                 menu.Items.Add(insertAfter);
             }
             if (node.Children != null && node.Children.Count >= 2)
             {
-                var sortChildren = new MenuItem { Header = "Sort Children" };
+                var sortChildren = new MenuItem { Header = Localization.Tr("Sort Children") };
                 sortChildren.Click += (s, ev) => RunAfterMenuClose(() => SortChildren());
                 menu.Items.Add(sortChildren);
             }
             if (node.FieldType == GFFFieldType.Binary)
             {
-                var convertVal = new MenuItem { Header = "Convert value..." };
+                var convertVal = new MenuItem { Header = Localization.Tr("Convert value...") };
                 convertVal.Click += (s, ev) => RunAfterMenuClose(() => ShowValueConverterDialog());
                 menu.Items.Add(convertVal);
             }
             menu.Items.Add(new Separator());
-            var copyNode = new MenuItem { Header = "Copy Node" };
+            var copyNode = new MenuItem { Header = Localization.Tr("Copy Node") };
             copyNode.Click += (s, ev) => RunAfterMenuClose(() => CopyNode());
             menu.Items.Add(copyNode);
-            var pasteNode = new MenuItem { Header = "Paste Node" };
+            var pasteNode = new MenuItem { Header = Localization.Tr("Paste Node") };
             pasteNode.Click += (s, ev) => RunAfterMenuClose(() => PasteNode());
             menu.Items.Add(pasteNode);
-            var duplicateNode = new MenuItem { Header = "Duplicate Node" };
+            var duplicateNode = new MenuItem { Header = Localization.Tr("Duplicate Node") };
             duplicateNode.Click += (s, ev) => RunAfterMenuClose(() => DuplicateNode());
             menu.Items.Add(duplicateNode);
             return menu;
@@ -1090,8 +1120,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/gff.py:120-142
-        // Original: def load(self, filepath, resref, restype, data):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
@@ -1139,9 +1167,13 @@ namespace OdyTools.Editors
             LoadStruct(rootNode, gff.Root);
             RefreshAllNodeTexts(rootNode);
             _treeView.ItemsSource = new[] { rootNode };
-            _undoStack.Clear();
-            _redoStack.Clear();
-            _copiedNode = null;
+            // Only clear undo/redo when loading a new document; preserve stacks during Undo/Redo (ApplyState).
+            if (!_undoRedoInProgress)
+            {
+                _undoStack.Clear();
+                _redoStack.Clear();
+                _copiedNode = null;
+            }
             _findMatches.Clear();
             _findStartIndex = 0;
             UpdateStatusBar();
@@ -1169,8 +1201,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/gff.py:171-185
-        // Original: def _load_list(self, node, gff_list):
         private void LoadList(GFFTreeNodeViewModel node, GFFList gffList)
         {
             foreach (var gffStruct in gffList)
@@ -1182,8 +1212,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/gff.py:187-205
-        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
             if (_gff == null)
@@ -1202,8 +1230,6 @@ namespace OdyTools.Editors
             return Tuple.Create(data, new byte[0]);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/gff.py:207-261
-        // Original: def _build_struct(self, item, gff_struct):
         private void BuildStruct(GFFTreeNodeViewModel item, GFFStruct gffStruct)
         {
             foreach (var child in item.Children)
@@ -1291,8 +1317,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/gff.py:262-272
-        // Original: def _build_list(self, item, gff_list):
         private void BuildList(GFFTreeNodeViewModel item, GFFList gffList)
         {
             foreach (var child in item.Children)
@@ -1303,8 +1327,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/gff.py:274-282
-        // Original: def new(self):
         public override void New()
         {
             base.New();
@@ -1329,7 +1351,8 @@ namespace OdyTools.Editors
                 _selectedNode = null;
                 _treeView.SelectedItem = null;
                 if (_pagesControl != null) _pagesControl.Content = null;
-                if (_fieldBox != null) _fieldBox.IsEnabled = false;
+                if (_fieldBoxBorder != null) _fieldBoxBorder.IsEnabled = false;
+                else if (_fieldBox != null) _fieldBox.IsEnabled = false;
             }
             UpdateStatusBar();
         }
@@ -1357,20 +1380,40 @@ namespace OdyTools.Editors
             _intSpin.Maximum = max;
         }
 
+        private bool IsPropertyPanelEnabled()
+        {
+            if (_fieldBoxBorder != null) return _fieldBoxBorder.IsEnabled;
+            return _fieldBox?.IsEnabled == true;
+        }
+
         private void LoadItem(GFFTreeNodeViewModel item)
         {
             if (_pagesControl == null) return;
+            _loadingItem = true;
+            try
+            {
+                LoadItemCore(item);
+            }
+            finally
+            {
+                _loadingItem = false;
+            }
+        }
 
+        private void LoadItemCore(GFFTreeNodeViewModel item)
+        {
             if (item.Label == null)
             {
-                _fieldBox.IsEnabled = false;
+                if (_fieldBoxBorder != null) _fieldBoxBorder.IsEnabled = false;
+                else if (_fieldBox != null) _fieldBox.IsEnabled = false;
                 SetIntSpinRange(-1, 0xFFFFFFFF);
                 if (_intSpin != null) _intSpin.Value = item.Value is int sid ? sid : (item.Value is GFFStruct gs ? gs.StructId : 0);
                 _pagesControl.Content = _intPage;
                 return;
             }
 
-            _fieldBox.IsEnabled = true;
+            if (_fieldBoxBorder != null) _fieldBoxBorder.IsEnabled = true;
+            else if (_fieldBox != null) _fieldBox.IsEnabled = true;
             _typeCombo.SelectedItem = item.FieldType.ToString();
             _labelEdit.Text = item.Label ?? "";
 
@@ -1461,7 +1504,7 @@ namespace OdyTools.Editors
             else if (item.FieldType == GFFFieldType.List)
             {
                 int n = item.Children?.Count ?? 0;
-                _binaryHexLabel.Text = $"List contains {n} item{(n == 1 ? "" : "s")}. Right-click the list in the tree to add structs.";
+                _binaryHexLabel.Text = Localization.Trf("List contains {0} item(s). Right-click the list in the tree to add structs.", n);
                 _copyBinaryButton.IsVisible = false;
                 if (_convertBinaryButton != null) _convertBinaryButton.IsVisible = false;
                 _pagesControl.Content = _blankPage;
@@ -1499,13 +1542,58 @@ namespace OdyTools.Editors
             public override string ToString() => Display ?? "";
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/gff.py:452-796
-        // Original: def update_data(self):
+        /// <summary>True if the property panel controls currently differ from the selected node (so we need to push undo before applying).</summary>
+        private bool PropertyPanelValueChanged()
+        {
+            if (_selectedNode == null || _loadingItem) return false;
+            if (IsPropertyPanelEnabled() && _labelEdit != null && (_labelEdit.Text ?? "") != (_selectedNode.Label ?? "")) return true;
+            decimal spinVal = _intSpin?.Value ?? 0;
+            switch (_selectedNode.FieldType)
+            {
+                case GFFFieldType.Int8: case GFFFieldType.Int16: case GFFFieldType.Int32: case GFFFieldType.Int64:
+                case GFFFieldType.UInt8: case GFFFieldType.UInt16: case GFFFieldType.UInt32: case GFFFieldType.UInt64:
+                    if (Convert.ToDecimal(_selectedNode.Value ?? 0) != spinVal) return true;
+                    break;
+            }
+            if (_selectedNode.FieldType == GFFFieldType.Single || _selectedNode.FieldType == GFFFieldType.Double)
+            {
+                if (_floatSpin != null && Math.Abs(Convert.ToDouble(_selectedNode.Value ?? 0d) - (double)(_floatSpin.Value ?? 0)) > 1e-9) return true;
+            }
+            else if (_selectedNode.FieldType == GFFFieldType.ResRef && _lineEdit != null)
+            {
+                if ((_selectedNode.Value as ResRef)?.ToString() != (_lineEdit.Text ?? "")) return true;
+            }
+            else if (_selectedNode.FieldType == GFFFieldType.String && _textEdit != null)
+            {
+                if ((_selectedNode.Value?.ToString() ?? "") != (_textEdit.Text ?? "")) return true;
+            }
+            else if (_selectedNode.FieldType == GFFFieldType.Vector3 && _xVec3Spin != null && _yVec3Spin != null && _zVec3Spin != null)
+            {
+                var v = _selectedNode.Value is Vector3 v3 ? v3 : default;
+                if (Math.Abs((float)(_xVec3Spin.Value ?? 0) - v.X) > 1e-6f || Math.Abs((float)(_yVec3Spin.Value ?? 0) - v.Y) > 1e-6f || Math.Abs((float)(_zVec3Spin.Value ?? 0) - v.Z) > 1e-6f) return true;
+            }
+            else if (_selectedNode.FieldType == GFFFieldType.Vector4 && _xVec4Spin != null && _yVec4Spin != null && _zVec4Spin != null && _wVec4Spin != null)
+            {
+                var v = _selectedNode.Value is Vector4 v4 ? v4 : default;
+                if (Math.Abs((float)(_xVec4Spin.Value ?? 0) - v.X) > 1e-6f || Math.Abs((float)(_yVec4Spin.Value ?? 0) - v.Y) > 1e-6f || Math.Abs((float)(_zVec4Spin.Value ?? 0) - v.Z) > 1e-6f || Math.Abs((float)(_wVec4Spin.Value ?? 0) - v.W) > 1e-6f) return true;
+            }
+            else if (_selectedNode.FieldType == GFFFieldType.LocalizedString && _selectedNode.Value is LocalizedString ls && _stringrefSpin != null)
+            {
+                if (ls.StringRef != (int)(_stringrefSpin.Value ?? -1)) return true;
+            }
+            else if (_selectedNode.FieldType == GFFFieldType.Struct && _selectedNode.Value is GFFStruct gs && _intSpin != null)
+            {
+                if (gs.StructId != (int)(_intSpin.Value ?? 0)) return true;
+            }
+            return false;
+        }
+
         private void UpdateData()
         {
-            if (_selectedNode == null) return;
-
-            if (_labelEdit != null)
+            if (_selectedNode == null || _loadingItem) return;
+            if (PropertyPanelValueChanged())
+                PushState();
+            if (_labelEdit != null && IsPropertyPanelEnabled())
             {
                 _selectedNode.Label = _labelEdit.Text;
             }
@@ -1628,7 +1716,7 @@ namespace OdyTools.Editors
 
         private void TypeChanged()
         {
-            if (_selectedNode == null || _typeCombo?.SelectedItem == null) return;
+            if (_selectedNode == null || _loadingItem || _typeCombo?.SelectedItem == null) return;
             if (!Enum.TryParse(_typeCombo.SelectedItem.ToString(), out GFFFieldType newType)) return;
             if (_selectedNode.FieldType == newType) return;
             PushState();
@@ -1681,11 +1769,15 @@ namespace OdyTools.Editors
 
         private void SubstringEdited()
         {
+            if (_loadingItem) return;
             if (!(_selectedNode?.Value is LocalizedString locStr)) return;
             if (!(_substringList?.SelectedItem is SubstringListItem item)) return;
+            string newText = _substringEdit?.Text ?? "";
+            if ((item.Text ?? "") == newText) return;
+            PushState();
             LocalizedString.SubstringPair(item.Id, out Language lang, out Gender gender);
-            locStr.SetData(lang, gender, _substringEdit?.Text ?? "");
-            item.Text = _substringEdit?.Text ?? "";
+            locStr.SetData(lang, gender, newText);
+            item.Text = newText;
             MarkDirty();
             RefreshItemText(_selectedNode);
         }
@@ -1780,15 +1872,15 @@ namespace OdyTools.Editors
                 var bytes = _selectedNode.Value as byte[] ?? new byte[0];
                 var dialog = new Window
                 {
-                    Title = "Convert value (Binary)",
+                    Title = Localization.Tr("Convert value (Binary)"),
                     Width = 480,
                     Height = 320,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 };
                 var panel = new StackPanel { Margin = new Avalonia.Thickness(12) };
-                var formatLabel = new TextBlock { Text = "View/Edit as:" };
+                var formatLabel = new TextBlock { Text = Localization.Tr("View/Edit as:") };
                 var formatCombo = new ComboBox { ItemsSource = new[] { "Hex", "Base64", "ASCII" }, SelectedIndex = 0 };
-                var textLabel = new TextBlock { Text = "Value:" };
+                var textLabel = new TextBlock { Text = Localization.Tr("Value:") };
                 var editBox = new TextBox { AcceptsReturn = true, Height = 160, FontFamily = "Courier New" };
                 string ToHex(byte[] b)
                 {
@@ -1811,8 +1903,8 @@ namespace OdyTools.Editors
                 formatCombo.SelectionChanged += (s, e) => RefreshEditBox();
                 RefreshEditBox();
                 var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Avalonia.Thickness(0, 8, 0, 0) };
-                var okBtn = new Button { Content = "OK", Margin = new Avalonia.Thickness(0, 0, 8, 0) };
-                var cancelBtn = new Button { Content = "Cancel" };
+                var okBtn = new Button { Content = Localization.Tr("OK"), Margin = new Avalonia.Thickness(0, 0, 8, 0) };
+                var cancelBtn = new Button { Content = Localization.Tr("Cancel") };
                 okBtn.Click += (s, e) =>
                 {
                     try
@@ -1847,7 +1939,7 @@ namespace OdyTools.Editors
                     }
                     catch (Exception ex)
                     {
-                        var box = MessageBoxManager.GetMessageBoxStandard("Convert value", "Invalid value: " + ex.Message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error);
+                        var box = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Convert value...").TrimEnd('.'), Localization.Tr("Invalid value: ") + ex.Message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error);
                         _ = box.ShowWindowDialogAsync(this as Window);
                     }
                 };
@@ -1868,16 +1960,16 @@ namespace OdyTools.Editors
             {
                 var dialog = new Window
                 {
-                    Title = "View as Hex (Integer)",
+                    Title = Localization.Tr("View as Hex (Integer)"),
                     Width = 320,
                     Height = 120,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
                 };
                 long val = Convert.ToInt64(_selectedNode.Value ?? 0);
                 var panel = new StackPanel { Margin = new Avalonia.Thickness(12) };
-                var decLabel = new TextBlock { Text = "Decimal: " + val };
-                var hexLabel = new TextBlock { Text = "Hex: 0x" + val.ToString("X") };
-                var closeBtn = new Button { Content = "Close", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left };
+                var decLabel = new TextBlock { Text = Localization.Tr("Decimal:") + " " + val };
+                var hexLabel = new TextBlock { Text = Localization.Tr("Hex:") + " 0x" + val.ToString("X") };
+                var closeBtn = new Button { Content = Localization.Tr("Close"), HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left };
                 closeBtn.Click += (s, e) => dialog.Close();
                 panel.Children.Add(decLabel);
                 panel.Children.Add(hexLabel);
@@ -1928,7 +2020,7 @@ namespace OdyTools.Editors
             var parent = GetParentOf(node);
             if (parent == null) return;
             PushState();
-            var newNode = new GFFTreeNodeViewModel("", GFFFieldType.String, "New Field", "");
+            var newNode = new GFFTreeNodeViewModel("", GFFFieldType.String, Localization.Tr("New Field"), "");
             int idx = parent.Children.IndexOf(node);
             parent.Children.Insert(idx, newNode);
             RefreshItemText(newNode);
@@ -1948,7 +2040,7 @@ namespace OdyTools.Editors
             var parent = GetParentOf(node);
             if (parent == null) return;
             PushState();
-            var newNode = new GFFTreeNodeViewModel("", GFFFieldType.String, "New Field", "");
+            var newNode = new GFFTreeNodeViewModel("", GFFFieldType.String, Localization.Tr("New Field"), "");
             int idx = parent.Children.IndexOf(node);
             parent.Children.Insert(idx + 1, newNode);
             RefreshItemText(newNode);
@@ -1966,7 +2058,7 @@ namespace OdyTools.Editors
             if (listNode == null || listNode.Children == null) return;
             if (listNode.FieldType != GFFFieldType.List) return;
             PushState();
-            int structId = GetNextStructId();
+            int structId = listNode.Children.Count > 0 ? listNode.Children[0].StructId : 0;
             var newStruct = new GFFStruct(structId);
             var node = new GFFTreeNodeViewModel("", GFFFieldType.Struct, null, newStruct) { StructId = structId };
             listNode.Children.Add(node);
@@ -2071,40 +2163,6 @@ namespace OdyTools.Editors
             return n.Label ?? n.Text ?? "";
         }
 
-        private void UpdateStatusBar()
-        {
-            try
-            {
-                if (_statusText == null)
-                    _statusText = this.FindControl<TextBlock>("statusText");
-                if (_statusText == null) return;
-                var root = _treeView?.ItemsSource as IEnumerable<GFFTreeNodeViewModel>;
-                var rootNode = root?.FirstOrDefault();
-                int totalNodes = CountNodes(rootNode);
-                int structCount = CountStructs(rootNode);
-                string baseText = $"{totalNodes} nodes";
-                if (structCount > 0) baseText += $" | {structCount} structs";
-                if (_undoStack.Count > 0) baseText += " | Undo";
-                if (_redoStack.Count > 0) baseText += " | Redo";
-                if (_findMatches.Count > 0 && !string.IsNullOrEmpty(_findQuery))
-                {
-                    int currentIdx = _findStartIndex > 0 ? _findStartIndex - 1 : 0;
-                    if (currentIdx < 0) currentIdx = _findMatches.Count - 1;
-                    baseText += $" | {_findMatches.Count} match{(_findMatches.Count == 1 ? "" : "es")}";
-                }
-                if (_selectedNode != null)
-                {
-                    string label = _selectedNode.Label ?? "(struct)";
-                    string typeStr = _selectedNode.FieldType.ToString();
-                    baseText += $" | Selected: {label} ({typeStr})";
-                }
-                else
-                    baseText += " | No selection";
-                _statusText.Text = baseText;
-            }
-            catch { }
-        }
-
         private static int CountStructs(GFFTreeNodeViewModel node)
         {
             if (node == null) return 0;
@@ -2168,6 +2226,7 @@ namespace OdyTools.Editors
                 }
                 catch { }
                 ApplyState(data);
+                ExpandAll();
                 UpdateStatusBar();
             }
             finally { _undoRedoInProgress = false; }
@@ -2188,6 +2247,7 @@ namespace OdyTools.Editors
                 }
                 catch { }
                 ApplyState(data);
+                ExpandAll();
                 UpdateStatusBar();
             }
             finally { _undoRedoInProgress = false; }
@@ -2211,20 +2271,20 @@ namespace OdyTools.Editors
         {
             var dialog = new Window
             {
-                Title = "Find in Tree",
+                Title = Localization.Tr("Find in Tree"),
                 Width = 400,
                 Height = 200,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
             var panel = new StackPanel { Margin = new Avalonia.Thickness(12) };
-            var findLabel = new TextBlock { Text = "Find what:" };
-            var queryBox = new TextBox { Text = _findQuery, Watermark = "Search label or value" };
-            var matchCaseCb = new CheckBox { Content = "Match case", IsChecked = _findMatchCase };
-            var findInLabelsCb = new CheckBox { Content = "Search in labels", IsChecked = _findInLabels };
-            var findInValuesCb = new CheckBox { Content = "Search in values", IsChecked = _findInValues };
+            var findLabel = new TextBlock { Text = Localization.Tr("Find what:") };
+            var queryBox = new TextBox { Text = _findQuery, Watermark = Localization.Tr("Search label or value") };
+            var matchCaseCb = new CheckBox { Content = Localization.Tr("Match case"), IsChecked = _findMatchCase };
+            var findInLabelsCb = new CheckBox { Content = Localization.Tr("Search in labels"), IsChecked = _findInLabels };
+            var findInValuesCb = new CheckBox { Content = Localization.Tr("Search in values"), IsChecked = _findInValues };
             var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Avalonia.Thickness(0, 8, 0, 0) };
-            var findNextBtn = new Button { Content = "Find Next", Margin = new Avalonia.Thickness(0, 0, 8, 0) };
-            var closeBtn = new Button { Content = "Close" };
+            var findNextBtn = new Button { Content = Localization.Tr("Find Next"), Margin = new Avalonia.Thickness(0, 0, 8, 0) };
+            var closeBtn = new Button { Content = Localization.Tr("Close") };
             panel.Children.Add(findLabel);
             panel.Children.Add(queryBox);
             panel.Children.Add(matchCaseCb);
@@ -2254,9 +2314,9 @@ namespace OdyTools.Editors
                 else
                 {
                     var msg = string.IsNullOrWhiteSpace(_findQuery)
-                        ? "Enter text to search for."
-                        : "No matches found.";
-                    var box = MessageBoxManager.GetMessageBoxStandard("Find in Tree", msg, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info);
+                        ? Localization.Tr("Enter text to search for.")
+                        : Localization.Tr("No matches found.");
+                    var box = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Find in Tree"), msg, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info);
                     await box.ShowWindowDialogAsync(dialog);
                 }
             };
@@ -2281,7 +2341,7 @@ namespace OdyTools.Editors
             }
             if (_findMatches.Count == 0)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard("Find in Tree", "No matches found.", ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this as Window);
+                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Find in Tree"), Localization.Tr("No matches found."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this as Window);
                 return;
             }
             int idx = _findStartIndex % _findMatches.Count;
@@ -2301,7 +2361,7 @@ namespace OdyTools.Editors
             }
             if (_findMatches.Count == 0)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard("Find in Tree", "No matches found.", ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this as Window);
+                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Find in Tree"), Localization.Tr("No matches found."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this as Window);
                 return;
             }
             _findStartIndex = (_findStartIndex - 2 + _findMatches.Count) % _findMatches.Count;
@@ -2320,7 +2380,7 @@ namespace OdyTools.Editors
             if (string.IsNullOrEmpty(query) && node.Value is string s && !string.IsNullOrEmpty(s)) query = s;
             if (string.IsNullOrEmpty(query))
             {
-                _ = MessageBoxManager.GetMessageBoxStandard("Find in Tree", "Selection has no label or string value to search for.", ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this as Window);
+                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Find in Tree"), Localization.Tr("Selection has no label or string value to search for."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this as Window);
                 return;
             }
             _findQuery = query;
@@ -2379,24 +2439,24 @@ namespace OdyTools.Editors
         {
             var dialog = new Window
             {
-                Title = "Replace in Tree",
+                Title = Localization.Tr("Replace in Tree"),
                 Width = 400,
                 Height = 260,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
             var panel = new StackPanel { Margin = new Avalonia.Thickness(12) };
-            var findLabel = new TextBlock { Text = "Find what:" };
-            var findBox = new TextBox { Text = _findQuery, Watermark = "Search label or value" };
-            var replaceLabel = new TextBlock { Text = "Replace with:" };
-            var replaceBox = new TextBox { Text = _replaceText, Watermark = "Replacement" };
-            var matchCaseCb = new CheckBox { Content = "Match case", IsChecked = _findMatchCase };
-            var replaceInLabelsCb = new CheckBox { Content = "Replace in labels", IsChecked = _replaceInLabels };
-            var replaceInValuesCb = new CheckBox { Content = "Replace in values", IsChecked = _replaceInValues };
+            var findLabel = new TextBlock { Text = Localization.Tr("Find what:") };
+            var findBox = new TextBox { Text = _findQuery, Watermark = Localization.Tr("Search label or value") };
+            var replaceLabel = new TextBlock { Text = Localization.Tr("Replace with:") };
+            var replaceBox = new TextBox { Text = _replaceText, Watermark = Localization.Tr("Replacement") };
+            var matchCaseCb = new CheckBox { Content = Localization.Tr("Match case"), IsChecked = _findMatchCase };
+            var replaceInLabelsCb = new CheckBox { Content = Localization.Tr("Replace in labels"), IsChecked = _replaceInLabels };
+            var replaceInValuesCb = new CheckBox { Content = Localization.Tr("Replace in values"), IsChecked = _replaceInValues };
             var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Avalonia.Thickness(0, 8, 0, 0) };
-            var findNextBtn = new Button { Content = "Find Next", Margin = new Avalonia.Thickness(0, 0, 8, 0) };
-            var replaceOneBtn = new Button { Content = "Replace", Margin = new Avalonia.Thickness(0, 0, 8, 0) };
-            var replaceAllBtn = new Button { Content = "Replace All", Margin = new Avalonia.Thickness(0, 0, 8, 0) };
-            var closeBtn = new Button { Content = "Close" };
+            var findNextBtn = new Button { Content = Localization.Tr("Find Next"), Margin = new Avalonia.Thickness(0, 0, 8, 0) };
+            var replaceOneBtn = new Button { Content = Localization.Tr("Replace"), Margin = new Avalonia.Thickness(0, 0, 8, 0) };
+            var replaceAllBtn = new Button { Content = Localization.Tr("Replace All"), Margin = new Avalonia.Thickness(0, 0, 8, 0) };
+            var closeBtn = new Button { Content = Localization.Tr("Close") };
             panel.Children.Add(findLabel);
             panel.Children.Add(findBox);
             panel.Children.Add(replaceLabel);
@@ -2452,6 +2512,56 @@ namespace OdyTools.Editors
             closeBtn.Click += (s, e) => dialog.Close();
             findBox.Focus();
             _ = dialog.ShowDialog(this as Window);
+        }
+
+        private void UpdateStatusBar()
+        {
+            try
+            {
+                if (_statusText == null)
+                    _statusText = this.FindControl<TextBlock>("statusText");
+                if (_statusText == null) return;
+                var root = _treeView?.ItemsSource as IEnumerable<GFFTreeNodeViewModel>;
+                var rootNode = root?.FirstOrDefault();
+                int totalNodes = CountNodes(rootNode);
+                int structCount = CountStructs(rootNode);
+                string baseText = totalNodes + " " + Localization.Tr("nodes");
+                if (structCount > 0) baseText += " | " + structCount + " " + Localization.Tr("structs");
+                if (_undoStack.Count > 0) baseText += " | " + Localization.Tr("Undo");
+                if (_redoStack.Count > 0) baseText += " | " + Localization.Tr("Redo");
+                if (_findMatches.Count > 0 && !string.IsNullOrEmpty(_findQuery))
+                {
+                    int currentIdx = _findStartIndex > 0 ? _findStartIndex - 1 : 0;
+                    if (currentIdx < 0) currentIdx = _findMatches.Count - 1;
+                    baseText += " | " + _findMatches.Count + " " + (_findMatches.Count == 1 ? Localization.Tr("match") : Localization.Tr("matches"));
+                }
+                if (_selectedNode != null)
+                {
+                    string label = _selectedNode.Label ?? Localization.Tr("(struct)");
+                    string typeStr = _selectedNode.FieldType.ToString();
+                    baseText += " | " + Localization.Tr("Selected:") + " " + label + " (" + typeStr + ")";
+                }
+                else
+                    baseText += " | " + Localization.Tr("No selection");
+                _statusText.Text = baseText;
+            }
+            catch { }
+        }
+
+        /// <summary>Reload from last saved/reverted state. No-op if no revert data.</summary>
+        public override void Revert()
+        {
+            if (_revert == null || string.IsNullOrEmpty(_filepath) || _revert.Length == 0) return;
+            try
+            {
+                Load(_filepath ?? "", _resname ?? "", _restype, _revert);
+                _undoStack.Clear();
+                _redoStack.Clear();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Revert failed: {ex}");
+            }
         }
 
         private void ReplaceOne()
@@ -2720,17 +2830,17 @@ namespace OdyTools.Editors
         {
             var dialog = new Window
             {
-                Title = "Go to Struct ID",
+                Title = Localization.Tr("Go to Struct ID"),
                 Width = 320,
                 Height = 120,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
             var panel = new StackPanel { Margin = new Avalonia.Thickness(12) };
-            var label = new TextBlock { Text = "Struct ID (0–4294967295):" };
+            var label = new TextBlock { Text = Localization.Tr("Struct ID (0–4294967295):") };
             var spin = new NumericUpDown { Minimum = 0, Maximum = 0xFFFFFFFF, Value = 0 };
             var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Avalonia.Thickness(0, 8, 0, 0) };
-            var goBtn = new Button { Content = "Go", Margin = new Avalonia.Thickness(0, 0, 8, 0) };
-            var cancelBtn = new Button { Content = "Cancel" };
+            var goBtn = new Button { Content = Localization.Tr("Go"), Margin = new Avalonia.Thickness(0, 0, 8, 0) };
+            var cancelBtn = new Button { Content = Localization.Tr("Cancel") };
             goBtn.Click += async (s, e) =>
             {
                 int id = (int)(spin.Value ?? 0);
@@ -2743,7 +2853,7 @@ namespace OdyTools.Editors
                 }
                 else
                 {
-                    var box = MessageBoxManager.GetMessageBoxStandard("Go to Struct ID", $"Struct ID {id} not found.", ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Warning);
+                    var box = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Go to Struct ID"), Localization.Trf("Struct ID {0} not found.", id), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Warning);
                     await box.ShowWindowDialogAsync(dialog);
                 }
             };

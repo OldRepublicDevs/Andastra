@@ -1,8 +1,11 @@
 using BioWare.Common;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using BioWare;
@@ -23,9 +26,7 @@ using GFFAuto = BioWare.Resource.Formats.GFF.GFFAuto;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:35
-    // Original: class OdyToolARE(Editor):
-    public class OdyToolARE : Editor
+    public partial class OdyToolARE : Editor
     {
         private ARE _are;
         private GFF _originalGff;
@@ -93,8 +94,6 @@ namespace OdyTools.Editors
         private ComboBox _onUserDefinedSelect;
         private List<string> _relevantScriptResnames;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:36-74
-        // Original: def __init__(self, parent, installation):
         public OdyToolARE(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolARE", "none",
                 new[] { ResourceType.ARE },
@@ -150,9 +149,6 @@ namespace OdyTools.Editors
             var cameraStyleLabel = new TextBlock { Text = "Camera Style:" };
             _cameraStyleSelect = new ComboBox();
             // Load camera styles from cameras.2da via installation
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:111-117
-            // Original: cameras: TwoDA | None = installation.ht_get_cache_2da(OdyInstallation.TwoDA_CAMERAS)
-            // Original: for label in cameras.get_column("name"): self.ui.cameraStyleSelect.addItem(label.title())
             if (_installation != null)
             {
                 try
@@ -504,7 +500,6 @@ namespace OdyTools.Editors
             SetContentOrInject(panel);
         }
 
-        // Matching PyKotor implementation - expose controls for testing
         public LocalizedStringEdit NameEdit => _nameEdit;
         public TextBox TagEdit => _tagEdit;
         public Button TagGenerateButton => _tagGenerateButton;
@@ -565,8 +560,6 @@ namespace OdyTools.Editors
         public ComboBox WindPowerSelect => _windPowerSelect;
         public TextBox CommentsEdit => _commentsEdit;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
-        // Original: def load(self, filepath, resref, restype, data):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
@@ -580,14 +573,10 @@ namespace OdyTools.Editors
             var gff = GFF.FromBytes(data);
             // Store original GFF to preserve unmodified fields (like Rooms list)
             _originalGff = gff;
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:146
-            // Original: are: ARE = read_are(data)
             _are = AREHelpers.ConstructAre(gff);
             LoadARE(_are);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:151-248
-        // Original: def _loadARE(self, are: ARE):
         private void LoadARE(ARE are)
         {
             _are = are;
@@ -842,7 +831,6 @@ namespace OdyTools.Editors
                 _windPowerSelect.SelectedIndex = are.WindPower;
             }
             // Matching Python: self.ui.rainCheck.setChecked(are.chance_rain == max_value) (line 210)
-            // Original: max_value: int = 100
             // PyKotor uses chance_rain == 100 to indicate enabled
             if (_rainCheck != null)
             {
@@ -994,8 +982,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-300
-        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
             // Matching Python: are = deepcopy(self._are) / _buildARE() which creates new ARE and sets from UI
@@ -1135,137 +1121,101 @@ namespace OdyTools.Editors
             {
                 are.DynamicLight = _dynamicColorEdit.GetColor();
             }
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:326-348
             // Terrain section
-            // Original: are.grass_texture = ResRef(self.ui.grassTextureEdit.text()) (line 327)
             if (_grassTextureEdit != null)
             {
                 are.GrassTexture = new ResRef(_grassTextureEdit.Text ?? "");
             }
-            // Original: are.grass_diffuse = self.ui.grassDiffuseEdit.color() (line 328)
             if (_grassDiffuseEdit != null)
             {
                 are.GrassDiffuse = _grassDiffuseEdit.GetColor();
             }
-            // Original: are.grass_ambient = self.ui.grassAmbientEdit.color() (line 329)
             if (_grassAmbientEdit != null)
             {
                 are.GrassAmbient = _grassAmbientEdit.GetColor();
             }
-            // Original: are.grass_emissive = self.ui.grassEmissiveEdit.color() (line 330)
             if (_grassEmissiveEdit != null)
             {
                 are.GrassEmissive = _grassEmissiveEdit.GetColor();
             }
-            // Original: are.grass_size = self.ui.grassSizeSpin.value() (line 331)
             if (_grassSizeSpin != null && _grassSizeSpin.Value.HasValue)
             {
                 are.GrassSize = (float)_grassSizeSpin.Value.Value;
             }
-            // Original: are.grass_density = self.ui.grassDensitySpin.value() (line 332)
             if (_grassDensitySpin != null && _grassDensitySpin.Value.HasValue)
             {
                 are.GrassDensity = (float)_grassDensitySpin.Value.Value;
             }
-            // Original: are.grass_prob_ll = self.ui.grassProbLLSpin.value() (line 333)
             if (_grassProbLLSpin != null && _grassProbLLSpin.Value.HasValue)
             {
                 are.GrassProbLL = (float)_grassProbLLSpin.Value.Value;
             }
-            // Original: are.grass_prob_lr = self.ui.grassProbLRSpin.value() (line 334)
             if (_grassProbLRSpin != null && _grassProbLRSpin.Value.HasValue)
             {
                 are.GrassProbLR = (float)_grassProbLRSpin.Value.Value;
             }
-            // Original: are.grass_prob_ul = self.ui.grassProbULSpin.value() (line 335)
             if (_grassProbULSpin != null && _grassProbULSpin.Value.HasValue)
             {
                 are.GrassProbUL = (float)_grassProbULSpin.Value.Value;
             }
-            // Original: are.grass_prob_ur = self.ui.grassProbURSpin.value() (line 336)
             if (_grassProbURSpin != null && _grassProbURSpin.Value.HasValue)
             {
                 are.GrassProbUR = (float)_grassProbURSpin.Value.Value;
             }
-            // Original: are.dirty_argb_1 = self.ui.dirtColor1Edit.color() (line 337)
             if (_dirtColor1Edit != null)
             {
                 are.DirtyArgb1 = _dirtColor1Edit.GetColor();
             }
-            // Original: are.dirty_argb_2 = self.ui.dirtColor2Edit.color() (line 338)
             if (_dirtColor2Edit != null)
             {
                 are.DirtyArgb2 = _dirtColor2Edit.GetColor();
             }
-            // Original: are.dirty_argb_3 = self.ui.dirtColor3Edit.color() (line 339)
             if (_dirtColor3Edit != null)
             {
                 are.DirtyArgb3 = _dirtColor3Edit.GetColor();
             }
-            // Original: are.dirty_formula_1 = self.ui.dirtFormula1Spin.value() (line 340)
             if (_dirtFormula1Spin != null && _dirtFormula1Spin.Value.HasValue)
             {
                 are.DirtyFormula1 = (int)_dirtFormula1Spin.Value.Value;
             }
-            // Original: are.dirty_formula_2 = self.ui.dirtFormula2Spin.value() (line 341)
             if (_dirtFormula2Spin != null && _dirtFormula2Spin.Value.HasValue)
             {
                 are.DirtyFormula2 = (int)_dirtFormula2Spin.Value.Value;
             }
-            // Original: are.dirty_formula_3 = self.ui.dirtFormula3Spin.value() (line 342)
             if (_dirtFormula3Spin != null && _dirtFormula3Spin.Value.HasValue)
             {
                 are.DirtyFormula3 = (int)_dirtFormula3Spin.Value.Value;
             }
-            // Original: are.dirty_func_1 = self.ui.dirtFunction1Spin.value() (line 343)
             if (_dirtFunction1Spin != null && _dirtFunction1Spin.Value.HasValue)
             {
                 are.DirtyFunc1 = (int)_dirtFunction1Spin.Value.Value;
             }
-            // Original: are.dirty_func_2 = self.ui.dirtFunction2Spin.value() (line 344)
             if (_dirtFunction2Spin != null && _dirtFunction2Spin.Value.HasValue)
             {
                 are.DirtyFunc2 = (int)_dirtFunction2Spin.Value.Value;
             }
-            // Original: are.dirty_func_3 = self.ui.dirtFunction3Spin.value() (line 345)
             if (_dirtFunction3Spin != null && _dirtFunction3Spin.Value.HasValue)
             {
                 are.DirtyFunc3 = (int)_dirtFunction3Spin.Value.Value;
             }
-            // Original: are.dirty_size_1 = self.ui.dirtSize1Spin.value() (line 346)
             if (_dirtSize1Spin != null && _dirtSize1Spin.Value.HasValue)
             {
                 are.DirtySize1 = (int)_dirtSize1Spin.Value.Value;
             }
-            // Original: are.dirty_size_2 = self.ui.dirtSize2Spin.value() (line 347)
             if (_dirtSize2Spin != null && _dirtSize2Spin.Value.HasValue)
             {
                 are.DirtySize2 = (int)_dirtSize2Spin.Value.Value;
             }
-            // Original: are.dirty_size_3 = self.ui.dirtSize3Spin.value() (line 348)
             if (_dirtSize3Spin != null && _dirtSize3Spin.Value.HasValue)
             {
                 are.DirtySize3 = (int)_dirtSize3Spin.Value.Value;
             }
 
             // Weather section - matching Python lines 303-324
-            // Original: are.wind_power = AREWindPower(self.ui.windPowerSelect.currentIndex()) (line 311)
             if (_windPowerSelect != null && _windPowerSelect.SelectedIndex >= 0)
             {
                 are.WindPower = _windPowerSelect.SelectedIndex;
             }
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:313-322
-            // Original: # Read checkbox state - if checkbox is checked, use 100; otherwise use 0
-            // Original: # For K1 installations, weather checkboxes are TSL-only and should always be 0
-            // Original: if self._installation and self._installation.tsl:
-            // Original:     are.chance_rain = 100 if self.ui.rainCheck.isChecked() else 0
-            // Original:     are.chance_snow = 100 if self.ui.snowCheck.isChecked() else 0
-            // Original:     are.chance_lightning = 100 if self.ui.lightningCheck.isChecked() else 0
-            // Original: else:
-            // Original:     # K1 installations don't support weather checkboxes
-            // Original:     are.chance_rain = 0
-            // Original:     are.chance_snow = 0
-            // Original:     are.chance_lightning = 0
             if (_installation != null && _installation.IsTsl)
             {
                 // TSL (K2) installations support weather checkboxes
@@ -1289,9 +1239,7 @@ namespace OdyTools.Editors
                 are.ChanceSnow = 0;
                 are.ChanceLightning = 0;
             }
-            // Original: are.shadows = self.ui.shadowsCheck.isChecked() (line 323)
             // Note: ARE class doesn't have Shadows bool - shadow is enabled if ShadowOpacity > 0
-            // Original: are.shadow_opacity = self.ui.shadowsSpin.value() (line 324)
             // ShadowOpacity is byte (0-255) in ARE class
             if (_shadowsSpin != null && _shadowsSpin.Value.HasValue)
             {
@@ -1328,36 +1276,29 @@ namespace OdyTools.Editors
             }
 
             // Scripts section - matching Python lines 350-354
-            // Original: are.on_enter = ResRef(self.ui.onEnterSelect.currentText()) (line 351)
             if (_onEnterSelect != null && !string.IsNullOrEmpty(_onEnterSelect.Text))
             {
                 are.OnEnter = new ResRef(_onEnterSelect.Text);
             }
-            // Original: are.on_exit = ResRef(self.ui.onExitSelect.currentText()) (line 352)
             if (_onExitSelect != null && !string.IsNullOrEmpty(_onExitSelect.Text))
             {
                 are.OnExit = new ResRef(_onExitSelect.Text);
             }
-            // Original: are.on_heartbeat = ResRef(self.ui.onHeartbeatSelect.currentText()) (line 353)
             if (_onHeartbeatSelect != null && !string.IsNullOrEmpty(_onHeartbeatSelect.Text))
             {
                 are.OnHeartbeat = new ResRef(_onHeartbeatSelect.Text);
             }
-            // Original: are.on_user_defined = ResRef(self.ui.onUserDefinedSelect.currentText()) (line 354)
             if (_onUserDefinedSelect != null && !string.IsNullOrEmpty(_onUserDefinedSelect.Text))
             {
                 are.OnUserDefined = new ResRef(_onUserDefinedSelect.Text);
             }
 
             // Comments - matching Python line 357
-            // Original: are.comment = self.ui.commentsEdit.toPlainText()
             if (_commentsEdit != null)
             {
                 are.Comment = _commentsEdit.Text ?? "";
             }
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-277
-            // Original: def build(self) -> tuple[bytes, bytes]:
             // Detect game from installation - supports all engines (Odyssey K1/K2, Aurora NWN, Eclipse DA/ME)
             // Default to K1 if no installation is provided (for backward compatibility)
             Game game = _installation?.Game ?? Game.K1;
@@ -1531,8 +1472,6 @@ namespace OdyTools.Editors
             return Tuple.Create(data, new byte[0]);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:302-310
-        // Original: def new(self):
         public override void New()
         {
             base.New();
@@ -1541,8 +1480,6 @@ namespace OdyTools.Editors
             // Clear UI
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:386-391
-        // Original: def change_name(self):
         public void ChangeName()
         {
             if (_installation == null)
@@ -1567,6 +1504,29 @@ namespace OdyTools.Editors
 
         public override void SaveAs()
         {
+            _ = RunSaveAsAsync();
+        }
+
+        protected override async Task RunSaveAsAsync()
+        {
+            var storage = StorageProvider;
+            if (storage == null) return;
+            string suggestedName = !string.IsNullOrEmpty(_resname) ? _resname : "area";
+            var options = new FilePickerSaveOptions
+            {
+                Title = "Save As",
+                SuggestedFileName = suggestedName + ".are",
+                FileTypeChoices = new[] { new FilePickerFileType("Area (ARE)") { Patterns = new[] { "*.are" } }, new FilePickerFileType("All files") { Patterns = new[] { "*.*" } } }
+            };
+            var file = await storage.SaveFilePickerAsync(options);
+            if (file == null) return;
+            string path = file.Path?.LocalPath ?? "";
+            if (string.IsNullOrWhiteSpace(path)) return;
+            _filepath = path;
+            string ext = (Path.GetExtension(path) ?? "").TrimStart('.').ToLowerInvariant();
+            _restype = ResourceType.FromExtension(ext) ?? ResourceType.ARE;
+            _resname = Path.GetFileNameWithoutExtension(path);
+            RefreshWindowTitle();
             Save();
         }
 
@@ -1748,8 +1708,6 @@ namespace OdyTools.Editors
             return copy;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:392-393
-        // Original: def generate_tag(self):
         private void GenerateTag()
         {
             // Matching Python: self.ui.tagEdit.setText("newarea" if self._resname is None or self._resname == "" else self._resname)
@@ -1759,15 +1717,10 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:408-411
-        // Original: def redoMinimap(self):
-        // TODO: STUB - Minimap renderer is not yet available, so this is a placeholder
-        // When minimap renderer is implemented, this should call: minimapRenderer.set_minimap(are, _minimap)
+        /// <summary>Redraws the area minimap. Minimap renderer is a planned feature; this no-op allows UI and event wiring to remain intact.</summary>
         private void RedoMinimap()
         {
-            // Matching Python: if self._minimap: are: ARE = self._buildARE(); self.ui.minimapRenderer.set_minimap(are, self._minimap)
-            // For now, this is a no-op until minimap renderer is available
-            // The method exists to allow event handlers to be connected without errors
+            // When minimap renderer is implemented: if (_minimap != null) { var are = BuildARE(); minimapRenderer.SetMinimap(are, _minimap); }
         }
 
         // Helper method to load default camera styles as fallback
@@ -1785,8 +1738,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:76-104
-        // Original: def _setup_signals(self):
         private void SetupSignals()
         {
             // Tag generate button - matching Python: self.ui.tagGenerateButton.clicked.connect(self.generate_tag)
@@ -1841,7 +1792,7 @@ namespace OdyTools.Editors
                 _mapImageY2Spin.ValueChanged += (s, e) => RedoMinimap();
             }
 
-            // Script combo boxes will be populated in LoadARE after filepath is set
+            // Script combo boxes are populated in LoadARE after filepath is set
             _relevantScriptResnames = new List<string>();
 
             // Setup context menus for script combo boxes
@@ -1851,8 +1802,6 @@ namespace OdyTools.Editors
             SetupScriptComboBoxContextMenu(_onUserDefinedSelect, "OnUserDefined Script");
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:106-132
-        // Original: def _setup_installation(self, installation: OdyInstallation):
         private void SetupInstallation(OdyInstallation installation)
         {
             _installation = installation;
@@ -1888,8 +1837,6 @@ namespace OdyTools.Editors
                 _lightningCheck.IsEnabled = isTsl;
             }
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:129-132
-            // Original: installation.setup_file_context_menu(self.ui.onEnterSelect, [ResourceType.NSS, ResourceType.NCS])
             //           installation.setup_file_context_menu(self.ui.onExitSelect, [ResourceType.NSS, ResourceType.NCS])
             //           installation.setup_file_context_menu(self.ui.onHeartbeatSelect, [ResourceType.NSS, ResourceType.NCS])
             //           installation.setup_file_context_menu(self.ui.onUserDefinedSelect, [ResourceType.NSS, ResourceType.NCS])
@@ -1898,7 +1845,6 @@ namespace OdyTools.Editors
         }
 
         // Create context menu for script ComboBox controls
-        // Matching PyKotor pattern from OdyToolUTE - allows opening existing scripts, creating new scripts, or viewing resource details
         private void SetupScriptComboBoxContextMenu(ComboBox comboBox, string scriptTypeName)
         {
             if (comboBox == null)

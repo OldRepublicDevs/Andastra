@@ -4,12 +4,8 @@ using OdyTools.Data;
 
 namespace OdyTools.Utils
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_utils.py:34
-    // Original: class NoOpRegistrySpoofer:
     public class NoOpRegistrySpoofer : IDisposable
     {
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_utils.py:35-45
-        // Original: def __enter__(self) -> Self: / def __exit__(...):
         public NoOpRegistrySpoofer()
         {
             Console.WriteLine("Enter NoOpRegistrySpoofer");
@@ -21,8 +17,6 @@ namespace OdyTools.Utils
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_utils.py:48-68
-    // Original: def setup_extract_path() -> Path:
     public static class ScriptUtils
     {
         public static string SetupExtractPath()
@@ -32,10 +26,20 @@ namespace OdyTools.Utils
 
             if (string.IsNullOrEmpty(extractPath) || !Directory.Exists(extractPath))
             {
-                // Prompt user for directory - will be implemented when file dialogs are available
-                // TODO: STUB - For now, use temp directory
-                extractPath = Path.Combine(Path.GetTempPath(), "OdyTools");
-                Directory.CreateDirectory(extractPath);
+                // Use LocalApplicationData so the extract path is persistent and user-specific
+                string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                extractPath = string.IsNullOrEmpty(appData)
+                    ? Path.Combine(Path.GetTempPath(), "OdyTools")
+                    : Path.Combine(appData, "OdyTools", "Extract");
+                try
+                {
+                    Directory.CreateDirectory(extractPath);
+                }
+                catch
+                {
+                    extractPath = Path.Combine(Path.GetTempPath(), "OdyTools");
+                    Directory.CreateDirectory(extractPath);
+                }
             }
 
             settings.SetValue("ExtractPath", extractPath);
@@ -53,12 +57,28 @@ namespace OdyTools.Utils
             return File.Exists(fallback) ? fallback : null;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_utils.py:71-109
-        // Original: def handle_permission_error(...):
         public static void HandlePermissionError(NoOpRegistrySpoofer regSpoofer, string installationPath, Exception e)
         {
-            // Handle permission errors - will be implemented when MessageBox is available
             Console.WriteLine($"Permission error: {e}");
+        }
+
+        /// <summary>
+        /// Shows a message box for permission errors when parent window is provided; otherwise logs to console.
+        /// </summary>
+        public static void HandlePermissionError(NoOpRegistrySpoofer regSpoofer, string installationPath, Exception e, Avalonia.Controls.Window parent)
+        {
+            if (parent != null)
+            {
+                _ = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
+                    "Permission error",
+                    "A permission error occurred: " + (e?.Message ?? "Unknown"),
+                    MsBox.Avalonia.Enums.ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Warning).ShowWindowDialogAsync(parent);
+            }
+            else
+            {
+                Console.WriteLine($"Permission error: {e}");
+            }
         }
     }
 }

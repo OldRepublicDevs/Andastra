@@ -14,7 +14,6 @@ using OdyTools.Data;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation pattern for resource location dialogs
     // Shows detailed information about where a resource is located in the installation
     public partial class ResourceLocationDialog : Window
     {
@@ -34,8 +33,6 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation pattern
-        // Original: Shows resource location details in a dialog
         public ResourceLocationDialog(
             Window parent,
             string resourceName,

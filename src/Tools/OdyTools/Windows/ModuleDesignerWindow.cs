@@ -12,13 +12,13 @@ using BioWare.Common;
 using BioWare.Extract;
 using BioWare.Resource;
 using BioWare.Tools;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 using ModuleClass = BioWare.Common.Module;
 using GameModule = BioWare.Common.Module;
 
 namespace OdyTools.Windows
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py
-    // Original: class ModuleDesigner(QMainWindow):
     public class ModuleDesignerWindow : Window
     {
         private OdyInstallation _installation;
@@ -28,18 +28,12 @@ namespace OdyTools.Windows
         private UndoStack _undoStack;
         private List<object> _selectedInstances; // GITInstance equivalents
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py
-        // Original: self.ui = Ui_MainWindow() - UI wrapper class exposing all controls
         public ModuleDesignerWindowUi Ui { get; private set; }
 
-        // Matching PyKotor implementation - self._module property
         public ModuleClass GetModule() => _module;
 
-        // Matching PyKotor implementation - self.undo_stack property
         public UndoStack UndoStack => _undoStack;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py
-        // Original: def __init__(self, parent, installation, module_path=None):
         public ModuleDesignerWindow(
             Window parent = null,
             OdyInstallation installation = null,
@@ -125,8 +119,6 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py:993-1005
-        // Original: def open_module_with_dialog(self):
         public void OpenModuleWithDialog()
         {
             if (_installation == null)
@@ -156,8 +148,6 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py:1008-1095
-        // Original: def open_module(self, mod_filepath: Path):
         public void OpenModule(string modFilepath)
         {
             if (_installation == null || string.IsNullOrEmpty(modFilepath))
@@ -191,8 +181,12 @@ namespace OdyTools.Windows
             }
             catch (Exception ex)
             {
-                // TODO:  Error handling - in full implementation would show error dialog
-                System.Console.WriteLine($"Failed to open module: {ex.Message}");
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Failed to open module",
+                    ex.Message ?? "Unknown error.",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Error);
+                errorBox.ShowWindowDialogAsync(this);
                 // Clear module on error to maintain consistent state
                 _module = null;
                 _modulePath = null;
@@ -203,8 +197,6 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py:1142-1144
-        // Original: def unload_module(self):
         public void UnloadModule()
         {
             // Matching Python: self._module = None
@@ -222,8 +214,6 @@ namespace OdyTools.Windows
             RefreshWindowTitle();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py:1188-1230
-        // Original: def save_git(self):
         public void SaveGit()
         {
             if (_module == null)
@@ -256,8 +246,6 @@ namespace OdyTools.Windows
             MarkCleanState();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py:1199-1262
-        // Original: def rebuild_resource_tree(self):
         public void RebuildResourceTree()
         {
             if (Ui.ModuleTree == null)
@@ -277,7 +265,6 @@ namespace OdyTools.Windows
             Ui.ModuleTree.IsEnabled = true;
 
             // Create category tree items for resource types
-            // Matching PyKotor: categories dictionary mapping ResourceType to category items
             var categories = new Dictionary<ResourceType, TreeViewItem>
             {
                 { ResourceType.UTC, new TreeViewItem { Header = "Creatures" } },
@@ -383,17 +370,18 @@ namespace OdyTools.Windows
             Ui.ModuleTree.ItemsSource = uniqueCategories;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py:1348-1458
-        // Original: def rebuild_instance_list(self):
         public void RebuildInstanceList()
         {
-            // Matching Python implementation: Rebuild list of GIT instances
-            // This will be fully implemented when GIT and instance classes are available
-            // TODO: STUB - For now, this is a placeholder matching the Python interface
+            _selectedInstances?.Clear();
+            // Clear properties table when no instance is selected (module unloaded or selection cleared)
+            if (Ui?.PropertiesTable != null)
+            {
+                Ui.PropertiesTable.ItemsSource = null;
+            }
+            // Full GIT instance list (creatures, doors, placeables, etc.) would be populated from module.Git()
+            // when instance list UI is present; resource tree selection drives properties table elsewhere.
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py:978-983
-        // Original: def _refresh_window_title(self):
         private void RefreshWindowTitle()
         {
             if (string.IsNullOrEmpty(_moduleName))
@@ -406,7 +394,6 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation - undo/redo handlers
         private void OnUndo()
         {
             if (_undoStack != null && _undoStack.CanUndo())
@@ -423,8 +410,6 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py:3200-3204
-        // Original: def _mark_clean_state(self):
         /// <summary>
         /// Mark the current state as clean (no unsaved changes).
         /// </summary>
@@ -438,8 +423,6 @@ namespace OdyTools.Windows
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py
-    // Original: self.ui = Ui_MainWindow() - UI wrapper class exposing all controls
     public class ModuleDesignerWindowUi
     {
         public TreeView ModuleTree { get; set; }

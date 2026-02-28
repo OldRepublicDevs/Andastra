@@ -4,8 +4,6 @@ using Avalonia.Markup.Xaml;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:8
-    // Original: class ExtractOptionsDialog(QDialog):
     public partial class ExtractOptionsDialog : Window
     {
         private bool _tpcDecompile;
@@ -18,8 +16,6 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:11-40
-        // Original: def __init__(self, parent=None):
         public ExtractOptionsDialog(Window parent)
         {
             InitializeComponent();
@@ -102,8 +98,6 @@ namespace OdyTools.Dialogs
         private Button _okButton;
         private Button _cancelButton;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:14-15
-        // Original: self.ui = Ui_ExtractOptionsDialog()
         // Expose UI widgets for testing
         public ExtractOptionsDialogUi Ui { get; private set; }
 
@@ -189,8 +183,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:22-25
-        // Original: @property def tpc_decompile(self) -> bool: return self.ui.tpcDecompileCheckbox.isChecked()
         // Note: Using snake_case property names to match Python API for test compatibility
         public bool tpc_decompile
         {
@@ -212,8 +204,6 @@ namespace OdyTools.Dialogs
             set => tpc_decompile = value;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:27-30
-        // Original: @property def tpc_extract_txi(self) -> bool: return self.ui.tpcTxiCheckbox.isChecked()
         public bool tpc_extract_txi
         {
             get => _tpcTxiCheckbox?.IsChecked ?? false;
@@ -234,8 +224,6 @@ namespace OdyTools.Dialogs
             set => tpc_extract_txi = value;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:32-35
-        // Original: @property def mdl_decompile(self) -> bool: return self.ui.mdlDecompileCheckbox.isChecked()
         public bool mdl_decompile
         {
             get => _mdlDecompileCheckbox?.IsChecked ?? false;
@@ -256,8 +244,6 @@ namespace OdyTools.Dialogs
             set => mdl_decompile = value;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:37-40
-        // Original: @property def mdl_extract_textures(self) -> bool: return self.ui.mdlTexturesCheckbox.isChecked()
         public bool mdl_extract_textures
         {
             get => _mdlTexturesCheckbox?.IsChecked ?? false;
@@ -278,8 +264,6 @@ namespace OdyTools.Dialogs
             set => mdl_extract_textures = value;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:14-15
-        // Original: self.ui = Ui_ExtractOptionsDialog()
         // UI wrapper class for testing access
         public class ExtractOptionsDialogUi
         {

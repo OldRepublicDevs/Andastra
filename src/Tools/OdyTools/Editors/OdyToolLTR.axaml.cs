@@ -391,12 +391,7 @@ namespace OdyTools.Editors
                 }
             }
 
-            Bind("actionNew", New);
-            Bind("actionOpen", () => { _ = RunOpenAsync(); });
-            Bind("actionSave", Save);
-            Bind("actionSaveAs", () => _ = RunSaveAsAsync());
-            Bind("actionRevert", Revert);
-            Bind("actionExit", Close);
+            // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
             Bind("actionUndo", Undo);
             Bind("actionRedo", Redo);
             Bind("actionFind", ShowFindDialog);
@@ -551,7 +546,7 @@ namespace OdyTools.Editors
             }
         }
 
-        private async Task RunOpenAsync()
+        protected override async Task RunOpenAsync()
         {
             var storageProvider = (this as Window)?.StorageProvider;
             if (storageProvider == null)
@@ -587,7 +582,7 @@ namespace OdyTools.Editors
             Load(path, resref, ResourceType.LTR, data);
         }
 
-        private async Task RunSaveAsAsync()
+        protected override async Task RunSaveAsAsync()
         {
             var storageProvider = (this as Window)?.StorageProvider;
             if (storageProvider == null)
@@ -623,7 +618,7 @@ namespace OdyTools.Editors
             Save();
         }
 
-        private void Revert()
+        public override void Revert()
         {
             if (_revert == null || _revert.Length == 0)
             {

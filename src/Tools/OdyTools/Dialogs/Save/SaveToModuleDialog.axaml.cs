@@ -8,8 +8,6 @@ using BioWare.Resource;
 
 namespace OdyTools.Dialogs.Save
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_module.py:9
-    // Original: class SaveToModuleDialog(QDialog):
     public partial class SaveToModuleDialog : Window
     {
         private TextBox _resrefEdit;
@@ -23,8 +21,6 @@ namespace OdyTools.Dialogs.Save
         {
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_module.py:12-45
-        // Original: def __init__(self, resname, restype, supported):
         public SaveToModuleDialog(string resname, ResourceType restype, List<ResourceType> supported)
         {
             InitializeComponent();
@@ -95,8 +91,6 @@ namespace OdyTools.Dialogs.Save
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_module.py:37-38
-        // Original: Load data into UI
         private void LoadData(string resname, ResourceType restype)
         {
             if (_resrefEdit != null)
@@ -120,15 +114,11 @@ namespace OdyTools.Dialogs.Save
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_module.py:41-42
-        // Original: def resname(self) -> str:
         public string GetResname()
         {
             return _resrefEdit?.Text ?? "";
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_module.py:44-45
-        // Original: def restype(self) -> ResourceType:
         public ResourceType GetRestype()
         {
             if (_typeCombo?.SelectedIndex >= 0 && _typeCombo.SelectedIndex < _supportedTypes.Count)

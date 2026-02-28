@@ -23,8 +23,6 @@ using BioWare.Resource.Formats.TLK;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:35
-    // Original: class TSLPatchDataEditor(QDialog):
     public partial class TSLPatchDataEditorDialog : Window
     {
         private OdyInstallation _installation;
@@ -79,8 +77,6 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:38-61
-        // Original: def __init__(self, parent, installation=None, tslpatchdata_path=None):
         public TSLPatchDataEditorDialog(Window parent, OdyInstallation installation, string tslpatchdataPath = null)
         {
             InitializeComponent();
@@ -180,8 +176,6 @@ namespace OdyTools.Dialogs
             _saveButton = this.FindControl<Button>("saveButton");
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:160-212
-        // Original: def _create_general_tab(self):
         private void CreateGeneralTab()
         {
             var tab = new TabItem { Header = "General Settings" };
@@ -236,8 +230,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:214-266
-        // Original: def _create_2da_memory_tab(self):
         private void Create2DAMemoryTab()
         {
             var tab = new TabItem { Header = "2DA Memory" };
@@ -307,8 +299,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:268-303
-        // Original: def _create_tlk_strref_tab(self):
         private void CreateTLKStrRefTab()
         {
             var tab = new TabItem { Header = "TLK StrRef" };
@@ -326,7 +316,6 @@ namespace OdyTools.Dialogs
             });
 
             // TLK string tree with column headers
-            // Matching PyKotor implementation: QTreeWidget with columns ["Token Name", "String", "Used By"]
             var treeContainer = new StackPanel { Spacing = 0 };
 
             // Column headers (matching QTreeWidget header labels)
@@ -406,8 +395,6 @@ namespace OdyTools.Dialogs
             RefreshTlkStringTree();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:305-348
-        // Original: def _create_gff_fields_tab(self):
         private void CreateGFFFieldsTab()
         {
             var tab = new TabItem { Header = "GFF Fields" };
@@ -473,8 +460,6 @@ namespace OdyTools.Dialogs
         }
 
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:350-373
-        // Original: def _create_scripts_tab(self):
         private void CreateScriptsTab()
         {
             var tab = new TabItem { Header = "Scripts" };
@@ -508,8 +493,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:375-394
-        // Original: def _create_ini_preview_tab(self):
         private void CreateINIPreviewTab()
         {
             var tab = new TabItem { Header = "INI Preview" };
@@ -541,8 +524,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:397-403
-        // Original: def _browse_tslpatchdata_path(self):
         private async void BrowseTslpatchdataPath()
         {
             if (_pathEdit == null)
@@ -622,8 +603,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:405-420
-        // Original: def _create_new_tslpatchdata(self):
         private async void CreateNewTslpatchdata()
         {
             var topLevel = TopLevel.GetTopLevel(this);
@@ -726,8 +705,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:422-430
-        // Original: def _load_existing_config(self):
         private void LoadExistingConfig()
         {
             if (string.IsNullOrEmpty(_tslpatchdataPath) || !Directory.Exists(_tslpatchdataPath))
@@ -845,8 +822,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:521-523
-        // Original: def _on_gff_file_selected(self, item):
         private void OnGffFileSelected(object sender, SelectionChangedEventArgs e)
         {
             if (_gffFileList == null || _gffFieldsTree == null)
@@ -951,8 +926,6 @@ namespace OdyTools.Dialogs
             return modifier.GetType().Name;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:525-527
-        // Original: def _open_gff_editor(self):
         private async void OpenGffEditor()
         {
             if (_gffFileList == null || _installation == null)
@@ -1034,8 +1007,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:529-534
-        // Original: def _add_script(self):
         private async Task AddScript()
         {
             if (_scriptList == null)
@@ -1124,8 +1095,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:536-540
-        // Original: def _remove_script(self):
         private void RemoveScript()
         {
             if (_scriptList == null)
@@ -1148,8 +1117,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:483-497
-        // Original: def _add_tlk_string(self):
         private async void AddTlkString()
         {
             var dialog = new TLKStringEditDialog(this, null);
@@ -1184,8 +1151,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:487-489
-        // Original: def _edit_tlk_string(self):
         private async void EditTlkString()
         {
             var selectedItem = _tlkStringTree?.SelectedItem;
@@ -1261,8 +1226,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:491-496
-        // Original: def _remove_tlk_string(self):
         private void RemoveTlkString()
         {
             var selectedItem = _tlkStringTree?.SelectedItem;
@@ -1299,8 +1262,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:498-519
-        // Original: def _open_tlk_editor(self):
         private void OpenTlkEditor()
         {
             if (_installation == null)
@@ -1349,8 +1310,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:460-481
-        // Original: def _add_2da_memory(self), _on_2da_selected(self), _add_2da_token(self), _edit_2da_token(self), _remove_2da_token(self):
         private async void Add2DAMemory()
         {
             if (_installation == null)
@@ -1617,7 +1576,6 @@ namespace OdyTools.Dialogs
 
             _tlkStringTree.Items.Clear();
 
-            // Matching PyKotor implementation: QTreeWidget with columns ["Token Name", "String", "Used By"]
             // Create TreeViewItem objects with custom Grid layout for columns
             foreach (var kvp in _tlkStrings.OrderBy(x => x.Key))
             {
@@ -2033,8 +1991,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:566-571
-        // Original: def _preview_ini(self):
         private void PreviewIni()
         {
             // Switch to INI Preview tab
@@ -2046,8 +2002,6 @@ namespace OdyTools.Dialogs
             UpdateIniPreview();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:542-564
-        // Original: def _update_ini_preview(self):
         private void UpdateIniPreview()
         {
             if (_iniPreviewText == null)
@@ -2216,8 +2170,6 @@ namespace OdyTools.Dialogs
             _iniPreviewText.Text = previewLines.ToString();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:573-588
-        // Original: def _save_configuration(self):
         private async void SaveConfiguration()
         {
             try
@@ -2282,8 +2234,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:422-430
-        // Original: def _load_existing_config(self) - TLK loading part
         private void LoadTlkStringsFromIni(string[] iniLines)
         {
             if (iniLines == null || iniLines.Length == 0)
@@ -2545,7 +2495,6 @@ namespace OdyTools.Dialogs
     }
 
     // Dialog for selecting 2DA file for memory token tracking
-    // Matching PyKotor implementation pattern for dialogs
     internal class TwoDAMemorySelectDialog : Window
     {
         public string Selected2DAFile { get; private set; }
@@ -2648,7 +2597,6 @@ namespace OdyTools.Dialogs
     }
 
     // Dialog for adding/editing 2DA memory tokens
-    // Matching PyKotor implementation pattern for dialogs
     internal class TwoDAMemoryTokenEditDialog : Window
     {
         public TwoDAMemoryTokenEntry TokenEntry { get; private set; }
@@ -2799,7 +2747,6 @@ namespace OdyTools.Dialogs
     }
 
     // Dialog for adding/editing TLK strings
-    // Matching PyKotor implementation pattern for dialogs
     internal class TLKStringEditDialog : Window
     {
         public TLKStringEntry TlkEntry { get; private set; }

@@ -48,9 +48,13 @@ namespace OdyTools.Themes
         public static readonly Color StatusBarForeground = Color.Parse("#FFFFFF");
         public static readonly Color StatusBarNoFolderBackground = Color.Parse("#68217A");
 
-        // Sidebar / activity bar
+        // Sidebar / activity bar (VS Code Dark+ 1:1)
         public static readonly Color SideBarBackground = Color.Parse("#252526");
         public static readonly Color ActivityBarBackground = Color.Parse("#333333");
+        public static readonly Color ActivityBarForeground = Color.Parse("#FFFFFF");
+        public static readonly Color ActivityBarInactiveForeground = Color.Parse("#858585");
+        public static readonly Color ActivityBarActiveBorder = Color.Parse("#007ACC");
+        public static readonly Color ActivityBarActiveBackground = Color.Parse("#37373D");
         public static readonly Color SideBarForeground = Color.Parse("#CCCCCC");
         public static readonly Color SideBarTitleForeground = Color.Parse("#BBBBBB");
 
@@ -73,5 +77,9 @@ namespace OdyTools.Themes
         public static readonly SolidColorBrush LineNumbersForegroundBrush = new SolidColorBrush(LineNumbersForeground);
         public static readonly SolidColorBrush EditorIndentGuideBrush = new SolidColorBrush(EditorIndentGuideBackground);
         public static readonly SolidColorBrush EditorIndentGuideActiveBrush = new SolidColorBrush(EditorIndentGuideActiveBackground);
+        public static readonly SolidColorBrush StatusBarForegroundBrush = new SolidColorBrush(StatusBarForeground);
+        public static readonly SolidColorBrush StatusBarBackgroundBrush = new SolidColorBrush(StatusBarBackground);
+        public static readonly SolidColorBrush PanelBackgroundBrush = new SolidColorBrush(PanelBackground);
+        public static readonly SolidColorBrush PanelForegroundBrush = new SolidColorBrush(PanelForeground);
     }
 }

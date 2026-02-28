@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "columns": [
+    {
+      "name": "Column 1",
+      "type": "string"
+    }
+  ],
+  {
+    "rows": [
+    {
+      "values": ["Value 1"]
+    }
+    ]
+//  } // <-- This is missing
+}

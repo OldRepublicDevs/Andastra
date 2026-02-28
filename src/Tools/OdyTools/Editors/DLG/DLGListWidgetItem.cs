@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using BioWare.Resource.Formats.GFF.Generics.DLG;
 using Avalonia.Controls;
@@ -8,11 +9,11 @@ namespace OdyTools.Editors
 {
     /// <summary>
     /// List widget item for DLG links with weak reference support.
-    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/list_widget_base.py:28-76
-    /// Original: class DLGListWidgetItem(QListWidgetItem):
     /// </summary>
-    public class DLGListWidgetItem
+    public class DLGListWidgetItem : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
         private readonly WeakReference<DLGLink> _linkRef;
         private readonly Dictionary<int, object> _dataCache = new Dictionary<int, object>();
         private bool _isOrphaned = false;
@@ -57,7 +58,6 @@ namespace OdyTools.Editors
 
         /// <summary>
         /// Gets data for the specified role, using cache if the item has been deleted.
-        /// Matching PyKotor implementation: def data(self, role: int = Qt.ItemDataRole.UserRole) -> Any
         /// </summary>
         public object GetData(int role)
         {
@@ -72,16 +72,23 @@ namespace OdyTools.Editors
 
         /// <summary>
         /// Sets data for the specified role and updates the cache.
-        /// Matching PyKotor implementation: def setData(self, role: int, value: Any)
         /// </summary>
         public void SetData(int role, object value)
         {
             _dataCache[role] = value;
+            if (role == 0)
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayText)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PlainDisplayText)));
+            }
+            else if (role == 1)
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TooltipText)));
+            }
         }
 
         /// <summary>
         /// Determines if this object has been deleted.
-        /// Matching PyKotor implementation: def isDeleted(self) -> bool
         /// </summary>
         public bool IsDeleted()
         {
@@ -109,6 +116,23 @@ namespace OdyTools.Editors
         {
             get => GetData(1) as string ?? "";
             set => SetData(1, value);
+        }
+
+        /// <summary>
+        /// Gets plain display text with HTML stripped, for use in item template (word-wrappable).
+        /// </summary>
+        public string PlainDisplayText
+        {
+            get
+            {
+                string display = GetData(0) as string ?? "";
+                if (!string.IsNullOrEmpty(display) && display.Contains("<"))
+                {
+                    display = System.Text.RegularExpressions.Regex.Replace(display, "<.*?>", "");
+                    display = System.Net.WebUtility.HtmlDecode(display);
+                }
+                return display ?? "";
+            }
         }
 
         /// <summary>

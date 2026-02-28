@@ -7,8 +7,6 @@ using OdyTools.Data;
 
 namespace OdyTools.Data
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py:203
-    // Original: class GlobalSettings(Settings):
     public class GlobalSettings : Settings
     {
         private static GlobalSettings _instance;
@@ -31,8 +29,6 @@ namespace OdyTools.Data
                 return _instance;
             }
         }
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py:GlobalSettings
-        // Original: gffSpecializedEditors: SettingsProperty[bool] = SettingsProperty("gffSpecializedEditors", True)
         public SettingsProperty<bool> GffSpecializedEditors { get; } = new SettingsProperty<bool>("GffSpecializedEditors", true);
 
         public bool UseBetaChannel { get; set; } = false;
@@ -46,8 +42,6 @@ namespace OdyTools.Data
         public List<string> RecentFiles { get; set; } = new List<string>();
         private bool _firstTime = true;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:311
-        // Original: app_env_variables: SettingsProperty[dict[str, str]] = Settings.addSetting("EnvironmentVariables", {...})
         public Dictionary<string, string> AppEnvVariables
         {
             get => GetValue("EnvironmentVariables", new Dictionary<string, string>());
@@ -80,8 +74,6 @@ namespace OdyTools.Data
             GffSpecializedEditors.SetValue(this, value);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py:207-221
-        // Original: def installations(self) -> dict[str, InstallationConfig]:
         public Dictionary<string, Dictionary<string, object>> Installations()
         {
             var installations = GetValue("Installations", new Dictionary<string, Dictionary<string, object>>());
@@ -170,32 +162,90 @@ namespace OdyTools.Data
             SetValue("Installations", installations);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py:358
-        // Original: showPreviewUTC: SettingsProperty[bool] = Settings.addSetting("showPreviewUTC", ...)
+        /// <summary>
+        /// Calls PathTools.FindKotorPathsFromDefault(), builds installation entries for any found paths,
+        /// and merges them into the current installations (existing names are not overwritten).
+        /// </summary>
+        /// <returns>Number of newly added installations.</returns>
+        public int MergeDetectedInstallationsFromDefault()
+        {
+            var current = Installations() ?? new Dictionary<string, Dictionary<string, object>>();
+            if (current == null)
+                current = new Dictionary<string, Dictionary<string, object>>();
+            var detected = BuildInstallationsFromFoundPaths(PathTools.FindKotorPathsFromDefault());
+            int added = 0;
+            foreach (var kv in detected)
+            {
+                if (!current.ContainsKey(kv.Key))
+                {
+                    current[kv.Key] = kv.Value;
+                    added++;
+                }
+            }
+            SetInstallations(current);
+            return added;
+        }
+
+        private static Dictionary<string, Dictionary<string, object>> BuildInstallationsFromFoundPaths(
+            Dictionary<BioWareGame, List<CaseAwarePath>> foundPaths)
+        {
+            var result = new Dictionary<string, Dictionary<string, object>>();
+            if (foundPaths == null) return result;
+            int k1Index = 0;
+            if (foundPaths.TryGetValue(BioWareGame.K1, out var k1Paths) && k1Paths != null)
+            {
+                foreach (var path in k1Paths)
+                {
+                    string resolvedPath = path?.GetResolvedPath();
+                    if (string.IsNullOrEmpty(resolvedPath) || !Directory.Exists(resolvedPath)) continue;
+                    string name = k1Index == 0 ? "KotOR" : "KotOR " + (k1Index + 1);
+                    result[name] = new Dictionary<string, object>
+                    {
+                        { "name", name },
+                        { "path", resolvedPath },
+                        { "tsl", false }
+                    };
+                    k1Index++;
+                }
+            }
+            int k2Index = 0;
+            if (foundPaths.TryGetValue(BioWareGame.K2, out var k2Paths) && k2Paths != null)
+            {
+                foreach (var path in k2Paths)
+                {
+                    string resolvedPath = path?.GetResolvedPath();
+                    if (string.IsNullOrEmpty(resolvedPath) || !Directory.Exists(resolvedPath)) continue;
+                    string name = k2Index == 0 ? "KotOR II: TSL" : "KotOR II: TSL " + (k2Index + 1);
+                    result[name] = new Dictionary<string, object>
+                    {
+                        { "name", name },
+                        { "path", resolvedPath },
+                        { "tsl", true }
+                    };
+                    k2Index++;
+                }
+            }
+            return result;
+        }
+
         public bool ShowPreviewUTC
         {
             get => GetValue("showPreviewUTC", false);
             set => SetValue("showPreviewUTC", value);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py
-        // Original: showPreviewUTD: SettingsProperty[bool] = Settings.addSetting("showPreviewUTD", ...)
         public bool ShowPreviewUTD
         {
             get => GetValue("showPreviewUTD", false);
             set => SetValue("showPreviewUTD", value);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py
-        // Original: showPreviewUTP: SettingsProperty[bool] = Settings.addSetting("showPreviewUTP", ...)
         public bool ShowPreviewUTP
         {
             get => GetValue("showPreviewUTP", false);
             set => SetValue("showPreviewUTP", value);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:60-67
-        // Original: settings.value("GlobalFont", "")
         public string GlobalFont
         {
             get => GetValue("GlobalFont", "");

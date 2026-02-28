@@ -1,5 +1,5 @@
 // Polyfills for APIs available in .NET 9.0 but missing in .NET Framework 4.7.2.
-// Only compiled when targeting net472. Extensions placed in System namespace for automatic availability.
+// Only compiled when targeting net48. Extensions placed in System namespace for automatic availability.
 #if NET472
 using System.Collections.Generic;
 using System.Globalization;

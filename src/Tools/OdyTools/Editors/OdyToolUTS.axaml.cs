@@ -3,18 +3,20 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Media;
+using System.Threading.Tasks;
 using BioWare.Extract;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform.Storage;
 using BioWare;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.GFF.Generics;
 using BioWare.Resource;
 using OdyTools.Data;
 using OdyTools.Dialogs;
+using OdyTools.Widgets;
 using GFFAuto = BioWare.Resource.Formats.GFF.GFFAuto;
 using Window = Avalonia.Controls.Window;
 using TextBlock = Avalonia.Controls.TextBlock;
@@ -37,9 +39,7 @@ using MsBox.Avalonia.Enums;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:28
-    // Original: class OdyToolUTS(Editor):
-    public class OdyToolUTS : Editor
+    public partial class OdyToolUTS : Editor
     {
         private UTS _uts;
 
@@ -86,13 +86,8 @@ namespace OdyTools.Editors
         // UI Controls - Comments
         private TextBox _commentsEdit;
 
-        // Sound playback - Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:55-56
-        // Original: self.player = QMediaPlayer(self), self.buffer = QBuffer(self)
-        private global::System.Media.SoundPlayer _soundPlayer;
-        private MemoryStream _soundStream;
+        private NAudioMediaPlayer _soundPlayer;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:29-73
-        // Original: def __init__(self, parent, installation):
         public OdyToolUTS(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTS", "sound",
                 new[] { ResourceType.UTS },
@@ -102,8 +97,8 @@ namespace OdyTools.Editors
             _installation = installation;
             _uts = new UTS();
 
-            // Initialize sound player - Matching PyKotor: self.player = QMediaPlayer(self)
-            _soundPlayer = new global::System.Media.SoundPlayer();
+            // Initialize cross-platform sound player (replaces Windows-only SoundPlayer)
+            _soundPlayer = new NAudioMediaPlayer();
 
             InitializeComponent();
             SetupUI();
@@ -129,8 +124,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:75-106
-        // Original: def _setup_signals(self):
         private void SetupProgrammaticUI()
         {
             var scrollViewer = new ScrollViewer();
@@ -313,17 +306,30 @@ namespace OdyTools.Editors
             mainPanel.Children.Add(commentsGroup);
 
             scrollViewer.Content = mainPanel;
-            Content = scrollViewer;
+            var contentRoot = this.FindControl<Avalonia.Controls.ContentControl>("contentRoot");
+            if (contentRoot != null)
+            {
+                contentRoot.Content = scrollViewer;
+            }
+            else
+            {
+                Content = scrollViewer;
+            }
         }
 
         private void SetupUI()
         {
-            // Try to find controls from XAML if available
-            // TODO: STUB - For now, programmatic UI is set up in SetupProgrammaticUI
+            var contentRoot = this.FindControl<Avalonia.Controls.ContentControl>("contentRoot");
+            if (contentRoot != null && contentRoot.Content == null)
+            {
+                SetupProgrammaticUI();
+            }
+            else if (contentRoot == null && Content == null)
+            {
+                SetupProgrammaticUI();
+            }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:111-121
-        // Original: def load(self, filepath, resref, restype, data):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
@@ -338,8 +344,6 @@ namespace OdyTools.Editors
             LoadUTS(_uts);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:123-195
-        // Original: def _loadUTS(self, uts):
         private void LoadUTS(UTS uts)
         {
             _uts = uts;
@@ -424,15 +428,12 @@ namespace OdyTools.Editors
             if (_commentsEdit != null) _commentsEdit.Text = uts.Comment;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:196-252
-        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
             // Matching Python: uts: UTS = deepcopy(self._uts)
             var uts = CopyUts(_uts);
 
             // Basic - read from UI controls (matching Python which always reads from UI)
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:213
             // Python: uts.name = self.ui.nameEdit.locstring()
             // In C#, nameEdit is TextBox (read-only), LocalizedString is stored in _uts.Name and updated via EditName()
             // So we use uts.Name from the copy (which preserves the value set by EditName())
@@ -444,7 +445,6 @@ namespace OdyTools.Editors
             uts.Active = _activeCheckbox?.IsChecked == true;
 
             // Advanced - read from UI controls
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:219-225
             uts.Positional = _playSpecificRadio?.IsChecked == true;
             uts.Random = _orderRandomRadio?.IsChecked == true;
             uts.Interval = (int)(_intervalSpin?.Value ?? 0);
@@ -453,7 +453,6 @@ namespace OdyTools.Editors
             uts.PitchVariance = (float)((_pitchVariationSlider?.Value ?? 0) / 100.0);
 
             // Sounds - read from UI controls
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:227-234
             uts.Sounds.Clear();
             if (_soundList?.Items != null)
             {
@@ -467,7 +466,6 @@ namespace OdyTools.Editors
             }
 
             // Positioning - read from UI controls
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:236-243
             uts.Continuous = _styleSeamlessRadio?.IsChecked == true;
             uts.Looping = (_styleSeamlessRadio?.IsChecked == true) || (_styleRepeatRadio?.IsChecked == true);
             uts.MaxDistance = (float)(_maxVolumeDistanceSpin?.Value ?? 0);
@@ -477,7 +475,6 @@ namespace OdyTools.Editors
             uts.RandomRangeX = (float)(_eastRandomSpin?.Value ?? 0);
 
             // Comments - read from UI controls
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:246
             uts.Comment = _commentsEdit?.Text ?? "";
 
             // Matching Python: gff: GFF = dismantle_uts(uts); write_gff(gff, data)
@@ -496,8 +493,6 @@ namespace OdyTools.Editors
             return UTSHelpers.ConstructUts(gff);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:254-256
-        // Original: def new(self):
         public override void New()
         {
             base.New();
@@ -505,8 +500,6 @@ namespace OdyTools.Editors
             LoadUTS(_uts);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:258-262
-        // Original: def change_name(self):
         private void EditName()
         {
             if (_installation == null) return;
@@ -521,8 +514,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:264-267
-        // Original: def generate_tag(self):
         private void GenerateTag()
         {
             if (string.IsNullOrEmpty(_resrefEdit?.Text))
@@ -535,8 +526,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:269-273
-        // Original: def generate_resref(self):
         private void GenerateResref()
         {
             if (_resrefEdit != null)
@@ -545,8 +534,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:275-287
-        // Original: def change_style(self):
         private void ChangeStyle()
         {
             // Enable/disable interval and variation groups based on style
@@ -564,8 +551,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:289-303
-        // Original: def change_play(self):
         private void ChangePlay()
         {
             // Enable/disable range and distance groups based on play mode
@@ -583,22 +568,10 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:305-321
-        // Original: def play_sound(self):
         private void PlaySound()
         {
-            // Matching PyKotor implementation: self.player.stop()
-            try
-            {
-                _soundPlayer?.Stop();
-            }
-            catch
-            {
-                // Ignore errors when stopping
-            }
+            _soundPlayer?.Stop();
 
-            // Matching PyKotor implementation: cur_item: QListWidgetItem | None = self.ui.soundList.currentItem()
-            // Matching PyKotor: cur_item_text: str | None = cur_item.text() if cur_item else None
             if (_soundList?.SelectedItem == null)
             {
                 return;
@@ -610,13 +583,11 @@ namespace OdyTools.Editors
                 return;
             }
 
-            // Matching PyKotor implementation: assert self._installation is not None
             if (_installation == null)
             {
                 return;
             }
 
-            // Matching PyKotor implementation: data: bytes | None = self._installation.sound(resname)
             // Default search order: SOUND, VOICE, OVERRIDE, CHITIN (matching PyKotor's default for UTS editor)
             byte[] soundData = _installation.Sound(resname.Trim(), new[]
             {
@@ -626,14 +597,12 @@ namespace OdyTools.Editors
                 SearchLocation.CHITIN
             });
 
-            // Matching PyKotor implementation: if data: self.play_byte_source_media(data); return True
             if (soundData != null && soundData.Length > 0)
             {
                 PlayByteSourceMedia(soundData);
             }
             else
             {
-                // Matching PyKotor implementation: QMessageBox(QMessageBox.Icon.Critical, "Could not find audio file", f"Could not find audio resource '{resname}'.")
                 var msgBox = MessageBoxManager.GetMessageBoxStandard(
                     "Could not find audio file",
                     $"Could not find audio resource '{resname}'.",
@@ -645,14 +614,11 @@ namespace OdyTools.Editors
 
         /// <summary>
         /// Plays audio from byte array data.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/base.py:736-772
-        /// Original: def play_byte_source_media(self, data: bytes | None) -> bool:
         /// </summary>
         /// <param name="data">The audio data bytes (WAV format).</param>
         /// <returns>True if playback started successfully, false otherwise.</returns>
         private bool PlayByteSourceMedia(byte[] data)
         {
-            // Matching PyKotor implementation: if not data: self.blink_window(); return False
             if (data == null || data.Length == 0)
             {
                 return false;
@@ -663,18 +629,8 @@ namespace OdyTools.Editors
                 // Stop any currently playing sound
                 _soundPlayer?.Stop();
 
-                // Dispose previous stream if it exists
-                if (_soundStream != null)
-                {
-                    _soundStream.Dispose();
-                    _soundStream = null;
-                }
-
-                // Create a new memory stream for the sound data
-                // Note: The stream must remain alive while the sound is playing
-                // Matching PyKotor's QBuffer approach which keeps the buffer alive
-                _soundStream = new MemoryStream(data);
-                _soundPlayer.Stream = _soundStream;
+                // Set source from WAV bytes (cross-platform; NAudio owns the buffer)
+                _soundPlayer.SetSourceFromBytes(data);
                 _soundPlayer.Play();
 
                 return true;
@@ -693,23 +649,11 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:323-326
-        // Original: def stop_sound(self):
         private void StopSound()
         {
-            // Matching PyKotor implementation: self.player.stop()
-            try
-            {
-                _soundPlayer?.Stop();
-            }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine($"Failed to stop sound: {ex}");
-            }
+            _soundPlayer?.Stop();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:328-331
-        // Original: def add_sound(self):
         private void AddSound()
         {
             if (_soundList != null)
@@ -718,8 +662,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:333-336
-        // Original: def remove_sound(self):
         private void RemoveSound()
         {
             if (_soundList?.SelectedItem != null)
@@ -728,8 +670,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:338-348
-        // Original: def move_sound_up(self):
         private void MoveSoundUp()
         {
             if (_soundList?.SelectedIndex > 0 && _soundList?.SelectedIndex < _soundList.Items.Count)
@@ -742,8 +682,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:350-360
-        // Original: def move_sound_down(self):
         private void MoveSoundDown()
         {
             if (_soundList?.SelectedIndex >= 0 && _soundList.SelectedIndex < _soundList.Items.Count - 1)
@@ -758,13 +696,34 @@ namespace OdyTools.Editors
 
         public override void SaveAs()
         {
+            _ = RunSaveAsAsync();
+        }
+
+        protected override async Task RunSaveAsAsync()
+        {
+            var storage = StorageProvider;
+            if (storage == null) return;
+            string suggestedName = !string.IsNullOrEmpty(_resname) ? _resname : "sound";
+            var options = new FilePickerSaveOptions
+            {
+                Title = "Save As",
+                SuggestedFileName = suggestedName + ".uts",
+                FileTypeChoices = new[] { new FilePickerFileType("Sound (UTS)") { Patterns = new[] { "*.uts" } }, new FilePickerFileType("All files") { Patterns = new[] { "*.*" } } }
+            };
+            var file = await storage.SaveFilePickerAsync(options);
+            if (file == null) return;
+            string path = file.Path?.LocalPath ?? "";
+            if (string.IsNullOrWhiteSpace(path)) return;
+            _filepath = path;
+            string ext = (Path.GetExtension(path) ?? "").TrimStart('.').ToLowerInvariant();
+            _restype = ResourceType.FromExtension(ext) ?? ResourceType.UTS;
+            _resname = Path.GetFileNameWithoutExtension(path);
+            RefreshWindowTitle();
             Save();
         }
 
         /// <summary>
         /// Cleans up resources when the window is closed.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:365-366
-        /// Original: def closeEvent(self, e: QCloseEvent): self.player.stop()
         /// </summary>
         protected override void OnClosed(EventArgs e)
         {
@@ -773,15 +732,6 @@ namespace OdyTools.Editors
             {
                 _soundPlayer?.Stop();
                 _soundPlayer?.Dispose();
-            }
-            catch
-            {
-                // Ignore errors during cleanup
-            }
-
-            try
-            {
-                _soundStream?.Dispose();
             }
             catch
             {

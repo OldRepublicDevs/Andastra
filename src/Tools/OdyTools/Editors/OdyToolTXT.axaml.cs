@@ -137,12 +137,7 @@ namespace OdyTools.Editors
                 catch { }
             }
 
-            Bind("actionNew", () => New());
-            Bind("actionOpen", () => _ = RunOpenAsync());
-            Bind("actionSave", () => Save());
-            Bind("actionSaveAs", () => _ = RunSaveAsAsync());
-            Bind("actionRevert", () => Revert());
-            Bind("actionExit", () => Close());
+            // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
 
             Bind("actionUndo", () => Undo());
             Bind("actionRedo", () => Redo());
@@ -389,7 +384,7 @@ namespace OdyTools.Editors
             UpdateStatusBar();
         }
 
-        private async Task RunOpenAsync()
+        protected override async Task RunOpenAsync()
         {
             var storageProvider = StorageProvider;
             if (storageProvider == null) return;
@@ -421,7 +416,7 @@ namespace OdyTools.Editors
             }
         }
 
-        private void Revert()
+        public override void Revert()
         {
             if (_revert == null || _revert.Length == 0) return;
             try
@@ -434,7 +429,7 @@ namespace OdyTools.Editors
             catch (Exception ex) { Console.WriteLine($"Revert failed: {ex}"); }
         }
 
-        private async Task RunSaveAsAsync()
+        protected override async Task RunSaveAsAsync()
         {
             var storageProvider = StorageProvider;
             if (storageProvider == null) return;

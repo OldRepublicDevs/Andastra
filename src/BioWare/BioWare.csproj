@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net9.0;net472</TargetFrameworks>
+    <TargetFrameworks>net9.0;net48</TargetFrameworks>
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -50,6 +50,11 @@
     <UseRidGraph>true</UseRidGraph>
   </PropertyGroup>
 
+  <!-- NET472 enables net48 polyfills (Net472PathHelper, Net472Polyfills). Must run after Config so DefineConstants is not overwritten. -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
+    <DefineConstants>$(DefineConstants);NET472</DefineConstants>
+  </PropertyGroup>
+
   <!-- Remove duplicate using directives (CS0105) before compile. Idempotent. Run from repo root: .\scripts\Remove-DuplicateUsings.ps1 -->
   <Target Name="RemoveDuplicateUsings" BeforeTargets="BeforeBuild">
     <PropertyGroup>
@@ -75,8 +80,8 @@
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
   </ItemGroup>
 
-  <!-- net472 polyfill packages: provide APIs that exist in net9.0 but not in .NET Framework -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+  <!-- net48 polyfill packages: provide APIs that exist in net9.0 but not in .NET Framework -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <PackageReference Include="Microsoft.Bcl.HashCode" Version="6.0.0" />
     <PackageReference Include="System.ValueTuple" Version="4.6.1" />
     <PackageReference Include="System.Memory" Version="4.6.3" />

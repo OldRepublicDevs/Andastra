@@ -2,7 +2,8 @@ using System;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Game.Scripting.Interfaces;
+using Andastra.Game.Scripting.Abstractions;
+using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
 
 namespace Andastra.Game.Games.Common
@@ -155,6 +156,10 @@ namespace Andastra.Game.Games.Common
         }
 
         public abstract IEngineGame CreateGameSession();
+
+        object Andastra.Game.Scripting.Abstractions.IEngine.ResourceProvider => ResourceProvider;
+        object Andastra.Game.Scripting.Abstractions.IEngine.World => World;
+        object Andastra.Game.Scripting.Abstractions.IEngine.CreateGameSession() => CreateGameSession();
 
         protected abstract IGameResourceProvider CreateResourceProvider(string installationPath);
 

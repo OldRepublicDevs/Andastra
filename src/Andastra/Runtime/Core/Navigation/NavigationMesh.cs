@@ -3040,14 +3040,14 @@ namespace Andastra.Runtime.Core.Navigation
             }
 
             // Edge case: Invalid max distance
-            if (maxDistance <= 0f || !float.IsFinite(maxDistance))
+            if (maxDistance <= 0f || float.IsNaN(maxDistance) || float.IsInfinity(maxDistance))
             {
                 return false;
             }
 
             // Edge case: Zero or near-zero direction vector
             float dirLength = direction.Length();
-            if (dirLength < 1e-6f || !float.IsFinite(dirLength))
+            if (dirLength < 1e-6f || float.IsNaN(dirLength) || float.IsInfinity(dirLength))
             {
                 return false;
             }
@@ -3248,7 +3248,7 @@ namespace Andastra.Runtime.Core.Navigation
             }
 
             // Edge case: Invalid max distance
-            if (maxDist <= 0f || !float.IsFinite(maxDist))
+            if (maxDist <= 0f || float.IsNaN(maxDist) || float.IsInfinity(maxDist))
             {
                 return false;
             }

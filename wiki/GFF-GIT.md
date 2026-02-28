@@ -50,6 +50,27 @@ Part of the [GFF File Format Documentation](GFF-File-Format).
 | `SoundList` | GITSound | Positional audio emitters |
 | `CameraList` | GITCamera | Camera definitions |
 
+**GFF Struct IDs:**
+
+Each list entry and nested list entry uses a numeric struct type ID in the GFF. These are fixed; use them when creating or editing GIT structs so the engine and tools recognize the type.
+
+| List or nested list | Struct type | Struct ID |
+| ------------------- | ----------- | --------- |
+| `Creature List` | GITCreature | 4 |
+| `Door List` | GITDoor | 8 |
+| `Encounter List` | GITEncounter | 7 |
+| `Encounter List` → `Geometry` | geometry vertex | 1 |
+| `Encounter List` → `SpawnPointList` | spawn point | 2 |
+| `Placeable List` | GITPlaceable | 9 |
+| `SoundList` | GITSound | 6 |
+| `StoreList` | GITStore | 11 |
+| `TriggerList` | GITTrigger | 1 |
+| `TriggerList` → `Geometry` | geometry vertex | 3 |
+| `WaypointList` | GITWaypoint | 5 |
+| `CameraList` | GITCamera | 14 |
+
+*Source: `src/BioWare/Resource/Formats/GFF/Generics/GIT.cs` (e.g. `GITCreature.GffStructId`, `GITEncounter.GffGeometryStructId`).*
+
 **Instance structure:**
 
 Each instance type has common fields plus type-specific data:

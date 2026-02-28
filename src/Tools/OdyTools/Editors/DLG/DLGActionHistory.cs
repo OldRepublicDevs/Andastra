@@ -43,6 +43,7 @@ namespace OdyTools.Editors.DLG
 
             // Add to undo stack
             _undoStack.Push(action);
+            _editor.NotifyActionHistoryChanged();
         }
 
         // Undo the last action
@@ -61,6 +62,7 @@ namespace OdyTools.Editors.DLG
 
             // Add to redo stack
             _redoStack.Push(action);
+            _editor.NotifyActionHistoryChanged();
         }
 
         // Redo the last undone action
@@ -79,6 +81,7 @@ namespace OdyTools.Editors.DLG
 
             // Add to undo stack
             _undoStack.Push(action);
+            _editor.NotifyActionHistoryChanged();
         }
 
         // Clear all undo/redo history
@@ -86,6 +89,7 @@ namespace OdyTools.Editors.DLG
         {
             _undoStack.Clear();
             _redoStack.Clear();
+            _editor.NotifyActionHistoryChanged();
         }
 
         // Get the number of actions in undo stack (for testing/debugging)

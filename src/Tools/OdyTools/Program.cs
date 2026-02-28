@@ -5,8 +5,6 @@ using OdyTools.Shell;
 
 namespace OdyTools.NET
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/__main__.py:43
-    // Original: if __name__ == "__main__": main_init(); main()
     internal class Program
     {
         internal static string PendingOpenTslPatchDataPath { get; private set; }

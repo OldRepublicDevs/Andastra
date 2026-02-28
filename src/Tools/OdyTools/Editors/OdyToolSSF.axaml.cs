@@ -323,12 +323,7 @@ namespace OdyTools.Editors
                 var item = EditorHelpers.FindControlSafe<MenuItem>(this, name) ?? this.FindControl<MenuItem>(name);
                 if (item != null) item.Click += (s, e) => handler();
             }
-            Bind("actionNew", () => New());
-            Bind("actionOpen", () => { });
-            Bind("actionSave", () => Save());
-            Bind("actionSaveAs", () => _ = RunSaveAsAsync());
-            Bind("actionRevert", () => Revert());
-            Bind("actionExit", () => Close());
+            // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
             Bind("actionUndo", () => Undo());
             Bind("actionRedo", () => Redo());
             Bind("actionFindStrref", () => ShowFindStrrefDialog());
@@ -385,7 +380,7 @@ namespace OdyTools.Editors
             finally { _undoRedoInProgress = false; }
         }
 
-        private void Revert()
+        public override void Revert()
         {
             if (_revert == null || _revert.Length == 0) return;
             try
@@ -398,7 +393,7 @@ namespace OdyTools.Editors
             catch (Exception ex) { Console.WriteLine($"Revert failed: {ex}"); }
         }
 
-        private async Task RunSaveAsAsync()
+        protected override async Task RunSaveAsAsync()
         {
             var storageProvider = (this as Window)?.StorageProvider;
             if (storageProvider == null) return;

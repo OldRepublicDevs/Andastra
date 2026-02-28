@@ -126,7 +126,7 @@ namespace Andastra.Game.Games.Engines.Common
 
             _resourceProvider = CreateResourceProvider(installationPath);
             _world = CreateWorld();
-            _engineApi = _profile.CreateEngineApi();
+            _engineApi = (IEngineApi)_profile.CreateEngineApi();
             _initialized = true;
         }
 

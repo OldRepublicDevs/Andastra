@@ -10,8 +10,6 @@ using MsBox.Avalonia.Enums;
 
 namespace OdyTools.Widgets.Settings
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py
-    // Original: class EnvVarsWidget(QWidget):
     public partial class EnvVarsWidget : UserControl
     {
         private DataGrid _tableWidget;
@@ -102,8 +100,6 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py
-        // Original: def populate_environment_variables(self):
         private void PopulateEnvironmentVariables()
         {
             if (_tableWidget == null)
@@ -123,8 +119,6 @@ namespace OdyTools.Widgets.Settings
             _tableWidget.ItemsSource = _environmentVariables;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py
-        // Original: def add_environment_variable(self):
         private async void AddEnvironmentVariable()
         {
             Window parentWindow = GetParentWindow();
@@ -166,8 +160,6 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py
-        // Original: def edit_environment_variable(self):
         private async void EditEnvironmentVariable()
         {
             if (_tableWidget == null || _tableWidget.SelectedItem == null)
@@ -236,8 +228,6 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:244-263
-        // Original: def remove_environment_variable(self):
         private async void RemoveEnvironmentVariable()
         {
             if (_tableWidget == null || _tableWidget.SelectedItem == null)
@@ -268,8 +258,6 @@ namespace OdyTools.Widgets.Settings
             RemoveEnvironmentVariableFromSettings(key);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:238-242
-        // Original: def remove_environment_variable_from_settings(self, key: str):
         private void RemoveEnvironmentVariableFromSettings(string key)
         {
             var envVars = _settings.AppEnvVariables;
@@ -280,8 +268,6 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:189-202
-        // Original: def save_environment_variable(self, key: str, value: str):
         private void SaveEnvironmentVariable(string key, string value)
         {
             var envVars = _settings.AppEnvVariables;

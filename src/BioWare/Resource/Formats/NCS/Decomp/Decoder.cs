@@ -1,4 +1,8 @@
-// Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/Decoder.java:20-496
+// Copyright 2021-2025 NCSDecomp
+// Licensed under the Business Source License 1.1 (BSL 1.1).
+// See LICENSE.txt file in the project root for full license information.
+//
+// Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/Decoder.java
 // Original: public class Decoder
 using System;
 using System.IO;
@@ -307,7 +311,13 @@ namespace BioWare.Resource.Formats.NCS.Decomp
 #else
             float value = BitConverter.Int32BitsToSingle(bits);
 #endif
-            return value.ToString();
+            // Format float to avoid scientific notation (E- or E+) which the lexer doesn't support (matching Java Decoder.java DecimalFormat)
+            string result = value.ToString("0.0###############", System.Globalization.CultureInfo.InvariantCulture);
+            if (result.IndexOf('.') == -1 && Math.Abs(value) < 1.0 && value != 0.0)
+            {
+                result = "0." + result;
+            }
+            return result;
         }
 
         private string ReadString()
@@ -349,7 +359,8 @@ namespace BioWare.Resource.Formats.NCS.Decomp
             };
             int status = this.@in.Read(buffer, 0, 8);
             this.pos += 8;
-            if (status <= 0 || !this.SequenceEqual(buffer, header))
+            // Matching Java: require full 8-byte header (Java uses Arrays.equals which fails if read was short)
+            if (status < 8 || !this.SequenceEqual(buffer, header))
             {
                 throw new Exception("The data file is not an NCS V1.0 file.");
             }

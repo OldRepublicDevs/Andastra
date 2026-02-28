@@ -1,0 +1,39 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="OdyTools.Dialogs.UTCSettingsDialog"
+        Title="UTC Settings"
+        Width="500"
+        Height="360"
+        MinWidth="420"
+        MinHeight="300"
+        WindowStartupLocation="CenterOwner"
+        RequestedThemeVariant="Light">
+  <Window.Styles>
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#F3F5F9" />
+    </Style>
+  </Window.Styles>
+  <Grid RowDefinitions="*,Auto">
+    <ScrollViewer Grid.Row="0" Margin="10">
+      <StackPanel Spacing="12">
+        <TextBlock Text="Choose a game installation for model preview, appearance/soundset/portrait lookup, and resource loading. Uses auto-detected installations from main OdyTools settings."
+                   TextWrapping="Wrap" MaxWidth="460" />
+        <StackPanel Spacing="6">
+          <TextBlock Text="Installation (from main OdyTools settings):" FontWeight="Bold" />
+          <ComboBox x:Name="installationCombo" MinWidth="300" />
+          <TextBlock Text="(None) = no installation; model preview and 2DA lookups will be unavailable."
+                     TextWrapping="Wrap" FontSize="12" Foreground="#555" MaxWidth="460" Margin="0,0,0,4" />
+        </StackPanel>
+        <StackPanel Spacing="8">
+          <TextBlock Text="Save options:" FontWeight="Bold" />
+          <CheckBox x:Name="saveUnusedFieldsCheck" Content="Save unused GFF fields" />
+          <CheckBox x:Name="alwaysSaveK2FieldsCheck" Content="Always save K2/TSL-specific fields" />
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="10">
+      <Button x:Name="okButton" Content="OK" Width="80" />
+      <Button x:Name="cancelButton" Content="Cancel" Width="80" />
+    </StackPanel>
+  </Grid>
+</Window>

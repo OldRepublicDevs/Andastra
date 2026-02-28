@@ -3,8 +3,6 @@ using System.Collections.Generic;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/editor_wiki_mapping.py
-    // Original: EDITOR_WIKI_MAP: dict[str, str | None]
     public static class EditorWikiMapping
     {
         // Editor class name -> wiki markdown filenames (array allows multiple documents per editor)

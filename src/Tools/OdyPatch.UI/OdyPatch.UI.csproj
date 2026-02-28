@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net9.0;net472</TargetFrameworks>
+    <TargetFrameworks>net9.0;net48</TargetFrameworks>
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <OutputType>Library</OutputType>
     <Platforms>x86;x64;arm64</Platforms>
-    
+
     <!-- Build Configuration -->
     <AllowEditAndContinue>false</AllowEditAndContinue>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
@@ -15,7 +15,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
-    
+
     <!-- Package Metadata -->
     <Version>2.0.0-alpha1</Version>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
@@ -34,7 +34,7 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
-    
+
     <!-- Avalonia Configuration -->
     <AvaloniaCopyWin32Dll>false</AvaloniaCopyWin32Dll>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
@@ -56,21 +56,21 @@
     <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.1.5" />
     <PackageReference Include="Avalonia.LinuxFramebuffer" Version="11.3.11" />
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.11" />
-    <PackageReference Include="System.Windows.Extensions" Version="10.0.1" Condition="'$(TargetFramework)' != 'net472'" />
-    
+    <PackageReference Include="System.Windows.Extensions" Version="10.0.1" Condition="'$(TargetFramework)' != 'net48'" />
+
     <!-- MVVM & Reactive -->
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="ReactiveUI" Version="22.3.1" />
     <PackageReference Include="System.Reactive" Version="6.1.0" />
-    
+
     <!-- UI Components -->
     <PackageReference Include="DialogHost.Avalonia" Version="0.10.4" />
     <PackageReference Include="MessageBox.Avalonia" Version="3.3.1.1" />
-    
+
     <!-- Microsoft Extensions -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.1" />
-    
+
     <!-- Third-Party Libraries -->
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.4.1" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
@@ -78,19 +78,19 @@
     <PackageReference Include="MicroCom.Runtime" Version="0.11.3" />
     <PackageReference Include="NetSparkleUpdater.SparkleUpdater" Version="3.0.4" />
     <PackageReference Include="RtfDomParser" Version="7.0.0" />
-    <PackageReference Include="System.Drawing.Common" Version="10.0.1" Condition="'$(TargetFramework)' != 'net472'" />
+    <PackageReference Include="System.Drawing.Common" Version="10.0.1" Condition="'$(TargetFramework)' != 'net48'" />
     <!-- Explicitly resolve transitive dependencies from Microsoft.Extensions.* 10.0.1 -->
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
   </ItemGroup>
 
-  <!-- net472: binding redirects for Avalonia/System.Memory -->
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
+  <!-- net48: binding redirects for Avalonia/System.Memory -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
     <AppConfig>$(MSBuildProjectDirectory)\app.config</AppConfig>
   </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <PackageReference Include="System.Memory" Version="4.6.3" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
@@ -98,7 +98,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Andastra\Andastra.csproj" Condition="'$(TargetFramework)' == 'net9.0'" />
-    <ProjectReference Include="..\..\BioWare\BioWare.csproj" Condition="'$(TargetFramework)' == 'net472'" />
+    <ProjectReference Include="..\..\BioWare\BioWare.csproj" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="Simplecto.Avalonia.RichTextBox" Version="1.3.9" />
   </ItemGroup>
 </Project>

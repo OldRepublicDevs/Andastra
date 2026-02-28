@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using BioWare;
@@ -10,12 +11,8 @@ using NcsFile = BioWare.Resource.Formats.NCS.Decomp.NcsFile;
 
 namespace OdyTools.Utils
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_decompiler.py:19
-    // Original: def ht_decompile_script(...):
     public static class ScriptDecompiler
     {
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_decompiler.py:19-95
-        // Original: def ht_decompile_script(compiled_bytes: bytes, installation_path: Path, *, tsl: bool) -> str:
         public static string HtDecompileScript(byte[] compiledBytes, string installationPath, bool tsl = false)
         {
             if (compiledBytes == null || compiledBytes.Length == 0)
@@ -26,37 +23,65 @@ namespace OdyTools.Utils
             var settings = new GlobalSettings();
             string extractPath = ScriptUtils.SetupExtractPath();
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_decompiler.py:46-60
-            // Original: Check for NCS decompiler path
             string ncsDecompilerPath = settings.GetValue("NcsDecompilerPath", "");
             if (string.IsNullOrEmpty(ncsDecompilerPath) || !File.Exists(ncsDecompilerPath))
             {
-                // TODO:  In full implementation, would prompt user for decompiler
-                // TODO: STUB - For now, try to use built-in decompiler
-                try
-                {
-                    return DecompileUsingBuiltIn(compiledBytes, installationPath, tsl);
-                }
-                catch
-                {
-                    throw new InvalidOperationException("NCS Decompiler has not been set or is invalid.");
-                }
+                return DecompileUsingBuiltIn(compiledBytes, installationPath, tsl);
             }
 
-            // Use external decompiler - will be implemented when external compiler integration is available
-            // TODO: STUB - For now, fall back to built-in
             try
             {
-                return DecompileUsingBuiltIn(compiledBytes, installationPath, tsl);
+                string externalResult = DecompileUsingExternal(ncsDecompilerPath, compiledBytes, extractPath);
+                if (!string.IsNullOrWhiteSpace(externalResult))
+                {
+                    return externalResult;
+                }
             }
             catch
             {
-                throw new InvalidOperationException("Decompilation failed.");
+                // Fall through to built-in
             }
+
+            return DecompileUsingBuiltIn(compiledBytes, installationPath, tsl);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2196-2246
-        // Original: def _decompile_ncs_dencs(self, ncs_data: bytes) -> str:
+        private static string DecompileUsingExternal(string decompilerPath, byte[] ncsBytes, string workingDir)
+        {
+            string tempNcs = Path.Combine(workingDir, "temp_decompile_" + Guid.NewGuid().ToString("N").Substring(0, 8) + ".ncs");
+            string tempNss = Path.ChangeExtension(tempNcs, ".nss");
+            try
+            {
+                File.WriteAllBytes(tempNcs, ncsBytes);
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = decompilerPath,
+                    Arguments = "-d \"" + tempNcs + "\"",
+                    WorkingDirectory = workingDir,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+                using (var process = Process.Start(startInfo))
+                {
+                    if (process == null) return null;
+                    process.WaitForExit(15000);
+                    if (File.Exists(tempNss))
+                    {
+                        return File.ReadAllText(tempNss, Encoding.UTF8);
+                    }
+                    string stdout = process.StandardOutput?.ReadToEnd();
+                    if (!string.IsNullOrWhiteSpace(stdout)) return stdout;
+                }
+            }
+            finally
+            {
+                try { if (File.Exists(tempNcs)) File.Delete(tempNcs); } catch { }
+                try { if (File.Exists(tempNss)) File.Delete(tempNss); } catch { }
+            }
+            return null;
+        }
+
         private static string DecompileUsingBuiltIn(byte[] ncsData, string installationPath, bool tsl)
         {
             // Read NCS from bytes

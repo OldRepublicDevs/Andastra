@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
+  <!-- Exclude Scripting.Abstractions (separate project under Game folder) from being compiled as part of Game -->
+  <ItemGroup>
+    <Compile Remove="Scripting.Abstractions\**\*.cs" />
+  </ItemGroup>
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFrameworks>net9.0;net48</TargetFrameworks>
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -12,6 +16,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Andastra.Core.csproj" />
+    <ProjectReference Include="..\Game\Scripting.Abstractions\Andastra.Game.Scripting.Abstractions.csproj" />
     <ProjectReference Include="..\Runtime\Andastra.Runtime.csproj" />
     <ProjectReference Include="..\Graphics\Andastra.Graphics.csproj" />
     <ProjectReference Include="..\UI\Andastra.UI.csproj" />

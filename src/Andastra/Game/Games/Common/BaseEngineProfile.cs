@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Andastra.Runtime.Content.Interfaces;
-using Andastra.Game.Scripting.Interfaces;
+using Andastra.Game.Scripting.Abstractions;
 
 namespace Andastra.Game.Games.Common
 {
@@ -78,7 +78,7 @@ namespace Andastra.Game.Games.Common
 
         public abstract EngineFamily EngineFamily { get; }
 
-        public abstract IEngineApi CreateEngineApi();
+        public abstract Andastra.Game.Scripting.Abstractions.IEngineApi CreateEngineApi();
 
         public IResourceConfig ResourceConfig
         {

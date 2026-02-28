@@ -82,6 +82,9 @@ namespace BioWare.Resource.Formats.GFF.Generics.UTC
         public int WillpowerBonus { get; set; }
         public int FortitudeBonus { get; set; }
 
+        // Experience points (PC and companions in save games)
+        public int Experience { get; set; }
+
         // Hit points and force points
         public int CurrentHp { get; set; }
         public int MaxHp { get; set; }

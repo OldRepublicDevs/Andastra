@@ -5,8 +5,6 @@ using OdyTools.Data;
 
 namespace OdyTools.Widgets
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/syntax_highlighter.py:21
-    // Original: class SyntaxHighlighter(QSyntaxHighlighter):
     /// <summary>
     /// Syntax highlighter for NWScript (NSS) code in the OdyTool NSS.
     /// Provides syntax highlighting patterns for keywords, functions, numbers, strings, and comments.
@@ -32,8 +30,6 @@ namespace OdyTools.Widgets
             "=", "==", "!=", "<", "<=", ">", ">=", "!", "+", "-", "*", "/", "%", "<<", ">>", "&", "|", "^", "&&", "||", "++", "--"
         };
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/syntax_highlighter.py:49-58
-        // Original: def __init__(self, parent: QTextDocument, installation: OdyInstallation | None = None):
         /// <summary>
         /// Initializes a new instance of the NWScriptSyntaxHighlighter.
         /// </summary>
@@ -67,8 +63,6 @@ namespace OdyTools.Widgets
         /// </summary>
         public List<HighlightingRule> Rules { get; private set; }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/syntax_highlighter.py:60-81
-        // Original: def _setupRules(self):
         /// <summary>
         /// Sets up the highlighting rules based on the current game configuration.
         /// </summary>
@@ -161,8 +155,6 @@ namespace OdyTools.Widgets
         /// </summary>
         public HighlightingFormat MultilineCommentFormat { get; set; }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/syntax_highlighter.py:148-157
-        // Original: def update_rules(self, is_tsl: bool):
         /// <summary>
         /// Updates the highlighting rules based on the selected game.
         /// Reinitializes rules and triggers re-highlighting if the document is available.
@@ -172,7 +164,7 @@ namespace OdyTools.Widgets
         {
             IsTsl = isTsl;
             SetupRules();
-            // Note: In Avalonia, actual re-highlighting would need to be implemented
+            // Re-highlighting: full implementation in Avalonia when needed
             // in the UI layer. This method matches the Python interface.
         }
 

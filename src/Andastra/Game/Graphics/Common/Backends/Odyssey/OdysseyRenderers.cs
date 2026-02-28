@@ -345,8 +345,6 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             _modelCache = new Dictionary<string, EntityModelCache>(StringComparer.OrdinalIgnoreCase);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/renderer/model.py:103-141
-        // Original: def paintGL(self): - entity rendering in OpenGL scene
         // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005261b0 @ 0x005261b0 (entity model rendering)
         public void RenderEntity([NotNull] IEntity entity, Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix)
         {

@@ -11,9 +11,9 @@
     <Platforms>x86;x64;arm64</Platforms>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
     <PackageId>OdyPatch</PackageId>
-    <TargetFrameworks>net9.0;net472</TargetFrameworks>
+    <TargetFrameworks>net9.0;net48</TargetFrameworks>
     <UseAppHost>true</UseAppHost>
-    
+
     <!-- Build Configuration -->
     <AllowEditAndContinue>false</AllowEditAndContinue>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
@@ -22,7 +22,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
-    
+
     <!-- Package Metadata -->
     <Version>1.0.0-alpha1</Version>
     <AssemblyVersion>1.0.0.0-alpha1</AssemblyVersion>
@@ -58,8 +58,6 @@
   </PropertyGroup>
   <!-- Debug Configuration -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <!-- Build only net9.0 for Debug to speed up development builds -->
-    <TargetFrameworks>net9.0</TargetFrameworks>
     <OutputType Condition="'$(OS)' == 'Windows_NT'">WinExe</OutputType>
     <OutputType Condition="'$(OS)' != 'Windows_NT'">Exe</OutputType>
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
@@ -78,18 +76,18 @@
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageReference Include="NetSparkleUpdater.SparkleUpdater" Version="3.0.4" />
     <PackageReference Include="Dotnet.Bundle" Version="*" />
-    <PackageReference Include="System.Windows.Extensions" Version="10.0.1" Condition="'$(TargetFramework)' != 'net472'" />
+    <PackageReference Include="System.Windows.Extensions" Version="10.0.1" Condition="'$(TargetFramework)' != 'net48'" />
     <!-- Explicitly resolve transitive dependencies from Microsoft.Extensions.* 10.0.1 -->
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
   </ItemGroup>
-  <!-- net472: binding redirects for Avalonia/System.Memory -->
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
+  <!-- net48: binding redirects for Avalonia/System.Memory -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
     <AppConfig>$(MSBuildProjectDirectory)\app.config</AppConfig>
   </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <PackageReference Include="System.Memory" Version="4.6.3" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />

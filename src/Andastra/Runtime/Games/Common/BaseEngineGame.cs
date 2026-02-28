@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Andastra.Runtime.Core.Interfaces;
+using IEngineAbstractions = Andastra.Game.Scripting.Abstractions.IEngine;
 using JetBrains.Annotations;
 
 namespace Andastra.Game.Games.Common
@@ -55,12 +56,12 @@ namespace Andastra.Game.Games.Common
     /// </remarks>
     public abstract class BaseEngineGame : IEngineGame
     {
-        protected readonly IEngine _engine;
+        protected readonly IEngineAbstractions _engine;
         protected readonly IWorld _world;
         protected string _currentModuleName;
         protected IEntity _playerEntity;
 
-        protected BaseEngineGame(IEngine engine)
+        protected BaseEngineGame(IEngineAbstractions engine)
         {
             if (engine == null)
             {
@@ -68,7 +69,7 @@ namespace Andastra.Game.Games.Common
             }
 
             _engine = engine;
-            _world = engine.World;
+            _world = (IWorld)engine.World;
         }
 
         [CanBeNull]

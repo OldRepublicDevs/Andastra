@@ -1,4 +1,8 @@
-// Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:22-219
+// Copyright 2021-2025 NCSDecomp
+// Licensed under the Business Source License 1.1 (BSL 1.1).
+// See LICENSE.txt file in the project root for full license information.
+//
+// Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java
 // Original: public class ActionsData
 using System;
 using System.Collections.Generic;
@@ -65,7 +69,8 @@ namespace BioWare.Resource.Formats.NCS.Decomp
             // - "// 123." (some vendor variants)
             // - "// 123"  (some tool-distributed nwscript files)
             // Reject enumerated lists like "// 6) ..." which otherwise desync indices.
-            Pattern header = Pattern.Compile("^\\s*//\\s*(\\d+)\\s*(?:[\\.:]\\s*.*)?$");
+            // Matching NCSDecomp Java: ^\s*//\s*(\d+)\b.*$
+            Pattern header = Pattern.Compile("^\\s*//\\s*(\\d+)\\b.*$");
             Pattern sig = Pattern.Compile("^\\s*(\\w+)\\s+(\\w+)\\s*\\((.*)\\)\\s*;?.*");
 
             string str;
@@ -148,6 +153,10 @@ namespace BioWare.Resource.Formats.NCS.Decomp
             {
                 throw new Exception("Invalid action index: " + index + " (actions list size: " + this.actions.Count + ")");
             }
+            if (this.actions[index] == null)
+            {
+                throw new Exception("Missing action metadata for index: " + index + " (actions list size: " + this.actions.Count + ")");
+            }
             return ((Action)this.actions[index]).ReturnType();
         }
 
@@ -158,6 +167,10 @@ namespace BioWare.Resource.Formats.NCS.Decomp
             if (index < 0 || index >= this.actions.Count)
             {
                 throw new Exception("Invalid action index: " + index + " (actions list size: " + this.actions.Count + ")");
+            }
+            if (this.actions[index] == null)
+            {
+                throw new Exception("Missing action metadata for index: " + index + " (actions list size: " + this.actions.Count + ")");
             }
             return ((Action)this.actions[index]).Name();
         }
@@ -170,6 +183,10 @@ namespace BioWare.Resource.Formats.NCS.Decomp
             {
                 throw new Exception("Invalid action index: " + index + " (actions list size: " + this.actions.Count + ")");
             }
+            if (this.actions[index] == null)
+            {
+                throw new Exception("Missing action metadata for index: " + index + " (actions list size: " + this.actions.Count + ")");
+            }
             return ((Action)this.actions[index]).Params();
         }
 
@@ -181,6 +198,10 @@ namespace BioWare.Resource.Formats.NCS.Decomp
             {
                 throw new Exception("Invalid action index: " + index + " (actions list size: " + this.actions.Count + ")");
             }
+            if (this.actions[index] == null)
+            {
+                throw new Exception("Missing action metadata for index: " + index + " (actions list size: " + this.actions.Count + ")");
+            }
             return ((Action)this.actions[index]).DefaultValues();
         }
 
@@ -191,6 +212,10 @@ namespace BioWare.Resource.Formats.NCS.Decomp
             if (index < 0 || index >= this.actions.Count)
             {
                 throw new Exception("Invalid action index: " + index + " (actions list size: " + this.actions.Count + ")");
+            }
+            if (this.actions[index] == null)
+            {
+                throw new Exception("Missing action metadata for index: " + index + " (actions list size: " + this.actions.Count + ")");
             }
             return ((Action)this.actions[index]).RequiredParamCount();
         }

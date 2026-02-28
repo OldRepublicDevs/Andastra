@@ -23,8 +23,6 @@ using OdyTools.Dialogs;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:56
-    // Original: class OdyToolTLK(Editor):
     public partial class OdyToolTLK : Editor
     {
         private const int MinEditorWidth = 400;
@@ -54,8 +52,6 @@ namespace OdyTools.Editors
         private bool _findMatchCase;
         private int _lastFindIndex = -1;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:57-95
-        // Original: def __init__(self, parent, installation):
         public OdyToolTLK(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolTLK", "none",
                 new[] { ResourceType.TLK, ResourceType.TLK_XML, ResourceType.TLK_JSON },
@@ -294,8 +290,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:97-166
-        // Original: def _setup_signals(self):
         private void SetupSignals()
         {
             if (_jumpButton != null)
@@ -377,12 +371,7 @@ namespace OdyTools.Editors
                 }
                 catch { }
             }
-            BindAsync("actionNew", async () => { if (await ConfirmDiscardUnsavedChangesAsync()) New(); });
-            BindAsync("actionOpen", async () => { if (await ConfirmDiscardUnsavedChangesAsync()) await RunOpenAsync(); });
-            Bind("actionSave", () => Save());
-            Bind("actionSaveAs", () => _ = RunSaveAsAsync());
-            BindAsync("actionRevert", async () => { if (await ConfirmDiscardUnsavedChangesAsync()) Revert(); });
-            Bind("actionExit", () => Close());
+            // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
             Bind("actionUndo", () => Undo());
             Bind("actionRedo", () => Redo());
             Bind("actionInsert", () => Insert());
@@ -538,7 +527,7 @@ namespace OdyTools.Editors
         }
 
         /// <summary>Opens a TLK file from disk (File → Open). Used by standalone and when opening from toolset.</summary>
-        private async Task RunOpenAsync()
+        protected override async Task RunOpenAsync()
         {
             var storageProvider = (this as Window)?.StorageProvider;
             if (storageProvider == null) return;
@@ -576,7 +565,7 @@ namespace OdyTools.Editors
             }
         }
 
-        private async Task RunSaveAsAsync()
+        protected override async Task RunSaveAsAsync()
         {
             var storageProvider = (this as Window)?.StorageProvider;
             if (storageProvider == null) return;
@@ -626,8 +615,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:223-239
-        // Original: def change_language(self, language):
         public void ChangeLanguage(Language language)
         {
             _language = language;
@@ -706,8 +693,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:241-255
-        // Original: def load(self, filepath, resref, restype, data):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
@@ -757,8 +742,6 @@ namespace OdyTools.Editors
             UpdateStatusBar();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:352-376
-        // Original: def new(self):
         public override void New()
         {
             base.New();
@@ -773,8 +756,6 @@ namespace OdyTools.Editors
             UpdateStatusBar();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:361-376
-        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
             var tlk = new TLK(_language);
@@ -789,8 +770,6 @@ namespace OdyTools.Editors
             return Tuple.Create(data, new byte[0]);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:378-379
-        // Original: def insert(self):
         public void Insert()
         {
             PushState();
@@ -820,8 +799,6 @@ namespace OdyTools.Editors
             UpdateStatusBar();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:381-385
-        // Original: def do_filter(self, text):
         public void DoFilter(string text)
         {
             if (_filteredEntries.View == null)
@@ -850,8 +827,6 @@ namespace OdyTools.Editors
             _filteredEntries.View.Refresh();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:387-392
-        // Original: def toggle_filter_box(self):
         public void ToggleFilterBox()
         {
             if (_searchBox != null)
@@ -865,8 +840,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:394-399
-        // Original: def toggle_goto_box(self):
         public void ToggleGotoBox()
         {
             if (_jumpBox != null)
@@ -879,8 +852,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:401-427
-        // Original: def selection_changed(self):
         private void SelectionChanged()
         {
             if (_talkTable == null)
@@ -915,8 +886,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:429-444
-        // Original: def update_entry(self):
         private void UpdateEntry()
         {
             if (_selectedEntry == null)

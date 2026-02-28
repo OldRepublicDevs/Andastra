@@ -10,5 +10,150 @@
       <Setter Property="Background" Value="#F3F5F9" />
     </Style>
   </Window.Styles>
-  <ContentControl x:Name="contentRoot"/>
+  <DockPanel LastChildFill="True">
+    <Menu DockPanel.Dock="Top" Name="menuBar">
+      <MenuItem Header="_File">
+        <MenuItem Header="_New" Name="actionNew"/>
+        <MenuItem Header="_Open" Name="actionOpen"/>
+        <MenuItem Header="_Save" Name="actionSave"/>
+        <MenuItem Header="Save _As" Name="actionSaveAs"/>
+        <Separator/>
+        <MenuItem Header="_Revert" Name="actionRevert"/>
+        <Separator/>
+        <MenuItem Header="E_xit" Name="actionExit"/>
+      </MenuItem>
+      <MenuItem Header="_Edit">
+        <MenuItem Header="_Undo" Name="actionUndo"/>
+        <MenuItem Header="_Redo" Name="actionRedo"/>
+        <Separator/>
+        <MenuItem Header="Find..." Name="actionFind"/>
+        <MenuItem Header="Find _Next" Name="actionFindNext"/>
+      </MenuItem>
+      <MenuItem Header="_Help" Name="menuHelp"/>
+    </Menu>
+
+    <ScrollViewer DockPanel.Dock="Top" HorizontalScrollBarVisibility="Disabled">
+      <StackPanel Margin="8" Spacing="4">
+        <!-- Basic -->
+        <Expander Header="Basic" IsExpanded="True">
+          <StackPanel Spacing="6">
+            <TextBlock Text="Name:"/>
+            <TextBox Name="nameEdit" IsReadOnly="True"/>
+            <Button Name="nameEditBtn" Content="Edit Name"/>
+            <TextBlock Text="Tag:"/>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBox Name="tagEdit"/>
+              <Button Name="tagGenerateBtn" Content="Generate"/>
+            </StackPanel>
+            <TextBlock Text="ResRef:"/>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBox Name="resrefEdit"/>
+              <Button Name="resrefGenerateBtn" Content="Generate"/>
+            </StackPanel>
+            <TextBlock Text="Appearance:"/>
+            <ComboBox Name="appearanceSelect"/>
+            <TextBlock Text="Model Preview:"/>
+            <ContentControl x:Name="previewRendererHost" MinHeight="220"/>
+            <TextBlock Text="Conversation:"/>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <ComboBox Name="conversationEdit" IsEditable="True"/>
+              <Button Name="conversationModifyBtn" Content="Edit"/>
+            </StackPanel>
+            <Button Name="inventoryBtn" Content="Edit Inventory"/>
+            <TextBlock Name="inventoryCountLabel" Text="Total Items: 0"/>
+          </StackPanel>
+        </Expander>
+
+        <!-- Advanced -->
+        <Expander Header="Advanced" IsExpanded="False">
+          <StackPanel Spacing="4">
+            <CheckBox Name="hasInventoryCheckbox" Content="Has Inventory"/>
+            <CheckBox Name="partyInteractCheckbox" Content="Party Interact"/>
+            <CheckBox Name="useableCheckbox" Content="Useable"/>
+            <CheckBox Name="min1HpCheckbox" Content="Min 1 HP"/>
+            <CheckBox Name="plotCheckbox" Content="Plot"/>
+            <CheckBox Name="staticCheckbox" Content="Static"/>
+            <CheckBox Name="notBlastableCheckbox" Content="Not Blastable"/>
+            <TextBlock Text="Faction:"/>
+            <ComboBox Name="factionSelect"/>
+            <TextBlock Text="Animation State:"/>
+            <NumericUpDown Name="animationStateSpin" Minimum="0" Maximum="255"/>
+            <TextBlock Text="Current HP:"/>
+            <NumericUpDown Name="currentHpSpin" Minimum="0" Maximum="32767"/>
+            <TextBlock Text="Maximum HP:"/>
+            <NumericUpDown Name="maxHpSpin" Minimum="0" Maximum="32767"/>
+            <TextBlock Text="Hardness:"/>
+            <NumericUpDown Name="hardnessSpin" Minimum="0" Maximum="255"/>
+            <TextBlock Text="Fortitude:"/>
+            <NumericUpDown Name="fortitudeSpin" Minimum="0" Maximum="255"/>
+            <TextBlock Text="Reflex:"/>
+            <NumericUpDown Name="reflexSpin" Minimum="0" Maximum="255"/>
+            <TextBlock Text="Will:"/>
+            <NumericUpDown Name="willSpin" Minimum="0" Maximum="255"/>
+          </StackPanel>
+        </Expander>
+
+        <!-- Lock -->
+        <Expander Header="Lock" IsExpanded="False">
+          <StackPanel Spacing="4">
+            <CheckBox Name="needKeyCheckbox" Content="Key Required"/>
+            <CheckBox Name="removeKeyCheckbox" Content="Auto Remove Key"/>
+            <TextBlock Text="Key Name:"/>
+            <TextBox Name="keyEdit"/>
+            <CheckBox Name="lockedCheckbox" Content="Locked"/>
+            <TextBlock Text="Unlock DC:"/>
+            <NumericUpDown Name="openLockSpin" Minimum="0" Maximum="255"/>
+            <TextBlock Text="Unlock Difficulty:"/>
+            <NumericUpDown Name="difficultySpin" Minimum="0" Maximum="255"/>
+            <TextBlock Text="Unlock Difficulty Mod:"/>
+            <NumericUpDown Name="difficultyModSpin" Minimum="-128" Maximum="127"/>
+          </StackPanel>
+        </Expander>
+
+        <!-- Scripts -->
+        <Expander Header="Scripts" IsExpanded="False">
+          <StackPanel Spacing="4">
+            <TextBlock Text="OnClosed:"/>
+            <ComboBox Name="onclosedEdit" IsEditable="True"/>
+            <TextBlock Text="OnDamaged:"/>
+            <ComboBox Name="ondamagedEdit" IsEditable="True"/>
+            <TextBlock Text="OnDeath:"/>
+            <ComboBox Name="ondeathEdit" IsEditable="True"/>
+            <TextBlock Text="OnEndDialog:"/>
+            <ComboBox Name="onenddialogEdit" IsEditable="True"/>
+            <TextBlock Text="OnOpenFailed:"/>
+            <ComboBox Name="onopenfailedEdit" IsEditable="True"/>
+            <TextBlock Text="OnHeartbeat:"/>
+            <ComboBox Name="onheartbeatEdit" IsEditable="True"/>
+            <TextBlock Text="OnInventory:"/>
+            <ComboBox Name="oninventoryEdit" IsEditable="True"/>
+            <TextBlock Text="OnMelee:"/>
+            <ComboBox Name="onmeleeEdit" IsEditable="True"/>
+            <TextBlock Text="OnOpen:"/>
+            <ComboBox Name="onopenEdit" IsEditable="True"/>
+            <TextBlock Text="OnLock:"/>
+            <ComboBox Name="onlockEdit" IsEditable="True"/>
+            <TextBlock Text="OnUnlock:"/>
+            <ComboBox Name="onunlockEdit" IsEditable="True"/>
+            <TextBlock Text="OnUsed:"/>
+            <ComboBox Name="onusedEdit" IsEditable="True"/>
+            <TextBlock Text="OnUserDefined:"/>
+            <ComboBox Name="onuserdefinedEdit" IsEditable="True"/>
+          </StackPanel>
+        </Expander>
+
+        <!-- Comments -->
+        <Expander Header="Comments" IsExpanded="False">
+          <StackPanel Spacing="4">
+            <TextBlock Text="Comment:"/>
+            <TextBox Name="commentsEdit" AcceptsReturn="True" AcceptsTab="True"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </ScrollViewer>
+
+    <Border DockPanel.Dock="Bottom" Padding="4,2" Background="#E8EAED">
+      <TextBlock Name="statusText" Text="Placeable"/>
+    </Border>
+  </DockPanel>
 </Window>

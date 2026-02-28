@@ -1,7 +1,9 @@
 using BioWare.Common;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
@@ -14,8 +16,6 @@ using OdyTools.Dialogs;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ifo.py:22
-    // Original: class OdyToolIFO(Editor):
     public partial class OdyToolIFO : Editor
     {
         private const int MinEditorWidth = 480;
@@ -33,24 +33,9 @@ namespace OdyTools.Editors
         // Public property to access IFO for testing (matching Python's self.ifo)
         public IFO Ifo => _ifo;
 
-        // Public properties for testing (matching Python's public attributes)
-        public TextBox TagEdit => _tagEdit;
-        public TextBox VoIdEdit => _voIdEdit;
-        public TextBox HakEdit => _hakEdit;
-        public TextBox EntryResrefEdit => _entryResrefEdit;
-        public NumericUpDown EntryXSpin => _entryXSpin;
-        public NumericUpDown EntryYSpin => _entryYSpin;
-        public NumericUpDown EntryZSpin => _entryZSpin;
-        public NumericUpDown EntryDirSpin => _entryDirSpin;
-        public NumericUpDown DawnHourSpin => _dawnHourSpin;
-        public NumericUpDown DuskHourSpin => _duskHourSpin;
-        public NumericUpDown TimeScaleSpin => _timeScaleSpin;
-        public NumericUpDown StartMonthSpin => _startMonthSpin;
-        public NumericUpDown StartDaySpin => _startDaySpin;
-        public NumericUpDown StartHourSpin => _startHourSpin;
-        public NumericUpDown StartYearSpin => _startYearSpin;
-        public NumericUpDown XpScaleSpin => _xpScaleSpin;
-        public Dictionary<string, TextBox> ScriptFields => _scriptFields;
+        // Public properties for testing: use generated name references (TagEdit, VoIdEdit, etc. from AXAML).
+        // ScriptFields is not a named control in XAML.
+        public Dictionary<string, ComboBox> ScriptFields => _scriptFields;
 
         // UI Controls - Basic Info
         private TextBox _nameEdit;
@@ -78,11 +63,9 @@ namespace OdyTools.Editors
         private NumericUpDown _startYearSpin;
         private NumericUpDown _xpScaleSpin;
 
-        // UI Controls - Scripts
-        private Dictionary<string, TextBox> _scriptFields;
+        // UI Controls - Scripts (editable combos with prefilled script resnames)
+        private Dictionary<string, ComboBox> _scriptFields;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ifo.py:25-38
-        // Original: def __init__(self, parent, installation):
         public OdyToolIFO(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolIFO", "ifo",
                 new[] { ResourceType.IFO },
@@ -117,8 +100,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ifo.py:39-177
-        // Original: def setup_ui(self):
         private void SetupProgrammaticUI()
         {
             var scrollViewer = new ScrollViewer();
@@ -265,7 +246,7 @@ namespace OdyTools.Editors
             // Scripts Group
             var scriptGroup = new Expander { Header = "Scripts", IsExpanded = true };
             var scriptPanel = new StackPanel { Orientation = Orientation.Vertical };
-            _scriptFields = new Dictionary<string, TextBox>();
+            _scriptFields = new Dictionary<string, ComboBox>();
 
             string[] scriptNames = {
                 "on_heartbeat", "on_load", "on_start", "on_enter", "on_leave",
@@ -277,8 +258,13 @@ namespace OdyTools.Editors
             foreach (string scriptName in scriptNames)
             {
                 var label = new TextBlock { Text = scriptName.Replace("_", " ").ToUpperInvariant() + ":" };
-                var edit = new TextBox();
+                var edit = new ComboBox { IsEditable = true };
+#if NET48
+                edit.GetObservable(ComboBox.TextProperty).Subscribe(_ => OnValueChanged());
+#else
                 edit.TextChanged += (s, e) => OnValueChanged();
+#endif
+                SetupScriptComboBoxContextMenu(edit, scriptName);
                 _scriptFields[scriptName] = edit;
                 scriptPanel.Children.Add(label);
                 scriptPanel.Children.Add(edit);
@@ -346,6 +332,91 @@ namespace OdyTools.Editors
                     if (kv.Value != null) kv.Value.LostFocus += OnCommit;
         }
 
+        private void SetupScriptComboBoxContextMenu(ComboBox comboBox, string scriptTypeName)
+        {
+            if (comboBox == null) return;
+
+            var contextMenu = new ContextMenu();
+            var openInEditorItem = new MenuItem { Header = "Open in OdyToolNSS", IsEnabled = false };
+            openInEditorItem.Click += (sender, e) => OpenScriptInEditor(comboBox, scriptTypeName);
+            contextMenu.Items.Add(openInEditorItem);
+
+            void UpdateOpenEnabled(object s, EventArgs e)
+            {
+                string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
+                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
+            }
+            comboBox.SelectionChanged += UpdateOpenEnabled;
+            contextMenu.Opened += (s, e) => UpdateOpenEnabled(s, e);
+            comboBox.ContextMenu = contextMenu;
+        }
+
+        private void OpenScriptInEditor(ComboBox comboBox, string scriptTypeName)
+        {
+            if (comboBox == null || _installation == null) return;
+            string scriptName = comboBox.Text?.Trim();
+            if (string.IsNullOrEmpty(scriptName)) return;
+
+            try
+            {
+                var resourceResult = _installation.Resource(scriptName, ResourceType.NSS, null);
+                var resourceType = ResourceType.NSS;
+                if (resourceResult == null)
+                {
+                    resourceResult = _installation.Resource(scriptName, ResourceType.NCS, null);
+                    resourceType = ResourceType.NCS;
+                }
+                if (resourceResult == null)
+                {
+                    System.Console.WriteLine($"Script '{scriptName}' not found in installation.");
+                    return;
+                }
+                byte[] data = resourceResult.Data;
+                if (data == null && !string.IsNullOrEmpty(resourceResult.FilePath) && System.IO.File.Exists(resourceResult.FilePath))
+                    data = System.IO.File.ReadAllBytes(resourceResult.FilePath);
+                if (data == null)
+                {
+                    System.Console.WriteLine($"No data for script '{scriptName}'.");
+                    return;
+                }
+                WindowUtils.OpenResourceEditor(resourceResult.FilePath, scriptName, resourceType, data, _installation, this);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"OpenScriptInEditor failed: {ex.Message}");
+            }
+        }
+
+        private void PopulateScriptComboBoxes()
+        {
+            if (_installation == null || _scriptFields == null) return;
+            try
+            {
+                var relevantResources = _installation.GetRelevantResources(ResourceType.NCS, FilepathPublic);
+                var resnames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                if (relevantResources != null)
+                {
+                    foreach (var res in relevantResources)
+                    {
+                        if (res != null && !string.IsNullOrEmpty(res.ResName))
+                            resnames.Add(res.ResName.ToLowerInvariant());
+                    }
+                }
+                var sorted = resnames.OrderBy(s => s, StringComparer.OrdinalIgnoreCase).ToList();
+                foreach (var kv in _scriptFields)
+                {
+                    if (kv.Value == null) continue;
+                    kv.Value.Items.Clear();
+                    foreach (string r in sorted)
+                        kv.Value.Items.Add(r);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Failed to populate script combo boxes: {ex.Message}");
+            }
+        }
+
         private void SetupMenuHandlers()
         {
             void Bind(string name, Action handler)
@@ -357,12 +428,7 @@ namespace OdyTools.Editors
                 }
                 catch { }
             }
-            Bind("actionNew", () => New());
-            Bind("actionOpen", () => { });
-            Bind("actionSave", () => Save());
-            Bind("actionSaveAs", () => _ = RunSaveAsAsync());
-            Bind("actionRevert", () => Revert());
-            Bind("actionExit", () => Close());
+            // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
             Bind("actionUndo", () => Undo());
             Bind("actionRedo", () => Redo());
             Bind("actionFind", () => ShowFindDialog());
@@ -433,12 +499,13 @@ namespace OdyTools.Editors
             try
             {
                 UpdateUIFromIFO();
+                PopulateScriptComboBoxes();
                 UpdateStatusBar();
             }
             finally { _undoRedoInProgress = false; }
         }
 
-        private void Revert()
+        public override void Revert()
         {
             if (_revert == null || _revert.Length == 0) return;
             try
@@ -454,7 +521,7 @@ namespace OdyTools.Editors
             }
         }
 
-        private async Task RunSaveAsAsync()
+        protected override async Task RunSaveAsAsync()
         {
             var storageProvider = (this as Window)?.StorageProvider;
             if (storageProvider == null) return;
@@ -565,7 +632,7 @@ namespace OdyTools.Editors
             var scriptPanel = EditorHelpers.FindControlSafe<StackPanel>(this, "scriptPanel");
             if (scriptPanel != null && (_scriptFields == null || _scriptFields.Count == 0))
             {
-                _scriptFields = new Dictionary<string, TextBox>();
+                _scriptFields = new Dictionary<string, ComboBox>();
                 string[] scriptNames = {
                     "on_heartbeat", "on_load", "on_start", "on_enter", "on_leave",
                     "on_activate_item", "on_acquire_item", "on_user_defined", "on_unacquire_item",
@@ -575,8 +642,13 @@ namespace OdyTools.Editors
                 foreach (string scriptName in scriptNames)
                 {
                     var label = new TextBlock { Text = scriptName.Replace("_", " ").ToUpperInvariant() + ":", Margin = new Avalonia.Thickness(0, 4, 12, 4) };
-                    var edit = new TextBox { Margin = new Avalonia.Thickness(0, 0, 0, 8) };
+                    var edit = new ComboBox { IsEditable = true, Margin = new Avalonia.Thickness(0, 0, 0, 8) };
+#if NET48
+                    edit.GetObservable(ComboBox.TextProperty).Subscribe(_ => OnValueChanged());
+#else
                     edit.TextChanged += (s, e) => OnValueChanged();
+#endif
+                    SetupScriptComboBoxContextMenu(edit, scriptName);
                     _scriptFields[scriptName] = edit;
                     var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
                     row.Children.Add(label);
@@ -593,8 +665,6 @@ namespace OdyTools.Editors
             KeyDown += OnWindowKeyDown;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ifo.py:179-195
-        // Original: def edit_name(self) and def edit_description(self):
         private void EditName()
         {
             if (_ifo == null || _installation == null)
@@ -624,8 +694,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ifo.py:197-201
-        // Original: def load(self, filepath, resref, restype, data):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
@@ -640,8 +708,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ifo.py:203-210
-        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
             if (_ifo == null)
@@ -654,8 +720,6 @@ namespace OdyTools.Editors
             return Tuple.Create(data, new byte[0]);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ifo.py:212-216
-        // Original: def new(self):
         public override void New()
         {
             base.New();
@@ -663,10 +727,9 @@ namespace OdyTools.Editors
             _redoStack.Clear();
             _ifo = new IFO();
             UpdateUIFromIFO();
+            PopulateScriptComboBoxes();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ifo.py:218-249
-        // Original: def update_ui_from_ifo(self):
         private void UpdateUIFromIFO()
         {
             if (_ifo == null)
@@ -759,8 +822,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ifo.py:251-288
-        // Original: def on_value_changed(self):
         public void OnValueChanged()
         {
             if (_ifo == null)

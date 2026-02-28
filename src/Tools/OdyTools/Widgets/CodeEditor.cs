@@ -229,7 +229,6 @@ namespace OdyTools.Widgets
             double marginLeft = 4.0; // Left margin from edge
             double marginTop = Padding.Top; // Account for text box padding
 
-            // Get visible lines (simplified - in a real implementation, we'd track scroll position)
             string[] lines = Text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
             int totalLines = lines.Length;
 
@@ -324,7 +323,7 @@ namespace OdyTools.Widgets
 
                 // Start searching after the end of the word at cursor
                 searchStartIndex = wordEnd;
-                
+
                 // Add the current selection to extra selections for highlighting (matching VS Code behavior)
                 _extraSelections.Clear();
                 _extraSelections.Add(new Tuple<int, int>(wordStart, wordEnd));
@@ -359,7 +358,7 @@ namespace OdyTools.Widgets
                 // Select the found occurrence
                 SelectionStart = nextIndex;
                 SelectionEnd = nextIndex + searchText.Length;
-                
+
                 // Update extra selections to include all occurrences (matching VS Code behavior)
                 // This allows highlighting all occurrences while navigating between them
                 _extraSelections.Clear();
@@ -374,7 +373,7 @@ namespace OdyTools.Widgets
                     _extraSelections.Add(new Tuple<int, int>(pos, pos + searchText.Length));
                     searchPos = pos + 1;
                 }
-                
+
                 return true;
             }
 
@@ -1066,7 +1065,7 @@ namespace OdyTools.Widgets
             _columnSelectionMode = false;
             _columnSelectionAnchor = null;
             base.OnPointerPressed(e);
-            
+
             // Match brackets after cursor position changes due to mouse click
             MatchBrackets();
         }
@@ -1149,7 +1148,7 @@ namespace OdyTools.Widgets
 
             _columnSelectionAnchor = null;
             base.OnPointerReleased(e);
-            
+
             // Match brackets after cursor position changes due to mouse release
             MatchBrackets();
         }
@@ -1169,7 +1168,6 @@ namespace OdyTools.Widgets
             // Ensure the control has been measured and laid out
             if (Bounds.Width <= 0 || Bounds.Height <= 0)
             {
-                // Fallback to simple calculation if not yet laid out
                 return GetCharacterIndexFromPointFallback(point);
             }
 
@@ -1257,7 +1255,7 @@ namespace OdyTools.Widgets
                 // For variable-width fonts, we use a similar approximation
                 // This is a reasonable approximation for code editors which typically use monospace fonts
                 charWidth = FontSize * 0.6;
-                
+
                 // Line height is typically FontSize * 1.2 to 1.5, depending on line spacing
                 // Use LineHeight property if available, otherwise calculate from FontSize
                 if (LineHeight > 0 && !double.IsNaN(LineHeight))
@@ -1984,9 +1982,7 @@ namespace OdyTools.Widgets
                 return; // Already folded
             }
 
-            // Mark as folded
-            // TODO:  Note: In a full implementation with a proper code editor control,
-            // we would hide the lines here. For TextBox, we maintain state for API compatibility.
+            // Mark as folded (TextBox cannot hide lines; we track state for API compatibility)
             _foldedBlockNumbers.Add(startBlock);
         }
 
@@ -2011,9 +2007,7 @@ namespace OdyTools.Widgets
                 return; // Not folded
             }
 
-            // Mark as unfolded
-            // TODO:  Note: In a full implementation with a proper code editor control,
-            // we would show the lines here. For TextBox, we maintain state for API compatibility.
+            // Mark as unfolded (TextBox cannot show/hide lines; we track state for API compatibility)
             _foldedBlockNumbers.Remove(startBlock);
         }
 

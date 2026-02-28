@@ -7,14 +7,10 @@ using Newtonsoft.Json.Linq;
 
 namespace OdyTools.Utils
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_github.py:12
-    // Original: def fetch_fork_releases(...):
     public static class UpdateGitHub
     {
         private static readonly HttpClient HttpClient = new HttpClient();
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_github.py:12-32
-        // Original: def fetch_fork_releases(fork_full_name: str, *, include_all: bool = False, include_prerelease: bool = False) -> list[GithubRelease]:
         public static async Task<List<object>> FetchForkReleasesAsync(
             string forkFullName,
             bool includeAll = false,
@@ -47,8 +43,6 @@ namespace OdyTools.Utils
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_github.py:34-48
-        // Original: def fetch_and_cache_forks() -> dict[str, list[GithubRelease]]:
         public static async Task<Dictionary<string, List<object>>> FetchAndCacheForksAsync()
         {
             var forksCache = new Dictionary<string, List<object>>();
@@ -75,8 +69,6 @@ namespace OdyTools.Utils
             return forksCache;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_github.py:50-62
-        // Original: def filter_releases(releases: list[GithubRelease], *, include_prerelease: bool = False) -> list[GithubRelease]:
         public static List<object> FilterReleases(
             List<object> releases,
             bool includePrerelease = false)

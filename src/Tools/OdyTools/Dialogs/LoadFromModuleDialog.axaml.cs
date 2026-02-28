@@ -10,8 +10,6 @@ using FileResource = BioWare.Extract.FileResource;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_module.py:14
-    // Original: class LoadFromModuleDialog(QDialog):
     public partial class LoadFromModuleDialog : Window
     {
         private List<FileResource> _resources;
@@ -23,8 +21,6 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_module.py:17-60
-        // Original: def __init__(self, capsule, supported):
         // Overload to accept Capsule directly (matching PyKotor interface)
         public LoadFromModuleDialog(Capsule capsule, IList<ResourceType> supported)
         {
@@ -33,7 +29,6 @@ namespace OdyTools.Dialogs
             _selectedResource = null;
 
             // Convert Capsule resources (CapsuleResource) to FileResource objects
-            // Matching PyKotor: capsule is iterable and yields FileResource-like objects
             _resources = new List<FileResource>();
             if (capsule != null)
             {
@@ -164,8 +159,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_module.py:54-60
-        // Original: Build resource list from capsule
         private void BuildResourceList()
         {
             // Filter resources by supported types
@@ -180,8 +173,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_module.py:62-84
-        // Original: def resname(self) -> str | None:
         public string ResName()
         {
             return _selectedResource?.ResName;

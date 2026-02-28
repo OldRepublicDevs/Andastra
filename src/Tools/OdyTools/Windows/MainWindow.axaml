@@ -209,14 +209,18 @@
             Content="ERF Editor"
             IsVisible="False" />
 
-          <Expander Header="TPC" IsExpanded="True">
+          <Expander Header="TPC" IsExpanded="True"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch">
             <StackPanel Margin="5" Spacing="5">
               <CheckBox Name="tpcDecompileCheckbox" Content="Decompile" />
               <CheckBox Name="tpcTxiCheckbox" Content="Extract TXI" />
             </StackPanel>
           </Expander>
 
-          <Expander Header="MDL" IsExpanded="True">
+          <Expander Header="MDL" IsExpanded="True"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch">
             <StackPanel Margin="5" Spacing="5">
               <CheckBox
                 Name="mdlDecompileCheckbox"

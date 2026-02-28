@@ -8,8 +8,6 @@ using Newtonsoft.Json.Linq;
 
 namespace OdyTools.Data
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/settings.py:160
-    // Original: class Settings:
     public class Settings
     {
         private readonly string _scope;
@@ -18,8 +16,6 @@ namespace OdyTools.Data
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "OdyToolsV3");
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/settings.py:161-165
-        // Original: def __init__(self, scope: str): self.settings: QSettings = QSettings("OdyToolsV3", scope)
         public Settings(string scope)
         {
             _scope = scope;
@@ -103,8 +99,6 @@ namespace OdyTools.Data
             Save();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/settings.py:174-181
-        // Original: def get_property(self, name: str) -> SettingsProperty[T]:
         public SettingsProperty<T> GetProperty<T>(string name)
         {
             var prop = GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
@@ -115,8 +109,6 @@ namespace OdyTools.Data
             throw new ArgumentException($"'{GetType().Name}' object has no property '{name}'");
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/settings.py:183-188
-        // Original: def get_default(self, name: str) -> Any:
         // Uses IResettableSettingsProperty so any SettingsProperty<T> works (not just SettingsProperty<object>).
         public object GetDefault(string name)
         {
@@ -128,8 +120,6 @@ namespace OdyTools.Data
             throw new ArgumentException($"'{GetType().Name}' object has no property '{name}'");
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/settings.py:190-195
-        // Original: def reset_setting(self, name: str):
         // Uses IResettableSettingsProperty so any SettingsProperty<T> works (not just SettingsProperty<object>).
         public void ResetSetting(string name)
         {
@@ -142,8 +132,6 @@ namespace OdyTools.Data
             throw new ArgumentException($"'{GetType().Name}' object has no property '{name}'");
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:104
-        // Original: GlobalSettings().settings.clear()
         public void Clear()
         {
             _values.Clear();
@@ -160,15 +148,11 @@ namespace OdyTools.Data
         object GetDefaultValue();
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/settings.py:28-157
-    // Original: class SettingsProperty(property, Generic[T]):
     public class SettingsProperty<T> : IResettableSettingsProperty
     {
         public string Name { get; }
         public T Default { get; }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/settings.py:29-44
-        // Original: def __init__(self, name: str, default: Any):
         public SettingsProperty(string name, T defaultValue)
         {
             Name = name;
@@ -185,8 +169,6 @@ namespace OdyTools.Data
             settings.SetValue(Name, value);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/settings.py:92-103
-        // Original: def reset_to_default(self, instance: Settings):
         public void ResetToDefault(Settings settings)
         {
             settings.SetValue(Name, Default);

@@ -1,66 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\Standalone\OdyTools.Standalone.Editor.props" />
   <PropertyGroup>
-    <!-- Project is in Editors/DLG; two levels up = OdyTools root -->
+    <OdyToolsStandaloneDefine>DLG_STANDALONE</OdyToolsStandaloneDefine>
+    <OdyToolsStandaloneStartupObject>OdyTools.Editors.Standalone.DLG.Program</OdyToolsStandaloneStartupObject>
+    <OdyToolsStandaloneBioWareRef>..\..\..\..\BioWare</OdyToolsStandaloneBioWareRef>
+    <OdyToolsStandaloneAppConfig>$(MSBuildProjectDirectory)\..\app.config</OdyToolsStandaloneAppConfig>
     <_OdyToolsRoot>$([System.IO.Path]::GetDirectoryName($([System.IO.Path]::GetDirectoryName('$(MSBuildProjectDirectory)'))))</_OdyToolsRoot>
   </PropertyGroup>
-  <PropertyGroup>
-    <LangVersion>7.3</LangVersion>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
-    <Platforms>x86;x64;arm64</Platforms>
-    <UseAppHost>true</UseAppHost>
-    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <IsPackable>false</IsPackable>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
-    <TargetFrameworks>net9.0;net472</TargetFrameworks>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Nullable>disable</Nullable>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(RuntimeIdentifier)'=='' OR $(RuntimeIdentifier.StartsWith('win'))">
-    <OutputType>WinExe</OutputType>
-  </PropertyGroup>
-  <PropertyGroup Condition="!$(RuntimeIdentifier.StartsWith('win')) AND '$(RuntimeIdentifier)'!=''">
-    <OutputType>Exe</OutputType>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject>OdyTools.Editors.Standalone.DLG.Program</StartupObject>
-    <DefineConstants>$(DefineConstants);DLG_STANDALONE</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
-    <AppConfig>$(MSBuildProjectDirectory)\..\app.config</AppConfig>
-  </PropertyGroup>
-
+  <Import Project="..\Standalone\OdyTools.Standalone.Editor.props" />
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\BioWare\BioWare.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Markdig" Version="0.44.0" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="System.Windows.Extensions" Version="10.0.1" Condition="'$(TargetFramework)' != 'net472'" />
+    <PackageReference Include="System.Windows.Extensions" Version="10.0.1" Condition="'$(TargetFramework)' != 'net48'" />
   </ItemGroup>
-
-  <!-- Slim: only Avalonia + BioWare; minimal OdyTools source (no OdyTools ref). -->
   <ItemGroup>
     <Compile Include="Program.DLG.Standalone.cs" />
     <Compile Include="..\Standalone\EditorStandaloneHost\EditorStandaloneProgram.cs" />
     <Compile Include="..\Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml.cs" />
     <Compile Include="OdyToolDLG.axaml.cs" />
     <Compile Include="DLGSettings.cs" />
+    <Compile Include="TwoDAFileHelper.cs" />
     <Compile Include="DLGModel.cs" />
     <Compile Include="DLGConstants.cs" />
     <Compile Include="DLGNodeTypes.cs" />
     <Compile Include="DLGListWidget.cs" />
     <Compile Include="DLGListWidgetItem.cs" />
     <Compile Include="DLGStandardItem.cs" />
+    <Compile Include="DlgGraphScene.cs" />
+    <Compile Include="DlgGraphColors.cs" />
+    <Compile Include="DlgTreeItemView.cs" />
     <Compile Include="DLGActionHistory.cs" />
     <Compile Include="DLGDebugUtils.cs" />
     <Compile Include="IDLGAction.cs" />
@@ -70,6 +38,7 @@
     <Compile Include="$(_OdyToolsRoot)\Editors\WindowUtils.cs" />
     <Compile Include="$(_OdyToolsRoot)\Data\OdyInstallation.cs" />
     <Compile Include="$(_OdyToolsRoot)\Data\Settings.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Data\IEditorInstallationSettings.cs" />
     <Compile Include="$(_OdyToolsRoot)\Data\GlobalSettings.cs" />
     <Compile Include="$(_OdyToolsRoot)\Common\Localization.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\InlineEditorHelp.cs" />
@@ -79,13 +48,26 @@
     <Compile Include="$(_OdyToolsRoot)\Dialogs\ReferenceChooserDialog.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\ColorPickerDialog.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\LocalizedStringDialog.axaml.cs" />
-    <Compile Include="$(_OdyToolsRoot)\Dialogs\Edit\DialogAnimationDialog.cs" />
-    <Compile Include="$(_OdyToolsRoot)\Dialogs\Edit\DialogModelDialog.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\EditorInstallationSettingsDialogBase.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\DLGSettingsDialog.axaml.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\Edit\DialogAnimationDialog.axaml.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\LoadFromLocationResultDialog.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\Edit\DialogModelDialog.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Editors\Actions\AddRootNodeAction.cs" />
     <Compile Include="$(_OdyToolsRoot)\Editors\Actions\AddChildToItemAction.cs" />
     <Compile Include="$(_OdyToolsRoot)\Editors\Actions\AddStarterAction.cs" />
     <Compile Include="$(_OdyToolsRoot)\Editors\Actions\MoveStarterAction.cs" />
     <Compile Include="$(_OdyToolsRoot)\Editors\Actions\RemoveStarterAction.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Editors\Actions\RemoveLinkAction.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Editors\Actions\AddStuntAction.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Editors\Actions\RemoveStuntAction.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Editors\Actions\EditStuntAction.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Editors\Actions\PasteItemAction.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Editors\Actions\DeleteNodeEverywhereAction.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Editors\Actions\RestoreOrphanAction.cs" />
+    <Compile Include="..\..\Widgets\IMediaPlayer.cs" />
+    <Compile Include="..\..\Widgets\NAudioMediaPlayer.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\ComboBox2DA.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\PlainTextEdit.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\GFFFieldSpinBox.axaml.cs" />
@@ -93,19 +75,17 @@
   </ItemGroup>
   <ItemGroup>
     <AvaloniaXaml Remove="**\*.axaml" />
-    <AvaloniaXaml Include="..\Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml" />
+    <AvaloniaXaml Include="..\Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml" Link="EditorStandaloneHost/EditorStandaloneApp.axaml" />
     <AvaloniaXaml Include="OdyToolDLG.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\ColorPickerDialog.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\LocalizedStringDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\DLGSettingsDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\Edit\DialogAnimationDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\Edit\DialogModelDialog.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\ComboBox2DA.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\GFFFieldSpinBox.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\ColorEdit.axaml" />
   </ItemGroup>
-  <!-- Force executable and entry point (standalone must be runnable app). Debug=Exe for console. -->
-  <PropertyGroup>
-    <OutputType Condition="'$(Configuration)' == 'Debug'">Exe</OutputType>
-    <OutputType Condition="'$(Configuration)' != 'Debug'">WinExe</OutputType>
-    <StartupObject>OdyTools.Editors.Standalone.DLG.Program</StartupObject>
-  </PropertyGroup>
 </Project>

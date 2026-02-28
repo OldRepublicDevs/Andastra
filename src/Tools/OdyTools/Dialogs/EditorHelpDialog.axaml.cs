@@ -25,8 +25,6 @@ namespace OdyTools.Dialogs
         public override string ToString() => Text;
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/editor_help.py:46
-    // Original: class EditorHelpDialog(QDialog):
     public partial class EditorHelpDialog : Window
     {
         private ScrollViewer _scrollViewer;
@@ -95,8 +93,6 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/editor_help.py:49-82
-        // Original: def __init__(self, parent, wiki_filename):
         public EditorHelpDialog(Window parent, string wikiFilename)
             : this(parent, new[] { wikiFilename })
         {
@@ -292,13 +288,11 @@ namespace OdyTools.Dialogs
         }
 
         // Test override for wiki path (allows mocking in tests)
-        // Matching PyKotor: monkeypatch.get_wiki_path in tests
         // This is set to non-null only during tests to override the wiki path resolution
         private static string _testWikiPathOverride = null;
 
         /// <summary>
         /// Sets a test override for the wiki path. Used only in unit tests.
-        /// Matching PyKotor: monkeypatch.get_wiki_path in test_editor_help_dialog_load_existing_file
         /// </summary>
         /// <param name="wikiPath">The wiki path to use for testing, or null to clear the override.</param>
         internal static void SetTestWikiPathOverride(string wikiPath)
@@ -314,12 +308,9 @@ namespace OdyTools.Dialogs
             return _testWikiPathOverride;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/editor_help.py:19-43
-        // Original: def get_wiki_path() -> Path:
         public static string GetWikiPath()
         {
             // Check for test override first (allows mocking in tests)
-            // Matching PyKotor: with patch("toolset.gui.dialogs.editor_help.get_wiki_path", return_value=wiki_dir):
             if (_testWikiPathOverride != null)
             {
                 return _testWikiPathOverride;
@@ -372,8 +363,6 @@ namespace OdyTools.Dialogs
             return "./wiki";
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/editor_help.py:254-296
-        // Original: def load_wiki_file(self, wiki_filename: str):
         private void LoadWikiFile(string wikiFilename)
         {
             LoadWikiFiles(new[] { wikiFilename });
@@ -483,8 +472,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/editor_help.py:84-252
-        // Original: def _wrap_html_with_styles(self, html_body: str) -> str:
         private string WrapHtmlWithStyles(string htmlBody)
         {
             return $@"<!DOCTYPE html>
@@ -717,8 +704,6 @@ namespace OdyTools.Dialogs
         }
 
         // Render HTML content to Avalonia controls
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/editor_help.py:254-296
-        // Original: def load_wiki_file(self, wiki_filename: str) -> None: ... self.text_browser.setHtml(html)
         private void RenderHtml(string html)
         {
             if (_htmlContainer == null)
@@ -1206,8 +1191,6 @@ namespace OdyTools.Dialogs
             parent.Children.Add(pre);
         }
 
-        // Matching PyKotor implementation: QTextBrowser link handling with setSearchPaths
-        // Original: self.text_browser.setSearchPaths([str(wiki_path)]) enables relative link resolution
         private void RenderLink(HtmlNode node, Panel parent)
         {
             var link = new TextBlock
@@ -1270,7 +1253,6 @@ namespace OdyTools.Dialogs
                 }
 
                 // Relative wiki file link - resolve and open in new dialog
-                // Matching PyKotor behavior: QTextBrowser.setSearchPaths enables relative link resolution
                 string wikiPath = GetWikiPath();
                 string targetFile = href;
 
@@ -1617,7 +1599,6 @@ namespace OdyTools.Dialogs
 
         /// <summary>
         /// Scrolls to an anchor within the current document.
-        /// Matching PyKotor QTextBrowser.scrollToAnchor behavior.
         /// </summary>
         /// <param name="anchorId">The anchor ID to scroll to (without # prefix).</param>
         private void ScrollToAnchor(string anchorId)

@@ -4,10 +4,10 @@
         Title="OdyToolNSS"
         MinWidth="800" MinHeight="500"
         Width="1200" Height="800"
-        RequestedThemeVariant="Light">
+        RequestedThemeVariant="Dark">
   <Window.Styles>
     <Style Selector="Window">
-      <Setter Property="Background" Value="#F3F5F9" />
+      <Setter Property="Background" Value="#1E1E1E" />
     </Style>
   </Window.Styles>
   <ContentControl x:Name="contentRoot"/>

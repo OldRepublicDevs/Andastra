@@ -9,8 +9,6 @@ using Avalonia.Media;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/color.py:23-37
-    // Original: QColorDialog for color selection
     public partial class ColorPickerDialog : Window
     {
         private Slider _redSlider;
@@ -45,8 +43,6 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/color.py:23-37
-        // Original: def open_color_dialog(self): QColorDialog(init_qcolor)
         public ColorPickerDialog(Window parent, Color initialColor, bool allowAlpha)
         {
             InitializeComponent();
@@ -249,7 +245,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation: dialog.selectedColor()
         public Color GetSelectedColor()
         {
             return _selectedColor;

@@ -20,14 +20,16 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG
 
     /// <summary>
     /// Type of conversation for dialog.
+    /// Matches vendor dlg.ui: Human, Computer, Type 3, Type 4, Type 5.
     /// </summary>
     [PublicAPI]
     public enum DLGConversationType
     {
         Human = 0,
         Computer = 1,
-        Other = 2,
-        Unknown = 3
+        Type3 = 2,
+        Type4 = 3,
+        Type5 = 4
     }
 
     /// <summary>
@@ -44,7 +46,19 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG
         public static readonly ResourceType BinaryType = ResourceType.DLG;
 
         public List<DLGLink> Starters { get; set; } = new List<DLGLink>();
+        /// <summary>
+        /// Canonical GFF EntryList storage (index-aligned with serialized EntryList).
+        /// </summary>
+        public List<DLGEntry> EntryList { get; set; } = new List<DLGEntry>();
+        /// <summary>
+        /// Canonical GFF ReplyList storage (index-aligned with serialized ReplyList).
+        /// </summary>
+        public List<DLGReply> ReplyList { get; set; } = new List<DLGReply>();
         public List<DLGStunt> Stunts { get; set; } = new List<DLGStunt>();
+        /// <summary>
+        /// Structural version for cache invalidation in lazy accessors/views.
+        /// </summary>
+        public int Version { get; private set; }
 
         // Dialog metadata
         public ResRef AmbientTrack { get; set; } = ResRef.FromBlank();
@@ -76,11 +90,22 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG
         {
         }
 
+        /// <summary>
+        /// Marks the DLG structure as changed (for cache invalidation).
+        /// </summary>
+        public void Touch()
+        {
+            unchecked
+            {
+                Version++;
+            }
+        }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/base.py:307
         // Original: def all_entries(self, *, as_sorted: bool = False) -> list[DLGEntry]:
         public List<DLGEntry> AllEntries(bool asSorted = false)
         {
-            List<DLGEntry> entries = _AllEntries();
+            List<DLGEntry> entries = EntryList;
             if (!asSorted)
             {
                 return entries;
@@ -88,43 +113,49 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG
             return entries.OrderBy(e => e.ListIndex == -1).ThenBy(e => e.ListIndex).ToList();
         }
 
-        private List<DLGEntry> _AllEntries(List<DLGLink> links = null, HashSet<DLGEntry> seenEntries = null)
+        /// <summary>
+        /// Enumerates entries reachable from starters by traversing links.
+        /// This preserves the previous traversal semantics of AllEntries().
+        /// </summary>
+        public IEnumerable<DLGEntry> ReachableEntries(bool asSorted = false)
         {
-            List<DLGEntry> entries = new List<DLGEntry>();
-            links = links ?? Starters;
-            seenEntries = seenEntries ?? new HashSet<DLGEntry>();
+            var result = ReachableEntriesCore(Starters, new HashSet<DLGEntry>());
+            if (!asSorted)
+            {
+                return result;
+            }
+            return result.OrderBy(e => e.ListIndex == -1).ThenBy(e => e.ListIndex);
+        }
 
+        private IEnumerable<DLGEntry> ReachableEntriesCore(IEnumerable<DLGLink> links, HashSet<DLGEntry> seenEntries)
+        {
+            if (links == null)
+            {
+                yield break;
+            }
             foreach (DLGLink link in links)
             {
-                DLGNode entry = link.Node;
-                if (entry == null || seenEntries.Contains(entry as DLGEntry))
+                DLGNode entry = link?.Node;
+                if (!(entry is DLGEntry dlgEntry) || seenEntries.Contains(dlgEntry))
                 {
                     continue;
                 }
-                if (!(entry is DLGEntry dlgEntry))
-                {
-                    continue;
-                }
-                entries.Add(dlgEntry);
+
                 seenEntries.Add(dlgEntry);
-                foreach (DLGLink replyLink in entry.Links)
+                yield return dlgEntry;
+
+                foreach (DLGEntry child in ReachableEntriesCore(dlgEntry.Links?.SelectMany(l => l?.Node?.Links ?? Enumerable.Empty<DLGLink>()), seenEntries))
                 {
-                    DLGNode reply = replyLink.Node;
-                    if (reply != null)
-                    {
-                        entries.AddRange(_AllEntries(reply.Links, seenEntries));
-                    }
+                    yield return child;
                 }
             }
-
-            return entries;
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/base.py:363
         // Original: def all_replies(self, *, as_sorted: bool = False) -> list[DLGReply]:
         public List<DLGReply> AllReplies(bool asSorted = false)
         {
-            List<DLGReply> replies = _AllReplies();
+            List<DLGReply> replies = ReplyList;
             if (!asSorted)
             {
                 return replies;
@@ -132,36 +163,43 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG
             return replies.OrderBy(r => r.ListIndex == -1).ThenBy(r => r.ListIndex).ToList();
         }
 
-        private List<DLGReply> _AllReplies(List<DLGLink> links = null, List<DLGReply> seenReplies = null)
+        /// <summary>
+        /// Enumerates replies reachable from starters by traversing links.
+        /// This preserves the previous traversal semantics of AllReplies().
+        /// </summary>
+        public IEnumerable<DLGReply> ReachableReplies(bool asSorted = false)
         {
-            List<DLGReply> replies = new List<DLGReply>();
-            links = links ?? Starters.Where(l => l.Node != null).SelectMany(l => l.Node.Links).ToList();
-            seenReplies = seenReplies ?? new List<DLGReply>();
+            var starterReplyLinks = Starters.Where(l => l.Node != null).SelectMany(l => l.Node.Links ?? new List<DLGLink>());
+            var result = ReachableRepliesCore(starterReplyLinks, new HashSet<DLGReply>());
+            if (!asSorted)
+            {
+                return result;
+            }
+            return result.OrderBy(r => r.ListIndex == -1).ThenBy(r => r.ListIndex);
+        }
 
+        private IEnumerable<DLGReply> ReachableRepliesCore(IEnumerable<DLGLink> links, HashSet<DLGReply> seenReplies)
+        {
+            if (links == null)
+            {
+                yield break;
+            }
             foreach (DLGLink link in links)
             {
-                DLGNode reply = link.Node;
-                if (seenReplies.Contains(reply as DLGReply))
+                DLGNode reply = link?.Node;
+                if (!(reply is DLGReply dlgReply) || seenReplies.Contains(dlgReply))
                 {
                     continue;
                 }
-                if (!(reply is DLGReply dlgReply))
-                {
-                    continue;
-                }
-                replies.Add(dlgReply);
+
                 seenReplies.Add(dlgReply);
-                foreach (DLGLink entryLink in reply.Links)
+                yield return dlgReply;
+
+                foreach (DLGReply child in ReachableRepliesCore(dlgReply.Links?.SelectMany(l => l?.Node?.Links ?? Enumerable.Empty<DLGLink>()), seenReplies))
                 {
-                    DLGNode entry = entryLink.Node;
-                    if (entry != null)
-                    {
-                        replies.AddRange(_AllReplies(entry.Links, seenReplies));
-                    }
+                    yield return child;
                 }
             }
-
-            return replies;
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/base.py:183

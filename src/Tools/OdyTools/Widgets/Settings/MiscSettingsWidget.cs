@@ -5,8 +5,6 @@ using OdyTools.Data;
 
 namespace OdyTools.Widgets.Settings
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/misc.py:15
-    // Original: class MiscWidget(QWidget):
     public partial class MiscSettingsWidget : UserControl
     {
         private GlobalSettings _settings;
@@ -115,8 +113,6 @@ namespace OdyTools.Widgets.Settings
             _nssCompEdit = this.FindControl<TextBox>("nssCompEdit");
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/misc.py:52-65
-        // Original: def setup_values(self):
         private void SetupValues()
         {
             if (_useBetaChannel != null)
@@ -173,8 +169,6 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/misc.py:67-80
-        // Original: def save(self):
         public void Save()
         {
             if (_useBetaChannel != null)

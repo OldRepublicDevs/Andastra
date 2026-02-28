@@ -16,6 +16,7 @@ using BioWare.Resource.Formats.TPC;
 using OdyTools.Data;
 using OdyTools.Dialogs;
 using OdyTools.Editors;
+using OdyTools.Utils;
 using OdyTools.Editors.DLG;
 using OdyTools.Shell;
 using MsBox.Avalonia;
@@ -28,41 +29,34 @@ using TabItem = Avalonia.Controls.TabItem;
 using TabControl = Avalonia.Controls.TabControl;
 using Button = Avalonia.Controls.Button;
 using GlobalSettings = OdyTools.Data.GlobalSettings;
+#if !NET48
 using UpdateManager = OdyTools.Windows.UpdateManager;
+#endif
 
 namespace OdyTools.Windows
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:199
-    // Original: class ToolWindow(QMainWindow):
     public partial class MainWindow : Window
     {
         private OdyInstallation _active;
         private Dictionary<string, OdyInstallation> _installations;
         private GlobalSettings _settings;
         private int _previousGameComboIndex;
+#if !NET48
         private UpdateManager _updateManager;
-
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:227
-        // Original: self.update_manager: UpdateManager = UpdateManager(silent=True)
         public UpdateManager UpdateManager => _updateManager;
+#else
+        public object UpdateManager => null;
+#endif
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py
-        // Original: self.ui = Ui_MainWindow(); self.ui.setupUi(self)
         public MainWindowUi Ui { get; private set; }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:206
-        // Original: self.active: OdyInstallation | None = None
         public OdyInstallation Active => _active;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:207
-        // Original: self.installations: dict[str, OdyInstallation] = {}
         public Dictionary<string, OdyInstallation> Installations => _installations;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:208
-        // Original: self.settings: GlobalSettings = GlobalSettings()
         public GlobalSettings Settings => _settings;
 
-        // UI Widgets - will be populated from XAML or created programmatically
+        // UI Widgets - populated from XAML or created programmatically
         private ComboBox _gameCombo;
         private TabControl _resourceTabs;
         private ResourceList _coreWidget;
@@ -78,6 +72,7 @@ namespace OdyTools.Windows
         private TabItem _savesTab;
         private TabItem _modulesTab;
         private TabItem _overrideTab;
+        private Button _openSaveEditorButton;
         private MenuItem _actionNewDLG;
         private MenuItem _actionNewUTC;
         private MenuItem _actionNewNSS;
@@ -86,8 +81,6 @@ namespace OdyTools.Windows
         private bool _overrideTabLoaded;
         private bool _savesTabLoaded;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:206-276
-        // Original: def __init__(self):
         public MainWindow()
         {
             InitializeComponent();
@@ -95,12 +88,10 @@ namespace OdyTools.Windows
             _installations = new Dictionary<string, OdyInstallation>();
             _settings = new GlobalSettings();
             _previousGameComboIndex = 0;
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:227
-            // Original: self.update_manager: UpdateManager = UpdateManager(silent=True)
+#if !NET48
             _updateManager = new UpdateManager(silent: true);
+#endif
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:821
-            // Original: self.setWindowTitle(f"{tr('OdyTools')} ({qtpy.API_NAME})")
             Title = "OdyTools";
 
             SetupUI();
@@ -234,6 +225,12 @@ namespace OdyTools.Windows
             }
             catch { }
 
+            try
+            {
+                _openSaveEditorButton = this.FindControl<Button>("openSaveEditorButton");
+            }
+            catch { }
+
             if (!xamlLoaded)
             {
                 SetupProgrammaticUI();
@@ -304,8 +301,6 @@ namespace OdyTools.Windows
                 _texturesWidget = new ResourceList();
             }
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py
-            // Original: self.ui = Ui_MainWindow(); self.ui.setupUi(self)
             // Create UI wrapper exposing all controls
             Ui = new MainWindowUi
             {
@@ -317,6 +312,7 @@ namespace OdyTools.Windows
                 SavesWidget = _savesWidget,
                 TexturesWidget = _texturesWidget,
                 CoreTab = _coreTab,
+                SavesTab = _savesTab,
                 ModulesTab = _modulesTab,
                 OverrideTab = _overrideTab,
                 ActionNewDLG = _actionNewDLG,
@@ -325,8 +321,6 @@ namespace OdyTools.Windows
             };
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:485-665
-        // Original: def _setup_signals(self):
         private void SetupSignals()
         {
             if (_gameCombo != null)
@@ -360,24 +354,27 @@ namespace OdyTools.Windows
                 _erfEditorButton.Click += (sender, e) => OpenModuleTabErfEditor();
             }
 
+            if (_openSaveEditorButton != null)
+            {
+                _openSaveEditorButton.Click += (sender, e) => OnOpenSaveEditor();
+            }
+
             // Connect tab control selection changed event
             if (_resourceTabs != null)
             {
                 _resourceTabs.SelectionChanged += (sender, e) => OnTabChanged();
             }
 
-            // Connect ResourceList events (matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:495-555)
+            // Connect ResourceList events
             ConnectResourceListEvents();
 
             // Connect menu actions from XAML
             ConnectMenuActions();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:495-555
-        // Original: Connect signals from ResourceList widgets to MainWindow handlers
         private void ConnectResourceListEvents()
         {
-            // Connect coreWidget events (matching PyKotor lines 495-497)
+            // Connect coreWidget events
             if (_coreWidget != null)
             {
                 _coreWidget.RefreshClicked += (sender, e) => OnCoreRefresh();
@@ -385,7 +382,7 @@ namespace OdyTools.Windows
                 _coreWidget.ExtractRequested += (sender, e) => OnExtractResources(e.Resources);
             }
 
-            // Connect modulesWidget events (matching PyKotor lines 499-503)
+            // Connect modulesWidget events
             if (_modulesWidget != null)
             {
                 _modulesWidget.SectionChanged += (sender, section) => OnModuleChanged(section);
@@ -395,7 +392,7 @@ namespace OdyTools.Windows
                 _modulesWidget.ExtractRequested += (sender, e) => OnExtractResources(e.Resources);
             }
 
-            // Connect savesWidget events (matching PyKotor lines 506-510)
+            // Connect savesWidget events
             if (_savesWidget != null)
             {
                 _savesWidget.IsSavesWidget = true;
@@ -407,7 +404,7 @@ namespace OdyTools.Windows
                 _savesWidget.RequestOpenSaveEditor += (sender, e) => OnOpenSaveEditor();
             }
 
-            // Connect overrideWidget events (matching PyKotor lines 546-550)
+            // Connect overrideWidget events
             if (_overrideWidget != null)
             {
                 _overrideWidget.SectionChanged += (sender, section) => OnOverrideChanged(section);
@@ -417,7 +414,7 @@ namespace OdyTools.Windows
                 _overrideWidget.ExtractRequested += (sender, e) => OnExtractResources(e.Resources);
             }
 
-            // Connect texturesWidget events (matching PyKotor lines 553-554)
+            // Connect texturesWidget events
             if (_texturesWidget != null)
             {
                 _texturesWidget.SectionChanged += (sender, section) => OnTexturesChanged(section);
@@ -426,7 +423,7 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor: on_open_save_editor - open selected save(s) in Save Editor
+        // open selected save(s) in Save Editor
         private void OnOpenSaveEditor()
         {
             if (_savesWidget == null) return;
@@ -473,8 +470,6 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:485-665
-        // Original: Connect menu actions
         private void ConnectMenuActions()
         {
             // Find menu items from XAML and connect them
@@ -526,7 +521,9 @@ namespace OdyTools.Windows
                 var actionHelpUpdates = this.FindControl<MenuItem>("actionHelpUpdates");
                 if (actionHelpUpdates != null)
                 {
+                    #if !NET48
                     actionHelpUpdates.Click += (s, e) => _updateManager?.CheckForUpdates(silent: false);
+#endif
                 }
 
                 var actionInstructions = this.FindControl<MenuItem>("actionInstructions");
@@ -554,6 +551,49 @@ namespace OdyTools.Windows
                     actionCloneModule.Click += (s, e) => OpenCloneModuleDialog();
                 }
 
+                var actionIndoorMapBuilder = this.FindControl<MenuItem>("actionIndoorMapBuilder");
+                if (actionIndoorMapBuilder != null)
+                {
+                    actionIndoorMapBuilder.Click += (s, e) => OpenIndoorMapBuilder();
+                }
+
+                var actionKotorDiff = this.FindControl<MenuItem>("actionKotorDiff");
+                if (actionKotorDiff != null)
+                {
+                    actionKotorDiff.Click += (s, e) => OpenKotordiff();
+                }
+
+                var actionTSLPatchDataEditor = this.FindControl<MenuItem>("actionTSLPatchDataEditor");
+                if (actionTSLPatchDataEditor != null)
+                {
+                    actionTSLPatchDataEditor.Click += (s, e) => OpenTslPatchDataEditor(null);
+                }
+
+                // Help -> Discord submenu
+                var actionDiscordOdyTools = this.FindControl<MenuItem>("actionDiscordOdyTools");
+                if (actionDiscordOdyTools != null)
+                {
+                    actionDiscordOdyTools.Click += (s, e) => OpenUrl("https://discord.gg/odytools");
+                }
+                var actionDiscordKotOR = this.FindControl<MenuItem>("actionDiscordKotOR");
+                if (actionDiscordKotOR != null)
+                {
+                    actionDiscordKotOR.Click += (s, e) => OpenUrl("https://discord.gg/kotor");
+                }
+                var actionDiscordDeadlyStream = this.FindControl<MenuItem>("actionDiscordDeadlyStream");
+                if (actionDiscordDeadlyStream != null)
+                {
+                    actionDiscordDeadlyStream.Click += (s, e) => OpenUrl("https://discord.gg/deadlystream");
+                }
+
+                // Language menu (populate on open)
+                var menuLanguage = this.FindControl<MenuItem>("menuLanguage");
+                if (menuLanguage != null)
+                {
+                    menuLanguage.SubmenuOpened += (s, e) => PopulateLanguageMenu(menuLanguage);
+                    PopulateLanguageMenu(menuLanguage);
+                }
+
                 // Edit menu
                 var actionEditTLK = this.FindControl<MenuItem>("actionEditTLK");
                 if (actionEditTLK != null)
@@ -574,8 +614,6 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:823-846
-        // Original: def on_open_resources(...):
         private void OnOpenResources(List<FileResource> resources, bool? useSpecializedEditor = null)
         {
             if (_active == null || resources == null || resources.Count == 0)
@@ -605,8 +643,6 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1952-2007
-        // Original: def on_extract_resources(...):
         private async void OnExtractResources(List<FileResource> resources)
         {
             if (resources == null || resources.Count == 0)
@@ -623,7 +659,35 @@ namespace OdyTools.Windows
 
             var (folderPath, pathsToWrite) = extractResult.Value;
 
-            // Handle file conflicts and determine final save paths
+            // File conflict resolution: if any destination file exists, prompt Overwrite all / Skip existing / Cancel
+            var existingPaths = pathsToWrite.Where(kvp => File.Exists(kvp.Value)).ToList();
+            if (existingPaths.Count > 0)
+            {
+                int n = existingPaths.Count;
+                var conflictBox = MessageBoxManager.GetMessageBoxStandard(
+                    "File conflict",
+                    $"{n} file(s) already exist at the destination.\n\nYes = Overwrite all\nNo = Skip existing files\nCancel = Abort extraction",
+                    ButtonEnum.YesNoCancel,
+                    MsBox.Avalonia.Enums.Icon.Question);
+                var conflictResult = await conflictBox.ShowWindowDialogAsync(this);
+                if (conflictResult == ButtonResult.Cancel)
+                {
+                    return;
+                }
+                if (conflictResult == ButtonResult.No)
+                {
+                    foreach (var kvp in existingPaths)
+                    {
+                        pathsToWrite.Remove(kvp.Key);
+                    }
+                    if (pathsToWrite.Count == 0)
+                    {
+                        return;
+                    }
+                }
+            }
+
+            // Determine final save paths (create dirs, collect failures)
             var failedSavePathHandlers = new Dictionary<string, Exception>();
             var resourceSavePaths = DetermineSavePaths(pathsToWrite, failedSavePathHandlers);
             if (resourceSavePaths.Count == 0)
@@ -639,8 +703,6 @@ namespace OdyTools.Windows
             await ExtractResourcesAsync(resourceSavePaths, failedSavePathHandlers, progressDialog);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1930-1952
-        // Original: def build_extract_save_paths(self, resources: list[FileResource]) -> tuple[Path, dict[FileResource, Path]] | tuple[None, None]:
         private async Task<(string FolderPath, Dictionary<FileResource, string> PathsToWrite)?> BuildExtractSavePaths(List<FileResource> resources)
         {
             var pathsToWrite = new Dictionary<FileResource, string>();
@@ -667,22 +729,24 @@ namespace OdyTools.Windows
 
             var folderPath = folders[0].Path.LocalPath;
 
-            // Build save paths for each resource
+            // Build save paths for each resource. Use output extension when extraction converts format (e.g. TPC->TGA).
             foreach (var resource in resources)
             {
-                var identifier = $"{resource.ResName}.{resource.ResType.Extension}";
+                string extension = resource.ResType?.Extension ?? "";
+                if (resource.ResType == ResourceType.TPC)
+                {
+                    extension = "tga"; // ExtractResourceAsync decompiles TPC to TGA
+                }
+                // MDL uses default extension; .mdl.ascii would require an MDL decompiler
+                var identifier = $"{resource.ResName}.{extension}";
                 var savePath = Path.Combine(folderPath, identifier);
-
-                // TODO: Handle resource type specific extensions (TPC->TGA, MDL->MDL.ASCII, etc.)
-                // For now, just use the basic resource identifier
                 pathsToWrite[resource] = savePath;
             }
 
             return (folderPath, pathsToWrite);
         }
 
-        // Equivalent to PyKotor's FileSaveHandler.determine_save_paths()
-        // Original: resource_save_paths: dict[FileResource, Path] = FileSaveHandler(selected_resources).determine_save_paths(paths_to_write, failed_savepath_handlers)
+        // Caller is responsible for file conflict resolution (filter pathsToWrite before calling if user chose Skip existing).
         private Dictionary<FileResource, string> DetermineSavePaths(Dictionary<FileResource, string> pathsToWrite, Dictionary<string, Exception> failedSavePathHandlers)
         {
             var resourceSavePaths = new Dictionary<FileResource, string>();
@@ -694,16 +758,12 @@ namespace OdyTools.Windows
 
                 try
                 {
-                    // Check if file already exists
                     if (File.Exists(desiredPath))
                     {
-                        // For now, just overwrite. In full implementation, would prompt user for conflict resolution
-                        // TODO: Implement file conflict resolution dialog
-                        resourceSavePaths[resource] = desiredPath;
+                        resourceSavePaths[resource] = desiredPath; // Overwrite (conflict already resolved by caller)
                     }
                     else
                     {
-                        // Ensure directory exists
                         var directory = Path.GetDirectoryName(desiredPath);
                         if (!string.IsNullOrEmpty(directory))
                         {
@@ -722,7 +782,6 @@ namespace OdyTools.Windows
         }
 
         // Async extraction of resources with progress dialog
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1960-2007
         private async Task ExtractResourcesAsync(Dictionary<FileResource, string> resourceSavePaths, Dictionary<string, Exception> failedSavePathHandlers, Dialogs.ExtractionProgressDialog progressDialog)
         {
             if (resourceSavePaths.Count == 0)
@@ -771,8 +830,6 @@ namespace OdyTools.Windows
         }
 
         // Extract a single resource
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:2011-2044
-        // Original: def _extract_resource(self, resource: FileResource, save_path: Path, loader: AsyncLoader, seen_resources: dict[LocationResult, Path]):
         private async Task ExtractResourceAsync(FileResource resource, string savePath)
         {
             var data = resource.GetData();
@@ -795,10 +852,9 @@ namespace OdyTools.Windows
             }
             else if (resource.ResType == ResourceType.MDL)
             {
-                // TODO: Implement MDL decompilation to ASCII format
-                // For now, just extract raw MDL data
+                // MDL is extracted as binary; decompilation to .mdl.ascii would require an MDL→ASCII converter
             }
-            // TODO: Handle other resource types as needed
+            // Other types (NCS, etc.) extract as-is; decompilation can be done separately (e.g. NCS via ScriptDecompiler)
 
             // Write the data to file
             await System.Threading.Tasks.Task.Run(() => File.WriteAllBytes(savePath, data));
@@ -835,8 +891,6 @@ namespace OdyTools.Windows
             await messageBox.ShowAsync();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1131-1259
-        // Original: def change_active_installation(...):
         public async void ChangeActiveInstallation(int index)
         {
             if (index < 0)
@@ -892,7 +946,18 @@ namespace OdyTools.Windows
 
             if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
             {
-                // TODO:  Path not set or invalid - would prompt user in full implementation
+                var messageBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Invalid installation path",
+                    string.IsNullOrEmpty(path)
+                        ? $"The installation path for \"{name}\" is not set. Open Settings to configure it?"
+                        : $"The installation path for \"{name}\" does not exist or is not accessible:\n\n{path}\n\nOpen Settings to fix it?",
+                    ButtonEnum.YesNo,
+                    MsBox.Avalonia.Enums.Icon.Warning);
+                var result = await messageBox.ShowWindowDialogAsync(this);
+                if (result == ButtonResult.Yes)
+                {
+                    OpenSettingsDialog();
+                }
                 _gameCombo.SelectedIndex = prevIndex;
                 return;
             }
@@ -923,8 +988,6 @@ namespace OdyTools.Windows
             _previousGameComboIndex = index;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1657-1700
-        // Original: def unset_installation(self):
         public void UnsetInstallation()
         {
             if (_gameCombo != null)
@@ -956,8 +1019,6 @@ namespace OdyTools.Windows
             _active = null;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1370-1432
-        // Original: def update_menus(self):
         public void UpdateMenus()
         {
             // Update menu states based on active installation
@@ -976,10 +1037,36 @@ namespace OdyTools.Windows
                 }
                 catch { /* Control may not exist in test scenarios */ }
             }
+            // Enable/disable Edit menu items that require installation
+            foreach (var name in new[] { "actionEditTLK", "actionEditJRL" })
+            {
+                try
+                {
+                    var item = this.FindControl<MenuItem>(name);
+                    if (item != null) item.IsEnabled = hasInstallation;
+                }
+                catch { }
+            }
+            // Enable/disable Tools menu items that require installation
+            foreach (var name in new[] {
+                "actionModuleDesigner", "actionIndoorMapBuilder", "actionKotorDiff", "actionTSLPatchDataEditor",
+                "actionFileSearch", "actionCloneModule"
+            })
+            {
+                try
+                {
+                    var item = this.FindControl<MenuItem>(name);
+                    if (item != null) item.IsEnabled = hasInstallation;
+                }
+                catch { }
+            }
+            // Open Save Editor button (Saves tab) requires installation
+            if (_openSaveEditorButton != null)
+            {
+                _openSaveEditorButton.IsEnabled = hasInstallation;
+            }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1705-1716
-        // Original: def refresh_core_list(...):
         public void RefreshCoreList(bool reload = true)
         {
             if (_active == null || _coreWidget == null)
@@ -999,8 +1086,6 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1851-1869
-        // Original: def refresh_saves_list(...):
         public void RefreshSavesList(bool reload = true)
         {
             if (_active == null || _savesWidget == null)
@@ -1010,7 +1095,6 @@ namespace OdyTools.Windows
 
             try
             {
-                // Get saves from installation
                 var saveLocations = _active.SaveLocations();
                 var sections = new List<string>();
                 foreach (var location in saveLocations)
@@ -1018,6 +1102,12 @@ namespace OdyTools.Windows
                     sections.Add(location);
                 }
                 _savesWidget.SetSections(sections);
+                // If there is at least one section and none selected, select the first so resources load
+                var sectionCombo = _savesWidget.Ui?.SectionCombo;
+                if (sectionCombo != null && sections.Count > 0 && sectionCombo.SelectedIndex < 0)
+                {
+                    sectionCombo.SelectedIndex = 0;
+                }
             }
             catch (Exception ex)
             {
@@ -1025,8 +1115,6 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1721-1740
-        // Original: def refresh_module_list(...):
         public void RefreshModuleList(bool reload = true, List<object> moduleItems = null)
         {
             if (_active == null || _modulesWidget == null)
@@ -1064,8 +1152,6 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1832-1840
-        // Original: def refresh_override_list(...):
         public void RefreshOverrideList(bool reload = true)
         {
             if (_active == null || _overrideWidget == null)
@@ -1090,15 +1176,11 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1581-1583
-        // Original: def reload_settings(self):
         public void ReloadSettings()
         {
             ReloadInstallations();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1646-1654
-        // Original: def reload_installations(self):
         public void ReloadInstallations()
         {
             if (_gameCombo == null)
@@ -1116,8 +1198,6 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1567-1579
-        // Original: def get_active_resource_widget(self):
         public ResourceList GetActiveResourceWidget()
         {
             if (_resourceTabs == null)
@@ -1150,8 +1230,6 @@ namespace OdyTools.Windows
             return _coreWidget ?? new ResourceList();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:100-106
-        // Original: def get_active_resource_tab(self):
         public Control GetActiveResourceTab()
         {
             if (_resourceTabs?.SelectedItem is TabItem selectedTab)
@@ -1161,8 +1239,6 @@ namespace OdyTools.Windows
             return _coreTab;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py
-        // Original: def get_active_tab_index(self):
         public int GetActiveTabIndex()
         {
             if (_resourceTabs != null)
@@ -1172,8 +1248,6 @@ namespace OdyTools.Windows
             return 0;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1606-1611
-        // Original: def on_tab_changed(self):
         public void OnTabChanged()
         {
             EnsureActiveResourceTabLoaded(force: false);
@@ -1292,8 +1366,6 @@ namespace OdyTools.Windows
             }, Avalonia.Threading.DispatcherPriority.Background);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1443-1455
-        // Original: def open_module_designer(self):
         private void OpenModuleDesigner()
         {
             // Matching Python: assert self.active is not None, "No installation loaded."
@@ -1489,8 +1561,6 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:2166-2177
-        // Original: def open_from_file(self):
         //          filepaths: list[str] = QFileDialog.getOpenFileNames(self, "Select files to open")[:-1][0]
         //          for filepath in filepaths:
         //              r_filepath = Path(filepath)
@@ -1566,7 +1636,6 @@ namespace OdyTools.Windows
                     }
                     catch (Exception ex)
                     {
-                        // Matching PyKotor implementation: QMessageBox(QMessageBox.Icon.Critical, f"Failed to open file ({etype})", msg).exec()
                         string errorType = ex.GetType().Name;
                         string errorMessage = ex.Message;
                         if (string.IsNullOrEmpty(errorMessage))
@@ -1602,22 +1671,16 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:873-875
-        // Original: def on_core_refresh(self):
         public void OnCoreRefresh()
         {
             RefreshCoreList(reload: true);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:877-881
-        // Original: def on_module_changed(self, new_module_file: str):
         public void OnModuleChanged(string newModuleFile)
         {
             OnModuleReload(newModuleFile);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:884-901
-        // Original: def on_module_reload(self, module_file: str):
         public void OnModuleReload(string moduleFile)
         {
             if (_active == null || string.IsNullOrWhiteSpace(moduleFile))
@@ -1636,15 +1699,11 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:917-918
-        // Original: def on_module_refresh(self):
         public void OnModuleRefresh()
         {
             RefreshModuleList(reload: true);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1100-1105
-        // Original: def on_override_changed(self, new_directory: str):
         public void OnOverrideChanged(string newDirectory)
         {
             if (_active == null)
@@ -1654,8 +1713,6 @@ namespace OdyTools.Windows
             _overrideWidget?.SetResources(_active.OverrideResources(newDirectory));
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1107-1121
-        // Original: def on_override_reload(self, file_or_folder: str):
         public void OnOverrideReload(string fileOrFolder)
         {
             if (_active == null)
@@ -1685,15 +1742,11 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1123-1124
-        // Original: def on_override_refresh(self):
         public void OnOverrideRefresh()
         {
             RefreshOverrideList(reload: true);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:921-933
-        // Original: def on_savepath_changed(self, new_save_dir: str):
         public void OnSavePathChanged(string newSaveDir)
         {
             if (_active == null || string.IsNullOrWhiteSpace(newSaveDir))
@@ -1709,9 +1762,26 @@ namespace OdyTools.Windows
                     _savesWidget.SetResources(new List<FileResource>());
                 }
 
-                // Load saves for the new directory and update the widget
-                // Note: In PyKotor, this calls active.load_saves() and checks if new_save_dir_path is in active.saves
-                // TODO: STUB - For now, we'll refresh the saves list with the new directory
+                // Load saves for the selected directory: get all FileResources under this save location from installation
+                var saves = _active.Saves;
+                if (saves != null && saves.ContainsKey(newSaveDir))
+                {
+                    var saveDict = saves[newSaveDir];
+                    var allResources = new List<FileResource>();
+                    if (saveDict != null)
+                    {
+                        foreach (var list in saveDict.Values)
+                        {
+                            if (list != null)
+                                allResources.AddRange(list);
+                        }
+                    }
+                    if (_savesWidget != null && allResources.Count > 0)
+                    {
+                        _savesWidget.SetResources(allResources, customCategory: "Saves", clearExisting: true);
+                    }
+                }
+
                 RefreshSavesList(reload: true);
             }
             catch (Exception ex)
@@ -1720,8 +1790,6 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:974-979
-        // Original: def on_save_reload(self, save_dir: str):
         public void OnSaveReload(string saveDir)
         {
             if (string.IsNullOrWhiteSpace(saveDir))
@@ -1734,8 +1802,6 @@ namespace OdyTools.Windows
             OnSavePathChanged(saveDir);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1126-1128
-        // Original: def on_textures_changed(self, texturepackName: str):
         private void OnTexturesChanged(string texturepackName)
         {
             if (_active == null)
@@ -1745,15 +1811,11 @@ namespace OdyTools.Windows
             _texturesWidget?.SetResources(_active.TexturepackResources(texturepackName));
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py
-        // Original: def on_save_refresh(self):
         public void OnSaveRefresh()
         {
             RefreshSavesList(reload: true);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py
-        // Original: def on_module_file_updated(self, file_path: str, event_type: str):
         public void OnModuleFileUpdated(string filePath, string eventType)
         {
             if (_active == null || string.IsNullOrWhiteSpace(filePath))
@@ -1771,8 +1833,6 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py
-        // Original: def on_override_file_updated(self, file_path: str, event_type: str):
         public void OnOverrideFileUpdated(string filePath, string eventType)
         {
             if (_active == null || string.IsNullOrWhiteSpace(filePath))
@@ -1790,8 +1850,6 @@ namespace OdyTools.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1475-1486
-        // Original: def open_active_talktable(self):
         private async void OpenActiveTalktable()
         {
             if (_active == null)
@@ -1802,8 +1860,6 @@ namespace OdyTools.Windows
             var tlkPath = Path.Combine(_active.Path, "dialog.tlk");
             if (!File.Exists(tlkPath))
             {
-                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1479-1483
-                // Original: QMessageBox(QMessageBox.Icon.Information, "dialog.tlk not found", f"Could not open the TalkTable editor, dialog.tlk not found at the expected location<br><br>{c_filepath}.").exec()
                 var messageBox = MessageBoxManager.GetMessageBoxStandard(
                     "dialog.tlk not found",
                     $"Could not open the TalkTable editor, dialog.tlk not found at the expected location\n\n{tlkPath}.",
@@ -1818,8 +1874,6 @@ namespace OdyTools.Windows
             WindowUtils.OpenResourceEditor(resource, _active, this);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1489-1505
-        // Original: def open_active_journal(self):
         private async void OpenActiveJournal()
         {
             if (_active == null)
@@ -1835,8 +1889,6 @@ namespace OdyTools.Windows
 
             if (journalResources == null || !journalResources.ContainsKey(jrlIdent) || journalResources[jrlIdent].Count == 0)
             {
-                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1497
-                // Original: QMessageBox(QMessageBox.Icon.Critical, "global.jrl not found", "Could not open the journal editor: 'global.jrl' not found.").exec()
                 var messageBox = MessageBoxManager.GetMessageBoxStandard(
                     "global.jrl not found",
                     "Could not open the journal editor: 'global.jrl' not found.",
@@ -1887,8 +1939,6 @@ namespace OdyTools.Windows
                 this);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1508-1514
-        // Original: def open_file_search_dialog(self):
         private void OpenFileSearchDialog()
         {
             if (_active == null)
@@ -1896,8 +1946,6 @@ namespace OdyTools.Windows
                 return;
             }
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1508-1514
-            // Original: dialog = FileSearcher(self, self.installations)
             //           dialog.file_results.connect(self.on_file_search_results)
             //           dialog.exec()
             var dialog = new Dialogs.FileSearcherDialog(this, _installations);
@@ -1905,8 +1953,6 @@ namespace OdyTools.Windows
             // Connect file results event
             dialog.FileResults += (results, installation) =>
             {
-                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1517-1522
-                // Original: def on_file_search_results(self, results: list[FileResource], installation: OdyInstallation):
                 //           dialog = FileResults(self, results, installation)
                 //           dialog.sig_searchresults_selected.connect(self.on_open_resources)
                 //           dialog.exec()
@@ -1927,8 +1973,6 @@ namespace OdyTools.Windows
             WindowUtils.AddWindow(dialog);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1585-1604
-        // Original: def _open_module_tab_erf_editor(self):
         private void OpenModuleTabErfEditor()
         {
             if (_active == null)
@@ -1986,8 +2030,6 @@ namespace OdyTools.Windows
                 gffSpecialized: null);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1517-1522
-        // Original: def open_indoor_map_builder(self):
         private void OpenIndoorMapBuilder()
         {
             if (_active == null)
@@ -2000,8 +2042,6 @@ namespace OdyTools.Windows
             WindowUtils.AddWindow(builder);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1525-1535
-        // Original: def open_kotordiff(self):
         private void OpenKotordiff()
         {
             var kotordiffWindow = new KotorDiffWindow(null, _installations, _active);
@@ -2009,8 +2049,6 @@ namespace OdyTools.Windows
             WindowUtils.AddWindow(kotordiffWindow);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1546-1552
-        // Original: def open_instructions_window(self):
         private void OpenInstructionsWindow()
         {
             var window = new HelpWindow(null);
@@ -2018,30 +2056,53 @@ namespace OdyTools.Windows
             WindowUtils.AddWindow(window);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1554-1556
-        // Original: def open_about_dialog(self):
         private void OpenAboutDialog()
         {
             var dialog = new Dialogs.AboutDialog(this);
             dialog.ShowDialog(this);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1457-1472
-        // Original: def open_settings_dialog(self):
+        private void OpenUrl(string url)
+        {
+            if (!string.IsNullOrWhiteSpace(url))
+            {
+                MiscUtils.OpenLink(url);
+            }
+        }
+
+        private void PopulateLanguageMenu(MenuItem menuLanguage)
+        {
+            if (menuLanguage == null) return;
+            menuLanguage.Items.Clear();
+            var currentLang = _settings?.GetValue("Language", "en") ?? "en";
+            var languages = new[] { ("English", "en") };
+            foreach (var (displayName, value) in languages)
+            {
+                var header = string.Equals(currentLang, value, StringComparison.OrdinalIgnoreCase)
+                    ? "✓ " + displayName
+                    : displayName;
+                var item = new MenuItem { Header = header };
+                var langValue = value;
+                item.Click += (s, e) =>
+                {
+                    if (_settings != null)
+                    {
+                        _settings.SetValue("Language", langValue);
+                    }
+                };
+                menuLanguage.Items.Add(item);
+            }
+        }
+
         private async void OpenSettingsDialog()
         {
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1457-1472
-            // Original: dialog = SettingsDialog(self)
             var dialog = new Dialogs.SettingsDialog(this);
 
-            // Matching PyKotor implementation: if (dialog.exec() and dialog.installation_edited and ...)
             // In Avalonia, ShowDialog returns a result indicating if dialog was accepted
             var result = await dialog.ShowDialog<bool?>(this);
 
-            // Matching PyKotor implementation: if dialog was accepted and installations were edited
             if (result == true && dialog.InstallationEdited)
             {
-                // Matching PyKotor implementation: QMessageBox(...).exec() == QMessageBox.StandardButton.Yes
                 // Show message box asking if user wants to reload installations
                 var messageBox = MessageBoxManager.GetMessageBoxStandard(
                     "Reload the installations?",
@@ -2051,17 +2112,13 @@ namespace OdyTools.Windows
 
                 var messageResult = await messageBox.ShowAsync();
 
-                // Matching PyKotor implementation: if user clicks Yes, reload settings
                 if (messageResult == ButtonResult.Yes)
                 {
-                    // Matching PyKotor implementation: self.reload_settings()
                     ReloadSettings();
                 }
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py
-        // Original: def open_clone_module_dialog(self):
         private void OpenCloneModuleDialog()
         {
             if (_active == null)
@@ -2096,8 +2153,6 @@ namespace OdyTools.Windows
 
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py
-    // Original: self.ui = Ui_MainWindow() - UI wrapper class exposing all controls
     public class MainWindowUi
     {
         public ComboBox GameCombo { get; set; }
@@ -2108,6 +2163,7 @@ namespace OdyTools.Windows
         public ResourceList SavesWidget { get; set; }
         public ResourceList TexturesWidget { get; set; }
         public TabItem CoreTab { get; set; }
+        public TabItem SavesTab { get; set; }
         public TabItem ModulesTab { get; set; }
         public TabItem OverrideTab { get; set; }
         public MenuItem ActionNewDLG { get; set; }

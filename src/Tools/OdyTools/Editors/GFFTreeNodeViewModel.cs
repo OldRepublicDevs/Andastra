@@ -8,7 +8,6 @@ namespace OdyTools.Editors
 {
     /// <summary>
     /// ViewModel for GFF tree nodes. Supports hierarchical binding in TreeView.
-    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/gff.py (QStandardItem + roles).
     /// </summary>
     public class GFFTreeNodeViewModel : INotifyPropertyChanged
     {

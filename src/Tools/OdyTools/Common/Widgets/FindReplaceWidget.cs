@@ -7,8 +7,6 @@ using OdyTools.Common;
 
 namespace OdyTools.Common.Widgets
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/find_replace_widget.py:30
-    // Original: class FindReplaceWidget(QWidget):
     public class FindReplaceWidget : UserControl
     {
         private TextBox _findInput;
@@ -36,8 +34,6 @@ namespace OdyTools.Common.Widgets
             IsVisible = false;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/find_replace_widget.py:45-152
-        // Original: def setup_ui(self):
         private void SetupUI()
         {
             var layout = new StackPanel
@@ -162,8 +158,6 @@ namespace OdyTools.Common.Widgets
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/find_replace_widget.py:156-169
-            // Original: def keyPressEvent(self, event: QKeyEvent):
             if (e.Key == Key.Escape)
             {
                 IsVisible = false;
@@ -193,8 +187,6 @@ namespace OdyTools.Common.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/find_replace_widget.py:171-186
-        // Original: def show_find(self, text: str | None = None):
         public void ShowFind(string text = null)
         {
             _showReplace = false;
@@ -214,8 +206,6 @@ namespace OdyTools.Common.Widgets
             _findInput.Focus();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/find_replace_widget.py:188-202
-        // Original: def show_replace(self, text: str | None = None):
         public void ShowReplace(string text = null)
         {
             _showReplace = true;
@@ -235,8 +225,6 @@ namespace OdyTools.Common.Widgets
             _findInput.Focus();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/find_replace_widget.py:204-209
-        // Original: def toggle_replace(self):
         public void ToggleReplace()
         {
             if (_showReplace)
@@ -249,8 +237,6 @@ namespace OdyTools.Common.Widgets
             }
         }
 
-        // Matching PyKotor implementation - convenience methods for setting mode
-        // Original: Methods to set find or replace mode explicitly
         public void SetFindMode()
         {
             ShowFind();
@@ -261,8 +247,6 @@ namespace OdyTools.Common.Widgets
             ShowReplace();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/find_replace_widget.py:211-221
-        // Original: def _on_find_text_changed(self):
         private void OnFindTextChanged()
         {
             bool hasText = !string.IsNullOrEmpty(_findInput.Text);
@@ -278,8 +262,6 @@ namespace OdyTools.Common.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/find_replace_widget.py:223-233
-        // Original: def _on_find_next(self):
         private void OnFindNext()
         {
             string text = _findInput.Text;
@@ -294,8 +276,6 @@ namespace OdyTools.Common.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/find_replace_widget.py:235-245
-        // Original: def _on_find_previous(self):
         private void OnFindPrevious()
         {
             string text = _findInput.Text;
@@ -310,8 +290,6 @@ namespace OdyTools.Common.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/find_replace_widget.py:247-258
-        // Original: def _on_replace(self):
         private void OnReplace()
         {
             string findText = _findInput.Text;
@@ -327,16 +305,12 @@ namespace OdyTools.Common.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/find_replace_widget.py:260-265
-        // Original: def _on_replace_next(self):
         private void OnReplaceNext()
         {
             OnReplace();
             OnFindNext();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/find_replace_widget.py:267-278
-        // Original: def _on_replace_all(self):
         private void OnReplaceAll()
         {
             string findText = _findInput.Text;
@@ -352,8 +326,6 @@ namespace OdyTools.Common.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/find_replace_widget.py:280-283
-        // Original: def _on_options_changed(self):
         private void OnOptionsChanged()
         {
             if (!string.IsNullOrEmpty(_findInput.Text))

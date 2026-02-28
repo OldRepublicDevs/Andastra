@@ -4,8 +4,6 @@ using Avalonia.Markup.Xaml;
 
 namespace OdyTools.Dialogs.Save
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_rim.py:13
-    // Original: class RimSaveOption(IntEnum):
     public enum RimSaveOption
     {
         Nothing = 0,
@@ -13,8 +11,6 @@ namespace OdyTools.Dialogs.Save
         Override = 2
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_rim.py:19
-    // Original: class RimSaveDialog(QDialog):
     public partial class RimSaveDialog : Window
     {
         private RimSaveOption _option = RimSaveOption.Nothing;
@@ -27,8 +23,6 @@ namespace OdyTools.Dialogs.Save
         {
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_rim.py:20-54
-        // Original: def __init__(self, parent):
         public RimSaveDialog(Window parent)
         {
             InitializeComponent();
@@ -95,16 +89,12 @@ namespace OdyTools.Dialogs.Save
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_rim.py:48-50
-        // Original: def save_as_mod(self):
         private void SaveAsMod()
         {
             _option = RimSaveOption.MOD;
             Close();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/save/to_rim.py:52-54
-        // Original: def save_as_override(self):
         private void SaveAsOverride()
         {
             _option = RimSaveOption.Override;

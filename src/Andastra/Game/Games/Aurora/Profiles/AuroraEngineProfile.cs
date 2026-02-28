@@ -54,7 +54,7 @@ namespace Andastra.Game.Games.Aurora.Profiles
             get { return EngineFamily.Aurora; }
         }
 
-        public override IEngineApi CreateEngineApi()
+        public override Andastra.Game.Scripting.Abstractions.IEngineApi CreateEngineApi()
         {
             // Aurora Engine API provides NWScript functions for both NWN and NWN2
             // Function set is largely the same, with NWN2 having additional functions

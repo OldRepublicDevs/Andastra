@@ -1,0 +1,38 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="OdyTools.Dialogs.Edit.DialogModelDialog"
+        Title="Edit Cutscene Model"
+        Width="420"
+        Height="200"
+        MinWidth="380"
+        MinHeight="180"
+        WindowStartupLocation="CenterOwner"
+        RequestedThemeVariant="Light">
+  <Window.Styles>
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#F3F5F9" />
+    </Style>
+  </Window.Styles>
+  <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="16">
+    <TextBlock Grid.Row="0" Margin="0,0,0,8"
+               Text="Map a participant tag to a custom model (Stunt Model ResRef) for cutscene dialogue. Participant must match a creature/NPC tag in the dialogue."
+               TextWrapping="Wrap" Foreground="#5F6368" MaxWidth="380" />
+    <Grid Grid.Row="1" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" Margin="0,0,0,8">
+      <TextBlock Grid.Row="0" Grid.Column="0" Text="Stunt Model:" VerticalAlignment="Center" Margin="0,0,12,6" />
+      <ComboBox x:Name="stuntModelCombo"
+                Grid.Row="0" Grid.Column="1"
+                IsEditable="True"
+                MinWidth="200" Margin="0,0,0,6"
+                ToolTip.Tip="ResRef of the model (e.g. .mdl) used for this participant during the dialogue. Leave blank for default. Used for cutscenes with non-standard character models (e.g. droids, creatures)." />
+      <TextBlock Grid.Row="1" Grid.Column="0" Text="Participant:" VerticalAlignment="Center" Margin="0,0,12,0" />
+      <TextBox x:Name="participantEdit"
+               Grid.Row="1" Grid.Column="1"
+               MinWidth="200"
+               ToolTip.Tip="Creature or NPC tag that uses this stunt model (e.g. PLAYER, or the tag of an NPC in the dialogue). Must match a participant in the dialogue." />
+    </Grid>
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,8,0,0">
+      <Button x:Name="okButton" Content="OK" Width="80" />
+      <Button x:Name="cancelButton" Content="Cancel" Width="80" />
+    </StackPanel>
+  </Grid>
+</Window>

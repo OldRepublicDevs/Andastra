@@ -23,7 +23,6 @@ namespace OdyTools.Widgets
     /// - Modern, sleek UI design inspired by React components
     /// - Cross-platform compatible
     ///
-    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:26
     /// </summary>
     public partial class MediaPlayerWidget : UserControl, INotifyPropertyChanged
     {
@@ -43,13 +42,9 @@ namespace OdyTools.Widgets
         private TimeSpan _currentPosition;
         private TimeSpan _duration;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:54-55
-        // Original: self.player: QMediaPlayer = QMediaPlayer(self)
         // MediaPlayer interface for actual playback control
         private IMediaPlayer _player;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:68-69
-        // Original: self.speed_levels: list[float] = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
         private static readonly double[] SpeedLevels = { 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0 };
         private int _currentSpeedIndex = 3; // Default to 1.0x
 
@@ -231,12 +226,10 @@ namespace OdyTools.Widgets
 
         private void SetupKeyboardShortcuts()
         {
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:301-328
             // Keyboard shortcuts are handled in KeyDown event
             KeyDown += OnKeyDown;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:330-348
         private void OnKeyDown(object sender, KeyEventArgs e)
         {
             if (!IsVisible || !IsEnabled)
@@ -283,7 +276,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:352-368
         public void TogglePlayPause()
         {
             if (_player == null)
@@ -317,7 +309,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:387-394
         public void Stop()
         {
             if (_player != null)
@@ -343,7 +334,6 @@ namespace OdyTools.Widgets
             PlaybackStopped?.Invoke(this, EventArgs.Empty);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:396-402
         public void SeekRelative(int deltaMs)
         {
             if (_player == null || _duration.TotalMilliseconds <= 0)
@@ -361,7 +351,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:404-409
         public void SeekAbsolute(int positionMs)
         {
             if (_player == null)
@@ -448,7 +437,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:411-433
         public void ToggleMute()
         {
             if (_player != null)
@@ -472,7 +460,6 @@ namespace OdyTools.Widgets
             UpdateMuteButton();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:448-483
         public double Volume
         {
             get { return _volume; }
@@ -515,7 +502,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:492-500
         public void VolumeUp()
         {
             Volume = Math.Min(1.0, _volume + 0.05);
@@ -526,7 +512,6 @@ namespace OdyTools.Widgets
             Volume = Math.Max(0.0, _volume - 0.05);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:508-533
         public void ChangePlaybackSpeed(int direction)
         {
             _currentSpeedIndex = Math.Max(0, Math.Min(SpeedLevels.Length - 1, _currentSpeedIndex + direction));
@@ -584,7 +569,6 @@ namespace OdyTools.Widgets
             OnPropertyChanged(nameof(PlaybackSpeed));
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:592-603
         public string FormatTime(TimeSpan time)
         {
             var totalSeconds = (int)time.TotalSeconds;
@@ -655,19 +639,16 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:605-614
         public void ShowWidget()
         {
             IsVisible = true;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:616-625
         public void HideWidget()
         {
             IsVisible = false;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:54-55
         public IMediaPlayer Player
         {
             get { return _player; }
@@ -705,24 +686,5 @@ namespace OdyTools.Widgets
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-    }
-
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:54-55
-    // Original: QMediaPlayer interface
-    /// <summary>
-    /// Interface for media player functionality to allow different implementations.
-    /// This abstraction allows the widget to work with any media player implementation.
-    /// </summary>
-    public interface IMediaPlayer
-    {
-        void Stop();
-        void Play();
-        void Pause();
-        void SetPosition(TimeSpan position);
-        TimeSpan Position { get; }
-        TimeSpan Duration { get; }
-        double Volume { get; set; }
-        bool IsMuted { get; set; }
-        double PlaybackRate { get; set; }
     }
 }

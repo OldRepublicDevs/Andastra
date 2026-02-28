@@ -18,8 +18,6 @@ using OdyTools.Utils;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:76
-    // Original: class GitHubFileSelector(QDialog):
     public partial class GitHubSelectorDialog : Window
     {
         // Using GitHubApiModels.TreeInfoData and GitHubApiModels.CompleteRepoData instead of local classes
@@ -36,15 +34,11 @@ namespace OdyTools.Dialogs
         private Button _okButton;
         private Button _cancelButton;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:120
-        // Original: self.repo_data: CompleteRepoData | None = None
         private CompleteRepoData _repoData;
 
         // Dictionary to map file paths to TreeViewItems for efficient lookup during filtering
         private Dictionary<string, TreeViewItem> _pathToItemMap;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:121-122
-        // Original: self.rate_limit_reset: int | None = None, self.rate_limit_remaining: int | None = None
         private int? _rateLimitReset;
         private int? _rateLimitRemaining;
 
@@ -62,8 +56,6 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:77-183
-        // Original: def __init__(self, *args, selected_files=None, parent=None):
         public GitHubSelectorDialog(string owner, string repo, List<string> selectedFiles = null, Window parent = null)
         {
             InitializeComponent();
@@ -75,8 +67,6 @@ namespace OdyTools.Dialogs
             SetupUI();
             InitializeRepoData();
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:180-183
-            // Original: if self.selected_files and self.repo_data is not None: self.filter_edit.setText(";".join(self.selected_files)); self.search_files()
             if (selectedFiles != null && selectedFiles.Count > 0 && _repoData != null && _filterEdit != null)
             {
                 _filterEdit.Text = string.Join(";", selectedFiles);
@@ -189,8 +179,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:185-218
-        // Original: def initialize_repo_data(self) -> CompleteRepoData | None:
         private async void InitializeRepoData()
         {
             if (string.IsNullOrEmpty(_owner) || string.IsNullOrEmpty(_repo))
@@ -294,8 +282,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/github.py:532-568
-        // Original: @classmethod def load_repo(cls, owner: str, repo_name: str, *, timeout: int = 15) -> CompleteRepoData:
         private async Task<CompleteRepoData> LoadRepoAsync(string owner, string repoName, int timeoutSeconds = 15)
         {
             string baseUrl = $"https://api.github.com/repos/{owner}/{repoName}";
@@ -384,8 +370,6 @@ namespace OdyTools.Dialogs
             return completeRepoData;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:220-234
-        // Original: def _load_repo_data(self, data: CompleteRepoData, *, do_fork_combo_update: bool = True) -> None:
         private void LoadRepoData(CompleteRepoData data, bool doForkComboUpdate = true)
         {
             _repoData = data;
@@ -410,8 +394,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:235-238
-        // Original: def load_main_branch_files(self) -> None:
         private void LoadMainBranchFiles()
         {
             if (_repoData != null)
@@ -424,8 +406,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:240-269
-        // Original: def populate_tree_widget(self, files: list[TreeInfoData] | None = None, parent_item: QTreeWidgetItem | None = None) -> None:
         private void PopulateTreeWidget(List<Utils.TreeInfoData> files = null)
         {
             if (files == null)
@@ -512,8 +492,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:277-284
-        // Original: def populate_fork_combobox(self) -> None:
         private void PopulateForkComboBox()
         {
             if (_forkComboBox == null)
@@ -538,8 +516,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:433-444
-        // Original: def load_fork(self, fork_name: str) -> None:
         private async void LoadFork(string forkName)
         {
             if (_repoTreeWidget == null)
@@ -575,8 +551,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:446-463
-        // Original: def api_get(self, url: str) -> dict[str, Any]:
         private async Task<Dictionary<string, object>> ApiGetAsync(string url)
         {
             try
@@ -617,8 +591,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:497-504
-        // Original: def update_rate_limit_info(self, headers: dict[str, Any] | requests.structures.CaseInsensitiveDict[str]) -> None:
         private void UpdateRateLimitInfo(System.Net.Http.Headers.HttpResponseHeaders headers)
         {
             if (headers.Contains("X-RateLimit-Reset"))
@@ -646,15 +618,13 @@ namespace OdyTools.Dialogs
             // This is a fallback when we can't access headers directly
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:465-476
-        // Original: def start_rate_limit_timer(self, e: requests.exceptions.HTTPError | None = None) -> None:
         private void StartRateLimitTimer(HttpRequestException e)
         {
             if (e != null)
             {
-                // Try to extract rate limit info from exception
-                // TODO: STUB -  In a real implementation, we'd need to access response headers
                 _rateLimitRemaining = 0;
+                _rateLimitReset = (int)DateTimeOffset.UtcNow.AddMinutes(1).ToUnixTimeSeconds();
+                // HttpRequestException does not expose response headers; callers that have HttpResponseMessage could pass X-RateLimit-* separately
             }
 
             UpdateRateLimitStatus();
@@ -669,8 +639,6 @@ namespace OdyTools.Dialogs
             _rateLimitTimer.Start();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:478-480
-        // Original: def stop_rate_limit_timer(self) -> None:
         private void StopRateLimitTimer()
         {
             if (_rateLimitTimer != null)
@@ -680,8 +648,6 @@ namespace OdyTools.Dialogs
             // Clear status bar message if available
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:482-495
-        // Original: def update_rate_limit_status(self) -> None:
         private void UpdateRateLimitStatus()
         {
             if (_rateLimitReset == null || _rateLimitRemaining == null)
@@ -710,15 +676,11 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:285-286
-        // Original: def search_files(self):
         private void SearchFiles()
         {
             OnFilterEditChanged();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:288-307
-        // Original: def on_filter_edit_changed(self):
         private void OnFilterEditChanged()
         {
             if (_filterEdit == null || _repoTreeWidget == null)
@@ -744,8 +706,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:406-424
-        // Original: def get_selected_path(self) -> str | None:
         private string GetSelectedPath()
         {
             if (_repoTreeWidget == null)
@@ -768,8 +728,6 @@ namespace OdyTools.Dialogs
             return null;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:418-424
-        // Original: def accept(self) -> None:
         private void Accept()
         {
             _selectedPath = GetSelectedPath();
@@ -788,8 +746,6 @@ namespace OdyTools.Dialogs
             Close(true);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:426-431
-        // Original: def on_fork_changed(self, index: int) -> None:
         private void OnForkChanged()
         {
             if (_repoData != null)
@@ -798,8 +754,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:520-537
-        // Original: def clone_repository(self) -> None:
         private void CloneRepository()
         {
             // Get selected fork from combo box
@@ -953,8 +907,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:630-633
-        // Original: def refresh_data(self) -> None:
         private void RefreshData()
         {
             try
@@ -973,8 +925,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:309-316
-        // Original: def search_and_highlight(self, partial_file_or_folder_names: list[str]) -> None:
         private void SearchAndHighlight(List<string> partialFileOrFolderNames)
         {
             if (_repoData == null || _repoData.Tree == null || _repoTreeWidget == null)
@@ -1008,8 +958,6 @@ namespace OdyTools.Dialogs
             ExpandAndHighlightPaths(pathsToHighlight);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:318-386
-        // Original: def expand_and_highlight_paths(self, paths: set[str]) -> None:
         private void ExpandAndHighlightPaths(HashSet<string> paths)
         {
             if (_repoTreeWidget == null)
@@ -1027,8 +975,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:335-359
-        // Original: def highlight_path(path: str):
         private void HighlightPath(string path)
         {
             if (_repoTreeWidget == null || string.IsNullOrEmpty(path))
@@ -1125,8 +1071,6 @@ namespace OdyTools.Dialogs
             public string Path { get; set; }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:361-367
-        // Original: def unhide_all_children(item: QTreeWidgetItem):
         private void UnhideAllChildren(TreeViewItem item)
         {
             if (item == null || item.ItemsSource == null)
@@ -1141,8 +1085,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:369-383
-        // Original: def hide_all_items(): ... def hide_item(item: QTreeWidgetItem):
         private void HideAllItems()
         {
             if (_repoTreeWidget == null || _repoTreeWidget.ItemsSource == null)
@@ -1177,8 +1119,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:296-307
-        // Original: def unhide_item(item: QTreeWidgetItem):
         private void UnhideAllItems()
         {
             if (_repoTreeWidget == null || _repoTreeWidget.ItemsSource == null)
@@ -1213,8 +1153,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:388-396
-        // Original: def expand_all_items(self):
         private void ExpandAllItems()
         {
             if (_repoTreeWidget == null || _repoTreeWidget.ItemsSource == null)
@@ -1246,8 +1184,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:398-404
-        // Original: def collapse_all_items(self):
         private void CollapseAllItems()
         {
             if (_repoTreeWidget == null || _repoTreeWidget.ItemsSource == null)

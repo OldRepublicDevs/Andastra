@@ -1,19 +1,17 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Xml.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using OdyTools.Config;
 
 namespace OdyTools.Windows
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/help.py:40
-    // Original: class HelpWindow(QMainWindow):
     public class HelpWindow : Window
     {
         private string _version;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/help.py:43-72
-        // Original: def __init__(self, parent, startingPage=None):
         public HelpWindow(Window parent = null, string startingPage = null)
         {
             InitializeComponent();
@@ -60,8 +58,6 @@ namespace OdyTools.Windows
             Content = panel;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/help.py
-        // Original: self.ui = Ui_MainWindow() - UI wrapper class exposing all controls
         public HelpWindowUi Ui { get; private set; }
 
         private void SetupUI()
@@ -70,36 +66,45 @@ namespace OdyTools.Windows
             Ui = new HelpWindowUi();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/help.py:76-92
-        // Original: def _setup_contents(self):
         private void SetupContents()
         {
             try
             {
-                string contentsPath = "./help/contents.xml";
-                if (File.Exists(contentsPath))
+                _version = typeof(HelpWindow).Assembly.GetName().Version?.ToString() ?? "1.0";
+                string[] candidatePaths =
                 {
-                    // Parse XML contents
-                    // This will be implemented when XML parsing is available
-                    _version = "1.0";
+                    System.IO.Path.Combine(AppContext.BaseDirectory, "help", "contents.xml"),
+                    System.IO.Path.Combine(Environment.CurrentDirectory, "help", "contents.xml")
+                };
+
+                string contentsPath = candidatePaths.FirstOrDefault(File.Exists);
+                if (!string.IsNullOrEmpty(contentsPath))
+                {
+                    XDocument doc = XDocument.Load(contentsPath);
+                    string xmlVersion = doc.Root?.Attribute("version")?.Value
+                        ?? doc.Root?.Element("version")?.Value
+                        ?? doc.Descendants("version").FirstOrDefault()?.Value;
+                    if (!string.IsNullOrWhiteSpace(xmlVersion))
+                    {
+                        _version = xmlVersion.Trim();
+                    }
                 }
             }
             catch
             {
-                // Suppress errors
+                _version = _version ?? "1.0";
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/help.py:117-166
-        // Original: def check_for_updates(self):
         private void CheckForUpdates()
         {
-            // Check for help updates
-            // This will be implemented when update checking is available
+#if !NET48
+            // Help window delegates update checking to the app-level update manager.
+            var manager = new UpdateManager(silent: false);
+            manager.CheckForUpdates(silent: false);
+#endif
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/help.py:182-196
-        // Original: def _wrap_html_with_styles(self, html_body: str) -> str:
         private string WrapHtmlWithStyles(string htmlBody)
         {
             return $@"<!DOCTYPE html>
@@ -129,8 +134,6 @@ namespace OdyTools.Windows
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/help.py
-    // Original: self.ui = Ui_MainWindow() - UI wrapper class exposing all controls
     public class HelpWindowUi
     {
     }

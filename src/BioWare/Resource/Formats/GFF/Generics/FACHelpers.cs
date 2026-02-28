@@ -31,7 +31,8 @@ namespace BioWare.Resource.Formats.GFF.Generics
                     // Standard factions use 0xFFFFFFFF (-1) for no parent
                     int parentIdVal = factionStruct.Acquire<int>("FactionParentID", -1);
                     // Handle both signed and unsigned representations of 0xFFFFFFFF
-                    faction.ParentId = (parentIdVal == -1 || parentIdVal == 0xFFFFFFFF) ? unchecked((int)0xFFFFFFFF) : parentIdVal;
+                    // Only compare against -1, because 0xFFFFFFFF overflows int and always equals -1 in this context
+                    faction.ParentId = (parentIdVal == -1) ? unchecked((int)0xFFFFFFFF) : parentIdVal;
 
                     // Engine default: 0, but if field missing defaults to 1 (k2_win_gog_aspyr_swkotor2.exe:0x005acf30 lines 48-52, k1_win_gog_swkotor.exe:0x0052b5c0 lines 48-52)
                     ushort globalValue = factionStruct.Acquire<ushort>("FactionGlobal", 0);

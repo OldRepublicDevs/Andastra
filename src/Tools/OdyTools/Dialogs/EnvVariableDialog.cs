@@ -11,8 +11,6 @@ using OdyTools.Data;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py:184
-    // Original: class EnvVariableDialog(QDialog):
     public partial class EnvVariableDialog : Window
     {
         private ComboBox _nameEdit;
@@ -29,8 +27,6 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py:185-258
-        // Original: def __init__(self, parent: QWidget | None = None):
         public EnvVariableDialog(Window parent)
         {
             InitializeComponent();
@@ -155,8 +151,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py:260-280
-        // Original: def update_description_and_completer(self):
         private void UpdateDescriptionAndCompleter()
         {
             if (_nameEdit == null)
@@ -197,9 +191,11 @@ namespace OdyTools.Dialogs
                     _docLinkLabel.Text = $"Documentation: {currentVar.DocLink}";
                 }
 
-                // Note: Avalonia doesn't have a built-in AutoCompleteBox like Qt's QCompleter
-                // The value field will remain a TextBox, but we can show possible values in tooltip or description
-                // TODO: STUB - For now, we'll rely on the validation to guide users
+                // Show possible values in value field tooltip; validation in CheckValueValidity guides input
+                if (_valueEdit != null && !string.IsNullOrEmpty(currentVar.PossibleValues))
+                {
+                    ToolTip.SetTip(_valueEdit, "Allowed values: " + currentVar.PossibleValues);
+                }
             }
             else
             {
@@ -212,11 +208,13 @@ namespace OdyTools.Dialogs
                 {
                     _docLinkLabel.Text = "";
                 }
+                if (_valueEdit != null)
+                {
+                    ToolTip.SetTip(_valueEdit, null);
+                }
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py:283-310
-        // Original: def check_value_validity(self):
         private void CheckValueValidity()
         {
             if (_valueEdit == null || _nameEdit == null)
@@ -301,8 +299,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py:312-315
-        // Original: def browse_directory(self):
         private async void BrowseDirectory()
         {
             if (_valueEdit == null)
@@ -364,8 +360,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py:317-320
-        // Original: def browse_file(self):
         private async void BrowseFile()
         {
             if (_valueEdit == null)
@@ -427,8 +421,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py:322-323
-        // Original: def get_data(self) -> tuple[str, str]:
         public Tuple<string, string> GetData()
         {
             string name = _nameEdit?.SelectedItem?.ToString() ?? "";
@@ -436,8 +428,6 @@ namespace OdyTools.Dialogs
             return Tuple.Create(name, value);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py:325-327
-        // Original: def set_data(self, name: str, value: str):
         public void SetData(string name, string value)
         {
             if (_nameEdit != null)

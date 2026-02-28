@@ -20,12 +20,8 @@ namespace OdyTools.Editors
         public object Instance { get; set; }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/git.py
-    // Original: class OdyToolGIT(Editor):
     public partial class OdyToolGIT : Editor
     {
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/git.py
-        // Original: self.git: GIT = GIT()
         private GIT _git;
         private GFF _originalGff;
 
@@ -118,15 +114,10 @@ namespace OdyTools.Editors
                 var item = EditorHelpers.FindControlSafe<MenuItem>(this, name);
                 if (item != null) item.Click += (s, e) => handler();
             }
-            Bind("actionNew", () => New());
-            Bind("actionOpen", () => { });
-            Bind("actionSave", () => Save());
-            Bind("actionSaveAs", () => _ = RunSaveAsAsync());
-            Bind("actionRevert", () => Revert());
-            Bind("actionExit", () => Close());
+            // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
         }
 
-        private async System.Threading.Tasks.Task RunSaveAsAsync()
+        protected override async System.Threading.Tasks.Task RunSaveAsAsync()
         {
             var provider = (this as Window)?.StorageProvider;
             if (provider == null) return;
@@ -322,7 +313,7 @@ namespace OdyTools.Editors
             _statusText.Text = text;
         }
 
-        private void Revert()
+        public override void Revert()
         {
             if (_revert == null || _revert.Length == 0) return;
             try
@@ -334,8 +325,6 @@ namespace OdyTools.Editors
             catch (Exception ex) { System.Console.WriteLine(ex); }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/git.py
-        // Original: def load(self, filepath: os.PathLike | str, resref: str, restype: ResourceType, data: bytes):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
@@ -349,8 +338,6 @@ namespace OdyTools.Editors
         private void LoadGIT(GIT git)
         {
             // Load GIT data into UI
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/git.py:512-517
-            // Original: def _loadGIT(self, git: GIT):
             _git = git;
             _selectedInstance = null;
             RebuildInstanceList();
@@ -361,8 +348,6 @@ namespace OdyTools.Editors
             UpdateStatusBar();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/git.py
-        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
             SaveDetailToInstance();
@@ -406,8 +391,6 @@ namespace OdyTools.Editors
             return Tuple.Create(data, new byte[0]);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/git.py
-        // Original: def new(self):
         public override void New()
         {
             base.New();
@@ -480,7 +463,7 @@ namespace OdyTools.Editors
 
         public override void SaveAs()
         {
-            Save();
+            _ = RunSaveAsAsync();
         }
     }
 }

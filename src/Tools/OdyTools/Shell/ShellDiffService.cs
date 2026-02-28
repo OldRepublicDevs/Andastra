@@ -77,7 +77,7 @@ namespace OdyTools.Shell
 
         private static string GetRelativePath(string basePath, string path)
         {
-#if NET472
+#if NET472 || NET48
             var baseUri = new Uri(Path.GetFullPath(basePath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar);
             var pathUri = new Uri(Path.GetFullPath(path));
             return Uri.UnescapeDataString(baseUri.MakeRelativeUri(pathUri).ToString().Replace('/', Path.DirectorySeparatorChar));

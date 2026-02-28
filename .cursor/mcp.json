@@ -1,23 +1,19 @@
 {
   "mcpServers": {
-    "reva": {
-      "type": "stdio",
-      "command": "uvx",
-      "args": [
-        "--refresh",
-        "--from",
-        "git+https://github.com/bolabaden/agentdecompile",
-        "mcp-agentdecompile"
-      ],
-      "env": {
-        "AGENT_DECOMPILE_PROJECT_PATH": "C:/Users/boden/AndastraGhidraProject.gpr",
-        "GHIDRA_INSTALL_DIR": "C:/Users/boden/Downloads/ghidra_12.0_PUBLIC_20251205/ghidra_12.0_PUBLIC"
-      },
-      "alwaysAllow": [],
-      "disabledTools": [],
-      "disabled": false,
-      "gallery": "https://api.mcp.github.com",
-      "version": "0.1.0"
+    "pyghidra": {
+        "command": "uvx",
+        "args": [
+            "pyghidra-mcp",
+            "--project-path",
+            "C:/Users/boden/AndastraGhidraProject.gpr",
+            "--host",
+            "170.9.241.140",
+            "--port",
+            "8000"
+        ],
+        "env": {
+            "GHIDRA_INSTALL_DIR": "C:/Users/boden/Downloads/ghidra_12.0_PUBLIC_20251205/ghidra_12.0_PUBLIC"
+        }
     }
   }
 }

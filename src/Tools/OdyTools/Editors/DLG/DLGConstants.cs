@@ -2,7 +2,6 @@ namespace OdyTools.Editors.DLG
 {
     /// <summary>
     /// Constants for DLG editor model roles and MIME types.
-    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/constants.py
     /// </summary>
     public static class DLGConstants
     {

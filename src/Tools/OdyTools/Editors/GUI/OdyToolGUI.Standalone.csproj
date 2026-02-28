@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OdyToolsStandaloneDefine>GUI_STANDALONE</OdyToolsStandaloneDefine>
+    <OdyToolsStandaloneBioWareRef>..\..\..\..\BioWare</OdyToolsStandaloneBioWareRef>
+    <OdyToolsStandaloneAppConfig>$(MSBuildProjectDirectory)\..\app.config</OdyToolsStandaloneAppConfig>
+    <_OdyToolsRoot>$([System.IO.Path]::GetDirectoryName($([System.IO.Path]::GetDirectoryName('$(MSBuildProjectDirectory)'))))</_OdyToolsRoot>
+  </PropertyGroup>
+  <Import Project="..\Standalone\OdyTools.Standalone.Editor.props" />
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Standalone\EditorStandaloneHost\EditorStandaloneProgram.cs" />
+    <Compile Include="..\Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml.cs" />
+    <Compile Include="OdyToolGUI.axaml.cs" />
+    <Compile Include="GUIPreviewControl.cs" />
+    <Compile Include="GuiNodeViewModel.cs" />
+    <Compile Include="OdyToolGUIHelpers.cs" />
+    <Compile Include="GUITextureCache.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Editors\Editor.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Editors\EditorHelpers.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Editors\EditorWikiMapping.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Editors\WindowUtils.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Data\OdyInstallation.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Data\Settings.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Data\IEditorInstallationSettings.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Data\GlobalSettings.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Common\Localization.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\InlineEditorHelp.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Utils\PathUtils.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Common\CollectionViewSource.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\EditorInstallationSettingsDialogBase.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\ColorPickerDialog.axaml.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaXaml Remove="**\*.axaml" />
+    <AvaloniaXaml Include="..\Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml" Link="EditorStandaloneHost/EditorStandaloneApp.axaml" />
+    <AvaloniaXaml Include="OdyToolGUI.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\ColorPickerDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml" />
+  </ItemGroup>
+</Project>

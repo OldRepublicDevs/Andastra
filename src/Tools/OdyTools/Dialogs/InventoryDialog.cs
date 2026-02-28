@@ -18,8 +18,6 @@ using BioWare.Resource;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:71
-    // Original: class InventoryEditor(QDialog):
     public partial class InventoryDialog : Window
     {
         private Window _parentWindow;
@@ -37,8 +35,6 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:72-150
-        // Original: def __init__(self, parent, installation, capsules, folders, inventory, equipment, ...):
         // Note: PyKotor uses Sequence[LazyCapsule] but UTM/UTP editors pass list[Capsule], so we use List<Capsule> for compatibility
         public InventoryDialog(
             Window parent,
@@ -113,8 +109,6 @@ namespace OdyTools.Dialogs
             Content = panel;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py
-        // Original: self.ui = Ui_Dialog() - UI wrapper class exposing all controls
         public InventoryDialogUi Ui { get; private set; }
 
         private DataGrid _contentsTable;
@@ -161,7 +155,6 @@ namespace OdyTools.Dialogs
                 // Set up DataGrid columns if not already configured
                 if (_contentsTable.Columns.Count == 0)
                 {
-                    // Matching PyKotor implementation: InventoryTable has 3 columns:
                     // Column 0: Icon (QTableWidgetItem with icon)
                     // Column 1: ResRef (InventoryTableResnameItem)
                     // Column 2: Name (QTableWidgetItem with name)
@@ -192,7 +185,6 @@ namespace OdyTools.Dialogs
                     });
 
                     // Column 2: Droppable (for non-store inventories) or Infinite (for store inventories)
-                    // Matching PyKotor implementation: droppable is shown for non-stores, infinite for stores
                     // In PyKotor, the context menu shows either "Droppable" or "Infinite" based on is_store flag
                     // In Avalonia DataGrid, columns don't have Visibility property, so we conditionally add columns
                     if (_isStore)
@@ -235,8 +227,6 @@ namespace OdyTools.Dialogs
             PopulateInventoryTable();
         }
 
-        // Matching PyKotor implementation: get_item method to retrieve UTI data
-        // Original: def get_item(self, resname: str, default: str = "") -> tuple[str, str, UTI]:
         // Returns (filepath, name, uti) for the given ResRef, or (None, resname, None) if not found
         private (string filepath, string name, UTI uti) GetItem(string resname)
         {
@@ -248,7 +238,6 @@ namespace OdyTools.Dialogs
             try
             {
                 // Try to find the UTI resource
-                // Matching PyKotor: uses installation.resource() to get UTI data
                 var resRef = ResRef.FromString(resname);
                 var resourceResult = _installation.Resource(resRef.ToString(), ResourceType.UTI);
 
@@ -258,27 +247,21 @@ namespace OdyTools.Dialogs
                 }
 
                 // Parse the UTI data
-                // Matching PyKotor: uses UTIHelpers.read_uti() equivalent
                 UTI uti = UTIHelpers.ReadUti(resourceResult.Data);
 
                 // Get the display name from the UTI
-                // Matching PyKotor: name = uti.name if uti else resname
                 string displayName = uti.Name?.ToString() ?? resname;
 
                 // Return filepath, name, and UTI object
-                // Matching PyKotor: return filepath, name, uti
                 return (resourceResult.FilePath, displayName, uti);
             }
             catch (Exception)
             {
                 // If anything fails, return the resname as fallback
-                // Matching PyKotor: error handling for corrupted/missing files
                 return (null, resname, null);
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:191-197
-        // Original: for item in self.inventory:
         //          try:
         //              self.ui.contentsTable.add_item(str(item.resref), droppable=item.droppable, infinite=item.infinite)
         //          except FileNotFoundError:
@@ -300,7 +283,6 @@ namespace OdyTools.Dialogs
                 try
                 {
                     // Get item information (filepath, name, uti) from installation if available
-                    // Matching PyKotor: filepath, name, uti = cast("InventoryEditor", self.window()).get_item(resname, "")
                     string filePath = "";
                     string name = item.ResRef?.ToString() ?? "";
                     UTI uti = null;
@@ -326,7 +308,6 @@ namespace OdyTools.Dialogs
                 }
                 catch (FileNotFoundException ex)
                 {
-                    // Matching PyKotor: RobustLogger().error(f"{item.resref}.uti did not exist in the installation", exc_info=True)
                     // Log error with exception information (matching exc_info=True in PyKotor)
                     string resrefStr = item.ResRef?.ToString() ?? "unknown";
                     System.Console.WriteLine($"[ERROR] {resrefStr}.uti did not exist in the installation");
@@ -340,7 +321,6 @@ namespace OdyTools.Dialogs
                 }
                 catch (Exception ex)
                 {
-                    // Matching PyKotor: RobustLogger().error(f"{item.resref}.uti is corrupted", exc_info=True)
                     // Log error with exception information (matching exc_info=True in PyKotor)
                     string resrefStr = item.ResRef?.ToString() ?? "unknown";
                     System.Console.WriteLine($"[ERROR] {resrefStr}.uti is corrupted");
@@ -361,8 +341,6 @@ namespace OdyTools.Dialogs
         public List<InventoryItem> Inventory => _inventory;
         public Dictionary<EquipmentSlot, InventoryItem> Equipment => _equipment;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:205-221
-        // Original: def accept(self): super().accept(); self.inventory.clear(); ...
         // Updates inventory and equipment from UI before dialog closes with OK
         private void Accept()
         {
@@ -370,8 +348,6 @@ namespace OdyTools.Dialogs
             _inventory.Clear();
             if (_contentsTable != null && _contentsTable.ItemsSource != null)
             {
-                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:208-212
-                // Original: for i in range(self.ui.contentsTable.rowCount()):
                 //          table_item: QTableWidgetItem | None = self.ui.contentsTable.item(i, 1)
                 //          if not isinstance(table_item, ItemContainer):
                 //              continue
@@ -389,7 +365,6 @@ namespace OdyTools.Dialogs
                         if (rowItem is InventoryTableRowItem tableRowItem)
                         {
                             // Extract ResRef, Droppable, and Infinite from the row item
-                            // Matching PyKotor: InventoryItem(ResRef(table_item.resname), table_item.droppable, table_item.infinite)
                             if (tableRowItem.ResRef != null && !string.IsNullOrEmpty(tableRowItem.ResRef.ToString()))
                             {
                                 _inventory.Add(new InventoryItem(tableRowItem.ResRef, tableRowItem.Droppable, tableRowItem.Infinite));
@@ -439,8 +414,6 @@ namespace OdyTools.Dialogs
 
             // Clear existing equipment and rebuild from equipment frames
             _equipment.Clear();
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:214-221
-            // Original: self.equipment.clear()
             //          widget: DropFrame | QObject
             //          for widget in self.ui.standardEquipmentTab.children() + self.ui.naturalEquipmentTab.children():
             //              if "DropFrame" in widget.__class__.__name__ and getattr(widget, "resname", None):
@@ -449,13 +422,10 @@ namespace OdyTools.Dialogs
             ExtractEquipmentFromFrames();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:214-221
-        // Original: Iterates through standardEquipmentTab and naturalEquipmentTab children to find DropFrame widgets
         // and extract equipment information (slot, resname, droppable, infinite)
         private void ExtractEquipmentFromFrames()
         {
             // Try to find equipment tabs from UI
-            // Matching PyKotor: self.ui.standardEquipmentTab.children() + self.ui.naturalEquipmentTab.children()
             var equipmentTabWidgets = new List<Control>();
 
             // Try to find standardEquipmentTab
@@ -473,10 +443,8 @@ namespace OdyTools.Dialogs
             }
 
             // Iterate through all widgets found in equipment tabs
-            // Matching PyKotor: for widget in self.ui.standardEquipmentTab.children() + self.ui.naturalEquipmentTab.children():
             foreach (var widget in equipmentTabWidgets)
             {
-                // Matching PyKotor: if "DropFrame" in widget.__class__.__name__ and getattr(widget, "resname", None):
                 // Check if widget has DropFrame-like properties using reflection
                 // This works with both actual DropFrame implementations and any widget with the required properties
                 var widgetType = widget.GetType();
@@ -488,7 +456,6 @@ namespace OdyTools.Dialogs
                 if (isDropFrameLike)
                 {
                     // Try to get resname property (must be non-null/non-empty to add to equipment)
-                    // Matching PyKotor: getattr(widget, "resname", None)
                     var resnameProperty = widgetType.GetProperty("resname") ?? widgetType.GetProperty("Resname") ?? widgetType.GetProperty("ResName");
                     if (resnameProperty != null)
                     {
@@ -496,11 +463,9 @@ namespace OdyTools.Dialogs
                         string resname = resnameValue?.ToString() ?? "";
 
                         // Only add to equipment if resname is not null/empty
-                        // Matching PyKotor: getattr(widget, "resname", None) - only proceed if resname exists
                         if (!string.IsNullOrEmpty(resname))
                         {
                             // Get slot property
-                            // Matching PyKotor: casted_widget.slot
                             var slotProperty = widgetType.GetProperty("slot") ?? widgetType.GetProperty("Slot");
                             EquipmentSlot slot = EquipmentSlot.INVALID;
                             if (slotProperty != null)
@@ -521,7 +486,6 @@ namespace OdyTools.Dialogs
                             }
 
                             // Get droppable property
-                            // Matching PyKotor: casted_widget.droppable
                             bool droppable = false;
                             var droppableProperty = widgetType.GetProperty("droppable") ?? widgetType.GetProperty("Droppable");
                             if (droppableProperty != null)
@@ -534,7 +498,6 @@ namespace OdyTools.Dialogs
                             }
 
                             // Get infinite property
-                            // Matching PyKotor: casted_widget.infinite
                             bool infinite = false;
                             var infiniteProperty = widgetType.GetProperty("infinite") ?? widgetType.GetProperty("Infinite");
                             if (infiniteProperty != null)
@@ -547,7 +510,6 @@ namespace OdyTools.Dialogs
                             }
 
                             // Only add to equipment if slot is valid (matching PyKotor behavior)
-                            // Matching PyKotor: self.equipment[casted_widget.slot] = InventoryItem(ResRef(casted_widget.resname), casted_widget.droppable, casted_widget.infinite)
                             if (slot != EquipmentSlot.INVALID)
                             {
                                 var resRef = ResRef.FromString(resname);
@@ -572,7 +534,6 @@ namespace OdyTools.Dialogs
         }
 
         // Helper method to recursively get all child controls from a parent control
-        // Matching PyKotor: widget.children() - gets all child widgets
         private List<Control> GetAllChildControls(Control parent)
         {
             var children = new List<Control>();
@@ -623,7 +584,6 @@ namespace OdyTools.Dialogs
             return children;
         }
 
-        // Matching PyKotor implementation: dialog.exec() returns bool
         // PyKotor's QDialog.exec() is a blocking modal dialog that returns QDialog.DialogCode.Accepted (true) or Rejected (false)
         // This synchronous method provides the same behavior for compatibility with existing code
         /// <summary>
@@ -692,21 +652,15 @@ namespace OdyTools.Dialogs
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py
-    // Original: self.ui = Ui_Dialog() - UI wrapper class exposing all controls
     public class InventoryDialogUi
     {
         public DataGrid ContentsTable { get; set; }
 
-        // Matching PyKotor implementation: self.ui.standardEquipmentTab and self.ui.naturalEquipmentTab
-        // Original: QWidget standardEquipmentTab, naturalEquipmentTab (from inventory.ui)
         // These tabs contain DropFrame widgets for each equipment slot
         public Control StandardEquipmentTab { get; set; }
         public Control NaturalEquipmentTab { get; set; }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:607-625
-    // Original: class InventoryTableResnameItem(ItemContainer, QTableWidgetItem):
     // This class represents a row item in the inventory DataGrid, containing ResRef, Droppable, and Infinite properties.
     // In PyKotor, InventoryTableResnameItem extends both ItemContainer (which has droppable and infinite) and QTableWidgetItem (which has resname).
     // In Avalonia, we use a simple class with properties that can be bound to DataGrid columns.
@@ -718,7 +672,6 @@ namespace OdyTools.Dialogs
         private string _name;
         private string _filePath;
 
-        // Matching PyKotor: resname property (stored as ResRef)
         public ResRef ResRef
         {
             get => _resRef;
@@ -750,7 +703,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor: droppable property from ItemContainer
         public bool Droppable
         {
             get => _droppable;
@@ -764,7 +716,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor: infinite property from ItemContainer
         public bool Infinite
         {
             get => _infinite;
@@ -778,7 +729,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor: name property (display name of the item)
         public string Name
         {
             get => _name;
@@ -792,7 +742,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor: filepath property (file path to the item resource)
         public string FilePath
         {
             get => _filePath;
@@ -806,7 +755,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor: ItemContainer.__init__(self, droppable=droppable, infinite=infinite)
         // and InventoryTableResnameItem.__init__(self, resname, filepath, name, *, droppable, infinite)
         public InventoryTableRowItem(ResRef resRef, string filePath, string name, bool droppable = false, bool infinite = false)
         {
@@ -827,7 +775,6 @@ namespace OdyTools.Dialogs
             _infinite = false;
         }
 
-        // Matching PyKotor: ItemContainer.set_item(self, resname, filepath, name, *, droppable, infinite)
         public void SetItem(ResRef resRef, string filePath, string name, bool droppable, bool infinite)
         {
             ResRef = resRef ?? ResRef.FromBlank();
@@ -837,13 +784,11 @@ namespace OdyTools.Dialogs
             Infinite = infinite;
         }
 
-        // Matching PyKotor: ItemContainer.toggle_droppable(self)
         public void ToggleDroppable()
         {
             Droppable = !Droppable;
         }
 
-        // Matching PyKotor: ItemContainer.toggle_infinite(self)
         public void ToggleInfinite()
         {
             Infinite = !Infinite;

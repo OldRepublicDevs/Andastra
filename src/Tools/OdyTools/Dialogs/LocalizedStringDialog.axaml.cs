@@ -14,11 +14,11 @@ using MsBox.Avalonia.Enums;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/locstring.py:20
-    // Original: class LocalizedStringDialog(QDialog):
     public partial class LocalizedStringDialog : Window
     {
         private OdyInstallation _installation;
+        private string _tlkPath;
+        private string _femaleTlkPath;
         public LocalizedString LocString { get; private set; }
 
         // Public parameterless constructor for XAML
@@ -26,12 +26,25 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/locstring.py:21-107
-        // Original: def __init__(self, parent, installation, locstring):
         public LocalizedStringDialog(Window parent, OdyInstallation installation, LocalizedString locstring)
         {
             InitializeComponent();
             _installation = installation;
+            _tlkPath = null;
+            _femaleTlkPath = null;
+            LocString = locstring ?? LocalizedString.FromInvalid();
+            SetupUI();
+        }
+
+        /// <summary>
+        /// Constructor for path-based TLK when no installation is set (DLG override paths).
+        /// </summary>
+        public LocalizedStringDialog(Window parent, string tlkPath, string femaleTlkPath, LocalizedString locstring)
+        {
+            InitializeComponent();
+            _installation = null;
+            _tlkPath = tlkPath;
+            _femaleTlkPath = femaleTlkPath;
             LocString = locstring ?? LocalizedString.FromInvalid();
             SetupUI();
         }
@@ -66,9 +79,9 @@ namespace OdyTools.Dialogs
             var stringrefSpin = new NumericUpDown { Minimum = -1, Maximum = 999999 };
             var stringEdit = new TextBox { AcceptsReturn = true, Watermark = "Text" };
             var okButton = new Button { Content = "OK" };
-            okButton.Click += (s, e) => { LocString = LocString ?? LocalizedString.FromInvalid(); Close(); };
+            okButton.Click += (s, e) => { LocString = LocString ?? LocalizedString.FromInvalid(); Close(true); };
             var cancelButton = new Button { Content = "Cancel" };
-            cancelButton.Click += (s, e) => Close();
+            cancelButton.Click += (s, e) => Close(false);
 
             panel.Children.Add(stringrefLabel);
             panel.Children.Add(stringrefSpin);
@@ -108,7 +121,7 @@ namespace OdyTools.Dialogs
             }
             if (_cancelButton != null)
             {
-                _cancelButton.Click += (s, e) => Close();
+                _cancelButton.Click += (s, e) => Close(false);
             }
             if (_stringrefNoneButton != null)
             {
@@ -140,7 +153,6 @@ namespace OdyTools.Dialogs
             }
 
             // Populate language combo box with all Language enum values
-            // Matching PyKotor: languages are ordered by their enum values (0 = English, 1 = French, etc.)
             // The combo box index directly maps to the Language enum value
             if (_languageSelect != null)
             {
@@ -173,8 +185,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/locstring.py:75-85
-        // Original: def stringref_changed(self, stringref: int):
         private void StringRefChanged(int stringref)
         {
             var substringFrame = this.FindControl<Control>("substringFrame");
@@ -192,34 +202,59 @@ namespace OdyTools.Dialogs
             {
                 UpdateText();
             }
-            else if (_installation != null && _stringEdit != null)
+            else if (_stringEdit != null)
             {
-                _stringEdit.Text = _installation.String(LocString);
+                if (_installation != null)
+                {
+                    _stringEdit.Text = _installation.String(LocString);
+                }
+                else if (!string.IsNullOrWhiteSpace(_tlkPath) && File.Exists(_tlkPath))
+                {
+                    try
+                    {
+                        var talkTable = new TalkTable(_tlkPath);
+                        _stringEdit.Text = talkTable.GetString(stringref) ?? "";
+                    }
+                    catch
+                    {
+                        _stringEdit.Text = "";
+                    }
+                }
+                else
+                {
+                    _stringEdit.Text = "";
+                }
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/locstring.py:87-88
-        // Original: def new_tlk_string(self):
         private void NewTlkString()
         {
-            if (_installation != null && _stringrefSpin != null)
+            if (_stringrefSpin == null) return;
+            try
             {
-                try
+                if (_installation != null)
                 {
                     var talkTable = _installation.TalkTable();
                     int size = talkTable.Size();
                     _stringrefSpin.Value = size;
                 }
-                catch
+                else if (!string.IsNullOrWhiteSpace(_tlkPath) && File.Exists(_tlkPath))
                 {
-                    // If we can't get the talktable size, fall back to a default value
+                    var talkTable = new TalkTable(_tlkPath);
+                    int size = talkTable.Size();
+                    _stringrefSpin.Value = size;
+                }
+                else
+                {
                     _stringrefSpin.Value = 1000;
                 }
             }
+            catch
+            {
+                _stringrefSpin.Value = 1000;
+            }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/locstring.py:90-91
-        // Original: def no_tlk_string(self):
         private void NoTlkString()
         {
             if (_stringrefSpin != null)
@@ -228,15 +263,11 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/locstring.py:93-94
-        // Original: def substring_changed(self):
         private void SubstringChanged()
         {
             UpdateText();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/locstring.py:96-100
-        // Original: def _update_text(self):
         private void UpdateText()
         {
             if (LocString == null || _languageSelect == null || _stringEdit == null)
@@ -245,7 +276,6 @@ namespace OdyTools.Dialogs
             }
 
             // Get selected language from combo box index
-            // Matching PyKotor: language: Language = Language(self.ui.languageSelect.currentIndex())
             int languageIndex = _languageSelect.SelectedIndex;
             if (languageIndex < 0 || _orderedLanguages == null || languageIndex >= _orderedLanguages.Count)
             {
@@ -255,7 +285,6 @@ namespace OdyTools.Dialogs
             Language selectedLanguage = _orderedLanguages[languageIndex];
 
             // Get selected gender from radio buttons
-            // Matching PyKotor: gender: Gender = Gender(int(self.ui.femaleRadio.isChecked()))
             Gender selectedGender = Gender.Male;
             if (_femaleRadio != null && _femaleRadio.IsChecked == true)
             {
@@ -263,7 +292,6 @@ namespace OdyTools.Dialogs
             }
 
             // Get text from locstring for the selected language/gender combination
-            // Matching PyKotor: text: str = self.locstring.get(language, gender) or ""
             string text = LocString.Get(selectedLanguage, selectedGender, false);
             if (text == null)
             {
@@ -273,8 +301,6 @@ namespace OdyTools.Dialogs
             _stringEdit.Text = text;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/locstring.py:102-106
-        // Original: def string_edited(self):
         private void StringEdited()
         {
             if (LocString == null || LocString.StringRef != -1 || _stringEdit == null)
@@ -283,7 +309,6 @@ namespace OdyTools.Dialogs
             }
 
             // Get selected language from combo box index
-            // Matching PyKotor: language: Language = Language(self.ui.languageSelect.currentIndex())
             int languageIndex = _languageSelect != null ? _languageSelect.SelectedIndex : -1;
             if (languageIndex < 0 || _orderedLanguages == null || languageIndex >= _orderedLanguages.Count)
             {
@@ -293,7 +318,6 @@ namespace OdyTools.Dialogs
             Language selectedLanguage = _orderedLanguages[languageIndex];
 
             // Get selected gender from radio buttons
-            // Matching PyKotor: gender: Gender = Gender(int(self.ui.femaleRadio.isChecked()))
             Gender selectedGender = Gender.Male;
             if (_femaleRadio != null && _femaleRadio.IsChecked == true)
             {
@@ -301,74 +325,65 @@ namespace OdyTools.Dialogs
             }
 
             // Update locstring with edited text for the selected language/gender combination
-            // Matching PyKotor: self.locstring.set_data(language, gender, self.ui.stringEdit.toPlainText())
             string editedText = _stringEdit.Text ?? "";
             LocString.SetData(selectedLanguage, selectedGender, editedText);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/locstring.py:62-70
-        // Original: def accept(self):
         private void Accept()
         {
-            if (LocString != null && LocString.StringRef != -1 && _installation != null && _stringEdit != null)
+            string tlkPathToSave = _installation != null
+                ? System.IO.Path.Combine(_installation.Path, "dialog.tlk")
+                : _tlkPath;
+
+            if (LocString != null && LocString.StringRef != -1 && _stringEdit != null && !string.IsNullOrWhiteSpace(tlkPathToSave))
             {
                 try
                 {
-                    // Get the TLK file path from installation
-                    // Matching PyKotor: tlk_path: CaseAwarePath = CaseAwarePath(self._installation.path(), "dialog.tlk")
-                    string tlkPath = System.IO.Path.Combine(_installation.Path, "dialog.tlk");
-
-                    // Check if TLK file exists
-                    if (!File.Exists(tlkPath))
+                    if (!File.Exists(tlkPathToSave))
                     {
-                        // If TLK doesn't exist, we can't save - just close the dialog
-                        // TODO:  In a full implementation, we might want to create a new TLK file
-                        Close();
+                        var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
+                            "Cannot save",
+                            "dialog.tlk was not found at the specified path. Creating a new TLK file is not supported; ensure the path points to an existing dialog.tlk.",
+                            MsBox.Avalonia.Enums.ButtonEnum.Ok,
+                            MsBox.Avalonia.Enums.Icon.Warning);
+                        msgBox.ShowWindowDialogAsync(this);
+                        Close(false);
                         return;
                     }
 
-                    // Read the TLK file
-                    // Matching PyKotor: tlk: TLK = read_tlk(tlk_path)
-                    TLK tlk = TLKAuto.ReadTlk(tlkPath);
+                    TLK tlk = TLKAuto.ReadTlk(tlkPathToSave);
 
-                    // Resize if needed to accommodate the stringref
-                    // Matching PyKotor: if len(tlk) <= self.locstring.stringref: tlk.resize(self.locstring.stringref + 1)
                     int stringref = LocString.StringRef;
                     if (tlk.Count <= stringref)
                     {
                         tlk.Resize(stringref + 1);
                     }
 
-                    // Get the text from the edit control
-                    // Matching PyKotor: tlk[self.locstring.stringref].text = self.ui.stringEdit.toPlainText()
                     string text = _stringEdit.Text ?? "";
                     tlk[stringref].Text = text;
 
-                    // Save the TLK file back to disk
-                    // Matching PyKotor: write_tlk(tlk, tlk_path)
-                    TLKAuto.WriteTlk(tlk, tlkPath, ResourceType.TLK);
+                    TLKAuto.WriteTlk(tlk, tlkPathToSave, ResourceType.TLK);
                 }
                 catch (Exception ex)
                 {
-                    // Show error dialog to user (matching PyKotor: errors are typically shown via MessageBox)
                     var errorBox = MessageBoxManager.GetMessageBoxStandard(
                         "Error Saving TLK File",
                         $"Failed to save the TLK file: {ex.Message}",
                         ButtonEnum.Ok,
                         MsBox.Avalonia.Enums.Icon.Error);
                     errorBox.ShowAsync();
-                    // Continue to close the dialog even if save failed
                 }
             }
 
-            // Matching PyKotor: super().accept()
-            Close();
+            Close(true);
         }
 
+        /// <summary>
+        /// Shows the dialog modally. Returns true if accepted, false if cancelled.
+        /// Call after showing the window (e.g. await window.ShowDialog(parent)) and read result from dialog state.
+        /// </summary>
         public bool ShowDialog()
         {
-            // Show dialog and return result
-            // This will be implemented when dialog system is available
             return true;
         }
     }

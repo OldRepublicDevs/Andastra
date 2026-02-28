@@ -12,7 +12,7 @@ namespace OdyPatch.UI
     /// <summary>
     /// Manages automatic updates using NetSparkle.
     /// Provides industry-standard auto-update functionality.
-    /// Note: NetSparkle only supports .NET Framework (net48+), so this is a no-op for net472 and .NET Core/.NET 5+.
+    /// Note: NetSparkle only supports .NET Framework (net48+), so this is a no-op for net48 and .NET Core/.NET 5+.
     /// </summary>
     public class UpdateManager : IDisposable
     {
@@ -72,7 +72,7 @@ namespace OdyPatch.UI
         public void Initialize()
         {
 #if NET472
-            // No-op on net472: NetSparkleUpdater API not used for this target
+            // No-op on net48: NetSparkleUpdater API not used for this target
 #elif NETFRAMEWORK
             if (_sparkle != null)
             {
@@ -118,7 +118,7 @@ namespace OdyPatch.UI
         public void Start()
         {
 #if NET472
-            // No-op on net472
+            // No-op on net48
 #elif NETFRAMEWORK
             if (_sparkle is null)
             {
@@ -140,7 +140,7 @@ namespace OdyPatch.UI
         public void CheckForUpdates()
         {
 #if NET472
-            // No-op on net472
+            // No-op on net48
 #elif NETFRAMEWORK
             if (_sparkle is null)
             {
@@ -157,7 +157,7 @@ namespace OdyPatch.UI
         public void Stop()
         {
 #if NET472
-            // No-op on net472
+            // No-op on net48
 #elif NETFRAMEWORK
             _sparkle?.Stop();
 #endif
@@ -187,7 +187,7 @@ namespace OdyPatch.UI
 #if NETFRAMEWORK && !NET472
         public UpdateStatus Status { get; set; } = UpdateStatus.UpdateNotAvailable;
 #else
-        // For .NET Core/.NET 5+ and net472, use a simple int
+        // For .NET Core/.NET 5+ and net48, use a simple int
         public int Status { get; set; } = 0; // 0 = UpdateNotAvailable
 #endif
     }

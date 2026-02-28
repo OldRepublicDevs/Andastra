@@ -24,8 +24,6 @@ using OdyTools.Editors.LYT;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:29
-    // Original: class OdyToolLYT(Editor):
     public partial class OdyToolLYT : Editor
     {
         private BioWare.Resource.Formats.LYT.LYT _lyt;
@@ -36,8 +34,6 @@ namespace OdyTools.Editors
         private TextureBrowser _textureBrowser; // Texture browser widget for displaying imported textures
         private LYTGraphicsScene _graphicsScene; // Graphics scene for rendering LYT layout elements
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:32-73
-        // Original: def __init__(self, parent, installation):
         public OdyToolLYT(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolLYT", "lyt",
                 new[] { ResourceType.LYT },
@@ -66,7 +62,7 @@ namespace OdyTools.Editors
 
         private void SetupUI()
         {
-            // UI setup - will be implemented when XAML is available
+            // UI setup (programmatic when XAML not used)
             // Initialize graphics scene
             InitializeGraphicsScene();
             // Initialize model browser widget
@@ -77,8 +73,6 @@ namespace OdyTools.Editors
 
         /// <summary>
         /// Initializes the graphics scene for rendering LYT layout elements.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:50-52
-        /// Original: self.scene: QGraphicsScene = QGraphicsScene()
         /// </summary>
         private void InitializeGraphicsScene()
         {
@@ -211,8 +205,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:127-131
-        // Original: def add_room(self):
         public void AddRoom()
         {
             var room = new LYTRoom(new ResRef("default_room"), new Vector3(0, 0, 0));
@@ -220,8 +212,6 @@ namespace OdyTools.Editors
             UpdateScene();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:133-150
-        // Original: def add_track(self):
         public void AddTrack()
         {
             if (_lyt.Rooms.Count < 2)
@@ -244,8 +234,6 @@ namespace OdyTools.Editors
             UpdateScene();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:152-179
-        // Original: def find_path(self, start: LYTRoom, end: LYTRoom) -> list[LYTRoom] | None:
         public List<LYTRoom> FindPath(LYTRoom start, LYTRoom end)
         {
             if (start == null || end == null)
@@ -299,8 +287,6 @@ namespace OdyTools.Editors
             return null;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:181-184
-        // Original: def add_obstacle(self):
         public void AddObstacle()
         {
             var obstacle = new LYTObstacle(new ResRef("default_obstacle"), new Vector3(0, 0, 0));
@@ -308,8 +294,6 @@ namespace OdyTools.Editors
             UpdateScene();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:186-210
-        // Original: def add_door_hook(self):
         public void AddDoorHook()
         {
             if (_lyt.Rooms.Count == 0)
@@ -330,15 +314,11 @@ namespace OdyTools.Editors
             UpdateScene();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:212-214
-        // Original: def generate_walkmesh(self):
         public void GenerateWalkmesh()
         {
             // Implement walkmesh generation logic here
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:216-218
-        // Original: def update_zoom(self, value: int):
         public void UpdateZoom(int value)
         {
             if (_graphicsScene == null)
@@ -354,8 +334,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:220-229
-        // Original: def update_scene(self):
         public void UpdateScene()
         {
             if (_lyt == null)
@@ -375,8 +353,6 @@ namespace OdyTools.Editors
 
         /// <summary>
         /// Updates the graphics scene to render all LYT layout elements.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:225-234
-        /// Original:
         ///     self.scene.clear()
         ///     for room in self._lyt.rooms:
         ///         self.scene.addItem(RoomItem(room, self))
@@ -950,8 +926,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:231-235
-        // Original: def import_texture(self):
         public async void ImportTexture()
         {
             var topLevel = TopLevel.GetTopLevel(this);
@@ -1368,8 +1342,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:237-241
-        // Original: def import_model(self):
         public async void ImportModel()
         {
             var topLevel = TopLevel.GetTopLevel(this);
@@ -1688,8 +1660,6 @@ namespace OdyTools.Editors
             get { return _textureBrowser; }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:243-245
-        // Original: def update_texture_browser(self):
         public void UpdateTextureBrowser()
         {
             // Ensure imported textures list is maintained and valid
@@ -1746,8 +1716,6 @@ namespace OdyTools.Editors
             return _importedTextures.TryGetValue(textureName, out string path) ? path : null;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:247-264
-        // Original: def load(self, filepath, resref, restype, data):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
@@ -1764,24 +1732,18 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:220-229
-        // Original: def update_scene(self):
         private void LoadLYT(BioWare.Resource.Formats.LYT.LYT lyt)
         {
             _lyt = lyt;
             UpdateScene();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:266-267
-        // Original: def build(self) -> tuple[bytes, ResourceType]:
         public override Tuple<byte[], byte[]> Build()
         {
             byte[] data = LYTAuto.BytesLyt(_lyt);
             return Tuple.Create(data, new byte[0]);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py
-        // Original: def new(self):
         public override void New()
         {
             base.New();
@@ -1791,6 +1753,29 @@ namespace OdyTools.Editors
 
         public override void SaveAs()
         {
+            _ = RunSaveAsAsync();
+        }
+
+        protected override async Task RunSaveAsAsync()
+        {
+            var storage = StorageProvider;
+            if (storage == null) return;
+            string suggestedName = !string.IsNullOrEmpty(_resname) ? _resname : "layout";
+            var options = new FilePickerSaveOptions
+            {
+                Title = "Save As",
+                SuggestedFileName = suggestedName + ".lyt",
+                FileTypeChoices = new[] { new FilePickerFileType("Layout (LYT)") { Patterns = new[] { "*.lyt" } }, new FilePickerFileType("All files") { Patterns = new[] { "*.*" } } }
+            };
+            var file = await storage.SaveFilePickerAsync(options);
+            if (file == null) return;
+            string path = file.Path?.LocalPath ?? "";
+            if (string.IsNullOrWhiteSpace(path)) return;
+            _filepath = path;
+            string ext = (Path.GetExtension(path) ?? "").TrimStart('.').ToLowerInvariant();
+            _restype = ResourceType.FromExtension(ext) ?? ResourceType.LYT;
+            _resname = Path.GetFileNameWithoutExtension(path);
+            RefreshWindowTitle();
             Save();
         }
     }

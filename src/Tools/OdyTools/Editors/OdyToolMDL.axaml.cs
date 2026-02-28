@@ -1,7 +1,9 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform.Storage;
 using BioWare.Extract;
 using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.MDL;
@@ -16,19 +18,15 @@ using MsBox.Avalonia.Enums;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/mdl.py:25
-    // Original: class OdyToolMDL(Editor):
-    public class OdyToolMDL : Editor
+    public partial class OdyToolMDL : Editor
     {
         private MDL _mdl;
         private ModelRenderer _modelRenderer;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/mdl.py:26-42
-        // Original: def __init__(self, parent: QWidget | None, installation: OdyInstallation | None = None):
         public OdyToolMDL(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolMDL", "none",
-                new[] { ResourceType.MDL },
-                new[] { ResourceType.MDL },
+                new[] { ResourceType.MDL, ResourceType.MDL_ASCII },
+                new[] { ResourceType.MDL, ResourceType.MDL_ASCII },
                 installation)
         {
             _installation = installation;
@@ -76,21 +74,37 @@ namespace OdyTools.Editors
             // Set Content after AddHelpAction is called
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/mdl.py:44-45
-        // Original: def _setup_signals(self):
         private void SetupSignals()
         {
             // Signals setup - currently empty in Python implementation
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/mdl.py:47-99
-        // Original: def load(self, filepath: os.PathLike | str, resref: str, restype: ResourceType, data: bytes | bytearray):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
 
             byte[] mdlData = null;
             byte[] mdxData = null;
+
+            // ASCII MDL: single file, no MDX; load via MDLAuto and compile to binary for 3D preview.
+            ResourceType detected = (restype == ResourceType.MDL && data != null && data.Length >= 4)
+                ? MDLAuto.DetectMdl(data, 0) : restype;
+            if (restype == ResourceType.MDL_ASCII || detected == ResourceType.MDL_ASCII)
+            {
+                _mdl = MDLAuto.ReadMdl(data, 0, null, null, 0, 0, ResourceType.MDL_ASCII);
+                _restype = ResourceType.MDL_ASCII;
+                if (_modelRenderer != null)
+                {
+                    // Render preview from an in-memory binary conversion; save format remains ASCII.
+                    using (var previewMdl = new MemoryStream())
+                    using (var previewMdx = new MemoryStream())
+                    {
+                        MDLAuto.WriteMdl(_mdl, previewMdl, ResourceType.MDL, previewMdx);
+                        _modelRenderer.SetModel(previewMdl.ToArray(), previewMdx.ToArray());
+                    }
+                }
+                return;
+            }
 
             if (restype == ResourceType.MDL)
             {
@@ -163,8 +177,6 @@ namespace OdyTools.Editors
 
             if (mdlData == null || mdxData == null)
             {
-                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/mdl.py:95
-                // Original: QMessageBox(QMessageBox.Icon.Critical, f"Could not find the '{p_filepath.stem}' MDL/MDX", "").exec()
                 var errorBox = MessageBoxManager.GetMessageBoxStandard(
                     $"Could not find the '{resref}' MDL/MDX",
                     "",
@@ -176,43 +188,52 @@ namespace OdyTools.Editors
 
             if (_modelRenderer != null)
             {
-                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/mdl.py:98
-                // Original: self.ui.modelRenderer.set_model(mdl_data, mdx_data)
                 // IMPLEMENTED: Now properly handles MDL header skipping (data[12:]) like Python implementation
                 // The ModelRenderer.SetModel now parses starting at offset 12 to skip the 12-byte file header
                 _modelRenderer.SetModel(mdlData, mdxData);
             }
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/mdl.py:99
-            // Original: self._mdl = read_mdl(mdl_data, 0, 0, mdx_data, 0, 0)
             _mdl = MDLAuto.ReadMdl(mdlData, 0, null, mdxData, 0, 0);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/mdl.py:101-108
-        // Original: def _loadMDL(self, mdl: MDL):
         private void LoadMDL(MDL mdl)
         {
             _mdl = mdl;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/mdl.py:110-114
-        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
-            byte[] data = new byte[0];
+            if (_restype == ResourceType.MDL_ASCII)
+            {
+                byte[] data = MDLAuto.BytesMdl(_mdl, ResourceType.MDL_ASCII);
+                return Tuple.Create(data, new byte[0]);
+            }
+            byte[] dataBin = new byte[0];
             byte[] dataExt = new byte[0];
             using (var ms = new MemoryStream())
             using (var msExt = new MemoryStream())
             {
                 MDLAuto.WriteMdl(_mdl, ms, ResourceType.MDL, msExt);
-                data = ms.ToArray();
+                dataBin = ms.ToArray();
                 dataExt = msExt.ToArray();
             }
-            return Tuple.Create(data, dataExt);
+            return Tuple.Create(dataBin, dataExt);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/mdl.py:116-119
-        // Original: def new(self):
+        /// <summary>Writes main file and, for binary MDL, the .mdx extension file. Base Editor.Save() only writes the first Build() element.</summary>
+        public override void Save()
+        {
+            var (data, dataExt) = Build();
+            if (string.IsNullOrEmpty(_filepath)) return;
+            File.WriteAllBytes(_filepath, data);
+            if (_restype == ResourceType.MDL && dataExt != null && dataExt.Length > 0)
+            {
+                string mdxPath = Path.ChangeExtension(_filepath, ".mdx");
+                File.WriteAllBytes(mdxPath, dataExt);
+            }
+            ClearDirty();
+        }
+
         public override void New()
         {
             base.New();
@@ -225,6 +246,45 @@ namespace OdyTools.Editors
 
         public override void SaveAs()
         {
+            _ = RunSaveAsAsync();
+        }
+
+        protected override async Task RunSaveAsAsync()
+        {
+            var storage = StorageProvider;
+            if (storage == null) return;
+            string suggestedName = !string.IsNullOrEmpty(_resname) ? _resname : "model";
+            var options = new FilePickerSaveOptions
+            {
+                Title = "Save As",
+                SuggestedFileName = suggestedName + ".mdl",
+                FileTypeChoices = new[]
+                {
+                    new FilePickerFileType("Model (MDL binary)") { Patterns = new[] { "*.mdl" } },
+                    new FilePickerFileType("Model (MDL ASCII)") { Patterns = new[] { "*.mdl.ascii" } },
+                    new FilePickerFileType("All files") { Patterns = new[] { "*.*" } }
+                }
+            };
+            var file = await storage.SaveFilePickerAsync(options);
+            if (file == null) return;
+            string path = file.Path?.LocalPath ?? "";
+            if (string.IsNullOrWhiteSpace(path)) return;
+            _filepath = path;
+            string pathLower = path.ToLowerInvariant();
+            if (pathLower.EndsWith(".mdl.ascii"))
+            {
+                _restype = ResourceType.MDL_ASCII;
+                string namePart = Path.GetFileName(path);
+                _resname = namePart.EndsWith(".mdl.ascii", StringComparison.OrdinalIgnoreCase)
+                    ? namePart.Substring(0, namePart.Length - ".mdl.ascii".Length) : Path.GetFileNameWithoutExtension(path);
+            }
+            else
+            {
+                string ext = (Path.GetExtension(path) ?? "").TrimStart('.').ToLowerInvariant();
+                _restype = ResourceType.FromExtension(ext) ?? ResourceType.MDL;
+                _resname = Path.GetFileNameWithoutExtension(path);
+            }
+            RefreshWindowTitle();
             Save();
         }
     }

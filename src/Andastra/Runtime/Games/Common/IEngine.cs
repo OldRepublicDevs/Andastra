@@ -2,37 +2,12 @@ using System;
 using System.Collections.Generic;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Game.Scripting.Interfaces;
+using Andastra.Game.Scripting.Abstractions;
+using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
 
 namespace Andastra.Game.Games.Common
 {
-    /// <summary>
-    /// Engine family enumeration for grouping related engines.
-    /// </summary>
-    public enum EngineFamily
-    {
-        /// <summary>
-        /// Aurora Engine (NWN, NWN2)
-        /// </summary>
-        Aurora,
-
-        /// <summary>
-        /// Odyssey Engine (KOTOR, KOTOR2, Jade Empire)
-        /// </summary>
-        Odyssey,
-
-        /// <summary>
-        /// Eclipse Engine (Dragon Age Origins, Dragon Age 2)
-        /// </summary>
-        Eclipse,
-
-        /// <summary>
-        /// Unknown or unsupported engine
-        /// </summary>
-        Unknown
-    }
-
     /// <summary>
     /// Base interface for all BioWare engine implementations.
     /// </summary>
@@ -159,48 +134,24 @@ namespace Andastra.Game.Games.Common
     ///
     /// This interface ensures consistent engine behavior across all BioWare engine families while
     /// allowing engine-specific implementations through the BaseEngine abstract class pattern.
+    /// Extends Abstractions.IEngine with strongly-typed Runtime members for net9.0 build.
     /// </remarks>
-    public interface IEngine
+    public interface IEngine : Andastra.Game.Scripting.Abstractions.IEngine
     {
-        /// <summary>
-        /// Gets the engine family (Odyssey, Aurora, Eclipse).
-        /// </summary>
-        EngineFamily EngineFamily { get; }
-
-        /// <summary>
-        /// Gets the game profile for this engine instance.
-        /// </summary>
-        IEngineProfile Profile { get; }
-
         /// <summary>
         /// Gets the resource provider for loading game resources.
         /// </summary>
-        IGameResourceProvider ResourceProvider { get; }
+        new IGameResourceProvider ResourceProvider { get; }
 
         /// <summary>
         /// Gets the world instance.
         /// </summary>
-        IWorld World { get; }
-
-        /// <summary>
-        /// Gets the engine API instance.
-        /// </summary>
-        IEngineApi EngineApi { get; }
+        new IWorld World { get; }
 
         /// <summary>
         /// Creates a new game session for this engine.
         /// </summary>
-        IEngineGame CreateGameSession();
-
-        /// <summary>
-        /// Initializes the engine with the specified installation path.
-        /// </summary>
-        void Initialize(string installationPath);
-
-        /// <summary>
-        /// Shuts down the engine and cleans up resources.
-        /// </summary>
-        void Shutdown();
+        new IEngineGame CreateGameSession();
     }
 
 }

@@ -106,6 +106,8 @@
     <!-- Expander -->
     <Style Selector="Expander">
         <Setter Property="Foreground" Value="#202124" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
     </Style>
     <Style Selector="CheckBox">
         <Setter Property="Foreground" Value="#202124" />

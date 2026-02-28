@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.OpenGL;
 using Avalonia.OpenGL.Controls;
+using Avalonia.Threading;
 using BioWare.Resource.Formats.GFF.Generics.UTC;
 using BioWare.Resource.Formats.MDL;
 using BioWare.Resource.Formats.MDLData;
@@ -63,6 +64,7 @@ namespace OdyTools.Widgets
 
         private readonly ModelViewport _viewport;
         private readonly TextBlock _overlayText;
+        private DispatcherTimer _renderTimer;
 
         private Vector3 _cameraPosition;
         private Vector3 _cameraTarget;
@@ -106,6 +108,18 @@ namespace OdyTools.Widgets
             {
                 UpdateProjectionMatrix((int)Math.Max(1, e.NewSize.Width), (int)Math.Max(1, e.NewSize.Height));
             };
+
+            _renderTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(33),
+            };
+            _renderTimer.Tick += (s, e) =>
+            {
+                if (_viewport?.Parent != null && _drawableModel != null)
+                {
+                    _viewport.InvalidateVisual();
+                }
+            };
         }
 
         public void SetModel(byte[] mdlData, byte[] mdxData)
@@ -118,7 +132,7 @@ namespace OdyTools.Widgets
 
             if (_mdlData == null || _mdlData.Length <= 12)
             {
-                UpdateOverlay("No model loaded");
+                UpdateOverlay(_installation == null ? "No installation – set game path in Settings" : "No model loaded");
                 _viewport.InvalidateVisual();
                 return;
             }
@@ -138,6 +152,7 @@ namespace OdyTools.Widgets
                 int meshCount = _convertedModel.Meshes.Count;
                 UpdateOverlay("Model: " + modelName + " | Meshes: " + meshCount);
                 ResetCamera();
+                _renderTimer?.Start();
             }
             catch (Exception ex)
             {
@@ -146,6 +161,7 @@ namespace OdyTools.Widgets
                 _drawableModel = null;
                 _convertedModel = null;
                 UpdateOverlay("Failed to parse model");
+                _renderTimer?.Stop();
             }
 
             _viewport.InvalidateVisual();
@@ -158,7 +174,8 @@ namespace OdyTools.Widgets
             _parsedModel = null;
             _drawableModel = null;
             _convertedModel = null;
-            UpdateOverlay("No model loaded");
+            _renderTimer?.Stop();
+            UpdateOverlay(_installation == null ? "No installation – set game path in Settings" : "No model loaded");
             _viewport.InvalidateVisual();
         }
 

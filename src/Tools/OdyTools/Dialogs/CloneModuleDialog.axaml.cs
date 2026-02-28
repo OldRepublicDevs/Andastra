@@ -10,8 +10,6 @@ using BioWare.Tools;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/clone_module.py:30
-    // Original: class CloneModuleDialog(QDialog):
     public partial class CloneModuleDialog : Window
     {
         private OdyInstallation _active;
@@ -32,8 +30,6 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/clone_module.py:31-83
-        // Original: def __init__(self, parent, active, installations):
         public CloneModuleDialog(
             Window parent,
             OdyInstallation active,
@@ -155,8 +151,6 @@ namespace OdyTools.Dialogs
         private Button _createButton;
         private Button _cancelButton;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/clone_module.py:66-68
-        // Original: self.ui = Ui_Dialog()
         // Expose UI widgets for testing
         public CloneModuleDialogUi Ui { get; private set; }
 
@@ -233,8 +227,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/clone_module.py:176-181
-        // Original: def changed_module(self, index: int):
         private void OnModuleSelectionChanged()
         {
             if (_moduleSelect?.SelectedItem is ModuleOption option)
@@ -243,8 +235,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/clone_module.py:183-184
-        // Original: def set_prefix_from_filename(self): self.ui.prefixEdit.setText(self.ui.filenameEdit.text().upper()[:3])
         private void SetPrefixFromFilename()
         {
             if (_filenameEdit == null || _prefixEdit == null)
@@ -271,8 +261,6 @@ namespace OdyTools.Dialogs
             SetPrefixFromFilename();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/clone_module.py:150-174
-        // Original: def load_modules(self):
         private void LoadModules()
         {
             if (_moduleSelect == null)
@@ -289,7 +277,6 @@ namespace OdyTools.Dialogs
                     string filename = kv.Key;
                     string value = kv.Value;
                     string name = value ?? "";
-                    // Matching PyKotor: Module.filepath_to_root(filename)
                     string root = Installation.GetModuleRoot(filename);
                     if (!options.ContainsKey(root))
                     {
@@ -312,8 +299,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/clone_module.py:85-148
-        // Original: def ok(self):
         private async void Ok()
         {
             // Validate that a module is selected
@@ -430,10 +415,7 @@ namespace OdyTools.Dialogs
                     "You have selected to create copies of the texture. This process may add a few extra minutes to the waiting time.",
                     ButtonEnum.Ok,
                     MsBox.Avalonia.Enums.Icon.Info);
-                // Show the warning - user must acknowledge before proceeding
-                // TODO:  In a full implementation, we'd await this, but for now we'll show it
-                // and let the async loader start after user acknowledges
-                warningBox.ShowAsync();
+                await warningBox.ShowWindowDialogAsync(this);
             }
 
             // Define cloning task (matching PyKotor lines 117-130)
@@ -499,8 +481,6 @@ namespace OdyTools.Dialogs
             Close();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/clone_module.py:23-27
-        // Original: class ModuleOption(NamedTuple):
         public class ModuleOption
         {
             public string Name { get; set; }
@@ -522,8 +502,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/clone_module.py:66-68
-        // Original: self.ui = Ui_Dialog()
         // UI wrapper class for testing access
         public class CloneModuleDialogUi
         {

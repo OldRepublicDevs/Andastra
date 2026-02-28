@@ -13,8 +13,10 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using BioWare.Common;
 using BioWare.Resource;
+using OdyTools.Common.Widgets;
 using OdyTools.Data;
 using OdyTools.Dialogs;
+using OdyTools.Themes;
 using OdyTools.Utils;
 using OdyTools.Widgets;
 using MsBox.Avalonia;
@@ -30,12 +32,15 @@ namespace OdyTools.Editors
     {
         private static ResourceType[] GetSupportedTypes() => new[] { ResourceType.NSS, ResourceType.NCS };
 
+        private MonacoEditorHost _monacoHost;
         private CodeEditor _codeEdit;
         private ContentControl _contentRoot;
         private CommandPalette _commandPalette;
+        private FindReplaceWidget _findReplaceWidget;
+        private BreadcrumbsWidget _breadcrumbs;
         private TextBlock _statusLeft;
         private TextBlock _statusRight;
-        private Panel _bottomPanel;
+        private VsCodeWorkbenchShell _workbenchShell;
         private TabControl _bottomTabs;
         private ListBox _problemsList;
         private TextBox _outputBox;
@@ -100,6 +105,8 @@ namespace OdyTools.Editors
 
             var viewMenu = new MenuItem { Header = "_View" };
             viewMenu.Items.Add(CreateMenuItem("_Command Palette", () => _commandPalette?.Show(), Key.P, KeyModifiers.Control | KeyModifiers.Shift));
+            viewMenu.Items.Add(CreateMenuItem("Toggle _Sidebar", () => _workbenchShell?.ToggleSidebar(), Key.B, KeyModifiers.Control));
+            viewMenu.Items.Add(CreateMenuItem("Toggle _Panel", () => ToggleBottomPanel(), Key.J, KeyModifiers.Control));
             viewMenu.Items.Add(CreateMenuItem("_Keyboard Shortcuts", () => { var d = new KeyboardShortcutsDialog(); d.ShowDialog(this); }));
             menu.Items.Add(viewMenu);
 
@@ -112,46 +119,74 @@ namespace OdyTools.Editors
             DockPanel.SetDock(menu, Dock.Top);
             mainDock.Children.Add(menu);
 
-            var center = new Grid { RowDefinitions = new RowDefinitions("*,Auto") };
-            _codeEdit = new CodeEditor
-            {
-                AcceptsReturn = true,
-                AcceptsTab = true,
-                FontFamily = new FontFamily("Cascadia Code, Consolas, monospace"),
-                FontSize = 12,
-            };
-            _codeEdit.TextChanged += (s, e) => { MarkDirty(); UpdateStatusBar(); };
-            _codeEdit.KeyUp += (s, e) => UpdateStatusBar();
-            Grid.SetRow(_codeEdit, 0);
-            center.Children.Add(_codeEdit);
+            _workbenchShell = new VsCodeWorkbenchShell();
+            _workbenchShell.PanelVisible = false;
+            _workbenchShell.SidebarVisible = true;
 
-            _bottomPanel = new StackPanel();
+            var sidebarContent = CreateSidebarContent();
+            _workbenchShell.SidebarContent = sidebarContent;
+
+            var editorColumn = new Grid { RowDefinitions = new RowDefinitions("Auto,*,Auto") };
+            _breadcrumbs = new BreadcrumbsWidget();
+            _breadcrumbs.ItemClicked += (path) => { };
+            _breadcrumbs.SetPath(new List<string> { "script", "main" });
+            Grid.SetRow(_breadcrumbs, 0);
+            editorColumn.Children.Add(_breadcrumbs);
+
+            _monacoHost = new MonacoEditorHost { ShowMinimap = true };
+            _codeEdit = _monacoHost.CodeEditor;
+            _codeEdit.AcceptsReturn = true;
+            _codeEdit.AcceptsTab = true;
+            _codeEdit.FontFamily = new FontFamily("Cascadia Code, Consolas, Menlo, Monaco, monospace");
+            _codeEdit.FontSize = 12;
+            _codeEdit.Background = MonacoColors.EditorBackgroundBrush;
+            _codeEdit.Foreground = MonacoColors.EditorForegroundBrush;
+            _codeEdit.TextChanged += (s, e) => { MarkDirty(); UpdateStatusBar(); UpdateBreadcrumbs(); };
+            _codeEdit.KeyUp += (s, e) => UpdateStatusBar();
+            Grid.SetRow(_monacoHost, 1);
+            editorColumn.Children.Add(_monacoHost);
+
+            _findReplaceWidget = new FindReplaceWidget();
+            _findReplaceWidget.Background = MonacoColors.EditorBackgroundBrush;
+            _findReplaceWidget.FindRequested += OnFindRequested;
+            _findReplaceWidget.ReplaceRequested += OnReplaceRequested;
+            _findReplaceWidget.ReplaceAllRequested += OnReplaceAllRequested;
+            _findReplaceWidget.CloseRequested += () => { _findReplaceWidget.IsVisible = false; };
+            _findReplaceWidget.FindNextRequested += () => OnFindNext();
+            _findReplaceWidget.FindPreviousRequested += () => OnFindPrevious();
+            Grid.SetRow(_findReplaceWidget, 2);
+            editorColumn.Children.Add(_findReplaceWidget);
+
+            _workbenchShell.EditorContent = editorColumn;
+
             _bottomTabs = new TabControl();
             var problemsItem = new TabItem { Header = "Problems", Content = CreateProblemsPanel() };
             var outputItem = new TabItem { Header = "Output", Content = CreateOutputPanel() };
+            _bottomTabs.Background = MonacoColors.PanelBackgroundBrush;
             _bottomTabs.ItemsSource = new List<object> { problemsItem, outputItem };
-            _bottomPanel.Children.Add(_bottomTabs);
-            _bottomPanel.IsVisible = false;
-            Grid.SetRow(_bottomPanel, 1);
-            center.Children.Add(_bottomPanel);
+            var panelContent = new Border { Background = new SolidColorBrush(MonacoColors.PanelBackground), Child = _bottomTabs };
+            _workbenchShell.PanelContent = panelContent;
 
-            mainDock.Children.Add(center);
-
-            var statusBar = new Border
-            {
-                Background = new SolidColorBrush(Avalonia.Media.Color.FromRgb(240, 240, 240)),
-                Padding = new Thickness(4, 2),
-                Child = new DockPanel()
-            };
-            _statusLeft = new TextBlock { Text = "Ln 1, Col 1", VerticalAlignment = VerticalAlignment.Center };
-            _statusRight = new TextBlock { VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Right };
-            ((DockPanel)statusBar.Child).Children.Add(_statusLeft);
+            var statusBarDock = new DockPanel { LastChildFill = true };
+            _statusLeft = new TextBlock { Text = "Ln 1, Col 1", Foreground = MonacoColors.StatusBarForegroundBrush, VerticalAlignment = VerticalAlignment.Center };
+            _statusRight = new TextBlock { Foreground = MonacoColors.StatusBarForegroundBrush, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Right };
+            statusBarDock.Children.Add(_statusLeft);
             DockPanel.SetDock(_statusRight, Dock.Right);
-            ((DockPanel)statusBar.Child).Children.Add(_statusRight);
-            DockPanel.SetDock(statusBar, Dock.Bottom);
-            mainDock.Children.Add(statusBar);
+            statusBarDock.Children.Add(_statusRight);
+            _workbenchShell.StatusBarContent = statusBarDock;
 
+            mainDock.Children.Add(_workbenchShell);
             SetContentOrInject(mainDock);
+        }
+
+        private Control CreateSidebarContent()
+        {
+            _outlineView = new TreeView { MinHeight = 100 };
+            var outlinePanel = new StackPanel { Margin = new Thickness(4) };
+            outlinePanel.Children.Add(new TextBlock { Text = "Outline", FontWeight = FontWeight.SemiBold, Margin = new Thickness(0, 0, 0, 4) });
+            outlinePanel.Children.Add(_outlineView);
+            var scroll = new ScrollViewer { Content = outlinePanel, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+            return scroll;
         }
 
         private StackPanel CreateProblemsPanel()
@@ -231,6 +266,7 @@ namespace OdyTools.Editors
             {
                 if (e.Key == Key.F5 && e.KeyModifiers == KeyModifiers.None) { CompileCurrentScript(); e.Handled = true; }
                 if (e.Key == Key.G && e.KeyModifiers == KeyModifiers.Control) { ShowGotoLine(); e.Handled = true; }
+                if (e.Key == Key.B && e.KeyModifiers == KeyModifiers.Control) { _workbenchShell?.ToggleSidebar(); e.Handled = true; }
                 if (e.Key == Key.J && e.KeyModifiers == KeyModifiers.Control) { ToggleBottomPanel(); e.Handled = true; }
                 if (e.Key == Key.P && (e.KeyModifiers & KeyModifiers.Shift) != 0 && (e.KeyModifiers & KeyModifiers.Control) != 0) { _commandPalette?.Show(); e.Handled = true; }
             };
@@ -299,9 +335,9 @@ namespace OdyTools.Editors
 
         private void ToggleBottomPanel()
         {
-            if (_bottomPanel != null)
+            if (_workbenchShell != null)
             {
-                _bottomPanel.IsVisible = !_bottomPanel.IsVisible;
+                _workbenchShell.TogglePanel();
                 UpdateStatusBar();
             }
         }
@@ -383,12 +419,93 @@ namespace OdyTools.Editors
 
         private void ShowFind()
         {
-            LogToOutput("Find: use Ctrl+F in editor or add Find dialog here.");
+            string sel = _codeEdit?.SelectedText;
+            _findReplaceWidget?.ShowFind(string.IsNullOrEmpty(sel) ? null : sel);
         }
 
         private void ShowReplace()
         {
-            LogToOutput("Replace: use Ctrl+H or add Replace dialog here.");
+            string sel = _codeEdit?.SelectedText;
+            _findReplaceWidget?.ShowReplace(string.IsNullOrEmpty(sel) ? null : sel);
+        }
+
+        private void OnFindRequested(string findText, bool caseSensitive, bool wholeWords, bool regex)
+        {
+            if (_codeEdit == null || string.IsNullOrEmpty(findText)) return;
+            bool found = _codeEdit.FindNext(findText, caseSensitive, wholeWords, regex, backward: false);
+            if (!found) LogToOutput($"Find: no more matches for \"{findText}\"");
+        }
+
+        private void OnFindPrevious()
+        {
+            string findText = _findReplaceWidget?.GetFindText();
+            if (_codeEdit == null || string.IsNullOrEmpty(findText)) return;
+            bool found = _codeEdit.FindPrevious(findText, _findReplaceWidget.GetCaseSensitive(), _findReplaceWidget.GetWholeWords(), _findReplaceWidget.GetRegex());
+            if (!found) LogToOutput($"Find: no more matches for \"{findText}\"");
+        }
+
+        private void OnFindNext()
+        {
+            string findText = _findReplaceWidget?.GetFindText();
+            if (_codeEdit == null || string.IsNullOrEmpty(findText)) return;
+            OnFindRequested(findText, _findReplaceWidget.GetCaseSensitive(), _findReplaceWidget.GetWholeWords(), _findReplaceWidget.GetRegex());
+        }
+
+        private void OnReplaceRequested(string findText, string replaceText, bool caseSensitive, bool wholeWords, bool regex)
+        {
+            if (_codeEdit == null || string.IsNullOrEmpty(findText)) return;
+            int pos = _codeEdit.SelectionStart;
+            int len = _codeEdit.SelectionEnd - pos;
+            if (pos >= 0 && len > 0 && _codeEdit.Text.Substring(pos, len) == findText)
+            {
+                _codeEdit.Text = _codeEdit.Text.Remove(pos, len).Insert(pos, replaceText ?? "");
+                _codeEdit.SelectionStart = _codeEdit.SelectionEnd = pos + (replaceText?.Length ?? 0);
+                MarkDirty();
+            }
+            OnFindNext();
+        }
+
+        private void OnReplaceAllRequested(string findText, string replaceText, bool caseSensitive, bool wholeWords, bool regex)
+        {
+            if (_codeEdit == null || string.IsNullOrEmpty(findText)) return;
+            int count = _codeEdit.ReplaceAllOccurrences(findText, replaceText ?? "", caseSensitive, wholeWords, regex);
+            MarkDirty();
+            LogToOutput($"Replace all: {count} occurrence(s) replaced.");
+        }
+
+        private void UpdateBreadcrumbs()
+        {
+            if (_breadcrumbs == null || _codeEdit == null) return;
+            GetLineColumn(out int line, out _);
+            string func = GetCurrentFunctionContext();
+            var path = new List<string> { "script" };
+            if (!string.IsNullOrEmpty(func)) path.Add(func);
+            path.Add($"Ln {line}");
+            _breadcrumbs.SetPath(path);
+        }
+
+        private string GetCurrentFunctionContext()
+        {
+            if (_codeEdit == null || string.IsNullOrEmpty(_codeEdit.Text)) return "";
+            int pos = Math.Min(_codeEdit.SelectionStart, _codeEdit.SelectionEnd);
+            if (pos <= 0) return "";
+            string t = _codeEdit.Text;
+            int lastFunc = -1;
+            for (int i = 0; i < pos && i < t.Length; i++)
+            {
+                if (i + 4 < t.Length && t.Substring(i, 4) == "void" && (i == 0 || !char.IsLetterOrDigit(t[i - 1])))
+                {
+                    int j = i + 4;
+                    while (j < t.Length && char.IsWhiteSpace(t[j])) j++;
+                    int start = j;
+                    while (j < t.Length && (char.IsLetterOrDigit(t[j]) || t[j] == '_')) j++;
+                    if (j > start) lastFunc = start;
+                }
+            }
+            if (lastFunc < 0) return "";
+            int end = lastFunc;
+            while (end < t.Length && (char.IsLetterOrDigit(t[end]) || t[end] == '_')) end++;
+            return t.Substring(lastFunc, end - lastFunc);
         }
 
         private void TriggerSuggest()
@@ -552,7 +669,7 @@ namespace OdyTools.Editors
             }
         }
 
-        private async System.Threading.Tasks.Task RunOpenAsync()
+        protected override async System.Threading.Tasks.Task RunOpenAsync()
         {
             try
             {

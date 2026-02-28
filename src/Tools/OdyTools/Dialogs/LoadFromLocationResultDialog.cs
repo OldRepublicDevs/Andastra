@@ -16,8 +16,6 @@ using MsBox.Avalonia;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py
-    // Original: class LoadFromLocationResultDialog(QMainWindow):
     public partial class LoadFromLocationResultDialog : Window
     {
         private DataGrid _tableWidget;
@@ -41,8 +39,6 @@ namespace OdyTools.Dialogs
         {
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py
-        // Original: def __init__(self, parent, resources):
         // Updated to include OdyInstallation parameter matching ResourceLocationDialog pattern
         public LoadFromLocationResultDialog(Window parent, List<FileResource> resources, OdyInstallation installation = null)
         {
@@ -139,8 +135,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py
-        // Original: def populate_resources(self):
         private void PopulateResources()
         {
             if (_tableWidget != null)
@@ -158,7 +152,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation pattern for resource filtering
         // Filters resources based on search text, checking ResRef, Type, and Path columns
         // Case-insensitive substring matching similar to ResourceProxyModel.filterAcceptsRow
         private void OnSearchChanged()
@@ -176,7 +169,6 @@ namespace OdyTools.Dialogs
             if (!string.IsNullOrWhiteSpace(filterText))
             {
                 // Filter resources where search text appears in ResRef, Type, or Path
-                // Matching PyKotor ResourceProxyModel.filterAcceptsRow pattern:
                 // Checks if filter_string is a substring of filename or resname
                 filteredResources = _resources.Where(r =>
                 {
@@ -218,8 +210,6 @@ namespace OdyTools.Dialogs
             _tableWidget.ItemsSource = items;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:927-936
-        // Original: def open_selected_resource(self, resources, installation, gff_specialized=None):
         // This method opens the selected resources in appropriate editors
         private void OpenSelected()
         {
@@ -235,7 +225,6 @@ namespace OdyTools.Dialogs
                 var parentWindow = this.Parent as Window ?? this;
 
                 // Open each selected resource in the appropriate editor
-                // Matching PyKotor: open_resource_editor(resource, installation, gff_specialized=gff_specialized)
                 foreach (var resource in selectedResources)
                 {
                     WindowUtils.OpenResourceEditor(resource, _installation, parentWindow);
@@ -263,8 +252,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:455-481
-        // Original: def _save_files(self, file_path: Path, table_item: FileTableWidgetItem):
         // This method extracts selected resources to the filesystem
         private async void ExtractSelected()
         {
@@ -495,8 +482,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:689-690
-        // Original: def selectedItems(self) -> list[ResourceTableWidgetItem]:
         // This method retrieves the selected resources from the DataGrid and maps them back to FileResource objects
         public List<FileResource> SelectedResources()
         {
@@ -526,8 +511,6 @@ namespace OdyTools.Dialogs
             return selectedResources;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1089-1105
-        // Original: def resize_to_content(self):
         // This method resizes the window to fit the table content, using screen geometry instead of QDesktopWidget
         // In Qt, it uses QApplication.primaryScreen() which works for both Qt5 and Qt6 (QDesktopWidget is deprecated in Qt6)
         // In Avalonia, we use Screen API which is always available
@@ -539,8 +522,6 @@ namespace OdyTools.Dialogs
             }
 
             // Calculate width based on table columns
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1094-1096
-            // Original: width = vert_header.width() + 4  # 4 for the frame
             //          for i in range(self.resource_table.columnCount()):
             //              width += self.resource_table.columnWidth(i)
             double width = 50; // Estimate for vertical header and frame padding
@@ -556,8 +537,6 @@ namespace OdyTools.Dialogs
             }
 
             // Get screen bounds to ensure window doesn't exceed screen size
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1097-1102
-            // Original: primary_screen: QScreen | None = QApplication.primaryScreen()
             //          if primary_screen is None:
             //              raise ValueError("Primary screen is not set")
             //          width = min(width, primary_screen.availableGeometry().width())
@@ -580,8 +559,6 @@ namespace OdyTools.Dialogs
                 width = System.Math.Min(width, 1920); // Default max width
             }
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1103-1104
-            // Original: height = self.height()  # keep the current height
             //          self.resize(width, height)
             // Set window width, keep current height
             Width = System.Math.Max(width, MinWidth);

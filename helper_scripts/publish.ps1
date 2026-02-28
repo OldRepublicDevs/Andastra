@@ -15,7 +15,7 @@ param(
     [string]$ProjectFile = "",              # When empty: discover publishable projects from solution.
     [Alias("Solution", "S")]
     [string]$SolutionPath = "",              # Path to .sln (required when -ProjectFile is empty and multiple .sln exist in CWD).
-    [string]$FrameworkDependent = "net48",  # net48 or net472 for non-self-contained profiles
+    [string]$FrameworkDependent = "net48",  # net48 or net48 for non-self-contained profiles
     [Alias("Framework")]
     [string]$FrameworkVersion = "net9.0",
     [Alias("SevenZip", "7z")]
@@ -194,7 +194,7 @@ function Get-ProjectAppInfo {
     return @{ AppName = $appName; Version = $version }
 }
 
-# --- Resolve framework-dependent target from project (net472 vs net48) ---
+# --- Resolve framework-dependent target from project (net48 vs net48) ---
 function Get-ProjectTargetFrameworks {
     param([string]$ProjectPath)
     if ([string]::IsNullOrWhiteSpace($ProjectPath) -or -not (Test-Path -LiteralPath $ProjectPath -PathType Leaf)) {
@@ -214,7 +214,7 @@ function Get-ProjectTargetFrameworks {
 function Get-ProjectFrameworkDependent {
     param([string]$ProjectPath)
     $tfs = Get-ProjectTargetFrameworks -ProjectPath $ProjectPath
-    if ($tfs -contains 'net472') { return 'net472' }
+    if ($tfs -contains 'net48') { return 'net48' }
     return $FrameworkDependent
 }
 
@@ -283,7 +283,7 @@ function Get-PredefinedPublishProfiles {
             MsBuildProperties = New-MsBuildProperties -Spec $spec -ProjectName $ProjectName -SolutionDirAbsolute $SolutionDirAbsolute -AppNameForBundle $AppNameForBundle -IsStandaloneProject:$IsStandaloneProject
         }
     }
-    # Only include profiles for frameworks the project actually targets (skip net48/net472 FD if project is net9.0-only)
+    # Only include profiles for frameworks the project actually targets (skip net48/net48 FD if project is net9.0-only)
     if ($projectTfs.Count -gt 0) {
         $profiles = @($profiles | Where-Object { $projectTfs -contains $_.TargetFramework })
     }
@@ -534,15 +534,15 @@ function Publish-OdyToolsInstallerPayload {
     if (-not $aioProject -or -not (Test-Path -LiteralPath $aioProject -PathType Leaf)) {
         Write-Log "[Installer] OdyTools.csproj not found in solution project list, skipping AIO payload." -Level "WARN"
     } else {
-        Write-Log "[Installer] Publishing OdyTools AIO payload (net472/win-x64)" -Level "INFO"
-        & dotnet publish $aioProject -c Release --framework net472 -r win-x64 --no-self-contained -o $aioOut
+        Write-Log "[Installer] Publishing OdyTools AIO payload (net48/win-x64)" -Level "INFO"
+        & dotnet publish $aioProject -c Release --framework net48 -r win-x64 --no-self-contained -o $aioOut
         if ($LASTEXITCODE -ne 0) { throw "Failed publishing OdyTools AIO for installer staging." }
     }
     foreach ($proj in $editorProjects) {
         $name = [IO.Path]::GetFileNameWithoutExtension(([IO.Path]::GetFileName($proj)))
         $displayName = $name -replace '\.Standalone$', ''
-        Write-Log "[Installer] Publishing $displayName (net472/win-x64)" -Level "INFO"
-        & dotnet publish $proj -c Release --framework net472 -r win-x64 --no-self-contained -o $editorsOut
+        Write-Log "[Installer] Publishing $displayName (net48/win-x64)" -Level "INFO"
+        & dotnet publish $proj -c Release --framework net48 -r win-x64 --no-self-contained -o $editorsOut
         if ($LASTEXITCODE -ne 0) {
             Write-Log "[Installer] Failed publishing $displayName, continuing." -Level "WARN"
             continue

@@ -6,8 +6,6 @@ using Avalonia.Markup.Xaml;
 
 namespace OdyTools.Widgets
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/breadcrumbs_widget.py:14
-    // Original: class BreadcrumbsWidget(QWidget):
     public partial class BreadcrumbsWidget : UserControl
     {
         private List<string> _path;
@@ -17,8 +15,6 @@ namespace OdyTools.Widgets
 
         public event Action<string> ItemClicked;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/breadcrumbs_widget.py:19-23
-        // Original: def __init__(self, parent: QWidget | None = None):
         public BreadcrumbsWidget()
         {
             InitializeComponent();
@@ -89,16 +85,12 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/breadcrumbs_widget.py:53-61
-        // Original: def set_path(self, path: list[str]):
         public void SetPath(List<string> path)
         {
             _path = path ?? new List<string>();
             UpdateDisplay();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/breadcrumbs_widget.py:63-90
-        // Original: def _update_display(self):
         private void UpdateDisplay()
         {
             if (_layout == null)
@@ -129,8 +121,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/breadcrumbs_widget.py:92-95
-        // Original: def _on_segment_clicked(self, index: int):
         private void OnSegmentClicked(int index)
         {
             if (index >= 0 && index < _path.Count)
@@ -139,8 +129,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/breadcrumbs_widget.py:97-99
-        // Original: def clear(self):
         public void Clear()
         {
             SetPath(new List<string>());

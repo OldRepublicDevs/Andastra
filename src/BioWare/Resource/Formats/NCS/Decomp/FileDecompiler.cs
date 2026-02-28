@@ -1,4 +1,8 @@
+// Copyright 2021-2025 NCSDecomp
+// Licensed under the Business Source License 1.1 (BSL 1.1).
+// See LICENSE.txt file in the project root for full license information.
 //
+// Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,6 +10,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using BioWare.Common;
+using BioWare.Resource.Formats.NCS;
 using BioWare.Resource.Formats.NCS.Decomp.Analysis;
 using BioWare.Resource.Formats.NCS.Decomp.Node;
 using BioWare.Resource.Formats.NCS.Decomp.Lexer;
@@ -1307,19 +1312,12 @@ namespace BioWare.Resource.Formats.NCS.Decomp
         }
 
         // Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:948-1010
-        // Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1008-1105
+        // When Java would use nwnnsscomp, we use the built-in compiler (NCSAuto) as in NCSCompiler.cs.
         // Original: public File externalCompile(File file, boolean k2, File outputDir)
         private NcsFile ExternalCompile(NcsFile file, bool k2, NcsFile outputDir)
         {
             try
             {
-                NcsFile compiler = GetCompilerFile();
-                if (!compiler.Exists())
-                {
-                    Debug("[Decomp] ERROR: Compiler not found: " + compiler.GetAbsolutePath());
-                    return null;
-                }
-
                 // Determine output directory: use provided outputDir, or temp if null
                 NcsFile actualOutputDir;
                 if (outputDir != null)
@@ -1328,7 +1326,6 @@ namespace BioWare.Resource.Formats.NCS.Decomp
                 }
                 else
                 {
-                    // Default to temp directory to avoid creating files without user consent
                     string tmpDir = JavaSystem.GetProperty("java.io.tmpdir");
                     actualOutputDir = new NcsFile(Path.Combine(tmpDir, "ncsdecomp_roundtrip"));
                     if (!actualOutputDir.Exists())
@@ -1337,7 +1334,6 @@ namespace BioWare.Resource.Formats.NCS.Decomp
                     }
                 }
 
-                // Create output NCS file in the specified output directory
                 string baseName = file.Name;
                 int lastDot = baseName.LastIndexOf('.');
                 if (lastDot > 0)
@@ -1346,8 +1342,43 @@ namespace BioWare.Resource.Formats.NCS.Decomp
                 }
                 NcsFile result = new NcsFile(Path.Combine(actualOutputDir.FullName, baseName + ".ncs"));
 
+                // Prefer built-in compiler (same as NCSCompiler.cs fallback) instead of nwnnsscomp
+                string nssSource = ReadFile(file);
+                if (!string.IsNullOrEmpty(nssSource))
+                {
+                    try
+                    {
+                        BioWareGame game = k2 ? BioWareGame.TSL : BioWareGame.K1;
+                        NCS ncs = NCSAuto.CompileNss(nssSource, game);
+                        if (ncs != null)
+                        {
+                            byte[] bytes = NCSAuto.BytesNcs(ncs);
+                            if (bytes != null && bytes.Length > 0)
+                            {
+                                System.IO.File.WriteAllBytes(result.FullName, bytes);
+                                if (result.Exists())
+                                {
+                                    Debug("[Decomp] Built-in compile succeeded: " + result.GetAbsolutePath());
+                                    return result;
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception builtInEx)
+                    {
+                        Debug("[Decomp] Built-in compile failed, falling back to external: " + builtInEx.Message);
+                    }
+                }
+
+                // Fallback: external nwnnsscomp (matching Java when built-in is unavailable or failed)
+                NcsFile compiler = GetCompilerFile();
+                if (compiler == null || !compiler.Exists())
+                {
+                    Debug("[Decomp] ERROR: Compiler not found: " + (compiler != null ? compiler.GetAbsolutePath() : "null"));
+                    return null;
+                }
+
                 // Ensure nwscript.nss is in the compiler's directory (like test does)
-                // Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:960-975
                 NcsFile compilerDir = compiler.Directory != null ? new NcsFile(compiler.Directory) : null;
                 if (compilerDir != null)
                 {
@@ -1364,22 +1395,15 @@ namespace BioWare.Resource.Formats.NCS.Decomp
                         }
                         catch (IOException e)
                         {
-                            // Log but don't fail - compiler might find nwscript.nss elsewhere
                             Debug("[Decomp] Warning: Could not copy nwscript.nss to compiler directory: " + e.Message);
                         }
                     }
                 }
 
-                // Use compiler detection to get correct command-line arguments
-                // Matching NCSDecomp implementation at vendor/NCSDecomp/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:978-983
-                // Original: NwnnsscompConfig config = new NwnnsscompConfig(compiler, file, result, k2);
-                // Original: String[] args = config.getCompileArgs(compiler.getAbsolutePath());
                 NwnnsscompConfig config = new NwnnsscompConfig(compiler, file, result, k2);
-                // For GUI compilation, match test behavior: don't use -i flags
-                // Test shows compilers work without -i when includes are in source directory or compiler directory
                 string[] args = config.GetCompileArgs(compiler.GetAbsolutePath());
 
-                Debug("[Decomp] Using compiler: " + config.GetChosenCompiler().Name +
+                Debug("[Decomp] Using external compiler: " + config.GetChosenCompiler().Name +
                     " (SHA256: " + config.GetSha256Hash().Substring(0, Math.Min(16, config.GetSha256Hash().Length)) + "...)");
                 Debug("[Decomp] Input file: " + file.GetAbsolutePath());
                 Debug("[Decomp] Expected output: " + result.GetAbsolutePath());
@@ -1390,7 +1414,6 @@ namespace BioWare.Resource.Formats.NCS.Decomp
                 {
                     Debug("[Decomp] ERROR: Expected output file does not exist: " + result.GetAbsolutePath());
                     Debug("[Decomp]   This usually means nwnnsscomp.exe compilation failed.");
-                    Debug("[Decomp]   Check the nwnnsscomp output above for compilation errors.");
                     return null;
                 }
 

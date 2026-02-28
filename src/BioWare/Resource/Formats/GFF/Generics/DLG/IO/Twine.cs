@@ -143,6 +143,25 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG.IO
         }
 
         /// <summary>
+        /// Reads Twine content (HTML or JSON) from a string and converts to DLG.
+        /// Used when content is already loaded (e.g. from byte array).
+        /// </summary>
+        public static DLG ReadTwineFromContent(string content)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+                throw new ArgumentException("Twine content cannot be null or empty.", nameof(content));
+            TwineStory story;
+            string trimmed = content.Trim();
+            if (trimmed.StartsWith("{"))
+                story = ReadJson(content);
+            else if (trimmed.StartsWith("<"))
+                story = ReadHtml(content);
+            else
+                throw new ArgumentException("Invalid Twine format - must be HTML or JSON");
+            return StoryToDlg(story);
+        }
+
+        /// <summary>
         /// Writes a DLG to Twine format.
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/twine.py:75-100
         /// </summary>
@@ -609,6 +628,12 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG.IO
         /// </summary>
         private static void WriteJson(TwineStory story, string path)
         {
+            File.WriteAllText(path, GetJsonString(story), Encoding.UTF8);
+        }
+
+        /// <summary>Returns the Twine story as a JSON string (for in-memory or stream use).</summary>
+        private static string GetJsonString(TwineStory story)
+        {
             var data = new Dictionary<string, object>
             {
                 { "name", story.Metadata.Name },
@@ -624,11 +649,9 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG.IO
                 { "startnode", story.StartPid },
                 { "passages", new List<object>() },
             };
-
             var passagesList = (List<object>)data["passages"];
             foreach (var passage in story.Passages)
             {
-                // Embed links into text in Twine format: [[text->target]] or [[target]]
                 string textWithLinks = passage.Text;
                 if (passage.Links.Count > 0)
                 {
@@ -638,73 +661,30 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG.IO
                         if (!string.IsNullOrEmpty(link.Target))
                         {
                             if (!string.IsNullOrEmpty(link.Text) && link.Text != link.Target)
-                            {
                                 linkTexts.Add($"[[{link.Text}->{link.Target}]]");
-                            }
                             else
-                            {
                                 linkTexts.Add($"[[{link.Target}]]");
-                            }
                         }
                     }
                     if (linkTexts.Count > 0)
-                    {
                         textWithLinks = passage.Text + (string.IsNullOrEmpty(passage.Text) ? "" : " ") + string.Join(" ", linkTexts);
-                    }
                 }
-
                 var metadataDict = new Dictionary<string, object>
                 {
                     { "position", $"{passage.Metadata.Position.X},{passage.Metadata.Position.Y}" },
                     { "size", $"{passage.Metadata.Size.X},{passage.Metadata.Size.Y}" },
                 };
-
-                // Include KotOR-specific metadata fields in custom dict
                 var kotorMetadata = new Dictionary<string, string>();
-                if (passage.Metadata.AnimationId != 0)
-                {
-                    kotorMetadata["animation_id"] = passage.Metadata.AnimationId.ToString();
-                }
-                if (passage.Metadata.CameraAngle != 0)
-                {
-                    kotorMetadata["camera_angle"] = passage.Metadata.CameraAngle.ToString();
-                }
-                if (passage.Metadata.CameraId.HasValue && passage.Metadata.CameraId.Value != 0)
-                {
-                    kotorMetadata["camera_id"] = passage.Metadata.CameraId.Value.ToString();
-                }
-                if (passage.Metadata.FadeType != 0)
-                {
-                    kotorMetadata["fade_type"] = passage.Metadata.FadeType.ToString();
-                }
-                if (!string.IsNullOrEmpty(passage.Metadata.Quest))
-                {
-                    kotorMetadata["quest"] = passage.Metadata.Quest;
-                }
-                if (!string.IsNullOrEmpty(passage.Metadata.Sound))
-                {
-                    kotorMetadata["sound"] = passage.Metadata.Sound;
-                }
-                if (!string.IsNullOrEmpty(passage.Metadata.VoResref))
-                {
-                    kotorMetadata["vo_resref"] = passage.Metadata.VoResref;
-                }
-                if (!string.IsNullOrEmpty(passage.Metadata.Speaker))
-                {
-                    kotorMetadata["speaker"] = passage.Metadata.Speaker;
-                }
-
-                // Merge with existing custom metadata
-                foreach (var kvp in passage.Metadata.Custom)
-                {
-                    kotorMetadata[kvp.Key] = kvp.Value;
-                }
-
-                if (kotorMetadata.Count > 0)
-                {
-                    metadataDict["custom"] = kotorMetadata;
-                }
-
+                if (passage.Metadata.AnimationId != 0) kotorMetadata["animation_id"] = passage.Metadata.AnimationId.ToString();
+                if (passage.Metadata.CameraAngle != 0) kotorMetadata["camera_angle"] = passage.Metadata.CameraAngle.ToString();
+                if (passage.Metadata.CameraId.HasValue && passage.Metadata.CameraId.Value != 0) kotorMetadata["camera_id"] = passage.Metadata.CameraId.Value.ToString();
+                if (passage.Metadata.FadeType != 0) kotorMetadata["fade_type"] = passage.Metadata.FadeType.ToString();
+                if (!string.IsNullOrEmpty(passage.Metadata.Quest)) kotorMetadata["quest"] = passage.Metadata.Quest;
+                if (!string.IsNullOrEmpty(passage.Metadata.Sound)) kotorMetadata["sound"] = passage.Metadata.Sound;
+                if (!string.IsNullOrEmpty(passage.Metadata.VoResref)) kotorMetadata["vo_resref"] = passage.Metadata.VoResref;
+                if (!string.IsNullOrEmpty(passage.Metadata.Speaker)) kotorMetadata["speaker"] = passage.Metadata.Speaker;
+                foreach (var kvp in passage.Metadata.Custom) kotorMetadata[kvp.Key] = kvp.Value;
+                if (kotorMetadata.Count > 0) metadataDict["custom"] = kotorMetadata;
                 var pData = new Dictionary<string, object>
                 {
                     { "name", passage.Name },
@@ -715,9 +695,8 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG.IO
                 };
                 passagesList.Add(pData);
             }
-
             var options = new JsonSerializerOptions { WriteIndented = true };
-            File.WriteAllText(path, JsonSerializer.Serialize(data, options), Encoding.UTF8);
+            return JsonSerializer.Serialize(data, options);
         }
 
         /// <summary>
@@ -725,6 +704,12 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG.IO
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/twine.py:438-532
         /// </summary>
         private static void WriteHtml(TwineStory story, string path)
+        {
+            BuildHtmlDocument(story).Save(path);
+        }
+
+        /// <summary>Builds the XDocument for Twine HTML format (for saving to file or string).</summary>
+        private static XDocument BuildHtmlDocument(TwineStory story)
         {
             var root = new XElement("html");
             var storyData = new XElement("tw-storydata");
@@ -858,8 +843,32 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG.IO
                 storyData.SetAttributeValue("startnode", story.StartPid);
             }
 
-            var doc = new XDocument(new XDeclaration("1.0", "utf-8", null), root);
-            doc.Save(path);
+            return new XDocument(new XDeclaration("1.0", "utf-8", null), root);
+        }
+
+        /// <summary>Returns the Twine story as an HTML string (for in-memory or stream use).</summary>
+        private static string GetHtmlString(TwineStory story)
+        {
+            var doc = BuildHtmlDocument(story);
+            using (var sw = new StringWriter())
+            {
+                doc.Save(sw);
+                return sw.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Returns a DLG serialized to Twine format as UTF-8 bytes.
+        /// </summary>
+        /// <param name="dlg">Dialogue to serialize.</param>
+        /// <param name="format">"json" or "html".</param>
+        public static byte[] BytesTwine(DLG dlg, string format)
+        {
+            if (dlg == null) throw new ArgumentNullException(nameof(dlg));
+            if (string.IsNullOrEmpty(format)) format = "html";
+            var story = DlgToStory(dlg, null);
+            string s = format.Equals("json", StringComparison.OrdinalIgnoreCase) ? GetJsonString(story) : GetHtmlString(story);
+            return Encoding.UTF8.GetBytes(s);
         }
 
         /// <summary>

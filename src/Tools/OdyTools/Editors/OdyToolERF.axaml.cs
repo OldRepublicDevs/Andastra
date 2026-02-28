@@ -26,8 +26,6 @@ using RIMResource = BioWare.Resource.Formats.RIM.RIMResource;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/erf.py:97
-    // Original: class OdyToolERF(Editor):
     public partial class OdyToolERF : Editor
     {
         private const int MinEditorWidth = 520;
@@ -53,8 +51,6 @@ namespace OdyTools.Editors
         private string _findText = "";
         private bool _findMatchCase;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/erf.py:98-146
-        // Original: def __init__(self, parent, installation):
         public OdyToolERF(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolERF", "none",
                 new[] { ResourceType.RIM, ResourceType.ERF, ResourceType.MOD, ResourceType.SAV, ResourceType.BIF },
@@ -240,8 +236,6 @@ namespace OdyTools.Editors
             catch { }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/erf.py:175-187
-        // Original: def _setup_signals(self):
         private void SetupSignals()
         {
             if (_extractButton != null)
@@ -277,6 +271,8 @@ namespace OdyTools.Editors
             Opened += (s, e) => { UpdateStatusBar(); _tableView?.Focus(); };
             KeyDown += OnWindowKeyDown;
         }
+
+        protected override bool UseStandardFileMenuWiring => false;
 
         private void SetupMenuHandlers()
         {
@@ -377,7 +373,7 @@ namespace OdyTools.Editors
             }
         }
 
-        private async Task RunSaveAsAsync()
+        protected override async Task RunSaveAsAsync()
         {
             var storageProvider = (this as Window)?.StorageProvider;
             if (storageProvider == null) return;
@@ -495,7 +491,6 @@ namespace OdyTools.Editors
             _tableView.ScrollIntoView(sel, null);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/erf.py: ERFEditorTable.dropEvent / sig_resource_dropped
         private void SetupTableViewDragDrop()
         {
             if (_tableView == null) return;
@@ -576,8 +571,6 @@ namespace OdyTools.Editors
                 _refreshButton.IsEnabled = _sourceResources.Count > 0;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/erf.py:199-255
-        // Original: def load(self, filepath, resref, restype, data):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             if (_hasChanges)
@@ -623,8 +616,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/erf.py:257-289
-        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
             // If restype is not set (e.g., after New()), default to ERF
@@ -667,8 +658,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/erf.py:291-299
-        // Original: def new(self):
         public override void New()
         {
             _hasChanges = false;
@@ -683,8 +672,6 @@ namespace OdyTools.Editors
             UpdateStatusBar();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/erf.py:301-328
-        // Original: def save(self):
         public override void Save()
         {
             _hasChanges = false;
@@ -703,8 +690,6 @@ namespace OdyTools.Editors
             File.WriteAllBytes(_filepath, data);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/erf.py:376-381
-        // Original: def extract_selected(self):
         private async Task RunExtractAsync()
         {
             var selected = GetSelectedViewModels();
@@ -773,8 +758,6 @@ namespace OdyTools.Editors
             return null;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/erf.py:467-469
-        // Original: def select_files_to_add(self):
         private async Task RunAddFilesAsync()
         {
             var storageProvider = (this as Window)?.StorageProvider;
@@ -793,8 +776,6 @@ namespace OdyTools.Editors
             AddResourcesFromPaths(files.Select(f => f.Path.LocalPath).ToList());
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/erf.py:430-437
-        // Original: def remove_selected(self):
         private void RemoveSelected()
         {
             var selected = GetSelectedViewModels();
@@ -807,8 +788,6 @@ namespace OdyTools.Editors
             UpdateStatusBar();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/erf.py:471-500
-        // Original: def open_selected(self, *, gff_specialized=None):
         private void OpenSelected()
         {
             var selected = GetSelectedViewModels();
@@ -932,8 +911,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/erf.py:523-538
-        // Original: def refresh(self):
         private void Refresh()
         {
             if (string.IsNullOrEmpty(_filepath)) return;
@@ -959,8 +936,6 @@ namespace OdyTools.Editors
             Refresh();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/erf.py:540-544
-        // Original: def on_selection_changed(self):
         private MenuItem _ctxRename;
 
         private void OnSelectionChanged()
@@ -991,7 +966,7 @@ namespace OdyTools.Editors
             return result == ButtonResult.Yes;
         }
 
-        private async Task RunOpenAsync()
+        protected override async Task RunOpenAsync()
         {
             var storageProvider = (this as Window)?.StorageProvider;
             if (storageProvider == null) return;
@@ -1043,8 +1018,6 @@ namespace OdyTools.Editors
             Revert();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/erf.py:71-76
-        // Original: def human_readable_size(byte_size: float) -> str:
         private static string HumanReadableSize(double byteSize)
         {
             string[] units = { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
@@ -1064,8 +1037,6 @@ namespace OdyTools.Editors
             _ = RunSaveAsAsync();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/erf.py:382-428
-        // Original: def rename_selected(self) / get_validated_resref
         private async Task RenameSelectedAsync()
         {
             var selected = GetSelectedViewModels();

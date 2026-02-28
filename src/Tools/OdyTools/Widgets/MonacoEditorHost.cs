@@ -7,17 +7,22 @@ using Avalonia.Media;
 namespace OdyTools.Widgets
 {
     /// <summary>
-    /// Monaco/VS Code-style editor host: line numbers margin + code editor with VS Code Dark+ theme.
+    /// Monaco/VS Code-style editor host: line numbers margin + code editor + optional minimap.
     /// Wraps CodeEditor with 1:1 Monaco/VS Code visuals.
     /// </summary>
     public class MonacoEditorHost : Panel
     {
         private MonacoLineNumbersMargin _lineNumbersMargin;
         private CodeEditor _codeEditor;
+        private MonacoMinimap _minimap;
         private Border _lineNumbersBorder;
+        private Border _minimapBorder;
         private Grid _grid;
 
         public CodeEditor CodeEditor => _codeEditor;
+        public MonacoMinimap Minimap => _minimap;
+
+        public bool ShowMinimap { get; set; } = true;
 
         public MonacoEditorHost()
         {
@@ -52,18 +57,38 @@ namespace OdyTools.Widgets
                 Padding = new Thickness(8, 4)
             };
 
+            _minimap = new MonacoMinimap
+            {
+                Width = 80,
+                MinWidth = 60,
+                FontFamily = new FontFamily("Cascadia Code, Consolas, Menlo, Monaco, monospace"),
+                FontSize = 14
+            };
+            _minimapBorder = new Border
+            {
+                Child = _minimap,
+                Background = OdyTools.Themes.MonacoColors.EditorBackgroundBrush,
+                BorderBrush = new SolidColorBrush(OdyTools.Themes.MonacoColors.EditorIndentGuideBackground),
+                BorderThickness = new Thickness(1, 0, 0, 0),
+                MinWidth = 60,
+                Width = 80
+            };
+
             _grid = new Grid
             {
-                ColumnDefinitions = new ColumnDefinitions("Auto,*"),
+                ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"),
                 Children =
                 {
                     _lineNumbersBorder,
-                    _codeEditor
+                    _codeEditor,
+                    _minimapBorder
                 }
             };
 
             Grid.SetColumn(_lineNumbersBorder, 0);
             Grid.SetColumn(_codeEditor, 1);
+            Grid.SetColumn(_minimapBorder, 2);
+            _minimapBorder.IsVisible = ShowMinimap;
 
             Children.Add(_grid);
 
@@ -93,10 +118,24 @@ namespace OdyTools.Widgets
                 _codeEditor.FontWeight);
             var ft = new FormattedText("A", System.Globalization.CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight, typeface, _codeEditor.FontSize, Brushes.Black);
-            _lineNumbersMargin.LineHeight = ft.Height * 1.2;
+            double lineHeight = ft.Height * 1.2;
+            double charWidth = _codeEditor.FontSize * 0.6;
+            _lineNumbersMargin.LineHeight = lineHeight;
 
             int caretLine = GetLineFromPosition(_codeEditor.CaretIndex, text);
             _lineNumbersMargin.ActiveLineNumber = caretLine;
+
+            if (_minimap != null && ShowMinimap)
+            {
+                _minimap.Text = text;
+                _minimap.LineHeight = lineHeight;
+                _minimap.CharWidth = charWidth;
+                _minimap.FontSize = _codeEditor.FontSize;
+                _minimap.FontFamily = _codeEditor.FontFamily ?? new FontFamily("Consolas, monospace");
+                _minimap.VisibleStartLine = Math.Max(0, caretLine - 5);
+                _minimap.VisibleLineCount = 30;
+                _minimap.InvalidateVisual();
+            }
         }
 
         private static int GetLineFromPosition(int position, string text)

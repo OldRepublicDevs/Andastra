@@ -20,7 +20,6 @@ namespace OdyTools.Widgets
     /// Similar to ModelBrowser but for 2D textures.
     /// </summary>
     /// <remarks>
-    /// Matching PyKotor implementation concept at Tools/HolocronToolset/src/toolset/gui/widgets/renderer/texture_browser.py
     /// This widget provides a visual browser for imported textures in the LYT editor.
     /// </remarks>
     public class TextureBrowser : UserControl
@@ -122,7 +121,7 @@ namespace OdyTools.Widgets
                         Margin = new Thickness(4)
                     };
 
-                    // Texture icon (placeholder - could be enhanced with actual texture preview)
+                    // Texture list item: icon indicates TPC/resource type; full preview in main view when selected
                     var iconBorder = new Border
                     {
                         Width = 48,
@@ -338,7 +337,6 @@ namespace OdyTools.Widgets
 
         /// <summary>
         /// Handles texture double-tap (opens texture preview dialog).
-        /// Matching PyKotor concept: double-click to preview texture.
         /// </summary>
         private void OnTextureDoubleTapped(object sender, TappedEventArgs e)
         {

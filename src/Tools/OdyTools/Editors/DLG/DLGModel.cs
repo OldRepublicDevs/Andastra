@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using BioWare.Common;
 using BioWare.Resource.Formats.GFF.Generics.DLG;
 
@@ -13,22 +14,17 @@ namespace OdyTools.Editors.DLG
         private List<DLGStandardItem> _rootItems = new List<DLGStandardItem>();
         private OdyToolDLG _editor;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:293-294
-        // Original: self.link_to_items: weakref.WeakKeyDictionary[DLGLink, list[DLGStandardItem]] = weakref.WeakKeyDictionary()
-        // Original: self.node_to_items: weakref.WeakKeyDictionary[DLGNode, list[DLGStandardItem]] = weakref.WeakKeyDictionary()
         // Note: C# doesn't have WeakKeyDictionary, so we use ConditionalWeakTable which provides similar functionality
         private Dictionary<DLGLink, List<DLGStandardItem>> _linkToItems = new Dictionary<DLGLink, List<DLGStandardItem>>();
         private Dictionary<DLGNode, List<DLGStandardItem>> _nodeToItems = new Dictionary<DLGNode, List<DLGStandardItem>>();
 
         /// <summary>
         /// Gets the dictionary mapping links to their items.
-        /// Matching PyKotor implementation: self.link_to_items
         /// </summary>
         public Dictionary<DLGLink, List<DLGStandardItem>> LinkToItems => _linkToItems;
 
         /// <summary>
         /// Gets the dictionary mapping nodes to their items.
-        /// Matching PyKotor implementation: self.node_to_items
         /// </summary>
         public Dictionary<DLGNode, List<DLGStandardItem>> NodeToItems => _nodeToItems;
 
@@ -66,7 +62,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Clears the model (alias for ResetModel for Python compatibility).
-        /// Matching PyKotor implementation: def clear(self):
         /// </summary>
         public void Clear()
         {
@@ -79,6 +74,7 @@ namespace OdyTools.Editors.DLG
             {
                 return;
             }
+            RegisterNodeInFlatLists(link.Node);
             var item = new DLGStandardItem(link);
             _rootItems.Add(item);
 
@@ -94,13 +90,14 @@ namespace OdyTools.Editors.DLG
 
             if (link.Node != null)
             {
-                if (!_nodeToItems.ContainsKey(link.Node))
+                if (!_nodeToItems.TryGetValue(link.Node, out List<DLGStandardItem> value))
                 {
-                    _nodeToItems[link.Node] = new List<DLGStandardItem>();
+                    value = new List<DLGStandardItem>();
+                    _nodeToItems[link.Node] = value;
                 }
-                if (!_nodeToItems[link.Node].Contains(item))
+                if (!value.Contains(item))
                 {
-                    _nodeToItems[link.Node].Add(item);
+                    value.Add(item);
                 }
             }
 
@@ -110,21 +107,106 @@ namespace OdyTools.Editors.DLG
                 if (!_editor.CoreDlg.Starters.Contains(link))
                 {
                     _editor.CoreDlg.Starters.Add(link);
+                    TouchCoreDlg();
                 }
             }
         }
 
         /// <summary>
+        /// Inserts a link as a child of the given parent at the specified row.
+        /// Used when restoring an orphaned node to a specific position in the tree.
+        /// </summary>
+        /// <param name="parent">Parent item, or null to insert at root.</param>
+        /// <param name="link">The link to insert (will be added to Starters or parent's Links).</param>
+        /// <param name="row">Index at which to insert (0-based).</param>
+        /// <returns>The new DLGStandardItem wrapping the link.</returns>
+        public DLGStandardItem InsertLinkToParentAsItem(DLGStandardItem parent, DLGLink link, int row)
+        {
+            if (link == null)
+            {
+                throw new ArgumentNullException(nameof(link));
+            }
+            RegisterNodeInFlatLists(link.Node);
+
+            var newItem = new DLGStandardItem(link);
+
+            if (parent == null)
+            {
+                int insertRow = row < 0 || row > _rootItems.Count ? _rootItems.Count : row;
+                _rootItems.Insert(insertRow, newItem);
+                if (_editor != null && _editor.CoreDlg != null)
+                {
+                    if (insertRow >= _editor.CoreDlg.Starters.Count)
+                    {
+                        _editor.CoreDlg.Starters.Add(link);
+                    }
+                    else
+                    {
+                        _editor.CoreDlg.Starters.Insert(insertRow, link);
+                    }
+                    TouchCoreDlg();
+                }
+            }
+            else
+            {
+                if (parent.Link?.Node == null)
+                {
+                    throw new InvalidOperationException("Parent item must have a valid link with node.");
+                }
+                int insertRow = row < 0 || row > parent.RowCount ? parent.RowCount : row;
+                if (insertRow >= parent.Link.Node.Links.Count)
+                {
+                    parent.Link.Node.Links.Add(link);
+                }
+                else
+                {
+                    parent.Link.Node.Links.Insert(insertRow, link);
+                }
+                TouchCoreDlg();
+                parent.InsertChild(insertRow, newItem);
+            }
+
+            if (!_linkToItems.ContainsKey(link))
+            {
+                _linkToItems[link] = new List<DLGStandardItem>();
+            }
+            if (!_linkToItems[link].Contains(newItem))
+            {
+                _linkToItems[link].Add(newItem);
+            }
+            if (link.Node != null)
+            {
+                if (!_nodeToItems.ContainsKey(link.Node))
+                {
+                    _nodeToItems[link.Node] = new List<DLGStandardItem>();
+                }
+                if (!_nodeToItems[link.Node].Contains(newItem))
+                {
+                    _nodeToItems[link.Node].Add(newItem);
+                }
+            }
+
+            UpdateItemDisplayText(newItem);
+            if (parent != null)
+            {
+                UpdateItemDisplayText(parent);
+            }
+            if (_editor != null)
+            {
+                _editor.UpdateTreeView();
+            }
+            return newItem;
+        }
+
+        /// <summary>
         /// Adds a root node to the dialog graph.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:846-856
-        /// Original: def add_root_node(self):
         /// </summary>
         public DLGStandardItem AddRootNode()
         {
             var newEntry = new DLGEntry();
             newEntry.PlotIndex = -1;
             var newLink = new DLGLink(newEntry);
-            newLink.Node.ListIndex = GetNewNodeListIndex(newLink.Node);
+            RegisterNodeInFlatLists(newLink.Node);
 
             var newItem = new DLGStandardItem(newLink);
             _rootItems.Add(newItem);
@@ -133,6 +215,7 @@ namespace OdyTools.Editors.DLG
             if (_editor != null && _editor.CoreDlg != null)
             {
                 _editor.CoreDlg.Starters.Add(newLink);
+                TouchCoreDlg();
             }
 
             UpdateItemDisplayText(newItem);
@@ -148,8 +231,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Adds a child node to the specified parent item.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:858-877
-        /// Original: def add_child_to_item(self, parent_item: DLGStandardItem, link: DLGLink | None = None) -> DLGStandardItem:
         /// </summary>
         public DLGStandardItem AddChildToItem(DLGStandardItem parentItem, DLGLink link = null)
         {
@@ -176,15 +257,17 @@ namespace OdyTools.Editors.DLG
                     newNode = new DLGReply();
                 }
                 newNode.PlotIndex = -1;
-                newNode.ListIndex = GetNewNodeListIndex(newNode);
+                RegisterNodeInFlatLists(newNode);
                 link = new DLGLink(newNode);
             }
+            RegisterNodeInFlatLists(link.Node);
 
             // Link the nodes
             if (parentItem.Link.Node != null)
             {
                 link.ListIndex = parentItem.Link.Node.Links.Count;
                 parentItem.Link.Node.Links.Add(link);
+                TouchCoreDlg();
             }
 
             var newItem = new DLGStandardItem(link);
@@ -220,7 +303,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Gets the item at the specified row and column.
-        /// Matching PyKotor implementation: def item(self, row: int, column: int = 0) -> DLGStandardItem | None:
         /// </summary>
         public DLGStandardItem Item(int row, int column = 0)
         {
@@ -229,6 +311,36 @@ namespace OdyTools.Editors.DLG
                 return null;
             }
             return _rootItems[row];
+        }
+
+        private void RegisterNodeInFlatLists(DLGNode node)
+        {
+            if (node == null || _editor?.CoreDlg == null)
+            {
+                return;
+            }
+
+            if (node is DLGEntry entry)
+            {
+                if (!_editor.CoreDlg.EntryList.Contains(entry))
+                {
+                    entry.ListIndex = _editor.CoreDlg.EntryList.Count;
+                    _editor.CoreDlg.EntryList.Add(entry);
+                }
+            }
+            else if (node is DLGReply reply)
+            {
+                if (!_editor.CoreDlg.ReplyList.Contains(reply))
+                {
+                    reply.ListIndex = _editor.CoreDlg.ReplyList.Count;
+                    _editor.CoreDlg.ReplyList.Add(reply);
+                }
+            }
+        }
+
+        private void TouchCoreDlg()
+        {
+            _editor?.CoreDlg?.Touch();
         }
 
         /// <summary>
@@ -243,35 +355,17 @@ namespace OdyTools.Editors.DLG
 
             if (node is DLGEntry)
             {
-                int maxIndex = -1;
-                foreach (var entry in _editor.CoreDlg.AllEntries())
-                {
-                    if (entry.ListIndex > maxIndex)
-                    {
-                        maxIndex = entry.ListIndex;
-                    }
-                }
-                return maxIndex + 1;
+                return _editor.CoreDlg.EntryList.Count;
             }
             else if (node is DLGReply)
             {
-                int maxIndex = -1;
-                foreach (var reply in _editor.CoreDlg.AllReplies())
-                {
-                    if (reply.ListIndex > maxIndex)
-                    {
-                        maxIndex = reply.ListIndex;
-                    }
-                }
-                return maxIndex + 1;
+                return _editor.CoreDlg.ReplyList.Count;
             }
             return 0;
         }
 
         /// <summary>
         /// Counts the number of references to a node in the UI tree model.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1065-1070
-        /// Original: def count_item_refs(self, link: DLGLink) -> int:
         /// </summary>
         /// <param name="link">The link to count references for.</param>
         /// <returns>The number of references to the node.</returns>
@@ -292,8 +386,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Checks if an item is a copy (has multiple items referencing the same node).
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1214-1220
-        /// Original: def is_copy(self, item: DLGStandardItem) -> bool:
         /// </summary>
         /// <param name="item">The item to check.</param>
         /// <returns>True if the item is a copy (multiple items reference the same node), false otherwise.</returns>
@@ -315,8 +407,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Updates the display text for an item.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1072-1212
-        /// Original: def update_item_display_text(self, item: DLGStandardItem, *, update_copies: bool = True)
         /// </summary>
         /// <param name="item">The DLGStandardItem to update.</param>
         /// <param name="updateCopies">If true, also updates all copies of this item.</param>
@@ -335,7 +425,6 @@ namespace OdyTools.Editors.DLG
             }
 
             // Determine color and prefix based on node type and whether it's a copy
-            // Matching PyKotor: color: QColor = QColor("#646464"), prefix: Literal["E", "R", "N"] = "N"
             string color = "#646464";
             string prefix = "N";
             string extraNodeInfo = "";
@@ -354,7 +443,6 @@ namespace OdyTools.Editors.DLG
             }
 
             // Get text from node
-            // Matching PyKotor: text: str = str(item.link.node.text) if self.editor._installation is None else self.editor._installation.string(item.link.node.text, "")
             string text;
             if (_editor.Installation == null)
             {
@@ -366,7 +454,6 @@ namespace OdyTools.Editors.DLG
             }
 
             // Format display text based on node state
-            // Matching PyKotor: if not item.link.node.links: display_text = f"{text} <span style='color:{end_dialog_color};'><b>[End Dialog]</b></span>"
             string displayText;
             string tooltipText = null;
             if (node.Links == null || node.Links.Count == 0)
@@ -376,7 +463,6 @@ namespace OdyTools.Editors.DLG
             }
             else if (string.IsNullOrEmpty(text) || string.IsNullOrWhiteSpace(text))
             {
-                // Matching PyKotor: if item.link.node.text.stringref == -1: display_text = "(continue)"
                 if (node.Text?.StringRef == -1)
                 {
                     displayText = "(continue)";
@@ -400,25 +486,21 @@ namespace OdyTools.Editors.DLG
             }
 
             // Build list prefix with node index
-            // Matching PyKotor: list_prefix: str = f"<b>{prefix}{item.link.node.list_index}:</b> "
             string listPrefix = $"<b>{prefix}{node.ListIndex}:</b> ";
 
             // Get text size (default to 9pt if not available)
-            // Matching PyKotor: font-size:{self.tree_view.get_text_size()}pt
             int textSize = 9; // Default text size
 
             // Build formatted display text with HTML
-            // Matching PyKotor: item.setData(f'<span style="color:{color.name()}; font-size:{self.tree_view.get_text_size()}pt;">{list_prefix}{display_text}</span>', Qt.ItemDataRole.DisplayRole)
             string formattedText = $"<span style=\"color:{color}; font-size:{textSize}pt;\">{listPrefix}{displayText}</span>";
 
             // Update the tree view item's header if editor is available
             if (_editor != null)
             {
-                _editor.UpdateTreeViewItemHeader(item, formattedText, tooltipText);
+                _editor.UpdateItemPresentation(item, formattedText, tooltipText);
             }
 
             // Check for various properties to determine icons (matching Python implementation)
-            // Matching PyKotor: has_conditional, has_script, has_animation, has_sound, has_voice, is_plot_or_quest_related
             bool hasConditional = (link.Active1 != null && !link.Active1.IsBlank()) || (link.Active2 != null && !link.Active2.IsBlank());
             bool hasScript = (node.Script1 != null && !node.Script1.IsBlank()) || (node.Script2 != null && !node.Script2.IsBlank());
             bool hasAnimation = (node.CameraAnim.HasValue && node.CameraAnim.Value != -1) || (node.Animations != null && node.Animations.Count > 0);
@@ -426,13 +508,10 @@ namespace OdyTools.Editors.DLG
             bool hasVoice = node.VoResRef != null && !node.VoResRef.IsBlank();
             bool isPlotOrQuestRelated = node.PlotIndex != -1 || (node.QuestEntry.HasValue && node.QuestEntry.Value != 0) || !string.IsNullOrEmpty(node.Quest);
 
-            // Note: Icon display is handled by the tree view implementation
-            // In Python, icons are set via item.setData(icon_data, ICONS_DATA_ROLE)
-            // In Avalonia, we would need to implement custom TreeViewItem templates to show icons
-            // For now, we focus on updating the text display
+            // Icon display would require custom TreeViewItem templates (Python used item.setData(icon_data, ICONS_DATA_ROLE)).
+            // This method updates the item text display; when updateCopies is true, all copies of this node are updated.
 
             // Update copies if requested
-            // Matching PyKotor: if not update_copies: return, items: list[DLGStandardItem] = self.node_to_items[item.link.node]
             if (updateCopies && _nodeToItems.TryGetValue(node, out List<DLGStandardItem> items))
             {
                 foreach (var copiedItem in items)
@@ -479,8 +558,6 @@ namespace OdyTools.Editors.DLG
             return _rootItems[index].Link;
         }
 
-        // Matching PyKotor implementation
-        // Original: def remove_starter(self, link: DLGLink): ...
         /// <summary>
         /// Removes a starter link from the model.
         /// </summary>
@@ -496,8 +573,6 @@ namespace OdyTools.Editors.DLG
             }
         }
 
-        // Matching PyKotor implementation
-        // Original: def move_starter(self, old_index: int, new_index: int): ...
         /// <summary>
         /// Moves a starter link from one index to another.
         /// </summary>
@@ -536,6 +611,7 @@ namespace OdyTools.Editors.DLG
             {
                 _editor.CoreDlg.Starters.RemoveAt(selectedIndex);
                 _editor.CoreDlg.Starters.Insert(newIndex, link);
+                TouchCoreDlg();
             }
 
             // Move in model
@@ -570,6 +646,7 @@ namespace OdyTools.Editors.DLG
             {
                 _editor.CoreDlg.Starters.RemoveAt(selectedIndex);
                 _editor.CoreDlg.Starters.Insert(newIndex, link);
+                TouchCoreDlg();
             }
 
             // Move in model
@@ -591,11 +668,141 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Recursively loads a dialog item and all its children into the model.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:752-807
-        /// Original: def load_dlg_item_rec(self, item_to_load: DLGStandardItem, copied_link: DLGLink | None = None):
+        /// Detects cycles in the DLG graph to avoid stack overflow (e.g. Entry A -> Reply B -> Entry A).
         /// </summary>
         /// <param name="itemToLoad">The item to load recursively.</param>
         public void LoadDlgItemRec(DLGStandardItem itemToLoad)
+        {
+            LoadDlgItemRec(itemToLoad, new HashSet<DLGNode>());
+        }
+
+        private void RegisterItemMappings(DLGStandardItem itemToLoad)
+        {
+            if (itemToLoad == null || itemToLoad.Link == null)
+            {
+                return;
+            }
+            var link = itemToLoad.Link;
+            var node = link.Node;
+
+            if (!_linkToItems.ContainsKey(link))
+            {
+                _linkToItems[link] = new List<DLGStandardItem>();
+            }
+            if (!_linkToItems[link].Contains(itemToLoad))
+            {
+                _linkToItems[link].Add(itemToLoad);
+            }
+
+            if (node != null)
+            {
+                if (!_nodeToItems.ContainsKey(node))
+                {
+                    _nodeToItems[node] = new List<DLGStandardItem>();
+                }
+                if (!_nodeToItems[node].Contains(itemToLoad))
+                {
+                    _nodeToItems[node].Add(itemToLoad);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Lazily materializes and returns an item for a link by walking paths from roots.
+        /// Does not pre-build the full tree.
+        /// </summary>
+        public DLGStandardItem MaterializeItemForLink(DLGLink target)
+        {
+            if (target == null)
+            {
+                return null;
+            }
+            if (_linkToItems.TryGetValue(target, out var existingList) && existingList != null && existingList.Count > 0)
+            {
+                return existingList[0];
+            }
+
+            foreach (var root in _rootItems)
+            {
+                if (root?.Link == target)
+                {
+                    RegisterItemMappings(root);
+                    return root;
+                }
+
+                var found = MaterializeRecursive(root, target, new HashSet<DLGNode>());
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+
+            return null;
+        }
+
+        private DLGStandardItem MaterializeRecursive(DLGStandardItem parentItem, DLGLink target, HashSet<DLGNode> visited)
+        {
+            if (parentItem?.Link?.Node == null)
+            {
+                return null;
+            }
+            var node = parentItem.Link.Node;
+            if (visited.Contains(node))
+            {
+                return null;
+            }
+            visited.Add(node);
+
+            var childLinks = node.Links;
+            if (childLinks != null)
+            {
+                foreach (var childLink in childLinks)
+                {
+                    if (childLink == null)
+                    {
+                        continue;
+                    }
+
+                    DLGStandardItem childItem = null;
+                    foreach (var existingChild in parentItem.Children)
+                    {
+                        if (ReferenceEquals(existingChild?.Link, childLink))
+                        {
+                            childItem = existingChild;
+                            break;
+                        }
+                    }
+
+                    if (childItem == null)
+                    {
+                        childItem = new DLGStandardItem(childLink);
+                        parentItem.AddChild(childItem);
+                    }
+                    RegisterItemMappings(childItem);
+
+                    if (ReferenceEquals(childLink, target))
+                    {
+                        return childItem;
+                    }
+
+                    var found = MaterializeRecursive(childItem, target, visited);
+                    if (found != null)
+                    {
+                        return found;
+                    }
+                }
+            }
+
+            visited.Remove(node);
+            return null;
+        }
+
+        /// <summary>
+        /// Recursively loads a dialog item and all its children into the model.
+        /// </summary>
+        /// <param name="itemToLoad">The item to load recursively.</param>
+        /// <param name="visitedInPath">Nodes already visited in the current path (for cycle detection).</param>
+        private void LoadDlgItemRec(DLGStandardItem itemToLoad, HashSet<DLGNode> visitedInPath)
         {
             if (itemToLoad == null || itemToLoad.Link == null)
             {
@@ -610,45 +817,42 @@ namespace OdyTools.Editors.DLG
                 return;
             }
 
-            // Register this item in the dictionaries
-            if (!_linkToItems.ContainsKey(link))
-            {
-                _linkToItems[link] = new List<DLGStandardItem>();
-            }
-            if (!_linkToItems[link].Contains(itemToLoad))
-            {
-                _linkToItems[link].Add(itemToLoad);
-            }
-
-            if (!_nodeToItems.ContainsKey(node))
-            {
-                _nodeToItems[node] = new List<DLGStandardItem>();
-            }
-            if (!_nodeToItems[node].Contains(itemToLoad))
-            {
-                _nodeToItems[node].Add(itemToLoad);
-            }
+            RegisterItemMappings(itemToLoad);
 
             // Recursively load all child links
             foreach (var childLink in node.Links)
             {
-                if (childLink == null)
+                if (childLink == null || childLink.Node == null)
                 {
                     continue;
                 }
 
+                var childNode = childLink.Node;
+
+                // Cycle detection: if we've already visited this node in the current path, add the item
+                // (so the tree shows the reference) but do not recurse - avoids stack overflow
+                bool isCycle = visitedInPath.Contains(childNode);
+
                 var childItem = new DLGStandardItem(childLink);
                 itemToLoad.AddChild(childItem);
 
-                // Recursively load children of this child
-                LoadDlgItemRec(childItem);
+                if (!isCycle)
+                {
+                    visitedInPath.Add(childNode);
+                    try
+                    {
+                        LoadDlgItemRec(childItem, visitedInPath);
+                    }
+                    finally
+                    {
+                        visitedInPath.Remove(childNode);
+                    }
+                }
             }
         }
 
         /// <summary>
         /// Shifts an item in the tree by a given amount.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1248-1285
-        /// Original: def shift_item(self, item: DLGStandardItem, amount: int, *, no_selection_update: bool = False):
         /// </summary>
         /// <param name="item">The item to shift.</param>
         /// <param name="amount">The amount to shift (positive = down, negative = up).</param>
@@ -704,9 +908,106 @@ namespace OdyTools.Editors.DLG
         }
 
         /// <summary>
+        /// Moves an item to a specific index within the model.
+        /// Vendor: move_item_to_index.
+        /// </summary>
+        /// <param name="item">The item to move.</param>
+        /// <param name="newIndex">The target index.</param>
+        /// <param name="targetParent">The target parent (null for root).</param>
+        public void MoveItemToIndex(DLGStandardItem item, int newIndex, DLGStandardItem targetParent)
+        {
+            if (item == null || _editor == null || _editor.CoreDlg == null)
+            {
+                return;
+            }
+
+            var sourceParent = item.Parent;
+            int oldRow = sourceParent == null ? _rootItems.IndexOf(item) : sourceParent.Children.ToList().IndexOf(item);
+            if (oldRow < 0)
+            {
+                return;
+            }
+
+            if (targetParent == sourceParent && newIndex == oldRow)
+            {
+                return;
+            }
+
+            if (newIndex < 0 || newIndex > (targetParent == null ? _rootItems.Count : targetParent.Children.Count))
+            {
+                return;
+            }
+
+            // Adjust newIndex when moving within same parent (removing shifts indices)
+            int adjustedNewIndex = newIndex;
+            if (sourceParent == targetParent && newIndex > oldRow)
+            {
+                adjustedNewIndex = newIndex - 1;
+            }
+
+            DLGLink linkToMove = item.Link;
+            if (linkToMove == null)
+            {
+                return;
+            }
+
+            // Remove from source
+            if (sourceParent == null)
+            {
+                _rootItems.RemoveAt(oldRow);
+                if (_editor.CoreDlg.Starters != null && oldRow < _editor.CoreDlg.Starters.Count)
+                {
+                    _editor.CoreDlg.Starters.RemoveAt(oldRow);
+                    TouchCoreDlg();
+                }
+            }
+            else
+            {
+                sourceParent.RemoveChild(item);
+                sourceParent.Link?.Node?.Links?.RemoveAt(oldRow);
+            }
+
+            // Insert at target
+            if (targetParent == null)
+            {
+                _rootItems.Insert(adjustedNewIndex, item);
+                if (_editor.CoreDlg.Starters != null && !_editor.CoreDlg.Starters.Contains(linkToMove))
+                {
+                    if (adjustedNewIndex <= _editor.CoreDlg.Starters.Count)
+                    {
+                        _editor.CoreDlg.Starters.Insert(adjustedNewIndex, linkToMove);
+                    }
+                    else
+                    {
+                        _editor.CoreDlg.Starters.Add(linkToMove);
+                    }
+                    TouchCoreDlg();
+                }
+            }
+            else
+            {
+                targetParent.InsertChild(adjustedNewIndex, item);
+                var linksList = targetParent.Link?.Node?.Links;
+                if (linksList != null)
+                {
+                    int insertIdx = Math.Min(adjustedNewIndex, linksList.Count);
+                    linksList.Insert(insertIdx, linkToMove);
+                    TouchCoreDlg();
+                    for (int i = 0; i < linksList.Count; i++)
+                    {
+                        if (linksList[i] != null)
+                        {
+                            linksList[i].ListIndex = i;
+                        }
+                    }
+                }
+            }
+
+            _editor.UpdateTreeView();
+        }
+
+        /// <summary>
         /// Copies a link and node to the clipboard as JSON.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:890-898
-        /// Original: def copy_link_and_node(self, link: DLGLink | None):
         /// Note: In Python, this only sets clipboard. The editor's _copy is set separately.
         /// In C#, we set both clipboard and editor._copy for convenience.
         /// </summary>
@@ -721,14 +1022,15 @@ namespace OdyTools.Editors.DLG
 
             try
             {
-                // Matching PyKotor implementation: q_app_clipboard.setText(json.dumps(link.to_dict()))
                 Dictionary<string, object> nodeMap = new Dictionary<string, object>();
                 Dictionary<string, object> linkDict = link.ToDict(nodeMap);
 
                 // Serialize to JSON
                 string json = JsonSerializer.Serialize(linkDict, new JsonSerializerOptions
                 {
-                    WriteIndented = false
+                    WriteIndented = false,
+                    ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                    MaxDepth = 256
                 });
 
                 // Set clipboard text
@@ -744,14 +1046,11 @@ namespace OdyTools.Editors.DLG
             }
             catch
             {
-                // Matching PyKotor: Silently handle clipboard errors
             }
         }
 
         /// <summary>
         /// Pastes a link as a child of the specified parent item.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:900-975
-        /// Original: def paste_item(self, parent_item: DLGStandardItem | Self | None, pasted_link: DLGLink | None = None, *, row: int | None = None, as_new_branches: bool = True):
         /// </summary>
         /// <param name="parentItem">The parent item to paste under, or null for root.</param>
         /// <param name="pastedLink">The link to paste.</param>
@@ -775,7 +1074,6 @@ namespace OdyTools.Editors.DLG
             }
 
             // Set is_child property based on whether parentItem is a DLGStandardItem or null
-            // Matching PyKotor: pasted_link.is_child = not isinstance(parent_item, DLGStandardItem)
             linkToPaste.IsChild = (parentItem != null);
 
             // Note: When as_new_branches is True, we create a deep copy via ToDict/FromDict,
@@ -784,7 +1082,6 @@ namespace OdyTools.Editors.DLG
             // and set in the constructor, so new objects created via FromDict already have unique hashes.
 
             // Ensure the link is not already in link_to_items
-            // Matching PyKotor: assert pasted_link not in self.link_to_items
             if (_linkToItems.ContainsKey(linkToPaste))
             {
                 // Link already exists, this shouldn't happen with a new hash, but handle it gracefully
@@ -793,7 +1090,7 @@ namespace OdyTools.Editors.DLG
 
             // Get all existing entry and reply indices
             HashSet<int> entryIndices = new HashSet<int>();
-            foreach (var entry in _editor.CoreDlg.AllEntries())
+            foreach (var entry in _editor.CoreDlg.EntryList)
             {
                 if (entry.ListIndex >= 0)
                 {
@@ -802,7 +1099,7 @@ namespace OdyTools.Editors.DLG
             }
 
             HashSet<int> replyIndices = new HashSet<int>();
-            foreach (var reply in _editor.CoreDlg.AllReplies())
+            foreach (var reply in _editor.CoreDlg.ReplyList)
             {
                 if (reply.ListIndex >= 0)
                 {
@@ -811,7 +1108,6 @@ namespace OdyTools.Editors.DLG
             }
 
             // Traverse all nodes in the pasted link tree and assign new list indices
-            // Matching PyKotor: queue = deque([pasted_link.node]), visited = set()
             Queue<DLGNode> queue = new Queue<DLGNode>();
             HashSet<DLGNode> visited = new HashSet<DLGNode>();
 
@@ -830,7 +1126,6 @@ namespace OdyTools.Editors.DLG
                 visited.Add(curNode);
 
                 // Assign new list index if as_new_branches or node doesn't exist in node_to_items
-                // Matching PyKotor: if as_new_branches or cur_node not in self.node_to_items:
                 if (asNewBranches || !_nodeToItems.ContainsKey(curNode))
                 {
                     int newIndex = GetNewNodeListIndex(curNode, entryIndices, replyIndices);
@@ -840,10 +1135,18 @@ namespace OdyTools.Editors.DLG
                     if (curNode is DLGEntry)
                     {
                         entryIndices.Add(newIndex);
+                        if (!_editor.CoreDlg.EntryList.Contains((DLGEntry)curNode))
+                        {
+                            _editor.CoreDlg.EntryList.Add((DLGEntry)curNode);
+                        }
                     }
                     else if (curNode is DLGReply)
                     {
                         replyIndices.Add(newIndex);
+                        if (!_editor.CoreDlg.ReplyList.Contains((DLGReply)curNode))
+                        {
+                            _editor.CoreDlg.ReplyList.Add((DLGReply)curNode);
+                        }
                     }
                 }
 
@@ -866,7 +1169,6 @@ namespace OdyTools.Editors.DLG
             }
 
             // If as_new_branches, also assign new list index to the root node of the pasted link
-            // Matching PyKotor: if as_new_branches: new_index = self._get_new_node_list_index(pasted_link.node, all_entries, all_replies), pasted_link.node.list_index = new_index
             if (asNewBranches && linkToPaste.Node != null)
             {
                 int newIndex = GetNewNodeListIndex(linkToPaste.Node, entryIndices, replyIndices);
@@ -909,6 +1211,7 @@ namespace OdyTools.Editors.DLG
                     {
                         _editor.CoreDlg.Starters.Add(linkToPaste);
                     }
+                    TouchCoreDlg();
                 }
             }
             else
@@ -919,16 +1222,13 @@ namespace OdyTools.Editors.DLG
                     : parentItem.Children.Count;
 
                 // Insert child at the specified index
-                // Matching PyKotor implementation: parent_item.insertRow(row, new_item)
                 parentItem.InsertChild(insertIndex, newItem);
 
                 // Add link to parent node's Links collection at the correct position
-                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:650-683
-                // Original: links_list.insert(item_row, item.link) and update list_index for all links
                 if (parentItem.Link?.Node != null)
                 {
                     var linksList = parentItem.Link.Node.Links;
-                    
+
                     // Check if link already exists in the list (shouldn't happen for new pasted links, but handle it)
                     int existingIndex = linksList.IndexOf(linkToPaste);
                     if (existingIndex >= 0)
@@ -943,7 +1243,7 @@ namespace OdyTools.Editors.DLG
                             }
                         }
                     }
-                    
+
                     // Insert link at the correct position
                     if (insertIndex >= 0 && insertIndex <= linksList.Count)
                     {
@@ -953,9 +1253,9 @@ namespace OdyTools.Editors.DLG
                     {
                         linksList.Add(linkToPaste);
                     }
-                    
+                    TouchCoreDlg();
+
                     // Update list_index for all links to maintain order
-                    // Matching PyKotor implementation: for i, link in enumerate(links_list): link.list_index = i
                     for (int i = 0; i < linksList.Count; i++)
                     {
                         if (linksList[i] != null)
@@ -988,11 +1288,10 @@ namespace OdyTools.Editors.DLG
                 }
             }
 
-            // Recursively load the item
-            LoadDlgItemRec(newItem);
+            // Register only this item; children are materialized lazily on access.
+            RegisterItemMappings(newItem);
 
             // Update parent item display text if parent is a DLGStandardItem
-            // Matching PyKotor: if isinstance(parent_item, DLGStandardItem): self.update_item_display_text(parent_item)
             if (parentItem != null)
             {
                 UpdateItemDisplayText(parentItem);
@@ -1007,8 +1306,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Gets a new unique list index for a node.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:977-996
-        /// Original: def _get_new_node_list_index(self, node: DLGNode, entry_indices: set[int] | None = None, reply_indices: set[int] | None = None) -> int:
         /// </summary>
         /// <param name="node">The node to get a new index for.</param>
         /// <param name="entryIndices">Optional set of existing entry indices.</param>
@@ -1027,7 +1324,7 @@ namespace OdyTools.Editors.DLG
                 if (entryIndices == null)
                 {
                     indices = new HashSet<int>();
-                    foreach (var entry in _editor.CoreDlg.AllEntries())
+                    foreach (var entry in _editor.CoreDlg.EntryList)
                     {
                         if (entry.ListIndex >= 0)
                         {
@@ -1045,7 +1342,7 @@ namespace OdyTools.Editors.DLG
                 if (replyIndices == null)
                 {
                     indices = new HashSet<int>();
-                    foreach (var reply in _editor.CoreDlg.AllReplies())
+                    foreach (var reply in _editor.CoreDlg.ReplyList)
                     {
                         if (reply.ListIndex >= 0)
                         {
@@ -1063,7 +1360,6 @@ namespace OdyTools.Editors.DLG
                 throw new ArgumentException($"Unknown node type: {node.GetType().Name}");
             }
 
-            // Matching PyKotor: new_index = max(indices, default=-1) + 1, while new_index in indices: new_index += 1
             int newIndex = (indices.Count > 0 ? indices.Max() : -1) + 1;
             while (indices.Contains(newIndex))
             {
@@ -1075,8 +1371,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Removes all occurrences of a node and all links to it from the model and CoreDlg.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1017-1049
-        /// Original: def delete_node_everywhere(self, node: DLGNode):
         /// </summary>
         /// <param name="nodeToRemove">The node to remove everywhere.</param>
         public void DeleteNodeEverywhere(DLGNode nodeToRemove)
@@ -1102,8 +1396,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Recursively removes links to a node from the model tree.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1025-1046
-        /// Original: def remove_links_recursive(node_to_remove: DLGNode, parent_item: DLGStandardItem | DLGStandardItemModel):
         /// </summary>
         /// <param name="nodeToRemove">The node to remove.</param>
         /// <param name="parentItem">The parent item to search in, or null to search root items.</param>
@@ -1152,6 +1444,7 @@ namespace OdyTools.Editors.DLG
                     if (parentItem != null && parentItem.Link != null && parentItem.Link.Node != null)
                     {
                         parentItem.Link.Node.Links.Remove(childLink);
+                        TouchCoreDlg();
                     }
 
                     // Remove the item from the model
@@ -1192,11 +1485,12 @@ namespace OdyTools.Editors.DLG
                 if (_editor.CoreDlg.Starters[i]?.Node == nodeToRemove)
                 {
                     _editor.CoreDlg.Starters.RemoveAt(i);
+                    TouchCoreDlg();
                 }
             }
 
             // Remove links from all entries
-            foreach (var entry in _editor.CoreDlg.AllEntries())
+            foreach (var entry in _editor.CoreDlg.EntryList)
             {
                 if (entry != null && entry.Links != null)
                 {
@@ -1205,13 +1499,14 @@ namespace OdyTools.Editors.DLG
                         if (entry.Links[i]?.Node == nodeToRemove)
                         {
                             entry.Links.RemoveAt(i);
+                            TouchCoreDlg();
                         }
                     }
                 }
             }
 
             // Remove links from all replies
-            foreach (var reply in _editor.CoreDlg.AllReplies())
+            foreach (var reply in _editor.CoreDlg.ReplyList)
             {
                 if (reply != null && reply.Links != null)
                 {
@@ -1220,6 +1515,7 @@ namespace OdyTools.Editors.DLG
                         if (reply.Links[i]?.Node == nodeToRemove)
                         {
                             reply.Links.RemoveAt(i);
+                            TouchCoreDlg();
                         }
                     }
                 }
@@ -1228,8 +1524,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Deletes a node from the DLG and UI tree model.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1051-1063
-        /// Original: def delete_node(self, item: DLGStandardItem):
         /// </summary>
         /// <param name="item">The DLGStandardItem to delete.</param>
         public void DeleteNode(DLGStandardItem item)
@@ -1254,6 +1548,7 @@ namespace OdyTools.Editors.DLG
                     if (_editor != null && _editor.CoreDlg != null && link != null)
                     {
                         _editor.CoreDlg.Starters.Remove(link);
+                        TouchCoreDlg();
                     }
 
                     // Clean up dictionaries
@@ -1288,6 +1583,7 @@ namespace OdyTools.Editors.DLG
                 if (parentItem.Link != null && parentItem.Link.Node != null && link != null)
                 {
                     parentItem.Link.Node.Links.Remove(link);
+                    TouchCoreDlg();
                 }
 
                 // Clean up dictionaries
@@ -1323,12 +1619,9 @@ namespace OdyTools.Editors.DLG
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:483-509
-        // Original: def mimeData(self, indexes: Iterable[QModelIndex]) -> QMimeData:
         /// <summary>
         /// Serializes items to MIME data format for drag-and-drop operations.
         /// Creates a JSON-based format compatible with Avalonia drag-and-drop.
-        /// Matching PyKotor: The method receives items and serializes them with row/column/roles.
         /// </summary>
         /// <param name="items">The items to serialize. Items should be in the order they appear in the model.</param>
         /// <returns>A JSON string containing the serialized MIME data.</returns>
@@ -1339,7 +1632,6 @@ namespace OdyTools.Editors.DLG
                 throw new ArgumentNullException(nameof(items));
             }
 
-            // Matching PyKotor: Create a list of item data entries
             // Each entry contains: row, column, num_roles, and role/value pairs
             var itemDataList = new List<Dictionary<string, object>>();
             int itemIndex = 0;
@@ -1380,7 +1672,9 @@ namespace OdyTools.Editors.DLG
                 // Role 261 = _DLG_MIME_DATA_ROLE (Qt.ItemDataRole.UserRole + 5 = 256 + 5)
                 string linkJson = JsonSerializer.Serialize(linkDict, new JsonSerializerOptions
                 {
-                    WriteIndented = false
+                    WriteIndented = false,
+                    ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                    MaxDepth = 256
                 });
                 roles["261"] = linkJson;
 
@@ -1396,15 +1690,16 @@ namespace OdyTools.Editors.DLG
             // Serialize to JSON
             string json = JsonSerializer.Serialize(itemDataList, new JsonSerializerOptions
             {
-                WriteIndented = false
+                WriteIndented = false,
+                ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                MaxDepth = 256
             });
 
             return json;
         }
 
         /// <summary>
-        /// Gets the display text for an item.
-        /// Matching PyKotor: item.data(Qt.ItemDataRole.DisplayRole)
+        /// Gets the display text for an item (uses resolved text: TLK when strref != -1, custom when -1).
         /// </summary>
         private string GetItemDisplayText(DLGStandardItem item)
         {
@@ -1415,7 +1710,7 @@ namespace OdyTools.Editors.DLG
 
             var node = item.Link.Node;
             string nodeType = node is DLGEntry ? "Entry" : "Reply";
-            string text = node.Text?.GetString(0, Gender.Male) ?? "";
+            string text = _editor != null ? _editor.GetResolvedNodeText(node) : (node.Text?.GetString(0, Gender.Male) ?? "");
             if (string.IsNullOrEmpty(text))
             {
                 text = "<empty>";
@@ -1423,8 +1718,6 @@ namespace OdyTools.Editors.DLG
             return $"{nodeType}: {text}";
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/tree_view.py:598-614
-        // Original: def parse_mime_data(self, mime_data: QMimeData) -> list[dict[Literal["row", "column", "roles"], Any]]:
         /// <summary>
         /// Parses MIME data from JSON format back into item data structures.
         /// </summary>

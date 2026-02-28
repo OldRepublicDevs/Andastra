@@ -6,8 +6,6 @@ namespace OdyTools.Editors.Actions
 {
     // Action for adding a child node to a parent item in the DLG tree
     // Tracks the parent item, child item, and child link for undo/redo
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:858-877
-    // Original: def add_child_to_item(self, parent_item: DLGStandardItem, link: DLGLink | None = None) -> DLGStandardItem:
     public class AddChildToItemAction : IDLGAction
     {
         private readonly DLGStandardItem _parentItem;

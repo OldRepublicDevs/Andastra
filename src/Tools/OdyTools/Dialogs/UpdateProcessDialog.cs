@@ -11,12 +11,8 @@ using Newtonsoft.Json.Linq;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_process.py:24
-    // Original: def run_progress_dialog(progress_queue: Queue, title: str = "Operation Progress") -> NoReturn:
     public static class UpdateProcess
     {
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_process.py:41-140
-        // Original: def start_update_process(release: GithubRelease, download_url: str) -> None:
         /// <summary>
         /// Starts the update process for the specified release and download URL.
         /// Downloads the update, extracts it, and applies it. The application will exit after the update is applied.
@@ -197,8 +193,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_process.py:143-177
-        // Original: def _terminate_qt_threads(log: RobustLogger):
         /// <summary>
         /// Terminates all non-essential background threads in preparation for application shutdown.
         /// This is a best-effort cleanup operation. Critical threads (UI, application lifecycle) are not terminated.
@@ -213,8 +207,6 @@ namespace OdyTools.Dialogs
             System.Console.WriteLine("Thread termination handled by Environment.Exit() - cooperative cancellation preferred.");
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_process.py:180-207
-        // Original: def _quit_qt_application(log: RobustLogger):
         /// <summary>
         /// Quits the application properly, ensuring all windows are closed and resources are cleaned up.
         /// For update operations, the application will exit via Environment.Exit() called by AppUpdate.

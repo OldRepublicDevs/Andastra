@@ -9,8 +9,6 @@ using OdyTools.Dialogs;
 
 namespace OdyTools.Widgets
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/locstring.py
-    // Original: class LocalizedStringLineEdit(QWidget):
     public partial class LocalizedStringEdit : UserControl
     {
         private TextBox _locstringText;
@@ -75,23 +73,17 @@ namespace OdyTools.Widgets
             Content = panel;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/locstring.py
-        // Original: def set_installation(self, installation):
         public void SetInstallation(OdyInstallation installation)
         {
             _installation = installation;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/locstring.py
-        // Original: def set_locstring(self, locstring):
         public void SetLocString(LocalizedString locstring)
         {
             _locstring = locstring ?? LocalizedString.FromInvalid();
             UpdateText();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/locstring.py
-        // Original: def locstring(self) -> LocalizedString:
         public LocalizedString GetLocString()
         {
             return _locstring ?? LocalizedString.FromInvalid();

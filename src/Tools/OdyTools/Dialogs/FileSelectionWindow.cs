@@ -22,8 +22,6 @@ using FileResource = BioWare.Extract.FileResource;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1006
-    // Original: class FileSelectionWindow(QMainWindow):
     /// <summary>
     /// Window for selecting a file from multiple search results.
     /// Displays resources in a table with detailed information and allows user to select and open one.
@@ -37,8 +35,6 @@ namespace OdyTools.Dialogs
         private OdyInstallation _installation;
         private List<string> _detailedStatAttributes;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1007-1025
-        // Original: def __init__(self, search_results: Sequence[FileResource | ResourceResult | LocationResult], ...):
         /// <summary>
         /// Initializes a new instance of FileSelectionWindow.
         /// </summary>
@@ -53,13 +49,13 @@ namespace OdyTools.Dialogs
             InitializeComponent();
             _installation = installation;
             _detailedStatAttributes = new List<string>();
-            
+
             // Convert search results to FileResource list
             _resources = UnifyResources(searchResults);
-            
+
             SetupUI();
             InitTable();
-            
+
             if (parent != null)
             {
                 WindowStartupLocation = WindowStartupLocation.CenterOwner;
@@ -94,8 +90,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:671-681
-        // Original: def _unify_resources(self, resources: Sequence[FileResource | ResourceResult | LocationResult]):
         /// <summary>
         /// Converts various resource types (FileResource, LocationResult) to a unified list of FileResource.
         /// </summary>
@@ -132,7 +126,7 @@ namespace OdyTools.Dialogs
                         // Try to extract resource name and type from path
                         string resName = Path.GetFileNameWithoutExtension(locationResult.FilePath);
                         ResourceType resType = ResourceType.INVALID;
-                        
+
                         // Try to determine resource type from extension
                         string ext = Path.GetExtension(locationResult.FilePath)?.ToLowerInvariant();
                         if (!string.IsNullOrEmpty(ext))
@@ -253,8 +247,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1073-1081
-        // Original: def update_table_headers(self):
         private void UpdateTableHeaders()
         {
             if (_resourceTable == null)
@@ -263,7 +255,7 @@ namespace OdyTools.Dialogs
             }
 
             var headers = new List<string> { "File Name", "File Path", "Offset", "Size" };
-            
+
             if (_detailedStatAttributes != null && _detailedStatAttributes.Count > 0)
             {
                 foreach (var header in _detailedStatAttributes)
@@ -291,8 +283,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1116-1155
-        // Original: def populate_table(self):
         private void PopulateTable()
         {
             if (_resourceTable == null || _resources == null)
@@ -357,8 +347,6 @@ namespace OdyTools.Dialogs
             _resourceTable.ItemsSource = tableItems;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1157-1166
-        // Original: def human_readable_size(self, size: float, decimal_places: int = 2) -> str:
         private string HumanReadableSize(long size, int decimalPlaces = 2)
         {
             string[] units = { "B", "KB", "MB", "GB", "TB", "PB" };
@@ -378,14 +366,12 @@ namespace OdyTools.Dialogs
             return string.Format("{0:F" + decimalPlaces + "} {1}", sizeDouble, unit);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1220-1234
-        // Original: def toggle_detailed_info(self):
         private void ToggleDetailedInfo()
         {
             try
             {
                 bool showDetailed = _detailedCheckbox?.IsChecked ?? false;
-                
+
                 if (showDetailed && _resources != null && _resources.Count > 0)
                 {
                     // Get stat attributes from first resource
@@ -419,8 +405,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1247-1259
-        // Original: def get_stat_attributes(self, path: Path) -> list[str]:
         /// <summary>
         /// Gets all available file stat attributes for display in detailed mode.
         /// Matches PyKotor's os.stat() attributes where possible using C# FileInfo and FileSystemInfo.
@@ -428,7 +412,7 @@ namespace OdyTools.Dialogs
         private List<string> GetStatAttributes(FileInfo fileInfo)
         {
             var attributes = new List<string>();
-            
+
             try
             {
                 if (fileInfo.Exists)
@@ -437,7 +421,7 @@ namespace OdyTools.Dialogs
                     attributes.Add("Last Modified");
                     attributes.Add("Last Accessed");
                     attributes.Add("Created");
-                    
+
                     // File attributes (matching os.stat() st_mode and file attributes)
                     attributes.Add("Mode");
                     attributes.Add("Attributes");
@@ -448,11 +432,11 @@ namespace OdyTools.Dialogs
                     attributes.Add("Is Compressed");
                     attributes.Add("Is Encrypted");
                     attributes.Add("Is Directory");
-                    
+
                     // File system attributes
                     attributes.Add("Extension");
                     attributes.Add("Directory Name");
-                    
+
                     // Link information (matching os.stat() st_nlink)
                     // Note: C# doesn't directly expose hard link count, but we can try to get it
                     try
@@ -477,8 +461,6 @@ namespace OdyTools.Dialogs
             return attributes;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1236-1241
-        // Original: def _init_table(self):
         private void InitTable()
         {
             if (_resourceTable == null)
@@ -492,8 +474,6 @@ namespace OdyTools.Dialogs
             ResizeToContent();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1089-1105
-        // Original: def resize_to_content(self):
         private void ResizeToContent()
         {
             if (_resourceTable == null)
@@ -535,8 +515,6 @@ namespace OdyTools.Dialogs
             CenterWindow();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1063-1071
-        // Original: def center_and_adjust_window(self):
         private void CenterWindow()
         {
             try
@@ -565,8 +543,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1041-1042
-        // Original: open_button.clicked.connect(lambda: self.resource_table.on_double_click(installation=self.installation))
         private void OpenSelected()
         {
             if (_resourceTable?.SelectedItem is ResourceTableItem item && item.Resource != null)
@@ -575,15 +551,11 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1043
-        // Original: self.resource_table.doubleClicked.connect(lambda: self.resource_table.on_double_click(installation=self.installation))
         private void OnDoubleClick()
         {
             OpenSelected();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:927-936
-        // Original: def open_selected_resource(self, resources: set[FileResource], installation: OdyInstallation | None = None, ...):
         private void OpenResource(FileResource resource)
         {
             if (resource == null)
@@ -600,16 +572,14 @@ namespace OdyTools.Dialogs
             catch (Exception ex)
             {
                 System.Console.WriteLine($"Error opening resource: {ex}");
-                
-                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/window.py:344-352
-                // Original: QMessageBox(QMessageBox.Icon.Critical, tr("An unexpected error has occurred"), str(universal_simplify_exception(e)), ...).show()
+
                 // Note: Using ex.Message for error details (similar to universal_simplify_exception in PyKotor)
                 string errorMessage = ex.Message;
                 if (string.IsNullOrEmpty(errorMessage))
                 {
                     errorMessage = ex.ToString();
                 }
-                
+
                 var errorBox = MessageBoxManager.GetMessageBoxStandard(
                     "Error",
                     $"Error opening resource:\n{errorMessage}",
@@ -625,14 +595,13 @@ namespace OdyTools.Dialogs
         /// <summary>
         /// Populates comprehensive file stat attributes for a resource table item.
         /// Matches PyKotor's add_file_item and add_extra_file_details methods.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1182-1217
         /// </summary>
         private void PopulateFileStatAttributes(ResourceTableItem item, FileInfo fileInfo, FileResource resource)
         {
             // Size on disk (matching get_size_on_disk in PyKotor)
             long sizeOnDisk = GetSizeOnDisk(fileInfo);
             item.SizeOnDisk = HumanReadableSize(sizeOnDisk);
-            
+
             // Calculate size ratio
             if (resource.Size > 0)
             {
@@ -643,16 +612,16 @@ namespace OdyTools.Dialogs
             {
                 item.SizeRatio = "N/A";
             }
-            
+
             // Time attributes (matching os.stat() st_mtime, st_atime, st_ctime)
             item.LastModified = FormatTime(fileInfo.LastWriteTime);
             item.LastAccessed = FormatTime(fileInfo.LastAccessTime);
             item.Created = FormatTime(fileInfo.CreationTime);
-            
+
             // File attributes (matching os.stat() st_mode)
             item.Mode = FormatFileMode(fileInfo);
             item.Attributes = FormatFileAttributes(fileInfo.Attributes);
-            
+
             // Boolean file attributes
             item.IsReadOnly = fileInfo.IsReadOnly ? "Yes" : "No";
             item.IsHidden = (fileInfo.Attributes & FileAttributes.Hidden) != 0 ? "Yes" : "No";
@@ -661,20 +630,19 @@ namespace OdyTools.Dialogs
             item.IsCompressed = (fileInfo.Attributes & FileAttributes.Compressed) != 0 ? "Yes" : "No";
             item.IsEncrypted = (fileInfo.Attributes & FileAttributes.Encrypted) != 0 ? "Yes" : "No";
             item.IsDirectory = (fileInfo.Attributes & FileAttributes.Directory) != 0 ? "Yes" : "No";
-            
+
             // File system attributes
             item.Extension = fileInfo.Extension ?? "";
             item.DirectoryName = fileInfo.DirectoryName ?? "";
-            
+
             // Hard links (matching os.stat() st_nlink)
             // Note: C# doesn't directly expose hard link count, but we can try to get it on Windows
             try
             {
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    // On Windows, we can use GetFileInformationByHandle to get hard link count
-                    // For now, we'll set it to "N/A" as it requires P/Invoke
-                    item.HardLinks = "N/A"; // Could be implemented with P/Invoke if needed
+                    // Hard link count on Windows requires P/Invoke (GetFileInformationByHandle); show N/A when unavailable
+                    item.HardLinks = "N/A";
                 }
                 else
                 {
@@ -686,10 +654,9 @@ namespace OdyTools.Dialogs
                 item.HardLinks = "N/A";
             }
         }
-        
+
         /// <summary>
         /// Gets the size on disk for a file (accounting for cluster size).
-        /// Matching PyKotor implementation at utility/system/os_helper.py:get_size_on_disk
         /// </summary>
         private long GetSizeOnDisk(FileInfo fileInfo)
         {
@@ -698,14 +665,12 @@ namespace OdyTools.Dialogs
                 // On Windows, size on disk accounts for cluster size
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    // Use GetCompressedFileSize and GetFileSize to get actual size on disk
-                    // For now, return file length (can be enhanced with P/Invoke if needed)
+                    // Actual size on disk (accounting for cluster size) could be obtained via GetCompressedFileSize/GetFileSize P/Invoke; we return file length.
                     return fileInfo.Length;
                 }
                 else
                 {
-                    // On Unix-like systems, size on disk is typically the file size rounded up to block size
-                    // For now, return file length
+                    // On Unix, size on disk is typically file size rounded up to block size; we return file length.
                     return fileInfo.Length;
                 }
             }
@@ -714,17 +679,15 @@ namespace OdyTools.Dialogs
                 return fileInfo.Length;
             }
         }
-        
+
         /// <summary>
         /// Formats a DateTime to a human-readable string.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1083-1087
-        /// Original: def format_time(self, timestamp: float) -> str:
         /// </summary>
         private string FormatTime(DateTime dateTime)
         {
             return dateTime.ToString("yyyy-MM-dd HH:mm:ss");
         }
-        
+
         /// <summary>
         /// Formats file mode (permissions) similar to os.stat() st_mode.
         /// On Windows, this represents file attributes; on Unix, it's permissions.
@@ -735,14 +698,24 @@ namespace OdyTools.Dialogs
             {
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    // On Windows, return file attributes as octal-like string
                     return $"0{(int)fileInfo.Attributes:X}";
                 }
                 else
                 {
-                    // On Unix, we would need to get actual permissions
-                    // For now, return a placeholder
+#if !NET48
+                    // Unix: use File.GetUnixFileMode when available (.NET 5+)
+                    try
+                    {
+                        var mode = File.GetUnixFileMode(fileInfo.FullName);
+                        return "0" + Convert.ToString((int)mode, 8).PadLeft(3, '0');
+                    }
+                    catch (PlatformNotSupportedException)
+                    {
+                        return "N/A";
+                    }
+#else
                     return "N/A";
+#endif
                 }
             }
             catch
@@ -750,14 +723,14 @@ namespace OdyTools.Dialogs
                 return "N/A";
             }
         }
-        
+
         /// <summary>
         /// Formats file attributes as a readable string.
         /// </summary>
         private string FormatFileAttributes(FileAttributes attributes)
         {
             var attrList = new List<string>();
-            
+
             if ((attributes & FileAttributes.ReadOnly) != 0) attrList.Add("ReadOnly");
             if ((attributes & FileAttributes.Hidden) != 0) attrList.Add("Hidden");
             if ((attributes & FileAttributes.System) != 0) attrList.Add("System");
@@ -774,7 +747,7 @@ namespace OdyTools.Dialogs
             if ((attributes & FileAttributes.Encrypted) != 0) attrList.Add("Encrypted");
             if ((attributes & FileAttributes.IntegrityStream) != 0) attrList.Add("IntegrityStream");
             if ((attributes & FileAttributes.NoScrubData) != 0) attrList.Add("NoScrubData");
-            
+
             return attrList.Count > 0 ? string.Join(", ", attrList) : "None";
         }
 
@@ -832,8 +805,6 @@ namespace OdyTools.Dialogs
     }
 
     // Helper class for table items
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py
-    // Original: ResourceTableWidgetItem class with comprehensive file stat attributes
     internal class ResourceTableItem
     {
         public FileResource Resource { get; set; }
@@ -841,7 +812,7 @@ namespace OdyTools.Dialogs
         public string FilePath { get; set; }
         public string Offset { get; set; }
         public string Size { get; set; }
-        
+
         // Detailed file stat attributes (matching os.stat() in Python)
         public string SizeOnDisk { get; set; }
         public string LastModified { get; set; }

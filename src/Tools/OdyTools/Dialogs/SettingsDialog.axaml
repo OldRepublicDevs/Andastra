@@ -17,6 +17,7 @@
             <!-- Settings Tree (left side) -->
             <TreeView Name="settingsTree" Grid.Column="0" Margin="5">
                 <TreeViewItem Header="Installations" IsSelected="True" />
+                <TreeViewItem Header="DLG Settings" />
                 <TreeViewItem Header="GIT Editor" />
                 <TreeViewItem Header="Module Designer" />
                 <TreeViewItem Header="Misc" />

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFrameworks>net9.0;net48</TargetFrameworks>
     <Nullable>disable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Andastra\Andastra.csproj" />
+    <ProjectReference Include="..\..\src\Andastra\Andastra.csproj" Condition="'$(TargetFramework)' == 'net9.0'" />
     <ProjectReference Include="..\..\src\BioWare\BioWare.csproj" />
   </ItemGroup>
 

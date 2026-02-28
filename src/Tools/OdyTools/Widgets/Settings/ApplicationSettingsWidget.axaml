@@ -9,7 +9,9 @@
         <ScrollViewer Grid.Row="1">
             <StackPanel Spacing="10">
                 <!-- Font Settings -->
-                <Expander Header="Global Font Settings" IsExpanded="True">
+                <Expander Header="Global Font Settings" IsExpanded="True"
+                          HorizontalAlignment="Stretch"
+                          HorizontalContentAlignment="Stretch">
                     <StackPanel Spacing="5" Margin="5">
                         <TextBlock Name="currentFontLabel" Text="Current Font: Default" />
                         <Button Name="fontButton" Content="Select Font..." HorizontalAlignment="Left" />
@@ -17,7 +19,9 @@
                 </Expander>
 
                 <!-- Environment Variables -->
-                <Expander Header="Environment Variables" IsExpanded="True">
+                <Expander Header="Environment Variables" IsExpanded="True"
+                          HorizontalAlignment="Stretch"
+                          HorizontalContentAlignment="Stretch">
                     <Grid RowDefinitions="*,Auto" Margin="5">
                         <DataGrid Name="tableWidget" Grid.Row="0" AutoGenerateColumns="True" Margin="0,0,0,5" />
                         <StackPanel Orientation="Horizontal" Grid.Row="1" Spacing="5">
@@ -29,12 +33,16 @@
                 </Expander>
 
                 <!-- Miscellaneous Settings -->
-                <Expander Header="Miscellaneous Settings" IsExpanded="True">
+                <Expander Header="Miscellaneous Settings" IsExpanded="True"
+                          HorizontalAlignment="Stretch"
+                          HorizontalContentAlignment="Stretch">
                     <StackPanel Name="verticalLayout_misc" Spacing="5" Margin="5" />
                 </Expander>
 
                 <!-- Experimental Settings -->
-                <Expander Header="Experimental settings (may cause app crashes)" IsExpanded="False">
+                <Expander Header="Experimental settings (may cause app crashes)" IsExpanded="False"
+                          HorizontalAlignment="Stretch"
+                          HorizontalContentAlignment="Stretch">
                     <StackPanel Name="verticalLayout_3" Spacing="5" Margin="5" />
                 </Expander>
             </StackPanel>

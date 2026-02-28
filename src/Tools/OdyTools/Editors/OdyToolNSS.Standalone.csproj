@@ -1,42 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="Standalone\OdyTools.Standalone.Editor.props" />
   <PropertyGroup>
+    <OdyToolsStandaloneDefine>NSS_STANDALONE</OdyToolsStandaloneDefine>
+    <OdyToolsStandaloneStartupObject>OdyTools.Editors.Standalone.NSS.Program</OdyToolsStandaloneStartupObject>
     <_OdyToolsRoot>$([System.IO.Path]::GetDirectoryName('$(MSBuildProjectDirectory)'))</_OdyToolsRoot>
   </PropertyGroup>
-  <PropertyGroup>
-    <LangVersion>7.3</LangVersion>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
-    <Platforms>x86;x64;arm64</Platforms>
-    <UseAppHost>true</UseAppHost>
-    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <IsPackable>false</IsPackable>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
-    <TargetFramework>net9.0</TargetFramework>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Nullable>disable</Nullable>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(RuntimeIdentifier)'=='' OR $(RuntimeIdentifier.StartsWith('win'))">
-    <OutputType>WinExe</OutputType>
-  </PropertyGroup>
-  <PropertyGroup Condition="!$(RuntimeIdentifier.StartsWith('win')) AND '$(RuntimeIdentifier)'!=''">
-    <OutputType>Exe</OutputType>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject>OdyTools.Editors.Standalone.NSS.Program</StartupObject>
-    <DefineConstants>$(DefineConstants);NSS_STANDALONE</DefineConstants>
-  </PropertyGroup>
+  <Import Project="Standalone\OdyTools.Standalone.Editor.props" />
   <ItemGroup>
-    <ProjectReference Include="..\..\..\BioWare\BioWare.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Markdig" Version="0.44.0" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
   <ItemGroup>
@@ -60,9 +30,13 @@
     <Compile Include="$(_OdyToolsRoot)\Widgets\BreadcrumbsWidget.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\MonacoEditorHost.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\MonacoLineNumbersMargin.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Widgets\MonacoMinimap.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Widgets\ActivityBarWidget.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Widgets\VsCodeWorkbenchShell.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\CommandPalette.cs" />
     <Compile Include="$(_OdyToolsRoot)\Data\OdyInstallation.cs" />
     <Compile Include="$(_OdyToolsRoot)\Data\Settings.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Data\IEditorInstallationSettings.cs" />
     <Compile Include="$(_OdyToolsRoot)\Data\GlobalSettings.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\PathUtils.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\ScriptUtils.cs" />
@@ -79,19 +53,16 @@
     <Compile Include="$(_OdyToolsRoot)\Dialogs\DecompileOrDownloadDialog.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\GitHubSelectorDialog.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\EditorInstallationSettingsDialogBase.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml.cs" />
   </ItemGroup>
   <ItemGroup>
     <AvaloniaXaml Remove="**\*.axaml" />
     <AvaloniaXaml Remove="*OdyTool*.axaml" />
-    <AvaloniaXaml Include="Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml" />
+    <AvaloniaXaml Include="Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml" Link="EditorStandaloneHost/EditorStandaloneApp.axaml" />
     <AvaloniaXaml Include="OdyToolNSS.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\LoadFromModuleDialog.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml" />
   </ItemGroup>
-  <!-- Force executable and entry point (standalone must be runnable app). Debug=Exe for console. -->
-  <PropertyGroup>
-    <OutputType Condition="'$(Configuration)' == 'Debug'">Exe</OutputType>
-    <OutputType Condition="'$(Configuration)' != 'Debug'">WinExe</OutputType>
-    <StartupObject>OdyTools.Editors.Standalone.NSS.Program</StartupObject>
-  </PropertyGroup>
 </Project>

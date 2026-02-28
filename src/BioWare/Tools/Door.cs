@@ -500,7 +500,7 @@ namespace BioWare.Tools
                         $"model and texture extraction failed");
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 System.Diagnostics.Debug.WriteLine("WARNING: [logger call replaced]");
             }

@@ -4,8 +4,6 @@ using Avalonia.Markup.Xaml;
 
 namespace OdyTools.Widgets
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/long_spinbox.py:14
-    // Original: class LongSpinBox(QAbstractSpinBox):
     public partial class LongSpinBox : NumericUpDown
     {
         private long _min = 0;
@@ -33,8 +31,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/long_spinbox.py:30-34
-        // Original: def stepUp/stepDown/stepBy
         public void StepUp()
         {
             long currentValue = GetValue();
@@ -53,8 +49,6 @@ namespace OdyTools.Widgets
             SetValue(currentValue + steps);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/long_spinbox.py:45-47
-        // Original: def setRange(self, min_value: int, max_value: int):
         public void SetRange(long minValue, long maxValue)
         {
             _min = minValue;
@@ -63,15 +57,11 @@ namespace OdyTools.Widgets
             Maximum = maxValue;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/long_spinbox.py:49-50
-        // Original: def _within_range(self, value: int) -> bool:
         private bool WithinRange(long value)
         {
             return _min <= value && value <= _max;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/long_spinbox.py:52-61
-        // Original: def clamp_line_edit(self):
         private void ClampLineEdit()
         {
             if (Value.HasValue)
@@ -86,8 +76,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/long_spinbox.py:63-72
-        // Original: def setValue(self, value: int):
         public void SetValue(long value)
         {
             value = Math.Max(_min, Math.Min(_max, value));
@@ -95,8 +83,6 @@ namespace OdyTools.Widgets
             // Note: Setting Value property automatically raises ValueChanged event in Avalonia
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/long_spinbox.py:74-81
-        // Original: def value(self) -> int:
         public long GetValue()
         {
             if (Value.HasValue)

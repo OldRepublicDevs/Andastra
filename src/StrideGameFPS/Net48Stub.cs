@@ -1,0 +1,2 @@
+﻿using System;
+namespace StrideGameFPS { internal static class Net48Stub { public static void Main() { Console.WriteLine("StrideGameFPS requires .NET 9.0 (Stride 4.2 does not support .NET Framework 4.8)."); Environment.Exit(1); } } }

@@ -7,12 +7,8 @@ using OdyTools.Data;
 
 namespace OdyTools.NET
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_settings.py:16
-    // Original: def setup_pre_init_settings():
     public static class MainSettings
     {
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_settings.py:16-37
-        // Original: def setup_pre_init_settings():
         /// <summary>
         /// Setup pre-initialization settings for the OdyTools.
         ///
@@ -20,19 +16,15 @@ namespace OdyTools.NET
         /// It sets up environment variables from user settings, prioritizing existing
         /// environment variable values to allow system-level overrides.
         ///
-        /// Matching PyKotor: setup_pre_init_settings() in main_settings.py
         /// </summary>
         public static void SetupPreInitSettings()
         {
             // Some application settings must be set before the app starts.
             // These ones are accessible through the in-app settings window widget.
-            // Matching PyKotor: settings_widget = ApplicationSettings()
             var settingsWidget = new ApplicationSettings();
 
-            // Matching PyKotor: environment_variables: dict[str, str] = settings_widget.app_env_variables
             Dictionary<string, string> environmentVariables = settingsWidget.AppEnvVariables;
 
-            // Matching PyKotor: for key, value in environment_variables.items():
             //                     os.environ[key] = os.environ.get(key, value)  # Use os.environ.get to prioritize the existing env.
             // Set environment variables, prioritizing existing environment variable values
             // This matches Python's os.environ.get(key, value) behavior - only set if not already set
@@ -51,7 +43,6 @@ namespace OdyTools.NET
                 }
             }
 
-            // Matching PyKotor: for attr_name, attr_value in settings_widget.REQUIRES_RESTART.items():
             //                     if attr_value is None:  # attr not available in this qt version.
             //                         continue
             //                     QApplication.setAttribute(
@@ -115,8 +106,6 @@ namespace OdyTools.NET
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_settings.py:40-72
-        // Original: def setup_post_init_settings():
         /// <summary>
         /// Set up post-initialization settings for the application.
         ///
@@ -127,7 +116,6 @@ namespace OdyTools.NET
         /// The function uses the GlobalSettings class to manage and apply various
         /// settings to the Avalonia Application instance.
         ///
-        /// Matching PyKotor: setup_post_init_settings() in main_settings.py
         /// </summary>
         public static void SetupPostInitSettings()
         {
@@ -167,7 +155,6 @@ namespace OdyTools.NET
                             }
 
                             // Apply font globally using FontApplicationHelper
-                            // Matching PyKotor: QApplication.setFont(font) applies globally to all widgets
                             // In Avalonia, we apply fonts via styles to achieve the same effect
                             OdyTools.Utils.FontApplicationHelper.ApplyGlobalFont(fontString);
                         }
@@ -185,8 +172,6 @@ namespace OdyTools.NET
             // However, we maintain the structure for potential future Avalonia equivalents.
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_settings.py:75-103
-        // Original: def setup_toolset_default_env():
         /// <summary>
         /// Setup default environment variables for the toolset based on our recommendations.
         /// These can be configured in the toolset's Settings dialog.

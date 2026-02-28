@@ -8,7 +8,6 @@ namespace OdyTools.Utils
 {
     /// <summary>
     /// Utility class for downloading files from GitHub repositories.
-    /// Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/github.py:609-643
     /// </summary>
     public static class GitHubDownloader
     {
@@ -22,7 +21,6 @@ namespace OdyTools.Utils
 
         /// <summary>
         /// Downloads a file from a GitHub repository.
-        /// Matching PyKotor implementation: download_github_file(url_or_repo, local_path, repo_path, timeout)
         /// </summary>
         /// <param name="owner">GitHub repository owner</param>
         /// <param name="repo">GitHub repository name</param>

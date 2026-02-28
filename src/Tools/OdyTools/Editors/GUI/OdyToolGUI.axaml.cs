@@ -26,7 +26,7 @@ namespace OdyTools.Editors.GUI
     /// Visual KotOR GUI editor (transpiled from kotor-gui-editor).
     /// Load .gui (GFF), set UI image folder for TPC/TGA, edit in tree + visual preview + property panel, save with backup.
     /// </summary>
-    public class OdyToolGUI : Editor
+    public partial class OdyToolGUI : Editor
     {
         private const int UndoMaxLevels = 50;
         private GFF _gff;
@@ -560,7 +560,7 @@ namespace OdyTools.Editors.GUI
             }
         }
 
-        private async System.Threading.Tasks.Task RunSaveAsAsync()
+        protected override async System.Threading.Tasks.Task RunSaveAsAsync()
         {
             var storage = (this as Window)?.StorageProvider;
             if (storage == null) return;
@@ -577,7 +577,7 @@ namespace OdyTools.Editors.GUI
 
         public override void SaveAs()
         {
-            Save();
+            _ = RunSaveAsAsync();
         }
 
         public override void New()
@@ -593,7 +593,7 @@ namespace OdyTools.Editors.GUI
             UpdateStatusBar();
         }
 
-        private void Revert()
+        public override void Revert()
         {
             if (_revert == null || _revert.Length == 0) return;
             Load(_filepath ?? "", _resname ?? "", ResourceType.GUI, _revert);

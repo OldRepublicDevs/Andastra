@@ -41,12 +41,9 @@ using TabItem = Avalonia.Controls.TabItem;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:26
-    // Original: class OdyToolUTE(Editor):
-    public class OdyToolUTE : Editor
+    public partial class OdyToolUTE : Editor
     {
         // Data model for creature table rows
-        // Matching PyKotor implementation: creature table uses widgets in cells
         // C# uses DataGrid with bindings, so we need a proper data model
         private class CreatureRow
         {
@@ -97,8 +94,6 @@ namespace OdyTools.Editors
         // UI Controls - Comments
         private TextBox _commentsEdit;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:27-66
-        // Original: def __init__(self, parent, installation):
         public OdyToolUTE(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTE", "encounter",
                 new[] { ResourceType.UTE, ResourceType.BTE },
@@ -123,7 +118,6 @@ namespace OdyTools.Editors
             New();
         }
 
-        // Matching PyKotor ute.ui: File menu with New, Open, Save, Save As, Revert, Exit
         private Menu BuildMenu()
         {
             var menu = new Menu();
@@ -151,12 +145,7 @@ namespace OdyTools.Editors
                 }
                 catch { }
             }
-            Bind("actionNew", () => New());
-            Bind("actionOpen", () => _ = RunOpenAsync());
-            Bind("actionSave", () => Save());
-            Bind("actionSaveAs", () => _ = RunSaveAsAsync());
-            Bind("actionRevert", () => Revert());
-            Bind("actionExit", () => Close());
+            // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
         }
 
         private void OnWindowKeyDown(object sender, KeyEventArgs e)
@@ -178,8 +167,7 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation: def revert(self)
-        private void Revert()
+        public override void Revert()
         {
             if (_revert == null || _revert.Length == 0) return;
             try
@@ -192,8 +180,7 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation: def open(self) - file picker to load UTE
-        private async Task RunOpenAsync()
+        protected override async Task RunOpenAsync()
         {
             if (await ConfirmDiscardUnsavedChangesAsync() == false) return;
             var storageProvider = (this as Window)?.StorageProvider;
@@ -232,7 +219,7 @@ namespace OdyTools.Editors
             }
         }
 
-        private async Task RunSaveAsAsync()
+        protected override async Task RunSaveAsAsync()
         {
             var storageProvider = (this as Window)?.StorageProvider;
             if (storageProvider == null) return;
@@ -312,8 +299,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:68-85
-        // Original: def _setup_signals(self):
         private void SetupSignals()
         {
             if (_tagGenerateBtn != null)
@@ -346,8 +331,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:87-131
-        // Original: def _setup_installation(self, installation):
         private void SetupInstallation(OdyInstallation installation)
         {
             _installation = installation;
@@ -356,7 +339,6 @@ namespace OdyTools.Editors
                 _nameEdit.SetInstallation(installation);
             }
 
-            // Matching PyKotor implementation: difficulties: TwoDA | None = installation.ht_get_cache_2da(OdyInstallation.TwoDA_ENC_DIFFICULTIES)
             TwoDA difficulties = installation.HtGetCache2DA(OdyInstallation.TwoDAEncDifficulties);
             if (_difficultySelect != null)
             {
@@ -369,7 +351,6 @@ namespace OdyTools.Editors
                 }
             }
 
-            // Matching PyKotor implementation: factions: TwoDA | None = installation.ht_get_cache_2da(OdyInstallation.TwoDA_FACTIONS)
             TwoDA factions = installation.HtGetCache2DA(OdyInstallation.TwoDAFactions);
             if (_factionSelect != null)
             {
@@ -382,10 +363,8 @@ namespace OdyTools.Editors
                 }
             }
 
-            // Matching PyKotor implementation: self._installation.setup_file_context_menu(...)
             SetupFileContextMenus();
 
-            // Matching PyKotor implementation: self.relevant_creature_resnames = sorted(...)
             if (installation != null && !string.IsNullOrEmpty(base._filepath))
             {
                 HashSet<FileResource> creatureResources = installation.GetRelevantResources(ResourceType.UTC, base._filepath);
@@ -557,15 +536,15 @@ namespace OdyTools.Editors
             var scriptsPanel = new StackPanel { Orientation = Orientation.Vertical };
 
             var onEnterLabel = new TextBlock { Text = "OnEnter:" };
-            _onEnterSelect = new ComboBox();
+            _onEnterSelect = new ComboBox { IsEditable = true };
             var onExitLabel = new TextBlock { Text = "OnExit:" };
-            _onExitSelect = new ComboBox();
+            _onExitSelect = new ComboBox { IsEditable = true };
             var onExhaustedLabel = new TextBlock { Text = "OnExhausted:" };
-            _onExhaustedEdit = new ComboBox();
+            _onExhaustedEdit = new ComboBox { IsEditable = true };
             var onHeartbeatLabel = new TextBlock { Text = "OnHeartbeat:" };
-            _onHeartbeatSelect = new ComboBox();
+            _onHeartbeatSelect = new ComboBox { IsEditable = true };
             var onUserDefinedLabel = new TextBlock { Text = "OnUserDefined:" };
-            _onUserDefinedSelect = new ComboBox();
+            _onUserDefinedSelect = new ComboBox { IsEditable = true };
 
             scriptsPanel.Children.Add(onEnterLabel);
             scriptsPanel.Children.Add(_onEnterSelect);
@@ -600,26 +579,19 @@ namespace OdyTools.Editors
             SetContentOrInject(dock);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:133-143
-        // Original: def load(self, filepath, resref, restype, data):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
-            // Matching PyKotor implementation: ute: UTE = read_ute(data); self._loadUTE(ute)
             var gff = GFF.FromBytes(data);
             _ute = UTEHelpers.ConstructUte(gff);
             LoadUTE(_ute);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:145-217
-        // Original: def _loadUTE(self, ute: UTE):
         private void LoadUTE(UTE ute)
         {
-            // Matching PyKotor implementation: self._ute = ute
             _ute = ute;
 
             // Basic
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:163-170
             if (_nameEdit != null)
             {
                 _nameEdit.SetLocString(ute.Name);
@@ -638,7 +610,6 @@ namespace OdyTools.Editors
             }
             if (_spawnSelect != null)
             {
-                // Matching PyKotor ute.ui: index 0 = Single Shot (spawn once), index 1 = Continuous (respawn)
                 // single_shot=True => Single Shot => index 0; single_shot=False => Continuous => index 1
                 _spawnSelect.SelectedIndex = ute.SingleShot ? 0 : 1;
                 // Ensure respawn fields are properly enabled/disabled based on spawn mode
@@ -654,7 +625,6 @@ namespace OdyTools.Editors
             }
 
             // Advanced
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:172-179
             if (_activeCheckbox != null)
             {
                 _activeCheckbox.IsChecked = ute.Active;
@@ -673,7 +643,6 @@ namespace OdyTools.Editors
             }
             if (_infiniteRespawnCheckbox != null)
             {
-                // Matching PyKotor implementation: self.ui.infiniteRespawnCheckbox.setChecked(ute.respawns == -1)
                 _infiniteRespawnCheckbox.IsChecked = ute.Respawns == -1;
             }
             if (_respawnTimeSpin != null)
@@ -686,7 +655,6 @@ namespace OdyTools.Editors
             }
 
             // Creatures
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:181-190
             if (_creatureTable != null && _creatureRows != null)
             {
                 _creatureRows.Clear();
@@ -703,7 +671,6 @@ namespace OdyTools.Editors
             }
 
             // Scripts
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:192-214
             // First, get relevant script resources and populate combo boxes
             if (_installation != null && !string.IsNullOrEmpty(base._filepath))
             {
@@ -827,35 +794,28 @@ namespace OdyTools.Editors
             }
 
             // Comments
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:217
             if (_commentsEdit != null)
             {
                 _commentsEdit.Text = ute.Comment;
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:219-285
-        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
-            // Matching PyKotor implementation: ute: UTE = deepcopy(self._ute)
             var ute = CopyUTE(_ute);
 
             // Basic - read from UI controls (matching Python which always reads from UI)
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:236-243
             ute.Name = _nameEdit?.GetLocString() ?? ute.Name ?? LocalizedString.FromInvalid();
             ute.Tag = _tagEdit?.Text ?? ute.Tag ?? "";
             ute.ResRef = _resrefEdit != null && !string.IsNullOrEmpty(_resrefEdit.Text)
                 ? new ResRef(_resrefEdit.Text)
                 : ute.ResRef;
             ute.DifficultyId = _difficultySelect?.SelectedIndex ?? ute.DifficultyId;
-            // Matching PyKotor ute.ui: index 0 = Single Shot (single_shot=True), index 1 = Continuous (single_shot=False)
             ute.SingleShot = _spawnSelect?.SelectedIndex == 0;
             ute.RecCreatures = _minCreatureSpin?.Value != null ? (int)_minCreatureSpin.Value : ute.RecCreatures;
             ute.MaxCreatures = _maxCreatureSpin?.Value != null ? (int)_maxCreatureSpin.Value : ute.MaxCreatures;
 
             // Advanced
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:245-251
             ute.Active = _activeCheckbox?.IsChecked ?? ute.Active;
             ute.PlayerOnly = (_playerOnlyCheckbox?.IsChecked ?? (ute.PlayerOnly != 0)) ? 1 : 0;
             ute.FactionId = _factionSelect?.SelectedIndex ?? ute.FactionId;
@@ -864,7 +824,6 @@ namespace OdyTools.Editors
             ute.ResetTime = _respawnTimeSpin?.Value != null ? (int)_respawnTimeSpin.Value : ute.ResetTime;
 
             // Creatures
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:253-269
             ute.Creatures.Clear();
             if (_creatureRows != null)
             {
@@ -895,7 +854,6 @@ namespace OdyTools.Editors
             }
 
             // Scripts
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:271-276
             ute.OnEntered = _onEnterSelect != null && !string.IsNullOrEmpty(_onEnterSelect.Text)
                 ? new ResRef(_onEnterSelect.Text)
                 : ute.OnEntered;
@@ -913,19 +871,15 @@ namespace OdyTools.Editors
                 : ute.OnUserDefined;
 
             // Comments
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:279
             ute.Comment = _commentsEdit?.Text ?? ute.Comment ?? "";
 
             // Build GFF
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:281-285
             var game = _installation?.Game ?? Game.K2;
             var gff = UTEHelpers.DismantleUte(ute, game);
             byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTE);
             return Tuple.Create(data, new byte[0]);
         }
 
-        // Matching PyKotor implementation: Deep copy helper
-        // Original: ute: UTE = deepcopy(self._ute)
         private UTE CopyUTE(UTE source)
         {
             // Deep copy LocalizedString objects (they're reference types)
@@ -990,8 +944,6 @@ namespace OdyTools.Editors
             return dict;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:287-289
-        // Original: def new(self):
         public override void New()
         {
             base.New();
@@ -999,8 +951,6 @@ namespace OdyTools.Editors
             LoadUTE(_ute);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:291-294
-        // Original: def change_name(self):
         private void ChangeName()
         {
             if (_installation == null) return;
@@ -1016,8 +966,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:296-299
-        // Original: def generate_tag(self):
         private void GenerateTag()
         {
             if (string.IsNullOrEmpty(_resrefEdit?.Text))
@@ -1030,8 +978,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:301-305
-        // Original: def generate_resref(self):
         private void GenerateResref()
         {
             if (_resrefEdit != null)
@@ -1040,8 +986,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:307-321
-        // Original: def set_infinite_respawn(self):
         private void SetInfiniteRespawn()
         {
             if (_infiniteRespawnCheckbox?.IsChecked == true)
@@ -1054,8 +998,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:313-321
-        // Original: def _set_infinite_respawn_main(self, val: int, *, enabled: bool):
         private void SetInfiniteRespawnMain(int val, bool enabled)
         {
             if (_respawnCountSpin != null)
@@ -1066,8 +1008,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:323-328
-        // Original: def set_continuous(self, *args, **kwargs):
         private void SetContinuous()
         {
             bool isContinuous = _spawnSelect?.SelectedIndex == 1;
@@ -1089,8 +1029,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:330-376
-        // Original: def add_creature(self, *args, resname: str = "", appearance_id: int = 0, challenge: float = 0.0, single: bool = False):
         private void AddCreature(string resname = "", int appearanceId = 0, float challenge = 0.0f, bool single = false)
         {
             if (_creatureRows == null)
@@ -1111,8 +1049,6 @@ namespace OdyTools.Editors
             _creatureRows.Add(creatureRow);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:378-392
-        // Original: def remove_selected_creature(self):
         private void RemoveSelectedCreature()
         {
             if (_creatureTable == null || _creatureRows == null) return;
@@ -1222,7 +1158,7 @@ namespace OdyTools.Editors
             }
             // Add separator after first menu items (Separator is not a MenuItem, so add directly to Items collection)
             contextMenu.Items.Insert(menuItems.Count - 1, new Separator());
-            
+
             comboBox.ContextMenu = contextMenu;
         }
 
@@ -1245,7 +1181,7 @@ namespace OdyTools.Editors
                 // Try to find the script resource (NSS source preferred, fallback to NCS)
                 var resourceResult = _installation.Resource(scriptName, ResourceType.NSS, null);
                 ResourceType resourceType = ResourceType.NSS;
-                
+
                 if (resourceResult == null)
                 {
                     // Try compiled version
@@ -1293,8 +1229,8 @@ namespace OdyTools.Editors
                 if (string.IsNullOrEmpty(scriptName))
                 {
                     // Generate based on encounter resref and script type
-                    string baseName = !string.IsNullOrEmpty(_resrefEdit?.Text) 
-                        ? _resrefEdit.Text 
+                    string baseName = !string.IsNullOrEmpty(_resrefEdit?.Text)
+                        ? _resrefEdit.Text
                         : "m00xx_enc_000";
                     scriptName = $"{baseName}_{scriptTypeName.ToLowerInvariant().Replace(" ", "_")}";
                 }
@@ -1309,7 +1245,7 @@ namespace OdyTools.Editors
                 // Create a new NSS editor with empty content
                 var nssEditor = new OdyToolNSS(this, _installation);
                 nssEditor.New();
-                
+
                 // Show the editor - user will set the resref when saving
                 OdyTools.Editors.WindowUtils.AddWindow(nssEditor, show: true);
 #else
@@ -1475,7 +1411,7 @@ namespace OdyTools.Editors
                 var selectedItem = _creatureTable.SelectedItem;
                 var itemType = selectedItem.GetType();
                 var resRefProp = itemType.GetProperty("ResRef");
-                
+
                 if (resRefProp == null)
                 {
                     return;
@@ -1491,7 +1427,7 @@ namespace OdyTools.Editors
 
                 // Find the creature resource (UTP)
                 var resourceResult = _installation.Resource(creatureResRef, ResourceType.UTP, null);
-                
+
                 if (resourceResult == null)
                 {
                     System.Console.WriteLine($"Creature '{creatureResRef}' not found in installation.");
@@ -1526,8 +1462,8 @@ namespace OdyTools.Editors
             try
             {
                 // Generate a default creature name based on encounter resref
-                string baseName = !string.IsNullOrEmpty(_resrefEdit?.Text) 
-                    ? _resrefEdit.Text 
+                string baseName = !string.IsNullOrEmpty(_resrefEdit?.Text)
+                    ? _resrefEdit.Text
                     : "m00xx_enc_000";
                 string creatureName = $"{baseName}_cre_000";
 
@@ -1575,7 +1511,7 @@ namespace OdyTools.Editors
                 var selectedItem = _creatureTable.SelectedItem;
                 var itemType = selectedItem.GetType();
                 var resRefProp = itemType.GetProperty("ResRef");
-                
+
                 if (resRefProp == null)
                 {
                     return;

@@ -12,8 +12,6 @@ using OdyTools.Config;
 
 namespace OdyTools.Update
 {
-    // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/update.py:419
-    // Original: class AppUpdate(LibUpdate):
     /// <summary>
     /// Handles downloading, extracting, and applying application updates.
     /// This class manages the complete update lifecycle from download to restart.
@@ -33,8 +31,6 @@ namespace OdyTools.Update
         private bool _downloadStatus;
         private string _archiveName;
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/update.py:422-450
-        // Original: def __init__(self, update_urls: list[str], filestem: str, current_version: str, latest: str, ...):
         public AppUpdate(
             List<string> updateUrls,
             string filestem,
@@ -86,8 +82,6 @@ namespace OdyTools.Update
             set => _getArchiveNames = value ?? GetArchiveNames;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/update.py:140-184
-        // Original: def get_archive_names(self) -> list[str]:
         private List<string> GetArchiveNames()
         {
             string osName = RuntimeInformation.OSDescription;
@@ -139,8 +133,6 @@ namespace OdyTools.Update
             throw new NotSupportedException($"Unsupported OS: {osName}");
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/update.py:195-212
-        // Original: def download(self, *, background: bool = False) -> bool | None:
         /// <summary>
         /// Downloads the update archive. If background is false, blocks until download completes.
         /// </summary>
@@ -183,8 +175,6 @@ namespace OdyTools.Update
             return _downloadStatus;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/update.py:349-356
-        // Original: def _is_downloaded(self) -> bool:
         private bool IsDownloaded()
         {
             string originalDir = Directory.GetCurrentDirectory();
@@ -206,8 +196,6 @@ namespace OdyTools.Update
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/update.py:358-413
-        // Original: def _full_update(self) -> bool:
         private bool _FullUpdate()
         {
             string originalDir = Directory.GetCurrentDirectory();
@@ -305,8 +293,6 @@ namespace OdyTools.Update
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/update.py:453-466
-        // Original: def extract_restart(self):
         /// <summary>
         /// Extracts the update, overwrites the current binary, and restarts the application.
         /// </summary>
@@ -332,8 +318,6 @@ namespace OdyTools.Update
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/update.py:248-265
-        // Original: def _extract_update(self):
         private void _ExtractUpdate()
         {
             string originalDir = Directory.GetCurrentDirectory();
@@ -379,8 +363,6 @@ namespace OdyTools.Update
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/update.py:267-285
-        // Original: @classmethod def _recursive_extract(cls, archive_path: Path):
         private void _RecursiveExtract(string archivePath)
         {
             if (!File.Exists(archivePath))
@@ -403,8 +385,6 @@ namespace OdyTools.Update
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/update.py:323-347
-        // Original: @classmethod def extract_zip(cls, archive_path: os.PathLike | str, *, recursive_extract: bool = False):
         private void ExtractZip(string archivePath, bool recursiveExtract = false)
         {
             using (ZipArchive archive = ZipFile.OpenRead(archivePath))
@@ -443,8 +423,6 @@ namespace OdyTools.Update
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/update.py:287-321
-        // Original: @classmethod def extract_tar(cls, archive_path: os.PathLike | str, *, recursive_extract: bool = False):
         private void ExtractTar(string archivePath, bool recursiveExtract = false)
         {
             string tarPath = archivePath;
@@ -525,8 +503,6 @@ namespace OdyTools.Update
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/update.py:530-639
-        // Original: def _win_rename(self, *, restart: bool = False) -> tuple[Path, Path]:
         private void _WinRename(bool restart = false)
         {
             string exeName = GetExpectedFilename();
@@ -600,8 +576,6 @@ namespace OdyTools.Update
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/update.py:659-690
-        // Original: def _win_overwrite(self, *, restart: bool = False):
         private void _WinOverwrite(bool restart = false)
         {
             string currentAppDir = GetCurrentAppDir();
@@ -646,8 +620,6 @@ namespace OdyTools.Update
             Environment.Exit(0);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/update.py:482-507
-        // Original: def _unix_overwrite(self):
         private void _UnixOverwrite()
         {
             string currentAppDir = GetCurrentAppDir();
@@ -680,8 +652,6 @@ namespace OdyTools.Update
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/update.py:509-528
-        // Original: def _unix_restart(self):
         private void _UnixRestart()
         {
             string currentAppDir = GetCurrentAppDir();
@@ -721,8 +691,6 @@ namespace OdyTools.Update
             return Path.GetDirectoryName(exePath) ?? AppDomain.CurrentDomain.BaseDirectory;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/update.py:415-416
-        // Original: def cleanup(self):
         /// <summary>
         /// Cleans up temporary update files and folders.
         /// </summary>

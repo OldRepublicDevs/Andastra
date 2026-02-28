@@ -20,8 +20,6 @@ using GFFAuto = BioWare.Resource.Formats.GFF.GFFAuto;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:23
-    // Original: class OdyToolUTT(Editor):
     public partial class OdyToolUTT : Editor
     {
         private const int MinEditorWidth = 640;
@@ -74,8 +72,6 @@ namespace OdyTools.Editors
         // UI Controls - Comments
         private TextBox _commentsEdit;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:24-64
-        // Original: def __init__(self, parent, installation):
         public OdyToolUTT(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTT", "trigger",
                 new[] { ResourceType.UTT, ResourceType.BTT },
@@ -180,8 +176,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:66-68
-        // Original: def _setup_signals(self):
         private void SetupSignals()
         {
             if (_tagGenerateButton != null)
@@ -194,8 +188,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:70-119
-        // Original: def _setup_installation(self, installation: OdyInstallation):
         private void SetupInstallation(OdyInstallation installation)
         {
             _installation = installation;
@@ -204,14 +196,10 @@ namespace OdyTools.Editors
                 _nameEdit.SetInstallation(installation);
             }
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:77-79
-            // Original: cursors: 2DA | None = installation.ht_get_cache_2da(OdyInstallation.TwoDA_CURSORS)
             TwoDA cursors = installation?.HtGetCache2DA(OdyInstallation.TwoDACursors);
             TwoDA factions = installation?.HtGetCache2DA(OdyInstallation.TwoDAFactions);
             TwoDA traps = installation?.HtGetCache2DA(OdyInstallation.TwoDATraps);
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:81-86
-            // Original: if cursors: self.ui.cursorSelect.set_context(cursors, installation, OdyInstallation.TwoDA_CURSORS)
             if (cursors != null && _cursorSelect != null)
             {
                 _cursorSelect.SetContext(cursors, installation, OdyInstallation.TwoDACursors);
@@ -225,8 +213,6 @@ namespace OdyTools.Editors
                 _trapSelect.SetContext(traps, installation, OdyInstallation.TwoDATraps);
             }
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:88-93
-            // Original: if cursors: self.ui.cursorSelect.set_items(cursors.get_column("label"))
             if (cursors != null && _cursorSelect != null)
             {
                 try
@@ -264,8 +250,6 @@ namespace OdyTools.Editors
                 }
             }
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:95-104
-            // Original: self.relevant_script_resnames: list[str] = sorted(...)
             // Setup script combo boxes with relevant script resources
             if (installation != null)
             {
@@ -289,8 +273,6 @@ namespace OdyTools.Editors
                     }
                     relevantScriptResnames.Sort();
 
-                    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:106-119
-                    // Original: self.ui.onClickEdit.populate_combo_box(self.relevant_script_resnames)
                     // Populate script combo boxes with relevant script resources
                     PopulateScriptComboBox(_onClickEdit, relevantScriptResnames, installation);
                     PopulateScriptComboBox(_onDisarmEdit, relevantScriptResnames, installation);
@@ -299,6 +281,15 @@ namespace OdyTools.Editors
                     PopulateScriptComboBox(_onHeartbeatSelect, relevantScriptResnames, installation);
                     PopulateScriptComboBox(_onTrapTriggeredEdit, relevantScriptResnames, installation);
                     PopulateScriptComboBox(_onUserDefinedSelect, relevantScriptResnames, installation);
+
+                    // Setup context menu (Open in OdyToolNSS) for each script combo
+                    SetupScriptComboBoxContextMenu(_onClickEdit, "OnClick");
+                    SetupScriptComboBoxContextMenu(_onDisarmEdit, "OnDisarm");
+                    SetupScriptComboBoxContextMenu(_onEnterSelect, "OnEnter");
+                    SetupScriptComboBoxContextMenu(_onExitSelect, "OnExit");
+                    SetupScriptComboBoxContextMenu(_onHeartbeatSelect, "OnHeartbeat");
+                    SetupScriptComboBoxContextMenu(_onTrapTriggeredEdit, "OnTrapTriggered");
+                    SetupScriptComboBoxContextMenu(_onUserDefinedSelect, "OnUserDefined");
                 }
                 catch (Exception ex)
                 {
@@ -524,12 +515,7 @@ namespace OdyTools.Editors
                 }
                 catch { }
             }
-            Bind("actionNew", () => New());
-            Bind("actionOpen", () => { });
-            Bind("actionSave", () => Save());
-            Bind("actionSaveAs", () => _ = RunSaveAsAsync());
-            Bind("actionRevert", () => Revert());
-            Bind("actionExit", () => Close());
+            // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
             Bind("actionUndo", () => Undo());
             Bind("actionRedo", () => Redo());
             Bind("actionFind", () => ShowFindDialog());
@@ -608,7 +594,7 @@ namespace OdyTools.Editors
             finally { _undoRedoInProgress = false; }
         }
 
-        private void Revert()
+        public override void Revert()
         {
             if (_revert == null || _revert.Length == 0) return;
             try
@@ -624,7 +610,7 @@ namespace OdyTools.Editors
             }
         }
 
-        private async Task RunSaveAsAsync()
+        protected override async Task RunSaveAsAsync()
         {
             var storageProvider = (this as Window)?.StorageProvider;
             if (storageProvider == null) return;
@@ -711,8 +697,6 @@ namespace OdyTools.Editors
             if (e.Key == Key.F3) { FindNextMatch(); e.Handled = true; }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:121-131
-        // Original: def load(self, filepath, resref, restype, data):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
@@ -726,8 +710,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:133-185
-        // Original: def _loadUTT(self, utt: UTT):
         private void LoadUTT(UTT utt)
         {
             _utt = utt;
@@ -839,8 +821,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:187-240
-        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
             // Update the existing UTT object from UI elements
@@ -1061,8 +1041,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:242-244
-        // Original: def new(self):
         public override void New()
         {
             base.New();
@@ -1072,8 +1050,6 @@ namespace OdyTools.Editors
             UpdateStatusBar();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:252-255
-        // Original: def generate_tag(self):
         private void GenerateTag()
         {
             if (_resrefEdit != null && string.IsNullOrEmpty(_resrefEdit.Text))
@@ -1086,8 +1062,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:257-261
-        // Original: def generate_resref(self):
         private void GenerateResref()
         {
             if (_resrefEdit != null)
@@ -1120,6 +1094,61 @@ namespace OdyTools.Editors
         public UTT Utt => _utt;
 
         // Helper method to populate script combo boxes (matching PyKotor's populate_combo_box and setup_file_context_menu)
+        private void SetupScriptComboBoxContextMenu(ComboBox comboBox, string scriptTypeName)
+        {
+            if (comboBox == null) return;
+
+            var contextMenu = new ContextMenu();
+            var openInEditorItem = new MenuItem { Header = "Open in OdyToolNSS", IsEnabled = false };
+            openInEditorItem.Click += (sender, e) => OpenScriptInEditor(comboBox, scriptTypeName);
+            contextMenu.Items.Add(openInEditorItem);
+
+            void UpdateOpenEnabled(object s, EventArgs e)
+            {
+                string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
+                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
+            }
+            comboBox.SelectionChanged += UpdateOpenEnabled;
+            contextMenu.Opened += (s, e) => UpdateOpenEnabled(s, e);
+            comboBox.ContextMenu = contextMenu;
+        }
+
+        private void OpenScriptInEditor(ComboBox comboBox, string scriptTypeName)
+        {
+            if (comboBox == null || _installation == null) return;
+            string scriptName = comboBox.Text?.Trim();
+            if (string.IsNullOrEmpty(scriptName)) return;
+
+            try
+            {
+                var resourceResult = _installation.Resource(scriptName, ResourceType.NSS, null);
+                var resourceType = ResourceType.NSS;
+                if (resourceResult == null)
+                {
+                    resourceResult = _installation.Resource(scriptName, ResourceType.NCS, null);
+                    resourceType = ResourceType.NCS;
+                }
+                if (resourceResult == null)
+                {
+                    System.Console.WriteLine($"Script '{scriptName}' not found in installation.");
+                    return;
+                }
+                byte[] data = resourceResult.Data;
+                if (data == null && !string.IsNullOrEmpty(resourceResult.FilePath) && System.IO.File.Exists(resourceResult.FilePath))
+                    data = System.IO.File.ReadAllBytes(resourceResult.FilePath);
+                if (data == null)
+                {
+                    System.Console.WriteLine($"No data for script '{scriptName}'.");
+                    return;
+                }
+                WindowUtils.OpenResourceEditor(resourceResult.FilePath, scriptName, resourceType, data, _installation, this);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"OpenScriptInEditor failed: {ex.Message}");
+            }
+        }
+
         private void PopulateScriptComboBox(ComboBox comboBox, List<string> scriptResnames, OdyInstallation installation)
         {
             if (comboBox == null)
@@ -1137,10 +1166,6 @@ namespace OdyTools.Editors
                 {
                     comboBox.Items.Add(resname);
                 }
-
-                // Setup file context menu (matching PyKotor: installation.setup_file_context_menu)
-                // This allows right-clicking to browse for scripts
-                // Note: SetupFileContextMenu may not be implemented yet, so we skip it if unavailable
             }
             catch (Exception ex)
             {

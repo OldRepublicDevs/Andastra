@@ -14,11 +14,10 @@ using OdyTools.Utils;
 using JetBrains.Annotations;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using Avalonia;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:291
-    // Original: class Editor(QMainWindow):
     public abstract class Editor : Window
     {
         protected const string CapsuleFilter = "*.mod *.erf *.rim *.sav";
@@ -41,8 +40,9 @@ namespace OdyTools.Editors
         public string FilepathPublic => _filepath;
 
         // Expose installation for widgets and derived classes
-        // Matching PyKotor: widgets access editor._installation directly
         internal OdyInstallation Installation => _installation;
+        private readonly List<byte[]> _undoStack = new List<byte[]>();
+        private readonly List<byte[]> _redoStack = new List<byte[]>();
 
         /// <summary>True when the document has unsaved changes.</summary>
         public bool IsDirty => _dirty;
@@ -63,8 +63,6 @@ namespace OdyTools.Editors
             RefreshWindowTitle();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:303-350
-        // Original: def __init__(self, parent, title, iconName, readSupported, writeSupported, installation):
         private bool _exitMenuItemWired;
         /// <summary>True while closing after user answered the save-changes dialog; prevents Showing the dialog again on the subsequent Closing event.</summary>
         private bool _closingAfterSavePrompt;
@@ -151,9 +149,139 @@ namespace OdyTools.Editors
             return true;
         }
 
+        private bool _recentFilesMenuWired;
+
         private void OnEditorOpened(object sender, EventArgs e)
         {
             EnsureExitMenuItemWired();
+            EnsureFileMenuWithRecentFiles();
+            EnsureStandardFileMenuActionsWired();
+            EnsureSettingsMenuWired();
+        }
+
+        private bool _standardFileMenuWired;
+
+        /// <summary>Override to false when the editor has fully custom File menu handling (e.g. ERF, SAV).</summary>
+        protected virtual bool UseStandardFileMenuWiring => true;
+
+        /// <summary>Wires standard File menu actions (New, Open, Save, Save As, Revert) to base handlers. Called automatically on Opened. Subclasses can override RunOpenAsync, RunSaveAsAsync, Revert for custom behavior.</summary>
+        private void EnsureStandardFileMenuActionsWired()
+        {
+            if (!UseStandardFileMenuWiring || _standardFileMenuWired) return;
+            _standardFileMenuWired = true;
+            WireFileAction("actionNew", async () =>
+            {
+                if (await ConfirmDiscardUnsavedChangesAsync()) New();
+            });
+            WireFileAction("actionOpen", () => _ = RunOpenAsync());
+            WireFileAction("actionSave", () => Save());
+            WireFileAction("actionSaveAs", () => _ = RunSaveAsAsync());
+            WireFileAction("actionSave_As", () => _ = RunSaveAsAsync()); // GFF uses this name
+            WireFileAction("actionRevert", () => _ = RevertAsync());
+        }
+
+        private void WireFileAction(string name, Action handler)
+        {
+            var item = FindControlSafe<MenuItem>(name);
+            if (item != null)
+                item.Click += (s, e) => handler();
+        }
+
+        private void WireFileAction(string name, Func<Task> asyncHandler)
+        {
+            var item = FindControlSafe<MenuItem>(name);
+            if (item != null)
+                item.Click += (s, e) => _ = asyncHandler();
+        }
+
+        /// <summary>Override to return the name of the Settings menu action (e.g. "actionDLGSettings") to wire it to ShowSettingsDialogAsync.</summary>
+        protected virtual string SettingsMenuActionName => null;
+
+        /// <summary>Opens the editor's settings dialog. Override in subclasses that have settings (e.g. DLG).</summary>
+        protected virtual Task ShowSettingsDialogAsync() => Task.CompletedTask;
+
+        /// <summary>
+        /// Resolves and sets _installation from IEditorInstallationSettings.
+        /// When UseInstallation is false, sets _installation to null.
+        /// When UseInstallation is true but SelectedInstallationName is empty, preserves current _installation (e.g. passed from main app).
+        /// When UseInstallation is true and SelectedInstallationName is set, creates OdyInstallation from GlobalSettings.Installations.
+        /// Call from constructor/Opened and after settings dialog OK. Refreshes window title when installation changes.
+        /// </summary>
+        protected void ApplyInstallationFromSettings(IEditorInstallationSettings settings)
+        {
+            if (settings == null) return;
+            if (!settings.UseInstallation(true))
+            {
+                _installation = null;
+                RefreshWindowTitle();
+                return;
+            }
+            string name = settings.SelectedInstallationName("")?.Trim();
+            if (string.IsNullOrEmpty(name))
+            {
+                return;
+            }
+            try
+            {
+                var installations = new GlobalSettings().Installations();
+                if (installations == null || !installations.ContainsKey(name))
+                {
+                    _installation = null;
+                    RefreshWindowTitle();
+                    return;
+                }
+                var installData = installations[name];
+                string path = installData != null && installData.ContainsKey("path") ? installData["path"]?.ToString()?.Trim() : null;
+                bool tsl = installData != null && installData.ContainsKey("tsl") && installData["tsl"] is bool tslVal && tslVal;
+                if (string.IsNullOrEmpty(path) || !System.IO.Directory.Exists(path))
+                {
+                    _installation = null;
+                    RefreshWindowTitle();
+                    return;
+                }
+                _installation = new OdyInstallation(path, name, tsl);
+                RefreshWindowTitle();
+            }
+            catch
+            {
+                _installation = null;
+                RefreshWindowTitle();
+            }
+        }
+
+        private bool _settingsMenuWired;
+
+        private void EnsureSettingsMenuWired()
+        {
+            if (_settingsMenuWired || string.IsNullOrEmpty(SettingsMenuActionName)) return;
+            _settingsMenuWired = true;
+            WireFileAction(SettingsMenuActionName, () => ShowSettingsDialogAsync());
+        }
+
+        private T FindControlSafe<T>(string name) where T : Control
+        {
+            try
+            {
+                var c = this.FindControl<T>(name);
+                if (c != null) return c;
+            }
+            catch { }
+            return FindControlByNameRecurse<T>(this, name);
+        }
+
+        private static T FindControlByNameRecurse<T>(Visual parent, string name) where T : Control
+        {
+            if (parent is Control c && c is T match && string.Equals(c.Name, name, StringComparison.Ordinal))
+                return match;
+            foreach (var child in parent.GetVisualChildren())
+            {
+                if (child is Visual v)
+                {
+                    var found = FindControlByNameRecurse<T>(v, name);
+                    if (found != null) return found;
+                }
+            }
+            return null;
         }
 
         private void EnsureExitMenuItemWired()
@@ -224,13 +352,165 @@ namespace OdyTools.Editors
             return string.Equals(s, "Exit", StringComparison.OrdinalIgnoreCase);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:489-516
-        // Original: def setupEditorFilters(self, readSupported, writeSupported):
+        /// <summary>Finds or creates the Recent Files submenu in the File menu. Automatically called on editor open.</summary>
+        private void EnsureFileMenuWithRecentFiles()
+        {
+            if (_recentFilesMenuWired) return;
+            var fileMenu = FindFileMenuItem();
+            if (fileMenu == null) return;
+            var recentSubmenu = GetOrCreateRecentFilesSubmenu(fileMenu);
+            if (recentSubmenu == null) return;
+            _recentFilesMenuWired = true;
+        }
+
+        private MenuItem FindFileMenuItem()
+        {
+            foreach (var menu in FindControls<Menu>(this))
+            {
+                foreach (var item in menu.Items)
+                {
+                    if (item is MenuItem mi && IsFileMenuHeader(mi.Header))
+                        return mi;
+                }
+            }
+            return null;
+        }
+
+        private static bool IsFileMenuHeader(object header)
+        {
+            if (header == null) return false;
+            var s = header.ToString()?.Replace("_", "").Trim();
+            return string.Equals(s, "File", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private MenuItem GetOrCreateRecentFilesSubmenu(MenuItem fileMenu)
+        {
+            // Check if Recent Files submenu already exists (by name or header)
+            foreach (var item in fileMenu.Items)
+            {
+                if (item is MenuItem sub && IsRecentFilesHeader(sub.Header))
+                {
+                    sub.SubmenuOpened += (s, e) => PopulateRecentFilesMenu(sub);
+                    PopulateRecentFilesMenu(sub);
+                    return sub;
+                }
+            }
+            // Find index of Exit item - insert Recent Files + separator before it
+            int exitIndex = -1;
+            for (int i = 0; i < fileMenu.Items.Count; i++)
+            {
+                if (fileMenu.Items[i] is MenuItem m && IsExitHeader(m.Header))
+                {
+                    exitIndex = i;
+                    break;
+                }
+            }
+            var recentItem = new MenuItem { Header = "_Recent Files" };
+            recentItem.SubmenuOpened += (s, e) => PopulateRecentFilesMenu(recentItem);
+            PopulateRecentFilesMenu(recentItem); // Initial populate so submenu shows items
+            if (exitIndex >= 0)
+            {
+                fileMenu.Items.Insert(exitIndex, new Separator());
+                fileMenu.Items.Insert(exitIndex, recentItem);
+            }
+            else
+            {
+                fileMenu.Items.Add(new Separator());
+                fileMenu.Items.Add(recentItem);
+            }
+            return recentItem;
+        }
+
+        private static bool IsRecentFilesHeader(object header)
+        {
+            if (header == null) return false;
+            var s = header.ToString()?.Replace("_", "").Trim();
+            return string.Equals(s, "Recent Files", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void PopulateRecentFilesMenu(MenuItem menuRecentFiles)
+        {
+            if (menuRecentFiles == null) return;
+            menuRecentFiles.Items.Clear();
+            var recentPaths = GetRecentFilesFilteredForEditor();
+            foreach (var path in recentPaths)
+            {
+                var display = Path.GetFileName(path);
+                if (string.IsNullOrEmpty(display)) display = path;
+                var item = new MenuItem { Header = display };
+                ToolTip.SetTip(item, path);
+                var captured = path;
+                item.Click += (s, e) => _ = OpenRecentFileAsync(captured);
+                menuRecentFiles.Items.Add(item);
+            }
+            if (recentPaths.Count == 0)
+            {
+                menuRecentFiles.Items.Add(new MenuItem { Header = "(No recent files)", IsEnabled = false });
+            }
+        }
+
+        private List<string> GetRecentFilesFilteredForEditor()
+        {
+            var settings = new Settings("Global");
+            var all = settings.GetValue("RecentFiles", new List<string>());
+            var supported = new List<string>();
+            foreach (var fp in all)
+            {
+                if (string.IsNullOrEmpty(fp) || !File.Exists(fp)) continue;
+                if (IsPathSupportedByEditor(fp))
+                    supported.Add(fp);
+                if (supported.Count >= 15) break;
+            }
+            return supported;
+        }
+
+        /// <summary>Returns true if this editor can open the given file path (extension matches _readSupported).</summary>
+        protected virtual bool IsPathSupportedByEditor(string filepath)
+        {
+            if (_readSupported == null || _readSupported.Length == 0) return false;
+            var ext = (Path.GetExtension(filepath) ?? "").TrimStart('.').ToLowerInvariant();
+            if (string.IsNullOrEmpty(ext)) return false;
+            return _readSupported.Any(r => r != null && string.Equals(r.Extension, ext, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>Opens a recent file in this editor. Called when user selects from Recent Files menu. Override to customize.</summary>
+        protected virtual async Task OpenRecentFileAsync(string filepath)
+        {
+            if (string.IsNullOrWhiteSpace(filepath) || !File.Exists(filepath))
+                return;
+            if (!await ConfirmDiscardUnsavedChangesAsync()) return;
+            if (!IsPathSupportedByEditor(filepath))
+            {
+                _ = MessageBoxManager.GetMessageBoxStandard(
+                    "Open Failed",
+                    "This editor cannot open this file type.",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Warning).ShowWindowDialogAsync(this);
+                return;
+            }
+            try
+            {
+                byte[] data = File.ReadAllBytes(filepath);
+                string resname = Path.GetFileNameWithoutExtension(filepath);
+                var ext = (Path.GetExtension(filepath) ?? "").TrimStart('.').ToLowerInvariant();
+                var restype = ResourceType.FromExtension(ext)
+                    ?? _readSupported?.FirstOrDefault(r => r != null && string.Equals(r.Extension, ext, StringComparison.OrdinalIgnoreCase));
+                if (restype == null) return;
+                Load(filepath, resname, restype, data);
+            }
+            catch (Exception ex)
+            {
+                _ = MessageBoxManager.GetMessageBoxStandard(
+                    "Open Failed",
+                    "Could not open file: " + ex.Message,
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
+            }
+        }
+
         protected void SetupEditorFilters()
         {
             // Setup file filters for open/save dialogs
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:489-516
-            // Original: Additional formats handling
             // Add format variants (XML, JSON, CSV, ASCII, YAML) for each base resource type
             var additionalFormats = new[] { "XML", "JSON", "CSV", "ASCII", "YAML" };
             var readList = _readSupported.ToList();
@@ -238,7 +518,6 @@ namespace OdyTools.Editors
 
             // Add format variants for read supported types
             // For each base type, look for variants like {FieldName}_XML, {FieldName}_JSON, etc.
-            // Matching PyKotor: uses restype.name (field name) to construct variant names
             var readVariants = new List<ResourceType>();
             foreach (var restype in _readSupported)
             {
@@ -262,7 +541,6 @@ namespace OdyTools.Editors
 
             // Add format variants for write supported types
             // For each base type, look for variants like {FieldName}_XML, {FieldName}_JSON, etc.
-            // Matching PyKotor: uses restype.name (field name) to construct variant names
             var writeVariants = new List<ResourceType>();
             foreach (var restype in _writeSupported)
             {
@@ -288,7 +566,6 @@ namespace OdyTools.Editors
             _writeSupported = writeList.ToArray();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/base.py refresh_window_title()
         // Title format: (installation name)\relpath\to\filename - Editor(installation)
         // When the file is inside a container (BIF/RIM/ERF/MOD/SAV), show logical resource path (e.g. data\mainmenu8x6.gui) not the container path (gui.bif).
         protected void RefreshWindowTitle()
@@ -354,12 +631,9 @@ namespace OdyTools.Editors
             return ext == ".bif" || ext == ".rim" || ext == ".erf" || ext == ".mod" || ext == ".sav";
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:523-589
-        // Original: def save_as(self):
-        public abstract void SaveAs();
+        /// <summary>Save As entry point. Default implementation calls RunSaveAsAsync. Override for custom behavior.</summary>
+        public virtual void SaveAs() => _ = RunSaveAsAsync();
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:590-644
-        // Original: def save(self):
         public virtual void Save()
         {
             if (string.IsNullOrEmpty(_filepath))
@@ -393,8 +667,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:700-750
-        // Original: def load(self, filepath, resref, restype, data):
         public virtual void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             _filepath = filepath;
@@ -403,10 +675,16 @@ namespace OdyTools.Editors
             _revert = data;
             ClearDirty();
             RefreshWindowTitle();
+            AddToRecentFilesWhenLoaded(filepath);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:750-780
-        // Original: def new(self):
+        /// <summary>Adds the file to recent files list when Load is called with a valid file path. Override to disable or customize.</summary>
+        protected virtual void AddToRecentFilesWhenLoaded(string filepath)
+        {
+            if (!string.IsNullOrEmpty(filepath) && File.Exists(filepath))
+                WindowUtils.AddRecentFile(filepath);
+        }
+
         public virtual void New()
         {
             _filepath = null;
@@ -417,19 +695,128 @@ namespace OdyTools.Editors
             RefreshWindowTitle();
         }
 
-        /// <summary>Reload from last saved/reverted state. No-op if no revert data.</summary>
+        /// <summary>Reverts the document to the last saved state. Override for custom revert logic (e.g. clearing undo stack).</summary>
         public virtual void Revert()
         {
             if (_revert == null || string.IsNullOrEmpty(_filepath)) return;
             Load(_filepath, _resname, _restype, _revert);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:750-780
-        // Original: def build(self) -> tuple[bytes, bytes]:
+        /// <summary>Confirms discard of unsaved changes, then calls Revert. Used by File > Revert.</summary>
+        protected virtual async Task RevertAsync()
+        {
+            if (_revert == null || string.IsNullOrEmpty(_filepath)) return;
+            if (!await ConfirmDiscardUnsavedChangesAsync()) return;
+            Revert();
+        }
+
+        /// <summary>Save As: file picker, build, write, reload. Override for custom Save As behavior (e.g. format options).</summary>
+        protected virtual async Task RunSaveAsAsync()
+        {
+            if (!await ConfirmDiscardUnsavedChangesAsync()) return;
+            var storage = StorageProvider;
+            if (storage == null) return;
+            var patterns = _writeSupported != null
+                ? _writeSupported.Where(r => r != null && !string.IsNullOrEmpty(r.Extension)).Select(r => "*." + r.Extension).Distinct().ToList()
+                : new List<string>();
+            if (patterns.Count == 0) patterns.Add("*.*");
+            var filter = new List<FilePickerFileType>
+            {
+                new FilePickerFileType("Supported") { Patterns = patterns },
+                new FilePickerFileType("All files") { Patterns = new[] { "*.*" } }
+            };
+            string suggested = string.IsNullOrEmpty(_resname) ? "file" : _resname;
+            string ext = _restype?.Extension ?? patterns.FirstOrDefault()?.TrimStart('*') ?? ".bin";
+            if (!ext.StartsWith(".")) ext = "." + ext;
+            var options = new FilePickerSaveOptions
+            {
+                Title = "Save As",
+                SuggestedFileName = suggested + ext,
+                FileTypeChoices = filter
+            };
+            var file = await storage.SaveFilePickerAsync(options);
+            if (file == null) return;
+            string path = file.Path?.LocalPath ?? "";
+            if (string.IsNullOrWhiteSpace(path)) return;
+            try
+            {
+                var (data, _) = Build();
+                if (data == null) return;
+                File.WriteAllBytes(path, data);
+                string resname = Path.GetFileNameWithoutExtension(path);
+                string extLower = (Path.GetExtension(path) ?? "").TrimStart('.').ToLowerInvariant();
+                var restype = ResourceType.FromExtension(extLower)
+                    ?? _writeSupported?.FirstOrDefault(r => r != null && string.Equals(r.Extension, extLower, StringComparison.OrdinalIgnoreCase));
+                if (restype != null)
+                {
+                    _revert = data;
+                    ClearDirty();
+                    Load(path, resname, restype, data);
+                }
+            }
+            catch (Exception ex)
+            {
+                _ = MessageBoxManager.GetMessageBoxStandard(
+                    "Error saving",
+                    "Could not save: " + ex.Message,
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
+            }
+        }
+
+        /// <summary>
+        /// Opens a file picker, reads the selected file, and loads it via Load(filepath, resname, restype, data).
+        /// Uses _readSupported to build the file type filter. Override for custom open flow (e.g. DLG module browser).
+        /// </summary>
+        protected virtual async Task RunOpenAsync()
+        {
+            if (!await ConfirmDiscardUnsavedChangesAsync()) return;
+            var storage = StorageProvider;
+            if (storage == null) return;
+            var patterns = _readSupported != null
+                ? _readSupported.Where(r => r != null && !string.IsNullOrEmpty(r.Extension)).Select(r => "*." + r.Extension).Distinct().ToList()
+                : new List<string>();
+            if (patterns.Count == 0) patterns.Add("*.*");
+            var filter = new List<FilePickerFileType>
+            {
+                new FilePickerFileType("Supported") { Patterns = patterns },
+                new FilePickerFileType("All files") { Patterns = new[] { "*.*" } }
+            };
+            var options = new FilePickerOpenOptions
+            {
+                Title = "Open",
+                AllowMultiple = false,
+                FileTypeFilter = filter
+            };
+            var files = await storage.OpenFilePickerAsync(options);
+            if (files == null || files.Count == 0) return;
+            var f = files[0];
+            string path = f.Path?.LocalPath ?? "";
+            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+                return;
+            try
+            {
+                byte[] data = File.ReadAllBytes(path);
+                string resname = Path.GetFileNameWithoutExtension(path);
+                string ext = (Path.GetExtension(path) ?? "").TrimStart('.').ToLowerInvariant();
+                var restype = ResourceType.FromExtension(ext);
+                if (restype == null && _readSupported != null && _readSupported.Length > 0)
+                    restype = _readSupported.FirstOrDefault(r => r != null && string.Equals(r.Extension, ext, StringComparison.OrdinalIgnoreCase));
+                if (restype == null) return;
+                Load(path, resname, restype, data);
+            }
+            catch (Exception ex)
+            {
+                _ = MessageBoxManager.GetMessageBoxStandard(
+                    "Open Failed",
+                    "Could not open file: " + ex.Message,
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
+            }
+        }
+
         public abstract Tuple<byte[], byte[]> Build();
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:518-521
-        // Original: def getOpenedFileName(self) -> str:
         public string GetOpenedFileName()
         {
             if (!string.IsNullOrEmpty(_filepath) && !string.IsNullOrEmpty(_resname) && _restype != null)
@@ -485,8 +872,6 @@ namespace OdyTools.Editors
             return (expander, content);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/base.py:187-239
-        // Original: def _add_help_action(self, wiki_filename: str | None = None):
         public void AddHelpAction(string wikiFilename = null)
         {
             string[] wikiFilenames = null;
@@ -534,8 +919,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/base.py:241-251
-        // Original: def _show_help_dialog(self, wiki_filename: str):
         public void ShowHelpDialog(string wikiFilename)
         {
             if (string.IsNullOrEmpty(wikiFilename))

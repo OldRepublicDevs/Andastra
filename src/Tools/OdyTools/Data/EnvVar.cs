@@ -6,7 +6,6 @@ namespace OdyTools.Data
 {
     /// <summary>
     /// Represents a Qt environment variable definition.
-    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py:13-19
     /// </summary>
     public class EnvVar
     {
@@ -29,7 +28,6 @@ namespace OdyTools.Data
 
         /// <summary>
         /// List of all supported Qt environment variables.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/env_vars.py:22-181
         /// </summary>
         public static readonly List<EnvVar> ENV_VARS = new List<EnvVar>
         {

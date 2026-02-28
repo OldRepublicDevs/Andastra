@@ -6,13 +6,10 @@ using Avalonia.Markup.Xaml;
 
 namespace OdyTools.Widgets.Edit
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/spinbox.py:13
-    // Original: class GFFFieldSpinBox(QSpinBox):
     public partial class GFFFieldSpinBox : NumericUpDown
     {
         private Dictionary<int, string> _specialValueTextMapping;
         private int _minValue;
-        private string _lastOperation;
         private int? _cachedValue;
 
         // Public parameterless constructor for XAML
@@ -23,17 +20,14 @@ namespace OdyTools.Widgets.Edit
             _minValue = (int)Minimum;
             Minimum = -2147483646M;
             Maximum = 2147483647M;
-            _lastOperation = null;
             _cachedValue = null;
         }
 
         private void InitializeComponent()
         {
-            bool xamlLoaded = false;
             try
             {
                 AvaloniaXamlLoader.Load(this);
-                xamlLoaded = true;
             }
             catch
             {
@@ -41,8 +35,6 @@ namespace OdyTools.Widgets.Edit
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/spinbox.py:28-30
-        // Original: def true_minimum(self) -> int:
         private int TrueMinimum()
         {
             int minValue = (int)Minimum;
@@ -50,8 +42,6 @@ namespace OdyTools.Widgets.Edit
             return Math.Min(Math.Min(minValue, specialMin), _minValue);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/spinbox.py:32-34
-        // Original: def true_maximum(self) -> int:
         private int TrueMaximum()
         {
             int maxValue = (int)Maximum;
@@ -59,18 +49,13 @@ namespace OdyTools.Widgets.Edit
             return Math.Max(maxValue, specialMax);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/spinbox.py:36-43
-        // Original: def stepBy(self, steps: int):
         public void StepBy(int steps)
         {
-            _lastOperation = "stepBy";
             int currentValue = (int)Value;
             _cachedValue = NextValue(currentValue, steps);
             ApplyFinalValue(_cachedValue.HasValue ? _cachedValue.Value : currentValue);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/spinbox.py:45-72
-        // Original: def _next_value(self, current_value: int, steps: int) -> int:
         private int NextValue(int currentValue, int steps)
         {
             int tentativeNextValue = currentValue + steps;
@@ -116,11 +101,8 @@ namespace OdyTools.Widgets.Edit
             return specialVal;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/spinbox.py:74-79
-        // Original: def text_changed(self, text: str):
         private void OnTextChanged(string text)
         {
-            _lastOperation = "textChanged";
             if (int.TryParse(text, out int parsedValue))
             {
                 _cachedValue = parsedValue;
@@ -131,8 +113,6 @@ namespace OdyTools.Widgets.Edit
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/spinbox.py:81-87
-        // Original: def _apply_final_value(self, value: int):
         private void ApplyFinalValue(int value)
         {
             if (value < TrueMinimum())
@@ -147,15 +127,13 @@ namespace OdyTools.Widgets.Edit
             ValueChanged?.Invoke(value);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/spinbox.py:89-91
-        // Original: def setMinimum(self, value: int):
         public void SetMinimum(int value)
         {
             _minValue = value;
             base.Minimum = Math.Min(-2, value);
         }
 
-        // Intentionally hides base ValueChanged event (EventHandler<NumericUpDownValueChangedEventArgs>) 
+        // Intentionally hides base ValueChanged event (EventHandler<NumericUpDownValueChangedEventArgs>)
         // to provide Action<int> signature for GFF field value changes
         public new event Action<int> ValueChanged;
     }

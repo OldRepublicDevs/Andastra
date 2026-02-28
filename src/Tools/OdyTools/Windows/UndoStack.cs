@@ -7,8 +7,6 @@ using IndoorMapRoom = OdyTools.Data.IndoorMapRoom;
 
 namespace OdyTools.Windows
 {
-    // Matching PyKotor implementation - QUndoStack equivalent
-    // Original: QUndoStack from Qt
     public class UndoStack
     {
         private readonly Stack<IUndoCommand> _undoStack = new Stack<IUndoCommand>();
@@ -269,7 +267,6 @@ namespace OdyTools.Windows
         }
     }
 
-    // Matching PyKotor implementation - QUndoCommand equivalent
     public interface IUndoCommand
     {
         string Text { get; }
@@ -277,8 +274,6 @@ namespace OdyTools.Windows
         void Redo();
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:149-176
-    // Original: class AddRoomCommand(QUndoCommand):
     public class AddRoomCommand : IUndoCommand
     {
         private readonly IndoorMap _indoorMap;
@@ -313,8 +308,6 @@ namespace OdyTools.Windows
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:178-210
-    // Original: class DeleteRoomsCommand(QUndoCommand):
     public class DeleteRoomsCommand : IUndoCommand
     {
         private readonly IndoorMap _indoorMap;
@@ -372,8 +365,6 @@ namespace OdyTools.Windows
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:319-365
-    // Original: class DuplicateRoomsCommand(QUndoCommand):
     public class DuplicateRoomsCommand : IUndoCommand
     {
         private readonly IndoorMap _indoorMap;
@@ -467,8 +458,6 @@ namespace OdyTools.Windows
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:213-243
-    // Original: class MoveRoomsCommand(QUndoCommand):
     public class MoveRoomsCommand : IUndoCommand
     {
         private readonly IndoorMap _indoorMap;
@@ -513,8 +502,6 @@ namespace OdyTools.Windows
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:246-276
-    // Original: class RotateRoomsCommand(QUndoCommand):
     public class RotateRoomsCommand : IUndoCommand
     {
         private readonly IndoorMap _indoorMap;
@@ -559,8 +546,6 @@ namespace OdyTools.Windows
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:279-312
-    // Original: class FlipRoomsCommand(QUndoCommand):
     public class FlipRoomsCommand : IUndoCommand
     {
         private readonly IndoorMap _indoorMap;
@@ -623,8 +608,6 @@ namespace OdyTools.Windows
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:368-386
-    // Original: class MoveWarpCommand(QUndoCommand):
     public class MoveWarpCommand : IUndoCommand
     {
         private readonly IndoorMap _indoorMap;

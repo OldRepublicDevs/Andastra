@@ -27,8 +27,8 @@ namespace BioWare.Tools
         // Original: def convert_xml_to_gff(input_path: Path, output_path: Path, *, gff_content_type: str | None = None) -> None:
         public static void ConvertXmlToGff(string inputPath, string outputPath, string gffContentType = null)
         {
-            // Note: XML/JSON reading not yet implemented - placeholder
-            throw new NotImplementedException("XML/JSON GFF reading not yet implemented");
+            GFF gff = GFFAuto.ReadGff(inputPath, fileFormat: ResourceType.GFF_XML);
+            GFFAuto.WriteGff(gff, outputPath, ResourceType.GFF);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/conversions.py:63-76
@@ -45,8 +45,12 @@ namespace BioWare.Tools
         // Original: def convert_xml_to_tlk(input_path: Path, output_path: Path, *, language: Language | None = None) -> None:
         public static void ConvertXmlToTlk(string inputPath, string outputPath, Language? language = null)
         {
-            // Note: XML/JSON reading not yet implemented - placeholder
-            throw new NotImplementedException("XML/JSON TLK reading not yet implemented");
+            TLK tlk = TLKAuto.ReadTlk(inputPath, ResourceType.TLK_XML);
+            if (language.HasValue)
+            {
+                tlk.Language = language.Value;
+            }
+            TLKAuto.WriteTlk(tlk, outputPath, ResourceType.TLK);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/conversions.py:96-105
@@ -81,8 +85,8 @@ namespace BioWare.Tools
         // Original: def convert_csv_to_2da(input_path: Path, output_path: Path, *, delimiter: str = ",") -> None:
         public static void ConvertCsvTo2da(string inputPath, string outputPath, string delimiter = ",")
         {
-            // Note: CSV reading not yet implemented - placeholder
-            throw new NotImplementedException("CSV 2DA reading not yet implemented");
+            TwoDA twoda = TwoDAAuto.Read2DA(inputPath, fileFormat: ResourceType.TwoDA_CSV);
+            TwoDAAuto.Write2DA(twoda, outputPath, ResourceType.TwoDA);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/conversions.py:154-163
@@ -99,8 +103,8 @@ namespace BioWare.Tools
         // Original: def convert_json_to_gff(input_path: Path, output_path: Path, *, gff_content_type: str | None = None) -> None:
         public static void ConvertJsonToGff(string inputPath, string outputPath, string gffContentType = null)
         {
-            // Note: JSON reading not yet implemented - placeholder
-            throw new NotImplementedException("JSON GFF reading not yet implemented");
+            GFF gff = GFFAuto.ReadGff(inputPath, fileFormat: ResourceType.GFF_JSON);
+            GFFAuto.WriteGff(gff, outputPath, ResourceType.GFF);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/conversions.py:179-188
@@ -117,8 +121,8 @@ namespace BioWare.Tools
         // Original: def convert_json_to_tlk(input_path: Path, output_path: Path) -> None:
         public static void ConvertJsonToTlk(string inputPath, string outputPath)
         {
-            // Note: JSON reading not yet implemented - placeholder
-            throw new NotImplementedException("JSON TLK reading not yet implemented");
+            TLK tlk = TLKAuto.ReadTlk(inputPath, ResourceType.TLK_JSON);
+            TLKAuto.WriteTlk(tlk, outputPath, ResourceType.TLK);
         }
     }
 }

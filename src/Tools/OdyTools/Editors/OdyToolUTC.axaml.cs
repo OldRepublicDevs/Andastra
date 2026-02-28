@@ -2,11 +2,14 @@ using BioWare.Common;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using BioWare.Extract;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Styling;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media.Imaging;
@@ -34,8 +37,6 @@ using BioWare.Extract.Capsule;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:51
-    // Original: class OdyToolUTC(Editor):
     public partial class OdyToolUTC : Editor
     {
         private const int MinEditorWidth = 798;
@@ -68,7 +69,7 @@ namespace OdyTools.Editors
         private Image _portraitPicture;
         private ModelRenderer _previewRenderer;
         private Slider _alignmentSlider;
-        private TextBox _conversationEdit;
+        private ComboBox _conversationEdit;
         private Button _conversationModifyBtn;
         private Button _inventoryBtn;
         private TextBlock _inventoryCountLabel;
@@ -127,26 +128,25 @@ namespace OdyTools.Editors
         private ListBox _featList;
         private ListBox _powerList;
 
-        // UI Controls - Scripts
-        private Dictionary<string, TextBox> _scriptFields;
+        // UI Controls - Scripts (editable combos with prefilled script resnames, matching vendor utc.py FilterComboBox)
+        private Dictionary<string, ComboBox> _scriptFields;
 
         // UI Controls - Comments
         private TextBox _commentsEdit;
         private Expander _commentsExpander; // For tab title update testing
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:52-105
-        // Original: def __init__(self, parent, installation):
         public OdyToolUTC(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTC", "creature",
                 new[] { ResourceType.UTC, ResourceType.BTC, ResourceType.BIC },
                 new[] { ResourceType.UTC, ResourceType.BTC, ResourceType.BIC },
                 installation)
         {
-            _installation = installation;
             _utc = new UTC();
-            _scriptFields = new Dictionary<string, TextBox>();
+            _scriptFields = new Dictionary<string, ComboBox>();
             _settings = new OdyToolUTCSettings();
             _globalSettings = new GlobalSettings();
+
+            ApplyInstallationFromSettings(_settings);
 
             InitializeComponent();
             SetupUI();
@@ -166,6 +166,8 @@ namespace OdyTools.Editors
             fileMenu.Items.Add(new MenuItem { Header = "_Open", Name = "actionOpen" });
             fileMenu.Items.Add(new MenuItem { Header = "_Save", Name = "actionSave" });
             fileMenu.Items.Add(new MenuItem { Header = "Save _As", Name = "actionSaveAs" });
+            fileMenu.Items.Add(new Separator());
+            fileMenu.Items.Add(new MenuItem { Header = "UTC _Settings...", Name = "actionUTCSettings" });
             fileMenu.Items.Add(new Separator());
             fileMenu.Items.Add(new MenuItem { Header = "_Revert", Name = "actionRevert" });
             fileMenu.Items.Add(new Separator());
@@ -188,368 +190,497 @@ namespace OdyTools.Editors
             SetupProgrammaticUI();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:186-218
-        // Original: def _setup_signals(self):
         private void SetupProgrammaticUI()
         {
-            var scrollViewer = new ScrollViewer();
-            var mainPanel = new StackPanel { Orientation = Orientation.Vertical };
+            // Layout: left = model preview (resizable), right = tabbed properties (matching utc.ui)
+            var mainGrid = new Grid();
+            mainGrid.ColumnDefinitions.Add(new ColumnDefinition(new GridLength(380, GridUnitType.Pixel)) { MinWidth = 350 });
+            mainGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
+            mainGrid.ColumnDefinitions.Add(new ColumnDefinition(new GridLength(1, GridUnitType.Star)));
 
-            // Basic Group
-            var basicGroup = new Expander { Header = "Basic", IsExpanded = true };
-            var basicPanel = new StackPanel { Orientation = Orientation.Vertical };
+            // Left panel: model preview + model info (like utc.ui verticalLayout_preview)
+            var leftPanel = new Grid();
+            leftPanel.RowDefinitions.Add(new RowDefinition(new GridLength(1, GridUnitType.Star)));
+            leftPanel.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
 
-            // First Name
-            var firstNameLabel = new TextBlock { Text = "First Name:" };
-            _firstNameEdit = new LocalizedStringEdit();
-            _firstNameRandomBtn = new Button { Content = "Random" };
-            _firstNameRandomBtn.Click += (s, e) => RandomizeFirstName();
-            basicPanel.Children.Add(firstNameLabel);
-            basicPanel.Children.Add(_firstNameEdit);
-            basicPanel.Children.Add(_firstNameRandomBtn);
+            _previewRenderer = new ModelRenderer
+            {
+                MinWidth = 350,
+                MinHeight = 200,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch,
+            };
+            if (_installation != null)
+            {
+                _previewRenderer.Installation = _installation;
+            }
+            Grid.SetRow(_previewRenderer, 0);
+            leftPanel.Children.Add(_previewRenderer);
 
-            // Last Name
-            var lastNameLabel = new TextBlock { Text = "Last Name:" };
-            _lastNameEdit = new LocalizedStringEdit();
-            _lastNameRandomBtn = new Button { Content = "Random" };
-            _lastNameRandomBtn.Click += (s, e) => RandomizeLastName();
-            basicPanel.Children.Add(lastNameLabel);
-            basicPanel.Children.Add(_lastNameEdit);
-            basicPanel.Children.Add(_lastNameRandomBtn);
+            var modelInfoExpander = new Expander
+            {
+                Header = "Model Info",
+                IsExpanded = false,
+                Padding = new Avalonia.Thickness(4),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Stretch,
+            };
+            var modelInfoLabel = new TextBlock
+            {
+                Text = "Summary of the creature's 3D model (from Appearance). Expand to see details.",
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                Margin = new Avalonia.Thickness(4),
+            };
+            modelInfoExpander.Content = modelInfoLabel;
+            Grid.SetRow(modelInfoExpander, 1);
+            leftPanel.Children.Add(modelInfoExpander);
 
-            // Tag
-            var tagLabel = new TextBlock { Text = "Tag:" };
-            _tagEdit = new TextBox();
-            _tagGenerateBtn = new Button { Content = "Generate" };
-            _tagGenerateBtn.Click += (s, e) => GenerateTag();
-            basicPanel.Children.Add(tagLabel);
-            basicPanel.Children.Add(_tagEdit);
-            basicPanel.Children.Add(_tagGenerateBtn);
+            var leftBorder = new Border
+            {
+                Child = leftPanel,
+                Background = Avalonia.Media.Brushes.White,
+                BorderThickness = new Avalonia.Thickness(0, 0, 1, 0),
+                BorderBrush = Avalonia.Media.Brushes.LightGray,
+                Padding = new Avalonia.Thickness(4),
+            };
+            Grid.SetColumn(leftBorder, 0);
+            mainGrid.Children.Add(leftBorder);
 
-            // ResRef
-            var resrefLabel = new TextBlock { Text = "ResRef:" };
-            _resrefEdit = new TextBox();
-            basicPanel.Children.Add(resrefLabel);
-            basicPanel.Children.Add(_resrefEdit);
+            var splitter = new GridSplitter
+            {
+                Width = 4,
+                Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(0xD7, 0xDB, 0xE6)),
+                ResizeDirection = GridResizeDirection.Columns,
+            };
+            Grid.SetColumn(splitter, 1);
+            mainGrid.Children.Add(splitter);
 
-            // Appearance
-            var appearanceLabel = new TextBlock { Text = "Appearance:" };
-            _appearanceSelect = new ComboBox();
-            basicPanel.Children.Add(appearanceLabel);
-            basicPanel.Children.Add(_appearanceSelect);
+            // Right panel: tabbed properties (matching utc.ui tabWidget)
+            var tabControl = new TabControl();
+#if !NET48
+            tabControl.Styles.Add(new Style(x => x.OfType<TabStripItem>())
+            {
+                Setters =
+                {
+                    new Setter(FontSizeProperty, 11.0),
+                    new Setter(PaddingProperty, new Thickness(6, 3)),
+                }
+            });
+#endif
+            var basicTab = BuildBasicTab();
+            var advancedTab = BuildAdvancedTab();
+            var statsTab = BuildStatsTab();
+            var classesTab = BuildClassesTab();
+            var featsPowersTab = BuildFeatsPowersTab();
+            var scriptsTab = BuildScriptsTab();
+            var commentsTab = BuildCommentsTab();
 
-            // Soundset
-            var soundsetLabel = new TextBlock { Text = "Soundset:" };
-            _soundsetSelect = new ComboBox();
-            basicPanel.Children.Add(soundsetLabel);
-            basicPanel.Children.Add(_soundsetSelect);
+            tabControl.Items.Add(new TabItem { Header = "Basic", Content = new ScrollViewer { Content = basicTab } });
+            tabControl.Items.Add(new TabItem { Header = "Advanced", Content = new ScrollViewer { Content = advancedTab } });
+            tabControl.Items.Add(new TabItem { Header = "Stats", Content = new ScrollViewer { Content = statsTab } });
+            tabControl.Items.Add(new TabItem { Header = "Classes", Content = new ScrollViewer { Content = classesTab } });
+            tabControl.Items.Add(new TabItem { Header = "Feats & Powers", Content = new ScrollViewer { Content = featsPowersTab } });
+            tabControl.Items.Add(new TabItem { Header = "Scripts", Content = new ScrollViewer { Content = scriptsTab } });
+            tabControl.Items.Add(new TabItem { Header = "Comments", Content = new ScrollViewer { Content = commentsTab } });
 
-            // Portrait
-            var portraitLabel = new TextBlock { Text = "Portrait:" };
-            _portraitSelect = new ComboBox();
-            _portraitSelect.SelectionChanged += (s, e) => PortraitChanged();
-            basicPanel.Children.Add(portraitLabel);
-            basicPanel.Children.Add(_portraitSelect);
+            var rightScroll = new ScrollViewer
+            {
+                Content = tabControl,
+                Padding = new Avalonia.Thickness(8),
+                Background = Avalonia.Media.Brushes.White,
+            };
+            Grid.SetColumn(rightScroll, 2);
+            mainGrid.Children.Add(rightScroll);
 
-            // Portrait Picture
+            var dock = new DockPanel();
+            dock.Children.Add(BuildMenu());
+            DockPanel.SetDock(dock.Children[0], Dock.Top);
+            dock.Children.Add(mainGrid);
+            _statusText = new Avalonia.Controls.TextBlock { Name = "statusText", Text = "Creature", Margin = new Avalonia.Thickness(4, 2) };
+            dock.Children.Add(_statusText);
+            DockPanel.SetDock(_statusText, Dock.Bottom);
+            SetContentOrInject(dock);
+            AttachCommitHandlers();
+        }
+
+        private Panel BuildBasicTab()
+        {
+            var panel = new StackPanel { Spacing = 8 };
+
+            // Profile group (matching utc.ui groupBox)
+            var profileGroup = new Expander { Header = "Profile", IsExpanded = true };
+            var profilePanel = new StackPanel { Spacing = 6 };
+            AddFormRow(profilePanel, "First Name:", _firstNameEdit = new LocalizedStringEdit(), _firstNameRandomBtn = new Button { Content = "?" }, () => RandomizeFirstName());
+            AddFormRow(profilePanel, "Last Name:", _lastNameEdit = new LocalizedStringEdit(), _lastNameRandomBtn = new Button { Content = "?" }, () => RandomizeLastName());
+            AddFormRow(profilePanel, "Tag:", _tagEdit = new TextBox(), _tagGenerateBtn = new Button { Content = "-" }, () => GenerateTag());
+            AddFormRow(profilePanel, "ResRef:", _resrefEdit = new TextBox { MaxLength = 16 });
+            AddFormRow(profilePanel, "Appearance:", _appearanceSelect = new ComboBox());
+            AddFormRow(profilePanel, "Soundset:", _soundsetSelect = new ComboBox());
+            AddFormRow(profilePanel, "Conversation:", _conversationEdit = new ComboBox { IsEditable = true }, _conversationModifyBtn = new Button { Content = "Edit" }, () => EditConversation());
+            SetupConversationComboBoxContextMenu(_conversationEdit);
+            profileGroup.Content = profilePanel;
+            panel.Children.Add(profileGroup);
+            HookAppearancePreviewEvent();
+
+            // Inventory group
+            var invGroup = new Expander { Header = "Inventory", IsExpanded = true };
+            var invPanel = new StackPanel { Spacing = 4 };
+            _inventoryCountLabel = new TextBlock { Text = "Total Items: 0" };
+            _inventoryBtn = new Button { Content = "Edit Inventory" };
+            _inventoryBtn.Click += (s, e) => OpenInventory();
+            invPanel.Children.Add(_inventoryCountLabel);
+            invPanel.Children.Add(_inventoryBtn);
+            invGroup.Content = invPanel;
+            panel.Children.Add(invGroup);
+
+            // Portrait group
+            var portraitGroup = new Expander { Header = "Portrait", IsExpanded = true };
+            var portraitPanel = new StackPanel { Spacing = 6 };
             _portraitPicture = new Image
             {
                 Width = 64,
                 Height = 64,
                 Stretch = Avalonia.Media.Stretch.Uniform
             };
-            basicPanel.Children.Add(_portraitPicture);
-
-            var previewLabel = new TextBlock { Text = "Model Preview:" };
-            _previewRenderer = new ModelRenderer
-            {
-                Height = 260,
-                MinHeight = 220,
-            };
-            if (_installation != null)
-            {
-                _previewRenderer.Installation = _installation;
-            }
-            basicPanel.Children.Add(previewLabel);
-            basicPanel.Children.Add(_previewRenderer);
-
-            // Alignment
-            var alignmentLabel = new TextBlock { Text = "Alignment:" };
-            _alignmentSlider = new Slider { Minimum = 0, Maximum = 100, Value = 50 };
+            portraitPanel.Children.Add(_portraitPicture);
+            AddFormRow(portraitPanel, "Portrait:", _portraitSelect = new ComboBox());
+            _portraitSelect.SelectionChanged += (s, e) => PortraitChanged();
+            AddFormRow(portraitPanel, "Alignment:", _alignmentSlider = new Slider { Minimum = 0, Maximum = 100, Value = 50 });
             _alignmentSlider.ValueChanged += (s, e) => PortraitChanged();
-            basicPanel.Children.Add(alignmentLabel);
-            basicPanel.Children.Add(_alignmentSlider);
-            HookAppearancePreviewEvent();
+            portraitGroup.Content = portraitPanel;
+            panel.Children.Add(portraitGroup);
 
-            // Conversation
-            var conversationLabel = new TextBlock { Text = "Conversation:" };
-            _conversationEdit = new TextBox();
-            _conversationModifyBtn = new Button { Content = "Edit" };
-            _conversationModifyBtn.Click += (s, e) => EditConversation();
-            basicPanel.Children.Add(conversationLabel);
-            basicPanel.Children.Add(_conversationEdit);
-            basicPanel.Children.Add(_conversationModifyBtn);
+            return panel;
+        }
 
-            // Inventory
-            _inventoryBtn = new Button { Content = "Edit Inventory" };
-            _inventoryBtn.Click += (s, e) => OpenInventory();
-            _inventoryCountLabel = new TextBlock { Text = "Total Items: 0" };
-            basicPanel.Children.Add(_inventoryBtn);
-            basicPanel.Children.Add(_inventoryCountLabel);
-
-            basicGroup.Content = basicPanel;
-            mainPanel.Children.Add(basicGroup);
-
-            // Advanced Group
-            var advancedGroup = new Expander { Header = "Advanced", IsExpanded = false };
-            var advancedPanel = new StackPanel { Orientation = Orientation.Vertical };
-
-            _disarmableCheckbox = new CheckBox { Content = "Disarmable" };
-            _noPermDeathCheckbox = new CheckBox { Content = "No Perm Death" };
-            _min1HpCheckbox = new CheckBox { Content = "Min 1 HP" };
-            _plotCheckbox = new CheckBox { Content = "Plot" };
-            _isPcCheckbox = new CheckBox { Content = "Is PC" };
-            _noReorientateCheckbox = new CheckBox { Content = "No Reorientate" };
-            _noBlockCheckbox = new CheckBox { Content = "No Block" };
-            _hologramCheckbox = new CheckBox { Content = "Hologram" };
-
-            var raceLabel = new TextBlock { Text = "Race:" };
-            _raceSelect = new ComboBox();
-            var subraceLabel = new TextBlock { Text = "Subrace:" };
-            _subraceSelect = new ComboBox();
-            var speedLabel = new TextBlock { Text = "Speed:" };
-            _speedSelect = new ComboBox();
-            var factionLabel = new TextBlock { Text = "Faction:" };
-            _factionSelect = new ComboBox();
-            var genderLabel = new TextBlock { Text = "Gender:" };
-            _genderSelect = new ComboBox();
-            var perceptionLabel = new TextBlock { Text = "Perception:" };
-            _perceptionSelect = new ComboBox();
-            var challengeRatingLabel = new TextBlock { Text = "Challenge Rating:" };
-            _challengeRatingSpin = new NumericUpDown { Minimum = 0, Maximum = decimal.MaxValue };
-            var blindSpotLabel = new TextBlock { Text = "Blind Spot:" };
-            _blindSpotSpin = new NumericUpDown { Minimum = 0, Maximum = decimal.MaxValue };
-            var multiplierSetLabel = new TextBlock { Text = "Multiplier Set:" };
-            _multiplierSetSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
-
-            advancedPanel.Children.Add(_disarmableCheckbox);
-            advancedPanel.Children.Add(_noPermDeathCheckbox);
-            advancedPanel.Children.Add(_min1HpCheckbox);
-            advancedPanel.Children.Add(_plotCheckbox);
-            advancedPanel.Children.Add(_isPcCheckbox);
-            advancedPanel.Children.Add(_noReorientateCheckbox);
-            advancedPanel.Children.Add(_noBlockCheckbox);
-            advancedPanel.Children.Add(_hologramCheckbox);
-            advancedPanel.Children.Add(raceLabel);
-            advancedPanel.Children.Add(_raceSelect);
-            advancedPanel.Children.Add(subraceLabel);
-            advancedPanel.Children.Add(_subraceSelect);
-            advancedPanel.Children.Add(speedLabel);
-            advancedPanel.Children.Add(_speedSelect);
-            advancedPanel.Children.Add(factionLabel);
-            advancedPanel.Children.Add(_factionSelect);
-            advancedPanel.Children.Add(genderLabel);
-            advancedPanel.Children.Add(_genderSelect);
-            advancedPanel.Children.Add(perceptionLabel);
-            advancedPanel.Children.Add(_perceptionSelect);
-            advancedPanel.Children.Add(challengeRatingLabel);
-            advancedPanel.Children.Add(_challengeRatingSpin);
-            advancedPanel.Children.Add(blindSpotLabel);
-            advancedPanel.Children.Add(_blindSpotSpin);
-            advancedPanel.Children.Add(multiplierSetLabel);
-            advancedPanel.Children.Add(_multiplierSetSpin);
-
-            advancedGroup.Content = advancedPanel;
-            mainPanel.Children.Add(advancedGroup);
-
-            // Stats Group
-            var statsGroup = new Expander { Header = "Stats", IsExpanded = false };
-            var statsPanel = new StackPanel { Orientation = Orientation.Vertical };
-
-            var strengthLabel = new TextBlock { Text = "Strength:" };
-            _strengthSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
-            var dexterityLabel = new TextBlock { Text = "Dexterity:" };
-            _dexteritySpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
-            var constitutionLabel = new TextBlock { Text = "Constitution:" };
-            _constitutionSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
-            var intelligenceLabel = new TextBlock { Text = "Intelligence:" };
-            _intelligenceSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
-            var wisdomLabel = new TextBlock { Text = "Wisdom:" };
-            _wisdomSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
-            var charismaLabel = new TextBlock { Text = "Charisma:" };
-            _charismaSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
-
-            var computerUseLabel = new TextBlock { Text = "Computer Use:" };
-            _computerUseSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
-            var demolitionsLabel = new TextBlock { Text = "Demolitions:" };
-            _demolitionsSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
-            var stealthLabel = new TextBlock { Text = "Stealth:" };
-            _stealthSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
-            var awarenessLabel = new TextBlock { Text = "Awareness:" };
-            _awarenessSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
-            var persuadeLabel = new TextBlock { Text = "Persuade:" };
-            _persuadeSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
-            var repairLabel = new TextBlock { Text = "Repair:" };
-            _repairSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
-            var securityLabel = new TextBlock { Text = "Security:" };
-            _securitySpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
-            var treatInjuryLabel = new TextBlock { Text = "Treat Injury:" };
-            _treatInjurySpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
-
-            var fortitudeLabel = new TextBlock { Text = "Fortitude Bonus:" };
-            _fortitudeSpin = new NumericUpDown { Minimum = -32768, Maximum = 32767 };
-            var reflexLabel = new TextBlock { Text = "Reflex Bonus:" };
-            _reflexSpin = new NumericUpDown { Minimum = -32768, Maximum = 32767 };
-            var willLabel = new TextBlock { Text = "Will Bonus:" };
-            _willSpin = new NumericUpDown { Minimum = -32768, Maximum = 32767 };
-            var armorClassLabel = new TextBlock { Text = "Natural AC:" };
-            _armorClassSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
-            var baseHpLabel = new TextBlock { Text = "Base HP:" };
-            _baseHpSpin = new NumericUpDown { Minimum = 0, Maximum = 32767 };
-            var currentHpLabel = new TextBlock { Text = "Current HP:" };
-            _currentHpSpin = new NumericUpDown { Minimum = 0, Maximum = 32767 };
-            var maxHpLabel = new TextBlock { Text = "Max HP:" };
-            _maxHpSpin = new NumericUpDown { Minimum = 0, Maximum = 32767 };
-            var currentFpLabel = new TextBlock { Text = "Current FP:" };
-            _currentFpSpin = new NumericUpDown { Minimum = 0, Maximum = 32767 };
-            var maxFpLabel = new TextBlock { Text = "Max FP:" };
-            _maxFpSpin = new NumericUpDown { Minimum = 0, Maximum = 32767 };
-
-            statsPanel.Children.Add(strengthLabel);
-            statsPanel.Children.Add(_strengthSpin);
-            statsPanel.Children.Add(dexterityLabel);
-            statsPanel.Children.Add(_dexteritySpin);
-            statsPanel.Children.Add(constitutionLabel);
-            statsPanel.Children.Add(_constitutionSpin);
-            statsPanel.Children.Add(intelligenceLabel);
-            statsPanel.Children.Add(_intelligenceSpin);
-            statsPanel.Children.Add(wisdomLabel);
-            statsPanel.Children.Add(_wisdomSpin);
-            statsPanel.Children.Add(charismaLabel);
-            statsPanel.Children.Add(_charismaSpin);
-            statsPanel.Children.Add(computerUseLabel);
-            statsPanel.Children.Add(_computerUseSpin);
-            statsPanel.Children.Add(demolitionsLabel);
-            statsPanel.Children.Add(_demolitionsSpin);
-            statsPanel.Children.Add(stealthLabel);
-            statsPanel.Children.Add(_stealthSpin);
-            statsPanel.Children.Add(awarenessLabel);
-            statsPanel.Children.Add(_awarenessSpin);
-            statsPanel.Children.Add(persuadeLabel);
-            statsPanel.Children.Add(_persuadeSpin);
-            statsPanel.Children.Add(repairLabel);
-            statsPanel.Children.Add(_repairSpin);
-            statsPanel.Children.Add(securityLabel);
-            statsPanel.Children.Add(_securitySpin);
-            statsPanel.Children.Add(treatInjuryLabel);
-            statsPanel.Children.Add(_treatInjurySpin);
-            statsPanel.Children.Add(fortitudeLabel);
-            statsPanel.Children.Add(_fortitudeSpin);
-            statsPanel.Children.Add(reflexLabel);
-            statsPanel.Children.Add(_reflexSpin);
-            statsPanel.Children.Add(willLabel);
-            statsPanel.Children.Add(_willSpin);
-            statsPanel.Children.Add(armorClassLabel);
-            statsPanel.Children.Add(_armorClassSpin);
-            statsPanel.Children.Add(baseHpLabel);
-            statsPanel.Children.Add(_baseHpSpin);
-            statsPanel.Children.Add(currentHpLabel);
-            statsPanel.Children.Add(_currentHpSpin);
-            statsPanel.Children.Add(maxHpLabel);
-            statsPanel.Children.Add(_maxHpSpin);
-            statsPanel.Children.Add(currentFpLabel);
-            statsPanel.Children.Add(_currentFpSpin);
-            statsPanel.Children.Add(maxFpLabel);
-            statsPanel.Children.Add(_maxFpSpin);
-
-            statsGroup.Content = statsPanel;
-            mainPanel.Children.Add(statsGroup);
-
-            // Classes Group
-            var classesGroup = new Expander { Header = "Classes", IsExpanded = false };
-            var classesPanel = new StackPanel { Orientation = Orientation.Vertical };
-
-            var class1Label = new TextBlock { Text = "Class 1:" };
-            _class1Select = new ComboBox();
-            var class1LevelLabel = new TextBlock { Text = "Class 1 Level:" };
-            _class1LevelSpin = new NumericUpDown { Minimum = 0, Maximum = 50 };
-            var class2Label = new TextBlock { Text = "Class 2:" };
-            _class2Select = new ComboBox();
-            var class2LevelLabel = new TextBlock { Text = "Class 2 Level:" };
-            _class2LevelSpin = new NumericUpDown { Minimum = 0, Maximum = 50 };
-
-            classesPanel.Children.Add(class1Label);
-            classesPanel.Children.Add(_class1Select);
-            classesPanel.Children.Add(class1LevelLabel);
-            classesPanel.Children.Add(_class1LevelSpin);
-            classesPanel.Children.Add(class2Label);
-            classesPanel.Children.Add(_class2Select);
-            classesPanel.Children.Add(class2LevelLabel);
-            classesPanel.Children.Add(_class2LevelSpin);
-
-            classesGroup.Content = classesPanel;
-            mainPanel.Children.Add(classesGroup);
-
-            // Feats and Powers Group
-            var featsPowersGroup = new Expander { Header = "Feats and Powers", IsExpanded = false };
-            var featsPowersPanel = new StackPanel { Orientation = Orientation.Vertical };
-
-            var featLabel = new TextBlock { Text = "Feats:" };
-            _featList = new ListBox();
-            var powerLabel = new TextBlock { Text = "Powers:" };
-            _powerList = new ListBox();
-
-            featsPowersPanel.Children.Add(featLabel);
-            featsPowersPanel.Children.Add(_featList);
-            featsPowersPanel.Children.Add(powerLabel);
-            featsPowersPanel.Children.Add(_powerList);
-
-            featsPowersGroup.Content = featsPowersPanel;
-            mainPanel.Children.Add(featsPowersGroup);
-
-            // Scripts Group
-            var scriptsGroup = new Expander { Header = "Scripts", IsExpanded = false };
-            var scriptsPanel = new StackPanel { Orientation = Orientation.Vertical };
-
-            string[] scriptNames = { "OnBlocked", "OnAttacked", "OnNotice", "OnDialog", "OnDamaged",
-                "OnDisturbed", "OnDeath", "OnEndRound", "OnEndDialog", "OnHeartbeat", "OnSpawn", "OnSpell", "OnUserDefined" };
-            foreach (string scriptName in scriptNames)
+        private static void AddFormRow(Panel parent, string labelText, Control control, Button actionBtn = null, Action action = null)
+        {
+            var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+            row.Children.Add(new TextBlock { Text = labelText, Width = 100, VerticalAlignment = VerticalAlignment.Center });
+            control.VerticalAlignment = VerticalAlignment.Center;
+            row.Children.Add(control);
+            if (actionBtn != null && action != null)
             {
-                var scriptLabel = new TextBlock { Text = scriptName + ":" };
-                var scriptEdit = new TextBox();
-                _scriptFields[scriptName] = scriptEdit;
-                scriptsPanel.Children.Add(scriptLabel);
-                scriptsPanel.Children.Add(scriptEdit);
+                actionBtn.Click += (s, e) => action();
+                row.Children.Add(actionBtn);
+            }
+            parent.Children.Add(row);
+        }
+
+        private Panel BuildAdvancedTab()
+        {
+            var panel = new StackPanel { Spacing = 8 };
+            var flagsGroup = new Expander { Header = "Flags", IsExpanded = true };
+            var flagsPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 24 };
+            var col1 = new StackPanel { Spacing = 4 };
+            var col2 = new StackPanel { Spacing = 4 };
+            col1.Children.Add(_disarmableCheckbox = new CheckBox { Content = "Disarmable" });
+            col1.Children.Add(_noPermDeathCheckbox = new CheckBox { Content = "No Perm Death" });
+            col1.Children.Add(_min1HpCheckbox = new CheckBox { Content = "Min 1 HP" });
+            col1.Children.Add(_plotCheckbox = new CheckBox { Content = "Plot" });
+            col1.Children.Add(_isPcCheckbox = new CheckBox { Content = "Is PC" });
+            col2.Children.Add(_noReorientateCheckbox = new CheckBox { Content = "No Reorientate" });
+            col2.Children.Add(_noBlockCheckbox = new CheckBox { Content = "No Block" });
+            col2.Children.Add(_hologramCheckbox = new CheckBox { Content = "Hologram" });
+            flagsPanel.Children.Add(col1);
+            flagsPanel.Children.Add(col2);
+            flagsGroup.Content = flagsPanel;
+            panel.Children.Add(flagsGroup);
+
+            var raceGroup = new Expander { Header = "Race", IsExpanded = true };
+            var racePanel = new StackPanel { Spacing = 6 };
+            AddFormRow(racePanel, "Race:", _raceSelect = new ComboBox());
+            AddFormRow(racePanel, "Subrace:", _subraceSelect = new ComboBox());
+            raceGroup.Content = racePanel;
+            panel.Children.Add(raceGroup);
+
+            var otherGroup = new Expander { Header = "Other", IsExpanded = true };
+            var otherPanel = new StackPanel { Spacing = 6 };
+            AddFormRow(otherPanel, "Speed:", _speedSelect = new ComboBox());
+            AddFormRow(otherPanel, "Faction:", _factionSelect = new ComboBox());
+            AddFormRow(otherPanel, "Gender:", _genderSelect = new ComboBox());
+            AddFormRow(otherPanel, "Perception:", _perceptionSelect = new ComboBox());
+            AddFormRow(otherPanel, "Challenge Rating:", _challengeRatingSpin = new NumericUpDown { Minimum = 0, Maximum = decimal.MaxValue });
+            AddFormRow(otherPanel, "Blind Spot:", _blindSpotSpin = new NumericUpDown { Minimum = 0, Maximum = decimal.MaxValue });
+            AddFormRow(otherPanel, "Multiplier Set:", _multiplierSetSpin = new NumericUpDown { Minimum = 0, Maximum = 255 });
+            otherGroup.Content = otherPanel;
+            panel.Children.Add(otherGroup);
+            return panel;
+        }
+
+        private Panel BuildStatsTab()
+        {
+            var panel = new StackPanel { Spacing = 8 };
+            _strengthSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
+            _dexteritySpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
+            _constitutionSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
+            _intelligenceSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
+            _wisdomSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
+            _charismaSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
+            AddFormRow(panel, "Strength:", _strengthSpin);
+            AddFormRow(panel, "Dexterity:", _dexteritySpin);
+            AddFormRow(panel, "Constitution:", _constitutionSpin);
+            AddFormRow(panel, "Intelligence:", _intelligenceSpin);
+            AddFormRow(panel, "Wisdom:", _wisdomSpin);
+            AddFormRow(panel, "Charisma:", _charismaSpin);
+
+            _computerUseSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
+            _demolitionsSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
+            _stealthSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
+            _awarenessSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
+            _persuadeSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
+            _repairSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
+            _securitySpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
+            _treatInjurySpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
+            AddFormRow(panel, "Computer Use:", _computerUseSpin);
+            AddFormRow(panel, "Demolitions:", _demolitionsSpin);
+            AddFormRow(panel, "Stealth:", _stealthSpin);
+            AddFormRow(panel, "Awareness:", _awarenessSpin);
+            AddFormRow(panel, "Persuade:", _persuadeSpin);
+            AddFormRow(panel, "Repair:", _repairSpin);
+            AddFormRow(panel, "Security:", _securitySpin);
+            AddFormRow(panel, "Treat Injury:", _treatInjurySpin);
+
+            _fortitudeSpin = new NumericUpDown { Minimum = -32768, Maximum = 32767 };
+            _reflexSpin = new NumericUpDown { Minimum = -32768, Maximum = 32767 };
+            _willSpin = new NumericUpDown { Minimum = -32768, Maximum = 32767 };
+            _armorClassSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
+            _baseHpSpin = new NumericUpDown { Minimum = 0, Maximum = 32767 };
+            _currentHpSpin = new NumericUpDown { Minimum = 0, Maximum = 32767 };
+            _maxHpSpin = new NumericUpDown { Minimum = 0, Maximum = 32767 };
+            _currentFpSpin = new NumericUpDown { Minimum = 0, Maximum = 32767 };
+            _maxFpSpin = new NumericUpDown { Minimum = 0, Maximum = 32767 };
+            AddFormRow(panel, "Fortitude Bonus:", _fortitudeSpin);
+            AddFormRow(panel, "Reflex Bonus:", _reflexSpin);
+            AddFormRow(panel, "Will Bonus:", _willSpin);
+            AddFormRow(panel, "Natural AC:", _armorClassSpin);
+            AddFormRow(panel, "Base HP:", _baseHpSpin);
+            AddFormRow(panel, "Current HP:", _currentHpSpin);
+            AddFormRow(panel, "Max HP:", _maxHpSpin);
+            AddFormRow(panel, "Current FP:", _currentFpSpin);
+            AddFormRow(panel, "Max FP:", _maxFpSpin);
+            return panel;
+        }
+
+        private Panel BuildClassesTab()
+        {
+            var panel = new StackPanel { Spacing = 8 };
+            AddFormRow(panel, "Class 1:", _class1Select = new ComboBox());
+            AddFormRow(panel, "Class 1 Level:", _class1LevelSpin = new NumericUpDown { Minimum = 0, Maximum = 50 });
+            AddFormRow(panel, "Class 2:", _class2Select = new ComboBox());
+            AddFormRow(panel, "Class 2 Level:", _class2LevelSpin = new NumericUpDown { Minimum = 0, Maximum = 50 });
+            return panel;
+        }
+
+        private Panel BuildFeatsPowersTab()
+        {
+            var panel = new StackPanel { Spacing = 8 };
+            panel.Children.Add(new TextBlock { Text = "Feats:" });
+            panel.Children.Add(_featList = new ListBox());
+            panel.Children.Add(new TextBlock { Text = "Powers:" });
+            panel.Children.Add(_powerList = new ListBox());
+            return panel;
+        }
+
+        private Panel BuildScriptsTab()
+        {
+            try
+            {
+                _scriptFields.Clear();
+                var scriptsTab = new OdyToolUTC_ScriptsTab();
+                string[] scriptNames = { "OnBlocked", "OnAttacked", "OnNotice", "OnDialog", "OnDamaged",
+                    "OnDisturbed", "OnDeath", "OnEndRound", "OnEndDialog", "OnHeartbeat", "OnSpawn", "OnSpell", "OnUserDefined" };
+                foreach (string scriptName in scriptNames)
+                {
+                    string controlName = scriptName.ToLowerInvariant() + "Edit";
+                    var scriptCombo = EditorHelpers.FindControlSafe<ComboBox>(scriptsTab, controlName);
+                    if (scriptCombo != null)
+                    {
+                        _scriptFields[scriptName] = scriptCombo;
+                        SetupScriptComboBoxContextMenu(scriptCombo, scriptName);
+                    }
+                }
+                if (_scriptFields.Count == scriptNames.Length)
+                    return scriptsTab;
+            }
+            catch { /* fallback to programmatic */ }
+
+            var panel = new StackPanel { Spacing = 6 };
+            string[] names = { "OnBlocked", "OnAttacked", "OnNotice", "OnDialog", "OnDamaged",
+                "OnDisturbed", "OnDeath", "OnEndRound", "OnEndDialog", "OnHeartbeat", "OnSpawn", "OnSpell", "OnUserDefined" };
+            foreach (string scriptName in names)
+            {
+                var scriptCombo = new ComboBox { IsEditable = true };
+                _scriptFields[scriptName] = scriptCombo;
+                SetupScriptComboBoxContextMenu(scriptCombo, scriptName);
+                AddFormRow(panel, scriptName + ":", scriptCombo);
+            }
+            return panel;
+        }
+
+        private void PopulateScriptComboBoxes()
+        {
+            if (_installation == null || _scriptFields == null)
+            {
+                return;
             }
 
-            scriptsGroup.Content = scriptsPanel;
-            mainPanel.Children.Add(scriptsGroup);
+            try
+            {
+                var relevantResources = _installation.GetRelevantResources(ResourceType.NCS, FilepathPublic);
+                var resnames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                if (relevantResources != null)
+                {
+                    foreach (var res in relevantResources)
+                    {
+                        if (res != null && !string.IsNullOrEmpty(res.ResName))
+                        {
+                            resnames.Add(res.ResName.ToLowerInvariant());
+                        }
+                    }
+                }
 
-            // Comments Group
-            // Matching PyKotor implementation: Comments tab with title update functionality
-            // Original: self.ui.commentsTab in tabWidget, _update_comments_tab_title() method
-            _commentsExpander = new Expander { Header = "Comments", IsExpanded = false };
-            var commentsPanel = new StackPanel { Orientation = Orientation.Vertical };
+                var sorted = resnames.OrderBy(s => s, StringComparer.OrdinalIgnoreCase).ToList();
+                foreach (var kv in _scriptFields)
+                {
+                    if (kv.Value == null) continue;
+                    kv.Value.Items.Clear();
+                    foreach (string r in sorted)
+                    {
+                        kv.Value.Items.Add(r);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Failed to populate script combo boxes: {ex.Message}");
+            }
+        }
+
+        private void SetupScriptComboBoxContextMenu(ComboBox comboBox, string scriptTypeName)
+        {
+            var contextMenu = new ContextMenu();
+            var openInEditorItem = new MenuItem
+            {
+                Header = "Open in OdyToolNSS",
+                IsEnabled = false
+            };
+            openInEditorItem.Click += (sender, e) => OpenScriptInEditor(comboBox, scriptTypeName);
+            contextMenu.Items.Add(openInEditorItem);
+
+            void UpdateOpenEnabled(object s, EventArgs e)
+            {
+                string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
+                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
+            }
+
+            comboBox.SelectionChanged += UpdateOpenEnabled;
+            contextMenu.Opened += (s, e) => UpdateOpenEnabled(s, e);
+
+            comboBox.ContextMenu = contextMenu;
+        }
+
+        private void OpenScriptInEditor(ComboBox comboBox, string scriptTypeName)
+        {
+            if (comboBox == null || _installation == null) return;
+
+            string scriptName = comboBox.Text?.Trim();
+            if (string.IsNullOrEmpty(scriptName)) return;
+
+            try
+            {
+                var resourceResult = _installation.Resource(scriptName, ResourceType.NSS, null);
+                var resourceType = ResourceType.NSS;
+                if (resourceResult == null)
+                {
+                    resourceResult = _installation.Resource(scriptName, ResourceType.NCS, null);
+                    resourceType = ResourceType.NCS;
+                }
+                if (resourceResult == null)
+                {
+                    System.Console.WriteLine($"Script '{scriptName}' not found in installation.");
+                    return;
+                }
+
+                string filepath = resourceResult.FilePath;
+                byte[] data = resourceResult.Data;
+                if (data == null && !string.IsNullOrEmpty(filepath) && System.IO.File.Exists(filepath))
+                {
+                    data = System.IO.File.ReadAllBytes(filepath);
+                }
+                if (data == null)
+                {
+                    System.Console.WriteLine($"No data for script '{scriptName}'.");
+                    return;
+                }
+
+                var fileResource = new FileResource(scriptName, resourceType, data.Length, 0, filepath ?? string.Empty);
+                WindowUtils.OpenResourceEditor(fileResource, _installation, this);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"OpenScriptInEditor failed: {ex.Message}");
+            }
+        }
+
+        private void SetupConversationComboBoxContextMenu(ComboBox comboBox)
+        {
+            if (comboBox == null) return;
+
+            var contextMenu = new ContextMenu();
+            var openInEditorItem = new MenuItem { Header = "Open in OdyToolDLG", IsEnabled = false };
+            openInEditorItem.Click += (sender, e) => EditConversation();
+            contextMenu.Items.Add(openInEditorItem);
+
+            void UpdateOpenEnabled(object s, EventArgs e)
+            {
+                string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
+                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
+            }
+            comboBox.SelectionChanged += UpdateOpenEnabled;
+            contextMenu.Opened += (s, e) => UpdateOpenEnabled(s, e);
+            comboBox.ContextMenu = contextMenu;
+        }
+
+        private void PopulateConversationComboBox()
+        {
+            if (_installation == null || _conversationEdit == null) return;
+            try
+            {
+                var relevantResources = _installation.GetRelevantResources(ResourceType.DLG, FilepathPublic);
+                var resnames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                if (relevantResources != null)
+                {
+                    foreach (var res in relevantResources)
+                    {
+                        if (res != null && !string.IsNullOrEmpty(res.ResName))
+                            resnames.Add(res.ResName.ToLowerInvariant());
+                    }
+                }
+                var sorted = resnames.OrderBy(s => s, StringComparer.OrdinalIgnoreCase).ToList();
+                _conversationEdit.Items.Clear();
+                foreach (string r in sorted)
+                    _conversationEdit.Items.Add(r);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Failed to populate conversation combo box: {ex.Message}");
+            }
+        }
+
+        private Panel BuildCommentsTab()
+        {
+            var panel = new StackPanel { Spacing = 6 };
+            _commentsExpander = new Expander { Header = "Comments", IsExpanded = true };
+            var commentsPanel = new StackPanel { Spacing = 4 };
             var commentsLabel = new TextBlock { Text = "Comment:" };
             _commentsEdit = new TextBox { AcceptsReturn = true, AcceptsTab = true };
-            // Matching PyKotor: Wire up text changed event to update tab title
-            // Original: self.ui.comments.textChanged.connect(self._update_comments_tab_title)
             _commentsEdit.TextChanged += (s, e) => UpdateCommentsTabTitle();
             commentsPanel.Children.Add(commentsLabel);
             commentsPanel.Children.Add(_commentsEdit);
             _commentsExpander.Content = commentsPanel;
-            mainPanel.Children.Add(_commentsExpander);
-
-            scrollViewer.Content = mainPanel;
-            var dock = new DockPanel();
-            dock.Children.Add(BuildMenu());
-            DockPanel.SetDock(dock.Children[0], Dock.Top);
-            dock.Children.Add(scrollViewer);
-            _statusText = new Avalonia.Controls.TextBlock { Name = "statusText", Text = "Creature", Margin = new Avalonia.Thickness(4, 2) };
-            dock.Children.Add(_statusText);
-            DockPanel.SetDock(_statusText, Dock.Bottom);
-            SetContentOrInject(dock);
-            AttachCommitHandlers();
+            panel.Children.Add(_commentsExpander);
+            return panel;
         }
 
         private void SetupUI()
@@ -594,6 +725,22 @@ namespace OdyTools.Editors
                     if (kv.Value != null) kv.Value.LostFocus += OnCommit;
         }
 
+        protected override string SettingsMenuActionName => "actionUTCSettings";
+
+        protected override async Task ShowSettingsDialogAsync()
+        {
+            var dialog = new UTCSettingsDialog();
+            bool result = await dialog.ShowDialog<bool>(this);
+            if (result == true)
+            {
+                ApplyInstallationFromSettings(_settings);
+                if (_previewRenderer != null) _previewRenderer.Installation = _installation;
+                RefreshCreaturePreview();
+                PopulateScriptComboBoxes();
+                UpdateStatusBar();
+            }
+        }
+
         private void SetupMenuHandlers()
         {
             void Bind(string name, Action handler)
@@ -605,12 +752,7 @@ namespace OdyTools.Editors
                 }
                 catch { }
             }
-            Bind("actionNew", () => New());
-            Bind("actionOpen", () => { });
-            Bind("actionSave", () => Save());
-            Bind("actionSaveAs", () => _ = RunSaveAsAsync());
-            Bind("actionRevert", () => Revert());
-            Bind("actionExit", () => Close());
+            // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
             Bind("actionUndo", () => Undo());
             Bind("actionRedo", () => Redo());
             Bind("actionFind", () => ShowFindDialog());
@@ -687,7 +829,7 @@ namespace OdyTools.Editors
             finally { _undoRedoInProgress = false; }
         }
 
-        private void Revert()
+        public override void Revert()
         {
             if (_revert == null || _revert.Length == 0) return;
             try
@@ -703,7 +845,7 @@ namespace OdyTools.Editors
             }
         }
 
-        private async Task RunSaveAsAsync()
+        protected override async Task RunSaveAsAsync()
         {
             var storageProvider = (this as Window)?.StorageProvider;
             if (storageProvider == null) return;
@@ -745,11 +887,11 @@ namespace OdyTools.Editors
                 Height = 180,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
-            var findBox = new TextBox { Watermark = "Find what:", Text = _findText, Margin = new Avalonia.Thickness(8) };
-            var matchCase = new CheckBox { Content = "Match case", IsChecked = _findMatchCase, Margin = new Avalonia.Thickness(8) };
-            var findNext = new Button { Content = "Find Next", Margin = new Avalonia.Thickness(8) };
-            var closeBtn = new Button { Content = "Close", Margin = new Avalonia.Thickness(8) };
-            var panel = new StackPanel { Margin = new Avalonia.Thickness(10) };
+            var findBox = new TextBox { Watermark = "Find what:", Text = _findText, Margin = new Thickness(8) };
+            var matchCase = new CheckBox { Content = "Match case", IsChecked = _findMatchCase, Margin = new Thickness(8) };
+            var findNext = new Button { Content = "Find Next", Margin = new Thickness(8) };
+            var closeBtn = new Button { Content = "Close", Margin = new Thickness(8) };
+            var panel = new StackPanel { Margin = new Thickness(10) };
             panel.Children.Add(findBox);
             panel.Children.Add(matchCase);
             var btnPanel = new StackPanel { Orientation = Orientation.Horizontal };
@@ -788,25 +930,19 @@ namespace OdyTools.Editors
 
         /// <summary>
         /// Updates the Comments tab/expander title with a notification badge if comments are not blank.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:558-564
-        /// Original: def _update_comments_tab_title(self): Updates tab title with "*" indicator
         /// </summary>
         private void UpdateCommentsTabTitle()
         {
-            // Matching PyKotor: comments = self.ui.comments.toPlainText()
             string comments = _commentsEdit?.Text ?? "";
 
-            // Matching PyKotor: if comments: setTabText("Comments *") else: setTabText("Comments")
             if (_commentsExpander != null)
             {
                 if (!string.IsNullOrWhiteSpace(comments))
                 {
-                    // Matching PyKotor: self.ui.tabWidget.setTabText(..., "Comments *")
                     _commentsExpander.Header = "Comments *";
                 }
                 else
                 {
-                    // Matching PyKotor: self.ui.tabWidget.setTabText(..., "Comments")
                     _commentsExpander.Header = "Comments";
                 }
             }
@@ -814,12 +950,9 @@ namespace OdyTools.Editors
 
         /// <summary>
         /// Gets the Comments Expander for testing.
-        /// Matching PyKotor: editor.ui.commentsTab for tab title testing
         /// </summary>
         public Expander CommentsExpander => _commentsExpander;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:365-535
-        // Original: def load(self, filepath, resref, restype, data):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
@@ -836,8 +969,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:376-535
-        // Original: def _load_utc(self, utc):
         private void LoadUTC(UTC utc)
         {
             _utc = utc;
@@ -879,6 +1010,7 @@ namespace OdyTools.Editors
             }
             if (_conversationEdit != null)
             {
+                PopulateConversationComboBox();
                 _conversationEdit.Text = utc.Conversation.ToString();
             }
 
@@ -934,7 +1066,7 @@ namespace OdyTools.Editors
             }
             if (utc.Classes != null && utc.Classes.Count >= 2)
             {
-                if (_class2Select != null) _class2Select.SelectedIndex = utc.Classes[1].ClassId + 1; // +1 for "[Unset]" placeholder
+                if (_class2Select != null) _class2Select.SelectedIndex = utc.Classes[1].ClassId + 1; // +1 for "[Unset]" option
                 if (_class2LevelSpin != null) _class2LevelSpin.Value = utc.Classes[1].ClassLevel;
             }
 
@@ -942,8 +1074,6 @@ namespace OdyTools.Editors
             if (_featList != null && _installation != null)
             {
                 _featList.Items.Clear();
-                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:316-329
-                // Original: feats: TwoDA | None = installation.ht_get_cache_2da(OdyInstallation.TwoDA_FEATS)
                 TwoDA feats = _installation.HtGetCache2DA(OdyInstallation.TwoDAFeats);
                 if (feats != null)
                 {
@@ -1001,8 +1131,6 @@ namespace OdyTools.Editors
             if (_powerList != null && _installation != null)
             {
                 _powerList.Items.Clear();
-                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:331-345
-                // Original: powers: TwoDA | None = installation.ht_get_cache_2da(OdyInstallation.TwoDA_POWERS)
                 TwoDA powers = _installation.HtGetCache2DA(OdyInstallation.TwoDAPowers);
                 if (powers != null)
                 {
@@ -1099,11 +1227,12 @@ namespace OdyTools.Editors
             if (_scriptFields.ContainsKey("OnUserDefined") && _scriptFields["OnUserDefined"] != null)
                 _scriptFields["OnUserDefined"].Text = utc.OnUserDefined.ToString();
 
+            PopulateScriptComboBoxes();
+
             // Comments
             if (_commentsEdit != null)
             {
                 _commentsEdit.Text = utc.Comment;
-                // Matching PyKotor: self._update_comments_tab_title() after loading comments
                 UpdateCommentsTabTitle();
             }
 
@@ -1161,15 +1290,12 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:545-663
-        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
             // Matching Python: utc: UTC = deepcopy(self._utc)
             var utc = CopyUtc(_utc);
 
             // Basic - read from UI controls (matching Python which always reads from UI)
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:561-562
             // Python: utc.first_name = self.ui.firstnameEdit.locstring()
             // In C#, firstNameEdit/lastNameEdit are LocalizedStringEdit widgets that store the LocalizedString
             utc.FirstName = _firstNameEdit?.GetLocString() ?? utc.FirstName ?? LocalizedString.FromInvalid();
@@ -1183,7 +1309,6 @@ namespace OdyTools.Editors
             utc.Alignment = (int)(_alignmentSlider?.Value ?? 50);
 
             // Advanced - read from UI controls
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:569-576
             utc.Disarmable = _disarmableCheckbox?.IsChecked == true;
             utc.NoPermDeath = _noPermDeathCheckbox?.IsChecked == true;
             utc.Min1Hp = _min1HpCheckbox?.IsChecked == true;
@@ -1243,8 +1368,6 @@ namespace OdyTools.Editors
             }
 
             // Feats - read from checked items in _featList
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:640-646
-            // Original: utc.feats = []; for i in range(self.ui.featList.count()): ... if item.checkState() == Qt.CheckState.Checked: utc.feats.append(item.data(Qt.ItemDataRole.UserRole))
             utc.Feats.Clear();
             if (_featList != null)
             {
@@ -1258,8 +1381,6 @@ namespace OdyTools.Editors
             }
 
             // Powers - read from checked items in _powerList and add to last class
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:647-653
-            // Original: powers: list[int] = utc.classes[-1].powers; for i in range(self.ui.powerList.count()): ... if item.checkState() == Qt.CheckState.Checked: powers.append(item.data(Qt.ItemDataRole.UserRole))
             if (utc.Classes.Count > 0)
             {
                 var lastClass = utc.Classes[utc.Classes.Count - 1];
@@ -1331,8 +1452,6 @@ namespace OdyTools.Editors
             return BioWare.Resource.Formats.GFF.Generics.UTC.UTCHelpers.ConstructUtc(gff);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:665-668
-        // Original: def new(self):
         public override void New()
         {
             base.New();
@@ -1344,8 +1463,6 @@ namespace OdyTools.Editors
             UpdateStatusBar();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:670-676
-        // Original: def randomize_first_name(self):
         private void RandomizeFirstName()
         {
             if (_installation == null)
@@ -1405,8 +1522,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:678-683
-        // Original: def randomize_last_name(self):
         private void RandomizeLastName()
         {
             if (_installation == null)
@@ -1464,8 +1579,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:685-686
-        // Original: def generate_tag(self):
         private void GenerateTag()
         {
             if (_tagEdit != null && _resrefEdit != null)
@@ -1474,8 +1587,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:688-710
-        // Original: def portrait_changed(self, _actual_combo_index):
         private void PortraitChanged()
         {
             if (_portraitPicture == null)
@@ -1531,8 +1642,6 @@ namespace OdyTools.Editors
             ToolTip.SetTip(_portraitPicture, GeneratePortraitTooltip());
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:712-756
-        // Original: def _build_pixmap(self, index: int) -> QPixmap:
         /// <summary>
         /// Builds a portrait bitmap based on character alignment.
         ///
@@ -1674,8 +1783,6 @@ namespace OdyTools.Editors
             return bitmap;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:112-120
-        // Original: def _generate_portrait_tooltip(self, *, as_html: bool = False) -> str:
         /// <summary>
         /// Generates a detailed tooltip for the portrait picture.
         /// </summary>
@@ -1688,8 +1795,6 @@ namespace OdyTools.Editors
             return $"Portrait: {portrait}\n\nRight-click for more options.";
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:146-160
-        // Original: def _get_portrait_resref(self) -> str:
         /// <summary>
         /// Gets the portrait resref based on the selected index and alignment.
         /// </summary>
@@ -1753,8 +1858,6 @@ namespace OdyTools.Editors
             return result;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:758-799
-        // Original: def edit_conversation(self):
         private void EditConversation()
         {
             if (_installation == null)
@@ -1763,10 +1866,9 @@ namespace OdyTools.Editors
                 return;
             }
 
-            string resname = _conversationEdit?.Text ?? "";
+            string resname = (_conversationEdit?.Text ?? "").Trim();
             if (string.IsNullOrEmpty(resname))
             {
-                // Matching PyKotor: QMessageBox(QMessageBox.Icon.Critical, "Invalid Dialog Reference", "Conversation field cannot be blank.").exec()
                 var messageBox = MessageBoxManager.GetMessageBoxStandard(
                     "Invalid Dialog Reference",
                     "Conversation field cannot be blank.",
@@ -1784,7 +1886,6 @@ namespace OdyTools.Editors
             if (search == null)
             {
                 // DLG not found - ask to create new
-                // Matching PyKotor: QMessageBox asking "Do you wish to create a new dialog in the 'Override' folder?"
                 var createDialog = MessageBoxManager.GetMessageBoxStandard(
                     "DLG file not found",
                     "Do you wish to create a new dialog in the 'Override' folder?",
@@ -1831,7 +1932,6 @@ namespace OdyTools.Editors
             }
 
             // Open DLG editor
-            // Matching PyKotor: open_resource_editor(filepath, resname, ResourceType.DLG, data, self._installation, self)
             OdyTools.Editors.WindowUtils.OpenResourceEditor(
                 filepath,
                 resname,
@@ -1841,8 +1941,6 @@ namespace OdyTools.Editors
                 this);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:801-835
-        // Original: def open_inventory(self):
         private void OpenInventory()
         {
             if (_installation == null || _utc == null)
@@ -1855,7 +1953,6 @@ namespace OdyTools.Editors
             bool droid = _raceSelect?.SelectedIndex == 0;
 
             // Load capsules to search
-            // Matching PyKotor: capsules_to_search based on filepath type
             List<Capsule> capsulesToSearch = new List<Capsule>();
 
             if (_filepath != null)
@@ -1863,7 +1960,6 @@ namespace OdyTools.Editors
                 if (BioWare.Tools.FileHelpers.IsSavFile(_filepath))
                 {
                     // Search capsules inside the .sav outer capsule
-                    // Matching PyKotor: capsules_to_search = [Capsule(res.filepath()) for res in Capsule(self._filepath) if is_capsule_file(res.filename()) and res.inside_capsule]
                     try
                     {
                         var outerCapsule = new Capsule(_filepath);
@@ -1895,7 +1991,6 @@ namespace OdyTools.Editors
                 else if (BioWare.Tools.FileHelpers.IsCapsuleFile(_filepath))
                 {
                     // Get capsules matching the module
-                    // Matching PyKotor: capsules_to_search = Module.get_capsules_tuple_matching(self._installation, self._filepath.name)
                     // This finds all capsules in the module that match the current file's module
                     try
                     {
@@ -1953,7 +2048,6 @@ namespace OdyTools.Editors
             }
 
             // Create inventory dialog
-            // Matching PyKotor: InventoryEditor(self, self._installation, capsules_to_search, [], self._utc.inventory, self._utc.equipment, droid=droid)
             var inventoryDialog = new InventoryDialog(
                 this,
                 _installation,
@@ -1964,7 +2058,6 @@ namespace OdyTools.Editors
                 droid: droid);
 
             // Show dialog and update if OK was clicked
-            // Matching PyKotor: if inventory_editor.exec(): self._utc.inventory = inventory_editor.inventory; self._utc.equipment = inventory_editor.equipment; self.update_item_count(); self.update3dPreview()
             bool result = inventoryDialog.ShowDialog();
             if (result)
             {
@@ -1975,8 +2068,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:837-838
-        // Original: def update_item_count(self):
         private void UpdateItemCount()
         {
             if (_inventoryCountLabel != null && _utc != null)
@@ -1986,8 +2077,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:840-851
-        // Original: def get_feat_item(self, feat_id: int) -> QListWidgetItem | None:
         private CheckableListItem GetFeatItem(int featId)
         {
             if (_featList == null)
@@ -2005,8 +2094,6 @@ namespace OdyTools.Editors
             return null;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:853-864
-        // Original: def get_power_item(self, power_id: int) -> QListWidgetItem | None:
         private CheckableListItem GetPowerItem(int powerId)
         {
             if (_powerList == null)
@@ -2037,7 +2124,6 @@ namespace OdyTools.Editors
     }
 
     // Helper class for checkable list items in Avalonia ListBox
-    // Matching PyKotor QListWidgetItem with checkable state and UserRole data
     public class CheckableListItem : ContentControl
     {
         private CheckBox _checkBox;

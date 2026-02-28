@@ -41,7 +41,7 @@ namespace Andastra.Game.Games.Engines.Eclipse.Profiles
             get { return EngineFamily.Eclipse; }
         }
 
-        public override IEngineApi CreateEngineApi()
+        public override Andastra.Game.Scripting.Abstractions.IEngineApi CreateEngineApi()
         {
             return new DragonAge2EngineApi();
         }

@@ -13,8 +13,6 @@ using SettingsBase = OdyTools.Data.Settings;
 
 namespace OdyTools.Widgets.Settings
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:32
-    // Original: class SettingsWidget(QWidget):
     public abstract class SettingsWidget : UserControl
     {
         protected Dictionary<string, SetBindWidget> _binds;
@@ -23,36 +21,26 @@ namespace OdyTools.Widgets.Settings
         protected NoScrollEventFilter _noScrollEventFilter;
         protected HoverEventFilter _hoverEventFilter;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:33-44
-        // Original: def __init__(self, parent: QWidget):
         protected SettingsWidget()
         {
             _binds = new Dictionary<string, SetBindWidget>();
             _colours = new Dictionary<string, ColorEdit>();
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:40-43
-            // Original: self.noScrollEventFilter: NoScrollEventFilter = NoScrollEventFilter(self)
-            // Original: self.hoverEventFilter: HoverEventFilter = HoverEventFilter(self)
-            // Original: self.installEventFilters(self, self.noScrollEventFilter)
-            // Initialize event filters (will be set up when widget is loaded)
+            // Initialize event filters (set up when widget is loaded)
             _noScrollEventFilter = new NoScrollEventFilter();
             _hoverEventFilter = new HoverEventFilter();
         }
 
         // Override OnLoaded to automatically install event filters when widget is loaded
         // This ensures the widget tree is fully constructed before installing filters
-        // Matching PyKotor: filters are installed in __init__, but in Avalonia we need to wait for the tree to be ready
         protected override void OnLoaded(RoutedEventArgs e)
         {
             base.OnLoaded(e);
 
             // Install event filters automatically when widget is loaded
-            // Matching PyKotor: self.installEventFilters(self, self.noScrollEventFilter)
             InstallEventFilters(this);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:46-64
-        // Original: def installEventFilters(self, parent_widget, event_filter, include_types):
         /// <summary>
         /// Recursively installs event filters on all child widgets matching the specified types.
         /// This method sets up NoScrollEventFilter and optionally HoverEventFilter on child controls
@@ -67,10 +55,6 @@ namespace OdyTools.Widgets.Settings
                 return;
             }
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:46-64
-            // Original: def installEventFilters(self, parent_widget, event_filter, include_types):
-            // Original: if include_types is None:
-            // Original:     include_types = [QComboBox, QSlider, QSpinBox, QGroupBox, QAbstractSpinBox, QDoubleSpinBox]
             // Set default include types if not provided (matching PyKotor default types)
             if (includeTypes == null)
             {
@@ -86,7 +70,6 @@ namespace OdyTools.Widgets.Settings
             }
 
             // Install NoScrollEventFilter (primary filter for preventing scrollbar interaction)
-            // Matching PyKotor: self.installEventFilters(self, self.noScrollEventFilter)
             // The NoScrollEventFilter.SetupFilter method handles recursive installation
             if (_noScrollEventFilter != null)
             {
@@ -94,12 +77,9 @@ namespace OdyTools.Widgets.Settings
             }
 
             // Note: HoverEventFilter installation is commented out in PyKotor (line 44)
-            // Original: #self.installEventFilters(self, self.hoverEventFilter, include_types=[QWidget])
             // So we don't install it here, but the instance is available if needed
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:66-70
-        // Original: def validateBind(self, bindName: str, bind: Bind) -> Bind:
         protected Tuple<HashSet<Key>, HashSet<PointerUpdateKind>> ValidateBind(string bindName, Tuple<HashSet<Key>, HashSet<PointerUpdateKind>> bind)
         {
             if (bind == null || bind.Item1 == null || bind.Item2 == null)
@@ -110,8 +90,6 @@ namespace OdyTools.Widgets.Settings
             return bind;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:72-76
-        // Original: def validateColour(self, colourName: str, color_value: int) -> int:
         protected int ValidateColour(string colourName, object colorValue)
         {
             if (!UtilityMisc.IsInt(colorValue))
@@ -123,8 +101,6 @@ namespace OdyTools.Widgets.Settings
             return Convert.ToInt32(colorValue);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:78-84
-        // Original: def save(self):
         public virtual void Save()
         {
             foreach (var kvp in _binds)
@@ -139,8 +115,6 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:86-89
-        // Original: def _registerBind(self, widget: SetBindWidget, bindName: str):
         protected void RegisterBind(SetBindWidget widget, string bindName)
         {
             var bind = ValidateBind(bindName, _settings.GetValue<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>(bindName, null));
@@ -148,8 +122,6 @@ namespace OdyTools.Widgets.Settings
             _binds[bindName] = widget;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:91-94
-        // Original: def _registerColour(self, widget: ColorEdit, colourName: str):
         protected void RegisterColour(ColorEdit widget, string colourName)
         {
             // Get raw value from settings (may be any type) and validate it
@@ -159,8 +131,6 @@ namespace OdyTools.Widgets.Settings
             _colours[colourName] = widget;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:96-100
-        // Original: def _reset_and_get_default(self, settingName: str) -> Any:
         /// <summary>
         /// Resets a bind setting to its default value and returns the default.
         ///
@@ -168,7 +138,6 @@ namespace OdyTools.Widgets.Settings
         /// its default value. If the SettingsProperty system is not available for this setting,
         /// it falls back to returning an empty bind tuple.
         ///
-        /// Matching PyKotor: _reset_and_get_default() in base.py
         /// </summary>
         /// <param name="settingName">The name of the bind setting to reset.</param>
         /// <returns>The default bind value (tuple of Key set and PointerUpdateKind set).</returns>
@@ -222,8 +191,6 @@ namespace OdyTools.Widgets.Settings
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:96-100
-        // Original: def _reset_and_get_default(self, settingName: str) -> Any:
         private int ResetAndGetDefaultColour(string settingName)
         {
             try

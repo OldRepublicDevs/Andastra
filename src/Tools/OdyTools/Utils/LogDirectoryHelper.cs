@@ -5,13 +5,11 @@ namespace OdyTools.Utils
 {
     /// <summary>
     /// Utility class for getting log directory paths.
-    /// Matching PyKotor implementation at Libraries/PyKotor/src/loggerplus/__init__.py:367-388
     /// </summary>
     public static class LogDirectoryHelper
     {
         /// <summary>
         /// Gets the log directory path, optionally with a subdirectory.
-        /// Matching PyKotor implementation: get_log_directory(subdir)
         /// </summary>
         /// <param name="subdir">Optional subdirectory name (default: "logs")</param>
         /// <param name="extractPath">Optional extract path from settings</param>

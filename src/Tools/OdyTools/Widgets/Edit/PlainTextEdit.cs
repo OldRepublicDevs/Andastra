@@ -7,8 +7,6 @@ using BioWare;
 
 namespace OdyTools.Widgets.Edit
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/plaintext.py:14
-    // Original: class HTPlainTextEdit(QPlainTextEdit):
     public partial class PlainTextEdit : TextBox
     {
         private LocalizedString _locstring;
@@ -23,11 +21,9 @@ namespace OdyTools.Widgets.Edit
 
         private void InitializeComponent()
         {
-            bool xamlLoaded = false;
             try
             {
                 AvaloniaXamlLoader.Load(this);
-                xamlLoaded = true;
             }
             catch
             {
@@ -35,8 +31,6 @@ namespace OdyTools.Widgets.Edit
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/plaintext.py:18-20
-        // Original: def __init__(self, *args, **kwargs):
         public PlainTextEdit(LocalizedString locstring = null)
         {
             InitializeComponent();
@@ -45,16 +39,12 @@ namespace OdyTools.Widgets.Edit
             AcceptsTab = false;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/plaintext.py:22-24
-        // Original: def keyReleaseEvent(self, e: QKeyEvent):
         protected override void OnKeyUp(KeyEventArgs e)
         {
             base.OnKeyUp(e);
             KeyReleased?.Invoke();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/plaintext.py:26-28
-        // Original: def mouseDoubleClickEvent(self, e: QMouseEvent):
         protected override void OnPointerPressed(PointerPressedEventArgs e)
         {
             base.OnPointerPressed(e);

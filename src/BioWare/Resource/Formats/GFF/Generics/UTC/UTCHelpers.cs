@@ -131,6 +131,9 @@ namespace BioWare.Resource.Formats.GFF.Generics.UTC
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 232, k1_win_gog_swkotor.exe:0x005afce0 line 224)
             utc.Charisma = root.Acquire<int>("Cha", 0);
 
+            // Extract experience points (PC and companions in save games; sotor: s.get("Experience", Field::dword))
+            utc.Experience = root.Acquire<int>("Experience", 0);
+
             // Extract hit points and force points
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 801-802, k1_win_gog_swkotor.exe:0x005afce0 line 734-735)
             utc.CurrentHp = root.Acquire<int>("CurrentHitPoints", 0);
@@ -311,6 +314,9 @@ namespace BioWare.Resource.Formats.GFF.Generics.UTC
             root.SetInt16("refbonus", (short)utc.ReflexBonus);
             root.SetInt16("willbonus", (short)utc.WillpowerBonus);
             root.SetInt16("fortbonus", (short)utc.FortitudeBonus);
+
+            // Set experience points
+            root.SetUInt32("Experience", (uint)utc.Experience);
 
             // Set ability scores
             root.SetUInt8("Str", (byte)utc.Strength);

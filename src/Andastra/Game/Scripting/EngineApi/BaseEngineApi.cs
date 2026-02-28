@@ -49,9 +49,40 @@ namespace Andastra.Game.Scripting.EngineApi
     /// - Object functions: GetPosition, GetFacing, GetDistanceToObject, GetIsObjectValid, GetObjectType
     /// - Action functions: AssignCommand, DelayCommand, ExecuteScript, ClearAllActions, SetFacing
     /// </remarks>
-    public abstract class BaseEngineApi : IEngineApi
+    public abstract class BaseEngineApi : IEngineApi, Andastra.Game.Scripting.Abstractions.IEngineApi
     {
         protected readonly Random _random;
+
+        Andastra.Game.Scripting.Abstractions.Variable Andastra.Game.Scripting.Abstractions.IEngineApi.CallEngineFunction(int routineId, IReadOnlyList<Andastra.Game.Scripting.Abstractions.Variable> args, object executionContext)
+        {
+            var list = new List<Variable>(args.Count);
+            for (int i = 0; i < args.Count; i++)
+                list.Add(FromAbstractions(args[i]));
+            var result = CallEngineFunction(routineId, list, (IExecutionContext)executionContext);
+            return ToAbstractions(result);
+        }
+
+        static Variable FromAbstractions(Andastra.Game.Scripting.Abstractions.Variable v) => new Variable
+        {
+            Type = (VariableType)v.Type,
+            IntValue = v.IntValue,
+            FloatValue = v.FloatValue,
+            StringValue = v.StringValue,
+            ObjectId = v.ObjectId,
+            VectorValue = v.VectorValue,
+            ComplexValue = v.ComplexValue
+        };
+
+        static Andastra.Game.Scripting.Abstractions.Variable ToAbstractions(Variable v) => new Andastra.Game.Scripting.Abstractions.Variable
+        {
+            Type = (Andastra.Game.Scripting.Abstractions.VariableType)v.Type,
+            IntValue = v.IntValue,
+            FloatValue = v.FloatValue,
+            StringValue = v.StringValue,
+            ObjectId = v.ObjectId,
+            VectorValue = v.VectorValue,
+            ComplexValue = v.ComplexValue
+        };
         protected readonly Dictionary<int, string> _functionNames;
         protected readonly HashSet<int> _implementedFunctions;
 

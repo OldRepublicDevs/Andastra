@@ -12,8 +12,6 @@ namespace OdyTools.Dialogs
 {
     /// <summary>
     /// Dialog for choosing and navigating between DLG node references.
-    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/widget_windows.py:31-204
-    /// Original: class ReferenceChooserDialog(QDialog):
     /// </summary>
     public partial class ReferenceChooserDialog : Window
     {
@@ -144,7 +142,6 @@ namespace OdyTools.Dialogs
 
         /// <summary>
         /// Updates the references displayed in the dialog.
-        /// Matching PyKotor implementation: def update_references(self, referenceItems: list[weakref.ref[DLGLink]], item_text: str)
         /// </summary>
         public void UpdateReferences(List<WeakReference<DLGLink>> referenceItems, string itemText)
         {
@@ -182,7 +179,6 @@ namespace OdyTools.Dialogs
 
         /// <summary>
         /// Accepts the dialog and raises the ItemChosen event.
-        /// Matching PyKotor implementation: def accept(self)
         /// </summary>
         private void Accept()
         {
@@ -195,7 +191,6 @@ namespace OdyTools.Dialogs
 
         /// <summary>
         /// Navigates back in the reference history.
-        /// Matching PyKotor implementation: def go_back(self)
         /// </summary>
         private void GoBack()
         {
@@ -208,7 +203,6 @@ namespace OdyTools.Dialogs
 
         /// <summary>
         /// Navigates forward in the reference history.
-        /// Matching PyKotor implementation: def go_forward(self)
         /// </summary>
         private void GoForward()
         {
@@ -221,7 +215,6 @@ namespace OdyTools.Dialogs
 
         /// <summary>
         /// Updates the enabled state of navigation buttons.
-        /// Matching PyKotor implementation: def update_button_states(self)
         /// </summary>
         private void UpdateButtonStates()
         {

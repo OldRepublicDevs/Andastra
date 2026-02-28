@@ -12,13 +12,11 @@ namespace OdyTools.Editors.DLG
 {
     /// <summary>
     /// Debug utilities for DLG editor.
-    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/debug_utils.py
     /// </summary>
     public static class DLGDebugUtils
     {
         /// <summary>
         /// Generate a string representation of the object with additional details.
-        /// Matching PyKotor: def custom_extra_info(obj) -> str
         /// </summary>
         public static string CustomExtraInfo(object obj)
         {
@@ -31,7 +29,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Custom function to provide additional details about objects in the graph.
-        /// Matching PyKotor: def detailed_extra_info(obj) -> str
         /// </summary>
         public static string DetailedExtraInfo(object obj)
         {
@@ -51,7 +48,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Filter to decide if the object should be included in the graph.
-        /// Matching PyKotor: def is_interesting(obj) -> bool
         /// </summary>
         public static bool IsInteresting(object obj)
         {
@@ -68,7 +64,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Display a graph of back references for the given target_object.
-        /// Matching PyKotor: def identify_reference_path(obj, max_depth=10)
         /// Finds all back reference chains leading to the target object using reflection-based graph traversal.
         /// </summary>
         public static void IdentifyReferencePath(object obj, int maxDepth = 10)
@@ -79,23 +74,19 @@ namespace OdyTools.Editors.DLG
             }
 
             // Find all back reference chains leading to 'obj'
-            // Matching PyKotor: paths = objgraph.find_backref_chain(obj, predicate, max_depth=max_depth)
             List<List<object>> paths = FindBackRefChains(obj, maxDepth);
 
             // Ensure that paths is a list of lists, even if only one chain is found
-            // Matching PyKotor: if not paths: paths = [[obj]]
             if (paths == null || paths.Count == 0)
             {
                 paths = new List<List<object>> { new List<object> { obj } };
             }
-            // Matching PyKotor: elif not isinstance(paths[0], list): paths = [paths]
             else if (paths.Count > 0 && paths[0] == null)
             {
                 paths = new List<List<object>> { new List<object> { obj } };
             }
 
             // Output each reference path
-            // Matching PyKotor: for path in paths: print("Reference Path:"); for ref in path: ...
             foreach (List<object> path in paths)
             {
                 if (path == null || path.Count == 0)
@@ -116,7 +107,6 @@ namespace OdyTools.Editors.DLG
                     StringBuilder refInfo = new StringBuilder($"Type={refType}, ID={refId}");
 
                     // Try to get more information about the object's definition
-                    // Matching PyKotor: if hasattr(ref, "__name__"): ref_info += f", Name={ref.__name__}"
                     try
                     {
                         Type refTypeObj = refObj.GetType();
@@ -142,7 +132,6 @@ namespace OdyTools.Editors.DLG
                             }
                         }
 
-                        // Matching PyKotor: if hasattr(ref, "__module__"): ref_info += f", Module={ref.__module__}"
                         // In .NET, use Namespace instead of module
                         if (!string.IsNullOrEmpty(refTypeObj.Namespace))
                         {
@@ -150,7 +139,6 @@ namespace OdyTools.Editors.DLG
                         }
 
                         // Method information
-                        // Matching PyKotor: if inspect.isfunction(ref) or inspect.ismethod(ref): ...
                         // In .NET, we can get method information from MethodBase
                         if (refObj is MethodBase methodBase)
                         {
@@ -169,7 +157,6 @@ namespace OdyTools.Editors.DLG
                     }
                     catch (Exception ex)
                     {
-                        // Matching PyKotor: except Exception as e: ref_info += f", Detail unavailable ({e!s})"
                         refInfo.Append($", Detail unavailable ({ex.Message})");
                     }
 
@@ -219,7 +206,6 @@ namespace OdyTools.Editors.DLG
             }
 
             // If no paths found, return path containing just the target
-            // Matching PyKotor: if not paths: paths = [[obj]]
             if (allPaths.Count == 0)
             {
                 return new List<List<object>> { new List<object> { target } };
@@ -449,7 +435,6 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>
         /// Debug references for an object.
-        /// Matching PyKotor: def debug_references(obj: Any)
         /// </summary>
         public static void DebugReferences(object obj)
         {

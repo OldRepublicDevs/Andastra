@@ -18,16 +18,12 @@ using JRLHelper = BioWare.Resource.Formats.GFF.Generics.JRLHelpers;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/jrl.py:40
-    // Original: class OdyToolJRL(Editor):
     public partial class OdyToolJRL : Editor
     {
         private const int MinEditorWidth = 480;
         private const int MinEditorHeight = 400;
         private const int UndoMaxLevels = 30;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/jrl.py:57-58
-        // Original: self._jrl: JRL = JRL(); self._model: QStandardItemModel = QStandardItemModel(self)
         private JRL _jrl;
         private List<JournalTreeItem> _model;
         private GFF _originalGff;
@@ -59,8 +55,6 @@ namespace OdyTools.Editors
         private bool _findMatchCase;
         private JournalTreeItem _lastFoundItem;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/jrl.py:53-78
-        // Original: def __init__(self, parent: QWidget | None, installation: OdyInstallation | None = None):
         public OdyToolJRL(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolJRL", "journal",
                 new[] { ResourceType.JRL },
@@ -346,12 +340,7 @@ namespace OdyTools.Editors
                 }
                 catch { }
             }
-            Bind("actionNew", () => New());
-            Bind("actionOpen", () => { });
-            Bind("actionSave", () => Save());
-            Bind("actionSaveAs", () => _ = RunSaveAsAsync());
-            Bind("actionRevert", () => Revert());
-            Bind("actionExit", () => Close());
+            // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
             Bind("actionUndo", () => Undo());
             Bind("actionRedo", () => Redo());
             Bind("actionFind", () => ShowFindDialog());
@@ -449,7 +438,7 @@ namespace OdyTools.Editors
             finally { _undoRedoInProgress = false; }
         }
 
-        private void Revert()
+        public override void Revert()
         {
             if (_revert == null || _revert.Length == 0) return;
             try
@@ -465,7 +454,7 @@ namespace OdyTools.Editors
             }
         }
 
-        private async Task RunSaveAsAsync()
+        protected override async Task RunSaveAsAsync()
         {
             var storageProvider = (this as Window)?.StorageProvider;
             if (storageProvider == null) return;
@@ -565,8 +554,6 @@ namespace OdyTools.Editors
             if (e.Key == Key.F3) { FindNextMatch(); e.Handled = true; }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/jrl.py:129-174
-        // Original: def load(self, filepath: os.PathLike | str, resref: str, restype: ResourceType, data: bytes):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
@@ -580,8 +567,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/jrl.py:175-178
-        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
             SaveCurrentSelectionToModel();
@@ -627,8 +612,6 @@ namespace OdyTools.Editors
             return Tuple.Create(data, new byte[0]);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/jrl.py:180-183
-        // Original: def new(self):
         public override void New()
         {
             base.New();
@@ -706,8 +689,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/jrl.py:185-197
-        // Original: def refresh_entry_item(self, entryItem: QStandardItem):
         private void RefreshEntryItem(JournalTreeItem entryItem)
         {
             if (entryItem.Data is JRLQuestEntry entry)
@@ -725,8 +706,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/jrl.py:199-210
-        // Original: def refresh_quest_item(self, questItem: QStandardItem):
         private void RefreshQuestItem(JournalTreeItem questItem)
         {
             if (questItem.Data is JRLQuest quest)

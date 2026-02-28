@@ -11,12 +11,9 @@ using OdyTools.Data;
 
 namespace OdyTools.Widgets.Edit
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/combobox_2da.py:31
-    // Original: class ComboBox2DA(QComboBox):
     public partial class ComboBox2DA : ComboBox
     {
         // Item wrapper to store row index and display text
-        // Matching PyKotor: QComboBox.setItemData() stores row index with each item
         private class ComboBoxItem
         {
             public string DisplayText { get; set; }
@@ -42,11 +39,9 @@ namespace OdyTools.Widgets.Edit
 
         private void InitializeComponent()
         {
-            bool xamlLoaded = false;
             try
             {
                 AvaloniaXamlLoader.Load(this);
-                xamlLoaded = true;
             }
             catch
             {
@@ -54,8 +49,6 @@ namespace OdyTools.Widgets.Edit
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/combobox_2da.py:57-68
-        // Original: def currentIndex(self) -> int:
         public new int SelectedIndex
         {
             get
@@ -78,8 +71,6 @@ namespace OdyTools.Widgets.Edit
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/combobox_2da.py:70-88
-        // Original: def setCurrentIndex(self, row_in_2da: int):
         // Python implementation: Iterates through items, finds one with matching row index via itemData(), sets currentIndex
         public void SetSelectedIndex(int rowIn2DA)
         {
@@ -100,8 +91,6 @@ namespace OdyTools.Widgets.Edit
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/combobox_2da.py:90-113
-        // Original: def addItem(self, text: str, row: int | None = None):
         // Python implementation: Stores row index via setItemData(), stores real text separately
         public void AddItem(string text, int? row = null)
         {
@@ -117,8 +106,6 @@ namespace OdyTools.Widgets.Edit
             Items.Add(item);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/combobox_2da.py:144-165
-        // Original: def set_items(self, values: Iterable[str], ...):
         // Python implementation: Clears items, adds each value with cleanup/blank filtering, then sorts if enabled
         public void SetItems(IEnumerable<string> values, bool sortAlphabetically = true, bool cleanupStrings = true, bool ignoreBlanks = false)
         {
@@ -155,8 +142,9 @@ namespace OdyTools.Widgets.Edit
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/combobox_2da.py:175-179
-        // Original: def set_context(self, data: 2DA | None, install: OdyInstallation, resname: str):
+        /// <param name="data">2DA data for the combo.</param>
+        /// <param name="install">Installation (may be null when using DLG override paths).</param>
+        /// <param name="resname">Resource name of the 2DA.</param>
         public void SetContext(TwoDA data, OdyInstallation install, string resname)
         {
             _this2DA = data;

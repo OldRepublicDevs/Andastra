@@ -8,6 +8,9 @@ using BioWare.Extract;
 using BioWare.Extract.Capsule;
 using BioWare.Resource.Formats.TwoDA;
 using BioWare.Resource.Formats.TPC;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.GFF.Generics;
+using BioWare.Resource.Formats.GFF.Generics.ARE;
 using BioWare.Resource;
 using Avalonia;
 using Avalonia.Media.Imaging;
@@ -18,12 +21,8 @@ using LocationResult = BioWare.Extract.LocationResult;
 
 namespace OdyTools.Data
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:48
-    // Original: class OdyInstallation(Installation):
     public class OdyInstallation
     {
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:49-91
-        // Original: TwoDA_PORTRAITS: str = TwoDARegistry.PORTRAITS
         public const string TwoDAAppearances = "appearance.2da";
         public const string TwoDABaseitems = "baseitems.2da";
         public const string TwoDACameras = "cameras.2da";
@@ -73,8 +72,6 @@ namespace OdyTools.Data
         private readonly Dictionary<string, TPC> _cacheTpc = new Dictionary<string, TPC>();
         private bool? _tsl;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:93-120
-        // Original: def __init__(self, path: str | os.PathLike, name: str, *, tsl: bool | None = None, ...):
         public OdyInstallation(string path, string name, bool? tsl = null)
         {
             _installation = new Installation(path);
@@ -87,15 +84,11 @@ namespace OdyTools.Data
         public BioWareGame Game => _installation.Game;
         public string Path => _installation.Path;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
-        // Original: def resource(self, resname: str, restype: ResourceType, ...) -> ResourceResult | None:
         [CanBeNull]
         public Extract_ResourceResult Resource(string resname, ResourceType restype, SearchLocation[] searchOrder = null, List<LazyCapsule> capsules = null)
         {
             if (capsules != null && capsules.Count > 0)
             {
-                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
-                // Original: Use Resources method with capsules to get the resource
                 var query = new ResourceIdentifier(resname, restype);
                 var resources = Resources(new List<ResourceIdentifier> { query }, searchOrder, capsules);
                 if (resources.ContainsKey(query) && resources[query] != null)
@@ -106,8 +99,6 @@ namespace OdyTools.Data
             return _installation.Resource(resname, restype, searchOrder);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1209-1285
-        // Original: def resources(self, queries: list[ResourceIdentifier], ...) -> dict[ResourceIdentifier, ResourceResult | None]:
         public Dictionary<ResourceIdentifier, ResourceResult> Resources(
             List<ResourceIdentifier> queries,
             SearchLocation[] searchOrder = null,
@@ -119,8 +110,6 @@ namespace OdyTools.Data
                 return results;
             }
 
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1239-1285
-            // Original: locations: dict[ResourceIdentifier, list[LocationResult]] = self.locations(...)
             var locations = _installation.Locations(queries, searchOrder, capsules);
             var handles = new Dictionary<ResourceIdentifier, FileStream>();
 
@@ -147,12 +136,10 @@ namespace OdyTools.Data
 
                         if (handle != null)
                         {
-                            handle.Seek(location.Offset, SeekOrigin.Begin);
+                            _ = handle.Seek(location.Offset, SeekOrigin.Begin);
                             byte[] data = new byte[location.Size];
-                            handle.Read(data, 0, location.Size);
+                            _ = handle.Read(data, 0, location.Size);
 
-                            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1272-1278
-                            // Original: result = ResourceResult(...); result.set_file_resource(FileResource(...))
                             var result = new ResourceResult(query.ResName, query.ResType, location.FilePath, data);
                             // Create a new FileResource without circular reference - don't use location.FileResource
                             var fileResource = new FileResource(query.ResName, query.ResType, location.Size, location.Offset, location.FilePath);
@@ -175,8 +162,6 @@ namespace OdyTools.Data
                 }
             }
 
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1282-1283
-            // Original: for handle in handles.values(): handle.close()
             foreach (var handle in handles.Values)
             {
                 handle?.Dispose();
@@ -185,8 +170,6 @@ namespace OdyTools.Data
             return results;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1297-1360
-        // Original: def location(self, resname: str, restype: ResourceType, ...) -> list[LocationResult]:
         public List<LocationResult> Location(
             string resname,
             ResourceType restype,
@@ -198,8 +181,54 @@ namespace OdyTools.Data
             return locations.ContainsKey(query) ? locations[query] : new List<LocationResult>();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:444-469
-        // Original: def ht_get_cache_2da(self, resname: str) -> 2DA | None:
+        /// <summary>Search order for 2DA resolution: override, then modules/ERF, then chitin BIF (matches Installation resource system).</summary>
+        private static readonly SearchLocation[] TwoDASearchOrder = { SearchLocation.OVERRIDE, SearchLocation.MODULES, SearchLocation.CHITIN };
+
+        /// <summary>Search order for 2DA with optional custom folders: CHITIN, OVERRIDE, then custom folders from DLG Settings.</summary>
+        private static readonly SearchLocation[] TwoDAWithCustomFoldersOrder = { SearchLocation.CHITIN, SearchLocation.OVERRIDE };
+
+        /// <summary>
+        /// Gets a 2DA from the installation using CHITIN and OVERRIDE, plus optional custom folders (e.g. from File → DLG Settings manual 2DA paths).
+        /// Custom folders are searched after installation locations. Result is cached. Returns null if not found.
+        /// </summary>
+        [CanBeNull]
+        public TwoDA Get2DAWithCustomFolders(string resname, [CanBeNull] List<string> customFolders = null)
+        {
+            if (string.IsNullOrWhiteSpace(resname))
+                return null;
+            resname = resname.ToLowerInvariant();
+            string cacheKey = resname;
+            string queryResName = resname.EndsWith(".2da", StringComparison.OrdinalIgnoreCase)
+                ? resname.Substring(0, resname.Length - 4)
+                : resname;
+            var query = new ResourceIdentifier(queryResName, ResourceType.TwoDA);
+            var folders = customFolders ?? new List<string>();
+            var locations = _installation.Locations(new List<ResourceIdentifier> { query }, TwoDAWithCustomFoldersOrder, null, folders);
+            if (locations == null || !locations.TryGetValue(query, out List<LocationResult> value) || value.Count == 0)
+                return null;
+            var location = value[0];
+            try
+            {
+                byte[] data;
+                using (var fs = File.Exists(location.FilePath) ? File.OpenRead(location.FilePath) : null)
+                {
+                    if (fs == null)
+                        return null;
+                    _ = fs.Seek(location.Offset, SeekOrigin.Begin);
+                    data = new byte[location.Size];
+                    _ = fs.Read(data, 0, location.Size);
+                }
+                var reader = new TwoDABinaryReader(data);
+                var twoda = reader.Load();
+                _cache2da[cacheKey] = twoda;
+                return twoda;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         [CanBeNull]
         public TwoDA HtGetCache2DA(string resname)
         {
@@ -209,7 +238,7 @@ namespace OdyTools.Data
                 ResourceResult result = _installation.Resource(
                     resname,
                     ResourceType.TwoDA,
-                    new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN });
+                    TwoDASearchOrder);
                 if (result == null)
                 {
                     return null;
@@ -220,8 +249,6 @@ namespace OdyTools.Data
             return _cache2da[resname];
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:520-547
-        // Original: def ht_batch_cache_2da(self, resnames: list[str], *, reload: bool = False):
         public void HtBatchCache2DA(List<string> resnames, bool reload = false)
         {
             var queries = new List<ResourceIdentifier>();
@@ -240,7 +267,7 @@ namespace OdyTools.Data
                 return;
             }
 
-            var resources = _installation.Locations(queries, new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN });
+            var resources = _installation.Locations(queries, TwoDASearchOrder);
             foreach (var kvp in resources)
             {
                 var locations = kvp.Value;
@@ -251,7 +278,7 @@ namespace OdyTools.Data
 
                 // Get the first location result
                 var location = locations[0];
-                var resource = _installation.Resource(kvp.Key.ResName, kvp.Key.ResType, new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN });
+                var resource = _installation.Resource(kvp.Key.ResName, kvp.Key.ResType, TwoDASearchOrder);
                 if (resource != null)
                 {
                     var reader = new TwoDABinaryReader(resource.Data);
@@ -260,8 +287,6 @@ namespace OdyTools.Data
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:673-677
-        // Original: @property def tsl(self) -> bool:
         public bool Tsl
         {
             get
@@ -277,15 +302,11 @@ namespace OdyTools.Data
         // Alias for Tsl property (used by OdyToolARE)
         public bool IsTsl => Tsl;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:549-550
-        // Original: def htClearCache2DA(self):
         public void HtClearCache2DA()
         {
             _cache2da.Clear();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:146-151
-        // Original: def clear_all_caches(self):
         public void ClearAllCaches()
         {
             _cache2da.Clear();
@@ -293,8 +314,6 @@ namespace OdyTools.Data
             _installation.ClearCache();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:554-567
-        // Original: def ht_get_cache_tpc(self, resname: str) -> TPC | None:
         [CanBeNull]
         public TPC HtGetCacheTpc(string resname)
         {
@@ -312,8 +331,6 @@ namespace OdyTools.Data
             return _cacheTpc.ContainsKey(resname) ? _cacheTpc[resname] : null;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:569-584
-        // Original: def ht_batch_cache_tpc(self, names: list[str], *, reload: bool = False):
         public void HtBatchCacheTpc(List<string> names, bool reload = false)
         {
             var queries = reload ? names.ToList() : names.Where(name => !_cacheTpc.ContainsKey(name.ToLowerInvariant())).ToList();
@@ -335,15 +352,11 @@ namespace OdyTools.Data
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:586-587
-        // Original: def ht_clear_cache_tpc(self):
         public void HtClearCacheTpc()
         {
             _cacheTpc.Clear();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:608-619
-        // Original: def get_item_base_name(self, base_item: int) -> str:
         public string GetItemBaseName(int baseItem)
         {
             try
@@ -363,22 +376,16 @@ namespace OdyTools.Data
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:621-623
-        // Original: def get_model_var_name(self, model_variation: int) -> str:
         public string GetModelVarName(int modelVariation)
         {
             return modelVariation == 0 ? "Default" : $"Variation {modelVariation}";
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:625-627
-        // Original: def get_texture_var_name(self, texture_variation: int) -> str:
         public string GetTextureVarName(int textureVariation)
         {
             return textureVariation == 0 ? "Default" : $"Texture {textureVariation}";
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:629-642
-        // Original: def get_item_icon_path(self, base_item: int, model_variation: int, texture_variation: int) -> str:
         public string GetItemIconPath(int baseItem, int modelVariation, int textureVariation)
         {
             TwoDA baseitems = HtGetCache2DA(TwoDABaseitems);
@@ -402,13 +409,10 @@ namespace OdyTools.Data
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:644-664
-        // Original: def get_item_icon(self, base_item: int, model_variation: int, texture_variation: int) -> QPixmap:
         [CanBeNull]
         public Bitmap GetItemIcon(int baseItem, int modelVariation, int textureVariation)
         {
             // In Avalonia, we return Bitmap instead of QPixmap
-            // Matching PyKotor implementation: converts TPC texture to QPixmap for display
             string iconPath = GetItemIconPath(baseItem, modelVariation, textureVariation);
             Console.WriteLine($"Icon path: '{iconPath}'");
             try
@@ -438,8 +442,6 @@ namespace OdyTools.Data
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:220-235
-        // Original: def to_qimage(self) -> QImage:
         // Converts TPC mipmap to Avalonia Bitmap for display
         [CanBeNull]
         public static Bitmap ConvertTpcMipmapToAvaloniaBitmap(TPCMipmap mipmap)
@@ -479,8 +481,6 @@ namespace OdyTools.Data
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py
-        // Original: Conversion logic from TpcToMonoGameTextureConverter.ConvertMipmapToRgba
         // Converts TPC mipmap pixel data to RGBA format for display
         private static byte[] ConvertMipmapToRgba(TPCMipmap mipmap)
         {
@@ -608,7 +608,6 @@ namespace OdyTools.Data
         }
 
         #region DXT Decompression
-        // Matching PyKotor implementation: DXT decompression algorithms
         // Based on TpcToMonoGameTextureConverter decompression methods
 
         private static void DecompressDxt1(byte[] input, byte[] output, int width, int height)
@@ -874,48 +873,64 @@ namespace OdyTools.Data
 
         #endregion
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
-        // Original: def module_path(self) -> Path:
         public string ModulePath()
         {
             return Installation.GetModulesPath(Path);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
-        // Original: def override_path(self) -> Path:
         public string OverridePath()
         {
             return Installation.GetOverridePath(Path);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
-        // Original: def save_locations(self) -> list[Path]:
         public List<string> SaveLocations()
         {
-            var locations = new List<string>();
-            // Get save locations from installation
-            // This will be implemented when save location detection is available
+            var locations = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string profileRoot = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            string gameDirName = Tsl ? "Knights of the Old Republic II" : "Knights of the Old Republic";
+            string gameDirNameStarWars = Tsl ? "Star Wars - Knights of the Old Republic II" : "Star Wars - Knights of the Old Republic";
+
+            // Common legacy and modern document paths.
+            _ = locations.Add(System.IO.Path.Combine(documentsPath, gameDirName, "saves"));
+            _ = locations.Add(System.IO.Path.Combine(documentsPath, gameDirNameStarWars, "saves"));
+            _ = locations.Add(System.IO.Path.Combine(profileRoot, "Saved Games", gameDirName, "saves"));
+            _ = locations.Add(System.IO.Path.Combine(profileRoot, "Saved Games", gameDirNameStarWars, "saves"));
+
+            // Store variants and virtualized install paths.
+            _ = locations.Add(System.IO.Path.Combine(localAppData, "VirtualStore", "Program Files", gameDirName, "saves"));
+            _ = locations.Add(System.IO.Path.Combine(localAppData, "VirtualStore", "Program Files (x86)", gameDirName, "saves"));
+            _ = locations.Add(System.IO.Path.Combine(Path, "saves"));
+
+            // Steam/compat cloud-style user data candidates.
+            string steamUserData = System.IO.Path.Combine(profileRoot, "AppData", "Local", "Steam", "userdata");
+            if (Directory.Exists(steamUserData))
+            {
+                string appId = Tsl ? "208580" : "32370";
+                foreach (string userDir in Directory.GetDirectories(steamUserData))
+                {
+                    _ = locations.Add(System.IO.Path.Combine(userDir, appId, "remote", "saves"));
+                    _ = locations.Add(System.IO.Path.Combine(userDir, appId, "remote"));
+                }
+            }
+
             if (Tsl)
             {
-                locations.Add(System.IO.Path.Combine(documentsPath, "Knights of the Old Republic II", "saves"));
+                _ = locations.Add(System.IO.Path.Combine(documentsPath, "Aspyr", "Knights of the Old Republic II", "saves"));
             }
             else
             {
-                locations.Add(System.IO.Path.Combine(documentsPath, "Knights of the Old Republic", "saves"));
+                _ = locations.Add(System.IO.Path.Combine(documentsPath, "Aspyr", "Knights of the Old Republic", "saves"));
             }
-            return locations.Where(loc => Directory.Exists(loc)).ToList();
+            return locations.Where(Directory.Exists).OrderBy(p => p).ToList();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
-        // Original: def core_resources(self) -> list[FileResource]:
         public List<FileResource> CoreResources()
         {
             return _installation.CoreResources();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
-        // Original: def modules_list(self) -> list[str]:
         public virtual List<string> ModulesList()
         {
             var modules = new List<string>();
@@ -936,8 +951,6 @@ namespace OdyTools.Data
             return modules;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
-        // Original: def module_names(self) -> dict[str, str | None]:
         public virtual Dictionary<string, string> ModuleNames()
         {
             var moduleNames = new Dictionary<string, string>();
@@ -966,20 +979,70 @@ namespace OdyTools.Data
 
         private string GetModuleAreaName(string moduleFile)
         {
-            // Try to get area name from module.ifo in the module
-            // This will be implemented when module reading is available
+            string modulesPath = ModulePath();
+            string modulePath = System.IO.Path.Combine(modulesPath, moduleFile);
+            if (!File.Exists(modulePath))
+            {
+                return "<Unknown Area>";
+            }
+
+            string moduleRoot = Installation.GetModuleRoot(moduleFile);
+            try
+            {
+                var capsule = new LazyCapsule(modulePath);
+
+                // Prefer module.ifo metadata.
+                foreach (string ifoResRef in new[] { "module", moduleRoot })
+                {
+                    byte[] ifoData = capsule.GetResource(ifoResRef, ResourceType.IFO);
+                    if (ifoData == null || ifoData.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    GFF ifoGff = GFFAuto.ReadGff(ifoData, 0, null, ResourceType.GFF);
+                    IFO ifo = IFOHelpers.ConstructIfo(ifoGff);
+                    string ifoName = String(ifo.ModName, "");
+                    if (!string.IsNullOrWhiteSpace(ifoName))
+                    {
+                        return ifoName;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(ifo.Tag))
+                    {
+                        return ifo.Tag;
+                    }
+
+                    if (ifo.AreaList.Count > 0 && !ifo.AreaList[0].IsBlank())
+                    {
+                        string areaResRef = ifo.AreaList[0].ToString();
+                        byte[] areData = capsule.GetResource(areaResRef, ResourceType.ARE);
+                        if (areData != null && areData.Length > 0)
+                        {
+                            GFF areGff = GFFAuto.ReadGff(areData, 0, null, ResourceType.GFF);
+                            ARE are = AREHelpers.ConstructAre(areGff, Game);
+                            string areaName = String(are.Name, "");
+                            if (!string.IsNullOrWhiteSpace(areaName))
+                            {
+                                return areaName;
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Keep unknown fallback; module browsing should remain resilient to malformed archives.
+            }
+
             return "<Unknown Area>";
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
-        // Original: def override_list(self) -> list[str]:
         public List<string> OverrideList()
         {
             return _installation.OverrideList();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
-        // Original: def texturepacks_list(self) -> list[str]:
         public List<string> TexturepacksList()
         {
             var texturePacks = new List<string>();
@@ -997,8 +1060,6 @@ namespace OdyTools.Data
             return texturePacks;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
-        // Original: def module_resources(self, module_name: str) -> list[FileResource]:
         public List<FileResource> ModuleResources(string moduleName)
         {
             var resources = new List<FileResource>();
@@ -1028,25 +1089,38 @@ namespace OdyTools.Data
             return resources;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
-        // Original: def override_resources(self, subfolder: str | None = None) -> list[FileResource]:
         public List<FileResource> OverrideResources(string subfolder = null)
         {
             return _installation.OverrideResources(subfolder);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
-        // Original: def texturepack_resources(self, texturepack_name: str) -> list[FileResource]:
         public List<FileResource> TexturepackResources(string texturepackName)
         {
             var resources = new List<FileResource>();
-            // Get resources from texture pack
-            // This will be implemented when texture pack resource enumeration is available
+            if (string.IsNullOrWhiteSpace(texturepackName))
+            {
+                return resources;
+            }
+
+            string texturePackPath = System.IO.Path.Combine(Installation.GetTexturePacksPath(Path), texturepackName);
+            if (!File.Exists(texturePackPath))
+            {
+                return resources;
+            }
+
+            try
+            {
+                var capsule = new LazyCapsule(texturePackPath);
+                resources.AddRange(capsule.GetResources());
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Failed to load resources from texture pack '{texturepackName}': {ex}");
+            }
+
             return resources;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:2239-2258
-        // Original: def string(self, locstring: LocalizedString, default: str = "") -> str:
         public string String(LocalizedString locstring, string defaultStr = "")
         {
             if (locstring == null)
@@ -1058,8 +1132,6 @@ namespace OdyTools.Data
             return results.ContainsKey(locstring) ? results[locstring] : defaultStr;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:2260-2299
-        // Original: def strings(self, queries: list[LocalizedString], default: str = "") -> dict[LocalizedString, str]:
         public Dictionary<LocalizedString, string> Strings(List<LocalizedString> queries, string defaultStr = "")
         {
             var results = new Dictionary<LocalizedString, string>();
@@ -1146,8 +1218,6 @@ namespace OdyTools.Data
             return results;
         }
 
-        // Matching PyKotor implementation: Helper method to get string from stringref (for use in editors)
-        // Original: installation.talktable().string(stringref)
         public string GetStringFromStringRef(int stringref)
         {
             if (stringref == -1)
@@ -1172,8 +1242,6 @@ namespace OdyTools.Data
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1117-1124
-        // Original: def talktable(self) -> TalkTable:
         /// <summary>
         /// Returns the TalkTable linked to the Installation.
         /// </summary>
@@ -1184,15 +1252,11 @@ namespace OdyTools.Data
             return new TalkTable(tlkPath);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
-        // Original: def reload_module(self, module_name: str):
         public void ReloadModule(string moduleName)
         {
             _installation.ReloadModule(moduleName);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
-        // Original: def load_override(self, directory: str | None = None):
         public void LoadOverride(string directory = null)
         {
             // Clear override cache to force reload
@@ -1200,16 +1264,12 @@ namespace OdyTools.Data
             _installation.ClearCache();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
-        // Original: def reload_override_file(self, filepath: Path):
         public void ReloadOverrideFile(string filepath)
         {
             // Clear override cache to force reload
             _installation.ClearCache();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
-        // Original: def module_id(self, module_file_name: str, use_alternate: bool = False) -> str:
         public string ModuleId(string moduleFileName, bool useAlternate = false)
         {
             // Extract module root from filename
@@ -1230,26 +1290,21 @@ namespace OdyTools.Data
             return root.ToLowerInvariant();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
-        // Original: def locations(self, queries: list[ResourceIdentifier], order: list[SearchLocation] | None = None) -> dict[ResourceIdentifier, list[LocationResult]]:
         public Dictionary<ResourceIdentifier, List<LocationResult>> Locations(
             List<ResourceIdentifier> queries,
             SearchLocation[] order = null,
-            List<LazyCapsule> capsules = null)
+            List<LazyCapsule> capsules = null,
+            List<string> folders = null)
         {
-            return _installation.Locations(queries, order, capsules);
+            return _installation.Locations(queries, order, capsules, folders);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1807-1843
-        // Original: def texture(self, resname: str, order: Sequence[SearchLocation] | None = None, ...) -> TPC | None:
         [CanBeNull]
         public TPC Texture(string resname, SearchLocation[] searchOrder = null)
         {
             return _installation.Texture(resname, searchOrder);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1845-1888
-        // Original: def textures(self, resnames: Iterable[str], order: Sequence[SearchLocation] | None = None, ...) -> CaseInsensitiveDict[TPC | None]:
         public Dictionary<string, TPC> Textures(
             List<string> resnames,
             SearchLocation[] searchOrder = null)
@@ -1281,8 +1336,6 @@ namespace OdyTools.Data
             return textures;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1918-2042
-        // Original: def sounds(self, resnames: Iterable[str], order: Sequence[SearchLocation] | None = None, ...) -> CaseInsensitiveDict[bytes | None]:
         public Dictionary<string, byte[]> Sounds(
             List<string> resnames,
             SearchLocation[] searchOrder = null)
@@ -1395,8 +1448,6 @@ namespace OdyTools.Data
                 }
                 else if (location == SearchLocation.VOICE)
                 {
-                    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1918-2042
-                    // Original: Try StreamVoice first (TSL), then StreamWaves (K1)
                     string streamVoicePath = Installation.GetStreamVoicePath(Path);
                     if (Directory.Exists(streamVoicePath))
                     {
@@ -1479,8 +1530,6 @@ namespace OdyTools.Data
             return sounds;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1890-1916
-        // Original: def sound(self, resname: str, order: Sequence[SearchLocation] | None = None, ...) -> bytes | None:
         /// <summary>
         /// Returns the bytes of a sound resource if it can be found, otherwise returns null.
         /// This is a wrapper of the Sounds() method provided to make searching for a single resource more convenient.
@@ -1495,15 +1544,10 @@ namespace OdyTools.Data
                 return null;
             }
 
-            // Matching PyKotor implementation: batch = self.sounds([resname], order, ...)
-            // Original: batch: CaseInsensitiveDict[bytes | None] = self.sounds([resname], order, capsules=capsules, folders=folders, logger=logger)
             var batch = Sounds(new List<string> { resname }, searchOrder);
-            // Matching PyKotor implementation: return batch[resname] if batch else None
             return batch != null && batch.ContainsKey(resname) ? batch[resname] : null;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:471-518
-        // Original: def get_relevant_resources(self, restype: ResourceType, src_filepath: Path | None = None) -> set[FileResource]:
         public HashSet<FileResource> GetRelevantResources(ResourceType restype, string srcFilepath = null)
         {
             if (srcFilepath == null)
@@ -1539,10 +1583,18 @@ namespace OdyTools.Data
 
             if (IsWithin(srcAbsolute, modulePath))
             {
-                // Add resources from matching modules
-                string moduleFileName = System.IO.Path.GetFileName(srcFilepath);
-                var moduleResources = ModuleResources(moduleFileName);
-                relevantResources.UnionWith(moduleResources.Where(r => r.ResType == restype));
+                // Add resources from all capsules of the same module (e.g. 001EBO.rim, 001EBO_s.rim, 001EBO_dlg.erf)
+                string moduleRoot = System.IO.Path.GetFileNameWithoutExtension(srcFilepath);
+                var moduleFilePaths = _installation.GetModuleFiles(moduleRoot);
+                if (moduleFilePaths != null)
+                {
+                    foreach (string filePath in moduleFilePaths)
+                    {
+                        string moduleFileName = System.IO.Path.GetFileName(filePath);
+                        var moduleResources = ModuleResources(moduleFileName);
+                        relevantResources.UnionWith(moduleResources.Where(r => r.ResType == restype));
+                    }
+                }
             }
             else if (IsWithin(srcAbsolute, overridePath))
             {
@@ -1554,8 +1606,6 @@ namespace OdyTools.Data
             return relevantResources;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
-        // Original: property saves -> dict[Path, dict[Path, list[FileResource]]]:
         public Dictionary<string, Dictionary<string, List<FileResource>>> Saves
         {
             get
@@ -1603,8 +1653,6 @@ namespace OdyTools.Data
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:679-699
-        // Original: def is_save_corrupted(self, save_path: Path) -> bool:
         public bool IsSaveCorrupted(string savePath)
         {
             try
@@ -1618,8 +1666,6 @@ namespace OdyTools.Data
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:701-751
-        // Original: def _check_save_corruption_lightweight(self, save_path: Path) -> bool:
         private bool CheckSaveCorruptionLightweight(string savePath)
         {
             string savegameSav = System.IO.Path.Combine(savePath, "SAVEGAME.sav");
@@ -1679,8 +1725,6 @@ namespace OdyTools.Data
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:753-825
-        // Original: def fix_save_corruption(self, save_path: Path) -> bool:
         public bool FixSaveCorruption(string savePath)
         {
             string savegameSav = System.IO.Path.Combine(savePath, "SAVEGAME.sav");
@@ -1764,9 +1808,7 @@ namespace OdyTools.Data
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
         // Serialization support for pickle-equivalent functionality
-        // Original: Python pickle serializes the object state including _path, name, and _tsl
 
         /// <summary>
         /// Serializes the OdyInstallation to a byte array (equivalent to pickle.dumps).

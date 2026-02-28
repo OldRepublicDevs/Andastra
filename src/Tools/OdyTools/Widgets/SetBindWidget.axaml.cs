@@ -8,8 +8,6 @@ using OdyTools.Utils;
 
 namespace OdyTools.Widgets
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/set_bind.py:17
-    // Original: class SetBindWidget(QWidget):
     public partial class SetBindWidget : UserControl
     {
         private HashSet<Key> _keybind = new HashSet<Key>();
@@ -84,8 +82,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/set_bind.py:39-44
-        // Original: def start_recording(self):
         private void StartRecording()
         {
             _recordBind = true;
@@ -97,8 +93,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/set_bind.py:46-50
-        // Original: def clear_keybind(self):
         private void ClearKeybind()
         {
             _keybind.Clear();
@@ -109,8 +103,6 @@ namespace OdyTools.Widgets
             UpdateKeybindText();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/set_bind.py:52-57
-        // Original: def keyPressEvent(self, a0: QKeyEvent):
         protected override void OnKeyDown(KeyEventArgs e)
         {
             if (_recordBind)
@@ -121,8 +113,6 @@ namespace OdyTools.Widgets
             base.OnKeyDown(e);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/set_bind.py:58-61
-        // Original: def keyReleaseEvent(self, e: QKeyEvent):
         protected override void OnKeyUp(KeyEventArgs e)
         {
             _recordBind = false;
@@ -130,8 +120,6 @@ namespace OdyTools.Widgets
             base.OnKeyUp(e);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/set_bind.py:93-98
-        // Original: def update_keybind_text(self):
         private void UpdateKeybindText()
         {
             if (_setKeysEdit == null)
@@ -139,8 +127,6 @@ namespace OdyTools.Widgets
                 return;
             }
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/set_bind.py:93-98
-            // Original: modifiers: list[Qt.Key] = [key for key in self.keybind if key in MODIFIER_KEY_NAMES]
             //           other_keys: list[Qt.Key] = [key for key in self.keybind if key not in MODIFIER_KEY_NAMES]
             //           sorted_keys: list[Qt.Key] = modifiers + other_keys
             //           text: str = "+".join(get_qt_key_string_localized(key) for key in sorted_keys)
@@ -151,8 +137,6 @@ namespace OdyTools.Widgets
             _setKeysEdit.Text = text;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/set_bind.py:63-85
-        // Original: def set_mouse_and_key_binds(self, bind: Bind):
         public void SetMouseAndKeyBinds(Tuple<HashSet<Key>, HashSet<PointerUpdateKind>> bind)
         {
             if (bind != null)
@@ -225,8 +209,6 @@ namespace OdyTools.Widgets
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/set_bind.py:87-91
-        // Original: def get_mouse_and_key_binds(self) -> Bind:
         public Tuple<HashSet<Key>, HashSet<PointerUpdateKind>> GetMouseAndKeyBinds()
         {
             // Extract mouse button selection from combo box

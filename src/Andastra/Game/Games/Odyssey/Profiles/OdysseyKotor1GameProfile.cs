@@ -42,7 +42,7 @@ namespace Andastra.Game.Games.Odyssey.Profiles
             get { return Andastra.Game.Games.Common.EngineFamily.Odyssey; }
         }
 
-        public override IEngineApi CreateEngineApi()
+        public override Andastra.Game.Scripting.Abstractions.IEngineApi CreateEngineApi()
         {
             return new EngineApi.OdysseyEngineApi(BioWareGame.K1);
         }

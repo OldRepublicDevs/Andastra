@@ -22,7 +22,7 @@
     </Style>
   </Window.Styles>
   <DockPanel LastChildFill="True">
-    <!-- Menu: File, Edit, View, Help (Holocron/PyKotor parity) -->
+    <!-- Menu: File, Edit, View, Help -->
     <Menu DockPanel.Dock="Top" Name="menuBar">
       <MenuItem Header="_File">
         <MenuItem Header="_New" Name="actionNew" HotKey="Ctrl+N"
@@ -107,7 +107,7 @@
         </Grid>
       </Border>
 
-      <!-- Right: PTH canvas (walkmesh + path nodes); Holocron-style render area -->
+      <!-- Right: PTH canvas (walkmesh + path nodes) -->
       <Border Grid.Column="1" Margin="4,0,0,0" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="6"
               Background="#1a1a1a" ClipToBounds="True"
               ToolTip.Tip="Path editor: left-click select, drag to pan (or move nodes if selected). Scroll to zoom. Right-click for Add/Remove node and edges.">

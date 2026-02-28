@@ -58,7 +58,9 @@
         </Grid>
 
         <!-- Resource Types -->
-        <Expander Grid.Row="2" IsExpanded="False" Margin="0,10,0,0">
+        <Expander Grid.Row="2" IsExpanded="False" Margin="0,10,0,0"
+                  HorizontalAlignment="Stretch"
+                  HorizontalContentAlignment="Stretch">
             <Expander.Header>
                 <TextBlock Text="Resource Types" />
             </Expander.Header>

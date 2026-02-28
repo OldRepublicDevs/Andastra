@@ -76,12 +76,8 @@ namespace OdyTools.Data
     /// Based on PyKotor's Kit class. Kits are a standard feature of the Aurora engine's module
     /// building system, allowing level designers to create modular, reusable room pieces.
     /// </remarks>
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:24
-    // Original: class Kit:
     public class Kit
     {
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:25-35
-        // Original: def __init__(self, name: str):
         public Kit(string name)
         {
             Name = name;
@@ -169,12 +165,8 @@ namespace OdyTools.Data
     /// Based on PyKotor's KitComponent class. Components are the fundamental building blocks
     /// of the indoor map builder system.
     /// </remarks>
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:38
-    // Original: class KitComponent:
     public class KitComponent
     {
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:39-47
-        // Original: def __init__(self, kit: Kit, name: str, image: QImage, bwm: BWM, mdl: bytes, mdx: bytes):
         public KitComponent(Kit kit, string name, object image, BWM bwm, byte[] mdl, byte[] mdx)
         {
             Kit = kit;
@@ -277,7 +269,6 @@ namespace OdyTools.Data
         /// Based on PyKotor's deepcopy(component) behavior. The original code also explicitly copies
         /// materials to ensure walkability is preserved during transformations.
         ///
-        /// Matching PyKotor implementation: deepcopy(component) behavior
         /// This matches the behavior in indoor_builder.py:338 and indoor_builder.py:1721
         /// </remarks>
         /// <returns>A new, independent KitComponent copy that can be transformed without affecting the original</returns>
@@ -471,15 +462,9 @@ namespace OdyTools.Data
     /// with transitions. The original implementation calculates hook positions and rotations
     /// from the edge's vertex positions and the triangle's normal vector.
     ///
-    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:50-55
-    /// Original: class KitComponentHook
     /// </remarks>
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:50
-    // Original: class KitComponentHook:
     public class KitComponentHook
     {
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:51-55
-        // Original: def __init__(self, position: Vector3, rotation: float, edge: int, door: KitDoor):
         public KitComponentHook(Vector3 position, float rotation, int edge, KitDoor door)
         {
             Position = position;
@@ -572,15 +557,9 @@ namespace OdyTools.Data
     /// Based on PyKotor's KitDoor class. Doors are defined in kit files and can be placed at
     /// hooks to connect rooms together.
     ///
-    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:58-63
-    /// Original: class KitDoor
     /// </remarks>
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:58
-    // Original: class KitDoor:
     public class KitDoor
     {
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:59-63
-        // Original: def __init__(self, utdK1: UTD, utdK2: UTD, width: float, height: float):
         public KitDoor(UTD utdK1, UTD utdK2, float width, float height)
         {
             UtdK1 = utdK1;
@@ -610,8 +589,6 @@ namespace OdyTools.Data
         public float Height { get; set; }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:66
-    // Original: class MDLMDXTuple(NamedTuple):
     public class MDLMDXTuple
     {
         public MDLMDXTuple(byte[] mdl, byte[] mdx)
@@ -624,12 +601,8 @@ namespace OdyTools.Data
         public byte[] Mdx { get; set; }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:33-57
-    // Original: class ModuleKit(Kit):
     public class ModuleKit : Kit
     {
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:43-57
-        // Original: def __init__(self, name: str, module_root: str, installation: OdyInstallation):
         public ModuleKit(string name, string moduleRoot, OdyInstallation installation) : base(name)
         {
             ModuleRoot = moduleRoot;
@@ -646,8 +619,6 @@ namespace OdyTools.Data
         private bool _loaded;
         private BioWare.Common.Module _module;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:59-74
-        // Original: def ensure_loaded(self) -> bool:
         public bool EnsureLoaded()
         {
             if (_loaded)
@@ -668,8 +639,6 @@ namespace OdyTools.Data
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:76-107
-        // Original: def _load_module_components(self):
         private void _LoadModuleComponents()
         {
             // Load the module
@@ -717,8 +686,6 @@ namespace OdyTools.Data
             _ProcessLytDoorhooks(lytData);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:109-114
-        // Original: def _create_default_door(self) -> KitDoor:
         private KitDoor _CreateDefaultDoor()
         {
             var utd = new UTD();
@@ -727,8 +694,6 @@ namespace OdyTools.Data
             return new KitDoor(utd, utd, 2.0f, 3.0f);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:116-201
-        // Original: def _create_component_from_lyt_room(...) -> KitComponent | None:
         private KitComponent _CreateComponentFromLytRoom(LYTRoom lytRoom, int roomIdx, KitDoor defaultDoor)
         {
             string model = lytRoom.Model ?? "";
@@ -738,7 +703,7 @@ namespace OdyTools.Data
             BWM bwm = _GetRoomWalkmesh(modelName);
             // Ensure we always have a usable walkmesh with at least one face for
             // collision / snapping logic. Some modules ship with empty or missing
-            // WOK data; in that case we fall back to a simple placeholder quad.
+            // WOK data; in that case we fall back to a minimal single-quad BWM.
             if (bwm == null || bwm.Faces.Count == 0)
             {
                 bwm = _CreatePlaceholderBwm(lytRoom.Position);
@@ -895,8 +860,6 @@ namespace OdyTools.Data
         /// </remarks>
         /// <param name="bwm">The walkmesh to re-center</param>
         /// <returns>The re-centered walkmesh (same instance, modified in place)</returns>
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:203-243
-        // Original: def _recenter_bwm(self, bwm: BWM) -> BWM:
         /// <summary>
         /// Re-centers a walkmesh so its center is at the origin (0, 0, 0).
         ///
@@ -999,12 +962,10 @@ namespace OdyTools.Data
         ///
         /// FALLBACK BEHAVIOR:
         ///
-        /// If a room's walkmesh is missing or cannot be loaded, the caller should create a placeholder
+        /// If a room's walkmesh is missing or cannot be loaded, the caller should create a fallback
         /// walkmesh using _CreatePlaceholderBwm. This ensures that every component has a walkmesh,
         /// even if the original is missing.
         ///
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:245-270
-        /// Original: def _get_room_walkmesh(self, model_name: str) -> BWM | None:
         /// </summary>
         /// <param name="modelName">The name of the room model (without extension)</param>
         /// <returns>The loaded BWM object, or null if the walkmesh could not be loaded</returns>
@@ -1046,8 +1007,6 @@ namespace OdyTools.Data
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:272-281
-        // Original: def _get_room_model(self, model_name: str) -> bytes | None:
         private byte[] _GetRoomModel(string modelName)
         {
             if (_module == null)
@@ -1070,8 +1029,6 @@ namespace OdyTools.Data
             return null;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:283-292
-        // Original: def _get_room_model_ext(self, model_name: str) -> bytes | None:
         private byte[] _GetRoomModelExt(string modelName)
         {
             if (_module == null)
@@ -1095,9 +1052,8 @@ namespace OdyTools.Data
         }
 
         /// <summary>
-        /// Create a placeholder BWM with a single quad.
-        ///
-        /// This method is used as a fallback when a room's walkmesh (WOK) is missing or empty.
+        /// Create a fallback BWM with a single quad.
+        /// Used when a room's walkmesh (WOK) is missing or empty.
         /// It creates a simple 10x10 unit square walkmesh at the origin with Stone material,
         /// providing a minimal walkable surface for collision and snapping logic.
         ///
@@ -1107,8 +1063,6 @@ namespace OdyTools.Data
         /// </summary>
         /// <param name="position">Room position (unused - BWM is created at origin)</param>
         /// <returns>A new BWM with a single quad face</returns>
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:294-313
-        // Original: def _create_placeholder_bwm(self, position: Vector3) -> BWM:
         private BWM _CreatePlaceholderBwm(Vector3 position)
         {
             var bwm = new BWM();
@@ -1131,8 +1085,6 @@ namespace OdyTools.Data
             return bwm;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:315-405
-        // Original: def _create_preview_image_from_bwm(self, bwm: BWM) -> QImage:
         private object _CreatePreviewImageFromBwm(BWM bwm)
         {
             // Collect all vertices to calculate bounding box
@@ -1165,18 +1117,11 @@ namespace OdyTools.Data
             width = Math.Max(width, 256);
             height = Math.Max(height, 256);
 
-            // Create a WriteableBitmap with the calculated dimensions
-            // For now, create a black image. Full walkmesh rendering will be implemented later.
             var bitmap = new WriteableBitmap(new PixelSize(width, height), new Vector2(96, 96), PixelFormat.Rgba8888);
-
-            // TODO: STUB - Basic image creation implemented, but actual walkmesh rendering
-            // (drawing faces with white/gray colors and mirroring) will be implemented
-            // when full rendering infrastructure is available
+            // Returns a black bitmap of the correct size; full walkmesh face rendering (faces, mirroring) is a planned enhancement
             return bitmap;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/kit.py:1467-1535
-        // Original: def _extract_doorhooks_from_bwm(bwm: BWM, num_doors: int) -> list[dict[str, float | int]]:
         private List<Dictionary<string, object>> _ExtractDoorhooksFromBwm(BWM bwm, int numDoors)
         {
             var doorhooks = new List<Dictionary<string, object>>();
@@ -1250,8 +1195,6 @@ namespace OdyTools.Data
             return doorhooks;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:407-417
-        // Original: def _process_lyt_doorhooks(self, lyt_data: LYT):
         private void _ProcessLytDoorhooks(LYT lytData)
         {
             // LYT doorhooks contain information about where doors connect rooms
@@ -1492,12 +1435,8 @@ namespace OdyTools.Data
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:419-503
-    // Original: class ModuleKitManager:
     public class ModuleKitManager
     {
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:426-429
-        // Original: def __init__(self, installation: OdyInstallation):
         public ModuleKitManager(OdyInstallation installation)
         {
             _installation = installation;
@@ -1509,8 +1448,6 @@ namespace OdyTools.Data
         private Dictionary<string, ModuleKit> _cache;
         private Dictionary<string, string> _moduleNames;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:431-441
-        // Original: def get_module_names(self) -> dict[str, str | None]:
         public Dictionary<string, string> GetModuleNames()
         {
             if (_moduleNames == null)
@@ -1520,8 +1457,6 @@ namespace OdyTools.Data
             return _moduleNames;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:443-458
-        // Original: def get_module_roots(self) -> list[str]:
         public List<string> GetModuleRoots()
         {
             var seenRoots = new HashSet<string>();
@@ -1542,8 +1477,6 @@ namespace OdyTools.Data
             return roots;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:460-479
-        // Original: def get_module_display_name(self, module_root: str) -> str:
         public string GetModuleDisplayName(string moduleRoot)
         {
             var moduleNames = GetModuleNames();
@@ -1566,8 +1499,6 @@ namespace OdyTools.Data
             return moduleRoot.ToUpperInvariant();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:481-498
-        // Original: def get_module_kit(self, module_root: str) -> ModuleKit:
         public ModuleKit GetModuleKit(string moduleRoot)
         {
             if (!_cache.ContainsKey(moduleRoot))
@@ -1580,8 +1511,6 @@ namespace OdyTools.Data
             return _cache[moduleRoot];
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:500-503
-        // Original: def clear_cache(self):
         public void ClearCache()
         {
             _cache.Clear();
@@ -1589,8 +1518,6 @@ namespace OdyTools.Data
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:71-180
-    // Original: def load_kits(path: os.PathLike | str) -> list[Kit]:
     public static class KitLoader
     {
         public static List<Kit> LoadKits(string path)
@@ -1749,7 +1676,6 @@ namespace OdyTools.Data
                                 using (var context = mirroredBitmap.CreateDrawingContext())
                                 {
                                     // Create transformation matrix to mirror horizontally
-                                    // Matching PyKotor: QImage.mirrored() flips horizontally (mirrored(True, False))
                                     // For horizontal mirroring: scale X by -1 (flips around origin), then translate to correct position
                                     // Matrix multiplication applies right-to-left, so we want: translate * scale
                                     // This means: first scale (flip), then translate (move back)

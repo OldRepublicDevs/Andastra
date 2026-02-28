@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="OdyTools.Widgets.Settings.DLGSettingsWidget">
+    <ScrollViewer>
+        <StackPanel Spacing="15" Margin="10">
+            <TextBlock Text="When no game installation is selected, the DLG editor uses these paths for TLK and 2DA files. To choose which installation the DLG editor uses (and to set manual paths in one place), open a DLG and go to File → DLG Settings."
+                       TextWrapping="Wrap" MaxWidth="500" />
+            <TextBlock Text="TLK path (dialog.tlk):" FontWeight="Bold" />
+            <TextBox Name="tlkPathEdit" Watermark="Full path to dialog.tlk" />
+            <TextBlock Text="Female TLK path (dialogf.tlk, optional):" FontWeight="Bold" />
+            <TextBox Name="femaleTlkPathEdit" Watermark="Full path to dialogf.tlk" />
+            <TextBlock Text="2DA directory (folder containing dialoganimations.2da, emotions.2da, etc.):" FontWeight="Bold" />
+            <TextBox Name="override2DADirEdit" Watermark="Folder path" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

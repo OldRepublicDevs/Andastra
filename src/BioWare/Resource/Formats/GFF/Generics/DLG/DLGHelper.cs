@@ -144,6 +144,10 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG
                 }
             }
 
+            // Persist canonical flat lists as loaded from authentic GFF lists.
+            dlg.EntryList = allEntries;
+            dlg.ReplyList = allReplies;
+
             return dlg;
         }
 
@@ -283,8 +287,17 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG
             var gff = new GFF(GFFContent.DLG);
             GFFStruct root = gff.Root;
 
-            List<DLGEntry> allEntries = dlg.AllEntries(asSorted: true);
-            List<DLGReply> allReplies = dlg.AllReplies(asSorted: true);
+            List<DLGEntry> allEntries = dlg.EntryList ?? new List<DLGEntry>();
+            List<DLGReply> allReplies = dlg.ReplyList ?? new List<DLGReply>();
+            // Backward-compatible fallback for DLGs constructed without canonical flat lists.
+            if (allEntries.Count == 0 && dlg.Starters.Count > 0)
+            {
+                allEntries = dlg.ReachableEntries(asSorted: true).ToList();
+            }
+            if (allReplies.Count == 0 && dlg.Starters.Count > 0)
+            {
+                allReplies = dlg.ReachableReplies(asSorted: true).ToList();
+            }
 
             root.SetUInt32("NumWords", (uint)dlg.WordCount);
             root.SetResRef("EndConverAbort", dlg.OnAbort);
@@ -580,15 +593,51 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:551-575
         // Original: def read_dlg(source: SOURCE_TYPES, offset: int = 0, size: int | None = None) -> DLG:
-        public static DLG ReadDlg(byte[] data, int offset = 0, int size = -1)
+        /// <summary>
+        /// Reads a DLG from binary or plaintext (XML/JSON) data.
+        /// </summary>
+        /// <param name="data">File or in-memory bytes (binary GFF, or UTF-8 XML/JSON).</param>
+        /// <param name="offset">Byte offset into data (default 0).</param>
+        /// <param name="size">Number of bytes to read, or -1 for rest of array.</param>
+        /// <param name="fileFormat">Format hint: DLG (binary), DLG_XML, or DLG_JSON. If null, auto-detected from content.</param>
+        public static DLG ReadDlg(byte[] data, int offset = 0, int size = -1, ResourceType fileFormat = null)
         {
-            byte[] dataToRead = data;
-            if (size > 0 && offset + size <= data.Length)
+            ResourceType format = fileFormat;
+            if (format == null)
             {
-                dataToRead = new byte[size];
-                Array.Copy(data, offset, dataToRead, 0, size);
+                int len = size > 0 && offset + size <= data.Length ? size : data.Length - offset;
+                int start = offset;
+                while (start < data.Length && start - offset < len && (data[start] == (byte)' ' || data[start] == (byte)'\t' || data[start] == (byte)'\r' || data[start] == (byte)'\n'))
+                    start++;
+                if (start < data.Length && data[start] == (byte)'<')
+                    format = ResourceType.DLG_XML;
+                else if (start < data.Length && data[start] == (byte)'{')
+                    format = ResourceType.DLG_JSON;
+                else
+                    format = ResourceType.DLG;
             }
-            GFF gff = GFF.FromBytes(dataToRead);
+
+            GFF gff;
+            if (format == ResourceType.DLG_XML || format == ResourceType.DLG_JSON)
+            {
+                // GFFAuto.ReadGff for XML/JSON does not use offset/size on byte[]; pass a slice
+                int len = data.Length - offset;
+                if (size > 0 && len > size) len = size;
+                byte[] slice = (offset == 0 && (size <= 0 || size >= data.Length)) ? data : new byte[len];
+                if (slice != data)
+                    Array.Copy(data, offset, slice, 0, len);
+                gff = GFFAuto.ReadGff(slice, 0, null, format);
+            }
+            else
+            {
+                byte[] dataToRead = data;
+                if (size > 0 && offset + size <= data.Length)
+                {
+                    dataToRead = new byte[size];
+                    Array.Copy(data, offset, dataToRead, 0, size);
+                }
+                gff = GFF.FromBytes(dataToRead);
+            }
             return ConstructDlg(gff);
         }
 

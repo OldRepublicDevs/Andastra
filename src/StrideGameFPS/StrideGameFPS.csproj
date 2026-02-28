@@ -1,15 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
     <UseWindowsForms>true</UseWindowsForms>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFrameworks>net9.0-windows;net48</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   <PropertyGroup>
-    <!-- Code-only project: no .sd assets; skip Stride asset compiler (avoids MSBuild 16 / .NET 8 requirement). -->
     <StrideCompilerSkipBuild>true</StrideCompilerSkipBuild>
     <RollForward>Major</RollForward>
     <PublishReadyToRun>false</PublishReadyToRun>
@@ -18,11 +16,20 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
-  <ItemGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
+    <StartupObject>StrideGameFPS.Net48Stub</StartupObject>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0-windows'">
     <PackageReference Include="Stride.Engine" Version="4.2.1.2487" />
     <PackageReference Include="Stride.Graphics" Version="4.2.1.2487" />
     <PackageReference Include="Stride.Input" Version="4.2.1.2487" />
-    <!-- Stride Community Toolkit: code-only window + graphics compositor (2025 approach). Use preview.61 for Stride 4.2. -->
     <PackageReference Include="Stride.CommunityToolkit.Windows" Version="1.0.0-preview.61" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0-windows'">
+    <Compile Remove="Net48Stub.cs" />
+  </ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <Compile Remove="**\*.cs" />
+    <Compile Include="Net48Stub.cs" />
   </ItemGroup>
 </Project>

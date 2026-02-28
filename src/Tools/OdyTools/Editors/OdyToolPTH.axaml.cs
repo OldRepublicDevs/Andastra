@@ -23,7 +23,6 @@ using Window = Avalonia.Controls.Window;
 
 namespace OdyTools.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py
     public class PTHRenderArea : Control
     {
         private PTH _pth;
@@ -174,14 +173,14 @@ namespace OdyTools.Editors
             SigKeyPressed?.Invoke(this, e);
         }
 
-        /// <summary>Set material colors for walkmesh rendering (Holocron parity).</summary>
+        /// <summary>Set material colors for walkmesh rendering.</summary>
         public void SetMaterialColors(Dictionary<SurfaceMaterial, Avalonia.Media.Color> colors)
         {
             _materialColors = colors ?? new Dictionary<SurfaceMaterial, Avalonia.Media.Color>();
             InvalidateVisual();
         }
 
-        // Render walkmesh (if loaded), then path connections and nodes (Holocron/PyKotor parity)
+        // Render walkmesh (if loaded), then path connections and nodes
         public override void Render(DrawingContext context)
         {
             base.Render(context);
@@ -190,7 +189,7 @@ namespace OdyTools.Editors
             var backgroundBrush = new SolidColorBrush(Avalonia.Media.Color.FromArgb(255, 0, 0, 0));
             context.FillRectangle(backgroundBrush, new Rect(0, 0, Bounds.Width, Bounds.Height));
 
-            // Draw walkmesh triangles first (behind path) - Holocron toolset shows LYT room walkmeshes
+            // Draw walkmesh triangles first (behind path)
             DrawWalkmeshes(context);
 
             if (_pth == null || _pth.Count == 0)
@@ -370,8 +369,6 @@ namespace OdyTools.Editors
             return hits;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/renderer/walkmesh.py:245-258
-        // Original: def set_walkmeshes(self, walkmeshes: list[BWM]):
         public void SetWalkmeshes(List<BWM> walkmeshes)
         {
             _walkmeshes = walkmeshes ?? new List<BWM>();
@@ -455,8 +452,6 @@ namespace OdyTools.Editors
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:120
-    // Original: class OdyToolPTH(Editor):
     public partial class OdyToolPTH : Editor
     {
         private PTH _pth;
@@ -490,7 +485,6 @@ namespace OdyTools.Editors
         private Button _removeEdgeButton;
         private bool _syncingSelection;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:121-177
         public OdyToolPTH(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolPTH", "pth",
                 new[] { ResourceType.PTH },
@@ -522,8 +516,6 @@ namespace OdyTools.Editors
             New();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:143-169
-        // Original: def intColorToQColor(num_color: int) -> QColor:
         private void InitializeMaterialColors()
         {
             // Helper to convert integer color to Avalonia Color
@@ -744,12 +736,7 @@ namespace OdyTools.Editors
                 var item = EditorHelpers.FindControlSafe<MenuItem>(this, name);
                 if (item != null) item.Click += (s, e) => handler();
             }
-            Bind("actionNew", () => New());
-            Bind("actionOpen", () => { });
-            Bind("actionSave", () => Save());
-            Bind("actionSaveAs", () => SaveAs());
-            Bind("actionRevert", () => Revert());
-            Bind("actionExit", () => Close());
+            // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
             Bind("actionAddNode", () => AddNodeAtLastContextWorld());
             Bind("actionRemoveNode", () => DeleteSelectedNode());
             Bind("actionAddEdge", () => AddEdgeBetweenSelected());
@@ -946,7 +933,6 @@ namespace OdyTools.Editors
             if (_removeEdgeButton != null) _removeEdgeButton.IsEnabled = selCount >= 2;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:179-207
         private void SetupStatusBar()
         {
             if (LeftLabel == null) LeftLabel = new TextBlock { Text = "" };
@@ -954,8 +940,6 @@ namespace OdyTools.Editors
             if (RightLabel == null) RightLabel = new TextBlock { Text = "" };
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:209-212
-        // Original: def update_status_bar(self, left: str = "", center: str = "", right: str = ""):
         public void UpdateStatusBar(string left = "", string center = "", string right = "")
         {
             if (LeftLabel != null)
@@ -972,23 +956,17 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:340-342
-        // Original: def addNode(self, x: float, y: float):
         public void AddNode(float x, float y)
         {
             _pth.Add(x, y);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:344-346
-        // Original: def remove_node(self, index: int):
         public void RemoveNode(int index)
         {
             _pth.Remove(index);
             if (RenderArea != null) RenderArea.PathSelection.Clear();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:356-359
-        // Original: def addEdge(self, source: int, target: int):
         public void AddEdge(int source, int target)
         {
             if (source < 0 || target < 0 || source >= _pth.Count || target >= _pth.Count)
@@ -1001,8 +979,6 @@ namespace OdyTools.Editors
             _pth.Connect(target, source);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:349-353
-        // Original: def removeEdge(self, source: int, target: int):
         public void RemoveEdge(int source, int target)
         {
             if (source < 0 || target < 0 || source >= _pth.Count || target >= _pth.Count)
@@ -1034,8 +1010,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:361-363
-        // Original: def points_under_mouse(self) -> list[Vector2]:
         public List<Vector2> PointsUnderMouse(float tolerance = 0.5f)
         {
             return RenderArea?.PathNodesUnderMouse(tolerance) ?? new List<Vector2>();
@@ -1046,8 +1020,6 @@ namespace OdyTools.Editors
             return RenderArea?.PathSelection.All() ?? new List<Vector2>();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:307-310
-        // Original: def moveCameraToSelection(self):
         public void MoveCameraToSelection()
         {
             if (RenderArea == null) return;
@@ -1062,8 +1034,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:313-314
-        // Original: def move_camera(self, x: float, y: float):
         public void MoveCamera(float x, float y)
         {
             if (RenderArea != null) RenderArea.Camera.NudgePosition(x, y);
@@ -1103,8 +1073,6 @@ namespace OdyTools.Editors
             RenderArea.PathSelection.Select(selected);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:373-374
-        // Original: def select_node_under_mouse(self):
         public void SelectNodeUnderMouse()
         {
             if (RenderArea == null) return;
@@ -1115,15 +1083,12 @@ namespace OdyTools.Editors
                 RenderArea.PathSelection.Clear();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:249-269
-        // Original: def load(self, filepath, resref, restype, data):
         // k2_win_gog_aspyr_swkotor2.exe: PTH loading requires LYT file for context (room layout and walkmesh information)
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
 
             // Search for corresponding LYT file (same resref, but .lyt extension)
-            // Matching PyKotor: order = [SearchLocation.OVERRIDE, SearchLocation.CHITIN, SearchLocation.MODULES]
             if (_installation != null)
             {
                 SearchLocation[] searchOrder = new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN, SearchLocation.MODULES };
@@ -1146,7 +1111,6 @@ namespace OdyTools.Editors
                 else
                 {
                     // LYT file not found - show error message
-                    // Matching PyKotor: BetterMessageBox with critical icon
                     string message = $"OdyToolPTH requires {resref}.lyt in order to load '{resref}.{restype}', but it could not be found.";
                     var errorBox = MessageBoxManager.GetMessageBoxStandard(
                         "Layout not found",
@@ -1171,7 +1135,6 @@ namespace OdyTools.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:271-275
         private void LoadPTH(PTH pth)
         {
             _pth = pth;
@@ -1181,15 +1144,12 @@ namespace OdyTools.Editors
             RebuildNodeList();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:277-278
-        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
             byte[] data = PTHAuto.BytesPth(_pth);
             return Tuple.Create(data, new byte[0]);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:280-282
         public override void New()
         {
             base.New();
@@ -1200,15 +1160,11 @@ namespace OdyTools.Editors
             RebuildNodeList();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:284-286
-        // Original: @status_bar_decorator def pth(self) -> PTH:
         public PTH Pth()
         {
             return _pth;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:288-304
-        // Original: @status_bar_decorator def loadLayout(self, layout: LYT):
         // k2_win_gog_aspyr_swkotor2.exe: LoadLayout loads walkmeshes for each room in the layout to provide visual context
         private void LoadLayout(BioWare.Resource.Formats.LYT.LYT layout)
         {
@@ -1235,7 +1191,6 @@ namespace OdyTools.Editors
                 {
                     try
                     {
-                        // Matching PyKotor: print("loadLayout", "BWM Found", f"{findBWM.resname}.{findBWM.restype}", file=self.status_out)
                         if (StatusOut != null)
                         {
                             StatusOut.Write($"loadLayout BWM Found {wokResult.ResName}.{wokResult.ResType}");
@@ -1253,18 +1208,38 @@ namespace OdyTools.Editors
             }
 
             // Set walkmeshes on render area
-            // Matching PyKotor: self.ui.renderArea.set_walkmeshes(walkmeshes)
             RenderArea.SetWalkmeshes(walkmeshes);
         }
 
         public override void SaveAs()
         {
+            _ = RunSaveAsAsync();
+        }
+
+        protected override async System.Threading.Tasks.Task RunSaveAsAsync()
+        {
+            var storage = (this as Avalonia.Controls.Window)?.StorageProvider;
+            if (storage == null) return;
+            string suggestedName = !string.IsNullOrEmpty(_resname) ? _resname : "path";
+            var options = new Avalonia.Platform.Storage.FilePickerSaveOptions
+            {
+                Title = "Save As",
+                SuggestedFileName = suggestedName + ".pth",
+                FileTypeChoices = new[] { new Avalonia.Platform.Storage.FilePickerFileType("Path (PTH)") { Patterns = new[] { "*.pth" } }, new Avalonia.Platform.Storage.FilePickerFileType("All files") { Patterns = new[] { "*.*" } } }
+            };
+            var file = await storage.SaveFilePickerAsync(options);
+            if (file == null) return;
+            string path = file.Path?.LocalPath ?? "";
+            if (string.IsNullOrWhiteSpace(path)) return;
+            _filepath = path;
+            string ext = (System.IO.Path.GetExtension(path) ?? "").TrimStart('.').ToLowerInvariant();
+            _restype = ResourceType.FromExtension(ext) ?? ResourceType.PTH;
+            _resname = System.IO.Path.GetFileNameWithoutExtension(path);
+            RefreshWindowTitle();
             Save();
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:42-76
-    // Original: class CustomStdout:
     public class PTHStatusOut
     {
         private string _prevStatusOut = "";
@@ -1321,8 +1296,6 @@ namespace OdyTools.Editors
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:425
-    // Original: class PTHControlScheme:
     public class PTHControlScheme
     {
         public OdyToolPTH Editor { get; private set; }
@@ -1338,7 +1311,7 @@ namespace OdyTools.Editors
         public PTHControlScheme(OdyToolPTH editor)
         {
             Editor = editor;
-            // Initialize control properties - will be fully implemented when render area is available
+            // Initialize control properties (render area may be set later)
             PanCamera = new object();
             RotateCamera = new object();
             ZoomCamera = new object();

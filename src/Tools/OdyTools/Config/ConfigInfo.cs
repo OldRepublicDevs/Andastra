@@ -4,16 +4,10 @@ using Newtonsoft.Json;
 
 namespace OdyTools.Config
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/config/config_info.py:37
-    // Original: LOCAL_PROGRAM_INFO: dict[str, Any] = {
     public static class ConfigInfo
     {
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/config/config_info.py:110-111
-        // Original: CURRENT_VERSION = LOCAL_PROGRAM_INFO["currentVersion"]
         public const string CurrentVersion = "4.0.0";
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/config/config_info.py:37-108
-        // Original: LOCAL_PROGRAM_INFO: dict[str, Any] = {
         public static Dictionary<string, object> LocalProgramInfo => new Dictionary<string, object>
         {
             ["currentVersion"] = CurrentVersion,

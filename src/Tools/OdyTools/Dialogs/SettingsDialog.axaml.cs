@@ -9,36 +9,27 @@ using MsBox.Avalonia.Enums;
 
 namespace OdyTools.Dialogs
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:18
-    // Original: class SettingsDialog(QDialog):
     public partial class SettingsDialog : Window
     {
         private bool _isResetting;
         private bool _installationEdited;
         private GlobalSettings _settings;
         private Control _installationsWidget;
+        private Control _dlgSettingsWidget;
         private Control _miscWidget;
         private Control _gitEditorWidget;
         private Control _moduleDesignerWidget;
         private Control _applicationSettingsWidget;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:42-43
-        // Original: self.ui = settings.Ui_Dialog(); self.ui.setupUi(self)
         public SettingsDialogUi Ui { get; private set; }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:38
-        // Original: self._is_resetting: bool = False
         public bool IsResetting => _isResetting;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:38
-        // Original: self.installation_edited: bool = False
         public bool InstallationEdited => _installationEdited;
 
         // Dialog result property (true if OK clicked, false if Cancel or closed)
         public bool? Result { get; private set; }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:19-125
-        // Original: def __init__(self, parent):
         public SettingsDialog(Window parent = null)
         {
             InitializeComponent();
@@ -92,6 +83,7 @@ namespace OdyTools.Dialogs
             // Create settings tree
             var settingsTree = new TreeView();
             settingsTree.Items.Add(new TreeViewItem { Header = "Installations", IsSelected = true });
+            settingsTree.Items.Add(new TreeViewItem { Header = "DLG Settings" });
             settingsTree.Items.Add(new TreeViewItem { Header = "GIT Editor" });
             settingsTree.Items.Add(new TreeViewItem { Header = "Module Designer" });
             settingsTree.Items.Add(new TreeViewItem { Header = "Misc" });
@@ -122,6 +114,8 @@ namespace OdyTools.Dialogs
             // Create actual settings widgets (matching PyKotor implementation). Defensive creation.
             _installationsWidget = CreateWidgetSafe(() => new InstallationsWidget(), nameof(InstallationsWidget))
                 ?? new ContentControl { Content = new TextBlock { Text = "Installations (failed to load)" } };
+            _dlgSettingsWidget = CreateWidgetSafe(() => new DLGSettingsWidget(), nameof(DLGSettingsWidget))
+                ?? new ContentControl { Content = new TextBlock { Text = "DLG Settings (failed to load)" } };
             _miscWidget = CreateWidgetSafe(() => new MiscSettingsWidget(), nameof(MiscSettingsWidget))
                 ?? new ContentControl { Content = new TextBlock { Text = "Misc (failed to load)" } };
             _gitEditorWidget = CreateWidgetSafe(() => new GITSettingsWidget(), nameof(GITSettingsWidget))
@@ -131,7 +125,6 @@ namespace OdyTools.Dialogs
             _applicationSettingsWidget = CreateWidgetSafe(() => new ApplicationSettingsWidget(), nameof(ApplicationSettingsWidget))
                 ?? new ContentControl { Content = new TextBlock { Text = "Application (failed to load)" } };
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:61
             if (_installationsWidget is InstallationsWidget iwProg)
             {
                 iwProg.SettingsEdited += OnInstallationEdited;
@@ -142,6 +135,7 @@ namespace OdyTools.Dialogs
                 SettingsTree = settingsTree,
                 SettingsStack = settingsStack,
                 InstallationsPage = _installationsWidget,
+                DLGSettingsPage = _dlgSettingsWidget,
                 GitEditorPage = _gitEditorWidget,
                 MiscPage = _miscWidget,
                 ModuleDesignerPage = _moduleDesignerWidget,
@@ -157,6 +151,7 @@ namespace OdyTools.Dialogs
             var pageDict = new Dictionary<string, Control>
             {
                 { "Installations", Ui.InstallationsPage },
+                { "DLG Settings", Ui.DLGSettingsPage },
                 { "GIT Editor", Ui.GitEditorPage },
                 { "Misc", Ui.MiscPage },
                 { "Module Designer", Ui.ModuleDesignerPage },
@@ -173,8 +168,6 @@ namespace OdyTools.Dialogs
 
         private void SetupUI()
         {
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:42-43
-            // Original: self.ui = settings.Ui_Dialog(); self.ui.setupUi(self)
             // Find all controls from XAML and expose via Ui property
             TreeView settingsTree = null;
             ContentControl settingsStack = null;
@@ -206,6 +199,7 @@ namespace OdyTools.Dialogs
 
             // Create actual settings widgets (matching PyKotor implementation). Defensive: one failing widget must not crash the dialog.
             _installationsWidget = CreateWidgetSafe(() => new InstallationsWidget(), nameof(InstallationsWidget));
+            _dlgSettingsWidget = CreateWidgetSafe(() => new DLGSettingsWidget(), nameof(DLGSettingsWidget));
             _miscWidget = CreateWidgetSafe(() => new MiscSettingsWidget(), nameof(MiscSettingsWidget));
             _gitEditorWidget = CreateWidgetSafe(() => new GITSettingsWidget(), nameof(GITSettingsWidget));
             _moduleDesignerWidget = CreateWidgetSafe(() => new ModuleDesignerSettingsWidget(), nameof(ModuleDesignerSettingsWidget));
@@ -214,6 +208,10 @@ namespace OdyTools.Dialogs
             if (_installationsWidget == null)
             {
                 _installationsWidget = new ContentControl { Content = new TextBlock { Text = "Installations (failed to load)" } };
+            }
+            if (_dlgSettingsWidget == null)
+            {
+                _dlgSettingsWidget = new ContentControl { Content = new TextBlock { Text = "DLG Settings (failed to load)" } };
             }
             if (_miscWidget == null)
             {
@@ -232,8 +230,6 @@ namespace OdyTools.Dialogs
                 _applicationSettingsWidget = new ContentControl { Content = new TextBlock { Text = "Application (failed to load)" } };
             }
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:61
-            // Original: self.ui.installationsWidget.sig_settings_edited.connect(self.on_installation_edited)
             if (_installationsWidget is InstallationsWidget iw)
             {
                 iw.SettingsEdited += OnInstallationEdited;
@@ -244,6 +240,7 @@ namespace OdyTools.Dialogs
                 SettingsTree = settingsTree,
                 SettingsStack = settingsStack,
                 InstallationsPage = _installationsWidget,
+                DLGSettingsPage = _dlgSettingsWidget,
                 GitEditorPage = _gitEditorWidget,
                 MiscPage = _miscWidget,
                 ModuleDesignerPage = _moduleDesignerWidget,
@@ -252,11 +249,10 @@ namespace OdyTools.Dialogs
                 CancelButton = cancelButton
             };
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:52-58
-            // Original: self.page_dict: dict[str, QWidget]
             var pageDict = new Dictionary<string, Control>
             {
                 { "Installations", Ui.InstallationsPage },
+                { "DLG Settings", Ui.DLGSettingsPage },
                 { "GIT Editor", Ui.GitEditorPage },
                 { "Misc", Ui.MiscPage },
                 { "Module Designer", Ui.ModuleDesignerPage },
@@ -283,8 +279,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:75-92
-        // Original: def on_page_change(self, page_tree_item: QTreeWidgetItem):
         private void OnSettingsTreeSelectionChanged(Dictionary<string, Control> pageDict)
         {
             if (Ui?.SettingsTree?.SelectedItem is TreeViewItem item)
@@ -297,8 +291,6 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:113-114
-        // Original: def on_installation_edited(self): self.installation_edited = True
         private void OnInstallationEdited(object sender, EventArgs e)
         {
             _installationEdited = true;
@@ -317,17 +309,15 @@ namespace OdyTools.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:116-125
-        // Original: def accept(self):
         public void Accept()
         {
             // Save settings
             if (!_isResetting)
             {
-                // Matching PyKotor implementation: save all settings widgets (only real widgets have Save)
                 if (_miscWidget is MiscSettingsWidget mw) mw.Save();
                 if (_gitEditorWidget is GITSettingsWidget gw) gw.Save();
                 if (_moduleDesignerWidget is ModuleDesignerSettingsWidget mdw) mdw.Save();
+                if (_dlgSettingsWidget is DLGSettingsWidget dsw) dsw.Save();
                 if (_installationsWidget is InstallationsWidget iw) iw.Save();
                 // ApplicationSettingsWidget doesn't have Save() - settings are saved directly when changed
             }
@@ -336,12 +326,8 @@ namespace OdyTools.Dialogs
             Close(true);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:94-111
-        // Original: def on_reset_all_settings(self):
         public async void OnResetAllSettings()
         {
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:95-111
-            // Original: QMessageBox.question and QMessageBox.information
             var confirmBox = MessageBoxManager.GetMessageBoxStandard(
                 "Reset All Settings",
                 "Are you sure you want to reset all settings to their default values? This action cannot be undone.",
@@ -352,8 +338,6 @@ namespace OdyTools.Dialogs
 
             if (confirmResult == ButtonResult.Yes)
             {
-                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:104
-                // Original: GlobalSettings().settings.clear()
                 _settings.Clear();
 
                 var infoBox = MessageBoxManager.GetMessageBoxStandard(
@@ -369,13 +353,12 @@ namespace OdyTools.Dialogs
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:42-43
-    // Original: self.ui = settings.Ui_Dialog() - UI wrapper class exposing all controls
     public class SettingsDialogUi
     {
         public TreeView SettingsTree { get; set; }
         public ContentControl SettingsStack { get; set; }
         public Control InstallationsPage { get; set; }
+        public Control DLGSettingsPage { get; set; }
         public Control GitEditorPage { get; set; }
         public Control MiscPage { get; set; }
         public Control ModuleDesignerPage { get; set; }

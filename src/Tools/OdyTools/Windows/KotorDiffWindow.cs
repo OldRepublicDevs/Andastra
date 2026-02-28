@@ -3,22 +3,18 @@ using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using OdyTools.Data;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace OdyTools.Windows
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/kotordiff.py:84
-    // Original: class KotorDiffWindow(QMainWindow):
     public class KotorDiffWindow : Window
     {
         private Dictionary<string, OdyInstallation> _installations;
         private OdyInstallation _activeInstallation;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/kotordiff.py
-        // Original: self.ui = Ui_MainWindow() - UI wrapper class exposing all controls
         public KotorDiffWindowUi Ui { get; private set; }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/kotordiff.py:87-107
-        // Original: def __init__(self, parent, installations, active_installation):
         public KotorDiffWindow(
             Window parent = null,
             Dictionary<string, OdyInstallation> installations = null,
@@ -72,18 +68,17 @@ namespace OdyTools.Windows
             Ui = new KotorDiffWindowUi();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/kotordiff.py:200-248
-        // Original: def _run_diff(self):
-        public void Compare()
+        public async void Compare()
         {
-            // Run KotorDiff operation
-            // This will be implemented when KotorDiff integration is available
-            System.Console.WriteLine("KotorDiff not yet fully implemented");
+            var box = MessageBoxManager.GetMessageBoxStandard(
+                "KotorDiff",
+                "KotorDiff comparison is not yet fully implemented. Use an external diff tool or wait for a future update.",
+                ButtonEnum.Ok,
+                MsBox.Avalonia.Enums.Icon.Info);
+            await box.ShowWindowDialogAsync(this);
         }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/kotordiff.py
-    // Original: self.ui = Ui_MainWindow() - UI wrapper class exposing all controls
     public class KotorDiffWindowUi
     {
     }

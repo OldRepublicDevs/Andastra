@@ -1,0 +1,48 @@
+certifi>=2021.10.8
+idna>=3.11
+jsonpickle>=4.1.1
+pykotor[encodings,extra,font,gl,updater]>=2.3.0
+qtpy>=2.4.3
+send2trash>=1.8.3
+
+[:platform_python_implementation == "CPython"]
+Pillow>=9.5
+
+[:platform_python_implementation == "PyPy"]
+Pillow<11.1.0,>10
+
+[:platform_python_implementation == "PyPy" and python_version >= "3.9"]
+PySide6_Addons>=6.10.1
+PySide6_Essentials>=6.10.1
+PySide6
+PySide6>=6.10.1
+
+[:python_version < "3.10"]
+PyQt6-sip<13.10.3,>=12.10
+
+[:python_version < "3.9"]
+Markdown<3.9,>=3.4.4
+numpy<1.25.0,>=1.19.0
+requests<2.32.0,>=2.25.0
+urllib3<2.0.0,>=1.26.0
+
+[:python_version == "3.8"]
+PyQt5-Qt5>=5.15
+PyQt5-sip>=12.10
+PyQt5>=5.15
+PyQt6-Qt6<6.10.1,>=6.6.1
+PyQt6<6.10.1,>=6.6.1
+
+[:python_version >= "3.10"]
+PyQt6-sip>=13.10.3
+
+[:python_version >= "3.9"]
+Markdown>=3.4.4
+numpy>=1.19.0
+PyQt6-Qt6>=6.10.1
+PyQt6>=6.10.1
+requests>=2.25.0
+urllib3>=1.26.0
+
+[:sys_platform == "win32"]
+comtypes>=1.4.0
