@@ -13,6 +13,11 @@ using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
+using Texture = Microsoft.Xna.Framework.Graphics.Texture;
+using Texture2D = Microsoft.Xna.Framework.Graphics.Texture2D;
+using TextureCube = Microsoft.Xna.Framework.Graphics.TextureCube;
+using SharpDX.Direct3D11;
+using Silk.NET.OpenGL;
 
 namespace Andastra.Game.Games.Odyssey.Fonts
 {
@@ -111,7 +116,7 @@ namespace Andastra.Game.Games.Odyssey.Fonts
         /// <param name="graphicsDevice">The graphics device for texture creation.</param>
         /// <returns>The loaded bitmap font, or null if loading failed.</returns>
         [CanBeNull]
-        public static OdysseyBitmapFont Load([NotNull] string fontResRef, [NotNull] Installation installation, [NotNull] GraphicsDevice graphicsDevice)
+        public static OdysseyBitmapFont Load([NotNull] string fontResRef, [NotNull] Installation installation, [NotNull] IGraphicsDevice graphicsDevice)
         {
             if (string.IsNullOrEmpty(fontResRef))
             {
@@ -129,6 +134,18 @@ namespace Andastra.Game.Games.Odyssey.Fonts
 
             try
             {
+                // Get MonoGame GraphicsDevice
+                Microsoft.Xna.Framework.Graphics.GraphicsDevice mgDevice = graphicsDevice as Microsoft.Xna.Framework.Graphics.GraphicsDevice;
+                if (mgDevice == null && graphicsDevice is MonoGameGraphicsDevice mgGfxDevice)
+                {
+                    mgDevice = mgGfxDevice.Device;
+                }
+                if (mgDevice == null)
+                {
+                    Console.WriteLine($"[OdysseyBitmapFont] ERROR: Graphics device must be MonoGame GraphicsDevice");
+                    return null;
+                }
+
                 // Load font texture (TPC or TGA)
                 TPC fontTexture = null;
                 var textureResult = installation.Resources.LookupResource(fontResRef, ResourceType.TPC, null, null);
@@ -155,7 +172,7 @@ namespace Andastra.Game.Games.Odyssey.Fonts
                 // Convert TPC to MonoGame Texture2D
                 // Fonts always use 2D textures, not cube maps.
                 // Do NOT flip - KOTOR font textures use top-left origin (same as MonoGame/GUI). Flipping caused backwards text.
-                Texture convertedTexture = Graphics.MonoGame.Converters.TpcToMonoGameTextureConverter.Convert(fontTexture, graphicsDevice, false, flipVertical: false, flipHorizontal: false);
+                Texture convertedTexture = Graphics.MonoGame.Converters.TpcToMonoGameTextureConverter.Convert(fontTexture, mgDevice, false, flipVertical: false, flipHorizontal: false);
                 if (convertedTexture is TextureCube)
                 {
                     Console.WriteLine($"[OdysseyBitmapFont] ERROR: Font texture cannot be a cube map: {fontResRef}");
