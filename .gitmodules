@@ -1,3 +1,27 @@
 [submodule "vendor/mcp/RoslynMCP"]
 	path = vendor/mcp/RoslynMCP
 	url = https://github.com/th3w1zard1/RoslynMCP
+[submodule "vendor/KotOR.js"]
+	path = vendor/KotOR.js
+	url = https://github.com/KobaltBlu/KotOR.js
+[submodule "vendor/kotor-save-editor"]
+	path = vendor/kotor-save-editor
+	url = https://github.com/th3w1zard1/kotor-save-editor
+[submodule "vendor/kotor-savegame-editor"]
+	path = vendor/kotor-savegame-editor
+	url = https://github.com/th3w1zard1/kotor-savegame-editor
+[submodule "vendor/pykotor"]
+	path = vendor/pykotor
+	url = https://github.com/OldRepublicDevs/PyKotor
+[submodule "vendor/sotor"]
+	path = vendor/sotor
+	url = https://github.com/th3w1zard1/sotor
+[submodule "vendor/vanilla_kotor_script_source"]
+	path = vendor/vanilla_kotor_script_source
+	url = https://github.com/kotorcommunitypatches/vanilla_kotor_script_source
+[submodule "vendor/kselinux"]
+	path = vendor/kselinux
+	url = https://gitlab.com/kotorsge-team/kselinux.git
+[submodule "src/Tools/NCSDecomp"]
+	path = src/Tools/NCSDecomp
+	url = https://github.com/OldRepublicDevs/NCSDecomp.NET

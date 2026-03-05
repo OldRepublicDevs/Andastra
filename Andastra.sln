@@ -19,10 +19,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BioWare", "src\BioWare\BioW
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andastra.Utility", "src\BioWare\Utility\Andastra.Utility.csproj", "{701ED044-C28E-4900-9D0A-BC18977B7241}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonoGameFPS", "src\MonoGameFPS\MonoGameFPS.csproj", "{EFCF2BEF-AACE-471F-9365-454D22E1DE6A}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StrideGameFPS", "src\StrideGameFPS\StrideGameFPS.csproj", "{5896BEE9-00C7-47A1-A31A-B9B4AD45A579}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KotorCLI", "src\Tools\KotorCLI\KotorCLI.csproj", "{F387E498-ABC1-4158-8C86-45E6CC98F0C4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KotorDiff", "src\Tools\KotorDiff\KotorDiff.csproj", "{F7892F81-F874-40B3-87AB-A623876EEBF4}"
