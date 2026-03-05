@@ -27,12 +27,14 @@ using UTCClass = BioWare.Resource.Formats.GFF.Generics.UTC.UTCClass;
 using OdyTools.Common;
 using OdyTools.Data;
 using OdyTools.Dialogs;
+using OdyTools.Utils;
 using OdyTools.Widgets;
 using Game = BioWare.Common.BioWareGame;
 using GFFAuto = BioWare.Resource.Formats.GFF.GFFAuto;
 using UTC = BioWare.Resource.Formats.GFF.Generics.UTC.UTC;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using IconType = MsBox.Avalonia.Enums.Icon;
 using BioWare.Extract.Capsule;
 
 namespace OdyTools.Editors
@@ -135,6 +137,7 @@ namespace OdyTools.Editors
         private TextBox _commentsEdit;
         private Expander _commentsExpander; // For tab title update testing
 
+        public OdyToolUTC() : this(null, null) { }
         public OdyToolUTC(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTC", "creature",
                 new[] { ResourceType.UTC, ResourceType.BTC, ResourceType.BIC },
@@ -185,7 +188,6 @@ namespace OdyTools.Editors
 
         private void InitializeComponent()
         {
-            bool xamlLoaded = false;
             try { AvaloniaXamlLoader.Load(this); } catch { /* XAML not available - use programmatic UI */ }
             SetupProgrammaticUI();
         }
@@ -327,7 +329,7 @@ namespace OdyTools.Editors
             var invPanel = new StackPanel { Spacing = 4 };
             _inventoryCountLabel = new TextBlock { Text = "Total Items: 0" };
             _inventoryBtn = new Button { Content = "Edit Inventory" };
-            _inventoryBtn.Click += (s, e) => OpenInventory();
+            EditorHelpers.BindClick(_inventoryBtn, OpenInventory);
             invPanel.Children.Add(_inventoryCountLabel);
             invPanel.Children.Add(_inventoryBtn);
             invGroup.Content = invPanel;
@@ -344,9 +346,9 @@ namespace OdyTools.Editors
             };
             portraitPanel.Children.Add(_portraitPicture);
             AddFormRow(portraitPanel, "Portrait:", _portraitSelect = new ComboBox());
-            _portraitSelect.SelectionChanged += (s, e) => PortraitChanged();
+            EditorHelpers.BindSelectionChanged(_portraitSelect, PortraitChanged);
             AddFormRow(portraitPanel, "Alignment:", _alignmentSlider = new Slider { Minimum = 0, Maximum = 100, Value = 50 });
-            _alignmentSlider.ValueChanged += (s, e) => PortraitChanged();
+            EditorHelpers.BindValueChanged(_alignmentSlider, PortraitChanged);
             portraitGroup.Content = portraitPanel;
             panel.Children.Add(portraitGroup);
 
@@ -716,13 +718,13 @@ namespace OdyTools.Editors
         private void AttachCommitHandlers()
         {
             void OnCommit(object s, EventArgs e) { if (!_undoRedoInProgress) PushState(); }
-            if (_tagEdit != null) _tagEdit.LostFocus += OnCommit;
-            if (_resrefEdit != null) _resrefEdit.LostFocus += OnCommit;
-            if (_conversationEdit != null) _conversationEdit.LostFocus += OnCommit;
-            if (_commentsEdit != null) _commentsEdit.LostFocus += OnCommit;
+            EditorHelpers.BindLostFocus(_tagEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_resrefEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_conversationEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_commentsEdit, OnCommit);
             if (_scriptFields != null)
                 foreach (var kv in _scriptFields)
-                    if (kv.Value != null) kv.Value.LostFocus += OnCommit;
+                    EditorHelpers.BindLostFocus(kv.Value, OnCommit);
         }
 
         protected override string SettingsMenuActionName => "actionUTCSettings";
@@ -743,20 +745,14 @@ namespace OdyTools.Editors
 
         private void SetupMenuHandlers()
         {
-            void Bind(string name, Action handler)
-            {
-                try
-                {
-                    var item = EditorHelpers.FindControlSafe<MenuItem>(this, name) ?? this.FindControl<MenuItem>(name);
-                    if (item != null) item.Click += (s, e) => handler();
-                }
-                catch { }
-            }
             // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
-            Bind("actionUndo", () => Undo());
-            Bind("actionRedo", () => Redo());
-            Bind("actionFind", () => ShowFindDialog());
-            Bind("actionFindNext", () => FindNextMatch());
+            EditorHelpers.BindMenuClicks(this, new (string menuItemName, Action handler)[]
+            {
+                ("actionUndo", Undo),
+                ("actionRedo", Redo),
+                ("actionFind", ShowFindDialog),
+                ("actionFindNext", FindNextMatch),
+            });
         }
 
         private void PushState()
@@ -769,6 +765,7 @@ namespace OdyTools.Editors
                 _undoStack.Add(data);
                 if (_undoStack.Count > UndoMaxLevels) _undoStack.RemoveAt(0);
                 _redoStack.Clear();
+                MarkDocumentDirty();
             }
             catch { }
         }
@@ -847,22 +844,7 @@ namespace OdyTools.Editors
 
         protected override async Task RunSaveAsAsync()
         {
-            var storageProvider = (this as Window)?.StorageProvider;
-            if (storageProvider == null) return;
-            string suggestedName = string.IsNullOrEmpty(_resname) ? "creature" : _resname;
-            var options = new FilePickerSaveOptions
-            {
-                Title = "Save As",
-                SuggestedFileName = suggestedName + ".utc",
-                FileTypeChoices = new[] { new FilePickerFileType("UTC") { Patterns = new[] { "*.utc", "*.btc", "*.bic" } } }
-            };
-            var file = await storageProvider.SaveFilePickerAsync(options);
-            if (file == null) return;
-            string path = file.Path.LocalPath;
-            if (string.IsNullOrWhiteSpace(path)) return;
-            _filepath = path;
-            RefreshWindowTitle();
-            Save();
+            await base.RunSaveAsAsync();
             UpdateStatusBar();
         }
 
@@ -1869,12 +1851,7 @@ namespace OdyTools.Editors
             string resname = (_conversationEdit?.Text ?? "").Trim();
             if (string.IsNullOrEmpty(resname))
             {
-                var messageBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Invalid Dialog Reference",
-                    "Conversation field cannot be blank.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                messageBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Invalid Dialog Reference", "Conversation field cannot be blank.", ButtonEnum.Ok, IconType.Error);
                 return;
             }
 
@@ -1886,12 +1863,7 @@ namespace OdyTools.Editors
             if (search == null)
             {
                 // DLG not found - ask to create new
-                var createDialog = MessageBoxManager.GetMessageBoxStandard(
-                    "DLG file not found",
-                    "Do you wish to create a new dialog in the 'Override' folder?",
-                    ButtonEnum.YesNo,
-                    MsBox.Avalonia.Enums.Icon.Question);
-                var result = createDialog.ShowAsync().GetAwaiter().GetResult();
+                var result = DialogHelper.ShowAsync("DLG file not found", "Do you wish to create a new dialog in the 'Override' folder?", ButtonEnum.YesNo, IconType.Question).GetAwaiter().GetResult();
 
                 if (result == ButtonResult.Yes)
                 {
@@ -2197,4 +2169,3 @@ namespace OdyTools.Editors
         }
     }
 }
-

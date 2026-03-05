@@ -255,7 +255,7 @@ namespace OdyPatch.UI.Update
 
             string scriptDirectory = Path.Combine(Path.GetTempPath(), "odypatch_update_scripts");
             Directory.CreateDirectory(scriptDirectory);
-#if NET472
+#if NETFRAMEWORK
             int processId = System.Diagnostics.Process.GetCurrentProcess().Id;
 #else
             int processId = Environment.ProcessId;
@@ -362,7 +362,7 @@ if (Test-Path ""$scriptPath"") {{ Remove-Item ""$scriptPath"" -Force -ErrorActio
 
         private static string EscapePowerShellPath(string path)
         {
-#if NET472
+#if NETFRAMEWORK
             return path.Replace("'", "''");
 #else
             return path.Replace("'", "''", StringComparison.Ordinal);

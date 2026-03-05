@@ -12,6 +12,8 @@ namespace BioWare.Resource.Formats.GFF
     /// </summary>
     public static class GFFAuto
     {
+        private const string UnsupportedGffFormatMessage = "Unsupported format specified; use GFF, GFF_XML, or GFF_JSON.";
+
         /// <summary>
         /// Compatibility overload for helpers that call <c>ReadGff(source, offset, size)</c>.
         /// </summary>
@@ -27,15 +29,7 @@ namespace BioWare.Resource.Formats.GFF
         /// </summary>
         public static GFF ReadGff(object source, int offset = 0, int? size = null, ResourceType fileFormat = null)
         {
-            ResourceType format = fileFormat ?? ResourceType.GFF;
-            // Map plaintext GFF abstractions (e.g. DLG_XML, DLG_JSON) to GFF_XML / GFF_JSON
-            if (format.TargetMember != null && format.Contents == "plaintext")
-            {
-                if (format.Extension != null && format.Extension.IndexOf("json", StringComparison.OrdinalIgnoreCase) >= 0)
-                    format = ResourceType.GFF_JSON;
-                else if (format.Extension != null && format.Extension.IndexOf("xml", StringComparison.OrdinalIgnoreCase) >= 0)
-                    format = ResourceType.GFF_XML;
-            }
+            ResourceType format = NormalizeGffFormat(fileFormat);
 
             if (format == ResourceType.GFF_JSON)
             {
@@ -91,34 +85,13 @@ namespace BioWare.Resource.Formats.GFF
             }
             else if (format.IsGff())
             {
-                byte[] data;
-                if (source is string filePath)
-                {
-                    data = File.ReadAllBytes(filePath);
-                }
-                else if (source is byte[] bytes)
-                {
-                    data = bytes;
-                }
-                else if (source is Stream stream)
-                {
-                    using (var ms = new MemoryStream())
-                    {
-                        stream.CopyTo(ms);
-                        data = ms.ToArray();
-                    }
-                }
-                else
-                {
-                    throw new ArgumentException("Source must be a file path, byte array, or stream.", nameof(source));
-                }
-
+                byte[] data = ResourceAutoHelpers.SourceDispatcher.ToBytes(source);
                 var reader = new GFFBinaryReader(data, offset, size ?? 0);
                 return reader.Load();
             }
             else
             {
-                throw new ArgumentException("Unsupported format specified; use GFF, GFF_XML, or GFF_JSON.");
+                throw new ArgumentException(UnsupportedGffFormatMessage, nameof(fileFormat));
             }
         }
 
@@ -130,53 +103,15 @@ namespace BioWare.Resource.Formats.GFF
         /// </summary>
         public static void WriteGff(GFF gff, object target, ResourceType fileFormat = null)
         {
-            ResourceType format = fileFormat ?? ResourceType.GFF;
-            // Map plaintext GFF abstractions (e.g. DLG_XML, DLG_JSON) to GFF_XML / GFF_JSON
-            if (format.TargetMember != null && format.Contents == "plaintext")
-            {
-                if (format.Extension != null && format.Extension.IndexOf("json", StringComparison.OrdinalIgnoreCase) >= 0)
-                    format = ResourceType.GFF_JSON;
-                else if (format.Extension != null && format.Extension.IndexOf("xml", StringComparison.OrdinalIgnoreCase) >= 0)
-                    format = ResourceType.GFF_XML;
-            }
+            ResourceType format = NormalizeGffFormat(fileFormat);
 
             if (format == ResourceType.GFF_JSON)
             {
-                var writer = new GFFJsonWriter();
-                string jsonText = writer.Write(gff);
-
-                if (target is string filePath)
-                {
-                    File.WriteAllText(filePath, jsonText);
-                }
-                else if (target is Stream stream)
-                {
-                    byte[] data = System.Text.Encoding.UTF8.GetBytes(jsonText);
-                    stream.Write(data, 0, data.Length);
-                }
-                else
-                {
-                    throw new ArgumentException("Target must be a file path or stream.", nameof(target));
-                }
+                ResourceAutoHelpers.SourceDispatcher.WriteText(new GFFJsonWriter().Write(gff), target);
             }
             else if (format == ResourceType.GFF_XML)
             {
-                var writer = new GFFXmlWriter();
-                string xmlText = writer.Write(gff);
-
-                if (target is string filePath)
-                {
-                    File.WriteAllText(filePath, xmlText);
-                }
-                else if (target is Stream stream)
-                {
-                    byte[] data = System.Text.Encoding.UTF8.GetBytes(xmlText);
-                    stream.Write(data, 0, data.Length);
-                }
-                else
-                {
-                    throw new ArgumentException("Target must be a file path or stream.", nameof(target));
-                }
+                ResourceAutoHelpers.SourceDispatcher.WriteText(new GFFXmlWriter().Write(gff), target);
             }
             else if (format.IsGff())
             {
@@ -189,24 +124,14 @@ namespace BioWare.Resource.Formats.GFF
                 var writer = new GFFBinaryWriter(gff);
                 byte[] data = writer.Write();
 
-                if (target is string filePath)
-                {
-                    File.WriteAllBytes(filePath, data);
-                }
-                else if (target is Stream stream)
-                {
-                    stream.Write(data, 0, data.Length);
-                }
-                else
-                {
-                    throw new ArgumentException("Target must be a file path or stream.", nameof(target));
-                }
+                ResourceAutoHelpers.SourceDispatcher.WriteBytes(data, target);
             }
             else
             {
-                throw new ArgumentException("Unsupported format specified; use GFF, GFF_XML, or GFF_JSON.");
+                throw new ArgumentException(UnsupportedGffFormatMessage, nameof(fileFormat));
             }
         }
+
 
         /// <summary>
         /// Returns the GFF data as a byte array.
@@ -215,33 +140,40 @@ namespace BioWare.Resource.Formats.GFF
         /// </summary>
         public static byte[] BytesGff(GFF gff, ResourceType fileFormat = null)
         {
+            ResourceType format = NormalizeGffFormat(fileFormat);
+
+            if (format == ResourceType.GFF_JSON)
+            {
+                return System.Text.Encoding.UTF8.GetBytes(new GFFJsonWriter().Write(gff));
+            }
+            else if (format == ResourceType.GFF_XML)
+            {
+                return System.Text.Encoding.UTF8.GetBytes(new GFFXmlWriter().Write(gff));
+            }
+            else
+            {
+                return new GFFBinaryWriter(gff).Write();
+            }
+        }
+
+        private static ResourceType NormalizeGffFormat(ResourceType fileFormat)        {
             ResourceType format = fileFormat ?? ResourceType.GFF;
+
             // Map plaintext GFF abstractions (e.g. DLG_XML, DLG_JSON) to GFF_XML / GFF_JSON
             if (format.TargetMember != null && format.Contents == "plaintext")
             {
                 if (format.Extension != null && format.Extension.IndexOf("json", StringComparison.OrdinalIgnoreCase) >= 0)
-                    format = ResourceType.GFF_JSON;
-                else if (format.Extension != null && format.Extension.IndexOf("xml", StringComparison.OrdinalIgnoreCase) >= 0)
-                    format = ResourceType.GFF_XML;
+                {
+                    return ResourceType.GFF_JSON;
+                }
+
+                if (format.Extension != null && format.Extension.IndexOf("xml", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return ResourceType.GFF_XML;
+                }
             }
 
-            if (format == ResourceType.GFF_JSON)
-            {
-                var writer = new GFFJsonWriter();
-                string jsonText = writer.Write(gff);
-                return System.Text.Encoding.UTF8.GetBytes(jsonText);
-            }
-            else if (format == ResourceType.GFF_XML)
-            {
-                var writer = new GFFXmlWriter();
-                string xmlText = writer.Write(gff);
-                return System.Text.Encoding.UTF8.GetBytes(xmlText);
-            }
-            else
-            {
-                var writer = new GFFBinaryWriter(gff);
-                return writer.Write();
-            }
+            return format;
         }
     }
 }

@@ -26,7 +26,6 @@
     <Compile Include="$(_OdyToolsRoot)\Dialogs\LocalizedStringDialog.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Common\Localization.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\LocalizedStringEdit.axaml.cs" />
-    <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\ComboBox2DA.axaml.cs" />
   </ItemGroup>
   <ItemGroup>
     <AvaloniaXaml Remove="**\*.axaml" />
@@ -36,7 +35,6 @@
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\LocalizedStringDialog.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\LocalizedStringEdit.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\ComboBox2DA.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml" />
   </ItemGroup>
 </Project>

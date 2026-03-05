@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
     <UseWindowsForms>true</UseWindowsForms>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net9.0-windows;net48</TargetFrameworks>
+    <TargetFramework>net9.0-windows</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
     <OutputType>Exe</OutputType>
@@ -16,20 +16,13 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
-    <StartupObject>StrideGameFPS.Net48Stub</StartupObject>
-  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Net48Stub.cs" />
+  </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net9.0-windows'">
     <PackageReference Include="Stride.Engine" Version="4.2.1.2487" />
     <PackageReference Include="Stride.Graphics" Version="4.2.1.2487" />
     <PackageReference Include="Stride.Input" Version="4.2.1.2487" />
     <PackageReference Include="Stride.CommunityToolkit.Windows" Version="1.0.0-preview.61" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0-windows'">
-    <Compile Remove="Net48Stub.cs" />
-  </ItemGroup>
-    <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
-    <Compile Remove="**\*.cs" />
-    <Compile Include="Net48Stub.cs" />
   </ItemGroup>
 </Project>

@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Graphics.MonoGame.Converters;
 using Andastra.Game.Graphics.MonoGame.Graphics;
+using Andastra.Runtime.Graphics;
 using BioWare.Common;
 using BioWare.Extract;
 using BioWare.Resource.Formats.TPC;
 using BioWare.Resource.Formats.TXI;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using JetBrains.Annotations;
+using GraphicsDevice = Microsoft.Xna.Framework.Graphics.GraphicsDevice;
+using Texture = Microsoft.Xna.Framework.Graphics.Texture;
+using Texture2D = Microsoft.Xna.Framework.Graphics.Texture2D;
+using TextureCube = Microsoft.Xna.Framework.Graphics.TextureCube;
 using MonoGameTexture2D = Andastra.Game.Graphics.MonoGame.Graphics.MonoGameTexture2D;
 
 namespace Andastra.Game.Games.Aurora.Fonts

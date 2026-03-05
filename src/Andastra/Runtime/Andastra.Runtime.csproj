@@ -11,7 +11,7 @@
 
   <!-- Debug Configuration -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <TargetFrameworks>net9.0;net48</TargetFrameworks>
+    <TargetFramework>net9.0</TargetFramework>
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
     <Nullable>disable</Nullable>
@@ -32,25 +32,7 @@
 
   <!-- Release Configuration -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <TargetFrameworks>net9.0;net48</TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '10.0.0'))">
-      net10.0;$(TargetFrameworks)
-    </TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '8.0.0'))">
-      $(TargetFrameworks);net9.0
-    </TargetFrameworks>
-    <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('7.'))">
-      $(TargetFrameworks);net7.0;net6.0
-    </TargetFrameworks>
-    <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('6.'))">
-      $(TargetFrameworks);net6.0
-    </TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8')">
-      $(TargetFrameworks);net48
-    </TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2')">
-      $(TargetFrameworks);net462
-    </TargetFrameworks>
+    <TargetFramework>net9.0</TargetFramework>
     <BuildInParallel>true</BuildInParallel>
     <DebugSymbols>false</DebugSymbols>
     <DebugType>portable</DebugType>
@@ -83,31 +65,18 @@
     <PackageReference Include="System.Text.Json" Version="10.0.1" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
   </ItemGroup>
-  <!-- Stride only supports net8.0+; omit for net48 to avoid assembly processor failure -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0' Or '$(TargetFramework)' == 'net10.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
     <PackageReference Include="Stride.Audio" Version="4.2.1.2487" />
     <PackageReference Include="Stride.Engine" Version="4.2.1.2487" />
     <PackageReference Include="Stride.Graphics" Version="4.2.1.2487" />
     <PackageReference Include="Stride.Input" Version="4.2.1.2487" />
-  </ItemGroup>
-  <!-- Microsoft.CSharp for dynamic (RuntimeBinder) on net48 -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net48' Or '$(TargetFramework)' == 'net462'">
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-  </ItemGroup>
-  <!-- Exclude Stride-specific implementation when building for net48 -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net48' Or '$(TargetFramework)' == 'net462'">
-    <Compile Remove="Graphics\Stride\**\*.cs" />
   </ItemGroup>
   <!-- Exclude BaseScriptExecutor and BaseDialogueManager for all TFMs (they need Game.Scripting VM types). BaseEngine and IEngine use Abstractions. -->
   <ItemGroup>
     <Compile Remove="Games\Common\BaseScriptExecutor.cs" />
     <Compile Remove="Games\Common\Dialogue\BaseDialogueManager.cs" />
   </ItemGroup>
-  <!-- Exclude BaseEngine/IEngine for net48/net462/net10.0. Exclude VulkanBackend for all TFMs (depends on Andastra.Graphics). -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net48' Or '$(TargetFramework)' == 'net462' Or '$(TargetFramework)' == 'net10.0'">
-    <Compile Remove="Games\Common\BaseEngine.cs" />
-    <Compile Remove="Games\Common\IEngine.cs" />
-  </ItemGroup>
+  <!-- Exclude VulkanBackend for all TFMs (depends on Andastra.Graphics). -->
   <ItemGroup>
     <Compile Remove="Graphics\MonoGame\Backends\VulkanBackend.cs" />
   </ItemGroup>

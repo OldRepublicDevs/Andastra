@@ -17,13 +17,15 @@ using BioWare.Common;
 using BioWare.Resource.Formats.GFF;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using IconType = MsBox.Avalonia.Enums.Icon;
 using OdyTools.Data;
 using OdyTools.Dialogs;
+using OdyTools.Utils;
 
 namespace OdyTools.Editors.GUI
 {
     /// <summary>
-    /// Visual KotOR GUI editor (transpiled from kotor-gui-editor).
+    /// Visual KotOR GUI editor.
     /// Load .gui (GFF), set UI image folder for TPC/TGA, edit in tree + visual preview + property panel, save with backup.
     /// </summary>
     public partial class OdyToolGUI : Editor
@@ -45,6 +47,7 @@ namespace OdyTools.Editors.GUI
         private int _undoIndex = -1;
         private bool _undoRedoInProgress;
 
+        public OdyToolGUI() : this(null, null) { }
         public OdyToolGUI(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolGUI", "none", new[] { ResourceType.GUI }, new[] { ResourceType.GUI }, installation)
         {
@@ -136,7 +139,7 @@ namespace OdyTools.Editors.GUI
                 RefreshPropertyPanel();
                 SyncTreeSelectionToNode(node);
             };
-            _preview.DataChanged += () => { PushState(); MarkDirty(); _preview.InvalidateVisual(); };
+            _preview.DataChanged += () => { PushState(); MarkDocumentDirty(); _preview.InvalidateVisual(); };
             Grid.SetColumn(_preview, 1);
             grid.Children.Add(_preview);
 
@@ -252,7 +255,7 @@ namespace OdyTools.Editors.GUI
             {
                 var v = (long)((NumericUpDown)s).Value;
                 _selectedNode.StructId = v == uint.MaxValue || v == -1 ? -1 : (int)v;
-                MarkDirty();
+                MarkDocumentDirty();
             };
             sp.Children.Add(idBox);
             return sp;
@@ -270,14 +273,14 @@ namespace OdyTools.Editors.GUI
                 case GFFFieldType.Int32:
                     var i = Convert.ToInt32(value ?? 0);
                     var intBox = new NumericUpDown { Value = i, Minimum = label == "WIDTH" || label == "HEIGHT" ? 1 : decimal.MinValue, Maximum = decimal.MaxValue };
-                    intBox.ValueChanged += (s, e) => { _selectedNode.SetInt32(label, (int)((NumericUpDown)s).Value); MarkDirty(); _preview.InvalidateVisual(); };
+                    intBox.ValueChanged += (s, e) => { _selectedNode.SetInt32(label, (int)((NumericUpDown)s).Value); MarkDocumentDirty(); _preview.InvalidateVisual(); };
                     input = intBox;
                     break;
                 case GFFFieldType.UInt16:
                 case GFFFieldType.UInt32:
                     var u = Convert.ToUInt32(value ?? 0);
                     var uintBox = new NumericUpDown { Value = u, Minimum = 0, Maximum = uint.MaxValue };
-                    uintBox.ValueChanged += (s, e) => { _selectedNode.SetUInt32(label, (uint)((NumericUpDown)s).Value); MarkDirty(); _preview.InvalidateVisual(); };
+                    uintBox.ValueChanged += (s, e) => { _selectedNode.SetUInt32(label, (uint)((NumericUpDown)s).Value); MarkDocumentDirty(); _preview.InvalidateVisual(); };
                     input = uintBox;
                     break;
                 case GFFFieldType.Single:
@@ -286,19 +289,19 @@ namespace OdyTools.Editors.GUI
                     var doubleBox = new NumericUpDown { Value = (decimal)d, Increment = 0.01M };
                     if (label == "ALPHA" || label == "ROTATE") { doubleBox.Minimum = 0; doubleBox.Maximum = 1; }
                     else doubleBox.Minimum = decimal.MinValue;
-                    doubleBox.ValueChanged += (s, e) => { _selectedNode.SetDouble(label, (double)((NumericUpDown)s).Value); MarkDirty(); _preview.InvalidateVisual(); };
+                    doubleBox.ValueChanged += (s, e) => { _selectedNode.SetDouble(label, (double)((NumericUpDown)s).Value); MarkDocumentDirty(); _preview.InvalidateVisual(); };
                     input = doubleBox;
                     break;
                 case GFFFieldType.String:
                     var str = value?.ToString() ?? "";
                     var txt = new TextBox { Text = str };
-                    txt.LostFocus += (s, e) => { _selectedNode.SetString(label, ((TextBox)s).Text ?? ""); MarkDirty(); };
+                    txt.LostFocus += (s, e) => { _selectedNode.SetString(label, ((TextBox)s).Text ?? ""); MarkDocumentDirty(); };
                     input = txt;
                     break;
                 case GFFFieldType.ResRef:
                     var resRef = value as ResRef ?? ResRef.FromBlank();
                     var resTxt = new TextBox { Text = resRef.ToString() ?? "", MaxLength = 16 };
-                    resTxt.LostFocus += (s, e) => { _selectedNode.SetResRef(label, ResRef.FromString(((TextBox)s).Text ?? "")); MarkDirty(); ReloadTextures(); _preview.InvalidateVisual(); };
+                    resTxt.LostFocus += (s, e) => { _selectedNode.SetResRef(label, ResRef.FromString(((TextBox)s).Text ?? "")); MarkDocumentDirty(); ReloadTextures(); _preview.InvalidateVisual(); };
                     input = resTxt;
                     break;
                 case GFFFieldType.Vector3:
@@ -308,7 +311,7 @@ namespace OdyTools.Editors.GUI
                     var v3X = new NumericUpDown { Value = (decimal)v3.X, Minimum = 0, Maximum = 1, Increment = 0.01M, Width = 70 };
                     var v3Y = new NumericUpDown { Value = (decimal)v3.Y, Minimum = 0, Maximum = 1, Increment = 0.01M, Width = 70 };
                     var v3Z = new NumericUpDown { Value = (decimal)v3.Z, Minimum = 0, Maximum = 1, Increment = 0.01M, Width = 70 };
-                    void ApplyV3() { _selectedNode.SetVector3(label, new Vector3((float)v3X.Value, (float)v3Y.Value, (float)v3Z.Value)); MarkDirty(); _preview.InvalidateVisual(); }
+                    void ApplyV3() { _selectedNode.SetVector3(label, new Vector3((float)v3X.Value, (float)v3Y.Value, (float)v3Z.Value)); MarkDocumentDirty(); _preview.InvalidateVisual(); }
                     v3X.ValueChanged += (s, e) => ApplyV3();
                     v3Y.ValueChanged += (s, e) => ApplyV3();
                     v3Z.ValueChanged += (s, e) => ApplyV3();
@@ -338,7 +341,7 @@ namespace OdyTools.Editors.GUI
                                 v3X.Value = (decimal)r; v3Y.Value = (decimal)g; v3Z.Value = (decimal)b;
                                 _selectedNode.SetVector3(label, new Vector3(r, g, b));
                                 colorPreview.Background = new SolidColorBrush(c);
-                                MarkDirty(); _preview.InvalidateVisual();
+                                MarkDocumentDirty(); _preview.InvalidateVisual();
                             }
                         };
                         var colorRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
@@ -355,10 +358,10 @@ namespace OdyTools.Editors.GUI
                     var v4Y = new NumericUpDown { Value = (decimal)v4.Y, Minimum = decimal.MinValue, Maximum = decimal.MaxValue, Increment = 0.01M, Width = 60 };
                     var v4Z = new NumericUpDown { Value = (decimal)v4.Z, Minimum = decimal.MinValue, Maximum = decimal.MaxValue, Increment = 0.01M, Width = 60 };
                     var v4W = new NumericUpDown { Value = (decimal)v4.W, Minimum = decimal.MinValue, Maximum = decimal.MaxValue, Increment = 0.01M, Width = 60 };
-                    v4X.ValueChanged += (s, e) => { _selectedNode.SetVector4(label, new Vector4((float)v4X.Value, (float)v4Y.Value, (float)v4Z.Value, (float)v4W.Value)); MarkDirty(); };
-                    v4Y.ValueChanged += (s, e) => { _selectedNode.SetVector4(label, new Vector4((float)v4X.Value, (float)v4Y.Value, (float)v4Z.Value, (float)v4W.Value)); MarkDirty(); };
-                    v4Z.ValueChanged += (s, e) => { _selectedNode.SetVector4(label, new Vector4((float)v4X.Value, (float)v4Y.Value, (float)v4Z.Value, (float)v4W.Value)); MarkDirty(); };
-                    v4W.ValueChanged += (s, e) => { _selectedNode.SetVector4(label, new Vector4((float)v4X.Value, (float)v4Y.Value, (float)v4Z.Value, (float)v4W.Value)); MarkDirty(); };
+                    v4X.ValueChanged += (s, e) => { _selectedNode.SetVector4(label, new Vector4((float)v4X.Value, (float)v4Y.Value, (float)v4Z.Value, (float)v4W.Value)); MarkDocumentDirty(); };
+                    v4Y.ValueChanged += (s, e) => { _selectedNode.SetVector4(label, new Vector4((float)v4X.Value, (float)v4Y.Value, (float)v4Z.Value, (float)v4W.Value)); MarkDocumentDirty(); };
+                    v4Z.ValueChanged += (s, e) => { _selectedNode.SetVector4(label, new Vector4((float)v4X.Value, (float)v4Y.Value, (float)v4Z.Value, (float)v4W.Value)); MarkDocumentDirty(); };
+                    v4W.ValueChanged += (s, e) => { _selectedNode.SetVector4(label, new Vector4((float)v4X.Value, (float)v4Y.Value, (float)v4Z.Value, (float)v4W.Value)); MarkDocumentDirty(); };
                     v4Row.Children.Add(new TextBlock { Text = "X", VerticalAlignment = VerticalAlignment.Center });
                     v4Row.Children.Add(v4X);
                     v4Row.Children.Add(new TextBlock { Text = "Y", VerticalAlignment = VerticalAlignment.Center });
@@ -373,14 +376,14 @@ namespace OdyTools.Editors.GUI
                     if (label == "Obj_Locked" || label == "LOOPING" || label == "LEFTSCROLLBAR" || label == "ISSELECTED" || label == "PULSING" || label == "STARTFROMLEFT")
                     {
                         var chk = new CheckBox { IsChecked = Convert.ToByte(value ?? 0) != 0 };
-                        chk.IsCheckedChanged += (s, e) => { _selectedNode.SetUInt8(label, (byte)(((CheckBox)s).IsChecked == true ? 1 : 0)); MarkDirty(); };
+                        chk.IsCheckedChanged += (s, e) => { _selectedNode.SetUInt8(label, (byte)(((CheckBox)s).IsChecked == true ? 1 : 0)); MarkDocumentDirty(); };
                         input = chk;
                     }
                     else
                     {
                         var u8 = Convert.ToByte(value ?? 0);
                         var u8Box = new NumericUpDown { Value = u8, Minimum = 0, Maximum = 255 };
-                        u8Box.ValueChanged += (s, e) => { _selectedNode.SetUInt8(label, (byte)((NumericUpDown)s).Value); MarkDirty(); };
+                        u8Box.ValueChanged += (s, e) => { _selectedNode.SetUInt8(label, (byte)((NumericUpDown)s).Value); MarkDocumentDirty(); };
                         input = u8Box;
                     }
                     break;
@@ -447,13 +450,13 @@ namespace OdyTools.Editors.GUI
                             _selectedNode.SetDouble(label, val);
                             break;
                     }
-                    MarkDirty();
+                    MarkDocumentDirty();
                     _preview.InvalidateVisual();
                     dialog.Close();
                 }
                 catch (Exception ex)
                 {
-                    _ = MessageBoxManager.GetMessageBoxStandard("Invalid expression", ex.Message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Warning).ShowWindowDialogAsync(dialog);
+                    _ = DialogHelper.ShowWindowAsync(dialog, "Invalid expression", ex.Message, ButtonEnum.Ok, IconType.Warning);
                 }
             };
             cancelBtn.Click += (s, e) => dialog.Close();
@@ -485,7 +488,7 @@ namespace OdyTools.Editors.GUI
                 }
                 catch (Exception ex)
                 {
-                    await MessageBoxManager.GetMessageBoxStandard("Error", "Failed to load: " + ex.Message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
+                    await DialogHelper.ShowWindowAsync(this, "Error", "Failed to load: " + ex.Message, ButtonEnum.Ok, IconType.Error);
                 }
             }
         }
@@ -510,7 +513,7 @@ namespace OdyTools.Editors.GUI
             }
             catch (Exception ex)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard("Error loading GUI", ex.Message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
+                _ = DialogHelper.ShowWindowAsync(this, "Error loading GUI", ex.Message, ButtonEnum.Ok, IconType.Error);
                 _gff = new GFF(GFFContent.GUI);
                 _gff.Root.SetList(OdyToolGUIHelpers.ControllistLabel, new GFFList());
                 LoadTreeAndPreview();
@@ -542,42 +545,15 @@ namespace OdyTools.Editors.GUI
 
         public override void Save()
         {
-            if (string.IsNullOrEmpty(_filepath)) { _ = RunSaveAsAsync(); return; }
-            try
-            {
-                var backupPath = _filepath + ".bak";
-                if (File.Exists(_filepath))
-                    File.Copy(_filepath, backupPath, true);
-                var (data, _) = Build();
-                File.WriteAllBytes(_filepath, data);
-                _revert = data;
-                ClearDirty();
-                UpdateStatusBar();
-            }
-            catch (Exception ex)
-            {
-                _ = MessageBoxManager.GetMessageBoxStandard("Save failed", ex.Message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
-            }
+            base.Save();
+            UpdateStatusBar();
         }
 
-        protected override async System.Threading.Tasks.Task RunSaveAsAsync()
+        protected override FilePickerSaveOptions CreateSaveAsOptions()
         {
-            var storage = (this as Window)?.StorageProvider;
-            if (storage == null) return;
-            var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions { Title = "Save GUI As", FileTypeChoices = new[] { new FilePickerFileType("GUI") { Patterns = new[] { "*.gui" } } } });
-            if (file != null && !string.IsNullOrEmpty(file.Path.LocalPath))
-            {
-                _filepath = file.Path.LocalPath;
-                _resname = System.IO.Path.GetFileNameWithoutExtension(_filepath);
-                _restype = ResourceType.GUI;
-                RefreshWindowTitle();
-                Save();
-            }
-        }
-
-        public override void SaveAs()
-        {
-            _ = RunSaveAsAsync();
+            var options = base.CreateSaveAsOptions();
+            options.Title = "Save GUI As";
+            return options;
         }
 
         public override void New()
@@ -624,7 +600,7 @@ namespace OdyTools.Editors.GUI
                 _gff = GFF.FromBytes(data);
                 LoadTreeAndPreview();
                 RefreshPropertyPanel();
-                MarkDirty();
+                MarkDocumentDirty();
             }
             finally { _undoRedoInProgress = false; }
         }
@@ -640,7 +616,7 @@ namespace OdyTools.Editors.GUI
                 _gff = GFF.FromBytes(data);
                 LoadTreeAndPreview();
                 RefreshPropertyPanel();
-                MarkDirty();
+                MarkDocumentDirty();
             }
             finally { _undoRedoInProgress = false; }
         }

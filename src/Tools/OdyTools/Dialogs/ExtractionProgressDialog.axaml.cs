@@ -22,6 +22,7 @@ namespace OdyTools.Dialogs
         private int _completedItems;
         private bool _allowClose;
 
+        public ExtractionProgressDialog() : this(0) { }
         public ExtractionProgressDialog(int totalItems)
         {
             InitializeComponent();

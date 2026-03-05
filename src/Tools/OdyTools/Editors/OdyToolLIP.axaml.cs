@@ -28,6 +28,7 @@ namespace OdyTools.Editors
         private bool _findMatchCase;
         private int _lastFindIndex = -1;
 
+        public OdyToolLIP() : this(null, null) { }
         public OdyToolLIP(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolLIP", "lip",
                 new[] { ResourceType.LIP, ResourceType.LIP_XML, ResourceType.LIP_JSON },
@@ -95,20 +96,14 @@ namespace OdyTools.Editors
 
         private void SetupMenuHandlers()
         {
-            void Bind(string name, Action handler)
-            {
-                try
-                {
-                    var item = EditorHelpers.FindControlSafe<MenuItem>(this, name) ?? this.FindControl<MenuItem>(name);
-                    if (item != null) item.Click += (s, e) => handler();
-                }
-                catch { }
-            }
             // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
-            Bind("actionUndo", () => Undo());
-            Bind("actionRedo", () => Redo());
-            Bind("actionFind", () => ShowFindDialog());
-            Bind("actionFindNext", () => FindNextMatch());
+            EditorHelpers.BindMenuClicks(this, new (string menuItemName, Action handler)[]
+            {
+                ("actionUndo", Undo),
+                ("actionRedo", Redo),
+                ("actionFind", ShowFindDialog),
+                ("actionFindNext", FindNextMatch),
+            });
         }
 
         private void PushState()
@@ -121,6 +116,7 @@ namespace OdyTools.Editors
                 _undoStack.Add(data);
                 if (_undoStack.Count > UndoMaxLevels) _undoStack.RemoveAt(0);
                 _redoStack.Clear();
+                MarkDocumentDirty();
             }
             catch { }
         }

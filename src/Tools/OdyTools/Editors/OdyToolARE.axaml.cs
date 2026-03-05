@@ -23,6 +23,8 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using Game = BioWare.Common.BioWareGame;
 using GFFAuto = BioWare.Resource.Formats.GFF.GFFAuto;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Editors
 {
@@ -94,6 +96,7 @@ namespace OdyTools.Editors
         private ComboBox _onUserDefinedSelect;
         private List<string> _relevantScriptResnames;
 
+        public OdyToolARE() : this(null, null) { }
         public OdyToolARE(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolARE", "none",
                 new[] { ResourceType.ARE },
@@ -593,38 +596,10 @@ namespace OdyTools.Editors
                     .ToList();
 
                 // Populate all script combo boxes
-                if (_onEnterSelect != null)
-                {
-                    _onEnterSelect.Items.Clear();
-                    foreach (var resname in _relevantScriptResnames)
-                    {
-                        _onEnterSelect.Items.Add(resname);
-                    }
-                }
-                if (_onExitSelect != null)
-                {
-                    _onExitSelect.Items.Clear();
-                    foreach (var resname in _relevantScriptResnames)
-                    {
-                        _onExitSelect.Items.Add(resname);
-                    }
-                }
-                if (_onHeartbeatSelect != null)
-                {
-                    _onHeartbeatSelect.Items.Clear();
-                    foreach (var resname in _relevantScriptResnames)
-                    {
-                        _onHeartbeatSelect.Items.Add(resname);
-                    }
-                }
-                if (_onUserDefinedSelect != null)
-                {
-                    _onUserDefinedSelect.Items.Clear();
-                    foreach (var resname in _relevantScriptResnames)
-                    {
-                        _onUserDefinedSelect.Items.Add(resname);
-                    }
-                }
+                EditorHelpers.PopulateComboBox(_onEnterSelect, _relevantScriptResnames);
+                EditorHelpers.PopulateComboBox(_onExitSelect, _relevantScriptResnames);
+                EditorHelpers.PopulateComboBox(_onHeartbeatSelect, _relevantScriptResnames);
+                EditorHelpers.PopulateComboBox(_onUserDefinedSelect, _relevantScriptResnames);
             }
 
             // Matching Python: self.ui.nameEdit.set_locstring(are.name) (line 177)
@@ -918,63 +893,11 @@ namespace OdyTools.Editors
             {
                 _dirtSize3Spin.Value = are.DirtySize3;
             }
-            // Matching Python: self.ui.onEnterSelect.set_combo_box_text(str(are.on_enter)) (line 241)
-            if (_onEnterSelect != null)
-            {
-                string onEnterText = are.OnEnter.ToString();
-                _onEnterSelect.Text = onEnterText;
-                // Try to select the item if it exists in the list
-                if (!string.IsNullOrEmpty(onEnterText))
-                {
-                    int index = _onEnterSelect.Items.IndexOf(onEnterText);
-                    if (index >= 0)
-                    {
-                        _onEnterSelect.SelectedIndex = index;
-                    }
-                }
-            }
-            // Matching Python: self.ui.onExitSelect.set_combo_box_text(str(are.on_exit)) (line 242)
-            if (_onExitSelect != null)
-            {
-                string onExitText = are.OnExit.ToString();
-                _onExitSelect.Text = onExitText;
-                if (!string.IsNullOrEmpty(onExitText))
-                {
-                    int index = _onExitSelect.Items.IndexOf(onExitText);
-                    if (index >= 0)
-                    {
-                        _onExitSelect.SelectedIndex = index;
-                    }
-                }
-            }
-            // Matching Python: self.ui.onHeartbeatSelect.set_combo_box_text(str(are.on_heartbeat)) (line 243)
-            if (_onHeartbeatSelect != null)
-            {
-                string onHeartbeatText = are.OnHeartbeat.ToString();
-                _onHeartbeatSelect.Text = onHeartbeatText;
-                if (!string.IsNullOrEmpty(onHeartbeatText))
-                {
-                    int index = _onHeartbeatSelect.Items.IndexOf(onHeartbeatText);
-                    if (index >= 0)
-                    {
-                        _onHeartbeatSelect.SelectedIndex = index;
-                    }
-                }
-            }
-            // Matching Python: self.ui.onUserDefinedSelect.set_combo_box_text(str(are.on_user_defined)) (line 244)
-            if (_onUserDefinedSelect != null)
-            {
-                string onUserDefinedText = are.OnUserDefined.ToString();
-                _onUserDefinedSelect.Text = onUserDefinedText;
-                if (!string.IsNullOrEmpty(onUserDefinedText))
-                {
-                    int index = _onUserDefinedSelect.Items.IndexOf(onUserDefinedText);
-                    if (index >= 0)
-                    {
-                        _onUserDefinedSelect.SelectedIndex = index;
-                    }
-                }
-            }
+            // Matching Python: set_combo_box_text(str(are.on_*)) (lines 241-244)
+            EditorHelpers.SetComboBoxText(_onEnterSelect, are.OnEnter.ToString());
+            EditorHelpers.SetComboBoxText(_onExitSelect, are.OnExit.ToString());
+            EditorHelpers.SetComboBoxText(_onHeartbeatSelect, are.OnHeartbeat.ToString());
+            EditorHelpers.SetComboBoxText(_onUserDefinedSelect, are.OnUserDefined.ToString());
             // Matching Python: self.ui.commentsEdit.setPlainText(are.comment) (line 247)
             if (_commentsEdit != null)
             {
@@ -1509,25 +1432,7 @@ namespace OdyTools.Editors
 
         protected override async Task RunSaveAsAsync()
         {
-            var storage = StorageProvider;
-            if (storage == null) return;
-            string suggestedName = !string.IsNullOrEmpty(_resname) ? _resname : "area";
-            var options = new FilePickerSaveOptions
-            {
-                Title = "Save As",
-                SuggestedFileName = suggestedName + ".are",
-                FileTypeChoices = new[] { new FilePickerFileType("Area (ARE)") { Patterns = new[] { "*.are" } }, new FilePickerFileType("All files") { Patterns = new[] { "*.*" } } }
-            };
-            var file = await storage.SaveFilePickerAsync(options);
-            if (file == null) return;
-            string path = file.Path?.LocalPath ?? "";
-            if (string.IsNullOrWhiteSpace(path)) return;
-            _filepath = path;
-            string ext = (Path.GetExtension(path) ?? "").TrimStart('.').ToLowerInvariant();
-            _restype = ResourceType.FromExtension(ext) ?? ResourceType.ARE;
-            _resname = Path.GetFileNameWithoutExtension(path);
-            RefreshWindowTitle();
-            Save();
+            await base.RunSaveAsAsync();
         }
 
         // Helper method to copy a GFF field from one struct to another, preserving type
@@ -1715,6 +1620,7 @@ namespace OdyTools.Editors
             {
                 _tagEdit.Text = string.IsNullOrEmpty(_resname) ? "newarea" : _resname;
             }
+            MarkDocumentDirty();
         }
 
         /// <summary>Redraws the area minimap. Minimap renderer is a planned feature; this no-op allows UI and event wiring to remain intact.</summary>
@@ -1741,55 +1647,17 @@ namespace OdyTools.Editors
         private void SetupSignals()
         {
             // Tag generate button - matching Python: self.ui.tagGenerateButton.clicked.connect(self.generate_tag)
-            if (_tagGenerateButton != null)
-            {
-                _tagGenerateButton.Click += (s, e) => GenerateTag();
-            }
+            EditorHelpers.BindClick(_tagGenerateButton, GenerateTag);
 
-            // Matching Python: self.ui.mapAxisSelect.currentIndexChanged.connect(self.redoMinimap) (line 89)
-            if (_mapAxisSelect != null)
+            // Minimap spins and axis selector redraw the minimap when changed (matching Python lines 89-97)
+            EditorHelpers.BindSelectionChanged(_mapAxisSelect, RedoMinimap);
+            foreach (var spin in new NumericUpDown[]
             {
-                _mapAxisSelect.SelectionChanged += (s, e) => RedoMinimap();
-            }
-            // Matching Python: self.ui.mapWorldX1Spin.valueChanged.connect(self.redoMinimap) (line 90)
-            if (_mapWorldX1Spin != null)
+                _mapWorldX1Spin, _mapWorldX2Spin, _mapWorldY1Spin, _mapWorldY2Spin,
+                _mapImageX1Spin, _mapImageX2Spin, _mapImageY1Spin, _mapImageY2Spin
+            })
             {
-                _mapWorldX1Spin.ValueChanged += (s, e) => RedoMinimap();
-            }
-            // Matching Python: self.ui.mapWorldX2Spin.valueChanged.connect(self.redoMinimap) (line 91)
-            if (_mapWorldX2Spin != null)
-            {
-                _mapWorldX2Spin.ValueChanged += (s, e) => RedoMinimap();
-            }
-            // Matching Python: self.ui.mapWorldY1Spin.valueChanged.connect(self.redoMinimap) (line 92)
-            if (_mapWorldY1Spin != null)
-            {
-                _mapWorldY1Spin.ValueChanged += (s, e) => RedoMinimap();
-            }
-            // Matching Python: self.ui.mapWorldY2Spin.valueChanged.connect(self.redoMinimap) (line 93)
-            if (_mapWorldY2Spin != null)
-            {
-                _mapWorldY2Spin.ValueChanged += (s, e) => RedoMinimap();
-            }
-            // Matching Python: self.ui.mapImageX1Spin.valueChanged.connect(self.redoMinimap) (line 94)
-            if (_mapImageX1Spin != null)
-            {
-                _mapImageX1Spin.ValueChanged += (s, e) => RedoMinimap();
-            }
-            // Matching Python: self.ui.mapImageX2Spin.valueChanged.connect(self.redoMinimap) (line 95)
-            if (_mapImageX2Spin != null)
-            {
-                _mapImageX2Spin.ValueChanged += (s, e) => RedoMinimap();
-            }
-            // Matching Python: self.ui.mapImageY1Spin.valueChanged.connect(self.redoMinimap) (line 96)
-            if (_mapImageY1Spin != null)
-            {
-                _mapImageY1Spin.ValueChanged += (s, e) => RedoMinimap();
-            }
-            // Matching Python: self.ui.mapImageY2Spin.valueChanged.connect(self.redoMinimap) (line 97)
-            if (_mapImageY2Spin != null)
-            {
-                _mapImageY2Spin.ValueChanged += (s, e) => RedoMinimap();
+                EditorHelpers.BindValueChanged(spin, RedoMinimap);
             }
 
             // Script combo boxes are populated in LoadARE after filepath is set
@@ -1864,13 +1732,6 @@ namespace OdyTools.Editors
             openInEditorItem.Click += (sender, e) => OpenScriptInEditor(comboBox, scriptTypeName);
             menuItems.Add(openInEditorItem);
 
-            // Enable/disable based on whether script name is set
-            comboBox.SelectionChanged += (sender, e) =>
-            {
-                string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
-                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
-            };
-
             // "Create New Script" menu item - creates a new NSS file
             var createNewItem = new MenuItem
             {
@@ -1888,12 +1749,16 @@ namespace OdyTools.Editors
             viewLocationItem.Click += (sender, e) => ViewScriptResourceLocation(comboBox, scriptTypeName);
             menuItems.Add(viewLocationItem);
 
-            // Enable/disable based on whether script name is set
-            comboBox.SelectionChanged += (sender, e) =>
+            void UpdateMenuItemStates()
             {
                 string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
-                viewLocationItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
-            };
+                bool hasScriptName = !string.IsNullOrWhiteSpace(text);
+                openInEditorItem.IsEnabled = hasScriptName;
+                viewLocationItem.IsEnabled = hasScriptName;
+            }
+
+            comboBox.SelectionChanged += (sender, e) => UpdateMenuItemStates();
+            UpdateMenuItemStates();
 
             // Add menu items to context menu
             foreach (var item in menuItems)
@@ -1992,12 +1857,7 @@ namespace OdyTools.Editors
                 // Show the editor - user will set the resref when saving
                 OdyTools.Editors.WindowUtils.AddWindow(nssEditor, show: true);
 #else
-                var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Not available",
-                    "Creating a new script is not available in the standalone ARE editor. Use the full OdyTools or the NSS editor standalone.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info);
-                msgBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Not available", "Creating a new script is not available in the standalone ARE editor. Use the full OdyTools or the NSS editor standalone.", ButtonEnum.Ok, IconType.Info);
 #endif
                 // Update the combo box with the suggested script name
                 comboBox.Text = scriptName;
@@ -2070,21 +1930,11 @@ namespace OdyTools.Editors
                     else
                     {
                         // Show "not found" message
-                        var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                            "Resource Not Found",
-                            $"Script '{scriptName}' not found in installation.\n\nSearched for:\n- {scriptName}.nss\n- {scriptName}.ncs",
-                            ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Info);
-                        msgBox.ShowAsync();
+                        _ = DialogHelper.ShowAsync("Resource Not Found", $"Script '{scriptName}' not found in installation.\n\nSearched for:\n- {scriptName}.nss\n- {scriptName}.ncs", ButtonEnum.Ok, IconType.Info);
                     }
                 }
 #else
-                var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Not available",
-                    "Viewing script location is not available in the standalone ARE editor. Use the full OdyTools.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info);
-                msgBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Not available", "Viewing script location is not available in the standalone ARE editor. Use the full OdyTools.", ButtonEnum.Ok, IconType.Info);
 #endif
             }
             catch (Exception ex)

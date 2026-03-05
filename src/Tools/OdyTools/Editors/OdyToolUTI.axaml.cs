@@ -158,6 +158,7 @@ namespace OdyTools.Editors
         public TextBox CommentsEdit => _commentsEdit;
         public Image IconLabel => _iconLabel;
 
+        public OdyToolUTI() : this(null, null) { }
         public OdyToolUTI(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTI", "item",
                 new[] { ResourceType.UTI },
@@ -300,7 +301,7 @@ namespace OdyTools.Editors
             var tagLabel = new TextBlock { Text = "Tag:" };
             _tagEdit = new TextBox();
             _tagGenerateBtn = new Button { Content = "Generate" };
-            _tagGenerateBtn.Click += (s, e) => GenerateTag();
+            EditorHelpers.BindClick(_tagGenerateBtn, GenerateTag);
             basicPanel.Children.Add(tagLabel);
             basicPanel.Children.Add(_tagEdit);
             basicPanel.Children.Add(_tagGenerateBtn);
@@ -309,7 +310,7 @@ namespace OdyTools.Editors
             var resrefLabel = new TextBlock { Text = "ResRef:" };
             _resrefEdit = new TextBox();
             _resrefGenerateBtn = new Button { Content = "Generate" };
-            _resrefGenerateBtn.Click += (s, e) => GenerateResref();
+            EditorHelpers.BindClick(_resrefGenerateBtn, GenerateResref);
             basicPanel.Children.Add(resrefLabel);
             basicPanel.Children.Add(_resrefEdit);
             basicPanel.Children.Add(_resrefGenerateBtn);
@@ -317,7 +318,7 @@ namespace OdyTools.Editors
             // Base Item
             var baseLabel = new TextBlock { Text = "Base Item:" };
             _baseSelect = new ComboBox();
-            _baseSelect.SelectionChanged += (s, e) => UpdateIcon();
+            EditorHelpers.BindSelectionChanged(_baseSelect, UpdateIcon);
             basicPanel.Children.Add(baseLabel);
             basicPanel.Children.Add(_baseSelect);
 
@@ -358,13 +359,13 @@ namespace OdyTools.Editors
             // Variations (for armor items)
             var modelVarLabel = new TextBlock { Text = "Model Variation:" };
             _modelVarSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
-            _modelVarSpin.ValueChanged += (s, e) => UpdateIcon();
+            EditorHelpers.BindValueChanged(_modelVarSpin, UpdateIcon);
             var bodyVarLabel = new TextBlock { Text = "Body Variation:" };
             _bodyVarSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
-            _bodyVarSpin.ValueChanged += (s, e) => UpdateIcon();
+            EditorHelpers.BindValueChanged(_bodyVarSpin, UpdateIcon);
             var textureVarLabel = new TextBlock { Text = "Texture Variation:" };
             _textureVarSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
-            _textureVarSpin.ValueChanged += (s, e) => UpdateIcon();
+            EditorHelpers.BindValueChanged(_textureVarSpin, UpdateIcon);
 
             basicPanel.Children.Add(modelVarLabel);
             basicPanel.Children.Add(_modelVarSpin);
@@ -386,11 +387,11 @@ namespace OdyTools.Editors
             _assignedPropertiesList = new ListBox();
             var propertyButtonsPanel = new StackPanel { Orientation = Orientation.Horizontal };
             _addPropertyBtn = new Button { Content = "Add" };
-            _addPropertyBtn.Click += (s, e) => AddSelectedProperty();
+            EditorHelpers.BindClick(_addPropertyBtn, AddSelectedProperty);
             _removePropertyBtn = new Button { Content = "Remove" };
-            _removePropertyBtn.Click += (s, e) => RemoveSelectedProperty();
+            EditorHelpers.BindClick(_removePropertyBtn, RemoveSelectedProperty);
             _editPropertyBtn = new Button { Content = "Edit" };
-            _editPropertyBtn.Click += async (s, e) => await EditSelectedProperty();
+            EditorHelpers.BindClickAsync(_editPropertyBtn, EditSelectedProperty);
             propertyButtonsPanel.Children.Add(_addPropertyBtn);
             propertyButtonsPanel.Children.Add(_removePropertyBtn);
             propertyButtonsPanel.Children.Add(_editPropertyBtn);
@@ -434,36 +435,30 @@ namespace OdyTools.Editors
         private void AttachCommitHandlers()
         {
             void OnCommit(object s, EventArgs e) { if (!_undoRedoInProgress) PushState(); }
-            if (_tagEdit != null) _tagEdit.LostFocus += OnCommit;
-            if (_resrefEdit != null) _resrefEdit.LostFocus += OnCommit;
-            if (_commentsEdit != null) _commentsEdit.LostFocus += OnCommit;
-            if (_costSpin != null) _costSpin.LostFocus += OnCommit;
-            if (_additionalCostSpin != null) _additionalCostSpin.LostFocus += OnCommit;
-            if (_upgradeSpin != null) _upgradeSpin.LostFocus += OnCommit;
-            if (_chargesSpin != null) _chargesSpin.LostFocus += OnCommit;
-            if (_stackSpin != null) _stackSpin.LostFocus += OnCommit;
-            if (_modelVarSpin != null) _modelVarSpin.LostFocus += OnCommit;
-            if (_bodyVarSpin != null) _bodyVarSpin.LostFocus += OnCommit;
-            if (_textureVarSpin != null) _textureVarSpin.LostFocus += OnCommit;
-            if (_plotCheckbox != null) _plotCheckbox.LostFocus += OnCommit;
+            EditorHelpers.BindLostFocus(_tagEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_resrefEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_commentsEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_costSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_additionalCostSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_upgradeSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_chargesSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_stackSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_modelVarSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_bodyVarSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_textureVarSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_plotCheckbox, OnCommit);
         }
 
         private void SetupMenuHandlers()
         {
-            void Bind(string name, Action handler)
-            {
-                try
-                {
-                    var item = EditorHelpers.FindControlSafe<MenuItem>(this, name) ?? this.FindControl<MenuItem>(name);
-                    if (item != null) item.Click += (s, e) => handler();
-                }
-                catch { }
-            }
             // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
-            Bind("actionUndo", () => Undo());
-            Bind("actionRedo", () => Redo());
-            Bind("actionFind", () => ShowFindDialog());
-            Bind("actionFindNext", () => FindNextMatch());
+            EditorHelpers.BindMenuClicks(this, new (string menuItemName, Action handler)[]
+            {
+                ("actionUndo", Undo),
+                ("actionRedo", Redo),
+                ("actionFind", ShowFindDialog),
+                ("actionFindNext", FindNextMatch),
+            });
         }
 
         private void PushState()
@@ -476,6 +471,7 @@ namespace OdyTools.Editors
                 _undoStack.Add(data);
                 if (_undoStack.Count > UndoMaxLevels) _undoStack.RemoveAt(0);
                 _redoStack.Clear();
+                MarkDocumentDirty();
             }
             catch { }
         }
@@ -554,22 +550,7 @@ namespace OdyTools.Editors
 
         protected override async Task RunSaveAsAsync()
         {
-            var storageProvider = (this as Window)?.StorageProvider;
-            if (storageProvider == null) return;
-            string suggestedName = string.IsNullOrEmpty(_resname) ? "item" : _resname;
-            var options = new FilePickerSaveOptions
-            {
-                Title = "Save As",
-                SuggestedFileName = suggestedName + ".uti",
-                FileTypeChoices = new[] { new FilePickerFileType("UTI") { Patterns = new[] { "*.uti" } } }
-            };
-            var file = await storageProvider.SaveFilePickerAsync(options);
-            if (file == null) return;
-            string path = file.Path.LocalPath;
-            if (string.IsNullOrWhiteSpace(path)) return;
-            _filepath = path;
-            RefreshWindowTitle();
-            Save();
+            await base.RunSaveAsAsync();
             UpdateStatusBar();
         }
 
@@ -646,44 +627,17 @@ namespace OdyTools.Editors
 
         private void SetupSignals()
         {
-            if (_tagGenerateBtn != null)
-            {
-                _tagGenerateBtn.Click += (s, e) => GenerateTag();
-            }
-            if (_resrefGenerateBtn != null)
-            {
-                _resrefGenerateBtn.Click += (s, e) => GenerateResref();
-            }
-            if (_editPropertyBtn != null)
-            {
-                _editPropertyBtn.Click += async (s, e) => await EditSelectedProperty();
-            }
-            if (_removePropertyBtn != null)
-            {
-                _removePropertyBtn.Click += (s, e) => RemoveSelectedProperty();
-            }
-            if (_addPropertyBtn != null)
-            {
-                _addPropertyBtn.Click += (s, e) => AddSelectedProperty();
-            }
-            if (_modelVarSpin != null)
-            {
-                _modelVarSpin.ValueChanged += (s, e) => UpdateIcon();
-            }
-            if (_bodyVarSpin != null)
-            {
-                _bodyVarSpin.ValueChanged += (s, e) => UpdateIcon();
-            }
-            if (_textureVarSpin != null)
-            {
-                _textureVarSpin.ValueChanged += (s, e) => UpdateIcon();
-            }
-            if (_baseSelect != null)
-            {
-                _baseSelect.SelectionChanged += (s, e) => UpdateIcon();
-            }
+            EditorHelpers.BindClick(_tagGenerateBtn, GenerateTag);
+            EditorHelpers.BindClick(_resrefGenerateBtn, GenerateResref);
+            EditorHelpers.BindClickAsync(_editPropertyBtn, EditSelectedProperty);
+            EditorHelpers.BindClick(_removePropertyBtn, RemoveSelectedProperty);
+            EditorHelpers.BindClick(_addPropertyBtn, AddSelectedProperty);
+            EditorHelpers.BindValueChanged(_modelVarSpin, UpdateIcon);
+            EditorHelpers.BindValueChanged(_bodyVarSpin, UpdateIcon);
+            EditorHelpers.BindValueChanged(_textureVarSpin, UpdateIcon);
+            EditorHelpers.BindSelectionChanged(_baseSelect, UpdateIcon);
             // Note: Name and Description editing is handled by LocalizedStringEdit's built-in edit button
-            
+
             if (_availablePropertyList != null)
             {
                 _availablePropertyList.DoubleTapped += (s, e) => OnAvailablePropertyListDoubleClicked();
@@ -692,7 +646,7 @@ namespace OdyTools.Editors
             {
                 _assignedPropertiesList.DoubleTapped += (s, e) => OnAssignedPropertyListDoubleClicked();
             }
-            
+
             // Note: In Avalonia, we handle KeyDown event instead of QShortcut
             this.KeyDown += (s, e) =>
             {
@@ -999,7 +953,7 @@ namespace OdyTools.Editors
             }
 
             var dialog = new PropertyEditorDialog(this, _installation, selectedItem.Property);
-            
+
             // Use ShowDialogAsync for proper modal dialog handling
             var resultObj = await dialog.ShowDialogAsync(this);
             bool result = resultObj is bool b ? b : false;
@@ -1007,7 +961,7 @@ namespace OdyTools.Editors
             {
                 return;
             }
-            
+
             UTIProperty updatedProperty = dialog.GetUtiProperty();
             selectedItem.Property = updatedProperty;
             selectedItem.Text = PropertySummary(updatedProperty);
@@ -1048,18 +1002,18 @@ namespace OdyTools.Editors
             TwoDARow propertyRow = itemProps.GetRow(propertyId);
             int? costTableNullable = propertyRow.GetInteger("costtableresref", 255);
             utiProperty.CostTable = costTableNullable ?? 255;
-            
+
             utiProperty.CostValue = 0;
-            
+
             int? param1Nullable = propertyRow.GetInteger("param1resref", 255);
             utiProperty.Param1 = param1Nullable ?? 255;
-            
+
             utiProperty.Param1Value = 0;
-            
+
             utiProperty.ChanceAppear = 100;
 
             string text = PropertySummary(utiProperty);
-            
+
             var listItem = new PropertyListItem { Text = text, Property = utiProperty };
             if (_assignedPropertiesList != null)
             {
@@ -1083,26 +1037,26 @@ namespace OdyTools.Editors
             }
 
             string propName = GetPropertyName(_installation, prop.PropertyName);
-            
+
             string subpropName = GetSubpropertyName(_installation, prop.PropertyName, prop.Subtype);
-            
+
             string costName = CostName(_installation, prop.CostTable, prop.CostValue);
 
             if (!string.IsNullOrEmpty(costName) && !string.IsNullOrEmpty(subpropName))
             {
                 return $"{propName}: {subpropName} [{costName}]";
             }
-            
+
             if (!string.IsNullOrEmpty(subpropName))
             {
                 return $"{propName}: {subpropName}";
             }
-            
+
             if (!string.IsNullOrEmpty(costName))
             {
                 return $"{propName}: [{costName}]";
             }
-            
+
             return propName;
         }
 
@@ -1199,18 +1153,18 @@ namespace OdyTools.Editors
             }
 
             int baseItem = _baseSelect?.SelectedIndex ?? 0;
-            
+
             int modelVariation = _modelVarSpin?.Value != null ? (int)_modelVarSpin.Value : 0;
-            
+
             int textureVariation = _textureVarSpin?.Value != null ? (int)_textureVarSpin.Value : 0;
 
             var bitmap = _installation.GetItemIcon(baseItem, modelVariation, textureVariation);
-            
+
             if (bitmap != null && _iconLabel != null)
             {
                 _iconLabel.Source = bitmap;
             }
-            
+
             if (_iconLabel != null)
             {
                 string tooltip = GenerateIconTooltip(true);
@@ -1226,17 +1180,17 @@ namespace OdyTools.Editors
             }
 
             int baseItem = _baseSelect?.SelectedIndex ?? 0;
-            
+
             int modelVariation = _modelVarSpin?.Value != null ? (int)_modelVarSpin.Value : 0;
-            
+
             int textureVariation = _textureVarSpin?.Value != null ? (int)_textureVarSpin.Value : 0;
 
             string baseItemName = _installation.GetItemBaseName(baseItem);
-            
+
             string modelVarName = _installation.GetModelVarName(modelVariation);
-            
+
             string textureVarName = _installation.GetTextureVarName(textureVariation);
-            
+
             string iconPath = _installation.GetItemIconPath(baseItem, modelVariation, textureVariation);
 
             if (asHtml)
@@ -1315,7 +1269,7 @@ namespace OdyTools.Editors
                 for (int i = 0; i < itemProperties.GetHeight(); i++)
                 {
                     string propName = GetPropertyName(installation, i);
-                    
+
                     var item = new TreeViewItem
                     {
                         Header = propName
@@ -1451,9 +1405,9 @@ namespace OdyTools.Editors
             if (_availablePropertyList?.SelectedItem is TreeViewItem selectedItem)
             {
                 // Check if it's a leaf node (no children)
-                bool isLeafNode = selectedItem.ItemsSource == null || 
+                bool isLeafNode = selectedItem.ItemsSource == null ||
                                   (selectedItem.ItemsSource is System.Collections.IList list && list.Count == 0);
-                
+
                 if (isLeafNode)
                 {
                     AddSelectedProperty();

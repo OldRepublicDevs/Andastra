@@ -9,6 +9,10 @@ namespace BioWare.Resource.Formats.KEY
     // Original: detect_key, read_key, write_key, bytes_key
     public static class KEYAuto
     {
+        private const string UnsupportedKeyFormatMessage = "Unsupported format specified; use KEY.";
+        private const string UnsupportedKeySourceMessage = "Source must be string, byte[], or Stream for KEY";
+        private const string UnsupportedKeyTargetMessage = "Target must be string or Stream for KEY";
+
         public static ResourceType DetectKey(object source, int offset = 0)
         {
             try
@@ -39,51 +43,64 @@ namespace BioWare.Resource.Formats.KEY
                 throw new ArgumentException("Invalid KEY file format");
             }
 
-            int sizeValue = size ?? 0;
-            if (source is string filepath)
-            {
-                return new KEYBinaryReader(filepath, offset, sizeValue).Load();
-            }
-            if (source is byte[] bytes)
-            {
-                return new KEYBinaryReader(bytes, offset, sizeValue).Load();
-            }
-            if (source is Stream stream)
-            {
-                return new KEYBinaryReader(stream, offset, sizeValue).Load();
-            }
-            throw new ArgumentException("Source must be string, byte[], or Stream for KEY");
+            return ReadKeySource(source, offset, size ?? 0);
         }
 
         public static void WriteKey(KEY key, object target, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.KEY;
-            if (format != ResourceType.KEY)
-            {
-                throw new ArgumentException("Unsupported format specified; use KEY.");
-            }
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            ValidateKeyFormat(format, nameof(fileFormat));
 
-            if (target is string filepath)
-            {
-                new KEYBinaryWriter(key, filepath).Write();
-                return;
-            }
-            if (target is Stream stream)
-            {
-                new KEYBinaryWriter(key, stream).Write();
-                return;
-            }
-            throw new ArgumentException("Target must be string or Stream for KEY");
+            WriteKeyTarget(
+                target,
+                filepath => new KEYBinaryWriter(key, filepath).Write(),
+                stream => new KEYBinaryWriter(key, stream).Write());
         }
 
         public static byte[] BytesKey(KEY key, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.KEY;
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            ValidateKeyFormat(format, nameof(fileFormat));
             using (var ms = new MemoryStream())
             {
                 WriteKey(key, ms, format);
                 return ms.ToArray();
             }
+        }
+
+        private static void ValidateKeyFormat(ResourceType format, string formatParamName)
+        {
+            if (format != ResourceType.KEY)
+            {
+                throw new ArgumentException(UnsupportedKeyFormatMessage, formatParamName);
+            }
+        }
+
+        private static KEY ReadKeySource(object source, int offset, int size)
+        {
+            byte[] data = ResourceAutoHelpers.SourceDispatcher.ToBytes(source);
+            return new KEYBinaryReader(data, offset, size).Load();
+        }
+
+        /// <summary>
+        /// Dispatches KEY output to either a filesystem path or stream target.
+        /// </summary>
+        private static void WriteKeyTarget(object target, Action<string> writeToPath, Action<Stream> writeToStream)
+        {
+            if (target is string filepath)
+            {
+                writeToPath(filepath);
+                return;
+            }
+            if (target is Stream stream)
+            {
+                writeToStream(stream);
+                return;
+            }
+
+            throw new ArgumentException(UnsupportedKeyTargetMessage);
         }
 
         private static BioWare.Common.RawBinaryReader CreateReader(object source, int offset, int size)
@@ -100,7 +117,7 @@ namespace BioWare.Resource.Formats.KEY
             {
                 return BioWare.Common.RawBinaryReader.FromStream(stream, offset, size > 0 ? (int?)size : null);
             }
-            throw new ArgumentException("Source must be string, byte[], or Stream for KEY");
+            throw new ArgumentException(UnsupportedKeySourceMessage);
         }
     }
 }

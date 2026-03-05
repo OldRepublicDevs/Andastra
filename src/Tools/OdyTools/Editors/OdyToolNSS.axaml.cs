@@ -21,6 +21,7 @@ using OdyTools.Utils;
 using OdyTools.Widgets;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Editors
 {
@@ -55,6 +56,7 @@ namespace OdyTools.Editors
         private bool _isTsl;
         private const string IndentString = "    ";
 
+        public OdyToolNSS() : this(null, null) { }
         public OdyToolNSS(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolNSS", "none", GetSupportedTypes(), new[] { ResourceType.NSS }, installation)
         {
@@ -141,7 +143,7 @@ namespace OdyTools.Editors
             _codeEdit.FontSize = 12;
             _codeEdit.Background = MonacoColors.EditorBackgroundBrush;
             _codeEdit.Foreground = MonacoColors.EditorForegroundBrush;
-            _codeEdit.TextChanged += (s, e) => { MarkDirty(); UpdateStatusBar(); UpdateBreadcrumbs(); };
+            _codeEdit.TextChanged += (s, e) => { MarkDocumentDirty(); UpdateStatusBar(); UpdateBreadcrumbs(); };
             _codeEdit.KeyUp += (s, e) => UpdateStatusBar();
             Grid.SetRow(_monacoHost, 1);
             editorColumn.Children.Add(_monacoHost);
@@ -460,7 +462,7 @@ namespace OdyTools.Editors
             {
                 _codeEdit.Text = _codeEdit.Text.Remove(pos, len).Insert(pos, replaceText ?? "");
                 _codeEdit.SelectionStart = _codeEdit.SelectionEnd = pos + (replaceText?.Length ?? 0);
-                MarkDirty();
+                MarkDocumentDirty();
             }
             OnFindNext();
         }
@@ -469,7 +471,7 @@ namespace OdyTools.Editors
         {
             if (_codeEdit == null || string.IsNullOrEmpty(findText)) return;
             int count = _codeEdit.ReplaceAllOccurrences(findText, replaceText ?? "", caseSensitive, wholeWords, regex);
-            MarkDirty();
+            MarkDocumentDirty();
             LogToOutput($"Replace all: {count} occurrence(s) replaced.");
         }
 
@@ -541,12 +543,12 @@ namespace OdyTools.Editors
             if (result != null && result.Length > 0)
             {
                 LogToOutput("Compile succeeded.");
-                _ = MessageBoxManager.GetMessageBoxStandard("Compile", "Compilation succeeded.", ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, "Compile", "Compilation succeeded.", IconType.Info);
             }
             else
             {
                 LogToOutput("Compile failed (see messages above).");
-                _ = MessageBoxManager.GetMessageBoxStandard("Compile", "Compilation failed. Check Output panel.", ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, "Compile", "Compilation failed. Check Output panel.", IconType.Error);
             }
         }
 
@@ -555,7 +557,7 @@ namespace OdyTools.Editors
             if (_codeEdit == null) return;
             string formatted = NssFormatHelper.FormatDocument(_codeEdit.Text ?? "", IndentString);
             _codeEdit.Text = formatted;
-            MarkDirty();
+            MarkDocumentDirty();
             LogToOutput("Document formatted.");
         }
 
@@ -665,7 +667,7 @@ namespace OdyTools.Editors
             }
             catch (Exception ex)
             {
-                await MessageBoxManager.GetMessageBoxStandard("Save As", "Error: " + ex.Message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
+                await DialogHelper.ShowWindowAsync(this, "Save As", "Error: " + ex.Message, ButtonEnum.Ok, IconType.Error);
             }
         }
 

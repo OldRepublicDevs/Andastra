@@ -18,8 +18,10 @@ using System.Numerics;
 using BioWare.Resource.Formats.GFF;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using IconType = MsBox.Avalonia.Enums.Icon;
 using OdyTools.Common;
 using OdyTools.Data;
+using OdyTools.Utils;
 
 namespace OdyTools.Editors
 {
@@ -28,6 +30,15 @@ namespace OdyTools.Editors
         private const int MinEditorWidth = 400;
         private const int MinEditorHeight = 250;
         private const int UndoMaxLevels = 30;
+        private static readonly (string menuItemName, string nativeLabel, ToolsetLanguage language)[] UiLanguageItems =
+        {
+            ("actionLangEnglish", "English", ToolsetLanguage.English),
+            ("actionLangFrench", "Français", ToolsetLanguage.French),
+            ("actionLangGerman", "Deutsch", ToolsetLanguage.German),
+            ("actionLangItalian", "Italiano", ToolsetLanguage.Italian),
+            ("actionLangSpanish", "Español", ToolsetLanguage.Spanish),
+            ("actionLangPolish", "Polski", ToolsetLanguage.Polish),
+        };
 
         private GFF _gff;
         private TreeView _treeView;
@@ -94,12 +105,54 @@ namespace OdyTools.Editors
         private ComboBox _zoomCombo;
         private Grid _mainGrid;
         private static readonly double[] TreeZoomFactors = { 0.5, 0.75, 1.0, 1.25, 1.5, 2.0 };
+        private static readonly (string menuItemName, string localizationKey)[] MenuLocalizationItems =
+        {
+            ("menuFile", "File"),
+            ("actionNew", "New"),
+            ("actionOpen", "Open"),
+            ("actionSave", "Save"),
+            ("actionSave_As", "Save _As"),
+            ("actionRevert", "Revert to _Saved"),
+            ("actionExit", "E_xit"),
+            ("menuEdit", "Edit"),
+            ("actionUndo", "_Undo"),
+            ("actionRedo", "_Redo"),
+            ("actionFind", "_Find in Tree..."),
+            ("actionUseSelectionForFind", "Use Selection for _Find"),
+            ("actionReplace", "_Replace in Tree..."),
+            ("actionFindNext", "Find _Next"),
+            ("actionFindPrevious", "Find _Previous"),
+            ("actionGoToSelection", "_Go to Selection"),
+            ("actionMoveNodeUp", "Move _Up"),
+            ("actionMoveNodeDown", "Move _Down"),
+            ("actionSortChildren", "_Sort Children"),
+            ("actionInsertSiblingBefore", "Insert Sibling _Before"),
+            ("actionInsertSiblingAfter", "Insert Sibling _After"),
+            ("actionCutNode", "_Cut Node"),
+            ("actionCopyNode", "_Copy Node"),
+            ("actionPasteNode", "_Paste Node"),
+            ("actionDuplicateNode", "_Duplicate Node"),
+            ("actionExpandAll", "E_xpand All"),
+            ("actionCollapseAll", "_Collapse All"),
+            ("actionGoToStructId", "_Go to Struct ID..."),
+            ("menuView", "View"),
+            ("actionZoomIn", "Zoom _In"),
+            ("actionZoomOut", "Zoom _Out"),
+            ("actionZoomNormal", "_Normal Size"),
+            ("actionSearchActions", "Search _Actions..."),
+            ("actionResetLayout", "_Reset Layout"),
+            ("menuTools", "Tools"),
+            ("actionConvertValue", "_Convert value..."),
+            ("actionSetTLK", "Set TLK"),
+            ("menuLanguage", "Language"),
+        };
         /// <summary>Track the last opened context menu so we can close it before opening another (prevents overlapping menus).</summary>
         private ContextMenu _openContextMenu;
         private const double DefaultTreeFontSize = 12;
         private int _zoomIndex = 2; // 1.0 = 100%
         private static readonly IBrush PropertyPanelForeground = new SolidColorBrush(Avalonia.Media.Color.FromRgb(0x21, 0x21, 0x21));
 
+        public OdyToolGFF() : this(null, null) { }
         public OdyToolGFF(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolGFF", "none",
                 GetSupportedTypes(),
@@ -378,12 +431,10 @@ namespace OdyTools.Editors
             menu.Items.Add(toolsMenu);
 
             var langMenu = new MenuItem { Header = "_Language", Name = "menuLanguage" };
-            langMenu.Items.Add(new MenuItem { Header = "English", Name = "actionLangEnglish" });
-            langMenu.Items.Add(new MenuItem { Header = "Français", Name = "actionLangFrench" });
-            langMenu.Items.Add(new MenuItem { Header = "Deutsch", Name = "actionLangGerman" });
-            langMenu.Items.Add(new MenuItem { Header = "Italiano", Name = "actionLangItalian" });
-            langMenu.Items.Add(new MenuItem { Header = "Español", Name = "actionLangSpanish" });
-            langMenu.Items.Add(new MenuItem { Header = "Polski", Name = "actionLangPolish" });
+            foreach (var item in UiLanguageItems)
+            {
+                langMenu.Items.Add(new MenuItem { Header = item.nativeLabel, Name = item.menuItemName });
+            }
             menu.Items.Add(langMenu);
 
             return menu;
@@ -527,6 +578,22 @@ namespace OdyTools.Editors
 
         private void SetupSignals()
         {
+            void BindValueChanged(NumericUpDown spin)
+            {
+                if (spin != null)
+                {
+                    spin.ValueChanged += (s, e) => UpdateData();
+                }
+            }
+
+            void BindLostFocus(TextBox textBox)
+            {
+                if (textBox != null)
+                {
+                    textBox.LostFocus += (s, e) => UpdateData();
+                }
+            }
+
             if (_treeView != null)
             {
                 _treeView.SelectionChanged += (s, e) => SelectionChanged();
@@ -544,21 +611,21 @@ namespace OdyTools.Editors
                 _treeView?.Focus();
             };
 
-            if (_intSpin != null) _intSpin.ValueChanged += (s, e) => UpdateData();
-            if (_floatSpin != null) _floatSpin.ValueChanged += (s, e) => UpdateData();
-            if (_lineEdit != null) _lineEdit.LostFocus += (s, e) => UpdateData();
-            if (_textEdit != null) _textEdit.LostFocus += (s, e) => UpdateData();
-            if (_xVec3Spin != null) _xVec3Spin.ValueChanged += (s, e) => UpdateData();
-            if (_yVec3Spin != null) _yVec3Spin.ValueChanged += (s, e) => UpdateData();
-            if (_zVec3Spin != null) _zVec3Spin.ValueChanged += (s, e) => UpdateData();
-            if (_xVec4Spin != null) _xVec4Spin.ValueChanged += (s, e) => UpdateData();
-            if (_yVec4Spin != null) _yVec4Spin.ValueChanged += (s, e) => UpdateData();
-            if (_zVec4Spin != null) _zVec4Spin.ValueChanged += (s, e) => UpdateData();
-            if (_wVec4Spin != null) _wVec4Spin.ValueChanged += (s, e) => UpdateData();
-            if (_labelEdit != null) _labelEdit.LostFocus += (s, e) => UpdateData();
+            BindValueChanged(_intSpin);
+            BindValueChanged(_floatSpin);
+            BindLostFocus(_lineEdit);
+            BindLostFocus(_textEdit);
+            BindValueChanged(_xVec3Spin);
+            BindValueChanged(_yVec3Spin);
+            BindValueChanged(_zVec3Spin);
+            BindValueChanged(_xVec4Spin);
+            BindValueChanged(_yVec4Spin);
+            BindValueChanged(_zVec4Spin);
+            BindValueChanged(_wVec4Spin);
+            BindLostFocus(_labelEdit);
             if (_typeCombo != null) _typeCombo.SelectionChanged += (s, e) => TypeChanged();
-            if (_addSubstringButton != null) _addSubstringButton.Click += (s, e) => AddSubstring();
-            if (_removeSubstringButton != null) _removeSubstringButton.Click += (s, e) => RemoveSubstring();
+            EditorHelpers.BindClick(_addSubstringButton, AddSubstring);
+            EditorHelpers.BindClick(_removeSubstringButton, RemoveSubstring);
             if (_substringEdit != null) _substringEdit.LostFocus += (s, e) => SubstringEdited();
             if (_stringrefSpin != null)
             {
@@ -566,102 +633,57 @@ namespace OdyTools.Editors
                 _stringrefSpin.LostFocus += (s, e) => UpdateData();
             }
             if (_substringList != null) _substringList.SelectionChanged += (s, e) => SubstringSelected();
-            if (_copyBinaryButton != null) _copyBinaryButton.Click += (s, e) => CopyBinaryData();
-            if (_convertBinaryButton != null) _convertBinaryButton.Click += (s, e) => ShowValueConverterDialog();
+            EditorHelpers.BindClick(_copyBinaryButton, CopyBinaryData);
+            EditorHelpers.BindClick(_convertBinaryButton, ShowValueConverterDialog);
         }
 
         private void SetupMenuHandlers()
         {
-            void Bind(string name, Action handler)
-            {
-                try
-                {
-                    var item = this.FindControl<MenuItem>(name);
-                    if (item != null) item.Click += (s, e) => handler();
-                }
-                catch { }
-            }
             // actionNew, actionOpen, actionSave, actionSave_As, actionRevert, actionExit wired by base Editor
-            Bind("actionUndo", () => Undo());
-            Bind("actionRedo", () => Redo());
-            Bind("actionFind", () => ShowFindDialog());
-            Bind("actionUseSelectionForFind", () => UseSelectionForFind());
-            Bind("actionReplace", () => ShowReplaceDialog());
-            Bind("actionFindNext", () => FindNextMatch());
-            Bind("actionFindPrevious", () => FindPreviousMatch());
-            Bind("actionGoToSelection", () => GoToSelection());
-            Bind("actionMoveNodeUp", () => MoveNodeUp());
-            Bind("actionMoveNodeDown", () => MoveNodeDown());
-            Bind("actionSortChildren", () => SortChildren());
-            Bind("actionCutNode", () => CutNode());
-            Bind("actionCopyNode", () => CopyNode());
-            Bind("actionPasteNode", () => PasteNode());
-            Bind("actionDuplicateNode", () => DuplicateNode());
-            Bind("actionInsertSiblingBefore", () => InsertSiblingBefore());
-            Bind("actionInsertSiblingAfter", () => InsertSiblingAfter());
-            Bind("actionExpandAll", () => ExpandAll());
-            Bind("actionCollapseAll", () => CollapseAll());
-            Bind("actionGoToStructId", () => ShowGoToStructIdDialog());
-            Bind("actionZoomIn", () => TreeZoomIn());
-            Bind("actionZoomOut", () => TreeZoomOut());
-            Bind("actionZoomNormal", () => TreeZoomNormal());
-            Bind("actionSearchActions", () => ShowSearchActionsDialog());
-            Bind("actionResetLayout", () => ResetLayout());
-            Bind("actionSetTLK", () => ShowSetTLKInfo());
-            Bind("actionConvertValue", () => ShowValueConverterDialog());
-            Bind("actionLangEnglish", () => { Localization.SetLanguage(ToolsetLanguage.English); RefreshLocalizedStrings(); });
-            Bind("actionLangFrench", () => { Localization.SetLanguage(ToolsetLanguage.French); RefreshLocalizedStrings(); });
-            Bind("actionLangGerman", () => { Localization.SetLanguage(ToolsetLanguage.German); RefreshLocalizedStrings(); });
-            Bind("actionLangItalian", () => { Localization.SetLanguage(ToolsetLanguage.Italian); RefreshLocalizedStrings(); });
-            Bind("actionLangSpanish", () => { Localization.SetLanguage(ToolsetLanguage.Spanish); RefreshLocalizedStrings(); });
-            Bind("actionLangPolish", () => { Localization.SetLanguage(ToolsetLanguage.Polish); RefreshLocalizedStrings(); });
+            EditorHelpers.BindMenuClicks(this, new (string menuItemName, Action handler)[]
+            {
+                ("actionUndo", Undo),
+                ("actionRedo", Redo),
+                ("actionFind", ShowFindDialog),
+                ("actionUseSelectionForFind", UseSelectionForFind),
+                ("actionReplace", ShowReplaceDialog),
+                ("actionFindNext", FindNextMatch),
+                ("actionFindPrevious", FindPreviousMatch),
+                ("actionGoToSelection", GoToSelection),
+                ("actionMoveNodeUp", MoveNodeUp),
+                ("actionMoveNodeDown", MoveNodeDown),
+                ("actionSortChildren", SortChildren),
+                ("actionCutNode", CutNode),
+                ("actionCopyNode", CopyNode),
+                ("actionPasteNode", PasteNode),
+                ("actionDuplicateNode", DuplicateNode),
+                ("actionInsertSiblingBefore", InsertSiblingBefore),
+                ("actionInsertSiblingAfter", InsertSiblingAfter),
+                ("actionExpandAll", ExpandAll),
+                ("actionCollapseAll", CollapseAll),
+                ("actionGoToStructId", ShowGoToStructIdDialog),
+                ("actionZoomIn", TreeZoomIn),
+                ("actionZoomOut", TreeZoomOut),
+                ("actionZoomNormal", TreeZoomNormal),
+                ("actionSearchActions", ShowSearchActionsDialog),
+                ("actionResetLayout", ResetLayout),
+                ("actionSetTLK", ShowSetTLKInfo),
+                ("actionConvertValue", ShowValueConverterDialog),
+            });
+            foreach (var item in UiLanguageItems)
+            {
+                ToolsetLanguage language = item.language;
+                EditorHelpers.BindMenuClick(this, item.menuItemName, () =>
+                {
+                    Localization.SetLanguage(language);
+                    RefreshLocalizedStrings();
+                });
+            }
         }
 
         private void RefreshLocalizedStrings()
         {
-            void SetMenuHeader(string name, string key)
-            {
-                var c = this.FindControl<MenuItem>(name);
-                if (c != null) c.Header = Localization.Tr(key);
-            }
-            SetMenuHeader("menuFile", "File");
-            SetMenuHeader("actionNew", "New");
-            SetMenuHeader("actionOpen", "Open");
-            SetMenuHeader("actionSave", "Save");
-            SetMenuHeader("actionSave_As", "Save _As");
-            SetMenuHeader("actionRevert", "Revert to _Saved");
-            SetMenuHeader("actionExit", "E_xit");
-            SetMenuHeader("menuEdit", "Edit");
-            SetMenuHeader("actionUndo", "_Undo");
-            SetMenuHeader("actionRedo", "_Redo");
-            SetMenuHeader("actionFind", "_Find in Tree...");
-            SetMenuHeader("actionUseSelectionForFind", "Use Selection for _Find");
-            SetMenuHeader("actionReplace", "_Replace in Tree...");
-            SetMenuHeader("actionFindNext", "Find _Next");
-            SetMenuHeader("actionFindPrevious", "Find _Previous");
-            SetMenuHeader("actionGoToSelection", "_Go to Selection");
-            SetMenuHeader("actionMoveNodeUp", "Move _Up");
-            SetMenuHeader("actionMoveNodeDown", "Move _Down");
-            SetMenuHeader("actionSortChildren", "_Sort Children");
-            SetMenuHeader("actionInsertSiblingBefore", "Insert Sibling _Before");
-            SetMenuHeader("actionInsertSiblingAfter", "Insert Sibling _After");
-            SetMenuHeader("actionCutNode", "_Cut Node");
-            SetMenuHeader("actionCopyNode", "_Copy Node");
-            SetMenuHeader("actionPasteNode", "_Paste Node");
-            SetMenuHeader("actionDuplicateNode", "_Duplicate Node");
-            SetMenuHeader("actionExpandAll", "E_xpand All");
-            SetMenuHeader("actionCollapseAll", "_Collapse All");
-            SetMenuHeader("actionGoToStructId", "_Go to Struct ID...");
-            SetMenuHeader("menuView", "View");
-            SetMenuHeader("actionZoomIn", "Zoom _In");
-            SetMenuHeader("actionZoomOut", "Zoom _Out");
-            SetMenuHeader("actionZoomNormal", "_Normal Size");
-            SetMenuHeader("actionSearchActions", "Search _Actions...");
-            SetMenuHeader("actionResetLayout", "_Reset Layout");
-            SetMenuHeader("menuTools", "Tools");
-            SetMenuHeader("actionConvertValue", "_Convert value...");
-            SetMenuHeader("actionSetTLK", "Set TLK");
-            SetMenuHeader("menuLanguage", "Language");
+            EditorHelpers.SetLocalizedMenuHeaders(this, MenuLocalizationItems, prependUnderscore: false);
             var propertiesHeader = this.FindControl<TextBlock>("propertiesHeader");
             if (propertiesHeader != null) propertiesHeader.Text = Localization.Tr("Properties");
             var labelLabel = this.FindControl<TextBlock>("labelLabel");
@@ -764,32 +786,7 @@ namespace OdyTools.Editors
 
         protected override async System.Threading.Tasks.Task RunSaveAsAsync()
         {
-            var storageProvider = (this as Window)?.StorageProvider;
-            if (storageProvider == null) return;
-            string suggestedName = string.IsNullOrEmpty(_resname) ? "resource" : _resname;
-            var ext = _restype != null ? _restype.Extension : "gff";
-            var options = new FilePickerSaveOptions
-            {
-                Title = Localization.Tr("Save GFF As"),
-                SuggestedFileName = suggestedName + "." + ext,
-                FileTypeChoices = new[]
-                {
-                    new FilePickerFileType(Localization.Tr("GFF (binary)")) { Patterns = new[] { "*.gff", "*.are", "*.dlg", "*.git", "*.ifo", "*.jrl", "*.pth", "*.utc", "*.utd", "*.ute", "*.uti", "*.utm", "*.utp", "*.uts", "*.utt", "*.utw" } },
-                    new FilePickerFileType(Localization.Tr("GFF XML")) { Patterns = new[] { "*.gff.xml", "*.xml" } },
-                    new FilePickerFileType(Localization.Tr("GFF JSON")) { Patterns = new[] { "*.gff.json", "*.json" } }
-                }
-            };
-            var file = await storageProvider.SaveFilePickerAsync(options);
-            if (file == null) return;
-            string path = file.Path.LocalPath;
-            if (string.IsNullOrWhiteSpace(path)) return;
-            _filepath = path;
-            string pathExt = System.IO.Path.GetExtension(path).TrimStart('.').ToLowerInvariant();
-            if (pathExt == "xml") _restype = ResourceType.GFF_XML;
-            else if (pathExt == "json") _restype = ResourceType.GFF_JSON;
-            else _restype = ResourceType.FromExtension(pathExt) ?? _restype ?? ResourceType.GFF;
-            RefreshWindowTitle();
-            Save();
+            await base.RunSaveAsAsync();
             UpdateStatusBar();
         }
 
@@ -828,8 +825,7 @@ namespace OdyTools.Editors
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine("GFF Open failed: " + ex);
-                var box = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Open GFF"), Localization.Tr("Could not open file: ") + ex.Message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error);
-                await box.ShowWindowDialogAsync(this as Window);
+                await DialogHelper.ShowWindowAsync(this as Window, Localization.Tr("Open GFF"), Localization.Tr("Could not open file: ") + ex.Message, ButtonEnum.Ok, IconType.Error);
             }
         }
 
@@ -839,8 +835,7 @@ namespace OdyTools.Editors
             string msg = _installation != null
                 ? Localization.Tr("TLK resolution uses the current installation's dialog.tlk for LocalizedString preview. Change the installation in the main window to use a different TLK.")
                 : Localization.Tr("No installation is set. Open a GFF from the main window with an installation to use TLK resolution for LocalizedString (string ref) preview.");
-            var box = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Set TLK"), msg, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info);
-            _ = box.ShowWindowDialogAsync(this as Window);
+            _ = DialogHelper.ShowWindowAsync(this as Window, Localization.Tr("Set TLK"), msg, ButtonEnum.Ok, IconType.Info);
         }
 
         private void OnTreeViewPointerPressed(object sender, PointerPressedEventArgs e)
@@ -912,7 +907,7 @@ namespace OdyTools.Editors
                             parent.Children.Insert(newIdx, _dragSourceNode);
                             RefreshItemText(parent);
                             UpdateStatusBar();
-                            MarkDirty();
+                            MarkDocumentDirty();
                         }
                     }
                 }
@@ -1007,8 +1002,7 @@ namespace OdyTools.Editors
                 catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine("GFF context menu action failed: " + ex);
-                    var box = MessageBoxManager.GetMessageBoxStandard("GFF Editor", "Action failed: " + ex.Message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error);
-                    _ = box.ShowWindowDialogAsync(this as Window);
+                    _ = DialogHelper.ShowWindowAsync(this as Window, "GFF Editor", "Action failed: " + ex.Message, ButtonEnum.Ok, IconType.Error);
                 }
             }, DispatcherPriority.Normal);
         }
@@ -1143,11 +1137,7 @@ namespace OdyTools.Editors
             catch (Exception ex)
             {
                 System.Console.WriteLine($"Failed to load GFF: {ex}");
-                _ = MessageBoxManager.GetMessageBoxStandard(
-                    "Error loading GFF",
-                    "Error while loading GFF: " + ex.Message,
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
+                _ = DialogHelper.ShowWindowAsync(this, "Error loading GFF", "Error while loading GFF: " + ex.Message, ButtonEnum.Ok, IconType.Error);
                 GFFContent content = GFFContent.GFF;
                 if (!string.IsNullOrEmpty(resref))
                     content = GFFContentExtensions.FromResName(resref);
@@ -1667,7 +1657,7 @@ namespace OdyTools.Editors
             }
 
             RefreshItemText(_selectedNode);
-            MarkDirty();
+            MarkDocumentDirty();
             UpdateStatusBar();
         }
 
@@ -1747,7 +1737,7 @@ namespace OdyTools.Editors
                 _selectedNode.Value = new GFFList();
                 _selectedNode.Children.Clear();
             }
-            MarkDirty();
+            MarkDocumentDirty();
             LoadItem(_selectedNode);
             RefreshItemText(_selectedNode);
             UpdateStatusBar();
@@ -1778,7 +1768,7 @@ namespace OdyTools.Editors
             LocalizedString.SubstringPair(item.Id, out Language lang, out Gender gender);
             locStr.SetData(lang, gender, newText);
             item.Text = newText;
-            MarkDirty();
+            MarkDocumentDirty();
             RefreshItemText(_selectedNode);
         }
 
@@ -1799,7 +1789,7 @@ namespace OdyTools.Editors
                 _substringItems.Add(new SubstringListItem { Id = subId, Text = "", Display = $"{lang}, {gender}" });
             }
             locStr.SetData(lang, gender, "");
-            MarkDirty();
+            MarkDocumentDirty();
             RefreshItemText(_selectedNode);
             UpdateStatusBar();
         }
@@ -1824,7 +1814,7 @@ namespace OdyTools.Editors
                 }
             }
             locStr.Remove(lang, gender);
-            MarkDirty();
+            MarkDocumentDirty();
             RefreshItemText(_selectedNode);
             UpdateStatusBar();
         }
@@ -1939,8 +1929,7 @@ namespace OdyTools.Editors
                     }
                     catch (Exception ex)
                     {
-                        var box = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Convert value...").TrimEnd('.'), Localization.Tr("Invalid value: ") + ex.Message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error);
-                        _ = box.ShowWindowDialogAsync(this as Window);
+                        _ = DialogHelper.ShowWindowAsync(this as Window, Localization.Tr("Convert value...").TrimEnd('.'), Localization.Tr("Invalid value: ") + ex.Message, ButtonEnum.Ok, IconType.Error);
                     }
                 };
                 cancelBtn.Click += (s, e) => dialog.Close();
@@ -2000,7 +1989,7 @@ namespace OdyTools.Editors
             parent.Children.Add(node);
             RefreshItemText(node);
             RefreshItemText(parent);
-            MarkDirty();
+            MarkDocumentDirty();
             UpdateStatusBar();
             ExpandNode(parent);
             _treeView.SelectedItem = node;
@@ -2025,7 +2014,7 @@ namespace OdyTools.Editors
             parent.Children.Insert(idx, newNode);
             RefreshItemText(newNode);
             RefreshItemText(parent);
-            MarkDirty();
+            MarkDocumentDirty();
             UpdateStatusBar();
             ExpandNode(parent);
             _treeView.SelectedItem = newNode;
@@ -2045,7 +2034,7 @@ namespace OdyTools.Editors
             parent.Children.Insert(idx + 1, newNode);
             RefreshItemText(newNode);
             RefreshItemText(parent);
-            MarkDirty();
+            MarkDocumentDirty();
             UpdateStatusBar();
             ExpandNode(parent);
             _treeView.SelectedItem = newNode;
@@ -2064,7 +2053,7 @@ namespace OdyTools.Editors
             listNode.Children.Add(node);
             RefreshItemText(node);
             RefreshItemText(listNode);
-            MarkDirty();
+            MarkDocumentDirty();
             UpdateStatusBar();
             ExpandNode(listNode);
             _treeView.SelectedItem = node;
@@ -2083,7 +2072,7 @@ namespace OdyTools.Editors
             if (rootNode == null || node == null || node == rootNode) return;
             PushState();
             if (RemoveNodeFromParent(rootNode, node))
-                MarkDirty();
+                MarkDocumentDirty();
             UpdateStatusBar();
         }
 
@@ -2123,7 +2112,7 @@ namespace OdyTools.Editors
             parent.Children.RemoveAt(idx);
             parent.Children.Insert(idx - 1, node);
             RefreshItemText(parent);
-            MarkDirty();
+            MarkDocumentDirty();
             UpdateStatusBar();
         }
 
@@ -2139,7 +2128,7 @@ namespace OdyTools.Editors
             parent.Children.RemoveAt(idx);
             parent.Children.Insert(idx + 1, node);
             RefreshItemText(parent);
-            MarkDirty();
+            MarkDocumentDirty();
             UpdateStatusBar();
         }
 
@@ -2154,7 +2143,7 @@ namespace OdyTools.Editors
             foreach (var c in sorted)
                 node.Children.Add(c);
             RefreshItemText(node);
-            MarkDirty();
+            MarkDocumentDirty();
             UpdateStatusBar();
         }
 
@@ -2316,8 +2305,7 @@ namespace OdyTools.Editors
                     var msg = string.IsNullOrWhiteSpace(_findQuery)
                         ? Localization.Tr("Enter text to search for.")
                         : Localization.Tr("No matches found.");
-                    var box = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Find in Tree"), msg, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info);
-                    await box.ShowWindowDialogAsync(dialog);
+                    await DialogHelper.ShowWindowAsync(dialog as Window, Localization.Tr("Find in Tree"), msg, ButtonEnum.Ok, IconType.Info);
                 }
             };
             closeBtn.Click += (s, e) => dialog.Close();
@@ -2341,7 +2329,7 @@ namespace OdyTools.Editors
             }
             if (_findMatches.Count == 0)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Find in Tree"), Localization.Tr("No matches found."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this as Window);
+                _ = DialogHelper.ShowWindowAsync(this as Window, Localization.Tr("Find in Tree"), Localization.Tr("No matches found."), ButtonEnum.Ok, IconType.Info);
                 return;
             }
             int idx = _findStartIndex % _findMatches.Count;
@@ -2361,7 +2349,7 @@ namespace OdyTools.Editors
             }
             if (_findMatches.Count == 0)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Find in Tree"), Localization.Tr("No matches found."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this as Window);
+                _ = DialogHelper.ShowWindowAsync(this as Window, Localization.Tr("Find in Tree"), Localization.Tr("No matches found."), ButtonEnum.Ok, IconType.Info);
                 return;
             }
             _findStartIndex = (_findStartIndex - 2 + _findMatches.Count) % _findMatches.Count;
@@ -2380,7 +2368,7 @@ namespace OdyTools.Editors
             if (string.IsNullOrEmpty(query) && node.Value is string s && !string.IsNullOrEmpty(s)) query = s;
             if (string.IsNullOrEmpty(query))
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Find in Tree"), Localization.Tr("Selection has no label or string value to search for."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this as Window);
+                _ = DialogHelper.ShowWindowAsync(this as Window, Localization.Tr("Find in Tree"), Localization.Tr("Selection has no label or string value to search for."), ButtonEnum.Ok, IconType.Info);
                 return;
             }
             _findQuery = query;
@@ -2656,7 +2644,7 @@ namespace OdyTools.Editors
             targetParent.Children.Add(clone);
             RefreshAllNodeTexts(clone);
             RefreshItemText(targetParent);
-            MarkDirty();
+            MarkDocumentDirty();
             UpdateStatusBar();
             ExpandNode(targetParent);
             _treeView.SelectedItem = clone;
@@ -2678,7 +2666,7 @@ namespace OdyTools.Editors
             else parent.Children.Add(clone);
             RefreshAllNodeTexts(clone);
             RefreshItemText(parent);
-            MarkDirty();
+            MarkDocumentDirty();
             UpdateStatusBar();
             ExpandNode(parent);
             _treeView.SelectedItem = clone;
@@ -2853,8 +2841,7 @@ namespace OdyTools.Editors
                 }
                 else
                 {
-                    var box = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Go to Struct ID"), Localization.Trf("Struct ID {0} not found.", id), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Warning);
-                    await box.ShowWindowDialogAsync(dialog);
+                    await DialogHelper.ShowWindowAsync(dialog as Window, Localization.Tr("Go to Struct ID"), Localization.Trf("Struct ID {0} not found.", id), ButtonEnum.Ok, IconType.Warning);
                 }
             };
             cancelBtn.Click += (s, e) => dialog.Close();

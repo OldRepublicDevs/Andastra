@@ -31,6 +31,8 @@ using OdyPatch.UI.Views.Dialogs;
 using JetBrains.Annotations;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyPatch.UI.ViewModels
 {
@@ -510,12 +512,7 @@ namespace OdyPatch.UI.ViewModels
                 string confirmMsg = Core.GetConfirmMessage(installer);
                 if (!string.IsNullOrEmpty(confirmMsg) && !_oneShot)
                 {
-                    MsBox.Avalonia.Base.IMsBox<ButtonResult> confirmBox = MessageBoxManager.GetMessageBoxStandard(
-                        "This mod requires confirmation",
-                        confirmMsg,
-                        ButtonEnum.OkCancel,
-                        Icon.Question);
-                    ButtonResult result = await confirmBox.ShowAsync();
+                    var result = await DialogHelper.ShowAsync("This mod requires confirmation", confirmMsg, ButtonEnum.OkCancel, IconType.Question);
                     if (result != ButtonResult.Ok)
                     {
                         IsTaskRunning = false;
@@ -560,30 +557,15 @@ namespace OdyPatch.UI.ViewModels
                 // Show completion message
                 if (numErrors > 0)
                 {
-                    MsBox.Avalonia.Base.IMsBox<ButtonResult> errorBox = MessageBoxManager.GetMessageBoxStandard(
-                        "Install completed with errors!",
-                        $"The install completed with {numErrors} errors and {numWarnings} warnings! The installation may not have been successful, check the logs for more details.{Environment.NewLine}{Environment.NewLine}Total install time: {timeStr}{Environment.NewLine}Total patches: {numPatches}",
-                        ButtonEnum.Ok,
-                        Icon.Error);
-                    await errorBox.ShowAsync();
+                    await DialogHelper.ShowAsync("Install completed with errors!", $"The install completed with {numErrors} errors and {numWarnings} warnings! The installation may not have been successful, check the logs for more details.{Environment.NewLine}{Environment.NewLine}Total install time: {timeStr}{Environment.NewLine}Total patches: {numPatches}", ButtonEnum.Ok, IconType.Error);
                 }
                 else if (numWarnings > 0)
                 {
-                    MsBox.Avalonia.Base.IMsBox<ButtonResult> warningBox = MessageBoxManager.GetMessageBoxStandard(
-                        "Install completed with warnings",
-                        $"The install completed with {numWarnings} warnings! Review the logs for details. The script in the 'uninstall' folder of the mod directory will revert these changes.{Environment.NewLine}{Environment.NewLine}Total install time: {timeStr}{Environment.NewLine}Total patches: {numPatches}",
-                        ButtonEnum.Ok,
-                        Icon.Warning);
-                    await warningBox.ShowAsync();
+                    await DialogHelper.ShowAsync("Install completed with warnings", $"The install completed with {numWarnings} warnings! Review the logs for details. The script in the 'uninstall' folder of the mod directory will revert these changes.{Environment.NewLine}{Environment.NewLine}Total install time: {timeStr}{Environment.NewLine}Total patches: {numPatches}", ButtonEnum.Ok, IconType.Warning);
                 }
                 else
                 {
-                    MsBox.Avalonia.Base.IMsBox<ButtonResult> infoBox = MessageBoxManager.GetMessageBoxStandard(
-                        "Install complete!",
-                        $"Check the logs for details on what has been done. Utilize the script in the 'uninstall' folder of the mod directory to revert these changes.{Environment.NewLine}{Environment.NewLine}Total install time: {timeStr}{Environment.NewLine}Total patches: {numPatches}",
-                        ButtonEnum.Ok,
-                        Icon.Success);
-                    await infoBox.ShowAsync();
+                    await DialogHelper.ShowAsync("Install complete!", $"Check the logs for details on what has been done. Utilize the script in the 'uninstall' folder of the mod directory to revert these changes.{Environment.NewLine}{Environment.NewLine}Total install time: {timeStr}{Environment.NewLine}Total patches: {numPatches}", ButtonEnum.Ok, IconType.Success);
                 }
             }
             catch (OperationCanceledException ex)
@@ -595,12 +577,7 @@ namespace OdyPatch.UI.ViewModels
             {
                 LogExceptionToDebugConsole(ex, "Install");
                 AddLogEntry($"[ERROR] Installation failed: {ex.Message}");
-                MsBox.Avalonia.Base.IMsBox<ButtonResult> errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    ex.GetType().Name,
-                    $"An unexpected error occurred during the installation and the installation was forced to terminate.{Environment.NewLine}{Environment.NewLine}{ex.Message}",
-                    ButtonEnum.Ok,
-                    Icon.Error);
-                await errorBox.ShowAsync();
+                await DialogHelper.ShowAsync(ex.GetType().Name, $"An unexpected error occurred during the installation and the installation was forced to terminate.{Environment.NewLine}{Environment.NewLine}{ex.Message}", ButtonEnum.Ok, IconType.Error);
             }
             finally
             {
@@ -700,8 +677,7 @@ namespace OdyPatch.UI.ViewModels
                         {
                             Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
                             {
-                                MsBox.Avalonia.Base.IMsBox<ButtonResult> box = MessageBoxManager.GetMessageBoxStandard(title, msg, ButtonEnum.Ok, Icon.Error);
-                                await box.ShowAsync();
+                                await DialogHelper.ShowAsync(title, msg, ButtonEnum.Ok, IconType.Error);
                             }).Wait();
                         },
                         showYesNoDialog: (title, msg) =>
@@ -709,8 +685,7 @@ namespace OdyPatch.UI.ViewModels
                             bool result = false;
                             Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
                             {
-                                MsBox.Avalonia.Base.IMsBox<ButtonResult> box = MessageBoxManager.GetMessageBoxStandard(title, msg, ButtonEnum.YesNo, Icon.Question);
-                                ButtonResult res = await box.ShowAsync();
+                                var res = await DialogHelper.ShowAsync(title, msg, ButtonEnum.YesNo, IconType.Question);
                                 result = res == ButtonResult.Yes;
                             }).Wait();
                             return result;
@@ -720,8 +695,7 @@ namespace OdyPatch.UI.ViewModels
                             bool? result = null;
                             Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
                             {
-                                MsBox.Avalonia.Base.IMsBox<ButtonResult> box = MessageBoxManager.GetMessageBoxStandard(title, msg, ButtonEnum.YesNoCancel, Icon.Question);
-                                ButtonResult res = await box.ShowAsync();
+                                var res = await DialogHelper.ShowAsync(title, msg, ButtonEnum.YesNoCancel, IconType.Question);
                                 switch (res)
                                 {
                                     case ButtonResult.Yes:
@@ -778,12 +752,7 @@ namespace OdyPatch.UI.ViewModels
 
             string directory = folders[0].Path.LocalPath;
 
-            MsBox.Avalonia.Base.IMsBox<ButtonResult> confirmBox = MessageBoxManager.GetMessageBoxStandard(
-                "Warning!",
-                "This is not a toy. Really continue?",
-                ButtonEnum.YesNo,
-                Icon.Warning);
-            ButtonResult result = await confirmBox.ShowAsync();
+            var result = await DialogHelper.ShowAsync("Warning!", "This is not a toy. Really continue?", ButtonEnum.YesNo, IconType.Warning);
             if (result != ButtonResult.Yes)
             {
                 return;
@@ -812,12 +781,7 @@ namespace OdyPatch.UI.ViewModels
 
                     Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
                     {
-                        MsBox.Avalonia.Base.IMsBox<ButtonResult> successBox = MessageBoxManager.GetMessageBoxStandard(
-                            "Successfully acquired permission",
-                            $"The operation was successful. {extraMsg}",
-                            ButtonEnum.Ok,
-                            Icon.Success);
-                        await successBox.ShowAsync();
+                        await DialogHelper.ShowAsync("Successfully acquired permission", $"The operation was successful. {extraMsg}", ButtonEnum.Ok, IconType.Success);
                     });
                 }
                 catch (Exception ex)
@@ -826,12 +790,7 @@ namespace OdyPatch.UI.ViewModels
                     AddLogEntry($"[ERROR] Failed to fix permissions: {ex.Message}");
                     Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
                     {
-                        MsBox.Avalonia.Base.IMsBox<ButtonResult> errorBox = MessageBoxManager.GetMessageBoxStandard(
-                            "Could not acquire permission!",
-                            $"Permissions denied! Check the logs for more details.{Environment.NewLine}{ex.Message}",
-                            ButtonEnum.Ok,
-                            Icon.Error);
-                        await errorBox.ShowAsync();
+                        await DialogHelper.ShowAsync("Could not acquire permission!", $"Permissions denied! Check the logs for more details.{Environment.NewLine}{ex.Message}", ButtonEnum.Ok, IconType.Error);
                     });
                 }
                 finally
@@ -964,22 +923,12 @@ namespace OdyPatch.UI.ViewModels
         {
             if (string.IsNullOrEmpty(SelectedNamespace))
             {
-                MsBox.Avalonia.Base.IMsBox<ButtonResult> infoBox = MessageBoxManager.GetMessageBoxStandard(
-                    "No namespace selected",
-                    "Please select a namespace first.",
-                    ButtonEnum.Ok,
-                    Icon.Info);
-                await infoBox.ShowAsync();
+                await DialogHelper.ShowAsync("No namespace selected", "Please select a namespace first.", ButtonEnum.Ok, IconType.Info);
                 return;
             }
 
             string description = Core.GetNamespaceDescription(_loadedNamespaces, SelectedNamespace);
-            MsBox.Avalonia.Base.IMsBox<ButtonResult> descBox = MessageBoxManager.GetMessageBoxStandard(
-                SelectedNamespace,
-                string.IsNullOrEmpty(description) ? "No description available." : description,
-                ButtonEnum.Ok,
-                Icon.Info);
-            await descBox.ShowAsync();
+            await DialogHelper.ShowAsync(SelectedNamespace, string.IsNullOrEmpty(description) ? "No description available." : description, ButtonEnum.Ok, IconType.Info);
         }
 
         private async Task<string> ShowChoiceDialogAsync(string title, string message, params string[] options)
@@ -1009,12 +958,7 @@ namespace OdyPatch.UI.ViewModels
 
         private async Task ShowErrorAsync(string title, string message)
         {
-            MsBox.Avalonia.Base.IMsBox<ButtonResult> box = MessageBoxManager.GetMessageBoxStandard(
-                title,
-                message,
-                ButtonEnum.Ok,
-                Icon.Error);
-            await box.ShowAsync();
+            await DialogHelper.ShowAsync(title, message, ButtonEnum.Ok, IconType.Error);
         }
 
         private async Task RunAutoUpdate(RemoteUpdateInfo info, bool useBetaChannel)
@@ -1126,12 +1070,7 @@ namespace OdyPatch.UI.ViewModels
             {
                 LogExceptionToDebugConsole(ex, "LoadModFromPath");
                 AddLogEntry($"[ERROR] Failed to load mod: {ex.Message}");
-                MsBox.Avalonia.Base.IMsBox<ButtonResult> errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error",
-                    $"Could not find a mod located at the given folder.{Environment.NewLine}{ex.Message}",
-                    ButtonEnum.Ok,
-                    Icon.Error);
-                await errorBox.ShowAsync();
+                await DialogHelper.ShowAsync("Error", $"Could not find a mod located at the given folder.{Environment.NewLine}{ex.Message}", ButtonEnum.Ok, IconType.Error);
             }
         }
 
@@ -1274,46 +1213,42 @@ namespace OdyPatch.UI.ViewModels
         {
             if (IsTaskRunning)
             {
-                MsBox.Avalonia.Base.IMsBox<ButtonResult> infoBox = MessageBoxManager.GetMessageBoxStandard(
+                _ = DialogHelper.ShowAsync(
                     "Task already running",
                     "Wait for the previous task to finish.",
                     ButtonEnum.Ok,
                     Icon.Info);
-                Avalonia.Threading.Dispatcher.UIThread.Post(async () => await infoBox.ShowAsync());
                 return false;
             }
 
             if (string.IsNullOrEmpty(ModPath) || !Directory.Exists(ModPath))
             {
-                MsBox.Avalonia.Base.IMsBox<ButtonResult> infoBox = MessageBoxManager.GetMessageBoxStandard(
+                _ = DialogHelper.ShowAsync(
                     "No mod chosen",
                     "Select your mod directory first.",
                     ButtonEnum.Ok,
                     Icon.Info);
-                Avalonia.Threading.Dispatcher.UIThread.Post(async () => await infoBox.ShowAsync());
                 return false;
             }
 
             if (string.IsNullOrEmpty(SelectedGamePath))
             {
-                MsBox.Avalonia.Base.IMsBox<ButtonResult> infoBox = MessageBoxManager.GetMessageBoxStandard(
+                _ = DialogHelper.ShowAsync(
                     "No KOTOR directory chosen",
                     "Select your KOTOR directory first.",
                     ButtonEnum.Ok,
                     Icon.Info);
-                Avalonia.Threading.Dispatcher.UIThread.Post(async () => await infoBox.ShowAsync());
                 return false;
             }
 
             var gamePath = new CaseAwarePath(SelectedGamePath);
             if (!gamePath.IsDirectory())
             {
-                MsBox.Avalonia.Base.IMsBox<ButtonResult> infoBox = MessageBoxManager.GetMessageBoxStandard(
+                _ = DialogHelper.ShowAsync(
                     "Invalid KOTOR directory chosen",
                     "Select a valid path to your KOTOR install.",
                     ButtonEnum.Ok,
                     Icon.Info);
-                Avalonia.Threading.Dispatcher.UIThread.Post(async () => await infoBox.ShowAsync());
                 return false;
             }
 

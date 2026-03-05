@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using OdyTools.Data;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Utils
 {
@@ -69,11 +71,7 @@ namespace OdyTools.Utils
         {
             if (parent != null)
             {
-                _ = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
-                    "Permission error",
-                    "A permission error occurred: " + (e?.Message ?? "Unknown"),
-                    MsBox.Avalonia.Enums.ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Warning).ShowWindowDialogAsync(parent);
+                DialogHelper.ShowWindow(parent, "Permission error", "A permission error occurred: " + (e?.Message ?? "Unknown"), IconType.Warning);
             }
             else
             {

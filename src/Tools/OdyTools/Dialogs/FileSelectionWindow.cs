@@ -19,6 +19,7 @@ using OdyTools.Editors;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using FileResource = BioWare.Extract.FileResource;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Dialogs
 {
@@ -580,12 +581,7 @@ namespace OdyTools.Dialogs
                     errorMessage = ex.ToString();
                 }
 
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error",
-                    $"Error opening resource:\n{errorMessage}",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Error", $"Error opening resource:\n{errorMessage}", ButtonEnum.Ok, IconType.Error);
             }
         }
 
@@ -833,4 +829,3 @@ namespace OdyTools.Dialogs
         public string DirectoryName { get; set; }
     }
 }
-

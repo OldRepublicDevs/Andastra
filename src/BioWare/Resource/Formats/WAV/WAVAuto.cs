@@ -9,24 +9,16 @@ namespace BioWare.Resource.Formats.WAV
     // Original: read_wav, write_wav, bytes_wav, get_playable_bytes, detect_audio_type functions
     public static class WAVAuto
     {
+        private const string UnsupportedWavSourceMessage = "Source must be string, byte[], or Stream for WAV";
+        private const string UnsupportedWavTargetMessage = "Target must be string or Stream for WAV";
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/wav/wav_auto.py:40-69
         // Original: def read_wav(source: SOURCE_TYPES, offset: int = 0, size: int | None = None) -> WAV
         public static WAV ReadWav(object source, int offset = 0, int? size = null)
         {
             int sizeValue = size ?? 0;
-            if (source is string filepath)
-            {
-                return new WAVBinaryReader(filepath, offset, sizeValue).Load();
-            }
-            if (source is byte[] bytes)
-            {
-                return new WAVBinaryReader(bytes, offset, sizeValue).Load();
-            }
-            if (source is Stream stream)
-            {
-                return new WAVBinaryReader(stream, offset, sizeValue).Load();
-            }
-            throw new ArgumentException("Source must be string, byte[], or Stream for WAV");
+            byte[] data = ResourceAutoHelpers.SourceDispatcher.ToBytes(source);
+            return new WAVBinaryReader(data, offset, sizeValue).Load();
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/wav/wav_auto.py:72-97
@@ -36,35 +28,27 @@ namespace BioWare.Resource.Formats.WAV
             ResourceType format = fileFormat ?? ResourceType.WAV;
             if (format == ResourceType.WAV)
             {
-                if (target is string filepath)
-                {
-                    new WAVBinaryWriter(wav, filepath).Write();
-                }
-                else if (target is Stream stream)
-                {
-                    new WAVBinaryWriter(wav, stream).Write();
-                }
-                else
-                {
-                    throw new ArgumentException("Target must be string or Stream for WAV");
-                }
+                WriteWavTarget(
+                    target,
+                    filepath => new WAVBinaryWriter(wav, filepath).Write(),
+                    stream => new WAVBinaryWriter(wav, stream).Write());
             }
             else
             {
                 // WAV_DEOB or other formats use standard writer (clean output)
-                if (target is string filepath)
-                {
-                    new WAVStandardWriter(wav, filepath).Write();
-                }
-                else if (target is Stream stream)
-                {
-                    new WAVStandardWriter(wav, stream).Write();
-                }
-                else
-                {
-                    throw new ArgumentException("Target must be string or Stream for WAV");
-                }
+                WriteWavTarget(
+                    target,
+                    filepath => new WAVStandardWriter(wav, filepath).Write(),
+                    stream => new WAVStandardWriter(wav, stream).Write());
             }
+        }
+
+        /// <summary>
+        /// Dispatches WAV output to either a filesystem path or stream target.
+        /// </summary>
+        private static void WriteWavTarget(object target, Action<string> writeToPath, Action<Stream> writeToStream)
+        {
+            ResourceAutoHelpers.SourceDispatcher.DispatchWrite(target, writeToPath, writeToStream, "WAV");
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/wav/wav_auto.py:100-118

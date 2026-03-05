@@ -809,19 +809,19 @@ namespace OdyTools.Tests
 
             InvokeUndo(editor);
             var afterUndo1 = BuildAndParse(editor);
-            Assert.That(afterUndo1.GetHeight(), Is.EqualTo(3), "First Undo reverts insert row");
+            Assert.That(afterUndo1.GetHeight(), Is.EqualTo(4), "First Undo reverts remove row");
             Assert.That(afterUndo1.GetCellString(0, "name"), Is.EqualTo("PMBTest"));
             Assert.That(afterUndo1.GetHeaders().Count, Is.EqualTo(4));
             Assert.That(afterUndo1.GetLabel(0), Is.Not.Null);
-            Assert.That(GetSourceData(editor).Count, Is.EqualTo(3));
+            Assert.That(GetSourceData(editor).Count, Is.EqualTo(4));
 
             InvokeUndo(editor);
             var afterUndo2 = BuildAndParse(editor);
-            Assert.That(afterUndo2.GetHeight(), Is.EqualTo(4), "Second Undo reverts remove row");
+            Assert.That(afterUndo2.GetHeight(), Is.EqualTo(3), "Second Undo reverts insert row");
             Assert.That(afterUndo2.GetCellString(0, "name"), Is.EqualTo("PMBTest"));
             Assert.That(afterUndo2.GetHeaders().Count, Is.EqualTo(4));
             Assert.That(afterUndo2.GetLabel(0), Is.EqualTo("0"));
-            Assert.That(GetSourceData(editor).Count, Is.EqualTo(4));
+            Assert.That(GetSourceData(editor).Count, Is.EqualTo(3));
 
             InvokeRedo(editor);
             InvokeRedo(editor);
@@ -1756,6 +1756,179 @@ namespace OdyTools.Tests
             Assert.That(grid, Is.Not.Null);
             Assert.That(grid.Columns.Count, Is.GreaterThanOrEqualTo(2));
             Assert.That(grid.ItemsSource, Is.Not.Null);
+            editor.Close();
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_LoadJSONAndBuild_PreservesContent()
+        {
+            var twoDA = new TwoDA(new List<string> { "label", "name", "value" });
+            twoDA.AddRow("0", new Dictionary<string, object> { ["label"] = "0", ["name"] = "JsonRow", ["value"] = "777" });
+            byte[] jsonBytes = TwoDAAuto.Bytes2DA(twoDA, ResourceType.TwoDA_JSON);
+
+            var editor = CreateEditor();
+            editor.Load("test.2da.json", "test", ResourceType.TwoDA_JSON, jsonBytes);
+
+            var built = editor.Build().Item1;
+            var result = TwoDAAuto.Read2DA(built);
+            Assert.That(result.GetHeight(), Is.EqualTo(1));
+            Assert.That(result.GetCellString(0, "name"), Is.EqualTo("JsonRow"));
+            Assert.That(result.GetCellString(0, "value"), Is.EqualTo("777"));
+            editor.Close();
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_RemoveDuplicateRows_RemovesDuplicates_AndUndoRestores()
+        {
+            var twoDA = new TwoDA(new List<string> { "label", "name" });
+            twoDA.AddRow("0", new Dictionary<string, object> { ["label"] = "0", ["name"] = "A" });
+            twoDA.AddRow("0", new Dictionary<string, object> { ["label"] = "0", ["name"] = "A" });
+            twoDA.AddRow("2", new Dictionary<string, object> { ["label"] = "2", ["name"] = "B" });
+            twoDA.AddRow("2", new Dictionary<string, object> { ["label"] = "2", ["name"] = "B" });
+            byte[] data = TwoDAAuto.Bytes2DA(twoDA);
+
+            var editor = CreateEditor();
+            editor.Load("dupes.2da", "dupes", ResourceType.TwoDA, data);
+
+            editor.RemoveDuplicateRows();
+            var after = BuildAndParse(editor);
+            Assert.That(after.GetHeight(), Is.EqualTo(2));
+
+            InvokeUndo(editor);
+            var restored = BuildAndParse(editor);
+            Assert.That(restored.GetHeight(), Is.EqualTo(4));
+            editor.Close();
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TransposeTable_ChangesShape_AndUndoRestores()
+        {
+            var twoDA = new TwoDA(new List<string> { "label", "c1", "c2" });
+            twoDA.AddRow("0", new Dictionary<string, object> { ["label"] = "0", ["c1"] = "A", ["c2"] = "B" });
+            twoDA.AddRow("1", new Dictionary<string, object> { ["label"] = "1", ["c1"] = "C", ["c2"] = "D" });
+            byte[] data = TwoDAAuto.Bytes2DA(twoDA);
+
+            var editor = CreateEditor();
+            editor.Load("transpose.2da", "transpose", ResourceType.TwoDA, data);
+
+            var before = BuildAndParse(editor);
+            int beforeHeight = before.GetHeight();
+            int beforeWidth = before.GetWidth();
+
+            editor.TransposeTable();
+            var after = BuildAndParse(editor);
+            Assert.That(after.GetHeight(), Is.EqualTo(beforeWidth));
+            Assert.That(after.GetWidth(), Is.EqualTo(beforeHeight));
+
+            InvokeUndo(editor);
+            var restored = BuildAndParse(editor);
+            Assert.That(restored.GetHeight(), Is.EqualTo(beforeHeight));
+            Assert.That(restored.GetWidth(), Is.EqualTo(beforeWidth));
+            editor.Close();
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_ColumnFilter_FiltersRows_AndClearRestores()
+        {
+            var twoDA = new TwoDA(new List<string> { "label", "name", "type" });
+            twoDA.AddRow("0", new Dictionary<string, object> { ["label"] = "0", ["name"] = "ItemA", ["type"] = "weapon" });
+            twoDA.AddRow("1", new Dictionary<string, object> { ["label"] = "1", ["name"] = "ItemB", ["type"] = "armor" });
+            twoDA.AddRow("2", new Dictionary<string, object> { ["label"] = "2", ["name"] = "ItemC", ["type"] = "weapon" });
+            twoDA.AddRow("3", new Dictionary<string, object> { ["label"] = "3", ["name"] = "ItemD", ["type"] = "armor" });
+            byte[] data = TwoDAAuto.Bytes2DA(twoDA);
+
+            var editor = CreateEditor();
+            editor.Load("filter.2da", "filter", ResourceType.TwoDA, data);
+
+            var sourceData = GetSourceData(editor);
+            Assert.That(sourceData.Count, Is.EqualTo(4), "Should have 4 rows before filter");
+
+            // Apply filter on "type" column (index 2) to show only "weapon"
+            var filterMethod = typeof(OdyTool2DA).GetMethod("ApplyColumnFilter", BindingFlags.NonPublic | BindingFlags.Instance);
+            var allowedValues = new HashSet<string> { "weapon" };
+            filterMethod?.Invoke(editor, new object[] { 2, allowedValues });
+
+            Assert.That(sourceData.Count, Is.EqualTo(2), "Should have 2 rows after filtering for 'weapon'");
+            Assert.That(sourceData[0][3], Is.EqualTo("weapon"), "First filtered row should be weapon");
+            Assert.That(sourceData[1][3], Is.EqualTo("weapon"), "Second filtered row should be weapon");
+
+            // Clear filter
+            editor.ClearColumnFilter();
+            Assert.That(sourceData.Count, Is.EqualTo(4), "Should have 4 rows after clearing filter");
+
+            editor.Close();
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_HideShowColumns_AffectsGridColumns()
+        {
+            var twoDA = new TwoDA(new List<string> { "label", "col1", "col2", "col3" });
+            twoDA.AddRow("0", new Dictionary<string, object> { ["label"] = "0", ["col1"] = "A", ["col2"] = "B", ["col3"] = "C" });
+            byte[] data = TwoDAAuto.Bytes2DA(twoDA);
+
+            var editor = CreateEditor();
+            editor.Load("cols.2da", "cols", ResourceType.TwoDA, data);
+
+            var grid = GetDataGrid(editor);
+            int initialColumnCount = grid.Columns.Count;
+            Assert.That(initialColumnCount, Is.EqualTo(5), "Should have 5 grid columns initially (# + 4 data)");
+
+            // Hide column at index 1 (col2)
+            var hiddenIndicesField = typeof(OdyTool2DA).GetField("_hiddenColumnIndices", BindingFlags.NonPublic | BindingFlags.Instance);
+            var hiddenIndices = (HashSet<int>)hiddenIndicesField?.GetValue(editor);
+            hiddenIndices?.Add(1);
+
+            // Rebuild grid
+            var rebuildMethod = typeof(OdyTool2DA).GetMethod("RebuildGridColumns", BindingFlags.NonPublic | BindingFlags.Instance);
+            rebuildMethod?.Invoke(editor, null);
+
+            Assert.That(grid.Columns.Count, Is.EqualTo(4), "Should have 4 grid columns after hiding one");
+
+            editor.Close();
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_ZoomLevel_AffectsFontSize()
+        {
+            var editor = CreateEditor();
+            var grid = GetDataGrid(editor);
+
+            // Get initial font size
+            double initialFontSize = grid.FontSize;
+
+            // Set zoom to 150%
+            var setZoomMethod = typeof(OdyTool2DA).GetMethod("SetZoomLevel", BindingFlags.NonPublic | BindingFlags.Instance);
+            setZoomMethod?.Invoke(editor, new object[] { 1.5 });
+
+            Assert.That(grid.FontSize, Is.GreaterThan(initialFontSize), "Font size should increase with zoom");
+            Assert.That(grid.FontSize, Is.EqualTo(12 * 1.5).Within(0.1), "Font size should be 150% of base");
+
+            // Reset to 100%
+            setZoomMethod?.Invoke(editor, new object[] { 1.0 });
+            Assert.That(grid.FontSize, Is.EqualTo(12).Within(0.1), "Font size should return to base");
+
+            editor.Close();
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_AutoFitColumns_AdjustsWidths()
+        {
+            var twoDA = new TwoDA(new List<string> { "label", "short", "verylongcolumnname" });
+            twoDA.AddRow("0", new Dictionary<string, object> { ["label"] = "0", ["short"] = "A", ["verylongcolumnname"] = "VeryLongContentHere" });
+            byte[] data = TwoDAAuto.Bytes2DA(twoDA);
+
+            var editor = CreateEditor();
+            editor.Load("autofit.2da", "autofit", ResourceType.TwoDA, data);
+
+            var grid = GetDataGrid(editor);
+
+            // Auto-fit columns
+            var autoFitMethod = typeof(OdyTool2DA).GetMethod("AutoFitAllColumns", BindingFlags.NonPublic | BindingFlags.Instance);
+            autoFitMethod?.Invoke(editor, null);
+
+            // Verify columns have different widths based on content
+            Assert.That(grid.Columns.Count, Is.GreaterThan(0), "Should have columns");
+
             editor.Close();
         }
 

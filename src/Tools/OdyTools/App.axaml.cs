@@ -1,8 +1,10 @@
 using System;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
+using OdyTools.Data;
 using OdyTools.Editors;
 using OdyTools.Windows;
 
@@ -34,20 +36,14 @@ namespace OdyTools.NET
 
                 desktop.MainWindow.Show();
 
-                // Notepad++-style crash recovery: periodic backup of open editors
-                EditorCrashRecoveryService.Start();
-
-                // Check for recovery after crash (post so UI is ready)
-                Dispatcher.UIThread.Post(async () =>
-                {
-                    if (await EditorCrashRecoveryService.ShowRecoveryDialogIfNeededAsync())
-                    {
-                        EditorCrashRecoveryService.Restore();
-                    }
-                });
-
-                // Clean recovery data on normal app exit
-                desktop.ShutdownRequested += (s, _) => EditorCrashRecoveryService.OnCleanExit();
+                ConfigureCrashRecoveryStartup(
+                    GlobalSettings.Instance.CrashRecoveryEnabled,
+                    () => EditorCrashRecoveryService.Start(),
+                    () => EditorCrashRecoveryService.ShowRecoveryDialogIfNeededAsync(),
+                    () => EditorCrashRecoveryService.Restore(),
+                    () => EditorCrashRecoveryService.OnCleanExit(),
+                    work => Dispatcher.UIThread.Post(async () => await work()),
+                    handler => desktop.ShutdownRequested += handler);
                 if (desktop.MainWindow is MainWindow mainWindow)
                 {
 #if !NET48
@@ -65,6 +61,33 @@ namespace OdyTools.NET
             MainSettings.SetupToolsetDefaultEnv();
 
             base.OnFrameworkInitializationCompleted();
+        }
+
+        private static void ConfigureCrashRecoveryStartup(
+            bool enabled,
+            Action startRecovery,
+            Func<Task<bool>> showRecoveryDialogIfNeededAsync,
+            Action restoreRecovery,
+            Action onCleanExit,
+            Action<Func<Task>> scheduleRecoveryPrompt,
+            Action<EventHandler<ShutdownRequestedEventArgs>> registerShutdownHandler)
+        {
+            if (!enabled)
+            {
+                return;
+            }
+
+            startRecovery?.Invoke();
+
+            scheduleRecoveryPrompt?.Invoke(async () =>
+            {
+                if (showRecoveryDialogIfNeededAsync != null && await showRecoveryDialogIfNeededAsync())
+                {
+                    restoreRecovery?.Invoke();
+                }
+            });
+
+            registerShutdownHandler?.Invoke((s, _) => onCleanExit?.Invoke());
         }
     }
 }

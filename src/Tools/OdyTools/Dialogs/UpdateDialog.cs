@@ -11,6 +11,7 @@ using Markdig;
 using Newtonsoft.Json.Linq;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Dialogs
 {
@@ -371,12 +372,7 @@ namespace OdyTools.Dialogs
             object latestRelease = GetLatestRelease();
             if (latestRelease == null)
             {
-                var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "No Release Found",
-                    "No toolset releases found?",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info);
-                msgBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("No Release Found", "No toolset releases found?", ButtonEnum.Ok, IconType.Info);
                 return;
             }
 
@@ -393,12 +389,7 @@ namespace OdyTools.Dialogs
             int index = _releaseComboBox.SelectedIndex;
             if (index < 0 || index >= _releases.Count)
             {
-                var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Select a release",
-                    "No release selected, select one first.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info);
-                msgBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Select a release", "No release selected, select one first.", ButtonEnum.Ok, IconType.Info);
                 return;
             }
 
@@ -454,12 +445,7 @@ namespace OdyTools.Dialogs
             if (string.IsNullOrEmpty(downloadUrl))
             {
                 // No matching asset found
-                var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "No Asset Found",
-                    $"There are no binaries available for download for release '{releaseObj["tag_name"]?.Value<string>() ?? "unknown"}'.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Warning);
-                msgBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("No Asset Found", $"There are no binaries available for download for release '{releaseObj["tag_name"]?.Value<string>() ?? "unknown"}'.", ButtonEnum.Ok, IconType.Warning);
                 return;
             }
 
@@ -475,24 +461,14 @@ namespace OdyTools.Dialogs
                     // Update process not yet fully implemented
                     Dispatcher.UIThread.Post(() =>
                     {
-                        var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                            "Update Not Available",
-                            "The update process is not yet fully implemented. Please download and install updates manually.",
-                            ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Info);
-                        msgBox.ShowAsync();
+                        _ = DialogHelper.ShowAsync("Update Not Available", "The update process is not yet fully implemented. Please download and install updates manually.", ButtonEnum.Ok, IconType.Info);
                     });
                 }
                 catch (Exception ex)
                 {
                     Dispatcher.UIThread.Post(() =>
                     {
-                        var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                            "Update Error",
-                            $"An error occurred while starting the update: {ex.Message}",
-                            ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Error);
-                        msgBox.ShowAsync();
+                        _ = DialogHelper.ShowAsync("Update Error", $"An error occurred while starting the update: {ex.Message}", ButtonEnum.Ok, IconType.Error);
                     });
                 }
             });

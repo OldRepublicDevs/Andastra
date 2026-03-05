@@ -9,6 +9,17 @@ namespace OdyTools.Data
 {
     public class GlobalSettings : Settings
     {
+        public const bool ManagedAutosaveEnabled = true;
+        public const int ManagedAutosaveIntervalMinutes = 3;
+
+        private static readonly string[] LegacyAutosaveSettingKeys =
+        {
+            "AutosaveEnabled",
+            "AutosaveIntervalMinutes",
+            "OdyToolDLG.autosave_enabled",
+            "OdyToolDLG.autosave_interval_minutes"
+        };
+
         private static GlobalSettings _instance;
         private static readonly object _lock = new object();
 
@@ -42,6 +53,42 @@ namespace OdyTools.Data
         public List<string> RecentFiles { get; set; } = new List<string>();
         private bool _firstTime = true;
 
+        public bool AutosaveEnabled
+        {
+            get => ManagedAutosaveEnabled;
+            set => SetValue("AutosaveEnabled", ManagedAutosaveEnabled);
+        }
+
+        public int AutosaveIntervalMinutes
+        {
+            get => ManagedAutosaveIntervalMinutes;
+            set => SetValue("AutosaveIntervalMinutes", ManagedAutosaveIntervalMinutes);
+        }
+
+        public bool BackupsEnabled
+        {
+            get => GetValue("BackupsEnabled", true);
+            set => SetValue("BackupsEnabled", value);
+        }
+
+        public int MaxBackupCount
+        {
+            get => Math.Max(1, GetValue("MaxBackupCount", 5));
+            set => SetValue("MaxBackupCount", Math.Max(1, value));
+        }
+
+        public bool CrashRecoveryEnabled
+        {
+            get => GetValue("CrashRecoveryEnabled", true);
+            set => SetValue("CrashRecoveryEnabled", value);
+        }
+
+        public int CrashRecoveryIntervalSeconds
+        {
+            get => Math.Max(5, GetValue("CrashRecoveryIntervalSeconds", 30));
+            set => SetValue("CrashRecoveryIntervalSeconds", Math.Max(5, value));
+        }
+
         public Dictionary<string, string> AppEnvVariables
         {
             get => GetValue("EnvironmentVariables", new Dictionary<string, string>());
@@ -50,6 +97,8 @@ namespace OdyTools.Data
 
         public GlobalSettings() : base("Global")
         {
+            CleanupLegacyAutosaveSettings();
+
             // Load settings from base class
             GffSpecializedEditors.GetValue(this);
             ExtractPath = GetValue("ExtractPath", "");
@@ -62,6 +111,11 @@ namespace OdyTools.Data
             SelectedLanguage = GetValue("SelectedLanguage", OdyTools.Common.Localization.GetSystemLanguageAsInt());
             JoinRIMsTogether = GetValue("JoinRIMsTogether", true);
             _firstTime = GetValue("FirstTime", true);
+        }
+
+        private void CleanupLegacyAutosaveSettings()
+        {
+            RemoveValues(LegacyAutosaveSettingKeys);
         }
 
         public bool GetGffSpecializedEditors()

@@ -13,6 +13,7 @@ namespace OdyTools.Editors
     {
         private BWM _bwm;
 
+        public OdyToolBWM() : this(null, null) { }
         public OdyToolBWM(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolBWM", "walkmesh",
                 new[] { ResourceType.WOK, ResourceType.DWK, ResourceType.PWK },

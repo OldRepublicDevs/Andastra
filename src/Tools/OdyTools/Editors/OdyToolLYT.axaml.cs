@@ -34,6 +34,7 @@ namespace OdyTools.Editors
         private TextureBrowser _textureBrowser; // Texture browser widget for displaying imported textures
         private LYTGraphicsScene _graphicsScene; // Graphics scene for rendering LYT layout elements
 
+        public OdyToolLYT() : this(null, null) { }
         public OdyToolLYT(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolLYT", "lyt",
                 new[] { ResourceType.LYT },
@@ -209,6 +210,7 @@ namespace OdyTools.Editors
         {
             var room = new LYTRoom(new ResRef("default_room"), new Vector3(0, 0, 0));
             _lyt.Rooms.Add(room);
+            MarkDocumentDirty();
             UpdateScene();
         }
 
@@ -229,6 +231,7 @@ namespace OdyTools.Editors
             if (path != null && path.Count > 0)
             {
                 _lyt.Tracks.Add(track);
+                MarkDocumentDirty();
             }
 
             UpdateScene();
@@ -291,6 +294,7 @@ namespace OdyTools.Editors
         {
             var obstacle = new LYTObstacle(new ResRef("default_obstacle"), new Vector3(0, 0, 0));
             _lyt.Obstacles.Add(obstacle);
+            MarkDocumentDirty();
             UpdateScene();
         }
 
@@ -311,6 +315,7 @@ namespace OdyTools.Editors
             );
 
             _lyt.Doorhooks.Add(doorhook);
+            MarkDocumentDirty();
             UpdateScene();
         }
 

@@ -13,6 +13,7 @@ namespace BioWare.Resource.Formats.TwoDA
     /// </summary>
     public static class TwoDAAuto
     {
+        private const string UnsupportedSourceMessage = "Source must be string, byte[], or Stream";
 
         /// <summary>
         /// Reads a 2DA file from a file path, byte array, or stream.
@@ -20,26 +21,8 @@ namespace BioWare.Resource.Formats.TwoDA
         /// </summary>
         public static TwoDA Read2DA(object source, int offset = 0, int? size = null, ResourceType fileFormat = null)
         {
-            if (source is string filepath)
-            {
-                byte[] fileBytes = File.ReadAllBytes(filepath);
-                return Read2DAFromBytes(fileBytes, filepath);
-            }
-            if (source is byte[] bytes)
-            {
-                return Read2DAFromBytes(bytes, null);
-            }
-            if (source is Stream stream)
-            {
-                byte[] streamBytes;
-                using (var ms = new MemoryStream())
-                {
-                    stream.CopyTo(ms);
-                    streamBytes = ms.ToArray();
-                }
-                return Read2DAFromBytes(streamBytes, null);
-            }
-            throw new ArgumentException("Source must be string, byte[], or Stream");
+            byte[] data = ResourceAutoHelpers.SourceDispatcher.ToBytes(source, out string filepath);
+            return Read2DAFromBytes(data, filepath);
         }
 
         private static TwoDA Read2DAFromBytes(byte[] data, string filepath)

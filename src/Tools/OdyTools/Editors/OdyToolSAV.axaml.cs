@@ -32,7 +32,9 @@ using JetBrains.Annotations;
 using OdyTools.Common;
 using OdyTools.Data;
 using OdyTools.Dialogs;
+using OdyTools.Utils;
 using MsBox.Avalonia;
+using IconType = MsBox.Avalonia.Enums.Icon;
 using MsBox.Avalonia.Enums;
 using ResourceAutoHelpers = BioWare.Resource.ResourceAutoHelpers;
 using UTCHelpers = BioWare.Resource.Formats.GFF.Generics.UTC.UTCHelpers;
@@ -244,6 +246,7 @@ namespace OdyTools.Editors
         private class GlobalStringRow { public string Name { get; set; } public string Value { get; set; } }
         private class GlobalLocationRow { public string Name { get; set; } public float X { get; set; } public float Y { get; set; } public float Z { get; set; } public float Orientation { get; set; } }
 
+        public OdyToolSAV() : this(null, null) { }
         public OdyToolSAV(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolSAV", "savegame",
                 new[] { ResourceType.SAV },
@@ -276,14 +279,13 @@ namespace OdyTools.Editors
 
         private void SetupMenuHandlers()
         {
-            var saveItem = FindMenuItem(this, "Save");
-            if (saveItem != null) saveItem.Click += (s, e) => Save();
-            var revertItem = FindMenuItem(this, "Revert");
-            if (revertItem != null) revertItem.Click += (s, e) => Revert();
-            var closeItem = FindMenuItem(this, "Close");
-            if (closeItem != null) closeItem.Click += (s, e) => CloseSave();
-            var closeGameItem = FindMenuItem(this, "Close Game");
-            if (closeGameItem != null) closeGameItem.Click += (s, e) => CloseSave();
+            EditorHelpers.BindMenuClicks(this, new (string menuItemName, Action handler)[]
+            {
+                ("Save", Save),
+                ("Revert", Revert),
+                ("Close", CloseSave),
+                ("Close Game", CloseSave),
+            });
         }
 
         /// <summary>Unload the current save game (matches vendor Close Game).</summary>
@@ -301,14 +303,9 @@ namespace OdyTools.Editors
 
         private async Task RunCloseSaveAsync()
         {
-            var box = MessageBoxManager.GetMessageBoxStandard(
-                Localization.Tr("Unsaved Changes"),
-                Localization.Tr("You have unsaved changes. Save before closing?"),
-                ButtonEnum.YesNoCancel,
-                MsBox.Avalonia.Enums.Icon.Warning);
-            var result = await box.ShowWindowDialogAsync(this);
-            if (result == MsBox.Avalonia.Enums.ButtonResult.Yes) Save();
-            if (result != MsBox.Avalonia.Enums.ButtonResult.Cancel) DoCloseSave();
+            var result = await DialogHelper.ShowWindowAsync(this, Localization.Tr("Unsaved Changes"), Localization.Tr("You have unsaved changes. Save before closing?"), ButtonEnum.YesNoCancel, IconType.Warning);
+            if (result == ButtonResult.Yes) Save();
+            if (result != ButtonResult.Cancel) DoCloseSave();
         }
 
         private void DoCloseSave()
@@ -342,18 +339,18 @@ namespace OdyTools.Editors
         {
             if (_saveFolder == null)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No Save Loaded"), Localization.Tr("Load a save game first."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Warning).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("No Save Loaded"), Localization.Tr("Load a save game first."), IconType.Warning);
                 return;
             }
             try
             {
                 LoadSaveGame(_saveFolder.FolderPath);
                 ClearDirty();
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Reverted"), Localization.Tr("Save game reverted to last saved state."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Success).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("Reverted"), Localization.Tr("Save game reverted to last saved state."), IconType.Success);
             }
             catch (Exception ex)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Error"), ex.Message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
+                DialogHelper.ShowErrorFromException(this, ex);
             }
         }
 
@@ -362,17 +359,17 @@ namespace OdyTools.Editors
         {
             if (_saveFolder == null)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No Save Loaded"), Localization.Tr("Load a save game first."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Warning).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("No Save Loaded"), Localization.Tr("Load a save game first."), IconType.Warning);
                 return;
             }
             try
             {
                 LoadSaveGame(_saveFolder.FolderPath);
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Rebuilt"), Localization.Tr("Cached modules have been reloaded from disk."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Success).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("Rebuilt"), Localization.Tr("Cached modules have been reloaded from disk."), IconType.Success);
             }
             catch (Exception ex)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Error"), ex.Message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
+                DialogHelper.ShowErrorFromException(this, ex);
             }
         }
 
@@ -381,22 +378,22 @@ namespace OdyTools.Editors
         {
             if (_saveFolder == null || _installation == null)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No Save Loaded"), Localization.Tr("Load a save game first."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Warning).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("No Save Loaded"), Localization.Tr("Load a save game first."), IconType.Warning);
                 return;
             }
             if (!_installation.IsSaveCorrupted(_saveFolder.FolderPath))
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No Corruption"), Localization.Tr("This save does not appear to be corrupted."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("No Corruption"), Localization.Tr("This save does not appear to be corrupted."), IconType.Info);
                 return;
             }
             if (_installation.FixSaveCorruption(_saveFolder.FolderPath))
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Fixed"), Localization.Tr("EventQueue corruption was fixed. Reload the save to see changes."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Success).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("Fixed"), Localization.Tr("EventQueue corruption was fixed. Reload the save to see changes."), IconType.Success);
                 LoadSaveGame(_saveFolder.FolderPath);
             }
             else
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Fix Failed"), Localization.Tr("Could not fix savegame corruption."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("Fix Failed"), Localization.Tr("Could not fix savegame corruption."), IconType.Error);
             }
         }
 
@@ -594,85 +591,75 @@ namespace OdyTools.Editors
 
         private TabItem CreateGlobalBoolsTab()
         {
-            var t = new TabItem { Header = Localization.Tr("Booleans") };
             _gridBooleans = new DataGrid { AutoGenerateColumns = false, IsReadOnly = false };
             _gridBooleans.Columns.Add(new DataGridTextColumn { Header = Localization.Tr("Name"), Binding = new Avalonia.Data.Binding("Name") });
             _gridBooleans.Columns.Add(new DataGridCheckBoxColumn { Header = Localization.Tr("Value"), Binding = new Avalonia.Data.Binding("Value") });
-            var addBtn = new Button { Content = Localization.Tr("Add") };
-            addBtn.Click += (s, e) => AddGlobalVarRow(_gridBooleans, "bools");
-            var removeBtn = new Button { Content = Localization.Tr("Remove") };
-            removeBtn.Click += (s, e) => RemoveGlobalVarRow(_gridBooleans);
-            var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 4, 0, 0) };
-            btnPanel.Children.Add(addBtn);
-            btnPanel.Children.Add(removeBtn);
-            var panel = new StackPanel();
-            panel.Children.Add(_gridBooleans);
-            panel.Children.Add(btnPanel);
-            t.Content = panel;
-            return t;
+            return CreateGlobalVarTab(Localization.Tr("Booleans"), _gridBooleans, () => AddGlobalVarRow(_gridBooleans, "bools"));
         }
 
         private TabItem CreateGlobalNumbersTab()
         {
-            var t = new TabItem { Header = Localization.Tr("Numbers") };
             _gridNumbers = new DataGrid { AutoGenerateColumns = false, IsReadOnly = false };
             _gridNumbers.Columns.Add(new DataGridTextColumn { Header = Localization.Tr("Name"), Binding = new Avalonia.Data.Binding("Name") });
             _gridNumbers.Columns.Add(new DataGridTextColumn { Header = Localization.Tr("Value"), Binding = new Avalonia.Data.Binding("Value") });
-            var addBtn = new Button { Content = Localization.Tr("Add") };
-            addBtn.Click += (s, e) => AddGlobalVarRow(_gridNumbers, "numbers");
-            var removeBtn = new Button { Content = Localization.Tr("Remove") };
-            removeBtn.Click += (s, e) => RemoveGlobalVarRow(_gridNumbers);
-            var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 4, 0, 0) };
-            btnPanel.Children.Add(addBtn);
-            btnPanel.Children.Add(removeBtn);
-            var panel = new StackPanel();
-            panel.Children.Add(_gridNumbers);
-            panel.Children.Add(btnPanel);
-            t.Content = panel;
-            return t;
+            return CreateGlobalVarTab(Localization.Tr("Numbers"), _gridNumbers, () => AddGlobalVarRow(_gridNumbers, "numbers"));
         }
 
         private TabItem CreateGlobalStringsTab()
         {
-            var t = new TabItem { Header = Localization.Tr("Strings") };
             _gridStrings = new DataGrid { AutoGenerateColumns = false, IsReadOnly = false };
             _gridStrings.Columns.Add(new DataGridTextColumn { Header = Localization.Tr("Name"), Binding = new Avalonia.Data.Binding("Name") });
             _gridStrings.Columns.Add(new DataGridTextColumn { Header = Localization.Tr("Value"), Binding = new Avalonia.Data.Binding("Value") });
-            var addBtn = new Button { Content = Localization.Tr("Add") };
-            addBtn.Click += (s, e) => AddGlobalVarRow(_gridStrings, "strings");
-            var removeBtn = new Button { Content = Localization.Tr("Remove") };
-            removeBtn.Click += (s, e) => RemoveGlobalVarRow(_gridStrings);
-            var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 4, 0, 0) };
-            btnPanel.Children.Add(addBtn);
-            btnPanel.Children.Add(removeBtn);
-            var panel = new StackPanel();
-            panel.Children.Add(_gridStrings);
-            panel.Children.Add(btnPanel);
-            t.Content = panel;
-            return t;
+            return CreateGlobalVarTab(Localization.Tr("Strings"), _gridStrings, () => AddGlobalVarRow(_gridStrings, "strings"));
         }
 
         private TabItem CreateGlobalLocationsTab()
         {
-            var t = new TabItem { Header = Localization.Tr("Locations") };
             _gridLocations = new DataGrid { AutoGenerateColumns = false, IsReadOnly = false };
             _gridLocations.Columns.Add(new DataGridTextColumn { Header = Localization.Tr("Name"), Binding = new Avalonia.Data.Binding("Name") });
             _gridLocations.Columns.Add(new DataGridTextColumn { Header = "X", Binding = new Avalonia.Data.Binding("X") });
             _gridLocations.Columns.Add(new DataGridTextColumn { Header = "Y", Binding = new Avalonia.Data.Binding("Y") });
             _gridLocations.Columns.Add(new DataGridTextColumn { Header = "Z", Binding = new Avalonia.Data.Binding("Z") });
             _gridLocations.Columns.Add(new DataGridTextColumn { Header = Localization.Tr("Orientation"), Binding = new Avalonia.Data.Binding("Orientation") });
-            var addBtn = new Button { Content = Localization.Tr("Add") };
-            addBtn.Click += (s, e) => AddGlobalVarRow(_gridLocations, "locations");
-            var removeBtn = new Button { Content = Localization.Tr("Remove") };
-            removeBtn.Click += (s, e) => RemoveGlobalVarRow(_gridLocations);
-            var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 4, 0, 0) };
-            btnPanel.Children.Add(addBtn);
-            btnPanel.Children.Add(removeBtn);
+            return CreateGlobalVarTab(Localization.Tr("Locations"), _gridLocations, () => AddGlobalVarRow(_gridLocations, "locations"));
+        }
+
+        /// <summary>
+        /// Builds a global-variable editor tab with common add/remove controls.
+        /// </summary>
+        private TabItem CreateGlobalVarTab(string header, DataGrid grid, Action onAdd)
+        {
+            var addBtn = CreateActionButton(Localization.Tr("Add"), () => onAdd?.Invoke());
+            var removeBtn = CreateActionButton(Localization.Tr("Remove"), () => RemoveGlobalVarRow(grid));
+            var btnPanel = CreateButtonRow(addBtn, removeBtn);
             var panel = new StackPanel();
-            panel.Children.Add(_gridLocations);
+            panel.Children.Add(grid);
             panel.Children.Add(btnPanel);
-            t.Content = panel;
-            return t;
+            return new TabItem { Header = header, Content = panel };
+        }
+
+        private Button CreateActionButton(string label, Action onClick)
+        {
+            var button = new Button { Content = label };
+            button.Click += (s, e) => onClick?.Invoke();
+            return button;
+        }
+
+        private StackPanel CreateButtonRow(params Control[] controls)
+        {
+            var panel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 4, 0, 0) };
+            if (controls != null)
+            {
+                foreach (Control control in controls)
+                {
+                    if (control != null)
+                    {
+                        panel.Children.Add(control);
+                    }
+                }
+            }
+
+            return panel;
         }
 
         private void AddGlobalVarRow(DataGrid grid, string kind)
@@ -702,7 +689,7 @@ namespace OdyTools.Editors
                 rows.Add(new GlobalLocationRow { Name = "NEW_VAR", X = 0, Y = 0, Z = 0, Orientation = 0 });
                 _gridLocations.ItemsSource = rows;
             }
-            MarkDirty();
+            MarkDocumentDirty();
         }
 
         private void RemoveGlobalVarRow(DataGrid grid)
@@ -710,7 +697,7 @@ namespace OdyTools.Editors
             int idx = grid.SelectedIndex;
             if (idx < 0)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No Selection"), Localization.Tr("Select a row to remove."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("No Selection"), Localization.Tr("Select a row to remove."), IconType.Info);
                 return;
             }
             if (grid == _gridBooleans)
@@ -733,7 +720,7 @@ namespace OdyTools.Editors
                 var rows = (_gridLocations.ItemsSource as IEnumerable<GlobalLocationRow>)?.ToList() ?? new List<GlobalLocationRow>();
                 if (idx < rows.Count) { rows.RemoveAt(idx); _gridLocations.ItemsSource = rows; }
             }
-            MarkDirty();
+            MarkDocumentDirty();
         }
 
         private TabItem CreateCharactersTab()
@@ -812,15 +799,10 @@ namespace OdyTools.Editors
             _gridCharClasses = new DataGrid { AutoGenerateColumns = false, MinHeight = 60, IsReadOnly = false };
             _gridCharClasses.Columns.Add(new DataGridTextColumn { Header = Localization.Tr("Class"), Binding = new Avalonia.Data.Binding("Name"), IsReadOnly = true });
             _gridCharClasses.Columns.Add(new DataGridTextColumn { Header = Localization.Tr("Level"), Binding = new Avalonia.Data.Binding("Level") });
-            var classBtnPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 4, 0, 0) };
             _comboAddClass = new ComboBox { MinWidth = 160, PlaceholderText = Localization.Tr("Select class to add") };
-            var addClassBtn = new Button { Content = Localization.Tr("Add Class") };
-            addClassBtn.Click += (s, e) => AddCharacterClass();
-            var removeClassBtn = new Button { Content = Localization.Tr("Remove Class") };
-            removeClassBtn.Click += (s, e) => RemoveCharacterClass();
-            classBtnPanel.Children.Add(_comboAddClass);
-            classBtnPanel.Children.Add(addClassBtn);
-            classBtnPanel.Children.Add(removeClassBtn);
+            var addClassBtn = CreateActionButton(Localization.Tr("Add Class"), AddCharacterClass);
+            var removeClassBtn = CreateActionButton(Localization.Tr("Remove Class"), RemoveCharacterClass);
+            var classBtnPanel = CreateButtonRow(_comboAddClass, addClassBtn, removeClassBtn);
             detailsPanel.Children.Add(_gridCharClasses);
             detailsPanel.Children.Add(classBtnPanel);
 
@@ -828,15 +810,10 @@ namespace OdyTools.Editors
             _listWidgetCharFeats = new ListBox { MinHeight = 80 };
             _listWidgetCharFeats.ItemTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<FeatDisplayItem>((item, _) =>
                 new TextBlock { Text = item?.Display ?? "", VerticalAlignment = VerticalAlignment.Center });
-            var featBtnPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 4, 0, 0) };
             _comboAddFeat = new ComboBox { MinWidth = 180, PlaceholderText = Localization.Tr("Select feat to add") };
-            var addFeatBtn = new Button { Content = Localization.Tr("Add Feat") };
-            addFeatBtn.Click += (s, e) => AddCharacterFeat();
-            var removeFeatBtn = new Button { Content = Localization.Tr("Remove Feat") };
-            removeFeatBtn.Click += (s, e) => RemoveCharacterFeat();
-            featBtnPanel.Children.Add(_comboAddFeat);
-            featBtnPanel.Children.Add(addFeatBtn);
-            featBtnPanel.Children.Add(removeFeatBtn);
+            var addFeatBtn = CreateActionButton(Localization.Tr("Add Feat"), AddCharacterFeat);
+            var removeFeatBtn = CreateActionButton(Localization.Tr("Remove Feat"), RemoveCharacterFeat);
+            var featBtnPanel = CreateButtonRow(_comboAddFeat, addFeatBtn, removeFeatBtn);
             detailsPanel.Children.Add(_listWidgetCharFeats);
             detailsPanel.Children.Add(featBtnPanel);
 
@@ -844,15 +821,10 @@ namespace OdyTools.Editors
             _listWidgetCharPowers = new ListBox { MinHeight = 80 };
             _listWidgetCharPowers.ItemTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<PowerDisplayItem>((item, _) =>
                 new TextBlock { Text = item?.Display ?? "", VerticalAlignment = VerticalAlignment.Center });
-            var powerBtnPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 4, 0, 0) };
             _comboAddPower = new ComboBox { MinWidth = 180, PlaceholderText = Localization.Tr("Select power to add") };
-            var addPowerBtn = new Button { Content = Localization.Tr("Add Power") };
-            addPowerBtn.Click += (s, e) => AddCharacterPower();
-            var removePowerBtn = new Button { Content = Localization.Tr("Remove Power") };
-            removePowerBtn.Click += (s, e) => RemoveCharacterPower();
-            powerBtnPanel.Children.Add(_comboAddPower);
-            powerBtnPanel.Children.Add(addPowerBtn);
-            powerBtnPanel.Children.Add(removePowerBtn);
+            var addPowerBtn = CreateActionButton(Localization.Tr("Add Power"), AddCharacterPower);
+            var removePowerBtn = CreateActionButton(Localization.Tr("Remove Power"), RemoveCharacterPower);
+            var powerBtnPanel = CreateButtonRow(_comboAddPower, addPowerBtn, removePowerBtn);
             detailsPanel.Children.Add(_listWidgetCharPowers);
             detailsPanel.Children.Add(powerBtnPanel);
 
@@ -869,8 +841,7 @@ namespace OdyTools.Editors
             equipContextMenu.Items.Add(editEquipItem);
             equipContextMenu.Items.Add(removeEquipItem);
             _listWidgetEquipment.ContextMenu = equipContextMenu;
-            var editEquipBtn = new Button { Content = Localization.Tr("Edit Inventory / Equipment") };
-            editEquipBtn.Click += (s, e) => OpenCharacterInventoryDialog();
+            var editEquipBtn = CreateActionButton(Localization.Tr("Edit Inventory / Equipment"), OpenCharacterInventoryDialog);
             detailsPanel.Children.Add(_listWidgetEquipment);
             detailsPanel.Children.Add(editEquipBtn);
 
@@ -891,19 +862,14 @@ namespace OdyTools.Editors
             _gridInventory.Columns.Add(new DataGridTextColumn { Header = Localization.Tr("Charges"), Binding = new Avalonia.Data.Binding("ChargesStr") });
             _gridInventory.Columns.Add(new DataGridTextColumn { Header = Localization.Tr("Upgrades"), Binding = new Avalonia.Data.Binding("UpgradeLevel") });
             _gridInventory.Columns.Add(new DataGridCheckBoxColumn { Header = Localization.Tr("New"), Binding = new Avalonia.Data.Binding("NewItem") });
-            _gridInventory.CellEditEnded += (s, e) => MarkDirty();
-            var addInvBtn = new Button { Content = Localization.Tr("Add Item") };
-            addInvBtn.Click += (s, e) => AddInventoryItem();
+            _gridInventory.CellEditEnded += (s, e) => MarkDocumentDirty();
+            var addInvBtn = CreateActionButton(Localization.Tr("Add Item"), AddInventoryItem);
             var addFromTemplateBtn = new Button { Content = Localization.Tr("Add from template...") };
             addFromTemplateBtn.Click += async (s, e) => await AddInventoryItemFromTemplateAsync();
-            var removeInvBtn = new Button { Content = Localization.Tr("Remove Selected") };
-            removeInvBtn.Click += (s, e) => RemoveInventoryItem();
+            var removeInvBtn = CreateActionButton(Localization.Tr("Remove Selected"), RemoveInventoryItem);
             var invPanel = new StackPanel();
             invPanel.Children.Add(_gridInventory);
-            var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 4, 0, 0) };
-            btnPanel.Children.Add(addInvBtn);
-            btnPanel.Children.Add(addFromTemplateBtn);
-            btnPanel.Children.Add(removeInvBtn);
+            var btnPanel = CreateButtonRow(addInvBtn, addFromTemplateBtn, removeInvBtn);
             invPanel.Children.Add(btnPanel);
             tab.Content = invPanel;
             return tab;
@@ -917,15 +883,10 @@ namespace OdyTools.Editors
             _gridJournal.Columns.Add(new DataGridTextColumn { Header = Localization.Tr("State"), Binding = new Avalonia.Data.Binding("StateStr") });
             _gridJournal.Columns.Add(new DataGridTextColumn { Header = Localization.Tr("Date"), Binding = new Avalonia.Data.Binding("DateStr") });
             _gridJournal.Columns.Add(new DataGridTextColumn { Header = Localization.Tr("Time"), Binding = new Avalonia.Data.Binding("TimeStr") });
-            var journalBtnPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 8, 0, 0) };
             _comboAddJournalPlot = new ComboBox { MinWidth = 200, PlaceholderText = Localization.Tr("Select plot to add") };
-            var addJournalBtn = new Button { Content = Localization.Tr("Add Journal Entry") };
-            addJournalBtn.Click += (s, e) => AddJournalEntry();
-            var removeJournalBtn = new Button { Content = Localization.Tr("Remove Selected") };
-            removeJournalBtn.Click += (s, e) => RemoveJournalEntry();
-            journalBtnPanel.Children.Add(_comboAddJournalPlot);
-            journalBtnPanel.Children.Add(addJournalBtn);
-            journalBtnPanel.Children.Add(removeJournalBtn);
+            var addJournalBtn = CreateActionButton(Localization.Tr("Add Journal Entry"), AddJournalEntry);
+            var removeJournalBtn = CreateActionButton(Localization.Tr("Remove Selected"), RemoveJournalEntry);
+            var journalBtnPanel = CreateButtonRow(_comboAddJournalPlot, addJournalBtn, removeJournalBtn);
             var journalPanel = new StackPanel { Spacing = 8, Margin = new Thickness(8) };
             journalPanel.Children.Add(_gridJournal);
             journalPanel.Children.Add(journalBtnPanel);
@@ -960,7 +921,7 @@ namespace OdyTools.Editors
             _gridDoors.Columns.Add(new DataGridTextColumn { Header = Localization.Tr("Tag"), Binding = new Avalonia.Data.Binding("Tag"), IsReadOnly = true });
             _gridDoors.Columns.Add(new DataGridCheckBoxColumn { Header = Localization.Tr("Locked"), Binding = new Avalonia.Data.Binding("Locked") });
             _gridDoors.Columns.Add(new DataGridTextColumn { Header = Localization.Tr("Open State (0–2)"), Binding = new Avalonia.Data.Binding("OpenStateStr") });
-            _gridDoors.CellEditEnded += (s, e) => MarkDirty();
+            _gridDoors.CellEditEnded += (s, e) => MarkDocumentDirty();
             var panel = new StackPanel { Spacing = 8, Margin = new Thickness(8) };
             panel.Children.Add(label);
             panel.Children.Add(_gridDoors);
@@ -1026,11 +987,7 @@ namespace OdyTools.Editors
                 string.Equals(Path.GetFileName(filepath), "SAVEGAME.SAV", StringComparison.OrdinalIgnoreCase);
             if (!isPathToFolder && !isPathToSaveFile && data != null && data.Length > 0)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(
-                    Localization.Tr("Save game"),
-                    Localization.Tr("Save games opened from an archive cannot be loaded here. Open the save folder from disk (e.g. the game's Saves directory) for full editing."),
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("Save game"), Localization.Tr("Save games opened from an archive cannot be loaded here. Open the save folder from disk (e.g. the game's Saves directory) for full editing."), IconType.Info);
                 New();
                 return;
             }
@@ -1083,7 +1040,7 @@ namespace OdyTools.Editors
             }
             catch (Exception ex)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Error"), ex.Message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
+                DialogHelper.ShowErrorFromException(this, ex);
                 New();
             }
         }
@@ -1092,7 +1049,7 @@ namespace OdyTools.Editors
         {
             if (_saveFolder == null)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No Save Loaded"), Localization.Tr("No save game is currently loaded."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Warning).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("No Save Loaded"), Localization.Tr("No save game is currently loaded."), IconType.Warning);
                 return;
             }
             try
@@ -1109,11 +1066,11 @@ namespace OdyTools.Editors
 
                 _saveFolder.Save();
                 ClearDirty();
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Saved"), Localization.Tr("Save game saved successfully."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Success).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("Saved"), Localization.Tr("Save game saved successfully."), IconType.Success);
             }
             catch (Exception ex)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Error"), ex.Message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
+                DialogHelper.ShowErrorFromException(this, ex);
             }
         }
 
@@ -1695,14 +1652,14 @@ namespace OdyTools.Editors
             var sel = _comboAddFeat?.SelectedItem as FeatDisplayItem;
             if (sel == null)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No Selection"), Localization.Tr("Select a feat to add."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("No Selection"), Localization.Tr("Select a feat to add."), IconType.Info);
                 return;
             }
             if (_currentCharacter.Feats == null) _currentCharacter.Feats = new List<int>();
             if (_currentCharacter.Feats.Contains(sel.FeatId)) return;
             _currentCharacter.Feats.Add(sel.FeatId);
             PopulateCharacterDetails();
-            MarkDirty();
+            MarkDocumentDirty();
         }
 
         private void RemoveCharacterFeat()
@@ -1711,12 +1668,12 @@ namespace OdyTools.Editors
             var sel = _listWidgetCharFeats?.SelectedItem as FeatDisplayItem;
             if (sel == null)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No Selection"), Localization.Tr("Select a feat to remove."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("No Selection"), Localization.Tr("Select a feat to remove."), IconType.Info);
                 return;
             }
             _currentCharacter.Feats?.Remove(sel.FeatId);
             PopulateCharacterDetails();
-            MarkDirty();
+            MarkDocumentDirty();
         }
 
         private void PopulateClassComboBox()
@@ -1751,18 +1708,18 @@ namespace OdyTools.Editors
             var sel = _comboAddClass?.SelectedItem as ClassGridRow;
             if (sel == null)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No Selection"), Localization.Tr("Select a class to add."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("No Selection"), Localization.Tr("Select a class to add."), IconType.Info);
                 return;
             }
             if (_currentCharacter.Classes == null) _currentCharacter.Classes = new List<UTCClass>();
             if (_currentCharacter.Classes.Any(c => c.ClassId == sel.ClassId))
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Already Present"), Localization.Tr("Character already has this class."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("Already Present"), Localization.Tr("Character already has this class."), IconType.Info);
                 return;
             }
             _currentCharacter.Classes.Add(new UTCClass(sel.ClassId, 1));
             PopulateCharacterDetails();
-            MarkDirty();
+            MarkDocumentDirty();
         }
 
         private void RemoveCharacterClass()
@@ -1771,14 +1728,14 @@ namespace OdyTools.Editors
             int idx = _gridCharClasses?.SelectedIndex ?? -1;
             if (idx < 0)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No Selection"), Localization.Tr("Select a class to remove."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("No Selection"), Localization.Tr("Select a class to remove."), IconType.Info);
                 return;
             }
             if (idx < _currentCharacter.Classes?.Count)
             {
                 _currentCharacter.Classes.RemoveAt(idx);
                 PopulateCharacterDetails();
-                MarkDirty();
+                MarkDocumentDirty();
             }
         }
 
@@ -1821,12 +1778,12 @@ namespace OdyTools.Editors
             var sel = _comboAddPower?.SelectedItem as PowerDisplayItem;
             if (sel == null)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No Selection"), Localization.Tr("Select a power to add."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("No Selection"), Localization.Tr("Select a power to add."), IconType.Info);
                 return;
             }
             if (_currentCharacter.Classes == null || _currentCharacter.Classes.Count == 0)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No Class"), Localization.Tr("Character must have at least one class to add powers."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Warning).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("No Class"), Localization.Tr("Character must have at least one class to add powers."), IconType.Warning);
                 return;
             }
             // Add to first Force-using class (Jedi/Sith: ClassId 2–7 in K1/K2), else first class
@@ -1835,7 +1792,7 @@ namespace OdyTools.Editors
             if (targetClass.Powers.Contains(sel.PowerId)) return;
             targetClass.Powers.Add(sel.PowerId);
             PopulateCharacterDetails();
-            MarkDirty();
+            MarkDocumentDirty();
         }
 
         private void RemoveCharacterPower()
@@ -1844,7 +1801,7 @@ namespace OdyTools.Editors
             var sel = _listWidgetCharPowers?.SelectedItem as PowerDisplayItem;
             if (sel == null)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No Selection"), Localization.Tr("Select a power to remove."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("No Selection"), Localization.Tr("Select a power to remove."), IconType.Info);
                 return;
             }
             if (_currentCharacter.Classes != null)
@@ -1854,7 +1811,7 @@ namespace OdyTools.Editors
                     if (c.Powers != null && c.Powers.Remove(sel.PowerId))
                     {
                         PopulateCharacterDetails();
-                        MarkDirty();
+                        MarkDocumentDirty();
                         return;
                     }
                 }
@@ -2021,13 +1978,13 @@ namespace OdyTools.Editors
             var sel = _listWidgetEquipment.SelectedItem as EquipmentDisplayItem;
             if (sel == null)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No Selection"), Localization.Tr("Select an equipment slot to remove."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("No Selection"), Localization.Tr("Select an equipment slot to remove."), IconType.Info);
                 return;
             }
             if (_currentCharacter.Equipment != null && _currentCharacter.Equipment.Remove(sel.Slot))
             {
                 PopulateCharacterDetails();
-                MarkDirty();
+                MarkDocumentDirty();
             }
         }
 
@@ -2035,7 +1992,7 @@ namespace OdyTools.Editors
         {
             if (_currentCharacter == null || _installation == null)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No Character"), Localization.Tr("Select a character first, and ensure a game installation is configured."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Warning).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("No Character"), Localization.Tr("Select a character first, and ensure a game installation is configured."), IconType.Warning);
                 return;
             }
             var capsules = GetCapsulesForSaveEditor();
@@ -2055,7 +2012,7 @@ namespace OdyTools.Editors
                 _currentCharacter.Inventory = inventoryDialog.Inventory ?? new List<InventoryItem>();
                 _currentCharacter.Equipment = inventoryDialog.Equipment ?? new Dictionary<EquipmentSlot, InventoryItem>();
                 PopulateCharacterDetails();
-                MarkDirty();
+                MarkDocumentDirty();
             }
         }
 
@@ -2178,20 +2135,20 @@ namespace OdyTools.Editors
         {
             if (_nestedCapsule?.InventoryGff == null)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No Save Loaded"), Localization.Tr("Load a save game first."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Warning).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("No Save Loaded"), Localization.Tr("Load a save game first."), IconType.Warning);
                 return;
             }
             SyncInventoryFromGrid();
             _inventoryItems.Add(new SaveInventoryItem { ResRef = "", StackSize = 1, Charges = 0, MaxCharges = 0, UpgradeLevel = 0, NewItem = true });
             RefreshInventoryGrid();
-            MarkDirty();
+            MarkDocumentDirty();
         }
 
         private async Task AddInventoryItemFromTemplateAsync()
         {
             if (_nestedCapsule?.InventoryGff == null)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No Save Loaded"), Localization.Tr("Load a save game first."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Warning).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("No Save Loaded"), Localization.Tr("Load a save game first."), IconType.Warning);
                 return;
             }
             var utiResRefs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -2290,7 +2247,7 @@ namespace OdyTools.Editors
                 SyncInventoryFromGrid();
                 _inventoryItems.Add(new SaveInventoryItem { ResRef = resRef.Trim(), StackSize = 1, Charges = 0, MaxCharges = 0, UpgradeLevel = 0, NewItem = true });
                 RefreshInventoryGrid();
-                MarkDirty();
+                MarkDocumentDirty();
             }
         }
 
@@ -2332,14 +2289,14 @@ namespace OdyTools.Editors
             int idx = _gridInventory.SelectedIndex;
             if (idx < 0)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No Selection"), Localization.Tr("Select an item to remove."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("No Selection"), Localization.Tr("Select an item to remove."), IconType.Info);
                 return;
             }
             if (idx < rows.Count)
             {
                 rows.RemoveAt(idx);
                 RefreshInventoryGridFromRows(rows);
-                MarkDirty();
+                MarkDocumentDirty();
             }
         }
 
@@ -2482,7 +2439,7 @@ namespace OdyTools.Editors
             string plotId = (_comboAddJournalPlot?.SelectedItem as JournalPlotItem)?.PlotId ?? GetFirstPlotIdFrom2DA() ?? "NEW_PLOT";
             if (_partyTable.JournalEntries.Any(j => string.Equals(j.PlotId, plotId, StringComparison.OrdinalIgnoreCase)))
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Already Present"), Localization.Tr("This plot is already in the journal."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("Already Present"), Localization.Tr("This plot is already in the journal."), IconType.Info);
                 return;
             }
             var last = _partyTable.JournalEntries.LastOrDefault();
@@ -2491,7 +2448,7 @@ namespace OdyTools.Editors
             _partyTable.JournalEntries.Add(new JournalEntry { PlotId = plotId, State = 0, Date = date, Time = time });
             PopulateJournal();
             PopulateJournalPlotComboBox();
-            MarkDirty();
+            MarkDocumentDirty();
         }
 
         private string GetFirstPlotIdFrom2DA()
@@ -2551,7 +2508,7 @@ namespace OdyTools.Editors
             int idx = _gridJournal?.SelectedIndex ?? -1;
             if (idx < 0)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No Selection"), Localization.Tr("Select a journal entry to remove."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, Localization.Tr("No Selection"), Localization.Tr("Select a journal entry to remove."), IconType.Info);
                 return;
             }
             if (idx < _partyTable.JournalEntries.Count)
@@ -2559,7 +2516,7 @@ namespace OdyTools.Editors
                 _partyTable.JournalEntries.RemoveAt(idx);
                 PopulateJournal();
                 PopulateJournalPlotComboBox();
-                MarkDirty();
+                MarkDocumentDirty();
             }
         }
 
@@ -2879,7 +2836,7 @@ namespace OdyTools.Editors
             }
             catch (Exception ex)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Error"), ex.Message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
+                DialogHelper.ShowErrorFromException(this, ex);
             }
         }
     }

@@ -20,6 +20,8 @@ using BioWare.TSLPatcher.Mods.TLK;
 using BioWare.TSLPatcher.Mods.NCS;
 using BioWare.Common;
 using BioWare.Resource.Formats.TLK;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Dialogs
 {
@@ -686,22 +688,12 @@ namespace OdyTools.Dialogs
                 }
 
                 // Show success message
-                var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Created",
-                    $"New tslpatchdata folder created at:\n{tslpatchdataPath}",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Success);
-                await msgBox.ShowAsync();
+                await DialogHelper.ShowAsync("Created", $"New tslpatchdata folder created at:\n{tslpatchdataPath}", ButtonEnum.Ok, IconType.Success);
             }
             catch (Exception ex)
             {
                 // Show error message
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error",
-                    $"Failed to create TSLPatchData folder:\n{ex.Message}",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                await errorBox.ShowAsync();
+                await DialogHelper.ShowAsync("Error", $"Failed to create TSLPatchData folder:\n{ex.Message}", ButtonEnum.Ok, IconType.Error);
             }
         }
 
@@ -936,12 +928,7 @@ namespace OdyTools.Dialogs
             var selectedItem = _gffFileList.SelectedItem as string;
             if (string.IsNullOrEmpty(selectedItem))
             {
-                var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "No File Selected",
-                    "Please select a GFF file from the list first.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Warning);
-                await msgBox.ShowAsync();
+                await DialogHelper.ShowSelectFirstAsync(this, "a GFF file from the list");
                 return;
             }
 
@@ -972,12 +959,7 @@ namespace OdyTools.Dialogs
 
             if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "File Not Found",
-                    $"Could not find GFF file: {selectedItem}\n\nPlease ensure the file exists in the tslpatchdata folder or installation.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                await errorBox.ShowAsync();
+                await DialogHelper.ShowAsync("File Not Found", $"Could not find GFF file: {selectedItem}\n\nPlease ensure the file exists in the tslpatchdata folder or installation.", ButtonEnum.Ok, IconType.Error);
                 return;
             }
 
@@ -998,12 +980,7 @@ namespace OdyTools.Dialogs
             }
             catch (Exception ex)
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error",
-                    $"Failed to open GFF editor:\n{ex.Message}",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                await errorBox.ShowAsync();
+                await DialogHelper.ShowAsync("Error", $"Failed to open GFF editor:\n{ex.Message}", ButtonEnum.Ok, IconType.Error);
             }
         }
 
@@ -1086,12 +1063,7 @@ namespace OdyTools.Dialogs
             }
             catch (Exception ex)
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error",
-                    $"Failed to add script:\n{ex.Message}",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                await errorBox.ShowAsync();
+                await DialogHelper.ShowAsync("Error", $"Failed to add script:\n{ex.Message}", ButtonEnum.Ok, IconType.Error);
             }
         }
 
@@ -1129,12 +1101,7 @@ namespace OdyTools.Dialogs
                     // Check if token name already exists
                     if (_tlkStrings.ContainsKey(entry.TokenName))
                     {
-                        var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                            "Error",
-                            $"A TLK string with token name '{entry.TokenName}' already exists.",
-                            ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Error);
-                        await errorBox.ShowAsync();
+                        await DialogHelper.ShowAsync("Error", $"A TLK string with token name '{entry.TokenName}' already exists.", ButtonEnum.Ok, IconType.Error);
                         return;
                     }
 
@@ -1156,12 +1123,7 @@ namespace OdyTools.Dialogs
             var selectedItem = _tlkStringTree?.SelectedItem;
             if (selectedItem == null)
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "No Selection",
-                    "Please select a TLK string to edit.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info);
-                await errorBox.ShowAsync();
+                await DialogHelper.ShowAsync("No Selection", "Please select a TLK string to edit.", ButtonEnum.Ok, IconType.Info);
                 return;
             }
 
@@ -1201,12 +1163,7 @@ namespace OdyTools.Dialogs
                     // If token name changed, remove old entry and add new one
                     if (entry.TokenName != tokenName && _tlkStrings.ContainsKey(entry.TokenName))
                     {
-                        var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                            "Error",
-                            $"A TLK string with token name '{entry.TokenName}' already exists.",
-                            ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Error);
-                        await errorBox.ShowAsync();
+                        await DialogHelper.ShowAsync("Error", $"A TLK string with token name '{entry.TokenName}' already exists.", ButtonEnum.Ok, IconType.Error);
                         return;
                     }
 
@@ -1266,12 +1223,7 @@ namespace OdyTools.Dialogs
         {
             if (_installation == null)
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "No Installation",
-                    "No installation loaded.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Warning);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("No Installation", "No installation loaded.", ButtonEnum.Ok, IconType.Warning);
                 return;
             }
 
@@ -1291,22 +1243,12 @@ namespace OdyTools.Dialogs
                 }
                 catch (Exception ex)
                 {
-                    var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                        "Error",
-                        $"Failed to open TLK editor:\n{ex.Message}",
-                        ButtonEnum.Ok,
-                        MsBox.Avalonia.Enums.Icon.Error);
-                    errorBox.ShowAsync();
+                    _ = DialogHelper.ShowAsync("Error", $"Failed to open TLK editor:\n{ex.Message}", ButtonEnum.Ok, IconType.Error);
                 }
             }
             else
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Not Found",
-                    "dialog.tlk not found in installation.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Warning);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Not Found", "dialog.tlk not found in installation.", ButtonEnum.Ok, IconType.Warning);
             }
         }
 
@@ -1314,12 +1256,7 @@ namespace OdyTools.Dialogs
         {
             if (_installation == null)
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "No Installation",
-                    "No installation loaded.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Warning);
-                await errorBox.ShowAsync();
+                await DialogHelper.ShowAsync("No Installation", "No installation loaded.", ButtonEnum.Ok, IconType.Warning);
                 return;
             }
 
@@ -1374,12 +1311,7 @@ namespace OdyTools.Dialogs
         {
             if (_twodaList == null || _twodaList.SelectedItem == null)
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "No 2DA Selected",
-                    "Please select a 2DA file from the list first.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info);
-                await errorBox.ShowAsync();
+                await DialogHelper.ShowSelectFirstAsync(this, "a 2DA file from the list");
                 return;
             }
 
@@ -1433,12 +1365,7 @@ namespace OdyTools.Dialogs
             var selectedItem = _twodaTokensTree.SelectedItem;
             if (selectedItem == null)
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "No Selection",
-                    "Please select a token to edit.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info);
-                await errorBox.ShowAsync();
+                await DialogHelper.ShowAsync("No Selection", "Please select a token to edit.", ButtonEnum.Ok, IconType.Info);
                 return;
             }
 
@@ -1655,12 +1582,7 @@ namespace OdyTools.Dialogs
                 // Validate tslpatchdata path
                 if (string.IsNullOrEmpty(_tslpatchdataPath))
                 {
-                    var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                        "Error",
-                        "TSLPatchData path is not set. Please specify a path first.",
-                        ButtonEnum.Ok,
-                        MsBox.Avalonia.Enums.Icon.Error);
-                    await errorBox.ShowAsync();
+                    await DialogHelper.ShowAsync("Error", "TSLPatchData path is not set. Please specify a path first.", ButtonEnum.Ok, IconType.Error);
                     return;
                 }
 
@@ -1966,28 +1888,18 @@ namespace OdyTools.Dialogs
                 File.WriteAllText(iniPath, iniContent, Encoding.UTF8);
 
                 // Show success message
-                var successBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Success",
-                    $"TSLPatchData generated successfully at:\n{_tslpatchdataPath}\n\n" +
+                await DialogHelper.ShowAsync("Success", $"TSLPatchData generated successfully at:\n{_tslpatchdataPath}\n\n" +
                     $"Files included:\n" +
                     $"- {installFiles.Count} file(s) to install\n" +
                     $"- {_gffModifications.Count} GFF modification(s)\n" +
                     $"- {_twodaModifications.Count} 2DA modification(s)\n" +
                     $"- {_tlkStrings.Count} TLK string(s)\n" +
                     $"- {_scriptPaths.Count} script(s)\n\n" +
-                    $"You can now distribute this folder with OdyPatch/TSLPatcher.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Success);
-                await successBox.ShowAsync();
+                    $"You can now distribute this folder with OdyPatch/TSLPatcher.", ButtonEnum.Ok, IconType.Success);
             }
             catch (Exception ex)
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error",
-                    $"Failed to generate TSLPatchData:\n{ex.Message}\n\n{ex.StackTrace}",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                await errorBox.ShowAsync();
+                await DialogHelper.ShowAsync("Error", $"Failed to generate TSLPatchData:\n{ex.Message}\n\n{ex.StackTrace}", ButtonEnum.Ok, IconType.Error);
             }
         }
 
@@ -2177,12 +2089,7 @@ namespace OdyTools.Dialogs
                 // Ensure tslpatchdata directory exists
                 if (string.IsNullOrEmpty(_tslpatchdataPath))
                 {
-                    var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                        "Error",
-                        "TSLPatchData path is not set. Please specify a path first.",
-                        ButtonEnum.Ok,
-                        MsBox.Avalonia.Enums.Icon.Error);
-                    await msgBox.ShowAsync();
+                    await DialogHelper.ShowAsync("Error", "TSLPatchData path is not set. Please specify a path first.", ButtonEnum.Ok, IconType.Error);
                     return;
                 }
 
@@ -2215,22 +2122,12 @@ namespace OdyTools.Dialogs
                 File.WriteAllText(iniPath, iniContent, Encoding.UTF8);
 
                 // Show success message
-                var successBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Saved",
-                    $"Configuration saved to:\n{iniPath}",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Success);
-                await successBox.ShowAsync();
+                await DialogHelper.ShowAsync("Saved", $"Configuration saved to:\n{iniPath}", ButtonEnum.Ok, IconType.Success);
             }
             catch (Exception ex)
             {
                 // Show error message
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error",
-                    $"Failed to save configuration:\n{ex.Message}",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                await errorBox.ShowAsync();
+                await DialogHelper.ShowAsync("Error", $"Failed to save configuration:\n{ex.Message}", ButtonEnum.Ok, IconType.Error);
             }
         }
 
@@ -2586,12 +2483,7 @@ namespace OdyTools.Dialogs
             }
             else
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "No Selection",
-                    "Please select a 2DA file.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("No Selection", "Please select a 2DA file.", ButtonEnum.Ok, IconType.Info);
             }
         }
     }
@@ -2693,12 +2585,7 @@ namespace OdyTools.Dialogs
             string tokenName = _tokenNameEdit?.Text?.Trim();
             if (string.IsNullOrWhiteSpace(tokenName))
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error",
-                    "Token name cannot be empty.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Error", "Token name cannot be empty.", ButtonEnum.Ok, IconType.Error);
                 return;
             }
 
@@ -2709,23 +2596,13 @@ namespace OdyTools.Dialogs
                 string idPart = tokenName.Substring(9); // Skip "2DAMEMORY"
                 if (!int.TryParse(idPart, out tokenId))
                 {
-                    var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                        "Error",
-                        "Token name must be in format 2DAMEMORY# where # is a number.",
-                        ButtonEnum.Ok,
-                        MsBox.Avalonia.Enums.Icon.Error);
-                    errorBox.ShowAsync();
+                    _ = DialogHelper.ShowAsync("Error", "Token name must be in format 2DAMEMORY# where # is a number.", ButtonEnum.Ok, IconType.Error);
                     return;
                 }
             }
             else
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error",
-                    "Token name must start with '2DAMEMORY' followed by a number.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Error", "Token name must start with '2DAMEMORY' followed by a number.", ButtonEnum.Ok, IconType.Error);
                 return;
             }
 
@@ -2855,12 +2732,7 @@ namespace OdyTools.Dialogs
             string tokenName = _tokenNameEdit?.Text?.Trim();
             if (string.IsNullOrWhiteSpace(tokenName))
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error",
-                    "Token name cannot be empty.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Error", "Token name cannot be empty.", ButtonEnum.Ok, IconType.Error);
                 return;
             }
 

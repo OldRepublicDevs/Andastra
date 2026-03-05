@@ -38,6 +38,8 @@ using Avalonia.VisualTree;
 using Avalonia.Controls.Primitives;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Editors.DLG
 {
@@ -118,6 +120,7 @@ namespace OdyTools.Editors.DLG
         private MenuItem _actionOpen;
         private MenuItem _actionSave;
         private MenuItem _actionSaveAs;
+        private MenuItem _actionRestoreBackup;
         private MenuItem _actionRevert;
         private MenuItem _actionDLGSettings;
         private MenuItem _actionExit;
@@ -413,6 +416,7 @@ namespace OdyTools.Editors.DLG
             _actionOpen = EditorHelpers.FindControlSafe<MenuItem>(this, "actionOpen");
             _actionSave = EditorHelpers.FindControlSafe<MenuItem>(this, "actionSave");
             _actionSaveAs = EditorHelpers.FindControlSafe<MenuItem>(this, "actionSaveAs");
+            _actionRestoreBackup = EditorHelpers.FindControlSafe<MenuItem>(this, "actionRestoreBackup");
             _actionRevert = EditorHelpers.FindControlSafe<MenuItem>(this, "actionRevert");
             _actionDLGSettings = EditorHelpers.FindControlSafe<MenuItem>(this, "actionDLGSettings");
             _actionExit = EditorHelpers.FindControlSafe<MenuItem>(this, "actionExit");
@@ -658,6 +662,7 @@ namespace OdyTools.Editors.DLG
             if (_actionOpen != null) _actionOpen.Header = Localization.Tr("Open");
             if (_actionSave != null) _actionSave.Header = Localization.Tr("Save");
             if (_actionSaveAs != null) _actionSaveAs.Header = Localization.Tr("Save As");
+            if (_actionRestoreBackup != null) _actionRestoreBackup.Header = Localization.Tr("Restore from Backup...");
             if (_actionRevert != null) _actionRevert.Header = Localization.Tr("Revert");
             var menuRecentFiles = EditorHelpers.FindControlSafe<MenuItem>(this, "menuRecentFiles");
             if (menuRecentFiles != null) menuRecentFiles.Header = Localization.Tr("_Recent Files");
@@ -1051,8 +1056,7 @@ namespace OdyTools.Editors.DLG
             }
             if (results.Count == 0)
             {
-                MessageBoxManager.GetMessageBoxStandard(Localization.Tr("No references found"), string.Format(Localization.Tr("No references found for '{0}'."), searchText),
-                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowAsync();
+                _ = DialogHelper.ShowAsync(Localization.Tr("No references found"), string.Format(Localization.Tr("No references found for '{0}'."), searchText), ButtonEnum.Ok, IconType.Info);
                 return;
             }
             var dialog = new LoadFromLocationResultDialog(this, results, _installation);
@@ -2172,10 +2176,10 @@ namespace OdyTools.Editors.DLG
                 menuItems.Add(new MenuItem { Header = "-" });
 
                 var moveUpItem = new MenuItem { Header = Localization.Tr("Move Up") };
-                moveUpItem.Click += (s, e) => { _model.ShiftItem(treeItem, -1); UpdateTreeView(); };
+                moveUpItem.Click += (s, e) => { _model.ShiftItem(treeItem, -1); MarkDocumentDirty(); UpdateTreeView(); };
                 menuItems.Add(moveUpItem);
                 var moveDownItem = new MenuItem { Header = Localization.Tr("Move Down") };
-                moveDownItem.Click += (s, e) => { _model.ShiftItem(treeItem, 1); UpdateTreeView(); };
+                moveDownItem.Click += (s, e) => { _model.ShiftItem(treeItem, 1); MarkDocumentDirty(); UpdateTreeView(); };
                 menuItems.Add(moveDownItem);
                 menuItems.Add(new MenuItem { Header = "-" });
 
@@ -2310,11 +2314,7 @@ namespace OdyTools.Editors.DLG
             DLGStandardItem selectedTreeItem = GetSelectedTreeItem();
             if (selectedTreeItem == null)
             {
-                MessageBoxManager.GetMessageBoxStandard(
-                    Localization.Tr("No target specified"),
-                    Localization.Tr("Select a position in the tree to insert this orphan at then try again."),
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info).ShowWindowAsync();
+                _ = DialogHelper.ShowAsync(Localization.Tr("No target specified"), Localization.Tr("Select a position in the tree to insert this orphan at then try again."), ButtonEnum.Ok, IconType.Info);
                 return;
             }
             DLGLink oldLink = orphanListItem.Link;
@@ -2343,24 +2343,17 @@ namespace OdyTools.Editors.DLG
             string linkedToPath = paths?.Item3 ?? "";
             string linkFullPath = string.IsNullOrEmpty(linkParentPath) ? linkPartialPath : $"{linkParentPath}\\{linkPartialPath}";
             string confirmMessage = string.Format(Localization.Tr("The orphan '{0}' (originally linked from {1}) will be newly linked from {2} with this action. Continue?"), linkedToPath, linkFullPath, newLinkPath);
-            var confirm = MessageBoxManager.GetMessageBoxStandard(
-                Localization.Tr("Restore Orphaned Node"),
-                confirmMessage,
-                ButtonEnum.YesNo,
-                MsBox.Avalonia.Enums.Icon.Question);
-            async void ShowAndHandle()
+            var confirm = DialogHelper
+                .ShowWindowAsync(this, Localization.Tr("Restore Orphaned Node"), confirmMessage, ButtonEnum.YesNo, IconType.Question)
+                .GetAwaiter()
+                .GetResult();
+            if (confirm == ButtonResult.Yes)
             {
-                var result = await confirm.ShowWindowAsync();
-                if (result != ButtonResult.Yes)
-                {
-                    return;
-                }
                 var nodeMap = new Dictionary<string, object>();
                 Dictionary<string, object> linkDict = oldLink.ToDict(nodeMap);
                 DLGLink newLink = DLGLink.FromDict(linkDict, nodeMap);
                 _actionHistory.Apply(new RestoreOrphanAction(targetParent, intendedRow, newLink, orphanListItem));
             }
-            ShowAndHandle();
         }
 
         /// <summary>
@@ -2425,11 +2418,10 @@ namespace OdyTools.Editors.DLG
             }
             if (results.Count == 0)
             {
-                MessageBoxManager.GetMessageBoxStandard(
+                DialogHelper.ShowWindow(this,
                     Localization.Tr("No references found"),
                     string.Format(Localization.Tr("No references found for dialog '{0}'."), dialogResref),
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                    IconType.Info);
                 return;
             }
             var dialog = new LoadFromLocationResultDialog(this, results, _installation);
@@ -2799,9 +2791,135 @@ namespace OdyTools.Editors.DLG
             PopulateOrphanedNodesList();
         }
 
+        public override void Save()
+        {
+            if (!ShouldProceedWithSaveValidation())
+            {
+                return;
+            }
+
+            base.Save();
+        }
+
         public override void SaveAs()
         {
             _ = RunSaveAsAsync();
+        }
+
+        private bool ShouldProceedWithSaveValidation()
+        {
+            if (!new DLGSettings().ValidateOnSave(true))
+            {
+                return true;
+            }
+
+            BioWareGame game = _installation?.Game ?? BioWareGame.K2;
+            var results = DLGValidator.Validate(_coreDlg, game);
+            if (results.Count == 0)
+            {
+                return true;
+            }
+
+            var errors = results.Where(r => r.Severity == DLGValidationSeverity.Error).ToList();
+            var warnings = results.Where(r => r.Severity == DLGValidationSeverity.Warning).ToList();
+            string summary = BuildValidationSummary(results);
+
+            if (errors.Count > 0)
+            {
+                DialogHelper.ShowWindow(this,
+                    Localization.Tr("Validation failed"),
+                    summary,
+                    IconType.Error);
+                return false;
+            }
+
+            if (warnings.Count > 0)
+            {
+                var result = DialogHelper.ShowWindowAsync(this,
+                    Localization.Tr("Validation warnings"),
+                    summary + "\n\n" + Localization.Tr("Save anyway?"),
+                    ButtonEnum.YesNo,
+                    IconType.Warning).Result;
+                return result == ButtonResult.Yes;
+            }
+
+            return true;
+        }
+
+        private static string BuildValidationSummary(List<DLGValidationResult> results)
+        {
+            var lines = new List<string>();
+            int errorCount = results.Count(r => r.Severity == DLGValidationSeverity.Error);
+            int warningCount = results.Count(r => r.Severity == DLGValidationSeverity.Warning);
+            int infoCount = results.Count(r => r.Severity == DLGValidationSeverity.Info);
+            lines.Add($"Errors: {errorCount}, Warnings: {warningCount}, Info: {infoCount}");
+
+            foreach (DLGValidationResult result in results.Take(12))
+            {
+                lines.Add($"- [{result.Severity}] {result.Message}");
+            }
+
+            if (results.Count > 12)
+            {
+                lines.Add($"... and {results.Count - 12} more.");
+            }
+
+            return string.Join("\n", lines);
+        }
+
+        private async Task RestoreFromBackupAsync()
+        {
+            if (string.IsNullOrWhiteSpace(_filepath))
+            {
+                await DialogHelper.ShowWindowAsync(this,
+                    Localization.Tr("Restore from Backup"),
+                    Localization.Tr("Save the file at least once before restoring backups."),
+                    ButtonEnum.Ok,
+                    IconType.Info);
+                return;
+            }
+
+            var backups = BackupRotator.GetAvailableBackups(_filepath);
+            if (backups.Count == 0)
+            {
+                await DialogHelper.ShowWindowAsync(this,
+                    Localization.Tr("Restore from Backup"),
+                    Localization.Tr("No backups were found for this file."),
+                    ButtonEnum.Ok,
+                    IconType.Info);
+                return;
+            }
+
+            string list = string.Join("\n", backups.Select(b =>
+                $"• {(b.Generation == 0 ? ".bak" : ".bak" + b.Generation)} ({new DateTimeOffset(b.LastWriteUtc).ToLocalTime():g}, {b.Length} bytes)"));
+
+            var confirm = await DialogHelper.ShowWindowAsync(this,
+                Localization.Tr("Restore latest backup"),
+                Localization.Tr("Available backups:") + "\n" + list + "\n\n" +
+                Localization.Tr("Restore the latest backup (.bak) and reload the file?"),
+                ButtonEnum.YesNo,
+                IconType.Question);
+
+            if (confirm != ButtonResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                BackupRotator.RestoreFromBackup(_filepath, 0);
+                byte[] restored = File.ReadAllBytes(_filepath);
+                Load(_filepath, _resname, _restype, restored);
+                RefreshAllViews();
+            }
+            catch (Exception ex)
+            {
+                await DialogHelper.ShowWindowAsync(this,
+                    Localization.Tr("Restore failed"),
+                    ex.Message,
+                    ButtonEnum.Ok,
+                    IconType.Error);
+            }
         }
 
         /// <summary>Returns the default file extension for the given dialogue resource type (e.g. .dlg, .dlg.xml, .cnv).</summary>
@@ -3008,9 +3126,9 @@ namespace OdyTools.Editors.DLG
         {
             if (_coreDlg == null)
             {
-                await MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Cutscene Model"),
+                await DialogHelper.ShowWindowAsync(this, Localization.Tr("Cutscene Model"),
                     Localization.Tr("Open a DLG file first."),
-                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                    ButtonEnum.Ok, IconType.Info);
                 return;
             }
             var dialog = new DialogModelDialog(this, null);
@@ -3025,16 +3143,16 @@ namespace OdyTools.Editors.DLG
         {
             if (_coreDlg == null)
             {
-                await MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Cutscene Model"),
+                await DialogHelper.ShowWindowAsync(this, Localization.Tr("Cutscene Model"),
                     Localization.Tr("Open a DLG file first."),
-                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                    ButtonEnum.Ok, IconType.Info);
                 return;
             }
             if (!(_stuntList?.SelectedItem is ListBoxItem selItem) || !(selItem.Tag is DLGStunt stunt))
             {
-                await MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Cutscene Model"),
+                await DialogHelper.ShowWindowAsync(this, Localization.Tr("Cutscene Model"),
                     Localization.Tr("Select a stunt from the list first, or use Add to create one."),
-                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                    ButtonEnum.Ok, IconType.Info);
                 return;
             }
             var dialog = new DialogModelDialog(this, stunt);
@@ -3052,9 +3170,9 @@ namespace OdyTools.Editors.DLG
         {
             if (_coreDlg == null)
             {
-                await MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Cutscene Model"),
+                await DialogHelper.ShowWindowAsync(this, Localization.Tr("Cutscene Model"),
                     Localization.Tr("Open a DLG file first."),
-                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                    ButtonEnum.Ok, IconType.Info);
                 return;
             }
             if (_stuntList?.SelectedItem is ListBoxItem item && item.Tag is DLGStunt stunt)
@@ -3063,9 +3181,9 @@ namespace OdyTools.Editors.DLG
             }
             else
             {
-                await MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Cutscene Model"),
+                await DialogHelper.ShowWindowAsync(this, Localization.Tr("Cutscene Model"),
                     Localization.Tr("Select a stunt from the list first, or use Add to create one."),
-                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                    ButtonEnum.Ok, IconType.Info);
             }
         }
 
@@ -3158,9 +3276,9 @@ namespace OdyTools.Editors.DLG
             DLGStandardItem selectedItem = GetSelectedItemFromTreeView() ?? _currentNodeItem;
             if (selectedItem?.Link?.Node == null)
             {
-                await MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Current Animations"),
+                await DialogHelper.ShowWindowAsync(this, Localization.Tr("Current Animations"),
                     Localization.Tr("Select a dialogue node in the tree first, or ensure the node whose fields are shown in the right panel has a valid link."),
-                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                    ButtonEnum.Ok, IconType.Info);
                 return;
             }
 
@@ -3186,16 +3304,16 @@ namespace OdyTools.Editors.DLG
             DLGStandardItem selectedItem = GetSelectedItemFromTreeView() ?? _currentNodeItem;
             if (selectedItem?.Link?.Node == null)
             {
-                await MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Current Animations"),
+                await DialogHelper.ShowWindowAsync(this, Localization.Tr("Current Animations"),
                     Localization.Tr("Select a dialogue node in the tree first."),
-                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                    ButtonEnum.Ok, IconType.Info);
                 return;
             }
             if (_animsList?.SelectedItem == null)
             {
-                await MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Current Animations"),
+                await DialogHelper.ShowWindowAsync(this, Localization.Tr("Current Animations"),
                     Localization.Tr("Select an animation in the list to remove."),
-                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                    ButtonEnum.Ok, IconType.Info);
                 return;
             }
 
@@ -3215,16 +3333,16 @@ namespace OdyTools.Editors.DLG
             DLGStandardItem selectedItem = GetSelectedItemFromTreeView() ?? _currentNodeItem;
             if (selectedItem?.Link?.Node == null)
             {
-                await MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Current Animations"),
+                await DialogHelper.ShowWindowAsync(this, Localization.Tr("Current Animations"),
                     Localization.Tr("Select a dialogue node in the tree first."),
-                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                    ButtonEnum.Ok, IconType.Info);
                 return;
             }
             if (_animsList?.SelectedItem == null)
             {
-                await MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Current Animations"),
+                await DialogHelper.ShowWindowAsync(this, Localization.Tr("Current Animations"),
                     Localization.Tr("Select an animation in the list to edit."),
-                    ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                    ButtonEnum.Ok, IconType.Info);
                 return;
             }
 
@@ -4277,6 +4395,7 @@ namespace OdyTools.Editors.DLG
             HandleSoundChecked();
             UpdateCameraWidgetState();
             _selectedLink = item.Link;
+            MarkDocumentDirty();
             RefreshAllViews();
         }
 
@@ -4393,15 +4512,32 @@ namespace OdyTools.Editors.DLG
                 return;
             }
 
+            bool modified = false;
+
             // Update file-level (root) fields from UI
             if (_voIdEdit != null)
             {
-                _coreDlg.VoId = _voIdEdit.Text ?? string.Empty;
+                string value = _voIdEdit.Text ?? string.Empty;
+                if (!string.Equals(_coreDlg.VoId, value, StringComparison.Ordinal))
+                {
+                    _coreDlg.VoId = value;
+                    modified = true;
+                }
             }
             if (_cameraModelSelect != null)
             {
                 string cameraText = _cameraModelSelect.Text?.Trim() ?? string.Empty;
-                _coreDlg.CameraModel = ResRef.IsValid(cameraText) ? new ResRef(cameraText) : ResRef.FromBlank();
+                ResRef value = ResRef.IsValid(cameraText) ? new ResRef(cameraText) : ResRef.FromBlank();
+                if (!Equals(_coreDlg.CameraModel, value))
+                {
+                    _coreDlg.CameraModel = value;
+                    modified = true;
+                }
+            }
+
+            if (modified)
+            {
+                MarkDocumentDirty();
             }
         }
 
@@ -4659,11 +4795,10 @@ namespace OdyTools.Editors.DLG
             if (sourceIsEntry == targetIsEntry)
             {
                 string msg = $"Cannot link two {sourceType} nodes. {sourceType} nodes can only connect to {(sourceIsEntry ? "Reply" : "Entry")} nodes.";
-                _ = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
+                DialogHelper.ShowWindow(this,
                     Localization.Tr("Invalid Link"),
                     msg,
-                    MsBox.Avalonia.Enums.ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Warning).ShowWindowDialogAsync(this);
+                    IconType.Warning);
                 return;
             }
 
@@ -4690,6 +4825,7 @@ namespace OdyTools.Editors.DLG
                         _model.NodeToItems[newLink.Node].Add(newItem);
                 }
             }
+            MarkDocumentDirty();
             UpdateTreeView();
             SelectTreeViewItem(newItem);
         }
@@ -6289,6 +6425,7 @@ namespace OdyTools.Editors.DLG
 
                     // Access dialog.LocString before cleanup
                     item.Link.Node.Text = dialog.LocString;
+                    MarkDocumentDirty();
 
                     if (item is DLGStandardItem standardItem)
                     {
@@ -6720,6 +6857,9 @@ namespace OdyTools.Editors.DLG
             _actionOpen = new MenuItem { Header = Localization.Tr("Open"), Name = "actionOpen" };
             _actionSave = new MenuItem { Header = Localization.Tr("Save"), Name = "actionSave" };
             _actionSaveAs = new MenuItem { Header = Localization.Tr("Save As"), Name = "actionSaveAs" };
+            _actionRestoreBackup = new MenuItem { Header = Localization.Tr("Restore from Backup..."), Name = "actionRestoreBackup" };
+            _actionSave.HotKey = new KeyGesture(Key.S, KeyModifiers.Control);
+            _actionSaveAs.HotKey = new KeyGesture(Key.S, KeyModifiers.Control | KeyModifiers.Shift);
             _actionRevert = new MenuItem { Header = Localization.Tr("Revert"), Name = "actionRevert" };
             _actionDLGSettings = new MenuItem { Header = Localization.Tr("DLG Settings..."), Name = "actionDLGSettings" };
             _actionExit = new MenuItem { Header = Localization.Tr("Exit"), Name = "actionExit" };
@@ -6728,6 +6868,7 @@ namespace OdyTools.Editors.DLG
             fileMenu.Items.Add(_actionOpen);
             fileMenu.Items.Add(_actionSave);
             fileMenu.Items.Add(_actionSaveAs);
+            fileMenu.Items.Add(_actionRestoreBackup);
             fileMenu.Items.Add(new Separator());
             fileMenu.Items.Add(_actionRevert);
             fileMenu.Items.Add(new Separator());
@@ -6769,6 +6910,7 @@ namespace OdyTools.Editors.DLG
             // Edit menu actions (undo/redo)
             if (_actionUndo != null) _actionUndo.Click += (s, e) => Undo();
             if (_actionRedo != null) _actionRedo.Click += (s, e) => Redo();
+            if (_actionRestoreBackup != null) _actionRestoreBackup.Click += async (s, e) => await RestoreFromBackupAsync();
             RefreshEditMenuState();
 
             // Tools menu actions
@@ -6783,6 +6925,11 @@ namespace OdyTools.Editors.DLG
             RefreshEditMenuState();
         }
 
+        internal void MarkDirtyFromActionHistory()
+        {
+            MarkDocumentDirty();
+        }
+
         private void RefreshEditMenuState()
         {
             if (_actionUndo != null) _actionUndo.IsEnabled = CanUndo;
@@ -6791,6 +6938,10 @@ namespace OdyTools.Editors.DLG
 
         /// <summary>Name of the Settings menu action for base Editor to wire.</summary>
         protected override string SettingsMenuActionName => "actionDLGSettings";
+
+        protected override bool CreateBackupsOnSave => new DLGSettings().BackupsEnabled(GlobalSettings.Instance.BackupsEnabled);
+
+        protected override int BackupCount => new DLGSettings().MaxBackupCount(GlobalSettings.Instance.MaxBackupCount);
 
         /// <summary>
         /// Opens the DLG Settings dialog (File -> DLG Settings). Persists installation vs manual paths and all manual path fields.
@@ -7774,24 +7925,22 @@ namespace OdyTools.Editors.DLG
                 {
                     // Clipboard not available - show error message
                     // Matching OdyToolTPC pattern: QMessageBox.critical when clipboard is unavailable
-                    var msgBox = MessageBoxManager.GetMessageBoxStandard(
+                    _ = DialogHelper.ShowAsync(
                         Localization.Tr("Copy Failed"),
                         Localization.Tr("Clipboard is not available. Unable to copy path to clipboard."),
                         ButtonEnum.Ok,
-                        MsBox.Avalonia.Enums.Icon.Error);
-                    await msgBox.ShowAsync();
+                        IconType.Error);
                 }
             }
             catch (Exception ex)
             {
                 // Matching OdyToolTPC pattern: QMessageBox.critical when clipboard copy fails
                 // Show error message to user when clipboard operation fails
-                var msgBox = MessageBoxManager.GetMessageBoxStandard(
+                _ = DialogHelper.ShowAsync(
                     Localization.Tr("Copy Failed"),
                     string.Format(Localization.Tr("Failed to copy path to clipboard:\n{0}"), ex.Message),
                     ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                await msgBox.ShowAsync();
+                    IconType.Error);
             }
         }
 

@@ -29,6 +29,7 @@ using TabItem = Avalonia.Controls.TabItem;
 using TabControl = Avalonia.Controls.TabControl;
 using Button = Avalonia.Controls.Button;
 using GlobalSettings = OdyTools.Data.GlobalSettings;
+using IconType = MsBox.Avalonia.Enums.Icon;
 #if !NET48
 using UpdateManager = OdyTools.Windows.UpdateManager;
 #endif
@@ -664,12 +665,7 @@ namespace OdyTools.Windows
             if (existingPaths.Count > 0)
             {
                 int n = existingPaths.Count;
-                var conflictBox = MessageBoxManager.GetMessageBoxStandard(
-                    "File conflict",
-                    $"{n} file(s) already exist at the destination.\n\nYes = Overwrite all\nNo = Skip existing files\nCancel = Abort extraction",
-                    ButtonEnum.YesNoCancel,
-                    MsBox.Avalonia.Enums.Icon.Question);
-                var conflictResult = await conflictBox.ShowWindowDialogAsync(this);
+                var conflictResult = await DialogHelper.ShowWindowAsync(this, "File conflict", $"{n} file(s) already exist at the destination.\n\nYes = Overwrite all\nNo = Skip existing files\nCancel = Abort extraction", ButtonEnum.YesNoCancel, IconType.Question);
                 if (conflictResult == ButtonResult.Cancel)
                 {
                     return;
@@ -882,13 +878,8 @@ namespace OdyTools.Windows
                 icon = MsBox.Avalonia.Enums.Icon.Warning;
             }
 
-            var messageBox = MessageBoxManager.GetMessageBoxStandard(
-                title,
-                message,
-                ButtonEnum.Ok,
-                icon);
 
-            await messageBox.ShowAsync();
+            await DialogHelper.ShowAsync(title, message, ButtonEnum.Ok, icon);
         }
 
         public async void ChangeActiveInstallation(int index)
@@ -946,14 +937,7 @@ namespace OdyTools.Windows
 
             if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
             {
-                var messageBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Invalid installation path",
-                    string.IsNullOrEmpty(path)
-                        ? $"The installation path for \"{name}\" is not set. Open Settings to configure it?"
-                        : $"The installation path for \"{name}\" does not exist or is not accessible:\n\n{path}\n\nOpen Settings to fix it?",
-                    ButtonEnum.YesNo,
-                    MsBox.Avalonia.Enums.Icon.Warning);
-                var result = await messageBox.ShowWindowDialogAsync(this);
+                var result = await DialogHelper.ShowWindowAsync(this, "Invalid installation path", string.IsNullOrEmpty(path) ? $"The installation path for \"{name}\" is not set. Open Settings to configure it?" : $"The installation path for \"{name}\" does not exist or is not accessible:\n\n{path}\n\nOpen Settings to fix it?", ButtonEnum.YesNo, IconType.Warning);
                 if (result == ButtonResult.Yes)
                 {
                     OpenSettingsDialog();
@@ -1552,12 +1536,7 @@ namespace OdyTools.Windows
                 string errorMessage = ex.Message;
                 if (string.IsNullOrEmpty(errorMessage)) errorMessage = ex.ToString();
 
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    $"Failed to open file ({errorType})",
-                    errorMessage,
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync($"Failed to open file ({errorType})", errorMessage, ButtonEnum.Ok, IconType.Error);
             }
         }
 
@@ -1643,12 +1622,7 @@ namespace OdyTools.Windows
                             errorMessage = ex.ToString();
                         }
 
-                        var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                            $"Failed to open file ({errorType})",
-                            errorMessage,
-                            ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Error);
-                        await errorBox.ShowAsync();
+                        await DialogHelper.ShowAsync($"Failed to open file ({errorType})", errorMessage, ButtonEnum.Ok, IconType.Error);
                     }
                 }
             }
@@ -1662,12 +1636,7 @@ namespace OdyTools.Windows
                     errorMessage = ex.ToString();
                 }
 
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    $"Failed to open file dialog ({errorType})",
-                    errorMessage,
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                await errorBox.ShowAsync();
+                await DialogHelper.ShowAsync($"Failed to open file dialog ({errorType})", errorMessage, ButtonEnum.Ok, IconType.Error);
             }
         }
 
@@ -1860,12 +1829,7 @@ namespace OdyTools.Windows
             var tlkPath = Path.Combine(_active.Path, "dialog.tlk");
             if (!File.Exists(tlkPath))
             {
-                var messageBox = MessageBoxManager.GetMessageBoxStandard(
-                    "dialog.tlk not found",
-                    $"Could not open the TalkTable editor, dialog.tlk not found at the expected location\n\n{tlkPath}.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info);
-                await messageBox.ShowAsync();
+                await DialogHelper.ShowAsync("dialog.tlk not found", $"Could not open the TalkTable editor, dialog.tlk not found at the expected location\n\n{tlkPath}.", ButtonEnum.Ok, IconType.Info);
                 return;
             }
 
@@ -1889,12 +1853,7 @@ namespace OdyTools.Windows
 
             if (journalResources == null || !journalResources.ContainsKey(jrlIdent) || journalResources[jrlIdent].Count == 0)
             {
-                var messageBox = MessageBoxManager.GetMessageBoxStandard(
-                    "global.jrl not found",
-                    "Could not open the journal editor: 'global.jrl' not found.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                await messageBox.ShowAsync();
+                await DialogHelper.ShowAsync("global.jrl not found", "Could not open the journal editor: 'global.jrl' not found.", ButtonEnum.Ok, IconType.Error);
                 return;
             }
 
@@ -2104,13 +2063,8 @@ namespace OdyTools.Windows
             if (result == true && dialog.InstallationEdited)
             {
                 // Show message box asking if user wants to reload installations
-                var messageBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Reload the installations?",
-                    "You appear to have made changes to your installations, would you like to reload?",
-                    ButtonEnum.YesNo,
-                    MsBox.Avalonia.Enums.Icon.Question);
 
-                var messageResult = await messageBox.ShowAsync();
+                var messageResult = await DialogHelper.ShowAsync("Reload the installations?", "You appear to have made changes to your installations, would you like to reload?", ButtonEnum.YesNo, IconType.Question);
 
                 if (messageResult == ButtonResult.Yes)
                 {

@@ -72,6 +72,7 @@ namespace OdyTools.Editors
         // UI Controls - Comments
         private TextBox _commentsEdit;
 
+        public OdyToolUTT() : this(null, null) { }
         public OdyToolUTT(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTT", "trigger",
                 new[] { ResourceType.UTT, ResourceType.BTT },
@@ -483,43 +484,37 @@ namespace OdyTools.Editors
         private void AttachCommitHandlers()
         {
             void OnCommit(object s, EventArgs e) { if (!_undoRedoInProgress) PushState(); }
-            if (_tagEdit != null) _tagEdit.LostFocus += OnCommit;
-            if (_resrefEdit != null) _resrefEdit.LostFocus += OnCommit;
-            if (_keyEdit != null) _keyEdit.LostFocus += OnCommit;
-            if (_commentsEdit != null) _commentsEdit.LostFocus += OnCommit;
-            if (_highlightHeightSpin != null) _highlightHeightSpin.LostFocus += OnCommit;
-            if (_detectDcSpin != null) _detectDcSpin.LostFocus += OnCommit;
-            if (_disarmDcSpin != null) _disarmDcSpin.LostFocus += OnCommit;
-            if (_autoRemoveKeyCheckbox != null) _autoRemoveKeyCheckbox.LostFocus += OnCommit;
-            if (_isTrapCheckbox != null) _isTrapCheckbox.LostFocus += OnCommit;
-            if (_activateOnceCheckbox != null) _activateOnceCheckbox.LostFocus += OnCommit;
-            if (_detectableCheckbox != null) _detectableCheckbox.LostFocus += OnCommit;
-            if (_disarmableCheckbox != null) _disarmableCheckbox.LostFocus += OnCommit;
-            if (_onClickEdit != null) _onClickEdit.LostFocus += OnCommit;
-            if (_onDisarmEdit != null) _onDisarmEdit.LostFocus += OnCommit;
-            if (_onEnterSelect != null) _onEnterSelect.LostFocus += OnCommit;
-            if (_onExitSelect != null) _onExitSelect.LostFocus += OnCommit;
-            if (_onHeartbeatSelect != null) _onHeartbeatSelect.LostFocus += OnCommit;
-            if (_onTrapTriggeredEdit != null) _onTrapTriggeredEdit.LostFocus += OnCommit;
-            if (_onUserDefinedSelect != null) _onUserDefinedSelect.LostFocus += OnCommit;
+            EditorHelpers.BindLostFocus(_tagEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_resrefEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_keyEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_commentsEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_highlightHeightSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_detectDcSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_disarmDcSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_autoRemoveKeyCheckbox, OnCommit);
+            EditorHelpers.BindLostFocus(_isTrapCheckbox, OnCommit);
+            EditorHelpers.BindLostFocus(_activateOnceCheckbox, OnCommit);
+            EditorHelpers.BindLostFocus(_detectableCheckbox, OnCommit);
+            EditorHelpers.BindLostFocus(_disarmableCheckbox, OnCommit);
+            EditorHelpers.BindLostFocus(_onClickEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_onDisarmEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_onEnterSelect, OnCommit);
+            EditorHelpers.BindLostFocus(_onExitSelect, OnCommit);
+            EditorHelpers.BindLostFocus(_onHeartbeatSelect, OnCommit);
+            EditorHelpers.BindLostFocus(_onTrapTriggeredEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_onUserDefinedSelect, OnCommit);
         }
 
         private void SetupMenuHandlers()
         {
-            void Bind(string name, Action handler)
-            {
-                try
-                {
-                    var item = EditorHelpers.FindControlSafe<MenuItem>(this, name) ?? this.FindControl<MenuItem>(name);
-                    if (item != null) item.Click += (s, e) => handler();
-                }
-                catch { }
-            }
             // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
-            Bind("actionUndo", () => Undo());
-            Bind("actionRedo", () => Redo());
-            Bind("actionFind", () => ShowFindDialog());
-            Bind("actionFindNext", () => FindNextMatch());
+            EditorHelpers.BindMenuClicks(this, new (string menuItemName, Action handler)[]
+            {
+                ("actionUndo", Undo),
+                ("actionRedo", Redo),
+                ("actionFind", ShowFindDialog),
+                ("actionFindNext", FindNextMatch),
+            });
         }
 
         private void PushState()
@@ -532,6 +527,7 @@ namespace OdyTools.Editors
                 _undoStack.Add(data);
                 if (_undoStack.Count > UndoMaxLevels) _undoStack.RemoveAt(0);
                 _redoStack.Clear();
+                MarkDocumentDirty();
             }
             catch { }
         }
@@ -612,22 +608,7 @@ namespace OdyTools.Editors
 
         protected override async Task RunSaveAsAsync()
         {
-            var storageProvider = (this as Window)?.StorageProvider;
-            if (storageProvider == null) return;
-            string suggestedName = string.IsNullOrEmpty(_resname) ? "trigger" : _resname;
-            var options = new FilePickerSaveOptions
-            {
-                Title = "Save As",
-                SuggestedFileName = suggestedName + ".utt",
-                FileTypeChoices = new[] { new FilePickerFileType("UTT") { Patterns = new[] { "*.utt", "*.btt" } } }
-            };
-            var file = await storageProvider.SaveFilePickerAsync(options);
-            if (file == null) return;
-            string path = file.Path.LocalPath;
-            if (string.IsNullOrWhiteSpace(path)) return;
-            _filepath = path;
-            RefreshWindowTitle();
-            Save();
+            await base.RunSaveAsAsync();
             UpdateStatusBar();
         }
 

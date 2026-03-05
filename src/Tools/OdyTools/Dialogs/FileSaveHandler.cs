@@ -8,8 +8,7 @@ using Avalonia.Platform.Storage;
 using BioWare.Common;
 using BioWare.Resource;
 using FileResource = BioWare.Extract.FileResource;
-using MsBox.Avalonia;
-using MsBox.Avalonia.Enums;
+using OdyTools.Utils;
 
 namespace OdyTools.Dialogs
 {
@@ -37,7 +36,7 @@ namespace OdyTools.Dialogs
                 try
                 {
                     byte[] data = kvp.Key.GetData();
-                    File.WriteAllBytes(kvp.Value, data);
+                    AtomicFileWriter.WriteAtomic(kvp.Value, data, new AtomicWriteOptions());
                     successfullySavedPaths[kvp.Key] = kvp.Value;
                 }
                 catch (Exception ex)
@@ -81,17 +80,13 @@ namespace OdyTools.Dialogs
             if (_resources.Count == 1)
             {
                 var resource = _resources[0];
-                string defaultPath = $"{resource.ResName}.{resource.ResType.Extension}";
+                string defaultPath = BuildResourceFileName(resource);
                 pathsToWrite[resource] = defaultPath;
             }
             else if (_resources.Count > 1)
             {
                 string folderPath = Path.GetTempPath();
-                foreach (var resource in _resources)
-                {
-                    string filePath = Path.Combine(folderPath, $"{resource.ResName}.{resource.ResType.Extension}");
-                    pathsToWrite[resource] = filePath;
-                }
+                return BuildPathsForFolder(folderPath);
             }
 
             return pathsToWrite;
@@ -108,7 +103,7 @@ namespace OdyTools.Dialogs
                 var options = new FilePickerSaveOptions
                 {
                     Title = "Save resource",
-                    SuggestedFileName = $"{resource.ResName}.{resource.ResType.Extension}",
+                    SuggestedFileName = BuildResourceFileName(resource),
                     FileTypeChoices = new[] { new FilePickerFileType("Resource") { Patterns = new[] { "*.*" } }, new FilePickerFileType("All files") { Patterns = new[] { "*.*" } } }
                 };
                 var file = await storage.SaveFilePickerAsync(options);
@@ -123,32 +118,58 @@ namespace OdyTools.Dialogs
             string folderPath = folder[0].Path?.LocalPath ?? "";
             if (string.IsNullOrWhiteSpace(folderPath)) return null;
 
-            var paths = new Dictionary<FileResource, string>();
-            foreach (var resource in _resources)
-            {
-                paths[resource] = Path.Combine(folderPath, $"{resource.ResName}.{resource.ResType.Extension}");
-            }
-            return paths;
+            return BuildPathsForFolder(folderPath);
         }
 
         private void HandleFailedExtractions(Dictionary<string, Exception> failedExtractions, Window parentForErrors)
         {
-            string message = string.Join(Environment.NewLine, failedExtractions.Select(kvp => $"{kvp.Key}: {kvp.Value.Message}"));
+            string message = BuildFailedExtractionsMessage(failedExtractions);
             if (parentForErrors != null)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(
-                    "Save failed",
-                    "Failed to save one or more files:" + Environment.NewLine + message,
-                    ButtonEnum.Ok,
-                    Icon.Error).ShowWindowDialogAsync(parentForErrors);
+                ShowSaveFailedMessage(parentForErrors, message);
             }
             else
             {
-                foreach (var kvp in failedExtractions)
-                {
-                    System.Console.WriteLine($"Failed to save {kvp.Key}: {kvp.Value}");
-                }
+                LogFailedExtractions(failedExtractions);
             }
+        }
+
+        private Dictionary<FileResource, string> BuildPathsForFolder(string folderPath)
+        {
+            var paths = new Dictionary<FileResource, string>();
+            foreach (var resource in _resources)
+            {
+                paths[resource] = Path.Combine(folderPath, BuildResourceFileName(resource));
+            }
+
+            return paths;
+        }
+
+        private static string BuildResourceFileName(FileResource resource)
+        {
+            return $"{resource.ResName}.{resource.ResType.Extension}";
+        }
+
+        private static string BuildFailedExtractionsMessage(Dictionary<string, Exception> failedExtractions)
+        {
+            return string.Join(Environment.NewLine, failedExtractions.Select(kvp => $"{kvp.Key}: {kvp.Value.Message}"));
+        }
+
+        private static void LogFailedExtractions(Dictionary<string, Exception> failedExtractions)
+        {
+            foreach (var kvp in failedExtractions)
+            {
+                System.Console.WriteLine($"Failed to save {kvp.Key}: {kvp.Value}");
+            }
+        }
+
+        private static void ShowSaveFailedMessage(Window parentForErrors, string message)
+        {
+            DialogHelper.ShowWindow(
+                parentForErrors,
+                "Save failed",
+                "Failed to save one or more files:" + Environment.NewLine + message,
+                MsBox.Avalonia.Enums.Icon.Error);
         }
     }
 }

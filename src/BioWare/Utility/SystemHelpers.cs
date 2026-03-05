@@ -4,7 +4,12 @@ using System.Linq;
 
 namespace BioWare.Utility
 {
-
+    /// <summary>
+    /// Cross-platform system utility helpers for file and directory operations.
+    /// Provides methods for fixing file permissions and case sensitivity issues commonly encountered
+    /// when working with KOTOR game files across different platforms (Windows, macOS, Linux).
+    /// Useful for pre-processing game installations before modification or analysis.
+    /// </summary>
     public static class SystemHelpers
     {
         /// <summary>

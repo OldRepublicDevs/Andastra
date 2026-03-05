@@ -114,7 +114,7 @@ namespace BioWare.Extract.SaveData
             nfo.LiveEntries[5] = Live6 ?? string.Empty;
 
             byte[] bytes = NFOAuto.BytesNfo(nfo);
-            File.WriteAllBytes(_saveInfoPath, bytes);
+            SaveFolderIO.WriteBytesAtomic(_saveInfoPath, bytes);
         }
     }
 }

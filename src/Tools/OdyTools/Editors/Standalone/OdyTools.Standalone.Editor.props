@@ -41,6 +41,20 @@
     <StartupObject>$(OdyToolsStandaloneStartupObject)</StartupObject>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Include="$(_OdyToolsRoot)\Utils\AutosaveService.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Utils\AtomicFileWriter.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Utils\BackupRotator.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\ComboBox2DA.axaml.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Widgets\IMediaPlayer.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Widgets\NAudioMediaPlayer.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Editors\TwoDA\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\ComboBox2DA.axaml" />
+  </ItemGroup>
+
   <!-- OutputType: WinExe for Windows, Exe for cross-platform RID -->
   <PropertyGroup Condition="'$(RuntimeIdentifier)'=='' OR $(RuntimeIdentifier.StartsWith('win'))">
     <OutputType>WinExe</OutputType>
@@ -77,6 +91,7 @@
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.9" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.11" />
     <PackageReference Include="MessageBox.Avalonia" Version="3.3.1.1" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
   </ItemGroup>
   <!-- net48: extra packages and force use of implementation (lib) not ref to avoid System.Private.CoreLib -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
@@ -84,6 +99,7 @@
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" PrivateAssets="All" />
     <PackageReference Include="NETStandard.Library" Version="2.0.3" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
+    <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <!-- net48: use Avalonia lib (netstandard2.0) for compile, strip package refs that point to CoreLib -->
   <Target Name="UseAvaloniaLibForNet48" AfterTargets="ResolveAssemblyReferences" Condition="'$(TargetFramework)' == 'net48'">

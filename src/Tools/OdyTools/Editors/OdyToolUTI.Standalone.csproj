@@ -21,6 +21,7 @@
     <Compile Include="$(_OdyToolsRoot)\Utils\PathUtils.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\InlineEditorHelp.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\PropertyEditorDialog.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\EditorInstallationSettingsDialogBase.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\LocalizedStringDialog.axaml.cs" />
@@ -32,6 +33,7 @@
     <AvaloniaXaml Remove="*OdyTool*.axaml" />
     <AvaloniaXaml Include="Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml" Link="EditorStandaloneHost/EditorStandaloneApp.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\PropertyEditorDialog.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\LocalizedStringDialog.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\LocalizedStringEdit.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml" />

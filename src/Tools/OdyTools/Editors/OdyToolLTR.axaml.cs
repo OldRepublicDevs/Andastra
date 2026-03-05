@@ -116,6 +116,7 @@ namespace OdyTools.Editors
 
         private int _findIndex = -1;
 
+        public OdyToolLTR() : this(null, null) { }
         public OdyToolLTR(Window parent = null, OdyInstallation installation = null)
             : base(parent, Localization.Tr("OdyToolLTR"), "ltr", new[] { ResourceType.LTR }, new[] { ResourceType.LTR }, installation)
         {
@@ -376,29 +377,17 @@ namespace OdyTools.Editors
 
         private void SetupMenuHandlers()
         {
-            void Bind(string name, Action handler)
-            {
-                try
-                {
-                    var item = EditorHelpers.FindControlSafe<MenuItem>(this, name);
-                    if (item != null)
-                    {
-                        item.Click += (s, e) => handler();
-                    }
-                }
-                catch
-                {
-                }
-            }
-
             // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
-            Bind("actionUndo", Undo);
-            Bind("actionRedo", Redo);
-            Bind("actionFind", ShowFindDialog);
-            Bind("actionFindNext", FindNextMatch);
-            Bind("actionNormalizeVisible", NormalizeVisibleDistribution);
-            Bind("actionUniformVisible", SetUniformVisibleDistribution);
-            Bind("actionGenerateNames", GenerateNameSamples);
+            EditorHelpers.BindMenuClicks(this, new (string menuItemName, Action handler)[]
+            {
+                ("actionUndo", Undo),
+                ("actionRedo", Redo),
+                ("actionFind", ShowFindDialog),
+                ("actionFindNext", FindNextMatch),
+                ("actionNormalizeVisible", NormalizeVisibleDistribution),
+                ("actionUniformVisible", SetUniformVisibleDistribution),
+                ("actionGenerateNames", GenerateNameSamples),
+            });
         }
 
         private void HookRowEvents(IEnumerable<ProbabilityRow> rows)
@@ -498,6 +487,7 @@ namespace OdyTools.Editors
                     _undoStack.RemoveAt(0);
                 }
                 _redoStack.Clear();
+                MarkDocumentDirty();
             }
             catch
             {

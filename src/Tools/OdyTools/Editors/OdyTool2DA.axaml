@@ -180,20 +180,48 @@
                 <MenuItem Header="Move Row _Up" Name="actionMoveRowUp" HotKey="Alt+Up" />
                 <MenuItem Header="Move Row D_own" Name="actionMoveRowDown" HotKey="Alt+Down" />
                 <MenuItem Header="_Fill Down" Name="actionFillDown" HotKey="Ctrl+D" />
+                <MenuItem Header="Fill _Right" Name="actionFillRight" />
                 <Separator />
                 <MenuItem Header="_Add Column..." Name="actionAddColumn" />
                 <MenuItem Header="_Rename Column..." Name="actionRenameColumn" />
+                <MenuItem Header="_Duplicate Column" Name="actionDuplicateColumn" />
                 <MenuItem Header="_Remove Column" Name="actionRemoveColumn" />
                 <MenuItem Header="Move Column _Left" Name="actionMoveColumnLeft" HotKey="Ctrl+Shift+Left" />
                 <MenuItem Header="Move Column _Right" Name="actionMoveColumnRight" HotKey="Ctrl+Shift+Right" />
                 <Separator />
+                <MenuItem Header="Sort (Multi-level)..." Name="actionMultiLevelSort" />
                 <MenuItem Header="Sort _A-Z" Name="actionSortAsc" />
                 <MenuItem Header="Sort _Z-A" Name="actionSortDesc" />
+                <Separator />
+                <MenuItem Header="Remove _Duplicate Rows" Name="actionRemoveDuplicateRows" />
+                <MenuItem Header="_Transpose Table" Name="actionTransposeTable" />
+                <Separator />
+                <MenuItem Header="_Bulk Edit Selected..." Name="actionBulkEdit" />
+                <MenuItem Header="Column _Statistics..." Name="actionColumnStats" />
+                <MenuItem Header="Set _Validation Rule..." Name="actionSetValidation" />
+                <MenuItem Header="_Validate Data" Name="actionValidateData" />
+                <MenuItem Header="_Autocomplete Cell" Name="actionAutocompleteCell" />
                 <Separator />
                 <MenuItem Header="_Redo Row Labels" Name="actionRedoRowLabels" />
             </MenuItem>
             <MenuItem Name="menuView" Header="_View">
                 <MenuItem Header="Toggle _Sidebar" Name="actionToggleSidebar" HotKey="F9" />
+                <MenuItem Header="Select _Blank Cells" Name="actionSelectBlankCells" />
+                <MenuItem Header="Select Cells with _Content" Name="actionSelectCellsWithContent" />
+                <Separator />
+                <MenuItem Header="_Filter by Column..." Name="actionColumnFilter" />
+                <MenuItem Header="_Clear Column Filter" Name="actionClearColumnFilter" />
+                <Separator />
+                <MenuItem Header="_Zoom">
+                    <MenuItem Header="100%" Name="actionZoom100" />
+                    <MenuItem Header="125%" Name="actionZoom125" />
+                    <MenuItem Header="150%" Name="actionZoom150" />
+                    <MenuItem Header="200%" Name="actionZoom200" />
+                </MenuItem>
+                <MenuItem Header="Toggle Text _Wrapping" Name="actionToggleTextWrap" />
+                <MenuItem Header="Auto-_Fit Columns" Name="actionAutoFitColumns" />
+                <MenuItem Header="_Manage Columns..." Name="actionManageColumns" />
+                <Separator />
                 <MenuItem Header="Set Row _Header" Name="actionRowHeaderMenu">
                     <MenuItem Header="Row index" Name="actionRowHeaderIndex" />
                     <MenuItem Header="Row label" Name="actionRowHeaderLabel" />
@@ -318,13 +346,19 @@
                                 <MenuItem Header="Move Row _Up" Name="ctxMoveRowUp" />
                                 <MenuItem Header="Move Row D_own" Name="ctxMoveRowDown" />
                                 <MenuItem Header="_Fill Down" Name="ctxFillDown" />
+                                <MenuItem Header="Fill _Right" Name="ctxFillRight" />
                                 <Separator />
                                 <MenuItem Header="_Rename Column..." Name="ctxRenameColumn" />
+                                <MenuItem Header="_Duplicate Column" Name="ctxDuplicateColumn" />
                                 <MenuItem Header="Move Column _Left" Name="ctxMoveColumnLeft" />
                                 <MenuItem Header="Move Column _Right" Name="ctxMoveColumnRight" />
                                 <Separator />
+                                <MenuItem Header="Sort (Multi-level)..." Name="ctxMultiLevelSort" />
                                 <MenuItem Header="Sort _A-Z" Name="ctxSortAsc" />
                                 <MenuItem Header="Sort _Z-A" Name="ctxSortDesc" />
+                                <Separator />
+                                <MenuItem Header="Remove _Duplicates" Name="ctxRemoveDuplicates" />
+                                <MenuItem Header="_Transpose Table" Name="ctxTranspose" />
                             </ContextMenu>
                         </DataGrid.ContextMenu>
                     </DataGrid>

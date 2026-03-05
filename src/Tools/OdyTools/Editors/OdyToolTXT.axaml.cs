@@ -18,6 +18,8 @@ using BioWare.Resource;
 using OdyTools.Data;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Editors
 {
@@ -64,6 +66,7 @@ namespace OdyTools.Editors
         private bool _findDown = true;
         private int _lastFindStart;
 
+        public OdyToolTXT() : this(null, null) { }
         public OdyToolTXT(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolTXT", "none", GetSupportedTypes(), GetSupportedTypes(), installation)
         {
@@ -86,7 +89,7 @@ namespace OdyTools.Editors
             try
             {
                 AvaloniaXamlLoader.Load(this);
-                _textEdit = this.FindControl<TextBox>("TextEdit") ?? EditorHelpers.FindControlSafe<TextBox>(this, "TextEdit");
+                _textEdit = EditorHelpers.FindControlSafe<TextBox>(this, "TextEdit");
             }
             catch
             {
@@ -99,14 +102,14 @@ namespace OdyTools.Editors
 
         private void SetupUI()
         {
-            _statusLnCol = this.FindControl<TextBlock>("statusLnCol");
-            _statusChars = this.FindControl<TextBlock>("statusChars");
-            _statusLines = this.FindControl<TextBlock>("statusLines");
-            _statusEncoding = this.FindControl<TextBlock>("statusEncoding");
-            _zoomLabel = this.FindControl<TextBlock>("zoomLabel");
-            _statusBar = this.FindControl<Border>("statusBar");
-            _actionWordWrap = this.FindControl<MenuItem>("actionWordWrap");
-            _actionStatusBar = this.FindControl<MenuItem>("actionStatusBar");
+            _statusLnCol = EditorHelpers.FindControlSafe<TextBlock>(this, "statusLnCol");
+            _statusChars = EditorHelpers.FindControlSafe<TextBlock>(this, "statusChars");
+            _statusLines = EditorHelpers.FindControlSafe<TextBlock>(this, "statusLines");
+            _statusEncoding = EditorHelpers.FindControlSafe<TextBlock>(this, "statusEncoding");
+            _zoomLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "zoomLabel");
+            _statusBar = EditorHelpers.FindControlSafe<Border>(this, "statusBar");
+            _actionWordWrap = EditorHelpers.FindControlSafe<MenuItem>(this, "actionWordWrap");
+            _actionStatusBar = EditorHelpers.FindControlSafe<MenuItem>(this, "actionStatusBar");
         }
 
         private void SetupSignals()
@@ -119,7 +122,7 @@ namespace OdyTools.Editors
             };
             if (_textEdit != null)
             {
-                _textEdit.LostFocus += (s, e) => CommitEdits();
+                EditorHelpers.BindLostFocus(_textEdit, CommitEdits);
                 _textEdit.TextChanged += (s, e) => Dispatcher.UIThread.Post(UpdateStatusBar);
                 _textEdit.KeyUp += (s, e) => UpdateStatusBar();
             }
@@ -127,73 +130,57 @@ namespace OdyTools.Editors
 
         private void SetupMenuHandlers()
         {
-            void Bind(string name, Action handler)
-            {
-                try
-                {
-                    var item = this.FindControl<MenuItem>(name);
-                    if (item != null) item.Click += (s, e) => handler();
-                }
-                catch { }
-            }
-
             // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
-
-            Bind("actionUndo", () => Undo());
-            Bind("actionRedo", () => Redo());
-
-            Bind("actionCut", () => Cut());
-            Bind("actionCopy", () => Copy());
-            Bind("actionPaste", () => Paste());
-            Bind("actionDelete", () => Delete());
-
-            Bind("actionFind", () => ShowFindDialog());
-            Bind("actionReplace", () => ShowReplaceDialog());
-            Bind("actionFindNext", () => FindNextMatch());
-            Bind("actionFindPrevious", () => FindPreviousMatch());
-
-            Bind("actionGoToLine", () => ShowGoToLineDialog());
-            Bind("actionSelectAll", () => SelectAll());
-            Bind("actionTimeDate", () => InsertTimeDate());
-
-            Bind("actionWordWrap", () => ToggleWordWrap());
-            Bind("actionFont", () => ShowFontDialog());
-
-            Bind("actionZoomIn", () => ZoomIn());
-            Bind("actionZoomOut", () => ZoomOut());
-            Bind("actionZoomReset", () => ZoomReset());
-            Bind("actionStatusBar", () => ToggleStatusBar());
-
-            Bind("ctxUndo", () => Undo());
-            Bind("ctxRedo", () => Redo());
-            Bind("ctxCut", () => Cut());
-            Bind("ctxCopy", () => Copy());
-            Bind("ctxPaste", () => Paste());
-            Bind("ctxDelete", () => Delete());
-            Bind("ctxFind", () => ShowFindDialog());
-            Bind("ctxReplace", () => ShowReplaceDialog());
-            Bind("ctxFindNext", () => FindNextMatch());
-            Bind("ctxSelectAll", () => SelectAll());
-            Bind("ctxTimeDate", () => InsertTimeDate());
+            EditorHelpers.BindMenuClicks(this, new (string menuItemName, Action handler)[]
+            {
+                ("actionUndo", Undo),
+                ("actionRedo", Redo),
+                ("actionCut", Cut),
+                ("actionCopy", Copy),
+                ("actionPaste", Paste),
+                ("actionDelete", Delete),
+                ("actionFind", ShowFindDialog),
+                ("actionReplace", ShowReplaceDialog),
+                ("actionFindNext", () => FindNextMatch()),
+                ("actionFindPrevious", () => FindPreviousMatch()),
+                ("actionGoToLine", ShowGoToLineDialog),
+                ("actionSelectAll", SelectAll),
+                ("actionTimeDate", InsertTimeDate),
+                ("actionWordWrap", ToggleWordWrap),
+                ("actionFont", ShowFontDialog),
+                ("actionZoomIn", ZoomIn),
+                ("actionZoomOut", ZoomOut),
+                ("actionZoomReset", ZoomReset),
+                ("actionStatusBar", ToggleStatusBar),
+                ("ctxUndo", Undo),
+                ("ctxRedo", Redo),
+                ("ctxCut", Cut),
+                ("ctxCopy", Copy),
+                ("ctxPaste", Paste),
+                ("ctxDelete", Delete),
+                ("ctxFind", ShowFindDialog),
+                ("ctxReplace", ShowReplaceDialog),
+                ("ctxFindNext", () => FindNextMatch()),
+                ("ctxSelectAll", SelectAll),
+                ("ctxTimeDate", InsertTimeDate),
+            });
         }
 
         private void SetupToolbar()
         {
-            void Bind(string name, Action handler)
+            EditorHelpers.BindButtonClicks(this, new (string buttonName, Action handler)[]
             {
-                var btn = this.FindControl<Button>(name);
-                if (btn != null) btn.Click += (s, e) => handler();
-            }
-            Bind("tbNew", () => New());
-            Bind("tbOpen", () => _ = RunOpenAsync());
-            Bind("tbSave", () => Save());
-            Bind("tbCut", () => Cut());
-            Bind("tbCopy", () => Copy());
-            Bind("tbPaste", () => Paste());
-            Bind("tbUndo", () => Undo());
-            Bind("tbRedo", () => Redo());
-            Bind("tbFind", () => ShowFindDialog());
-            Bind("tbReplace", () => ShowReplaceDialog());
+                ("tbNew", New),
+                ("tbOpen", () => _ = RunOpenAsync()),
+                ("tbSave", Save),
+                ("tbCut", Cut),
+                ("tbCopy", Copy),
+                ("tbPaste", Paste),
+                ("tbUndo", Undo),
+                ("tbRedo", Redo),
+                ("tbFind", ShowFindDialog),
+                ("tbReplace", ShowReplaceDialog),
+            });
         }
 
         private void SetupContextMenu()
@@ -215,6 +202,7 @@ namespace OdyTools.Editors
             _redoStack.Clear();
             _undoStack.Add(_textEdit.Text ?? "");
             if (_undoStack.Count > UndoMaxLevels) _undoStack.RemoveAt(0);
+            MarkDocumentDirty();
         }
 
         private void ApplyState(string text)
@@ -412,7 +400,7 @@ namespace OdyTools.Editors
             }
             catch (Exception ex)
             {
-                await MessageBoxManager.GetMessageBoxStandard("Open failed", $"Could not open file:\n{ex.Message}", ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
+                await DialogHelper.ShowWindowAsync(this, "Open failed", $"Could not open file:\n{ex.Message}", ButtonEnum.Ok, IconType.Error);
             }
         }
 

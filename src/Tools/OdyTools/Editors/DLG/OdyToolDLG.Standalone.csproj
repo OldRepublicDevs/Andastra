@@ -9,7 +9,6 @@
   </PropertyGroup>
   <Import Project="..\Standalone\OdyTools.Standalone.Editor.props" />
   <ItemGroup>
-    <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="System.Windows.Extensions" Version="10.0.1" Condition="'$(TargetFramework)' != 'net48'" />
   </ItemGroup>
@@ -31,6 +30,8 @@
     <Compile Include="DlgTreeItemView.cs" />
     <Compile Include="DLGActionHistory.cs" />
     <Compile Include="DLGDebugUtils.cs" />
+    <Compile Include="DLGValidationResult.cs" />
+    <Compile Include="DLGValidator.cs" />
     <Compile Include="IDLGAction.cs" />
     <Compile Include="$(_OdyToolsRoot)\Editors\Editor.cs" />
     <Compile Include="$(_OdyToolsRoot)\Editors\EditorHelpers.cs" />
@@ -68,7 +69,6 @@
     <Compile Include="$(_OdyToolsRoot)\Editors\Actions\RestoreOrphanAction.cs" />
     <Compile Include="..\..\Widgets\IMediaPlayer.cs" />
     <Compile Include="..\..\Widgets\NAudioMediaPlayer.cs" />
-    <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\ComboBox2DA.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\PlainTextEdit.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\GFFFieldSpinBox.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\ColorEdit.axaml.cs" />
@@ -84,7 +84,6 @@
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\Edit\DialogAnimationDialog.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\Edit\DialogModelDialog.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\ComboBox2DA.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\GFFFieldSpinBox.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\ColorEdit.axaml" />
   </ItemGroup>

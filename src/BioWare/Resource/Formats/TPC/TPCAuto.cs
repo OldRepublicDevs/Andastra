@@ -11,6 +11,8 @@ namespace BioWare.Resource.Formats.TPC
     // Complete implementation with BioWare DDS header heuristic, automatic TXI file detection, and comprehensive error handling
     public static class TPCAuto
     {
+        private const string UnsupportedTpcTargetFormatMessage = "Unsupported format specified; use TPC, TGA, DDS or BMP.";
+
         /// <summary>
         /// Returns what format the TPC data is believed to be in.
         /// This function performs a basic check and does not guarantee accuracy of the result or integrity of the data.
@@ -182,60 +184,30 @@ namespace BioWare.Resource.Formats.TPC
             TPC loadedTpc;
             if (fileFormat == ResourceType.TPC)
             {
-                if (source is string filepath)
-                {
-                    loadedTpc = new TPCBinaryReader(filepath, offset, size ?? 0).Load();
-                }
-                else if (source is byte[] data)
-                {
-                    loadedTpc = new TPCBinaryReader(data, offset, size ?? 0).Load();
-                }
-                else if (source is Stream stream)
-                {
-                    loadedTpc = new TPCBinaryReader(stream, offset, size ?? 0).Load();
-                }
-                else
-                {
-                    throw new ArgumentException("Unsupported source type for TPC reading");
-                }
+                loadedTpc = ReadTpcFromSource(
+                    source,
+                    filepath => new TPCBinaryReader(filepath, offset, size ?? 0).Load(),
+                    data => new TPCBinaryReader(data, offset, size ?? 0).Load(),
+                    stream => new TPCBinaryReader(stream, offset, size ?? 0).Load(),
+                    "TPC");
             }
             else if (fileFormat == ResourceType.TGA)
             {
-                if (source is string filepath)
-                {
-                    loadedTpc = new TPCTGAReader(filepath, offset, size).Load();
-                }
-                else if (source is byte[] data)
-                {
-                    loadedTpc = new TPCTGAReader(data, offset, size).Load();
-                }
-                else if (source is Stream stream)
-                {
-                    loadedTpc = new TPCTGAReader(stream, offset, size).Load();
-                }
-                else
-                {
-                    throw new ArgumentException("Unsupported source type for TGA reading");
-                }
+                loadedTpc = ReadTpcFromSource(
+                    source,
+                    filepath => new TPCTGAReader(filepath, offset, size).Load(),
+                    data => new TPCTGAReader(data, offset, size).Load(),
+                    stream => new TPCTGAReader(stream, offset, size).Load(),
+                    "TGA");
             }
             else if (fileFormat == ResourceType.DDS)
             {
-                if (source is string filepath)
-                {
-                    loadedTpc = new TPCDDSReader(filepath, offset, size).Load();
-                }
-                else if (source is byte[] data)
-                {
-                    loadedTpc = new TPCDDSReader(data, offset, size).Load();
-                }
-                else if (source is Stream stream)
-                {
-                    loadedTpc = new TPCDDSReader(stream, offset, size).Load();
-                }
-                else
-                {
-                    throw new ArgumentException("Unsupported source type for DDS reading");
-                }
+                loadedTpc = ReadTpcFromSource(
+                    source,
+                    filepath => new TPCDDSReader(filepath, offset, size).Load(),
+                    data => new TPCDDSReader(data, offset, size).Load(),
+                    stream => new TPCDDSReader(stream, offset, size).Load(),
+                    "DDS");
             }
             else
             {
@@ -337,67 +309,39 @@ namespace BioWare.Resource.Formats.TPC
 
             if (fmt == ResourceType.TGA)
             {
-                if (target is string filepath)
-                {
-                    new TPCTGAWriter(tpc, filepath).Write();
-                }
-                else if (target is Stream stream)
-                {
-                    new TPCTGAWriter(tpc, stream).Write();
-                }
-                else
-                {
-                    throw new ArgumentException("Target must be string or Stream for TGA");
-                }
+                WriteTpcToTarget(
+                    target,
+                    filepath => new TPCTGAWriter(tpc, filepath).Write(),
+                    stream => new TPCTGAWriter(tpc, stream).Write(),
+                    "TGA");
             }
             else if (fmt == ResourceType.BMP)
             {
-                if (target is string filepath)
-                {
-                    new TPCBMPWriter(tpc, filepath).Write();
-                }
-                else if (target is Stream stream)
-                {
-                    new TPCBMPWriter(tpc, stream).Write();
-                }
-                else
-                {
-                    throw new ArgumentException("Target must be string or Stream for BMP");
-                }
+                WriteTpcToTarget(
+                    target,
+                    filepath => new TPCBMPWriter(tpc, filepath).Write(),
+                    stream => new TPCBMPWriter(tpc, stream).Write(),
+                    "BMP");
             }
             else if (fmt == ResourceType.DDS)
             {
-                if (target is string filepath)
-                {
-                    new TPCDDSWriter(tpc, filepath).Write();
-                }
-                else if (target is Stream stream)
-                {
-                    new TPCDDSWriter(tpc, stream).Write();
-                }
-                else
-                {
-                    throw new ArgumentException("Target must be string or Stream for DDS");
-                }
+                WriteTpcToTarget(
+                    target,
+                    filepath => new TPCDDSWriter(tpc, filepath).Write(),
+                    stream => new TPCDDSWriter(tpc, stream).Write(),
+                    "DDS");
             }
             else if (fmt == ResourceType.TPC)
             {
-                if (target is string filepath)
-                {
-                    new TPCBinaryWriter(tpc, filepath).Write();
-                }
-                else if (target is Stream stream)
-                {
-                    new TPCBinaryWriter(tpc, stream).Write();
-                }
-                else
-                {
-                    throw new ArgumentException("Target must be string or Stream for TPC");
-                }
+                WriteTpcToTarget(
+                    target,
+                    filepath => new TPCBinaryWriter(tpc, filepath).Write(),
+                    stream => new TPCBinaryWriter(tpc, stream).Write(),
+                    "TPC");
             }
             else
             {
-                throw new ArgumentException("Unsupported format specified; use TPC, TGA, DDS or BMP.");
+                throw new ArgumentException(UnsupportedTpcTargetFormatMessage);
             }
         }
 
@@ -451,6 +395,33 @@ namespace BioWare.Resource.Formats.TPC
                 WriteTpc(tpc, ms, fmt);
                 return ms.ToArray();
             }
+        }
+
+        /// <summary>
+        /// Dispatches TPC input sources (path/bytes/stream) to format-specific loaders.
+        /// </summary>
+        private static TPC ReadTpcFromSource(
+            object source,
+            Func<string, TPC> readFromPath,
+            Func<byte[], TPC> readFromBytes,
+            Func<Stream, TPC> readFromStream,
+            string formatName)
+        {
+            if (source is string filepath)
+            {
+                return readFromPath(filepath);
+            }
+
+            byte[] data = ResourceAutoHelpers.SourceDispatcher.ToBytes(source);
+            return readFromBytes(data);
+        }
+
+        /// <summary>
+        /// Dispatches TPC output to either file paths or streams for a specific target format.
+        /// </summary>
+        private static void WriteTpcToTarget(object target, Action<string> writeToPath, Action<Stream> writeToStream, string formatName)
+        {
+            ResourceAutoHelpers.SourceDispatcher.DispatchWrite(target, writeToPath, writeToStream, formatName);
         }
     }
 }

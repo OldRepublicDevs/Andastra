@@ -21,6 +21,13 @@ namespace OdyTools.Editors
         private const int MinEditorWidth = 480;
         private const int MinEditorHeight = 520;
         private const int UndoMaxLevels = 30;
+        private static readonly string[] ScriptNames =
+        {
+            "on_heartbeat", "on_load", "on_start", "on_enter", "on_leave",
+            "on_activate_item", "on_acquire_item", "on_user_defined", "on_unacquire_item",
+            "on_player_death", "on_player_dying", "on_player_levelup", "on_player_respawn",
+            "on_player_rest", "start_movie"
+        };
 
         private IFO _ifo;
         private TextBlock _statusText;
@@ -66,6 +73,7 @@ namespace OdyTools.Editors
         // UI Controls - Scripts (editable combos with prefilled script resnames)
         private Dictionary<string, ComboBox> _scriptFields;
 
+        public OdyToolIFO() : this(null, null) { }
         public OdyToolIFO(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolIFO", "ifo",
                 new[] { ResourceType.IFO },
@@ -248,27 +256,7 @@ namespace OdyTools.Editors
             var scriptPanel = new StackPanel { Orientation = Orientation.Vertical };
             _scriptFields = new Dictionary<string, ComboBox>();
 
-            string[] scriptNames = {
-                "on_heartbeat", "on_load", "on_start", "on_enter", "on_leave",
-                "on_activate_item", "on_acquire_item", "on_user_defined", "on_unacquire_item",
-                "on_player_death", "on_player_dying", "on_player_levelup", "on_player_respawn",
-                "on_player_rest", "start_movie"
-            };
-
-            foreach (string scriptName in scriptNames)
-            {
-                var label = new TextBlock { Text = scriptName.Replace("_", " ").ToUpperInvariant() + ":" };
-                var edit = new ComboBox { IsEditable = true };
-#if NET48
-                edit.GetObservable(ComboBox.TextProperty).Subscribe(_ => OnValueChanged());
-#else
-                edit.TextChanged += (s, e) => OnValueChanged();
-#endif
-                SetupScriptComboBoxContextMenu(edit, scriptName);
-                _scriptFields[scriptName] = edit;
-                scriptPanel.Children.Add(label);
-                scriptPanel.Children.Add(edit);
-            }
+            AddProgrammaticScriptFields(scriptPanel);
 
             scriptGroup.Content = scriptPanel;
             mainPanel.Children.Add(scriptGroup);
@@ -311,25 +299,25 @@ namespace OdyTools.Editors
         private void AttachCommitHandlers()
         {
             void OnCommit(object s, EventArgs e) { if (!_undoRedoInProgress) PushState(); }
-            if (_tagEdit != null) _tagEdit.LostFocus += OnCommit;
-            if (_voIdEdit != null) _voIdEdit.LostFocus += OnCommit;
-            if (_hakEdit != null) _hakEdit.LostFocus += OnCommit;
-            if (_entryResrefEdit != null) _entryResrefEdit.LostFocus += OnCommit;
-            if (_entryXSpin != null) _entryXSpin.LostFocus += OnCommit;
-            if (_entryYSpin != null) _entryYSpin.LostFocus += OnCommit;
-            if (_entryZSpin != null) _entryZSpin.LostFocus += OnCommit;
-            if (_entryDirSpin != null) _entryDirSpin.LostFocus += OnCommit;
-            if (_dawnHourSpin != null) _dawnHourSpin.LostFocus += OnCommit;
-            if (_duskHourSpin != null) _duskHourSpin.LostFocus += OnCommit;
-            if (_timeScaleSpin != null) _timeScaleSpin.LostFocus += OnCommit;
-            if (_startMonthSpin != null) _startMonthSpin.LostFocus += OnCommit;
-            if (_startDaySpin != null) _startDaySpin.LostFocus += OnCommit;
-            if (_startHourSpin != null) _startHourSpin.LostFocus += OnCommit;
-            if (_startYearSpin != null) _startYearSpin.LostFocus += OnCommit;
-            if (_xpScaleSpin != null) _xpScaleSpin.LostFocus += OnCommit;
+            EditorHelpers.BindLostFocus(_tagEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_voIdEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_hakEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_entryResrefEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_entryXSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_entryYSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_entryZSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_entryDirSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_dawnHourSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_duskHourSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_timeScaleSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_startMonthSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_startDaySpin, OnCommit);
+            EditorHelpers.BindLostFocus(_startHourSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_startYearSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_xpScaleSpin, OnCommit);
             if (_scriptFields != null)
                 foreach (var kv in _scriptFields)
-                    if (kv.Value != null) kv.Value.LostFocus += OnCommit;
+                    EditorHelpers.BindLostFocus(kv.Value, OnCommit);
         }
 
         private void SetupScriptComboBoxContextMenu(ComboBox comboBox, string scriptTypeName)
@@ -349,6 +337,53 @@ namespace OdyTools.Editors
             comboBox.SelectionChanged += UpdateOpenEnabled;
             contextMenu.Opened += (s, e) => UpdateOpenEnabled(s, e);
             comboBox.ContextMenu = contextMenu;
+        }
+
+        private void ConfigureScriptField(ComboBox scriptCombo, string scriptName)
+        {
+            if (scriptCombo == null)
+            {
+                return;
+            }
+
+            scriptCombo.IsEditable = true;
+            scriptCombo.GetObservable(ComboBox.TextProperty).Subscribe(_ => OnValueChanged());
+            SetupScriptComboBoxContextMenu(scriptCombo, scriptName);
+            _scriptFields[scriptName] = scriptCombo;
+        }
+
+        private static string FormatScriptLabel(string scriptName)
+        {
+            return scriptName.Replace("_", " ").ToUpperInvariant() + ":";
+        }
+
+        private void AddProgrammaticScriptFields(Panel scriptPanel)
+        {
+            foreach (string scriptName in ScriptNames)
+            {
+                var label = new TextBlock { Text = FormatScriptLabel(scriptName) };
+                var edit = new ComboBox();
+                ConfigureScriptField(edit, scriptName);
+                scriptPanel.Children.Add(label);
+                scriptPanel.Children.Add(edit);
+            }
+        }
+
+        private void AddXamlScriptFields(Panel scriptPanel)
+        {
+            foreach (string scriptName in ScriptNames)
+            {
+                var label = new TextBlock { Text = FormatScriptLabel(scriptName), Margin = new Avalonia.Thickness(0, 4, 12, 4) };
+                var edit = new ComboBox { Margin = new Avalonia.Thickness(0, 0, 0, 8) };
+                ConfigureScriptField(edit, scriptName);
+
+                var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
+                row.Children.Add(label);
+                Grid.SetColumn(label, 0);
+                row.Children.Add(edit);
+                Grid.SetColumn(edit, 1);
+                scriptPanel.Children.Add(row);
+            }
         }
 
         private void OpenScriptInEditor(ComboBox comboBox, string scriptTypeName)
@@ -419,20 +454,14 @@ namespace OdyTools.Editors
 
         private void SetupMenuHandlers()
         {
-            void Bind(string name, Action handler)
-            {
-                try
-                {
-                    var item = EditorHelpers.FindControlSafe<MenuItem>(this, name) ?? this.FindControl<MenuItem>(name);
-                    if (item != null) item.Click += (s, e) => handler();
-                }
-                catch { }
-            }
             // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
-            Bind("actionUndo", () => Undo());
-            Bind("actionRedo", () => Redo());
-            Bind("actionFind", () => ShowFindDialog());
-            Bind("actionFindNext", () => FindNextMatch());
+            EditorHelpers.BindMenuClicks(this, new (string menuItemName, Action handler)[]
+            {
+                ("actionUndo", Undo),
+                ("actionRedo", Redo),
+                ("actionFind", ShowFindDialog),
+                ("actionFindNext", FindNextMatch),
+            });
         }
 
         private void PushState()
@@ -445,6 +474,7 @@ namespace OdyTools.Editors
                 _undoStack.Add(data);
                 if (_undoStack.Count > UndoMaxLevels) _undoStack.RemoveAt(0);
                 _redoStack.Clear();
+                MarkDocumentDirty();
             }
             catch { }
         }
@@ -523,22 +553,7 @@ namespace OdyTools.Editors
 
         protected override async Task RunSaveAsAsync()
         {
-            var storageProvider = (this as Window)?.StorageProvider;
-            if (storageProvider == null) return;
-            string suggestedName = string.IsNullOrEmpty(_resname) ? "module" : _resname;
-            var options = new FilePickerSaveOptions
-            {
-                Title = "Save As",
-                SuggestedFileName = suggestedName + ".ifo",
-                FileTypeChoices = new[] { new FilePickerFileType("IFO") { Patterns = new[] { "*.ifo" } } }
-            };
-            var file = await storageProvider.SaveFilePickerAsync(options);
-            if (file == null) return;
-            string path = file.Path.LocalPath;
-            if (string.IsNullOrWhiteSpace(path)) return;
-            _filepath = path;
-            RefreshWindowTitle();
-            Save();
+            await base.RunSaveAsAsync();
             UpdateStatusBar();
         }
 
@@ -633,30 +648,7 @@ namespace OdyTools.Editors
             if (scriptPanel != null && (_scriptFields == null || _scriptFields.Count == 0))
             {
                 _scriptFields = new Dictionary<string, ComboBox>();
-                string[] scriptNames = {
-                    "on_heartbeat", "on_load", "on_start", "on_enter", "on_leave",
-                    "on_activate_item", "on_acquire_item", "on_user_defined", "on_unacquire_item",
-                    "on_player_death", "on_player_dying", "on_player_levelup", "on_player_respawn",
-                    "on_player_rest", "start_movie"
-                };
-                foreach (string scriptName in scriptNames)
-                {
-                    var label = new TextBlock { Text = scriptName.Replace("_", " ").ToUpperInvariant() + ":", Margin = new Avalonia.Thickness(0, 4, 12, 4) };
-                    var edit = new ComboBox { IsEditable = true, Margin = new Avalonia.Thickness(0, 0, 0, 8) };
-#if NET48
-                    edit.GetObservable(ComboBox.TextProperty).Subscribe(_ => OnValueChanged());
-#else
-                    edit.TextChanged += (s, e) => OnValueChanged();
-#endif
-                    SetupScriptComboBoxContextMenu(edit, scriptName);
-                    _scriptFields[scriptName] = edit;
-                    var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
-                    row.Children.Add(label);
-                    Grid.SetColumn(label, 0);
-                    row.Children.Add(edit);
-                    Grid.SetColumn(edit, 1);
-                    scriptPanel.Children.Add(row);
-                }
+                AddXamlScriptFields(scriptPanel);
             }
             var findBtn = EditorHelpers.FindControlSafe<Button>(this, "findButton");
             if (findBtn != null) findBtn.Click += (s, e) => ShowFindDialog();

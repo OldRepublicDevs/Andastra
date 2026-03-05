@@ -16,6 +16,39 @@ namespace BioWare.Tools
     // Original: Utility command functions for file operations, validation, and analysis
     public static class Utilities
     {
+        private static readonly HashSet<string> GffLikeExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ".gff", ".utc", ".uti", ".dlg", ".are", ".git", ".ifo"
+        };
+
+        private static GFF ReadGff(string filePath)
+        {
+            return new GFFBinaryReader(File.ReadAllBytes(filePath)).Load();
+        }
+
+        private static TwoDA ReadTwoDa(string filePath)
+        {
+            return new TwoDABinaryReader(File.ReadAllBytes(filePath)).Load();
+        }
+
+        private static TLK ReadTlk(string filePath)
+        {
+            return new TLKBinaryReader(File.ReadAllBytes(filePath)).Load();
+        }
+
+        private static bool IsGffLikeExtension(string suffix)
+        {
+            return GffLikeExtensions.Contains(suffix);
+        }
+
+        private static void WriteOutputIfRequested(string outputPath, string content)
+        {
+            if (!string.IsNullOrEmpty(outputPath))
+            {
+                File.WriteAllText(outputPath, content, System.Text.Encoding.UTF8);
+            }
+        }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/utilities.py:25-63
         // Original: def diff_files(file1_path: Path, file2_path: Path, *, output_path: Path | None = None, context_lines: int = 3) -> str:
         public static string DiffFiles(string file1Path, string file2Path, string outputPath = null, int contextLines = 3)
@@ -23,7 +56,7 @@ namespace BioWare.Tools
             string suffix = Path.GetExtension(file1Path).ToLowerInvariant();
 
             // Structured comparison for known formats
-            if (suffix == ".gff" || suffix == ".utc" || suffix == ".uti" || suffix == ".dlg" || suffix == ".are" || suffix == ".git" || suffix == ".ifo")
+            if (IsGffLikeExtension(suffix))
             {
                 return DiffGffFiles(file1Path, file2Path, outputPath, contextLines);
             }
@@ -46,23 +79,15 @@ namespace BioWare.Tools
         {
             try
             {
-                byte[] data1 = File.ReadAllBytes(file1Path);
-                byte[] data2 = File.ReadAllBytes(file2Path);
-                var reader1 = new GFFBinaryReader(data1);
-                var reader2 = new GFFBinaryReader(data2);
-                GFF gff1 = reader1.Load();
-                GFF gff2 = reader2.Load();
+                GFF gff1 = ReadGff(file1Path);
+                GFF gff2 = ReadGff(file2Path);
 
                 // Use GFF's compare method for structured comparison
                 string text1 = GffToText(gff1);
                 string text2 = GffToText(gff2);
 
                 string result = GenerateUnifiedDiff(text1, text2, file1Path, file2Path, contextLines);
-
-                if (!string.IsNullOrEmpty(outputPath))
-                {
-                    File.WriteAllText(outputPath, result, System.Text.Encoding.UTF8);
-                }
+                WriteOutputIfRequested(outputPath, result);
 
                 return result;
             }
@@ -79,22 +104,14 @@ namespace BioWare.Tools
         {
             try
             {
-                byte[] data1 = File.ReadAllBytes(file1Path);
-                byte[] data2 = File.ReadAllBytes(file2Path);
-                var reader1 = new TwoDABinaryReader(data1);
-                var reader2 = new TwoDABinaryReader(data2);
-                TwoDA twoda1 = reader1.Load();
-                TwoDA twoda2 = reader2.Load();
+                TwoDA twoda1 = ReadTwoDa(file1Path);
+                TwoDA twoda2 = ReadTwoDa(file2Path);
 
                 string text1 = TwoDAToText(twoda1);
                 string text2 = TwoDAToText(twoda2);
 
                 string result = GenerateUnifiedDiff(text1, text2, file1Path, file2Path, contextLines);
-
-                if (!string.IsNullOrEmpty(outputPath))
-                {
-                    File.WriteAllText(outputPath, result, System.Text.Encoding.UTF8);
-                }
+                WriteOutputIfRequested(outputPath, result);
 
                 return result;
             }
@@ -110,22 +127,14 @@ namespace BioWare.Tools
         {
             try
             {
-                byte[] data1 = File.ReadAllBytes(file1Path);
-                byte[] data2 = File.ReadAllBytes(file2Path);
-                var reader1 = new TLKBinaryReader(data1);
-                var reader2 = new TLKBinaryReader(data2);
-                TLK tlk1 = reader1.Load();
-                TLK tlk2 = reader2.Load();
+                TLK tlk1 = ReadTlk(file1Path);
+                TLK tlk2 = ReadTlk(file2Path);
 
                 string text1 = TlkToText(tlk1);
                 string text2 = TlkToText(tlk2);
 
                 string result = GenerateUnifiedDiff(text1, text2, file1Path, file2Path, contextLines);
-
-                if (!string.IsNullOrEmpty(outputPath))
-                {
-                    File.WriteAllText(outputPath, result, System.Text.Encoding.UTF8);
-                }
+                WriteOutputIfRequested(outputPath, result);
 
                 return result;
             }
@@ -152,10 +161,7 @@ namespace BioWare.Tools
                 result = $"Files differ:\n  {Path.GetFileName(file1Path)}: {data1.Length} bytes\n  {Path.GetFileName(file2Path)}: {data2.Length} bytes\n";
             }
 
-            if (!string.IsNullOrEmpty(outputPath))
-            {
-                File.WriteAllText(outputPath, result, System.Text.Encoding.UTF8);
-            }
+            WriteOutputIfRequested(outputPath, result);
 
             return result;
         }
@@ -167,7 +173,7 @@ namespace BioWare.Tools
             string suffix = Path.GetExtension(filePath).ToLowerInvariant();
 
             // Handle structured formats
-            if (suffix == ".gff" || suffix == ".utc" || suffix == ".uti" || suffix == ".dlg" || suffix == ".are" || suffix == ".git" || suffix == ".ifo")
+            if (IsGffLikeExtension(suffix))
             {
                 return GrepInGff(filePath, pattern, caseSensitive);
             }
@@ -228,9 +234,7 @@ namespace BioWare.Tools
         {
             try
             {
-                byte[] data = File.ReadAllBytes(filePath);
-                var reader = new GFFBinaryReader(data);
-                GFF gff = reader.Load();
+                GFF gff = ReadGff(filePath);
                 string text = GffToText(gff);
                 return GrepInTextContent(text, pattern, caseSensitive);
             }
@@ -246,9 +250,7 @@ namespace BioWare.Tools
         {
             try
             {
-                byte[] data = File.ReadAllBytes(filePath);
-                var reader = new TwoDABinaryReader(data);
-                TwoDA twoda = reader.Load();
+                TwoDA twoda = ReadTwoDa(filePath);
                 string text = TwoDAToText(twoda);
                 return GrepInTextContent(text, pattern, caseSensitive);
             }
@@ -264,9 +266,7 @@ namespace BioWare.Tools
         {
             try
             {
-                byte[] data = File.ReadAllBytes(filePath);
-                var reader = new TLKBinaryReader(data);
-                TLK tlk = reader.Load();
+                TLK tlk = ReadTlk(filePath);
                 string text = TlkToText(tlk);
                 return GrepInTextContent(text, pattern, caseSensitive);
             }
@@ -316,13 +316,11 @@ namespace BioWare.Tools
             string suffix = Path.GetExtension(filePath).ToLowerInvariant();
 
             // Add format-specific statistics
-            if (suffix == ".gff" || suffix == ".utc" || suffix == ".uti" || suffix == ".dlg" || suffix == ".are" || suffix == ".git" || suffix == ".ifo")
+            if (IsGffLikeExtension(suffix))
             {
                 try
                 {
-                    byte[] data = File.ReadAllBytes(filePath);
-                    var reader = new GFFBinaryReader(data);
-                    GFF gff = reader.Load();
+                    GFF gff = ReadGff(filePath);
                     stats["type"] = "GFF";
                     stats["field_count"] = gff.Root != null ? gff.Root.Count : 0;
                 }
@@ -335,9 +333,7 @@ namespace BioWare.Tools
             {
                 try
                 {
-                    byte[] data = File.ReadAllBytes(filePath);
-                    var reader = new TwoDABinaryReader(data);
-                    TwoDA twoda = reader.Load();
+                    TwoDA twoda = ReadTwoDa(filePath);
                     stats["type"] = "2DA";
                     stats["row_count"] = twoda != null ? twoda.Rows.Count : 0;
                     stats["column_count"] = twoda != null ? twoda.Headers.Count : 0;
@@ -351,9 +347,7 @@ namespace BioWare.Tools
             {
                 try
                 {
-                    byte[] data = File.ReadAllBytes(filePath);
-                    var reader = new TLKBinaryReader(data);
-                    TLK tlk = reader.Load();
+                    TLK tlk = ReadTlk(filePath);
                     stats["type"] = "TLK";
                     stats["string_count"] = tlk != null ? tlk.Entries.Count : 0;
                 }
@@ -379,25 +373,19 @@ namespace BioWare.Tools
 
             try
             {
-                if (suffix == ".gff" || suffix == ".utc" || suffix == ".uti" || suffix == ".dlg" || suffix == ".are" || suffix == ".git" || suffix == ".ifo")
+                if (IsGffLikeExtension(suffix))
                 {
-                    byte[] data = File.ReadAllBytes(filePath);
-                    var reader = new GFFBinaryReader(data);
-                    reader.Load();
+                    ReadGff(filePath);
                     return (true, "Valid GFF file");
                 }
                 if (suffix == ".2da")
                 {
-                    byte[] data = File.ReadAllBytes(filePath);
-                    var reader = new TwoDABinaryReader(data);
-                    reader.Load();
+                    ReadTwoDa(filePath);
                     return (true, "Valid 2DA file");
                 }
                 if (suffix == ".tlk")
                 {
-                    byte[] data = File.ReadAllBytes(filePath);
-                    var reader = new TLKBinaryReader(data);
-                    reader.Load();
+                    ReadTlk(filePath);
                     return (true, "Valid TLK file");
                 }
                 if (suffix == ".erf" || suffix == ".mod" || suffix == ".sav")

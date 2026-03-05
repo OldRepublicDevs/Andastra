@@ -9,12 +9,19 @@ namespace BioWare.Tools
     // Original: Template utility functions
     public static class TemplateTools
     {
+        /// <summary>
+        /// Parses raw GFF bytes into an in-memory GFF model.
+        /// </summary>
+        private static GFF ParseGff(byte[] data)
+        {
+            return new GFFBinaryReader(data).Load();
+        }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/template.py:14-36
         // Original: def extract_name(data: bytes) -> LocalizedString:
         public static LocalizedString ExtractName(byte[] data)
         {
-            var reader = new GFFBinaryReader(data);
-            GFF gff = reader.Load();
+            GFF gff = ParseGff(data);
             if (gff.Content == GFFContent.UTC)
             {
                 return gff.Root.GetLocString("FirstName");
@@ -30,8 +37,7 @@ namespace BioWare.Tools
         // Original: def extract_tag_from_gff(data: bytes) -> str:
         public static string ExtractTagFromGff(byte[] data)
         {
-            var reader = new GFFBinaryReader(data);
-            GFF gff = reader.Load();
+            GFF gff = ParseGff(data);
             return gff.Root.GetString("Tag");
         }
     }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -12,9 +13,11 @@ using BioWare.Resource.Formats.RIM;
 using BioWare.Common;
 using BioWare.Resource;
 using OdyTools.Data;
+using OdyTools.Utils;
 using OdyTools.Widgets;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Editors
 {
@@ -23,6 +26,7 @@ namespace OdyTools.Editors
         private MDL _mdl;
         private ModelRenderer _modelRenderer;
 
+        public OdyToolMDL() : this(null, null) { }
         public OdyToolMDL(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolMDL", "none",
                 new[] { ResourceType.MDL, ResourceType.MDL_ASCII },
@@ -177,12 +181,7 @@ namespace OdyTools.Editors
 
             if (mdlData == null || mdxData == null)
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    $"Could not find the '{resref}' MDL/MDX",
-                    "",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync($"Could not find the '{resref}' MDL/MDX", "", ButtonEnum.Ok, IconType.Error);
                 return;
             }
 
@@ -220,18 +219,26 @@ namespace OdyTools.Editors
             return Tuple.Create(dataBin, dataExt);
         }
 
-        /// <summary>Writes main file and, for binary MDL, the .mdx extension file. Base Editor.Save() only writes the first Build() element.</summary>
-        public override void Save()
+        protected override IReadOnlyList<SaveArtifact> BuildSaveArtifactsForPath(string path)
         {
             var (data, dataExt) = Build();
-            if (string.IsNullOrEmpty(_filepath)) return;
-            File.WriteAllBytes(_filepath, data);
+            if (data == null)
+            {
+                return Array.Empty<SaveArtifact>();
+            }
+
+            var artifacts = new List<SaveArtifact>
+            {
+                new SaveArtifact(path, data, CreateBackupsOnSave, Math.Max(1, BackupCount))
+            };
+
             if (_restype == ResourceType.MDL && dataExt != null && dataExt.Length > 0)
             {
-                string mdxPath = Path.ChangeExtension(_filepath, ".mdx");
-                File.WriteAllBytes(mdxPath, dataExt);
+                string mdxPath = Path.ChangeExtension(path, ".mdx");
+                artifacts.Add(new SaveArtifact(mdxPath, dataExt, CreateBackupsOnSave, Math.Max(1, BackupCount)));
             }
-            ClearDirty();
+
+            return artifacts;
         }
 
         public override void New()
@@ -244,17 +251,10 @@ namespace OdyTools.Editors
             }
         }
 
-        public override void SaveAs()
+        protected override FilePickerSaveOptions CreateSaveAsOptions()
         {
-            _ = RunSaveAsAsync();
-        }
-
-        protected override async Task RunSaveAsAsync()
-        {
-            var storage = StorageProvider;
-            if (storage == null) return;
             string suggestedName = !string.IsNullOrEmpty(_resname) ? _resname : "model";
-            var options = new FilePickerSaveOptions
+            return new FilePickerSaveOptions
             {
                 Title = "Save As",
                 SuggestedFileName = suggestedName + ".mdl",
@@ -265,27 +265,29 @@ namespace OdyTools.Editors
                     new FilePickerFileType("All files") { Patterns = new[] { "*.*" } }
                 }
             };
-            var file = await storage.SaveFilePickerAsync(options);
-            if (file == null) return;
-            string path = file.Path?.LocalPath ?? "";
-            if (string.IsNullOrWhiteSpace(path)) return;
-            _filepath = path;
+        }
+
+        protected override bool TryResolveSaveIdentity(string path, out string resname, out ResourceType restype)
+        {
             string pathLower = path.ToLowerInvariant();
             if (pathLower.EndsWith(".mdl.ascii"))
             {
-                _restype = ResourceType.MDL_ASCII;
+                restype = ResourceType.MDL_ASCII;
                 string namePart = Path.GetFileName(path);
-                _resname = namePart.EndsWith(".mdl.ascii", StringComparison.OrdinalIgnoreCase)
+                resname = namePart.EndsWith(".mdl.ascii", StringComparison.OrdinalIgnoreCase)
                     ? namePart.Substring(0, namePart.Length - ".mdl.ascii".Length) : Path.GetFileNameWithoutExtension(path);
+                return true;
             }
-            else
+
+            bool resolved = base.TryResolveSaveIdentity(path, out resname, out restype);
+            if (!resolved || restype == null)
             {
-                string ext = (Path.GetExtension(path) ?? "").TrimStart('.').ToLowerInvariant();
-                _restype = ResourceType.FromExtension(ext) ?? ResourceType.MDL;
-                _resname = Path.GetFileNameWithoutExtension(path);
+                restype = ResourceType.MDL;
+                resname = Path.GetFileNameWithoutExtension(path);
+                return true;
             }
-            RefreshWindowTitle();
-            Save();
+
+            return true;
         }
     }
 }

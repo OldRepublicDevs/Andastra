@@ -22,6 +22,7 @@ namespace OdyTools.Dialogs
         private CancellationTokenSource _cancellationTokenSource;
         private bool _allowClose;
 
+        public UpdateProgressDialog() : this(null) { }
         public UpdateProgressDialog(Queue<Dictionary<string, object>> progressQueue)
         {
             InitializeComponent();

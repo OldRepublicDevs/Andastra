@@ -36,6 +36,8 @@ using ResourceType = BioWare.Common.ResourceType;
 using GFF = BioWare.Resource.Formats.GFF.GFF;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Editors
 {
@@ -88,6 +90,7 @@ namespace OdyTools.Editors
 
         private NAudioMediaPlayer _soundPlayer;
 
+        public OdyToolUTS() : this(null, null) { }
         public OdyToolUTS(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTS", "sound",
                 new[] { ResourceType.UTS },
@@ -137,7 +140,7 @@ namespace OdyTools.Editors
             var nameLabel = new TextBlock { Text = "Name:" };
             _nameEdit = new TextBox { IsReadOnly = true };
             _nameEditBtn = new Button { Content = "Edit Name" };
-            _nameEditBtn.Click += (s, e) => EditName();
+            EditorHelpers.BindClick(_nameEditBtn, EditName);
             basicPanel.Children.Add(nameLabel);
             basicPanel.Children.Add(_nameEdit);
             basicPanel.Children.Add(_nameEditBtn);
@@ -146,7 +149,7 @@ namespace OdyTools.Editors
             var tagLabel = new TextBlock { Text = "Tag:" };
             _tagEdit = new TextBox();
             _tagGenerateBtn = new Button { Content = "Generate" };
-            _tagGenerateBtn.Click += (s, e) => GenerateTag();
+            EditorHelpers.BindClick(_tagGenerateBtn, GenerateTag);
             basicPanel.Children.Add(tagLabel);
             basicPanel.Children.Add(_tagEdit);
             basicPanel.Children.Add(_tagGenerateBtn);
@@ -155,7 +158,7 @@ namespace OdyTools.Editors
             var resrefLabel = new TextBlock { Text = "ResRef:" };
             _resrefEdit = new TextBox();
             _resrefGenerateBtn = new Button { Content = "Generate" };
-            _resrefGenerateBtn.Click += (s, e) => GenerateResref();
+            EditorHelpers.BindClick(_resrefGenerateBtn, GenerateResref);
             basicPanel.Children.Add(resrefLabel);
             basicPanel.Children.Add(_resrefEdit);
             basicPanel.Children.Add(_resrefGenerateBtn);
@@ -182,9 +185,9 @@ namespace OdyTools.Editors
             _playRandomRadio = new RadioButton { Content = "Random Position", GroupName = "PlayMode" };
             _playSpecificRadio = new RadioButton { Content = "Specific Position", GroupName = "PlayMode" };
             _playEverywhereRadio = new RadioButton { Content = "Everywhere", GroupName = "PlayMode", IsChecked = true };
-            _playRandomRadio.Checked += (s, e) => ChangePlay();
-            _playSpecificRadio.Checked += (s, e) => ChangePlay();
-            _playEverywhereRadio.Checked += (s, e) => ChangePlay();
+            EditorHelpers.BindRadioChecked(_playRandomRadio, ChangePlay);
+            EditorHelpers.BindRadioChecked(_playSpecificRadio, ChangePlay);
+            EditorHelpers.BindRadioChecked(_playEverywhereRadio, ChangePlay);
 
             // Order
             var orderLabel = new TextBlock { Text = "Order:" };
@@ -229,17 +232,17 @@ namespace OdyTools.Editors
             _soundList = new ListBox();
             var soundButtonsPanel = new StackPanel { Orientation = Orientation.Horizontal };
             _addSoundBtn = new Button { Content = "Add" };
-            _addSoundBtn.Click += (s, e) => AddSound();
+            EditorHelpers.BindClick(_addSoundBtn, AddSound);
             _removeSoundBtn = new Button { Content = "Remove" };
-            _removeSoundBtn.Click += (s, e) => RemoveSound();
+            EditorHelpers.BindClick(_removeSoundBtn, RemoveSound);
             _playSoundBtn = new Button { Content = "Play" };
-            _playSoundBtn.Click += (s, e) => PlaySound();
+            EditorHelpers.BindClick(_playSoundBtn, PlaySound);
             _stopSoundBtn = new Button { Content = "Stop" };
-            _stopSoundBtn.Click += (s, e) => StopSound();
+            EditorHelpers.BindClick(_stopSoundBtn, StopSound);
             _moveUpBtn = new Button { Content = "Up" };
-            _moveUpBtn.Click += (s, e) => MoveSoundUp();
+            EditorHelpers.BindClick(_moveUpBtn, MoveSoundUp);
             _moveDownBtn = new Button { Content = "Down" };
-            _moveDownBtn.Click += (s, e) => MoveSoundDown();
+            EditorHelpers.BindClick(_moveDownBtn, MoveSoundDown);
             soundButtonsPanel.Children.Add(_addSoundBtn);
             soundButtonsPanel.Children.Add(_removeSoundBtn);
             soundButtonsPanel.Children.Add(_playSoundBtn);
@@ -261,9 +264,9 @@ namespace OdyTools.Editors
             _styleOnceRadio = new RadioButton { Content = "Once", GroupName = "Style", IsChecked = true };
             _styleSeamlessRadio = new RadioButton { Content = "Seamless", GroupName = "Style" };
             _styleRepeatRadio = new RadioButton { Content = "Repeat", GroupName = "Style" };
-            _styleOnceRadio.Checked += (s, e) => ChangeStyle();
-            _styleSeamlessRadio.Checked += (s, e) => ChangeStyle();
-            _styleRepeatRadio.Checked += (s, e) => ChangeStyle();
+            EditorHelpers.BindRadioChecked(_styleOnceRadio, ChangeStyle);
+            EditorHelpers.BindRadioChecked(_styleSeamlessRadio, ChangeStyle);
+            EditorHelpers.BindRadioChecked(_styleRepeatRadio, ChangeStyle);
 
             // Distances
             var cutoffLabel = new TextBlock { Text = "Cutoff Distance:" };
@@ -511,6 +514,7 @@ namespace OdyTools.Editors
                 {
                     _nameEdit.Text = _installation.String(_uts.Name);
                 }
+                MarkDocumentDirty();
             }
         }
 
@@ -524,6 +528,7 @@ namespace OdyTools.Editors
             {
                 _tagEdit.Text = _resrefEdit.Text;
             }
+            MarkDocumentDirty();
         }
 
         private void GenerateResref()
@@ -532,6 +537,7 @@ namespace OdyTools.Editors
             {
                 _resrefEdit.Text = !string.IsNullOrEmpty(base._resname) ? base._resname : "m00xx_trg_000";
             }
+            MarkDocumentDirty();
         }
 
         private void ChangeStyle()
@@ -603,12 +609,7 @@ namespace OdyTools.Editors
             }
             else
             {
-                var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Could not find audio file",
-                    $"Could not find audio resource '{resname}'.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                msgBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Could not find audio file", $"Could not find audio resource '{resname}'.", ButtonEnum.Ok, IconType.Error);
             }
         }
 
@@ -639,12 +640,7 @@ namespace OdyTools.Editors
             {
                 // Log error and show message box
                 System.Console.WriteLine($"Failed to play sound: {ex}");
-                var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error Playing Sound",
-                    $"Failed to play sound:\n{ex.Message}",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                msgBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Error Playing Sound", $"Failed to play sound:\n{ex.Message}", ButtonEnum.Ok, IconType.Error);
                 return false;
             }
         }
@@ -659,6 +655,7 @@ namespace OdyTools.Editors
             if (_soundList != null)
             {
                 _soundList.Items.Add("new sound");
+                MarkDocumentDirty();
             }
         }
 
@@ -667,6 +664,7 @@ namespace OdyTools.Editors
             if (_soundList?.SelectedItem != null)
             {
                 _soundList.Items.Remove(_soundList.SelectedItem);
+                MarkDocumentDirty();
             }
         }
 
@@ -679,6 +677,7 @@ namespace OdyTools.Editors
                 _soundList.Items.RemoveAt(index);
                 _soundList.Items.Insert(index - 1, item);
                 _soundList.SelectedIndex = index - 1;
+                MarkDocumentDirty();
             }
         }
 
@@ -691,6 +690,7 @@ namespace OdyTools.Editors
                 _soundList.Items.RemoveAt(index);
                 _soundList.Items.Insert(index + 1, item);
                 _soundList.SelectedIndex = index + 1;
+                MarkDocumentDirty();
             }
         }
 
@@ -701,25 +701,7 @@ namespace OdyTools.Editors
 
         protected override async Task RunSaveAsAsync()
         {
-            var storage = StorageProvider;
-            if (storage == null) return;
-            string suggestedName = !string.IsNullOrEmpty(_resname) ? _resname : "sound";
-            var options = new FilePickerSaveOptions
-            {
-                Title = "Save As",
-                SuggestedFileName = suggestedName + ".uts",
-                FileTypeChoices = new[] { new FilePickerFileType("Sound (UTS)") { Patterns = new[] { "*.uts" } }, new FilePickerFileType("All files") { Patterns = new[] { "*.*" } } }
-            };
-            var file = await storage.SaveFilePickerAsync(options);
-            if (file == null) return;
-            string path = file.Path?.LocalPath ?? "";
-            if (string.IsNullOrWhiteSpace(path)) return;
-            _filepath = path;
-            string ext = (Path.GetExtension(path) ?? "").TrimStart('.').ToLowerInvariant();
-            _restype = ResourceType.FromExtension(ext) ?? ResourceType.UTS;
-            _resname = Path.GetFileNameWithoutExtension(path);
-            RefreshWindowTitle();
-            Save();
+            await base.RunSaveAsAsync();
         }
 
         /// <summary>

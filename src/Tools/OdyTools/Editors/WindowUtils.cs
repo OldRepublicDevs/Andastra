@@ -13,6 +13,8 @@ using FileResource = BioWare.Extract.FileResource;
 using JetBrains.Annotations;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Editors
 {
@@ -92,12 +94,7 @@ namespace OdyTools.Editors
             catch (Exception ex)
             {
                 System.Console.WriteLine($"Error getting resource data: {ex}");
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Failed to get the file data.",
-                    "An error occurred while attempting to read the data of the file.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Failed to get the file data.", "An error occurred while attempting to read the data of the file.", ButtonEnum.Ok, IconType.Error);
                 return null;
             }
         }
@@ -184,12 +181,7 @@ namespace OdyTools.Editors
             {
                 if (installation == null && restype == ResourceType.NCS)
                 {
-                    var warningBox = MessageBoxManager.GetMessageBoxStandard(
-                        "Cannot decompile NCS without an installation active",
-                        "Please select an installation from the dropdown before loading an NCS.",
-                        ButtonEnum.Ok,
-                        Icon.Warning);
-                    warningBox.ShowAsync();
+                    _ = DialogHelper.ShowAsync("Cannot decompile NCS without an installation active", "Please select an installation from the dropdown before loading an NCS.", ButtonEnum.Ok, IconType.Warning);
                     return null;
                 }
                 editor = new OdyToolNSS(parentWindow, installation);
@@ -280,12 +272,7 @@ namespace OdyTools.Editors
             {
                 if (installation == null && restype == ResourceType.NCS)
                 {
-                    var warningBox = MessageBoxManager.GetMessageBoxStandard(
-                        "Cannot decompile NCS without an installation active",
-                        "Please select an installation from the dropdown before loading an NCS.",
-                        ButtonEnum.Ok,
-                        Icon.Warning);
-                    warningBox.ShowAsync();
+                    _ = DialogHelper.ShowAsync("Cannot decompile NCS without an installation active", "Please select an installation from the dropdown before loading an NCS.", ButtonEnum.Ok, IconType.Warning);
                     return null;
                 }
                 editor = new OdyToolNSS(parentWindow, installation);
@@ -483,12 +470,7 @@ namespace OdyTools.Editors
             {
                 // Note: C# string.Format uses positional placeholders {0}, {1}, etc., so we convert the Python named placeholder {format} to {0}
                 string message = string.Format("The selected file format '{0}' is not yet supported.", restype?.ToString() ?? "unknown");
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Failed to open file",
-                    message,
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Failed to open file", message, ButtonEnum.Ok, IconType.Error);
                 return null;
             }
 
@@ -511,12 +493,7 @@ namespace OdyTools.Editors
                 {
                     errorMessage = ex.ToString();
                 }
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "An unexpected error has occurred",
-                    errorMessage,
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("An unexpected error has occurred", errorMessage, ButtonEnum.Ok, IconType.Error);
                 System.Console.WriteLine($"Error loading resource: {ex}");
                 return null;
             }

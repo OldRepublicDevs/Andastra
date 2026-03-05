@@ -19,6 +19,8 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using FileResource = BioWare.Extract.FileResource;
 using Module = BioWare.Common.Module;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Dialogs
 {
@@ -311,12 +313,7 @@ namespace OdyTools.Dialogs
 
             if (_resourceList?.SelectedItem == null)
             {
-                var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                    Localization.Translate("Choose an instance"),
-                    Localization.Translate("You must choose an instance, use the radial buttons to determine where/how to create the GIT instance."),
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                await msgBox.ShowAsync();
+                await DialogHelper.ShowAsync(Localization.Translate("Choose an instance"), Localization.Translate("You must choose an instance, use the radial buttons to determine where/how to create the GIT instance."), ButtonEnum.Ok, IconType.Error);
                 return;
             }
 
@@ -532,12 +529,7 @@ namespace OdyTools.Dialogs
             catch (Exception ex)
             {
                 System.Console.WriteLine($"Error saving resource to file: {ex.Message}");
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error saving resource",
-                    ex.Message ?? "Unknown error.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorBox.ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, "Error saving resource", ex.Message ?? "Unknown error.", IconType.Error);
                 throw; // Re-throw to allow caller to handle
             }
         }

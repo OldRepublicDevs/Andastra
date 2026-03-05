@@ -20,12 +20,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
         {
             ResourceType format = fileFormat ?? ResourceType.GFF;
             if (nfo == null) throw new ArgumentNullException(nameof(nfo));
-
-            // NFO is stored as a GFF file on disk (savenfo.res) but the ResourceType is still GFF.
-            if (format != ResourceType.GFF)
-            {
-                throw new ArgumentException("Unsupported format specified; use GFF (NFO content).", nameof(fileFormat));
-            }
+            ValidateNfoFormat(format, nameof(fileFormat));
 
             GFF gff = NFOHelpers.DismantleNfo(nfo);
             GFFAuto.WriteGff(gff, target, format);
@@ -35,14 +30,24 @@ namespace BioWare.Resource.Formats.GFF.Generics
         {
             ResourceType format = fileFormat ?? ResourceType.GFF;
             if (nfo == null) throw new ArgumentNullException(nameof(nfo));
-
-            if (format != ResourceType.GFF)
-            {
-                throw new ArgumentException("Unsupported format specified; use GFF (NFO content).", nameof(fileFormat));
-            }
+            ValidateNfoFormat(format, nameof(fileFormat));
 
             GFF gff = NFOHelpers.DismantleNfo(nfo);
             return GFFAuto.BytesGff(gff, format);
+        }
+
+        /// <summary>
+        /// Validates that NFO operations use GFF content format.
+        /// </summary>
+        /// <remarks>
+        /// NFO is stored as a GFF payload on disk (typically <c>savenfo.res</c>).
+        /// </remarks>
+        private static void ValidateNfoFormat(ResourceType format, string paramName)
+        {
+            if (format != ResourceType.GFF)
+            {
+                throw new ArgumentException("Unsupported format specified; use GFF (NFO content).", paramName);
+            }
         }
     }
 }

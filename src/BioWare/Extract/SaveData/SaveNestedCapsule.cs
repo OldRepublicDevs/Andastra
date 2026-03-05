@@ -139,7 +139,7 @@ namespace BioWare.Extract.SaveData
             }
 
             byte[] bytes = ERFAuto.BytesErf(erf, ResourceType.SAV);
-            File.WriteAllBytes(_path, bytes);
+            SaveFolderIO.WriteBytesAtomic(_path, bytes);
         }
 
         public IEnumerable<KeyValuePair<ResourceIdentifier, byte[]>> IterSerializedResources()

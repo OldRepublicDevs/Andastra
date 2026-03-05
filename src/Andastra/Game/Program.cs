@@ -1,9 +1,8 @@
 using System;
 using System.Threading;
-using BioWare.Common;
-using Andastra.Runtime.Core;
 using Andastra.Game.Core;
 using Andastra.Game.GUI;
+using Andastra.Runtime.Core;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Avalonia;
@@ -12,6 +11,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
+using BioWare.Common;
 
 namespace Andastra.Game
 {
@@ -20,9 +20,9 @@ namespace Andastra.Game
     /// </summary>
     /// <remarks>
     /// Program Entry Point (addresses from Reva/Ghidra; K1 = k1_win_gog_swkotor.exe, TSL = k2_win_gog_legacypc_swkotor2.exe):
-    /// - entry (PE entry point): K1 @ 0x006fb38d, TSL @ 0x0076e2dd
-    /// - WinMain (main initialization): K1 @ 0x004041f0, TSL @ 0x00404250
-    /// - Located via string references: "swkotor2" @ 0x007b575c (TSL executable name), "KotOR2" @ 0x0080c210 (BioWareGame title)
+    /// - entry (PE entry point): (K1 @ 0x006fb38d, TSL @ 0x0076e2dd)
+    /// - WinMain (main initialization): (K1 @ 0x004041f0, TSL @ 0x00404250)
+    /// - Located via string references: ("swkotor2" @ 0x007b575c (TSL executable name), "KotOR2" @ 0x0080c210 (BioWareGame title))
     /// - Original implementation: entry calls GetVersionExA, initializes heap, then calls WinMain
     /// - WinMain (TSL 0x00404250): Creates mutex "swkotor2" via CreateMutexA, initializes COM via CoInitialize, loads config.txt (0x00460ff0), loads swKotor2.ini (0x00630a90), creates engine objects, runs game loop
     /// - Mutex creation: CreateMutexA with name "swkotor2" prevents multiple instances, WaitForSingleObject checks if already running

@@ -17,9 +17,11 @@ using BioWare.Resource.Formats.BWM;
 using BioWare.Resource.Formats.GFF.Generics;
 using BioWare.Resource.Formats.LYT;
 using OdyTools.Data;
+using OdyTools.Utils;
 using KotorColor = BioWare.Common.Color;
 using PTH = BioWare.Resource.Formats.GFF.Generics.PTH;
 using Window = Avalonia.Controls.Window;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Editors
 {
@@ -485,6 +487,7 @@ namespace OdyTools.Editors
         private Button _removeEdgeButton;
         private bool _syncingSelection;
 
+        public OdyToolPTH() : this(null, null) { }
         public OdyToolPTH(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolPTH", "pth",
                 new[] { ResourceType.PTH },
@@ -700,7 +703,7 @@ namespace OdyTools.Editors
             AddNode(_contextMenuWorld.X, _contextMenuWorld.Y);
             RebuildNodeList();
             RenderArea?.InvalidateVisual();
-            MarkDirty();
+            MarkDocumentDirty();
         }
 
         private void RemoveNodeUnderContextMenu()
@@ -714,7 +717,7 @@ namespace OdyTools.Editors
                     RemoveNode(idx.Value);
                     RebuildNodeList();
                     UpdateNodeButtonsState();
-                    MarkDirty();
+                    MarkDocumentDirty();
                 }
             }
         }
@@ -731,21 +734,19 @@ namespace OdyTools.Editors
 
         private void SetupMenuHandlers()
         {
-            void Bind(string name, Action handler)
-            {
-                var item = EditorHelpers.FindControlSafe<MenuItem>(this, name);
-                if (item != null) item.Click += (s, e) => handler();
-            }
             // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
-            Bind("actionAddNode", () => AddNodeAtLastContextWorld());
-            Bind("actionRemoveNode", () => DeleteSelectedNode());
-            Bind("actionAddEdge", () => AddEdgeBetweenSelected());
-            Bind("actionRemoveEdge", () => RemoveEdgeBetweenSelected());
-            Bind("actionCopyXY", () => CopyXYToClipboard());
-            Bind("actionCenterSelection", () => MoveCameraToSelection());
-            Bind("actionZoomIn", () => ZoomCamera(1.25f));
-            Bind("actionZoomOut", () => ZoomCamera(0.8f));
-            Bind("actionZoomReset", () => { if (RenderArea != null) RenderArea.CenterCamera(); RenderArea?.InvalidateVisual(); });
+            EditorHelpers.BindMenuClicks(this, new (string menuItemName, Action handler)[]
+            {
+                ("actionAddNode", AddNodeAtLastContextWorld),
+                ("actionRemoveNode", DeleteSelectedNode),
+                ("actionAddEdge", AddEdgeBetweenSelected),
+                ("actionRemoveEdge", RemoveEdgeBetweenSelected),
+                ("actionCopyXY", CopyXYToClipboard),
+                ("actionCenterSelection", MoveCameraToSelection),
+                ("actionZoomIn", () => ZoomCamera(1.25f)),
+                ("actionZoomOut", () => ZoomCamera(0.8f)),
+                ("actionZoomReset", () => { if (RenderArea != null) RenderArea.CenterCamera(); RenderArea?.InvalidateVisual(); }),
+            });
         }
 
         private void RebuildNodeList()
@@ -871,7 +872,7 @@ namespace OdyTools.Editors
             _pth.SetPoint(idx.Value, (float)_nodePosX.Value, (float)_nodePosY.Value);
             RenderArea.PathSelection.Select(new[] { new Vector2((float)_nodePosX.Value, (float)_nodePosY.Value) });
             RebuildNodeList();
-            MarkDirty();
+            MarkDocumentDirty();
         }
 
         private void AddNodeAtSpinnerPosition()
@@ -880,7 +881,7 @@ namespace OdyTools.Editors
             AddNode((float)_nodePosX.Value, (float)_nodePosY.Value);
             RebuildNodeList();
             RenderArea?.InvalidateVisual();
-            MarkDirty();
+            MarkDocumentDirty();
         }
 
         private void RemoveSelectedNodeFromList()
@@ -898,7 +899,7 @@ namespace OdyTools.Editors
                 RemoveNode(idx.Value);
                 RebuildNodeList();
                 UpdateNodeButtonsState();
-                MarkDirty();
+                MarkDocumentDirty();
             }
         }
 
@@ -911,7 +912,7 @@ namespace OdyTools.Editors
             AddEdge(a, b);
             RenderArea?.InvalidateVisual();
             UpdateNodeButtonsState();
-            MarkDirty();
+            MarkDocumentDirty();
         }
 
         private void RemoveEdgeBetweenSelected()
@@ -922,7 +923,7 @@ namespace OdyTools.Editors
             if (a < 0 || b < 0 || a >= _pth.Count || b >= _pth.Count) return;
             RemoveEdge(a, b);
             RenderArea?.InvalidateVisual();
-            MarkDirty();
+            MarkDocumentDirty();
         }
 
         private void UpdateNodeButtonsState()
@@ -1112,12 +1113,7 @@ namespace OdyTools.Editors
                 {
                     // LYT file not found - show error message
                     string message = $"OdyToolPTH requires {resref}.lyt in order to load '{resref}.{restype}', but it could not be found.";
-                    var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                        "Layout not found",
-                        message,
-                        ButtonEnum.Ok,
-                        MsBox.Avalonia.Enums.Icon.Error);
-                    errorBox.ShowAsync();
+                    _ = DialogHelper.ShowAsync("Layout not found", message, ButtonEnum.Ok, IconType.Error);
                     // Continue with PTH loading anyway (user may still want to edit the path)
                 }
             }
@@ -1218,25 +1214,7 @@ namespace OdyTools.Editors
 
         protected override async System.Threading.Tasks.Task RunSaveAsAsync()
         {
-            var storage = (this as Avalonia.Controls.Window)?.StorageProvider;
-            if (storage == null) return;
-            string suggestedName = !string.IsNullOrEmpty(_resname) ? _resname : "path";
-            var options = new Avalonia.Platform.Storage.FilePickerSaveOptions
-            {
-                Title = "Save As",
-                SuggestedFileName = suggestedName + ".pth",
-                FileTypeChoices = new[] { new Avalonia.Platform.Storage.FilePickerFileType("Path (PTH)") { Patterns = new[] { "*.pth" } }, new Avalonia.Platform.Storage.FilePickerFileType("All files") { Patterns = new[] { "*.*" } } }
-            };
-            var file = await storage.SaveFilePickerAsync(options);
-            if (file == null) return;
-            string path = file.Path?.LocalPath ?? "";
-            if (string.IsNullOrWhiteSpace(path)) return;
-            _filepath = path;
-            string ext = (System.IO.Path.GetExtension(path) ?? "").TrimStart('.').ToLowerInvariant();
-            _restype = ResourceType.FromExtension(ext) ?? ResourceType.PTH;
-            _resname = System.IO.Path.GetFileNameWithoutExtension(path);
-            RefreshWindowTitle();
-            Save();
+            await base.RunSaveAsAsync();
         }
     }
 

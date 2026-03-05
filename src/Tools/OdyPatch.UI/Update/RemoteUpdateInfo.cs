@@ -104,7 +104,7 @@ namespace OdyPatch.UI.Update
 
         private static string DetectPlatformKey()
         {
-#if NET472
+#if NETFRAMEWORK
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return "Windows";
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))

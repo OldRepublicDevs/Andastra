@@ -58,46 +58,108 @@ namespace BioWare.Extract.SaveData
 
         public static void WriteSaveNfo(string saveDirectoryPath, byte[] nfoBytes)
         {
-            if (nfoBytes == null) throw new ArgumentNullException(nameof(nfoBytes));
-            EnsureDirectoryExists(saveDirectoryPath);
-            string path = Path.Combine(saveDirectoryPath, SaveNfoFileName);
-            File.WriteAllBytes(path, nfoBytes);
+            WriteSaveFile(saveDirectoryPath, SaveNfoFileName, nfoBytes, nameof(nfoBytes));
         }
 
         public static byte[] ReadSaveNfo(string saveDirectoryPath)
         {
-            if (string.IsNullOrEmpty(saveDirectoryPath)) return null;
-            string path = Path.Combine(saveDirectoryPath, SaveNfoFileName);
-            return File.Exists(path) ? File.ReadAllBytes(path) : null;
+            return ReadSaveFile(saveDirectoryPath, SaveNfoFileName);
         }
 
         public static void WriteSaveArchive(string saveDirectoryPath, byte[] archiveBytes)
         {
-            if (archiveBytes == null) throw new ArgumentNullException(nameof(archiveBytes));
-            EnsureDirectoryExists(saveDirectoryPath);
-            string path = Path.Combine(saveDirectoryPath, SaveArchiveFileName);
-            File.WriteAllBytes(path, archiveBytes);
+            WriteSaveFile(saveDirectoryPath, SaveArchiveFileName, archiveBytes, nameof(archiveBytes));
         }
 
         public static byte[] ReadSaveArchive(string saveDirectoryPath)
         {
-            if (string.IsNullOrEmpty(saveDirectoryPath)) return null;
-            string path = Path.Combine(saveDirectoryPath, SaveArchiveFileName);
-            return File.Exists(path) ? File.ReadAllBytes(path) : null;
+            return ReadSaveFile(saveDirectoryPath, SaveArchiveFileName);
         }
 
         public static void WriteScreenshot(string saveDirectoryPath, byte[] screenshotBytes)
         {
-            if (screenshotBytes == null) throw new ArgumentNullException(nameof(screenshotBytes));
-            EnsureDirectoryExists(saveDirectoryPath);
-            string path = Path.Combine(saveDirectoryPath, ScreenshotFileName);
-            File.WriteAllBytes(path, screenshotBytes);
+            WriteSaveFile(saveDirectoryPath, ScreenshotFileName, screenshotBytes, nameof(screenshotBytes));
+        }
+
+        public static void WriteBytesAtomic(string path, byte[] data)
+        {
+            if (string.IsNullOrEmpty(path)) throw new ArgumentException("Path cannot be null or empty.", nameof(path));
+            if (data == null) throw new ArgumentNullException(nameof(data));
+
+            string directoryPath = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(directoryPath))
+            {
+                EnsureDirectoryExists(directoryPath);
+            }
+
+            string fileName = Path.GetFileName(path);
+            string tempDirectory = string.IsNullOrEmpty(directoryPath) ? Directory.GetCurrentDirectory() : directoryPath;
+            string tempPath = Path.Combine(tempDirectory, fileName + ".tmp." + Guid.NewGuid().ToString("N"));
+
+            try
+            {
+                using (var stream = new FileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                {
+                    stream.Write(data, 0, data.Length);
+                    stream.Flush(true);
+                }
+
+                if (File.Exists(path))
+                {
+                    string backupPath = path + ".bak";
+                    if (File.Exists(backupPath))
+                    {
+                        File.Delete(backupPath);
+                    }
+
+                    File.Replace(tempPath, path, backupPath, true);
+
+                    if (File.Exists(backupPath))
+                    {
+                        File.Delete(backupPath);
+                    }
+                }
+                else
+                {
+                    File.Move(tempPath, path);
+                }
+            }
+            catch
+            {
+                if (File.Exists(tempPath))
+                {
+                    try
+                    {
+                        File.Delete(tempPath);
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                throw;
+            }
         }
 
         public static byte[] ReadScreenshot(string saveDirectoryPath)
         {
+            return ReadSaveFile(saveDirectoryPath, ScreenshotFileName);
+        }
+
+        private static void WriteSaveFile(string saveDirectoryPath, string fileName, byte[] fileBytes, string bytesParamName)
+        {
+            if (fileBytes == null) throw new ArgumentNullException(bytesParamName);
+            EnsureDirectoryExists(saveDirectoryPath);
+
+            string path = Path.Combine(saveDirectoryPath, fileName);
+            WriteBytesAtomic(path, fileBytes);
+        }
+
+        private static byte[] ReadSaveFile(string saveDirectoryPath, string fileName)
+        {
             if (string.IsNullOrEmpty(saveDirectoryPath)) return null;
-            string path = Path.Combine(saveDirectoryPath, ScreenshotFileName);
+
+            string path = Path.Combine(saveDirectoryPath, fileName);
             return File.Exists(path) ? File.ReadAllBytes(path) : null;
         }
     }

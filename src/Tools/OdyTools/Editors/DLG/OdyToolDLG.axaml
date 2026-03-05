@@ -53,8 +53,9 @@
         <MenuItem x:Name="menuFile" Header="File">
           <MenuItem x:Name="actionNew" Header="New" />
           <MenuItem x:Name="actionOpen" Header="Open" />
-          <MenuItem x:Name="actionSave" Header="Save" />
-          <MenuItem x:Name="actionSaveAs" Header="Save As" />
+          <MenuItem x:Name="actionSave" Header="Save" InputGesture="Ctrl+S" />
+          <MenuItem x:Name="actionSaveAs" Header="Save As" InputGesture="Ctrl+Shift+S" />
+          <MenuItem x:Name="actionRestoreBackup" Header="Restore from Backup..." />
           <MenuItem x:Name="actionRevert" Header="Revert" />
           <Separator />
           <MenuItem x:Name="menuRecentFiles" Header="_Recent Files" />

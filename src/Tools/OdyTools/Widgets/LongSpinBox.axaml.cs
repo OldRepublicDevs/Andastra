@@ -19,11 +19,9 @@ namespace OdyTools.Widgets
 
         private void InitializeComponent()
         {
-            bool xamlLoaded = false;
             try
             {
                 AvaloniaXamlLoader.Load(this);
-                xamlLoaded = true;
             }
             catch
             {

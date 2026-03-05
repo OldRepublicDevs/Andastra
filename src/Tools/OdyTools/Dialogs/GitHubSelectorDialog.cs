@@ -15,6 +15,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using Newtonsoft.Json;
 using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Dialogs
 {
@@ -202,24 +203,14 @@ namespace OdyTools.Dialogs
                 {
                     if (_rateLimitTimer == null || !_rateLimitTimer.IsEnabled)
                     {
-                        var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                            "Rate Limited",
-                            "You have submitted too many requests to GitHub's API. Check the status bar at the bottom.",
-                            ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Error);
-                        _ = msgBox.ShowAsync();
+                        _ = DialogHelper.ShowAsync("Rate Limited", "You have submitted too many requests to GitHub's API. Check the status bar at the bottom.", ButtonEnum.Ok, IconType.Error);
                         StartRateLimitTimer(null);
                     }
                     return;
                 }
 
                 // Try to load forks as fallback
-                var errorMsgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Repository Not Found",
-                    $"The repository '{_owner}/{_repo}' had an unexpected error:\n\n{ex.Message}",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                await errorMsgBox.ShowAsync();
+                await DialogHelper.ShowAsync("Repository Not Found", $"The repository '{_owner}/{_repo}' had an unexpected error:\n\n{ex.Message}", ButtonEnum.Ok, IconType.Error);
 
                 // Try to fetch forks
                 try
@@ -231,12 +222,7 @@ namespace OdyTools.Dialogs
                     if (forks != null && forks.Count > 0)
                     {
                         string firstFork = forks[0].FullName;
-                        var infoMsgBox = MessageBoxManager.GetMessageBoxStandard(
-                            "Using Fork",
-                            $"The main repository is not available. Using the fork: {firstFork}",
-                            ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Info);
-                        await infoMsgBox.ShowAsync();
+                        await DialogHelper.ShowAsync("Using Fork", $"The main repository is not available. Using the fork: {firstFork}", ButtonEnum.Ok, IconType.Info);
 
                         string[] forkParts = firstFork.Split('/');
                         if (forkParts.Length == 2)
@@ -254,31 +240,16 @@ namespace OdyTools.Dialogs
                         }
                     }
 
-                    var noForksMsgBox = MessageBoxManager.GetMessageBoxStandard(
-                        "No Forks Available",
-                        "No forks are available to load.",
-                        ButtonEnum.Ok,
-                        MsBox.Avalonia.Enums.Icon.Error);
-                    await noForksMsgBox.ShowAsync();
+                    await DialogHelper.ShowAsync("No Forks Available", "No forks are available to load.", ButtonEnum.Ok, IconType.Error);
                 }
                 catch (Exception forkEx)
                 {
-                    var forkErrorMsgBox = MessageBoxManager.GetMessageBoxStandard(
-                        "Forks Load Error",
-                        $"Failed to load forks: {forkEx.Message}",
-                        ButtonEnum.Ok,
-                        MsBox.Avalonia.Enums.Icon.Error);
-                    await forkErrorMsgBox.ShowAsync();
+                    await DialogHelper.ShowAsync("Forks Load Error", $"Failed to load forks: {forkEx.Message}", ButtonEnum.Ok, IconType.Error);
                 }
             }
             catch (Exception ex)
             {
-                var errorMsgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error",
-                    $"Failed to initialize repository data: {ex.Message}",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                await errorMsgBox.ShowAsync();
+                await DialogHelper.ShowAsync("Error", $"Failed to initialize repository data: {ex.Message}", ButtonEnum.Ok, IconType.Error);
             }
         }
 
@@ -542,12 +513,7 @@ namespace OdyTools.Dialogs
             }
             catch (Exception ex)
             {
-                var errorMsgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error Loading Fork",
-                    $"Failed to load fork '{forkName}': {ex.Message}",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                await errorMsgBox.ShowAsync();
+                await DialogHelper.ShowAsync("Error Loading Fork", $"Failed to load fork '{forkName}': {ex.Message}", ButtonEnum.Ok, IconType.Error);
             }
         }
 
@@ -734,12 +700,7 @@ namespace OdyTools.Dialogs
             if (string.IsNullOrEmpty(_selectedPath))
             {
                 // Show warning message
-                var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
-                    "Warning",
-                    "You must select a file.",
-                    MsBox.Avalonia.Enums.ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Warning);
-                msgBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Warning", "You must select a file.", MsBox.Avalonia.Enums.ButtonEnum.Ok, IconType.Warning);
                 return;
             }
             System.Console.WriteLine($"User selected '{_selectedPath}'");
@@ -771,12 +732,7 @@ namespace OdyTools.Dialogs
             // Validate that a fork is selected
             if (string.IsNullOrWhiteSpace(selectedFork))
             {
-                var warningMsgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "No Fork Selected",
-                    "Please select a fork to clone.",
-                    ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Warning);
-                warningMsgBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("No Fork Selected", "Please select a fork to clone.", ButtonEnum.Ok, IconType.Warning);
                 return;
             }
 
@@ -788,12 +744,7 @@ namespace OdyTools.Dialogs
                 // Check if git is available
                 if (!IsGitAvailable())
                 {
-                    var errorMsgBox = MessageBoxManager.GetMessageBoxStandard(
-                        "Git Not Found",
-                        "Git is not installed or not available in PATH. Please install Git and ensure it is accessible from the command line.",
-                        ButtonEnum.Ok,
-                        MsBox.Avalonia.Enums.Icon.Error);
-                    errorMsgBox.ShowAsync();
+                    _ = DialogHelper.ShowAsync("Git Not Found", "Git is not installed or not available in PATH. Please install Git and ensure it is accessible from the command line.", ButtonEnum.Ok, IconType.Error);
                     return;
                 }
 
@@ -830,12 +781,7 @@ namespace OdyTools.Dialogs
                     if (process.ExitCode == 0)
                     {
                         // Clone successful
-                        var successMsgBox = MessageBoxManager.GetMessageBoxStandard(
-                            "Clone Successful",
-                            $"Repository {selectedFork} cloned successfully.",
-                            ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Success);
-                        successMsgBox.ShowAsync();
+                        _ = DialogHelper.ShowAsync("Clone Successful", $"Repository {selectedFork} cloned successfully.", ButtonEnum.Ok, IconType.Success);
                     }
                     else
                     {
@@ -845,24 +791,14 @@ namespace OdyTools.Dialogs
                         {
                             errorMessage = $"Git clone failed with exit code {process.ExitCode}";
                         }
-                        var errorMsgBox = MessageBoxManager.GetMessageBoxStandard(
-                            "Clone Failed",
-                            $"Failed to clone repository: {errorMessage}",
-                            ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Error);
-                        errorMsgBox.ShowAsync();
+                        _ = DialogHelper.ShowAsync("Clone Failed", $"Failed to clone repository: {errorMessage}", ButtonEnum.Ok, IconType.Error);
                     }
                 }
             }
             catch (Exception ex)
             {
                 // Handle exceptions during git clone execution
-                var errorMsgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Clone Failed",
-                    $"Failed to clone repository: {ex.Message}",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorMsgBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Clone Failed", $"Failed to clone repository: {ex.Message}", ButtonEnum.Ok, IconType.Error);
             }
         }
 
@@ -916,12 +852,7 @@ namespace OdyTools.Dialogs
             }
             catch (Exception ex)
             {
-                var errorMsgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Refresh Error",
-                    $"Failed to refresh data: {ex.Message}",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorMsgBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Refresh Error", $"Failed to refresh data: {ex.Message}", ButtonEnum.Ok, IconType.Error);
             }
         }
 

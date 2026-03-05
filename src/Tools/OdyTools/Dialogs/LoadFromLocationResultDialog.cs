@@ -13,6 +13,8 @@ using OdyTools.Data;
 using OdyTools.Utils;
 using OdyTools.Editors;
 using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Dialogs
 {
@@ -238,12 +240,7 @@ namespace OdyTools.Dialogs
                 // Show error dialog if MessageBox is available
                 try
                 {
-                    var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
-                        "Error",
-                        $"Failed to open selected resources:\n{ex.Message}",
-                        MsBox.Avalonia.Enums.ButtonEnum.Ok,
-                        MsBox.Avalonia.Enums.Icon.Error);
-                    msgBox.ShowAsync();
+                    _ = DialogHelper.ShowAsync("Error", $"Failed to open selected resources:\n{ex.Message}", MsBox.Avalonia.Enums.ButtonEnum.Ok, IconType.Error);
                 }
                 catch
                 {
@@ -261,12 +258,7 @@ namespace OdyTools.Dialogs
                 // No resources selected - show message to user
                 try
                 {
-                    var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
-                        "No Selection",
-                        "Please select one or more resources to extract.",
-                        MsBox.Avalonia.Enums.ButtonEnum.Ok,
-                        MsBox.Avalonia.Enums.Icon.Info);
-                    await msgBox.ShowAsync();
+                    await DialogHelper.ShowAsync("No Selection", "Please select one or more resources to extract.", ButtonEnum.Ok, IconType.Info);
                 }
                 catch
                 {
@@ -403,12 +395,7 @@ namespace OdyTools.Dialogs
                             ? $"Successfully extracted resource to:\n{pathsToWrite.Values.First()}"
                             : $"Successfully extracted {successCount} resource(s) to:\n{Path.GetDirectoryName(pathsToWrite.Values.First())}";
                         
-                        var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
-                            "Extraction Complete",
-                            successMsg,
-                            MsBox.Avalonia.Enums.ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Success);
-                        await msgBox.ShowAsync();
+                        await DialogHelper.ShowAsync("Extraction Complete", successMsg, ButtonEnum.Ok, IconType.Success);
                     }
                     catch
                     {
@@ -425,12 +412,7 @@ namespace OdyTools.Dialogs
                         string message = $"Extracted {successCount} resource(s) successfully.\n\n" +
                                         $"Failed to extract {failureCount} resource(s):\n{failedDetails}";
                         
-                        var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
-                            "Extraction Complete with Errors",
-                            message,
-                            MsBox.Avalonia.Enums.ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Warning);
-                        await msgBox.ShowAsync();
+                        await DialogHelper.ShowAsync("Extraction Complete with Errors", message, ButtonEnum.Ok, IconType.Warning);
                     }
                     catch
                     {
@@ -446,12 +428,7 @@ namespace OdyTools.Dialogs
                         string failedDetails = string.Join("\n", failedPaths.Select((path, idx) => $"{path}: {failedExceptions[idx].Message}"));
                         string message = $"Failed to extract all {selectedResources.Count} resource(s):\n{failedDetails}";
                         
-                        var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
-                            "Extraction Failed",
-                            message,
-                            MsBox.Avalonia.Enums.ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Error);
-                        await msgBox.ShowAsync();
+                        await DialogHelper.ShowAsync("Extraction Failed", message, ButtonEnum.Ok, IconType.Error);
                     }
                     catch
                     {
@@ -468,12 +445,7 @@ namespace OdyTools.Dialogs
                 // Show error dialog if MessageBox is available
                 try
                 {
-                    var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
-                        "Error",
-                        $"Failed to extract resources:\n{ex.Message}",
-                        MsBox.Avalonia.Enums.ButtonEnum.Ok,
-                        MsBox.Avalonia.Enums.Icon.Error);
-                    await msgBox.ShowAsync();
+                    await DialogHelper.ShowAsync("Error", $"Failed to extract resources:\n{ex.Message}", ButtonEnum.Ok, IconType.Error);
                 }
                 catch
                 {

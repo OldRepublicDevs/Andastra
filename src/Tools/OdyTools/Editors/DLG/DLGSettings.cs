@@ -90,6 +90,56 @@ namespace OdyTools.Editors.DLG
             Set("show_verbose_hover_hints", value);
         }
 
+        public bool AutosaveEnabled(bool defaultValue = true)
+        {
+            return GlobalSettings.ManagedAutosaveEnabled;
+        }
+
+        public void SetAutosaveEnabled(bool value)
+        {
+            Set("autosave_enabled", GlobalSettings.ManagedAutosaveEnabled);
+        }
+
+        public int AutosaveIntervalMinutes(int defaultValue = 3)
+        {
+            return GlobalSettings.ManagedAutosaveIntervalMinutes;
+        }
+
+        public void SetAutosaveIntervalMinutes(int value)
+        {
+            Set("autosave_interval_minutes", GlobalSettings.ManagedAutosaveIntervalMinutes);
+        }
+
+        public bool BackupsEnabled(bool defaultValue = true)
+        {
+            return Get("backups_enabled", defaultValue);
+        }
+
+        public void SetBackupsEnabled(bool value)
+        {
+            Set("backups_enabled", value);
+        }
+
+        public int MaxBackupCount(int defaultValue = 5)
+        {
+            return Get("max_backup_count", defaultValue);
+        }
+
+        public void SetMaxBackupCount(int value)
+        {
+            Set("max_backup_count", Math.Max(1, value));
+        }
+
+        public bool ValidateOnSave(bool defaultValue = true)
+        {
+            return Get("validate_on_save", defaultValue);
+        }
+
+        public void SetValidateOnSave(bool value)
+        {
+            Set("validate_on_save", value);
+        }
+
         // --- Mode: Use installation vs manual paths ---
 
         /// <summary>True = use game installation when available; False = always use manual paths.</summary>

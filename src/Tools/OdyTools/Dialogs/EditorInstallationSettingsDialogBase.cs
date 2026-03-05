@@ -10,6 +10,8 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using OdyTools.Data;
 using OdyTools.Widgets.Settings;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Dialogs
 {
@@ -104,14 +106,9 @@ namespace OdyTools.Dialogs
                     int added = new GlobalSettings().MergeDetectedInstallationsFromDefault();
                     LoadInstallationNames();
                     InstallationCombo.SelectedIndex = InstallationNames.Count > 0 ? 1 : 0;
-                    var msg = MessageBoxManager.GetMessageBoxStandard(
-                        "Auto-detect",
-                        added > 0
+                    await DialogHelper.ShowWindowAsync(this, "Auto-detect", added > 0
                             ? $"Found and added {added} installation(s) from default paths."
-                            : "No new installations found. Existing installations were left unchanged.",
-                        ButtonEnum.Ok,
-                        MsBox.Avalonia.Enums.Icon.Info);
-                    await msg.ShowWindowDialogAsync(this);
+                            : "No new installations found. Existing installations were left unchanged.", ButtonEnum.Ok, IconType.Info);
                 }
                 finally
                 {

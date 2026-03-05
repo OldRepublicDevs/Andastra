@@ -49,32 +49,8 @@ namespace BioWare.Resource.Formats.GFF.Generics
         public static void WriteGam(GAM gam, object target, BioWareGame game, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.GAM;
-            if (format != ResourceType.GAM)
-            {
-                throw new ArgumentException("Unsupported format specified; use GAM.", nameof(fileFormat));
-            }
-
-            // Validate game type - GAM format is only used by Aurora and Infinity Engine, NOT Odyssey
-            // Odyssey uses NFO format for save games, not GAM format
-            if (game.IsOdyssey())
-            {
-                throw new ArgumentException(
-                    $"GAM format is not supported for Odyssey engine (KOTOR). Odyssey uses NFO format for save games. " +
-                    $"GAM format is only supported for Aurora (Neverwinter Nights) and Infinity Engine games (Baldur's Gate, Icewind Dale, Planescape: Torment). " +
-                    $"Provided game: {game}",
-                    nameof(game));
-            }
-
-            // Currently only Aurora is supported (Infinity Engine games not yet in Game enum)
-            // When Infinity Engine games (BG, IWD, PST) are added to Game enum, this validation will be updated
-            if (!game.IsAurora())
-            {
-                throw new ArgumentException(
-                    $"GAM format is only supported for Aurora (Neverwinter Nights, NWN2) and Infinity Engine games. " +
-                    $"Currently only Aurora is supported as Infinity Engine games are not yet in the Game enum. " +
-                    $"Provided game: {game}",
-                    nameof(game));
-            }
+            if (gam == null) throw new ArgumentNullException(nameof(gam));
+            ValidateGamSerializationInputs(game, format, nameof(fileFormat));
 
             // Dismantle GAM to GFF
             GFF gff = GAMHelpers.DismantleGam(gam, game);
@@ -99,9 +75,24 @@ namespace BioWare.Resource.Formats.GFF.Generics
         public static byte[] BytesGam(GAM gam, BioWareGame game, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.GAM;
+            if (gam == null) throw new ArgumentNullException(nameof(gam));
+            ValidateGamSerializationInputs(game, format, nameof(fileFormat));
+
+            // Dismantle GAM to GFF
+            GFF gff = GAMHelpers.DismantleGam(gam, game);
+
+            // Convert GFF to bytes
+            return GFFAuto.BytesGff(gff, format);
+        }
+
+        /// <summary>
+        /// Validates shared GAM serialization preconditions for write/bytes operations.
+        /// </summary>
+        private static void ValidateGamSerializationInputs(BioWareGame game, ResourceType format, string formatParamName)
+        {
             if (format != ResourceType.GAM)
             {
-                throw new ArgumentException("Unsupported format specified; use GAM.", nameof(fileFormat));
+                throw new ArgumentException("Unsupported format specified; use GAM.", formatParamName);
             }
 
             // Validate game type - GAM format is only used by Aurora and Infinity Engine, NOT Odyssey
@@ -125,12 +116,6 @@ namespace BioWare.Resource.Formats.GFF.Generics
                     $"Provided game: {game}",
                     nameof(game));
             }
-
-            // Dismantle GAM to GFF
-            GFF gff = GAMHelpers.DismantleGam(gam, game);
-
-            // Convert GFF to bytes
-            return GFFAuto.BytesGff(gff, format);
         }
     }
 }

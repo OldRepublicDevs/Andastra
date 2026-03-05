@@ -3,16 +3,11 @@ using System.Globalization;
 
 namespace BioWare.Utility
 {
-    // Matching PyKotor implementation at Libraries/PyKotor/src/utility/misc.py:348-387
-    // Original: def is_int(val: str | int | Buffer | SupportsInt | SupportsIndex) -> bool:
     /// <summary>
-    /// Can be cast to an int without raising an error.
-    ///
-    /// Args:
-    ///     val: The value to try to convert
-    ///
-    /// Returns:
-    ///     True if val can be converted else False
+    /// Type conversion and validation utilities ported from PyKotor.
+    /// Provides robust type checking for int and float conversion with support for multiple input formats.
+    /// Also includes utility functions for hashing and format conversion.
+    /// Port of Libraries/PyKotor/src/utility/misc.py module.
     /// </summary>
     public static class UtilityMisc
     {

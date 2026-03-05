@@ -28,6 +28,19 @@ namespace OdyTools.Editors
         private const int MinEditorWidth = 400;
         private const int MinEditorHeight = 300;
         private const int UndoMaxLevels = 30;
+        private static readonly (Language language, string menuItemName)[] LanguageMenuItems =
+        {
+            (Language.English, "actionLangEnglish"),
+            (Language.French, "actionLangFrench"),
+            (Language.German, "actionLangGerman"),
+            (Language.Italian, "actionLangItalian"),
+            (Language.Spanish, "actionLangSpanish"),
+            (Language.Polish, "actionLangPolish"),
+            (Language.ChineseSimplified, "actionLangChineseSimplified"),
+            (Language.ChineseTraditional, "actionLangChineseTraditional"),
+            (Language.Japanese, "actionLangJapanese"),
+            (Language.Korean, "actionLangKorean"),
+        };
 
         private ObservableCollection<TLKEntryViewModel> _sourceEntries;
         private CollectionViewSource _filteredEntries;
@@ -52,6 +65,7 @@ namespace OdyTools.Editors
         private bool _findMatchCase;
         private int _lastFindIndex = -1;
 
+        public OdyToolTLK() : this(null, null) { }
         public OdyToolTLK(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolTLK", "none",
                 new[] { ResourceType.TLK, ResourceType.TLK_XML, ResourceType.TLK_JSON },
@@ -335,13 +349,13 @@ namespace OdyTools.Editors
             if (_textEdit != null)
             {
                 _textEdit.TextChanged += (s, e) => UpdateEntry();
-                _textEdit.LostFocus += (s, e) => CommitEntryEdits();
+                EditorHelpers.BindLostFocus(_textEdit, CommitEntryEdits);
             }
 
             if (_soundEdit != null)
             {
                 _soundEdit.TextChanged += (s, e) => UpdateEntry();
-                _soundEdit.LostFocus += (s, e) => CommitEntryEdits();
+                EditorHelpers.BindLostFocus(_soundEdit, CommitEntryEdits);
             }
 
             Opened += (s, e) =>
@@ -353,53 +367,47 @@ namespace OdyTools.Editors
 
         private void SetupMenuHandlers()
         {
-            void Bind(string name, Action handler)
-            {
-                try
-                {
-                    var item = this.FindControl<MenuItem>(name);
-                    if (item != null) item.Click += (s, e) => handler();
-                }
-                catch { }
-            }
-            void BindAsync(string name, Func<Task> handler)
-            {
-                try
-                {
-                    var item = this.FindControl<MenuItem>(name);
-                    if (item != null) item.Click += async (s, e) => await handler();
-                }
-                catch { }
-            }
             // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
-            Bind("actionUndo", () => Undo());
-            Bind("actionRedo", () => Redo());
-            Bind("actionInsert", () => Insert());
-            Bind("actionDeleteEntry", () => RemoveSelectedEntry());
-            Bind("actionFind", () => ShowFindDialog());
-            Bind("actionReplace", () => ShowReplaceDialog());
-            Bind("actionFindNext", () => FindNextMatch());
-            Bind("actionGoTo", () => ShowGoToEntryDialog());
-            Bind("ctxInsert", () => Insert());
-            Bind("ctxDeleteEntry", () => RemoveSelectedEntry());
-            Bind("ctxFind", () => ShowFindDialog());
-            Bind("ctxGoTo", () => ShowGoToEntryDialog());
-            Bind("ctxFindReferences", () => FindLocalizedStringReferences());
+            EditorHelpers.BindMenuClicks(this, new (string menuItemName, Action handler)[]
+            {
+                ("actionUndo", Undo),
+                ("actionRedo", Redo),
+                ("actionInsert", Insert),
+                ("actionDeleteEntry", RemoveSelectedEntry),
+                ("actionFind", ShowFindDialog),
+                ("actionReplace", ShowReplaceDialog),
+                ("actionFindNext", () => FindNextMatch()),
+                ("actionGoTo", ShowGoToEntryDialog),
+                ("ctxInsert", Insert),
+                ("ctxDeleteEntry", RemoveSelectedEntry),
+                ("ctxFind", ShowFindDialog),
+                ("ctxGoTo", ShowGoToEntryDialog),
+                ("ctxFindReferences", FindLocalizedStringReferences),
+            });
 
-            // Language menu (TLK file language, not UI language)
-            Bind("actionLangAutoDetect", () => { if (_revert != null && _revert.Length > 0) Revert(); });
-            Bind("actionLangEnglish", () => ChangeLanguage(Language.English));
-            Bind("actionLangFrench", () => ChangeLanguage(Language.French));
-            Bind("actionLangGerman", () => ChangeLanguage(Language.German));
-            Bind("actionLangItalian", () => ChangeLanguage(Language.Italian));
-            Bind("actionLangSpanish", () => ChangeLanguage(Language.Spanish));
-            Bind("actionLangPolish", () => ChangeLanguage(Language.Polish));
-            Bind("actionLangChineseSimplified", () => ChangeLanguage(Language.ChineseSimplified));
-            Bind("actionLangChineseTraditional", () => ChangeLanguage(Language.ChineseTraditional));
-            Bind("actionLangJapanese", () => ChangeLanguage(Language.Japanese));
-            Bind("actionLangKorean", () => ChangeLanguage(Language.Korean));
+            BindLanguageMenuHandlers();
 
             RefreshLanguageMenuCheckmarks();
+        }
+
+        /// <summary>
+        /// Wires TLK file language menu actions to language-switch handlers.
+        /// </summary>
+        private void BindLanguageMenuHandlers()
+        {
+            EditorHelpers.BindMenuClick(this, "actionLangAutoDetect", () =>
+            {
+                if (_revert != null && _revert.Length > 0)
+                {
+                    Revert();
+                }
+            });
+
+            foreach (var item in LanguageMenuItems)
+            {
+                Language selectedLanguage = item.language;
+                EditorHelpers.BindMenuClick(this, item.menuItemName, () => ChangeLanguage(selectedLanguage));
+            }
         }
 
         private void CommitEntryEdits()
@@ -415,12 +423,11 @@ namespace OdyTools.Editors
         private void PushState()
         {
             if (_undoRedoInProgress) return;
-            var snapshot = new List<(string text, string sound)>();
-            foreach (var e in _sourceEntries)
-                snapshot.Add((e.Text ?? "", e.Sound ?? ""));
+            var snapshot = CaptureCurrentEntriesSnapshot();
             _redoStack.Clear();
             _undoStack.Add(snapshot);
             if (_undoStack.Count > UndoMaxLevels) _undoStack.RemoveAt(0);
+            MarkDocumentDirty();
         }
 
         private void ApplyState(List<(string text, string sound)> snapshot)
@@ -428,8 +435,7 @@ namespace OdyTools.Editors
             _sourceEntries.Clear();
             for (int i = 0; i < snapshot.Count; i++)
                 _sourceEntries.Add(new TLKEntryViewModel(i, snapshot[i].text, snapshot[i].sound));
-            if (_jumpSpinbox != null)
-                _jumpSpinbox.Maximum = _sourceEntries.Count > 0 ? _sourceEntries.Count - 1 : 0;
+            UpdateJumpSpinboxMaximum();
             UpdateStatusBar();
         }
 
@@ -441,8 +447,7 @@ namespace OdyTools.Editors
             {
                 var snapshot = _undoStack[_undoStack.Count - 1];
                 _undoStack.RemoveAt(_undoStack.Count - 1);
-                var current = new List<(string, string)>();
-                foreach (var e in _sourceEntries) current.Add((e.Text ?? "", e.Sound ?? ""));
+                var current = CaptureCurrentEntriesSnapshot();
                 _redoStack.Add(current);
                 ApplyState(snapshot);
             }
@@ -457,8 +462,7 @@ namespace OdyTools.Editors
             {
                 var snapshot = _redoStack[_redoStack.Count - 1];
                 _redoStack.RemoveAt(_redoStack.Count - 1);
-                var current = new List<(string, string)>();
-                foreach (var e in _sourceEntries) current.Add((e.Text ?? "", e.Sound ?? ""));
+                var current = CaptureCurrentEntriesSnapshot();
                 _undoStack.Add(current);
                 ApplyState(snapshot);
             }
@@ -636,19 +640,6 @@ namespace OdyTools.Editors
         {
             try
             {
-                var langToName = new Dictionary<Language, string>
-                {
-                    { Language.English, "actionLangEnglish" },
-                    { Language.French, "actionLangFrench" },
-                    { Language.German, "actionLangGerman" },
-                    { Language.Italian, "actionLangItalian" },
-                    { Language.Spanish, "actionLangSpanish" },
-                    { Language.Polish, "actionLangPolish" },
-                    { Language.ChineseSimplified, "actionLangChineseSimplified" },
-                    { Language.ChineseTraditional, "actionLangChineseTraditional" },
-                    { Language.Japanese, "actionLangJapanese" },
-                    { Language.Korean, "actionLangKorean" }
-                };
                 bool hasRevert = _revert != null && _revert.Length > 0;
                 Language? fileLanguage = null;
                 if (hasRevert)
@@ -663,10 +654,10 @@ namespace OdyTools.Editors
                 bool isAutoDetect = hasRevert && fileLanguage.HasValue && _language == fileLanguage.Value;
                 var autoItem = this.FindControl<MenuItem>("actionLangAutoDetect");
                 if (autoItem != null) autoItem.IsChecked = isAutoDetect;
-                foreach (var kvp in langToName)
+                foreach (var item in LanguageMenuItems)
                 {
-                    var item = this.FindControl<MenuItem>(kvp.Value);
-                    if (item != null) item.IsChecked = _language == kvp.Key;
+                    var menuItem = this.FindControl<MenuItem>(item.menuItemName);
+                    if (menuItem != null) menuItem.IsChecked = _language == item.language;
                 }
             }
             catch { }
@@ -738,7 +729,7 @@ namespace OdyTools.Editors
             }
 
             if (_jumpSpinbox != null)
-                _jumpSpinbox.Maximum = _sourceEntries.Count > 0 ? _sourceEntries.Count - 1 : 0;
+                _jumpSpinbox.Maximum = GetLastEntryIndex();
             UpdateStatusBar();
         }
 
@@ -775,8 +766,7 @@ namespace OdyTools.Editors
             PushState();
             int newIndex = _sourceEntries.Count;
             _sourceEntries.Add(new TLKEntryViewModel(newIndex, "", ""));
-            if (_jumpSpinbox != null)
-                _jumpSpinbox.Maximum = _sourceEntries.Count > 0 ? _sourceEntries.Count - 1 : 0;
+            UpdateJumpSpinboxMaximum();
             UpdateStatusBar();
         }
 
@@ -791,12 +781,35 @@ namespace OdyTools.Editors
             _sourceEntries.Clear();
             for (int i = 0; i < list.Count; i++)
                 _sourceEntries.Add(new TLKEntryViewModel(i, list[i].Item1, list[i].Item2));
-            if (_jumpSpinbox != null)
-                _jumpSpinbox.Maximum = _sourceEntries.Count > 0 ? _sourceEntries.Count - 1 : 0;
+            UpdateJumpSpinboxMaximum();
             _selectedEntry = null;
             if (_textEdit != null) _textEdit.IsEnabled = false;
             if (_soundEdit != null) _soundEdit.IsEnabled = false;
             UpdateStatusBar();
+        }
+
+        private List<(string text, string sound)> CaptureCurrentEntriesSnapshot()
+        {
+            var snapshot = new List<(string text, string sound)>();
+            foreach (var entry in _sourceEntries)
+            {
+                snapshot.Add((entry.Text ?? "", entry.Sound ?? ""));
+            }
+
+            return snapshot;
+        }
+
+        private int GetLastEntryIndex()
+        {
+            return _sourceEntries.Count > 0 ? _sourceEntries.Count - 1 : 0;
+        }
+
+        private void UpdateJumpSpinboxMaximum()
+        {
+            if (_jumpSpinbox != null)
+            {
+                _jumpSpinbox.Maximum = GetLastEntryIndex();
+            }
         }
 
         public void DoFilter(string text)
@@ -1102,7 +1115,7 @@ namespace OdyTools.Editors
             };
             var panel = new StackPanel { Margin = new Avalonia.Thickness(12) };
             var label = new TextBlock { Text = "Entry index:" };
-            int maxIdx = _sourceEntries.Count > 0 ? _sourceEntries.Count - 1 : 0;
+            int maxIdx = GetLastEntryIndex();
             var spin = new NumericUpDown { Minimum = 0, Maximum = maxIdx, Value = 0 };
             var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Avalonia.Thickness(0, 8, 0, 0) };
             var goBtn = new Button { Content = "Go", Margin = new Avalonia.Thickness(0, 0, 8, 0) };

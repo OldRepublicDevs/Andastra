@@ -5,8 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using OdyTools.Data;
 using OdyTools.Dialogs;
-using MsBox.Avalonia;
-using MsBox.Avalonia.Enums;
+using OdyTools.Utils;
 
 namespace OdyTools.Widgets.Settings
 {
@@ -107,21 +106,13 @@ namespace OdyTools.Widgets.Settings
                 return;
             }
 
-            // Load environment variables from settings
-            var envVarsDict = _settings.AppEnvVariables;
-            _environmentVariables = new List<EnvironmentVariable>();
-
-            foreach (var kvp in envVarsDict)
-            {
-                _environmentVariables.Add(new EnvironmentVariable(kvp.Key, kvp.Value));
-            }
-
-            _tableWidget.ItemsSource = _environmentVariables;
+            _environmentVariables = EnvironmentVariableGridHelper.FromDictionary(_settings.AppEnvVariables);
+            EnvironmentVariableGridHelper.RefreshGrid(_tableWidget, _environmentVariables);
         }
 
         private async void AddEnvironmentVariable()
         {
-            Window parentWindow = GetParentWindow();
+            Window parentWindow = ControlTreeHelper.GetParentWindow(this);
             if (parentWindow == null)
             {
                 return;
@@ -138,22 +129,16 @@ namespace OdyTools.Widgets.Settings
                 string value = result.Item2 ?? "";
 
                 // Check if key already exists
-                if (_environmentVariables.Any(ev => ev.Key.Equals(key, StringComparison.OrdinalIgnoreCase)))
+                if (HasEnvironmentVariableKey(key))
                 {
-                    var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                        "Duplicate Variable",
-                        $"An environment variable with key '{key}' already exists.",
-                        ButtonEnum.Ok,
-                        Icon.Warning);
-                    await msgBox.ShowAsync();
+                    await DialogHelper.ShowWarningAsync("Duplicate Variable", $"An environment variable with key '{key}' already exists.");
                     return;
                 }
 
                 // Add to list
                 var newVar = new EnvironmentVariable(key, value);
                 _environmentVariables.Add(newVar);
-                _tableWidget.ItemsSource = null;
-                _tableWidget.ItemsSource = _environmentVariables;
+                RefreshEnvironmentVariablesGrid();
 
                 // Save to settings
                 SaveEnvironmentVariable(key, value);
@@ -162,24 +147,14 @@ namespace OdyTools.Widgets.Settings
 
         private async void EditEnvironmentVariable()
         {
-            if (_tableWidget == null || _tableWidget.SelectedItem == null)
+            EnvironmentVariable selectedVar;
+            if (!TryGetSelectedEnvironmentVariable(out selectedVar))
             {
-                var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Edit Variable",
-                    "Please select a variable to edit.",
-                    ButtonEnum.Ok,
-                    Icon.Warning);
-                await msgBox.ShowAsync();
+                await DialogHelper.ShowWarningAsync("Edit Variable", "Please select a variable to edit.");
                 return;
             }
 
-            var selectedVar = _tableWidget.SelectedItem as EnvironmentVariable;
-            if (selectedVar == null)
-            {
-                return;
-            }
-
-            Window parentWindow = GetParentWindow();
+            Window parentWindow = ControlTreeHelper.GetParentWindow(this);
             if (parentWindow == null)
             {
                 return;
@@ -200,14 +175,9 @@ namespace OdyTools.Widgets.Settings
                 // If key changed, check for duplicates
                 if (!oldKey.Equals(newKey, StringComparison.OrdinalIgnoreCase))
                 {
-                    if (_environmentVariables.Any(ev => ev.Key.Equals(newKey, StringComparison.OrdinalIgnoreCase)))
+                    if (HasEnvironmentVariableKey(newKey, selectedVar))
                     {
-                        var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                            "Duplicate Variable",
-                            $"An environment variable with key '{newKey}' already exists.",
-                            ButtonEnum.Ok,
-                            Icon.Warning);
-                        await msgBox.ShowAsync();
+                        await DialogHelper.ShowWarningAsync("Duplicate Variable", $"An environment variable with key '{newKey}' already exists.");
                         return;
                     }
 
@@ -220,8 +190,7 @@ namespace OdyTools.Widgets.Settings
                 selectedVar.Value = newValue;
 
                 // Refresh the DataGrid
-                _tableWidget.ItemsSource = null;
-                _tableWidget.ItemsSource = _environmentVariables;
+                RefreshEnvironmentVariablesGrid();
 
                 // Save to settings
                 SaveEnvironmentVariable(newKey, newValue);
@@ -230,20 +199,10 @@ namespace OdyTools.Widgets.Settings
 
         private async void RemoveEnvironmentVariable()
         {
-            if (_tableWidget == null || _tableWidget.SelectedItem == null)
+            EnvironmentVariable selectedVar;
+            if (!TryGetSelectedEnvironmentVariable(out selectedVar))
             {
-                var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Remove Variable",
-                    "Please select a variable to remove.",
-                    ButtonEnum.Ok,
-                    Icon.Warning);
-                await msgBox.ShowAsync();
-                return;
-            }
-
-            var selectedVar = _tableWidget.SelectedItem as EnvironmentVariable;
-            if (selectedVar == null)
-            {
+                await DialogHelper.ShowWarningAsync("Remove Variable", "Please select a variable to remove.");
                 return;
             }
 
@@ -251,56 +210,40 @@ namespace OdyTools.Widgets.Settings
 
             // Remove from the list
             _environmentVariables.Remove(selectedVar);
-            _tableWidget.ItemsSource = null;
-            _tableWidget.ItemsSource = _environmentVariables;
+            RefreshEnvironmentVariablesGrid();
 
             // Remove from settings
             RemoveEnvironmentVariableFromSettings(key);
         }
 
+        private void RefreshEnvironmentVariablesGrid()
+        {
+            EnvironmentVariableGridHelper.RefreshGrid(_tableWidget, _environmentVariables);
+        }
+
+        private bool TryGetSelectedEnvironmentVariable(out EnvironmentVariable selected)
+        {
+            return EnvironmentVariableGridHelper.TryGetSelected(_tableWidget, out selected);
+        }
+
+        private bool HasEnvironmentVariableKey(string key, EnvironmentVariable except = null)
+        {
+            return EnvironmentVariableGridHelper.HasKey(_environmentVariables, key, except);
+        }
+
         private void RemoveEnvironmentVariableFromSettings(string key)
         {
-            var envVars = _settings.AppEnvVariables;
-            if (envVars.ContainsKey(key))
-            {
-                envVars.Remove(key);
-                _settings.AppEnvVariables = envVars;
-            }
+            EnvironmentVariableGridHelper.RemoveSetting(_settings, key);
         }
 
         private void SaveEnvironmentVariable(string key, string value)
         {
-            var envVars = _settings.AppEnvVariables;
-            envVars[key] = value;
-            _settings.AppEnvVariables = envVars;
+            EnvironmentVariableGridHelper.UpsertSetting(_settings, key, value);
         }
 
         public void Save()
         {
-            // Save all environment variables to settings
-            var envVars = new Dictionary<string, string>();
-            foreach (var envVar in _environmentVariables)
-            {
-                if (!string.IsNullOrWhiteSpace(envVar.Key))
-                {
-                    envVars[envVar.Key] = envVar.Value ?? "";
-                }
-            }
-            _settings.AppEnvVariables = envVars;
-        }
-
-        private Window GetParentWindow()
-        {
-            Control current = this;
-            while (current != null)
-            {
-                if (current is Window window)
-                {
-                    return window;
-                }
-                current = current.Parent as Control;
-            }
-            return null;
+            _settings.AppEnvVariables = EnvironmentVariableGridHelper.ToDictionary(_environmentVariables);
         }
     }
 }

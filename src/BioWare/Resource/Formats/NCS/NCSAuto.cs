@@ -22,6 +22,8 @@ namespace BioWare.Resource.Formats.NCS
     /// </summary>
     public static class NCSAuto
     {
+        private const string UnsupportedNcsFormatMessage = "Unsupported format specified; use NCS.";
+
         // Matching Python: BYTECODE_BLOCK_PATTERN = re.compile(r"/\*__NCS_BYTECODE__\s*([\s\S]*?)\s*__END_NCS_BYTECODE__\*/", re.MULTILINE)
         private static readonly Regex BytecodeBlockPattern = new Regex(
             @"/\*__NCS_BYTECODE__\s*([\s\S]*?)\s*__END_NCS_BYTECODE__\*/",
@@ -43,32 +45,7 @@ namespace BioWare.Resource.Formats.NCS
                 throw new ArgumentNullException(nameof(source));
             }
 
-            // Handle different source types matching Python's SOURCE_TYPES
-            if (source is string filepath)
-            {
-                using (var reader = new NCSBinaryReader(filepath, offset, size ?? 0))
-                {
-                    return reader.Load();
-                }
-            }
-            else if (source is byte[] data)
-            {
-                using (var reader = new NCSBinaryReader(data, offset, size ?? 0))
-                {
-                    return reader.Load();
-                }
-            }
-            else if (source is Stream stream)
-            {
-                using (var reader = new NCSBinaryReader(stream, offset, size ?? 0))
-                {
-                    return reader.Load();
-                }
-            }
-            else
-            {
-                throw new ArgumentException($"Unsupported source type: {source.GetType()}", nameof(source));
-            }
+            return ReadNcsSource(source, offset, size ?? 0);
         }
 
         /// <summary>
@@ -93,36 +70,13 @@ namespace BioWare.Resource.Formats.NCS
 
             if (fileFormat != ResourceType.NCS)
             {
-                throw new ArgumentException("Unsupported format specified; use NCS.");
+                throw new ArgumentException(UnsupportedNcsFormatMessage);
             }
 
             var writer = new NCSBinaryWriter(ncs);
             byte[] data = writer.Write();
 
-            // Handle different target types matching Python's TARGET_TYPES
-            if (target is string filepath)
-            {
-                File.WriteAllBytes(filepath, data);
-            }
-            else if (target is Stream stream)
-            {
-                stream.Write(data, 0, data.Length);
-            }
-            else if (target is List<byte> byteList)
-            {
-                byteList.Clear();
-                byteList.AddRange(data);
-            }
-            else if (target is MemoryStream memoryStream)
-            {
-                memoryStream.SetLength(0);
-                memoryStream.Write(data, 0, data.Length);
-            }
-            else
-            {
-                // Try to use reflection to set bytes if target supports it
-                throw new ArgumentException($"Unsupported target type: {target.GetType()}", nameof(target));
-            }
+            WriteNcsTarget(target, data);
         }
 
         /// <summary>
@@ -146,6 +100,52 @@ namespace BioWare.Resource.Formats.NCS
                 WriteNcs(ncs, ms, fileFormat);
                 return ms.ToArray();
             }
+        }
+
+        /// <summary>
+        /// Creates and loads an NCS reader from a supported source.
+        /// </summary>
+        private static NCS ReadNcsSource(object source, int offset, int size)
+        {
+            byte[] data = ResourceAutoHelpers.SourceDispatcher.ToBytes(source);
+            using (var reader = new NCSBinaryReader(data, offset, size))
+            {
+                return reader.Load();
+            }
+        }
+
+        /// <summary>
+        /// Writes NCS bytes to a supported output target.
+        /// </summary>
+        private static void WriteNcsTarget(object target, byte[] data)
+        {
+            if (target is string filepath)
+            {
+                File.WriteAllBytes(filepath, data);
+                return;
+            }
+
+            if (target is Stream stream)
+            {
+                stream.Write(data, 0, data.Length);
+                return;
+            }
+
+            if (target is List<byte> byteList)
+            {
+                byteList.Clear();
+                byteList.AddRange(data);
+                return;
+            }
+
+            if (target is MemoryStream memoryStream)
+            {
+                memoryStream.SetLength(0);
+                memoryStream.Write(data, 0, data.Length);
+                return;
+            }
+
+            throw new ArgumentException($"Unsupported target type: {target.GetType()}", nameof(target));
         }
 
         /// <summary>

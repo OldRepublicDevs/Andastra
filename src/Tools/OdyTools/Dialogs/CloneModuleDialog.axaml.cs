@@ -5,6 +5,8 @@ using Avalonia.Markup.Xaml;
 using OdyTools.Data;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 using BioWare.Extract;
 using BioWare.Tools;
 
@@ -304,36 +306,21 @@ namespace OdyTools.Dialogs
             // Validate that a module is selected
             if (!(_moduleSelect?.SelectedItem is ModuleOption option))
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error",
-                    "Please select a module to clone.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Error", "Please select a module to clone.", ButtonEnum.Ok, IconType.Error);
                 return;
             }
 
             Installation installation = option.Installation?.Installation;
             if (installation == null)
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error",
-                    "Invalid installation selected.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Error", "Invalid installation selected.", ButtonEnum.Ok, IconType.Error);
                 return;
             }
 
             string root = option.Root;
             if (string.IsNullOrWhiteSpace(root))
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error",
-                    "Invalid module root selected.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Error", "Invalid module root selected.", ButtonEnum.Ok, IconType.Error);
                 return;
             }
 
@@ -341,60 +328,35 @@ namespace OdyTools.Dialogs
             string identifier = (_filenameEdit?.Text ?? "").ToLowerInvariant();
             if (string.IsNullOrWhiteSpace(identifier))
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error",
-                    "Please enter a module filename.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Error", "Please enter a module filename.", ButtonEnum.Ok, IconType.Error);
                 return;
             }
 
             // Validate identifier length (max 16 characters for module filename)
             if (identifier.Length > 16)
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error",
-                    "Module filename must be 16 characters or less.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Error", "Module filename must be 16 characters or less.", ButtonEnum.Ok, IconType.Error);
                 return;
             }
 
             string prefix = (_prefixEdit?.Text ?? "").ToLowerInvariant();
             if (string.IsNullOrWhiteSpace(prefix))
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error",
-                    "Please enter a module prefix.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Error", "Please enter a module prefix.", ButtonEnum.Ok, IconType.Error);
                 return;
             }
 
             // Validate prefix length (max 3 characters)
             if (prefix.Length > 3)
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error",
-                    "Module prefix must be 3 characters or less.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Error", "Module prefix must be 3 characters or less.", ButtonEnum.Ok, IconType.Error);
                 return;
             }
 
             string name = _nameEdit?.Text ?? "";
             if (string.IsNullOrWhiteSpace(name))
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Error",
-                    "Please enter a module name.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Error", "Please enter a module name.", ButtonEnum.Ok, IconType.Error);
                 return;
             }
 
@@ -410,12 +372,7 @@ namespace OdyTools.Dialogs
             // We'll show it asynchronously but the user should acknowledge before cloning starts
             if (copyTextures)
             {
-                var warningBox = MessageBoxManager.GetMessageBoxStandard(
-                    "This may take a while",
-                    "You have selected to create copies of the texture. This process may add a few extra minutes to the waiting time.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info);
-                await warningBox.ShowWindowDialogAsync(this);
+                await DialogHelper.ShowWindowAsync(this, "This may take a while", "You have selected to create copies of the texture. This process may add a few extra minutes to the waiting time.", ButtonEnum.Ok, IconType.Info);
             }
 
             // Define cloning task (matching PyKotor lines 117-130)
@@ -470,12 +427,7 @@ namespace OdyTools.Dialogs
             }
 
             // Show success message (matching PyKotor lines 143-148)
-            var successBox = MessageBoxManager.GetMessageBoxStandard(
-                "Clone Successful",
-                $"You can now warp to the cloned module '{identifier}'.",
-                ButtonEnum.Ok,
-                MsBox.Avalonia.Enums.Icon.Success);
-            successBox.ShowAsync();
+            _ = DialogHelper.ShowAsync("Clone Successful", $"You can now warp to the cloned module '{identifier}'.", ButtonEnum.Ok, IconType.Success);
 
             // Close the dialog
             Close();

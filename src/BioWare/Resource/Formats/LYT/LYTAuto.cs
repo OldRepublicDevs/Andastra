@@ -11,44 +11,44 @@ namespace BioWare.Resource.Formats.LYT
     /// </summary>
     /// <remarks>
     /// WHAT IS LYTAUTO?
-    /// 
+    ///
     /// LYTAuto is a helper class that makes it easy to load and save LYT files. Instead of
     /// manually creating an LYTAsciiReader or LYTAsciiWriter, you can use these simple methods
     /// to read from files, byte arrays, or streams, and write to files, byte arrays, or streams.
-    /// 
+    ///
     /// HOW TO USE IT:
-    /// 
+    ///
     /// READING A LYT FILE:
-    /// 
+    ///
     /// From a file path:
     /// LYT lyt = LYTAuto.ReadLyt("path/to/file.lyt");
-    /// 
+    ///
     /// From a byte array:
     /// byte[] data = File.ReadAllBytes("file.lyt");
     /// LYT lyt = LYTAuto.ReadLyt(data);
-    /// 
+    ///
     /// From a stream:
     /// using (FileStream stream = File.OpenRead("file.lyt"))
     /// {
     ///     LYT lyt = LYTAuto.ReadLyt(stream);
     /// }
-    /// 
+    ///
     /// WRITING A LYT FILE:
-    /// 
+    ///
     /// To a file path:
     /// LYTAuto.WriteLyt(lyt, "path/to/output.lyt");
-    /// 
+    ///
     /// To a byte array:
     /// byte[] data = LYTAuto.BytesLyt(lyt);
-    /// 
+    ///
     /// To a stream:
     /// using (FileStream stream = File.Create("output.lyt"))
     /// {
     ///     LYTAuto.WriteLyt(lyt, stream);
     /// }
-    /// 
+    ///
     /// WHAT HAPPENS WHEN YOU READ A LYT?
-    /// 
+    ///
     /// When you call ReadLyt, it:
     /// 1. Creates an LYTAsciiReader with your source (file, bytes, or stream)
     /// 2. Calls reader.Load() which:
@@ -59,9 +59,9 @@ namespace BioWare.Resource.Formats.LYT
     ///    - Parses door hook definitions (door placement points)
     ///    - Creates a LYT object with all this data
     /// 3. Returns the LYT object
-    /// 
+    ///
     /// WHAT HAPPENS WHEN YOU WRITE A LYT?
-    /// 
+    ///
     /// When you call WriteLyt or BytesLyt, it:
     /// 1. Creates an LYTAsciiWriter with your LYT object and target (file, stream, or byte array)
     /// 2. Calls writer.Write() which:
@@ -71,41 +71,45 @@ namespace BioWare.Resource.Formats.LYT
     ///    - Writes obstacle definitions (swoop track obstacles)
     ///    - Writes door hook definitions (door placement points)
     /// 3. Returns the written data (for BytesLyt) or writes to file/stream (for WriteLyt)
-    /// 
+    ///
     /// LYT FILE FORMAT:
-    /// 
+    ///
     /// LYT files are stored in ASCII text format (not binary). Each line contains one piece of
     /// information. The format is:
-    /// 
+    ///
     /// - Room lines: "roommodel modelname x y z"
     /// - Track lines: "trackmodel modelname x y z"
     /// - Obstacle lines: "obstaclemodel modelname x y z"
     /// - Door hook lines: "doorhook roomname doorname x y z qx qy qz qw"
-    /// 
+    ///
     /// WHERE:
     /// - modelname: The name of the MDL file (without .mdl extension)
     /// - x, y, z: The position coordinates
     /// - qx, qy, qz, qw: The quaternion orientation (for door hooks)
-    /// 
+    ///
     /// OFFSET AND SIZE PARAMETERS:
-    /// 
+    ///
     /// The offset parameter lets you read a LYT from a specific position in the source.
     /// This is useful if the LYT data is embedded in a larger file.
-    /// 
+    ///
     /// The size parameter lets you limit how much data is read. If null, it reads until
     /// the end of the source. This is useful if you know the exact size of the LYT data.
-    /// 
+    ///
     /// ORIGINAL IMPLEMENTATION:
-    /// 
+    ///
     /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): The original engine loads LYT files directly from disk or
     /// from ERF/BIF archives. The file format is ASCII text, making it easy to read and
     /// edit manually.
-    /// 
+    ///
     /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lyt/lyt_auto.py
     /// Original: read_lyt, write_lyt, bytes_lyt functions
     /// </remarks>
     public static class LYTAuto
     {
+        private const string UnsupportedLytFormatMessage = "Unsupported format specified; use LYT.";
+        private const string UnsupportedLytSourceMessage = "Source must be string, byte[], or Stream for LYT";
+        private const string UnsupportedLytTargetMessage = "Target must be string or Stream for LYT";
+
         /// <summary>
         /// Reads a LYT layout file from various sources (file path, byte array, or stream).
         /// </summary>
@@ -120,19 +124,8 @@ namespace BioWare.Resource.Formats.LYT
         public static BioWare.Resource.Formats.LYT.LYT ReadLyt(object source, int offset = 0, int? size = null)
         {
             int sizeValue = size ?? 0;
-            if (source is string filepath)
-            {
-                return new LYTAsciiReader(filepath, offset, sizeValue).Load();
-            }
-            if (source is byte[] bytes)
-            {
-                return new LYTAsciiReader(bytes, offset, sizeValue).Load();
-            }
-            if (source is Stream stream)
-            {
-                return new LYTAsciiReader(stream, offset, sizeValue).Load();
-            }
-            throw new ArgumentException("Source must be string, byte[], or Stream for LYT");
+            byte[] data = ResourceAutoHelpers.SourceDispatcher.ToBytes(source);
+            return new LYTAsciiReader(data, offset, sizeValue).Load();
         }
 
         /// <summary>
@@ -148,23 +141,13 @@ namespace BioWare.Resource.Formats.LYT
         public static void WriteLyt(BioWare.Resource.Formats.LYT.LYT lyt, object target, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.LYT;
-            if (format != ResourceType.LYT)
-            {
-                throw new ArgumentException("Unsupported format specified; use LYT.");
-            }
+            if (lyt == null) throw new ArgumentNullException(nameof(lyt));
+            ValidateLytFormat(format, nameof(fileFormat));
 
-            if (target is string filepath)
-            {
-                new LYTAsciiWriter(lyt, filepath).Write();
-            }
-            else if (target is Stream stream)
-            {
-                new LYTAsciiWriter(lyt, stream).Write();
-            }
-            else
-            {
-                throw new ArgumentException("Target must be string or Stream for LYT");
-            }
+            WriteLytTarget(
+                target,
+                filepath => new LYTAsciiWriter(lyt, filepath).Write(),
+                stream => new LYTAsciiWriter(lyt, stream).Write());
         }
 
         /// <summary>
@@ -180,11 +163,29 @@ namespace BioWare.Resource.Formats.LYT
         public static byte[] BytesLyt(BioWare.Resource.Formats.LYT.LYT lyt, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.LYT;
+            if (lyt == null) throw new ArgumentNullException(nameof(lyt));
+            ValidateLytFormat(format, nameof(fileFormat));
             using (var ms = new MemoryStream())
             {
                 WriteLyt(lyt, ms, format);
                 return ms.ToArray();
             }
+        }
+
+        private static void ValidateLytFormat(ResourceType format, string formatParamName)
+        {
+            if (format != ResourceType.LYT)
+            {
+                throw new ArgumentException(UnsupportedLytFormatMessage, formatParamName);
+            }
+        }
+
+        /// <summary>
+        /// Dispatches LYT output to either a filesystem path or stream target.
+        /// </summary>
+        private static void WriteLytTarget(object target, Action<string> writeToPath, Action<Stream> writeToStream)
+        {
+            ResourceAutoHelpers.SourceDispatcher.DispatchWrite(target, writeToPath, writeToStream, "LYT");
         }
     }
 }

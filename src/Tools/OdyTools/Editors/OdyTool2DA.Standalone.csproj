@@ -15,6 +15,7 @@
     <Compile Include="OdyTool2DA.axaml.cs" />
     <Compile Include="Editor.cs" />
     <Compile Include="EditorHelpers.cs" />
+    <Compile Include="WindowUtils.cs" />
     <Compile Include="EditorWikiMapping.cs" />
     <Compile Include="$(_OdyToolsRoot)\Common\CollectionViewSource.cs" />
     <Compile Include="$(_OdyToolsRoot)\Data\OdyInstallation.cs" />

@@ -16,6 +16,8 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using ModuleClass = BioWare.Common.Module;
 using GameModule = BioWare.Common.Module;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Windows
 {
@@ -181,12 +183,7 @@ namespace OdyTools.Windows
             }
             catch (Exception ex)
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Failed to open module",
-                    ex.Message ?? "Unknown error.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorBox.ShowWindowDialogAsync(this);
+                DialogHelper.ShowWindow(this, "Failed to open module", ex.Message ?? "Unknown error.", IconType.Error);
                 // Clear module on error to maintain consistent state
                 _module = null;
                 _modulePath = null;

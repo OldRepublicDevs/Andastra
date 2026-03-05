@@ -27,6 +27,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using Game = BioWare.Common.BioWareGame;
 using GFFAuto = BioWare.Resource.Formats.GFF.GFFAuto;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Editors
 {
@@ -119,6 +120,7 @@ namespace OdyTools.Editors
         public Dictionary<string, ComboBox> ScriptFields => _scriptFields;
         public TextBox CommentsEdit => _commentsEdit;
 
+        public OdyToolUTD() : this(null, null) { }
         public OdyToolUTD(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTD", "door",
                 new[] { ResourceType.UTD, ResourceType.BTD },
@@ -663,31 +665,31 @@ namespace OdyTools.Editors
         private void AttachCommitHandlers()
         {
             void OnCommit(object s, EventArgs e) { if (!_undoRedoInProgress) PushState(); }
-            if (_tagEdit != null) _tagEdit.LostFocus += OnCommit;
-            if (_resrefEdit != null) _resrefEdit.LostFocus += OnCommit;
-            if (_conversationEdit != null) _conversationEdit.LostFocus += OnCommit;
-            if (_keyEdit != null) _keyEdit.LostFocus += OnCommit;
-            if (_commentsEdit != null) _commentsEdit.LostFocus += OnCommit;
-            if (_animationStateSpin != null) _animationStateSpin.LostFocus += OnCommit;
-            if (_currentHpSpin != null) _currentHpSpin.LostFocus += OnCommit;
-            if (_maxHpSpin != null) _maxHpSpin.LostFocus += OnCommit;
-            if (_hardnessSpin != null) _hardnessSpin.LostFocus += OnCommit;
-            if (_fortitudeSpin != null) _fortitudeSpin.LostFocus += OnCommit;
-            if (_reflexSpin != null) _reflexSpin.LostFocus += OnCommit;
-            if (_willSpin != null) _willSpin.LostFocus += OnCommit;
-            if (_openLockSpin != null) _openLockSpin.LostFocus += OnCommit;
-            if (_difficultySpin != null) _difficultySpin.LostFocus += OnCommit;
-            if (_difficultyModSpin != null) _difficultyModSpin.LostFocus += OnCommit;
-            if (_min1HpCheckbox != null) _min1HpCheckbox.LostFocus += OnCommit;
-            if (_plotCheckbox != null) _plotCheckbox.LostFocus += OnCommit;
-            if (_staticCheckbox != null) _staticCheckbox.LostFocus += OnCommit;
-            if (_notBlastableCheckbox != null) _notBlastableCheckbox.LostFocus += OnCommit;
-            if (_needKeyCheckbox != null) _needKeyCheckbox.LostFocus += OnCommit;
-            if (_removeKeyCheckbox != null) _removeKeyCheckbox.LostFocus += OnCommit;
-            if (_lockedCheckbox != null) _lockedCheckbox.LostFocus += OnCommit;
+            EditorHelpers.BindLostFocus(_tagEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_resrefEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_conversationEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_keyEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_commentsEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_animationStateSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_currentHpSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_maxHpSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_hardnessSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_fortitudeSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_reflexSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_willSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_openLockSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_difficultySpin, OnCommit);
+            EditorHelpers.BindLostFocus(_difficultyModSpin, OnCommit);
+            EditorHelpers.BindLostFocus(_min1HpCheckbox, OnCommit);
+            EditorHelpers.BindLostFocus(_plotCheckbox, OnCommit);
+            EditorHelpers.BindLostFocus(_staticCheckbox, OnCommit);
+            EditorHelpers.BindLostFocus(_notBlastableCheckbox, OnCommit);
+            EditorHelpers.BindLostFocus(_needKeyCheckbox, OnCommit);
+            EditorHelpers.BindLostFocus(_removeKeyCheckbox, OnCommit);
+            EditorHelpers.BindLostFocus(_lockedCheckbox, OnCommit);
             if (_scriptFields != null)
                 foreach (var kv in _scriptFields)
-                    if (kv.Value != null) kv.Value.LostFocus += OnCommit;
+                    EditorHelpers.BindLostFocus(kv.Value, OnCommit);
         }
 
         private void SetupMenuHandlers()
@@ -714,6 +716,7 @@ namespace OdyTools.Editors
                 _undoStack.Add(data);
                 if (_undoStack.Count > UndoMaxLevels) _undoStack.RemoveAt(0);
                 _redoStack.Clear();
+                MarkDocumentDirty();
             }
             catch { }
         }
@@ -792,22 +795,7 @@ namespace OdyTools.Editors
 
         protected override async Task RunSaveAsAsync()
         {
-            var storageProvider = (this as Window)?.StorageProvider;
-            if (storageProvider == null) return;
-            string suggestedName = string.IsNullOrEmpty(_resname) ? "door" : _resname;
-            var options = new FilePickerSaveOptions
-            {
-                Title = "Save As",
-                SuggestedFileName = suggestedName + ".utd",
-                FileTypeChoices = new[] { new FilePickerFileType("UTD") { Patterns = new[] { "*.utd", "*.btd" } } }
-            };
-            var file = await storageProvider.SaveFilePickerAsync(options);
-            if (file == null) return;
-            string path = file.Path.LocalPath;
-            if (string.IsNullOrWhiteSpace(path)) return;
-            _filepath = path;
-            RefreshWindowTitle();
-            Save();
+            await base.RunSaveAsAsync();
             UpdateStatusBar();
         }
 
@@ -1254,12 +1242,7 @@ namespace OdyTools.Editors
 
             if (string.IsNullOrEmpty(resname))
             {
-                var errorBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
-                    "Failed to open OdyToolDLG",
-                    "Conversation field cannot be blank.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                errorBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Failed to open OdyToolDLG", "Conversation field cannot be blank.", ButtonEnum.Ok, IconType.Error);
                 return;
             }
 
@@ -1272,12 +1255,11 @@ namespace OdyTools.Editors
 
             if (search == null)
             {
-                var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
+                var result = DialogHelper.ShowAsync(
                     "DLG file not found",
                     "Do you wish to create a file in the override?",
                     ButtonEnum.YesNo,
-                    MsBox.Avalonia.Enums.Icon.Question);
-                var result = msgBox.ShowAsync().Result;
+                    IconType.Question).GetAwaiter().GetResult();
 
                 if (result == ButtonResult.Yes)
                 {

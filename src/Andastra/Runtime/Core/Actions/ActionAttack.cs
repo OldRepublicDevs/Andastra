@@ -50,25 +50,12 @@ namespace Andastra.Runtime.Core.Actions
         private const float AttackRange = 2.0f;
         private const float AttackInterval = 2.0f; // Time between attacks
 
-        public int GroupId { get; set; }
-        public IEntity Owner { get; set; }
-
         public ActionAttack(uint targetObjectId, bool passive = false)
             : base(ActionType.AttackObject)
         {
             _targetObjectId = targetObjectId;
             _passive = passive;
             _attackTimer = 0;
-        }
-
-        public ActionStatus Update(IEntity actor, float deltaTime)
-        {
-            return Execute(actor, deltaTime);
-        }
-
-        public void Dispose()
-        {
-            // Cleanup if needed
         }
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)

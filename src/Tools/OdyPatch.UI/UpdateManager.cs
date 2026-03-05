@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-#if NETFRAMEWORK && !NET472
+#if NETFRAMEWORK && !NET48
 using NetSparkleUpdater;
 using NetSparkleUpdater.Enums;
 using NetSparkleUpdater.SignatureVerifiers;
@@ -16,7 +16,7 @@ namespace OdyPatch.UI
     /// </summary>
     public class UpdateManager : IDisposable
     {
-#if NETFRAMEWORK && !NET472
+#if NETFRAMEWORK && !NET48
         private SparkleUpdater _sparkle;
 #endif
         private bool _disposed = false;
@@ -71,7 +71,7 @@ namespace OdyPatch.UI
         /// </summary>
         public void Initialize()
         {
-#if NET472
+#if NET48
             // No-op on net48: NetSparkleUpdater API not used for this target
 #elif NETFRAMEWORK
             if (_sparkle != null)
@@ -117,7 +117,7 @@ namespace OdyPatch.UI
         /// </summary>
         public void Start()
         {
-#if NET472
+#if NET48
             // No-op on net48
 #elif NETFRAMEWORK
             if (_sparkle is null)
@@ -139,7 +139,7 @@ namespace OdyPatch.UI
         /// </summary>
         public void CheckForUpdates()
         {
-#if NET472
+#if NET48
             // No-op on net48
 #elif NETFRAMEWORK
             if (_sparkle is null)
@@ -156,7 +156,7 @@ namespace OdyPatch.UI
         /// </summary>
         public void Stop()
         {
-#if NET472
+#if NET48
             // No-op on net48
 #elif NETFRAMEWORK
             _sparkle?.Stop();
@@ -168,7 +168,7 @@ namespace OdyPatch.UI
             if (!_disposed)
             {
                 Stop();
-#if NETFRAMEWORK && !NET472
+#if NETFRAMEWORK && !NET48
                 _sparkle?.Dispose();
 #endif
                 _disposed = true;
@@ -184,7 +184,7 @@ namespace OdyPatch.UI
         public bool UpdateAvailable { get; set; }
         public string LatestVersion { get; set; } = "";
         public string ReleaseNotes { get; set; } = "";
-#if NETFRAMEWORK && !NET472
+#if NETFRAMEWORK && !NET48
         public UpdateStatus Status { get; set; } = UpdateStatus.UpdateNotAvailable;
 #else
         // For .NET Core/.NET 5+ and net48, use a simple int

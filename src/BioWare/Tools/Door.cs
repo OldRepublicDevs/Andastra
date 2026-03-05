@@ -25,13 +25,11 @@ namespace BioWare.Tools
         {
             if (genericdoors == null)
             {
-                var result = installation.Resources.LookupResource("genericdoors", ResourceType.TwoDA);
-                if (result == null)
+                genericdoors = TwoDAResourceLoader.LoadFromInstallation(installation, "genericdoors");
+                if (genericdoors == null)
                 {
                     throw new ArgumentException("Resource 'genericdoors.2da' not found in the installation, cannot get UTD model.");
                 }
-                var reader = new TwoDABinaryReader(result.Data);
-                genericdoors = reader.Load();
             }
 
             return genericdoors.GetRow(utd.AppearanceId).GetString("modelname");
@@ -43,65 +41,7 @@ namespace BioWare.Tools
             Installation installation,
             RobustLogger logger = null)
         {
-            if (logger == null)
-            {
-                logger = new RobustLogger();
-            }
-
-            TwoDA genericdoors2DA = null;
-
-            // Try locations() first (more reliable, handles BIF files)
-            try
-            {
-                // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/door.py:67-118
-                // Original: locations_result = installation.locations([ResourceIdentifier("genericdoors", ResourceType.TwoDA)], [SearchLocation.OVERRIDE, SearchLocation.CHITIN])
-                var locationResults = installation.Locations(
-                    new List<ResourceIdentifier> { new ResourceIdentifier("genericdoors", ResourceType.TwoDA) },
-                    new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN });
-                foreach (var kvp in locationResults)
-                {
-                    if (kvp.Value != null && kvp.Value.Count > 0)
-                    {
-                        var loc = kvp.Value[0];
-                        if (loc.FilePath != null && File.Exists(loc.FilePath))
-                        {
-                            using (var f = File.OpenRead(loc.FilePath))
-                            {
-                                f.Seek(loc.Offset, SeekOrigin.Begin);
-                                var data = new byte[loc.Size];
-                                f.Read(data, 0, loc.Size);
-                                var reader = new TwoDABinaryReader(data);
-                                genericdoors2DA = reader.Load();
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.Debug($"locations() failed for genericdoors.2da: {ex}");
-            }
-
-            // Fallback: try resource() if locations() didn't work
-            if (genericdoors2DA == null)
-            {
-                try
-                {
-                    var genericdoorsResult = installation.Resources.LookupResource("genericdoors", ResourceType.TwoDA);
-                    if (genericdoorsResult != null && genericdoorsResult.Data != null)
-                    {
-                        var reader = new TwoDABinaryReader(genericdoorsResult.Data);
-                        genericdoors2DA = reader.Load();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    logger.Debug($"resource() also failed for genericdoors.2da: {ex}");
-                }
-            }
-
-            return genericdoors2DA;
+            return TwoDAResourceLoader.LoadFromInstallation(installation, "genericdoors", logger);
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/door.py:215-237

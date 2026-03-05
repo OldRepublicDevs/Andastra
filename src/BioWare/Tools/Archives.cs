@@ -364,62 +364,13 @@ namespace BioWare.Tools
                 erf.IsSaveErf = true;
             }
 
-            // Collect files from directory
-            if (Directory.Exists(inputDir))
+            foreach (DirectoryResourceEntry entry in EnumerateDirectoryResources(inputDir, fileFilter))
             {
-                foreach (string filePath in Directory.GetFiles(inputDir))
-                {
-                    // Apply filter if specified
-                    if (!string.IsNullOrEmpty(fileFilter) && !MatchesFilter(Path.GetFileName(filePath), fileFilter))
-                    {
-                        continue;
-                    }
-
-                    // Parse filename to get resref and extension
-                    string stem = Path.GetFileNameWithoutExtension(filePath);
-                    string ext = Path.GetExtension(filePath).TrimStart('.');
-
-                    try
-                    {
-                        ResourceType restype = ResourceType.FromExtension(ext);
-                        if (restype == ResourceType.INVALID || restype.IsInvalid)
-                        {
-                            continue; // Skip unknown file types
-                        }
-
-                        // Handle files with embedded type in stem (e.g., "model.123.mdl")
-                        string resref;
-                        if (stem.Contains("."))
-                        {
-                            string[] parts = stem.Split('.');
-                            // Check if last part is numeric (resource ID)
-                            if (parts.Length > 1 && int.TryParse(parts[parts.Length - 1], out _))
-                            {
-                                resref = string.Join(".", parts.Take(parts.Length - 1));
-                            }
-                            else
-                            {
-                                resref = stem;
-                            }
-                        }
-                        else
-                        {
-                            resref = stem;
-                        }
-
-                        // Read file data and add to ERF
-                        byte[] fileData = File.ReadAllBytes(filePath);
-                        erf.SetData(new ResRef(resref), restype, fileData);
-                    }
-                    catch
-                    {
-                        // Skip files that can't be processed
-                    }
-                }
+                erf.SetData(new ResRef(entry.ResRef), entry.ResType, entry.Data);
             }
 
             // Write ERF archive
-            Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
+            EnsureOutputDirectoryForFile(outputPath);
             ResourceType outputFormat = erfType.Equals("MOD", StringComparison.OrdinalIgnoreCase) ? ResourceType.MOD :
                 erfType.Equals("SAV", StringComparison.OrdinalIgnoreCase) ? ResourceType.SAV : ResourceType.ERF;
             ERFAuto.WriteErf(erf, outputPath, outputFormat);
@@ -437,62 +388,108 @@ namespace BioWare.Tools
         {
             var rim = new RIM();
 
-            // Collect files from directory
-            if (Directory.Exists(inputDir))
+            foreach (DirectoryResourceEntry entry in EnumerateDirectoryResources(inputDir, fileFilter))
             {
-                foreach (string filePath in Directory.GetFiles(inputDir))
+                rim.SetData(new ResRef(entry.ResRef), entry.ResType, entry.Data);
+            }
+
+            // Write RIM archive
+            EnsureOutputDirectoryForFile(outputPath);
+            RIMAuto.WriteRim(rim, outputPath, ResourceType.RIM);
+        }
+
+        private sealed class DirectoryResourceEntry
+        {
+            public string ResRef { get; set; }
+            public ResourceType ResType { get; set; }
+            public byte[] Data { get; set; }
+        }
+
+        /// <summary>
+        /// Enumerates valid resources from a directory for archive creation.
+        /// Invalid or unreadable files are skipped to match existing tolerant behavior.
+        /// </summary>
+        private static IEnumerable<DirectoryResourceEntry> EnumerateDirectoryResources(string inputDir, string fileFilter)
+        {
+            if (!Directory.Exists(inputDir))
+            {
+                yield break;
+            }
+
+            foreach (string filePath in Directory.GetFiles(inputDir))
+            {
+                if (!string.IsNullOrEmpty(fileFilter) && !MatchesFilter(Path.GetFileName(filePath), fileFilter))
                 {
-                    // Apply filter if specified
-                    if (!string.IsNullOrEmpty(fileFilter) && !MatchesFilter(Path.GetFileName(filePath), fileFilter))
+                    continue;
+                }
+
+                DirectoryResourceEntry entry = null;
+
+                try
+                {
+                    if (!TryParseDirectoryResourceInfo(filePath, out string resref, out ResourceType resType))
                     {
                         continue;
                     }
 
-                    // Parse filename to get resref and extension
-                    string stem = Path.GetFileNameWithoutExtension(filePath);
-                    string ext = Path.GetExtension(filePath).TrimStart('.');
-
-                    try
+                    entry = new DirectoryResourceEntry
                     {
-                        ResourceType restype = ResourceType.FromExtension(ext);
-                        if (restype == ResourceType.INVALID || restype.IsInvalid)
-                        {
-                            continue; // Skip unknown file types
-                        }
+                        ResRef = resref,
+                        ResType = resType,
+                        Data = File.ReadAllBytes(filePath)
+                    };
+                }
+                catch
+                {
+                    // Skip files that can't be processed.
+                    // TODO: log them here
+                }
 
-                        // Handle files with embedded type in stem
-                        string resref;
-                        if (stem.Contains("."))
-                        {
-                            string[] parts = stem.Split('.');
-                            if (parts.Length > 1 && int.TryParse(parts[parts.Length - 1], out _))
-                            {
-                                resref = string.Join(".", parts.Take(parts.Length - 1));
-                            }
-                            else
-                            {
-                                resref = stem;
-                            }
-                        }
-                        else
-                        {
-                            resref = stem;
-                        }
-
-                        // Read file data and add to RIM
-                        byte[] fileData = File.ReadAllBytes(filePath);
-                        rim.SetData(new ResRef(resref), restype, fileData);
-                    }
-                    catch
-                    {
-                        // Skip files that can't be processed
-                    }
+                if (entry != null)
+                {
+                    yield return entry;
                 }
             }
+        }
 
-            // Write RIM archive
-            Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
-            RIMAuto.WriteRim(rim, outputPath, ResourceType.RIM);
+        /// <summary>
+        /// Parses resref and resource type from a file path used in archive creation.
+        /// </summary>
+        private static bool TryParseDirectoryResourceInfo(string filePath, out string resref, out ResourceType restype)
+        {
+            resref = string.Empty;
+            restype = ResourceType.INVALID;
+
+            string stem = Path.GetFileNameWithoutExtension(filePath);
+            string ext = Path.GetExtension(filePath).TrimStart('.');
+            restype = ResourceType.FromExtension(ext);
+            if (restype == ResourceType.INVALID || restype.IsInvalid)
+            {
+                // TODO: log unsupported file type here
+                return false;
+            }
+
+            resref = ParseResRefFromStem(stem);
+            return true;
+        }
+
+        /// <summary>
+        /// Extracts the logical resref from a filename stem, handling embedded numeric ids.
+        /// </summary>
+        private static string ParseResRefFromStem(string stem)
+        {
+            if (string.IsNullOrEmpty(stem) || !stem.Contains("."))
+            {
+                return stem;
+            }
+
+            string[] parts = stem.Split('.');
+            if (parts.Length > 1 && int.TryParse(parts[parts.Length - 1], out _))
+            {
+                return string.Join(".", parts.Take(parts.Length - 1));
+            }
+
+            return stem;
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/archives.py:488-550
@@ -797,8 +794,20 @@ namespace BioWare.Tools
 
             // Build lookup tables and write KEY
             key.BuildLookupTables();
-            Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
+            EnsureOutputDirectoryForFile(outputPath);
             KEYAuto.WriteKey(key, outputPath);
+        }
+
+        /// <summary>
+        /// Ensures the parent directory for an output file path exists.
+        /// </summary>
+        private static void EnsureOutputDirectoryForFile(string outputPath)
+        {
+            string outputDirectory = Path.GetDirectoryName(outputPath);
+            if (!string.IsNullOrWhiteSpace(outputDirectory))
+            {
+                Directory.CreateDirectory(outputDirectory);
+            }
         }
 
         /// <summary>

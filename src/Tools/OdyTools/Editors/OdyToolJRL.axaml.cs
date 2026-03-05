@@ -55,6 +55,7 @@ namespace OdyTools.Editors
         private bool _findMatchCase;
         private JournalTreeItem _lastFoundItem;
 
+        public OdyToolJRL() : this(null, null) { }
         public OdyToolJRL(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolJRL", "journal",
                 new[] { ResourceType.JRL },
@@ -127,6 +128,15 @@ namespace OdyTools.Editors
 
         private void SetupUI()
         {
+            void BindCommit(NumericUpDown spin, Action commit)
+            {
+                if (spin != null)
+                {
+                    spin.ValueChanged += (s, e) => commit();
+                    spin.LostFocus += (s, e) => commit();
+                }
+            }
+
             _statusText = EditorHelpers.FindControlSafe<TextBlock>(this, "statusText");
             _journalTree = EditorHelpers.FindControlSafe<TreeView>(this, "journalTree");
             _addQuestButton = EditorHelpers.FindControlSafe<Button>(this, "addQuestButton");
@@ -160,20 +170,20 @@ namespace OdyTools.Editors
                 _journalTree.ItemsSource = _model;
                 _journalTree.SelectionChanged += OnTreeSelectionChanged;
             }
-            if (_addQuestButton != null) _addQuestButton.Click += (s, e) => AddQuest();
-            if (_addEntryButton != null) _addEntryButton.Click += (s, e) => AddEntry();
-            if (_removeButton != null) _removeButton.Click += (s, e) => RemoveSelected();
+            EditorHelpers.BindClick(_addQuestButton, AddQuest);
+            EditorHelpers.BindClick(_addEntryButton, AddEntry);
+            EditorHelpers.BindClick(_removeButton, RemoveSelected);
             var findBtn = EditorHelpers.FindControlSafe<Button>(this, "findButton");
-            if (findBtn != null) findBtn.Click += (s, e) => ShowFindDialog();
+            EditorHelpers.BindClick(findBtn, ShowFindDialog);
 
             void CommitAndPush() { SaveCurrentSelectionToModel(); PushState(); UpdateStatusBar(); }
-            if (_questPlanetId != null) { _questPlanetId.ValueChanged += (s, e) => CommitAndPush(); _questPlanetId.LostFocus += (s, e) => CommitAndPush(); }
+            BindCommit(_questPlanetId, CommitAndPush);
             if (_questPriority != null) _questPriority.SelectionChanged += (s, e) => CommitAndPush();
-            if (_questTag != null) _questTag.LostFocus += (s, e) => CommitAndPush();
-            if (_questComment != null) _questComment.LostFocus += (s, e) => CommitAndPush();
-            if (_entryId != null) { _entryId.ValueChanged += (s, e) => CommitAndPush(); _entryId.LostFocus += (s, e) => CommitAndPush(); }
+            EditorHelpers.BindLostFocus(_questTag, CommitAndPush);
+            EditorHelpers.BindLostFocus(_questComment, CommitAndPush);
+            BindCommit(_entryId, CommitAndPush);
             if (_entryEnd != null) _entryEnd.IsCheckedChanged += (s, e) => CommitAndPush();
-            if (_entryXpPct != null) { _entryXpPct.ValueChanged += (s, e) => CommitAndPush(); _entryXpPct.LostFocus += (s, e) => CommitAndPush(); }
+            BindCommit(_entryXpPct, CommitAndPush);
             // LocalizedStringEdit commits when dialog closes; we also flush on selection change and Build()
 
             RefreshDetailVisibility();
@@ -331,20 +341,14 @@ namespace OdyTools.Editors
 
         private void SetupMenuHandlers()
         {
-            void Bind(string name, Action handler)
-            {
-                try
-                {
-                    var item = EditorHelpers.FindControlSafe<MenuItem>(this, name) ?? this.FindControl<MenuItem>(name);
-                    if (item != null) item.Click += (s, e) => handler();
-                }
-                catch { }
-            }
             // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
-            Bind("actionUndo", () => Undo());
-            Bind("actionRedo", () => Redo());
-            Bind("actionFind", () => ShowFindDialog());
-            Bind("actionFindNext", () => FindNextMatch());
+            EditorHelpers.BindMenuClicks(this, new (string menuItemName, Action handler)[]
+            {
+                ("actionUndo", Undo),
+                ("actionRedo", Redo),
+                ("actionFind", ShowFindDialog),
+                ("actionFindNext", FindNextMatch),
+            });
         }
 
         private void PushState()
@@ -357,6 +361,7 @@ namespace OdyTools.Editors
                 _undoStack.Add(data);
                 if (_undoStack.Count > UndoMaxLevels) _undoStack.RemoveAt(0);
                 _redoStack.Clear();
+                MarkDocumentDirty();
             }
             catch { }
         }
@@ -456,22 +461,7 @@ namespace OdyTools.Editors
 
         protected override async Task RunSaveAsAsync()
         {
-            var storageProvider = (this as Window)?.StorageProvider;
-            if (storageProvider == null) return;
-            string suggestedName = string.IsNullOrEmpty(_resname) ? "journal" : _resname;
-            var options = new FilePickerSaveOptions
-            {
-                Title = "Save As",
-                SuggestedFileName = suggestedName + ".jrl",
-                FileTypeChoices = new[] { new FilePickerFileType("JRL") { Patterns = new[] { "*.jrl" } } }
-            };
-            var file = await storageProvider.SaveFilePickerAsync(options);
-            if (file == null) return;
-            string path = file.Path.LocalPath;
-            if (string.IsNullOrWhiteSpace(path)) return;
-            _filepath = path;
-            RefreshWindowTitle();
-            Save();
+            await base.RunSaveAsAsync();
             UpdateStatusBar();
         }
 

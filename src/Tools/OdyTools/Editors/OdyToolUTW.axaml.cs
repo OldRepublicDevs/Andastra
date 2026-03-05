@@ -44,6 +44,7 @@ namespace OdyTools.Editors
         // UI Controls - Comments
         private TextBox _commentsEdit;
 
+        public OdyToolUTW() : this(null, null) { }
         public OdyToolUTW(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTW", "waypoint",
                 new[] { ResourceType.UTW },
@@ -137,34 +138,24 @@ namespace OdyTools.Editors
 
         private void SetupSignals()
         {
-            if (_tagGenerateButton != null)
-            {
-                _tagGenerateButton.Click += (s, e) => GenerateTag();
-            }
-            if (_resrefGenerateButton != null)
-            {
-                _resrefGenerateButton.Click += (s, e) => GenerateResref();
-            }
+            EditorHelpers.BindClick(_tagGenerateButton, GenerateTag);
+            EditorHelpers.BindClick(_resrefGenerateButton, GenerateResref);
 
             // Add checkbox change handlers to properly bind to UTW properties
             // This eliminates the need for workarounds in headless testing
-            if (_isNoteCheckbox != null)
+            BindCheckBoxProperty(_isNoteCheckbox, isChecked => _utw.HasMapNote = isChecked);
+            BindCheckBoxProperty(_noteEnabledCheckbox, isChecked => _utw.MapNoteEnabled = isChecked);
+        }
+
+        private static void BindCheckBoxProperty(CheckBox checkBox, Action<bool> onValueChanged)
+        {
+            if (checkBox != null)
             {
-                _isNoteCheckbox.PropertyChanged += (s, e) =>
+                checkBox.PropertyChanged += (s, e) =>
                 {
                     if (e.Property == CheckBox.IsCheckedProperty)
                     {
-                        _utw.HasMapNote = _isNoteCheckbox.IsChecked == true;
-                    }
-                };
-            }
-            if (_noteEnabledCheckbox != null)
-            {
-                _noteEnabledCheckbox.PropertyChanged += (s, e) =>
-                {
-                    if (e.Property == CheckBox.IsCheckedProperty)
-                    {
-                        _utw.MapNoteEnabled = _noteEnabledCheckbox.IsChecked == true;
+                        onValueChanged(checkBox.IsChecked == true);
                     }
                 };
             }
@@ -200,7 +191,7 @@ namespace OdyTools.Editors
             var tagPanel = new StackPanel { Orientation = Orientation.Horizontal };
             _tagEdit = new TextBox();
             _tagGenerateButton = new Button { Content = "⟳", MinWidth = 32, MinHeight = 32 };
-            _tagGenerateButton.Click += (s, e) => GenerateTag();
+            EditorHelpers.BindClick(_tagGenerateButton, GenerateTag);
             tagPanel.Children.Add(_tagEdit);
             tagPanel.Children.Add(_tagGenerateButton);
             basicPanel.Children.Add(tagLabel);
@@ -211,7 +202,7 @@ namespace OdyTools.Editors
             var resrefPanel = new StackPanel { Orientation = Orientation.Horizontal };
             _resrefEdit = new TextBox { MaxLength = 16 };
             _resrefGenerateButton = new Button { Content = "⟳", MinWidth = 32, MinHeight = 32 };
-            _resrefGenerateButton.Click += (s, e) => GenerateResref();
+            EditorHelpers.BindClick(_resrefGenerateButton, GenerateResref);
             resrefPanel.Children.Add(_resrefEdit);
             resrefPanel.Children.Add(_resrefGenerateButton);
             basicPanel.Children.Add(resrefLabel);
@@ -265,32 +256,26 @@ namespace OdyTools.Editors
 
         private void SetupMenuHandlers()
         {
-            void Bind(string name, Action handler)
-            {
-                try
-                {
-                    var item = EditorHelpers.FindControlSafe<MenuItem>(this, name) ?? this.FindControl<MenuItem>(name);
-                    if (item != null) item.Click += (s, e) => handler();
-                }
-                catch { }
-            }
             // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
-            Bind("actionUndo", () => Undo());
-            Bind("actionRedo", () => Redo());
-            Bind("actionFind", () => ShowFindDialog());
-            Bind("actionFindNext", () => FindNextMatch());
+            EditorHelpers.BindMenuClicks(this, new (string menuItemName, Action handler)[]
+            {
+                ("actionUndo", Undo),
+                ("actionRedo", Redo),
+                ("actionFind", ShowFindDialog),
+                ("actionFindNext", FindNextMatch),
+            });
         }
 
         private void AttachCommitHandlers()
         {
             void OnCommit(object s, EventArgs e) { if (!_undoRedoInProgress) PushState(); }
-            if (_nameEdit != null) _nameEdit.LostFocus += OnCommit;
-            if (_tagEdit != null) _tagEdit.LostFocus += OnCommit;
-            if (_resrefEdit != null) _resrefEdit.LostFocus += OnCommit;
-            if (_noteEdit != null) _noteEdit.LostFocus += OnCommit;
-            if (_commentsEdit != null) _commentsEdit.LostFocus += OnCommit;
-            if (_isNoteCheckbox != null) _isNoteCheckbox.LostFocus += OnCommit;
-            if (_noteEnabledCheckbox != null) _noteEnabledCheckbox.LostFocus += OnCommit;
+            EditorHelpers.BindLostFocus(_nameEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_tagEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_resrefEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_noteEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_commentsEdit, OnCommit);
+            EditorHelpers.BindLostFocus(_isNoteCheckbox, OnCommit);
+            EditorHelpers.BindLostFocus(_noteEnabledCheckbox, OnCommit);
         }
 
         private void PushState()
@@ -303,6 +288,7 @@ namespace OdyTools.Editors
                 _undoStack.Add(data);
                 if (_undoStack.Count > UndoMaxLevels) _undoStack.RemoveAt(0);
                 _redoStack.Clear();
+                MarkDocumentDirty();
             }
             catch { }
         }
@@ -380,22 +366,7 @@ namespace OdyTools.Editors
 
         protected override async Task RunSaveAsAsync()
         {
-            var storageProvider = (this as Window)?.StorageProvider;
-            if (storageProvider == null) return;
-            string suggestedName = string.IsNullOrEmpty(_resname) ? "waypoint" : _resname;
-            var options = new FilePickerSaveOptions
-            {
-                Title = "Save As",
-                SuggestedFileName = suggestedName + ".utw",
-                FileTypeChoices = new[] { new FilePickerFileType("UTW") { Patterns = new[] { "*.utw" } } }
-            };
-            var file = await storageProvider.SaveFilePickerAsync(options);
-            if (file == null) return;
-            string path = file.Path.LocalPath;
-            if (string.IsNullOrWhiteSpace(path)) return;
-            _filepath = path;
-            RefreshWindowTitle();
-            Save();
+            await base.RunSaveAsAsync();
             UpdateStatusBar();
         }
 

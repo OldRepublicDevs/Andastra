@@ -59,6 +59,7 @@ namespace OdyTools.Editors
         private TextBox _commentsEdit;
         public TextBox CommentsEdit => _commentsEdit;
 
+        public OdyToolUTM() : this(null, null) { }
         public OdyToolUTM(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTM", "merchant",
                 new[] { ResourceType.UTM, ResourceType.BTM },
@@ -134,22 +135,10 @@ namespace OdyTools.Editors
 
         private void SetupSignals()
         {
-            if (_tagGenerateBtn != null)
-            {
-                _tagGenerateBtn.Click += (s, e) => GenerateTag();
-            }
-            if (_resrefGenerateBtn != null)
-            {
-                _resrefGenerateBtn.Click += (s, e) => GenerateResref();
-            }
-            if (_inventoryButton != null)
-            {
-                _inventoryButton.Click += (s, e) => OpenInventory();
-            }
-            if (_nameEditBtn != null)
-            {
-                _nameEditBtn.Click += (s, e) => ChangeName();
-            }
+            EditorHelpers.BindClick(_tagGenerateBtn, GenerateTag);
+            EditorHelpers.BindClick(_resrefGenerateBtn, GenerateResref);
+            EditorHelpers.BindClick(_inventoryButton, OpenInventory);
+            EditorHelpers.BindClick(_nameEditBtn, ChangeName);
         }
 
         private void SetupInstallation(OdyInstallation installation)
@@ -256,7 +245,7 @@ namespace OdyTools.Editors
                 _nameEdit.SetInstallation(_installation);
             }
             _nameEditBtn = new Button { Content = "Edit Name" };
-            _nameEditBtn.Click += (s, e) => ChangeName();
+            EditorHelpers.BindClick(_nameEditBtn, ChangeName);
             basicPanel.Children.Add(nameLabel);
             basicPanel.Children.Add(_nameEdit);
             basicPanel.Children.Add(_nameEditBtn);
@@ -265,7 +254,7 @@ namespace OdyTools.Editors
             var tagLabel = new TextBlock { Text = "Tag:" };
             _tagEdit = new TextBox();
             _tagGenerateBtn = new Button { Content = "-" };
-            _tagGenerateBtn.Click += (s, e) => GenerateTag();
+            EditorHelpers.BindClick(_tagGenerateBtn, GenerateTag);
             var tagPanel = new StackPanel { Orientation = Orientation.Horizontal };
             tagPanel.Children.Add(_tagEdit);
             tagPanel.Children.Add(_tagGenerateBtn);
@@ -276,7 +265,7 @@ namespace OdyTools.Editors
             var resrefLabel = new TextBlock { Text = "ResRef:" };
             _resrefEdit = new TextBox { MaxLength = 16 };
             _resrefGenerateBtn = new Button { Content = "-" };
-            _resrefGenerateBtn.Click += (s, e) => GenerateResref();
+            EditorHelpers.BindClick(_resrefGenerateBtn, GenerateResref);
             var resrefPanel = new StackPanel { Orientation = Orientation.Horizontal };
             resrefPanel.Children.Add(_resrefEdit);
             resrefPanel.Children.Add(_resrefGenerateBtn);
@@ -291,7 +280,7 @@ namespace OdyTools.Editors
 
             // Inventory Button
             _inventoryButton = new Button { Content = "Edit Inventory" };
-            _inventoryButton.Click += (s, e) => OpenInventory();
+            EditorHelpers.BindClick(_inventoryButton, OpenInventory);
             basicPanel.Children.Add(_inventoryButton);
 
             basicGroup.Content = basicPanel;
@@ -539,6 +528,7 @@ namespace OdyTools.Editors
                 {
                     _nameEdit.SetLocString(_utm.Name);
                 }
+                MarkDocumentDirty();
             }
         }
 
@@ -552,6 +542,7 @@ namespace OdyTools.Editors
             {
                 _tagEdit.Text = _resrefEdit.Text;
             }
+            MarkDocumentDirty();
         }
 
         private void GenerateResref()
@@ -560,6 +551,7 @@ namespace OdyTools.Editors
             {
                 _resrefEdit.Text = !string.IsNullOrEmpty(base._resname) ? base._resname : "m00xx_mer_000";
             }
+            MarkDocumentDirty();
         }
 
         private void OpenInventory()
@@ -658,25 +650,7 @@ namespace OdyTools.Editors
 
         protected override async Task RunSaveAsAsync()
         {
-            var storage = StorageProvider;
-            if (storage == null) return;
-            string suggestedName = !string.IsNullOrEmpty(_resname) ? _resname : "store";
-            var options = new FilePickerSaveOptions
-            {
-                Title = "Save As",
-                SuggestedFileName = suggestedName + ".utm",
-                FileTypeChoices = new[] { new FilePickerFileType("Store (UTM)") { Patterns = new[] { "*.utm" } }, new FilePickerFileType("All files") { Patterns = new[] { "*.*" } } }
-            };
-            var file = await storage.SaveFilePickerAsync(options);
-            if (file == null) return;
-            string path = file.Path?.LocalPath ?? "";
-            if (string.IsNullOrWhiteSpace(path)) return;
-            _filepath = path;
-            string ext = (Path.GetExtension(path) ?? "").TrimStart('.').ToLowerInvariant();
-            _restype = ResourceType.FromExtension(ext) ?? ResourceType.UTM;
-            _resname = Path.GetFileNameWithoutExtension(path);
-            RefreshWindowTitle();
-            Save();
+            await base.RunSaveAsAsync();
         }
     }
 }

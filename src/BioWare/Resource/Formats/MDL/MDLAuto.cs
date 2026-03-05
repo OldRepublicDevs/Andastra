@@ -314,54 +314,14 @@ namespace BioWare.Resource.Formats.MDL
         }
 
         /// <summary>
-        /// Reads an MDL file from the source, automatically detecting format or using the specified format.
-        /// Comprehensive dispatcher with validation and error handling.
-        /// Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_auto.py:read_mdl()
+        /// Helper method for consistent error handling in read operations.
+        /// Wraps reader dispatch logic with standardized exception transformation.
         /// </summary>
-        /// <param name="source">Source of the MDL data (string path, byte[], or Stream)</param>
-        /// <param name="offset">Byte offset into the source data</param>
-        /// <param name="size">Number of bytes to read (0 or null for entire source)</param>
-        /// <param name="sourceExt">Source of the MDX data (for binary MDL)</param>
-        /// <param name="offsetExt">Offset into the MDX source data</param>
-        /// <param name="sizeExt">Number of bytes to read from MDX source</param>
-        /// <param name="fileFormat">Explicit format to use (null for auto-detection)</param>
-        /// <returns>Parsed MDL instance</returns>
-        /// <exception cref="ArgumentException">Thrown when format cannot be determined or is invalid</exception>
-        /// <exception cref="FileNotFoundException">Thrown when file path does not exist</exception>
-        /// <exception cref="IOException">Thrown when file cannot be read</exception>
-        public static MDLData.MDL ReadMdl(object source, int offset = 0, int? size = null, object sourceExt = null, int offsetExt = 0, int sizeExt = 0, ResourceType fileFormat = null)
+        private static MDLData.MDL DispatchReadMdl(Func<MDLData.MDL> readerFunc, ResourceType fmt)
         {
-            if (source == null)
-            {
-                throw new ArgumentNullException(nameof(source), "MDL source cannot be null");
-            }
-
-            // Detect format if not explicitly provided
-            ResourceType fmt = fileFormat ?? DetectMdl(source, offset);
-
-            // Validate detected format
-            if (fmt == ResourceType.INVALID)
-            {
-                string sourceDesc = source is string ? $"file '{source}'" : source.GetType().Name;
-                throw new ArgumentException($"Failed to determine the format of the MDL file at offset {offset}. The file may be corrupted, empty, or in an unsupported format.", nameof(source));
-            }
-
-            // Dispatch to appropriate reader based on format
             try
             {
-                if (fmt == ResourceType.MDL)
-                {
-                    // Binary MDL format
-                    return new MDLBinaryReader(source, offset, size ?? 0, sourceExt, offsetExt, sizeExt).Load();
-                }
-                if (fmt == ResourceType.MDL_ASCII)
-                {
-                    // ASCII MDL format
-                    return CreateAsciiReader(source, offset, size ?? 0).Load();
-                }
-
-                // Unsupported format
-                throw new ArgumentException($"Unsupported MDL format: {fmt}. Only MDL (binary) and MDL_ASCII formats are supported.", nameof(fileFormat));
+                return readerFunc();
             }
             catch (FileNotFoundException ex)
             {
@@ -391,6 +351,100 @@ namespace BioWare.Resource.Formats.MDL
         }
 
         /// <summary>
+        /// Helper method for consistent error handling in write operations.
+        /// Wraps writer dispatch logic with standardized exception transformation.
+        /// </summary>
+        private static void DispatchWriteMdl(Action writerFunc, ResourceType fmt)
+        {
+            try
+            {
+                writerFunc();
+            }
+            catch (DirectoryNotFoundException ex)
+            {
+                throw new DirectoryNotFoundException($"MDL directory not found: {ex.Message}", ex);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                throw new UnauthorizedAccessException($"Access denied to MDL file: {ex.Message}", ex);
+            }
+            catch (IOException ex)
+            {
+                throw new IOException($"Error writing MDL file: {ex.Message}", ex);
+            }
+            catch (ArgumentException)
+            {
+                // Re-throw ArgumentException as-is (validation errors)
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Error writing MDL file in {fmt} format: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Validates MDL source and format, throwing appropriate exceptions if invalid.
+        /// </summary>
+        private static ResourceType ValidateAndDetectMdlFormat(object source, int offset, ResourceType fileFormat)
+        {
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source), "MDL source cannot be null");
+            }
+
+            // Detect format if not explicitly provided
+            ResourceType fmt = fileFormat ?? DetectMdl(source, offset);
+
+            // Validate detected format
+            if (fmt == ResourceType.INVALID)
+            {
+                throw new ArgumentException($"Failed to determine the format of the MDL file at offset {offset}. The file may be corrupted, empty, or in an unsupported format.", nameof(source));
+            }
+
+            return fmt;
+        }
+
+        /// <summary>
+        /// Reads an MDL file from the source, automatically detecting format or using the specified format.
+        /// Comprehensive dispatcher with validation and error handling.
+        /// Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_auto.py:read_mdl()
+        /// </summary>
+        /// <param name="source">Source of the MDL data (string path, byte[], or Stream)</param>
+        /// <param name="offset">Byte offset into the source data</param>
+        /// <param name="size">Number of bytes to read (0 or null for entire source)</param>
+        /// <param name="sourceExt">Source of the MDX data (for binary MDL)</param>
+        /// <param name="offsetExt">Offset into the MDX source data</param>
+        /// <param name="sizeExt">Number of bytes to read from MDX source</param>
+        /// <param name="fileFormat">Explicit format to use (null for auto-detection)</param>
+        /// <returns>Parsed MDL instance</returns>
+        /// <exception cref="ArgumentException">Thrown when format cannot be determined or is invalid</exception>
+        /// <exception cref="FileNotFoundException">Thrown when file path does not exist</exception>
+        /// <exception cref="IOException">Thrown when file cannot be read</exception>
+        public static MDLData.MDL ReadMdl(object source, int offset = 0, int? size = null, object sourceExt = null, int offsetExt = 0, int sizeExt = 0, ResourceType fileFormat = null)
+        {
+            ResourceType fmt = ValidateAndDetectMdlFormat(source, offset, fileFormat);
+
+            // Dispatch to appropriate reader based on format
+            return DispatchReadMdl(() =>
+            {
+                if (fmt == ResourceType.MDL)
+                {
+                    // Binary MDL format
+                    return new MDLBinaryReader(source, offset, size ?? 0, sourceExt, offsetExt, sizeExt).Load();
+                }
+                if (fmt == ResourceType.MDL_ASCII)
+                {
+                    // ASCII MDL format
+                    return CreateAsciiReader(source, offset, size ?? 0).Load();
+                }
+
+                // Unsupported format
+                throw new ArgumentException($"Unsupported MDL format: {fmt}. Only MDL (binary) and MDL_ASCII formats are supported.", nameof(fileFormat));
+            }, fmt);
+        }
+
+        /// <summary>
         /// Reads an MDL file with fast loading optimized for rendering (binary MDL only).
         /// Fast loading skips animations and controllers for performance.
         /// Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_auto.py:read_mdl_fast()
@@ -407,23 +461,10 @@ namespace BioWare.Resource.Formats.MDL
         /// <exception cref="IOException">Thrown when file cannot be read</exception>
         public static MDLData.MDL ReadMdlFast(object source, int offset = 0, int? size = null, object sourceExt = null, int offsetExt = 0, int sizeExt = 0)
         {
-            if (source == null)
-            {
-                throw new ArgumentNullException(nameof(source), "MDL source cannot be null");
-            }
-
-            // Detect format
-            ResourceType fmt = DetectMdl(source, offset);
-
-            // Validate detected format
-            if (fmt == ResourceType.INVALID)
-            {
-                string sourceDesc = source is string ? $"file '{source}'" : source.GetType().Name;
-                throw new ArgumentException($"Failed to determine the format of the MDL file at offset {offset}. The file may be corrupted, empty, or in an unsupported format.", nameof(source));
-            }
+            ResourceType fmt = ValidateAndDetectMdlFormat(source, offset, null);
 
             // Dispatch to appropriate reader
-            try
+            return DispatchReadMdl(() =>
             {
                 if (fmt == ResourceType.MDL)
                 {
@@ -439,32 +480,7 @@ namespace BioWare.Resource.Formats.MDL
 
                 // Unsupported format
                 throw new ArgumentException($"Unsupported MDL format: {fmt}. Only MDL (binary) and MDL_ASCII formats are supported.");
-            }
-            catch (FileNotFoundException ex)
-            {
-                throw new FileNotFoundException($"MDL file not found: {ex.Message}", ex);
-            }
-            catch (DirectoryNotFoundException ex)
-            {
-                throw new DirectoryNotFoundException($"MDL directory not found: {ex.Message}", ex);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                throw new UnauthorizedAccessException($"Access denied to MDL file: {ex.Message}", ex);
-            }
-            catch (IOException ex)
-            {
-                throw new IOException($"Error reading MDL file: {ex.Message}", ex);
-            }
-            catch (ArgumentException)
-            {
-                // Re-throw ArgumentException as-is (format errors)
-                throw;
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidDataException($"Error parsing MDL file in {fmt} format: {ex.Message}", ex);
-            }
+            }, fmt);
         }
 
         /// <summary>
@@ -498,7 +514,7 @@ namespace BioWare.Resource.Formats.MDL
                 throw new ArgumentException($"Unsupported format specified: {fmt}. Use ResourceType.MDL or ResourceType.MDL_ASCII.", nameof(fileFormat));
             }
 
-            try
+            DispatchWriteMdl(() =>
             {
                 if (fmt == ResourceType.MDL)
                 {
@@ -522,28 +538,7 @@ namespace BioWare.Resource.Formats.MDL
                         throw new ArgumentException($"Target type '{target.GetType().Name}' is not supported for MDL_ASCII format. Use string (file path) or Stream.", nameof(target));
                     }
                 }
-            }
-            catch (DirectoryNotFoundException ex)
-            {
-                throw new DirectoryNotFoundException($"MDL directory not found: {ex.Message}", ex);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                throw new UnauthorizedAccessException($"Access denied to MDL file: {ex.Message}", ex);
-            }
-            catch (IOException ex)
-            {
-                throw new IOException($"Error writing MDL file: {ex.Message}", ex);
-            }
-            catch (ArgumentException)
-            {
-                // Re-throw ArgumentException as-is (validation errors)
-                throw;
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Error writing MDL file in {fmt} format: {ex.Message}", ex);
-            }
+            }, fmt);
         }
 
         /// <summary>

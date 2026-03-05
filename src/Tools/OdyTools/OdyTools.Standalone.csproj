@@ -32,12 +32,15 @@
     <Compile Remove="App.axaml.cs" />
     <!-- Exclude per-editor standalone entry points (use unified host only) -->
     <Compile Remove="Editors\Standalone\OdyTool2DA\**" />
+    <Compile Remove="Dialogs\InsertInstanceDialog.axaml.cs" />
   </ItemGroup>
   <!-- Use default AvaloniaXaml; remove main app and per-editor standalone XAML (no code-behind in this build) -->
   <ItemGroup>
     <AvaloniaXaml Remove="App.axaml" />
     <AvaloniaXaml Remove="**\App.axaml" />
     <AvaloniaXaml Remove="Editors\Standalone\OdyTool2DA\**" />
+    <AvaloniaXaml Remove="Dialogs\InsertInstanceDialog.axaml" />
+    <AvaloniaXaml Remove="Themes\MonacoTheme.axaml" />
   </ItemGroup>
   <!-- OutputType -->
   <PropertyGroup Condition="'$(RuntimeIdentifier)'=='' OR $(RuntimeIdentifier.StartsWith('win'))">
@@ -70,6 +73,8 @@
     <PackageReference Include="ReactiveUI" Version="22.3.1" />
     <PackageReference Include="System.Reactive" Version="6.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="NetSparkleUpdater.SparkleUpdater" Version="3.0.4" Condition="'$(TargetFramework)' != 'net48'" />
+    <PackageReference Include="NetSparkleUpdater.UI.Avalonia" Version="3.0.4" Condition="'$(TargetFramework)' != 'net48'" />
     <PackageReference Include="Markdig" Version="0.44.0" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
     <PackageReference Include="System.Windows.Extensions" Version="10.0.1" Condition="'$(TargetFramework)' != 'net48'" />
@@ -81,8 +86,10 @@
     <ProjectReference Include="..\..\BioWare\BioWare.csproj" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
+    <Compile Remove="Windows\UpdateManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <AvaloniaResource Include="Resources\**" />

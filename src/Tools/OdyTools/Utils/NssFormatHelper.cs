@@ -46,7 +46,6 @@ namespace OdyTools.Utils
 
             var sb = new StringBuilder();
             int indentLevel = 0;
-            bool afterOpenBrace = false;
 
             for (int i = 0; i < lines.Count; i++)
             {

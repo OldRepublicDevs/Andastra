@@ -11,6 +11,8 @@ using BioWare.Resource.Formats.TLK;
 using OdyTools.Data;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Dialogs
 {
@@ -341,12 +343,7 @@ namespace OdyTools.Dialogs
                 {
                     if (!File.Exists(tlkPathToSave))
                     {
-                        var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
-                            "Cannot save",
-                            "dialog.tlk was not found at the specified path. Creating a new TLK file is not supported; ensure the path points to an existing dialog.tlk.",
-                            MsBox.Avalonia.Enums.ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Warning);
-                        msgBox.ShowWindowDialogAsync(this);
+                        _ = DialogHelper.ShowWindowAsync(this, "Cannot save", "dialog.tlk was not found at the specified path. Creating a new TLK file is not supported; ensure the path points to an existing dialog.tlk.", MsBox.Avalonia.Enums.ButtonEnum.Ok, IconType.Warning);
                         Close(false);
                         return;
                     }
@@ -366,12 +363,7 @@ namespace OdyTools.Dialogs
                 }
                 catch (Exception ex)
                 {
-                    var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                        "Error Saving TLK File",
-                        $"Failed to save the TLK file: {ex.Message}",
-                        ButtonEnum.Ok,
-                        MsBox.Avalonia.Enums.Icon.Error);
-                    errorBox.ShowAsync();
+                    _ = DialogHelper.ShowAsync("Error Saving TLK File", $"Failed to save the TLK file: {ex.Message}", ButtonEnum.Ok, IconType.Error);
                 }
             }
 

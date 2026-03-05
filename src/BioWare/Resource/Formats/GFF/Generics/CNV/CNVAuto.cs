@@ -50,19 +50,8 @@ namespace BioWare.Resource.Formats.GFF.Generics.CNV
         public static void WriteCnv(CNV cnv, object target, BioWareGame game, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.CNV;
-            if (format != ResourceType.CNV && format != ResourceType.GFF)
-            {
-                throw new ArgumentException("Unsupported format specified; use CNV or GFF.", nameof(fileFormat));
-            }
-
-            // Validate game type - CNV format is only used by Eclipse Engine
-            if (!game.IsEclipse())
-            {
-                throw new ArgumentException(
-                    $"CNV format is only supported for Eclipse Engine games (Dragon Age, ). " +
-                    $"Provided game: {game}",
-                    nameof(game));
-            }
+            if (cnv == null) throw new ArgumentNullException(nameof(cnv));
+            ValidateCnvSerializationInputs(game, format, nameof(fileFormat));
 
             // Dismantle CNV to GFF
             GFF gff = CNVHelper.DismantleCnv(cnv, game);
@@ -98,9 +87,24 @@ namespace BioWare.Resource.Formats.GFF.Generics.CNV
         public static byte[] BytesCnv(CNV cnv, BioWareGame game, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.CNV;
+            if (cnv == null) throw new ArgumentNullException(nameof(cnv));
+            ValidateCnvSerializationInputs(game, format, nameof(fileFormat));
+
+            // Dismantle CNV to GFF
+            GFF gff = CNVHelper.DismantleCnv(cnv, game);
+
+            // Convert GFF to bytes
+            return GFFAuto.BytesGff(gff, format);
+        }
+
+        /// <summary>
+        /// Validates shared CNV serialization preconditions for write/bytes operations.
+        /// </summary>
+        private static void ValidateCnvSerializationInputs(BioWareGame game, ResourceType format, string formatParamName)
+        {
             if (format != ResourceType.CNV && format != ResourceType.GFF)
             {
-                throw new ArgumentException("Unsupported format specified; use CNV or GFF.", nameof(fileFormat));
+                throw new ArgumentException("Unsupported format specified; use CNV or GFF.", formatParamName);
             }
 
             // Validate game type - CNV format is only used by Eclipse Engine
@@ -111,12 +115,6 @@ namespace BioWare.Resource.Formats.GFF.Generics.CNV
                     $"Provided game: {game}",
                     nameof(game));
             }
-
-            // Dismantle CNV to GFF
-            GFF gff = CNVHelper.DismantleCnv(cnv, game);
-
-            // Convert GFF to bytes
-            return GFFAuto.BytesGff(gff, format);
         }
     }
 }

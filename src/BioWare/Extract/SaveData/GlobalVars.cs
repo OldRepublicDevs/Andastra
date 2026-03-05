@@ -187,7 +187,7 @@ namespace BioWare.Extract.SaveData
             }
 
             byte[] bytes = new GFFBinaryWriter(gff).Write();
-            File.WriteAllBytes(_globalsPath, bytes);
+            SaveFolderIO.WriteBytesAtomic(_globalsPath, bytes);
         }
 
         // Convenience getters/setters

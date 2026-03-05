@@ -7,6 +7,9 @@ using BioWare.Common;
 using Newtonsoft.Json;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using OdyTools.Data;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Editors
 {
@@ -24,7 +27,7 @@ namespace OdyTools.Editors
         private static readonly object Lock = new object();
         private static DispatcherTimer _timer;
         private static bool _cleanExitRequested;
-        private const int BackupIntervalSeconds = 30;
+        private const int MaxRecoveryAgeDays = 7;
 
         /// <summary>
         /// Starts the periodic backup timer. Call from app startup after MainWindow is created.
@@ -35,12 +38,25 @@ namespace OdyTools.Editors
             {
                 if (_timer != null) return;
                 EnsureBackupDirectory();
+                CleanupStaleBackups();
                 _timer = new DispatcherTimer
                 {
-                    Interval = TimeSpan.FromSeconds(BackupIntervalSeconds)
+                    Interval = TimeSpan.FromSeconds(GetBackupIntervalSeconds())
                 };
                 _timer.Tick += OnBackupTick;
                 _timer.Start();
+            }
+        }
+
+        private static int GetBackupIntervalSeconds()
+        {
+            try
+            {
+                return Math.Max(5, GlobalSettings.Instance.CrashRecoveryIntervalSeconds);
+            }
+            catch
+            {
+                return 30;
             }
         }
 
@@ -145,12 +161,7 @@ namespace OdyTools.Editors
             var entries = GetRecoveryEntries();
             if (entries.Count == 0) { DiscardRecovery(); return false; }
             var fileList = string.Join("\n", entries.ConvertAll(e => "• " + e.DisplayName));
-            var box = MessageBoxManager.GetMessageBoxStandard(
-                "Recovery Available",
-                $"The application may have closed unexpectedly. Recover {entries.Count} unsaved editor(s)?\n\n{fileList}",
-                ButtonEnum.YesNo,
-                Icon.Question);
-            var result = await box.ShowAsync();
+            var result = await DialogHelper.ShowAsync("Recovery Available", $"The application may have closed unexpectedly. Recover {entries.Count} unsaved editor(s)?\n\n{fileList}", ButtonEnum.YesNo, IconType.Question);
             if (result != ButtonResult.Yes)
             {
                 DiscardRecovery();
@@ -199,7 +210,13 @@ namespace OdyTools.Editors
                 if (entries.Count > 0)
                 {
                     string json = JsonConvert.SerializeObject(entries, Formatting.Indented);
-                    File.WriteAllText(SessionFilePath, json);
+                    AtomicFileWriter.WriteAtomic(SessionFilePath, System.Text.Encoding.UTF8.GetBytes(json), new AtomicWriteOptions
+                    {
+                        CreateBackup = false,
+                        MaxBackups = 1,
+                        RetryCount = 2,
+                        RetryDelayMs = 150
+                    });
                 }
                 else if (File.Exists(SessionFilePath))
                 {
@@ -225,7 +242,19 @@ namespace OdyTools.Editors
             string backupFileName = $"{safeName}_{DateTime.UtcNow:yyyyMMddHHmmss}.backup";
             string backupPath = Path.Combine(BackupDirectory, backupFileName);
 
-            File.WriteAllBytes(backupPath, data);
+            AtomicFileWriter.WriteAtomic(backupPath, data, new AtomicWriteOptions
+            {
+                CreateBackup = false,
+                MaxBackups = 1,
+                RetryCount = 2,
+                RetryDelayMs = 150
+            });
+
+            var fi = new FileInfo(backupPath);
+            if (!fi.Exists || fi.Length == 0)
+            {
+                return null;
+            }
 
             return new RecoveryEntry
             {
@@ -268,6 +297,42 @@ namespace OdyTools.Editors
             catch
             {
                 // Ignore
+            }
+        }
+
+        private static void CleanupStaleBackups()
+        {
+            try
+            {
+                if (!Directory.Exists(BackupDirectory))
+                {
+                    return;
+                }
+
+                DateTime threshold = DateTime.UtcNow.AddDays(-MaxRecoveryAgeDays);
+                foreach (string file in Directory.EnumerateFiles(BackupDirectory, "*.backup"))
+                {
+                    try
+                    {
+                        if (File.GetLastWriteTimeUtc(file) < threshold)
+                        {
+                            File.Delete(file);
+                        }
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
+                }
+
+                if (File.Exists(SessionFilePath) && File.GetLastWriteTimeUtc(SessionFilePath) < threshold)
+                {
+                    File.Delete(SessionFilePath);
+                }
+            }
+            catch
+            {
+                // ignored
             }
         }
 

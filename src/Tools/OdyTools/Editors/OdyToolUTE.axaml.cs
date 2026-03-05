@@ -38,6 +38,8 @@ using CheckBox = Avalonia.Controls.CheckBox;
 using DataGrid = Avalonia.Controls.DataGrid;
 using TabControl = Avalonia.Controls.TabControl;
 using TabItem = Avalonia.Controls.TabItem;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Editors
 {
@@ -94,6 +96,7 @@ namespace OdyTools.Editors
         // UI Controls - Comments
         private TextBox _commentsEdit;
 
+        public OdyToolUTE() : this(null, null) { }
         public OdyToolUTE(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTE", "encounter",
                 new[] { ResourceType.UTE, ResourceType.BTE },
@@ -136,15 +139,6 @@ namespace OdyTools.Editors
 
         private void SetupMenuHandlers()
         {
-            void Bind(string name, Action handler)
-            {
-                try
-                {
-                    var item = EditorHelpers.FindControlSafe<MenuItem>(this, name) ?? this.FindControl<MenuItem>(name);
-                    if (item != null) item.Click += (s, e) => handler();
-                }
-                catch { }
-            }
             // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
         }
 
@@ -210,40 +204,13 @@ namespace OdyTools.Editors
             }
             catch (Exception ex)
             {
-                var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Open Failed",
-                    $"Could not open file: {ex.Message}",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                await msgBox.ShowWindowDialogAsync(this);
+                await DialogHelper.ShowWindowAsync(this, "Open Failed", $"Could not open file: {ex.Message}", ButtonEnum.Ok, IconType.Error);
             }
         }
 
         protected override async Task RunSaveAsAsync()
         {
-            var storageProvider = (this as Window)?.StorageProvider;
-            if (storageProvider == null) return;
-            string suggestedName = string.IsNullOrEmpty(_resname) ? "encounter" : _resname;
-            var options = new FilePickerSaveOptions
-            {
-                Title = "Save As",
-                SuggestedFileName = suggestedName + ".ute",
-                FileTypeChoices = new[]
-                {
-                    new FilePickerFileType("Encounter (UTE)") { Patterns = new[] { "*.ute", "*.bte" } },
-                    new FilePickerFileType("All files") { Patterns = new[] { "*.*" } }
-                }
-            };
-            var file = await storageProvider.SaveFilePickerAsync(options);
-            if (file == null) return;
-            string path = file.Path.LocalPath;
-            if (string.IsNullOrWhiteSpace(path)) return;
-            _filepath = path;
-            string pathExt = Path.GetExtension(path).TrimStart('.').ToLowerInvariant();
-            _restype = ResourceType.FromExtension(pathExt) ?? ResourceType.UTE;
-            _resname = Path.GetFileNameWithoutExtension(path);
-            RefreshWindowTitle();
-            Save();
+            await base.RunSaveAsAsync();
         }
 
         private void InitializeComponent()
@@ -301,34 +268,13 @@ namespace OdyTools.Editors
 
         private void SetupSignals()
         {
-            if (_tagGenerateBtn != null)
-            {
-                _tagGenerateBtn.Click += (s, e) => GenerateTag();
-            }
-            if (_resrefGenerateBtn != null)
-            {
-                _resrefGenerateBtn.Click += (s, e) => GenerateResref();
-            }
-            if (_infiniteRespawnCheckbox != null)
-            {
-                _infiniteRespawnCheckbox.IsCheckedChanged += (s, e) => SetInfiniteRespawn();
-            }
-            if (_spawnSelect != null)
-            {
-                _spawnSelect.SelectionChanged += (s, e) => SetContinuous();
-            }
-            if (_addCreatureButton != null)
-            {
-                _addCreatureButton.Click += (s, e) => AddCreature();
-            }
-            if (_removeCreatureButton != null)
-            {
-                _removeCreatureButton.Click += (s, e) => RemoveSelectedCreature();
-            }
-            if (_nameEditBtn != null)
-            {
-                _nameEditBtn.Click += (s, e) => ChangeName();
-            }
+            EditorHelpers.BindClick(_tagGenerateBtn, GenerateTag);
+            EditorHelpers.BindClick(_resrefGenerateBtn, GenerateResref);
+            EditorHelpers.BindCheckedChanged(_infiniteRespawnCheckbox, SetInfiniteRespawn);
+            EditorHelpers.BindSelectionChanged(_spawnSelect, SetContinuous);
+            EditorHelpers.BindClick(_addCreatureButton, AddCreature);
+            EditorHelpers.BindClick(_removeCreatureButton, RemoveSelectedCreature);
+            EditorHelpers.BindClick(_nameEditBtn, ChangeName);
         }
 
         private void SetupInstallation(OdyInstallation installation)
@@ -408,7 +354,7 @@ namespace OdyTools.Editors
                 basicPanel.Children.Add(nameTextBox);
             }
             _nameEditBtn = new Button { Content = "Edit Name" };
-            _nameEditBtn.Click += (s, e) => ChangeName();
+            EditorHelpers.BindClick(_nameEditBtn, ChangeName);
             basicPanel.Children.Add(nameLabel);
             basicPanel.Children.Add(_nameEditBtn);
 
@@ -416,7 +362,7 @@ namespace OdyTools.Editors
             var tagLabel = new TextBlock { Text = "Tag:" };
             _tagEdit = new TextBox();
             _tagGenerateBtn = new Button { Content = "-" };
-            _tagGenerateBtn.Click += (s, e) => GenerateTag();
+            EditorHelpers.BindClick(_tagGenerateBtn, GenerateTag);
             var tagPanel = new StackPanel { Orientation = Orientation.Horizontal };
             tagPanel.Children.Add(_tagEdit);
             tagPanel.Children.Add(_tagGenerateBtn);
@@ -427,7 +373,7 @@ namespace OdyTools.Editors
             var resrefLabel = new TextBlock { Text = "ResRef:" };
             _resrefEdit = new TextBox { MaxLength = 16 };
             _resrefGenerateBtn = new Button { Content = "-" };
-            _resrefGenerateBtn.Click += (s, e) => GenerateResref();
+            EditorHelpers.BindClick(_resrefGenerateBtn, GenerateResref);
             var resrefPanel = new StackPanel { Orientation = Orientation.Horizontal };
             resrefPanel.Children.Add(_resrefEdit);
             resrefPanel.Children.Add(_resrefGenerateBtn);
@@ -445,7 +391,7 @@ namespace OdyTools.Editors
             _spawnSelect = new ComboBox();
             _spawnSelect.Items.Add("Single Shot");
             _spawnSelect.Items.Add("Continuous");
-            _spawnSelect.SelectionChanged += (s, e) => SetContinuous();
+            EditorHelpers.BindSelectionChanged(_spawnSelect, SetContinuous);
             basicPanel.Children.Add(spawnLabel);
             basicPanel.Children.Add(_spawnSelect);
 
@@ -474,7 +420,7 @@ namespace OdyTools.Editors
 
             _respawnsCheckbox = new CheckBox { Content = "Respawns" };
             _infiniteRespawnCheckbox = new CheckBox { Content = "Infinite Respawns" };
-            _infiniteRespawnCheckbox.IsCheckedChanged += (s, e) => SetInfiniteRespawn();
+            EditorHelpers.BindCheckedChanged(_infiniteRespawnCheckbox, SetInfiniteRespawn);
 
             var respawnTimeLabel = new TextBlock { Text = "Respawn Time (s):" };
             _respawnTimeSpin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue };
@@ -518,9 +464,9 @@ namespace OdyTools.Editors
 
             var creatureButtonsPanel = new StackPanel { Orientation = Orientation.Horizontal };
             _removeCreatureButton = new Button { Content = "Remove" };
-            _removeCreatureButton.Click += (s, e) => RemoveSelectedCreature();
+            EditorHelpers.BindClick(_removeCreatureButton, RemoveSelectedCreature);
             _addCreatureButton = new Button { Content = "Add" };
-            _addCreatureButton.Click += (s, e) => AddCreature();
+            EditorHelpers.BindClick(_addCreatureButton, AddCreature);
 
             creatureButtonsPanel.Children.Add(_removeCreatureButton);
             creatureButtonsPanel.Children.Add(_addCreatureButton);
@@ -682,116 +628,20 @@ namespace OdyTools.Editors
                     .ToList();
 
                 // Populate all script combo boxes with relevant script resources (matching Python populate_combo_box)
-                if (_onEnterSelect != null)
-                {
-                    _onEnterSelect.Items.Clear();
-                    foreach (var resname in _relevantScriptResnames)
-                    {
-                        _onEnterSelect.Items.Add(resname);
-                    }
-                }
-                if (_onExitSelect != null)
-                {
-                    _onExitSelect.Items.Clear();
-                    foreach (var resname in _relevantScriptResnames)
-                    {
-                        _onExitSelect.Items.Add(resname);
-                    }
-                }
-                if (_onExhaustedEdit != null)
-                {
-                    _onExhaustedEdit.Items.Clear();
-                    foreach (var resname in _relevantScriptResnames)
-                    {
-                        _onExhaustedEdit.Items.Add(resname);
-                    }
-                }
-                if (_onHeartbeatSelect != null)
-                {
-                    _onHeartbeatSelect.Items.Clear();
-                    foreach (var resname in _relevantScriptResnames)
-                    {
-                        _onHeartbeatSelect.Items.Add(resname);
-                    }
-                }
-                if (_onUserDefinedSelect != null)
-                {
-                    _onUserDefinedSelect.Items.Clear();
-                    foreach (var resname in _relevantScriptResnames)
-                    {
-                        _onUserDefinedSelect.Items.Add(resname);
-                    }
-                }
+                EditorHelpers.PopulateComboBox(_onEnterSelect, _relevantScriptResnames);
+                EditorHelpers.PopulateComboBox(_onExitSelect, _relevantScriptResnames);
+                EditorHelpers.PopulateComboBox(_onExhaustedEdit, _relevantScriptResnames);
+                EditorHelpers.PopulateComboBox(_onHeartbeatSelect, _relevantScriptResnames);
+                EditorHelpers.PopulateComboBox(_onUserDefinedSelect, _relevantScriptResnames);
             }
 
             // Then set the text values (matching Python set_combo_box_text)
             // This must be done after populating items to ensure the text is set correctly
-            if (_onEnterSelect != null)
-            {
-                string onEnterText = ute.OnEntered.ToString();
-                _onEnterSelect.Text = onEnterText;
-                // Try to select the item if it exists in the list
-                if (!string.IsNullOrEmpty(onEnterText))
-                {
-                    int index = _onEnterSelect.Items.IndexOf(onEnterText);
-                    if (index >= 0)
-                    {
-                        _onEnterSelect.SelectedIndex = index;
-                    }
-                }
-            }
-            if (_onExitSelect != null)
-            {
-                string onExitText = ute.OnExit.ToString();
-                _onExitSelect.Text = onExitText;
-                if (!string.IsNullOrEmpty(onExitText))
-                {
-                    int index = _onExitSelect.Items.IndexOf(onExitText);
-                    if (index >= 0)
-                    {
-                        _onExitSelect.SelectedIndex = index;
-                    }
-                }
-            }
-            if (_onExhaustedEdit != null)
-            {
-                string onExhaustedText = ute.OnExhausted.ToString();
-                _onExhaustedEdit.Text = onExhaustedText;
-                if (!string.IsNullOrEmpty(onExhaustedText))
-                {
-                    int index = _onExhaustedEdit.Items.IndexOf(onExhaustedText);
-                    if (index >= 0)
-                    {
-                        _onExhaustedEdit.SelectedIndex = index;
-                    }
-                }
-            }
-            if (_onHeartbeatSelect != null)
-            {
-                string onHeartbeatText = ute.OnHeartbeat.ToString();
-                _onHeartbeatSelect.Text = onHeartbeatText;
-                if (!string.IsNullOrEmpty(onHeartbeatText))
-                {
-                    int index = _onHeartbeatSelect.Items.IndexOf(onHeartbeatText);
-                    if (index >= 0)
-                    {
-                        _onHeartbeatSelect.SelectedIndex = index;
-                    }
-                }
-            }
-            if (_onUserDefinedSelect != null)
-            {
-                string onUserDefinedText = ute.OnUserDefined.ToString();
-                _onUserDefinedSelect.Text = onUserDefinedText;
-                if (!string.IsNullOrEmpty(onUserDefinedText))
-                {
-                    int index = _onUserDefinedSelect.Items.IndexOf(onUserDefinedText);
-                    if (index >= 0)
-                    {
-                        _onUserDefinedSelect.SelectedIndex = index;
-                    }
-                }
-            }
+            EditorHelpers.SetComboBoxText(_onEnterSelect, ute.OnEntered.ToString());
+            EditorHelpers.SetComboBoxText(_onExitSelect, ute.OnExit.ToString());
+            EditorHelpers.SetComboBoxText(_onExhaustedEdit, ute.OnExhausted.ToString());
+            EditorHelpers.SetComboBoxText(_onHeartbeatSelect, ute.OnHeartbeat.ToString());
+            EditorHelpers.SetComboBoxText(_onUserDefinedSelect, ute.OnUserDefined.ToString());
 
             // Comments
             if (_commentsEdit != null)
@@ -963,6 +813,7 @@ namespace OdyTools.Editors
                 {
                     _nameEdit.SetLocString(_ute.Name);
                 }
+                MarkDocumentDirty();
             }
         }
 
@@ -976,6 +827,7 @@ namespace OdyTools.Editors
             {
                 _tagEdit.Text = _resrefEdit.Text;
             }
+            MarkDocumentDirty();
         }
 
         private void GenerateResref()
@@ -984,6 +836,7 @@ namespace OdyTools.Editors
             {
                 _resrefEdit.Text = !string.IsNullOrEmpty(base._resname) ? base._resname : "m00xx_enc_000";
             }
+            MarkDocumentDirty();
         }
 
         private void SetInfiniteRespawn()
@@ -1047,6 +900,7 @@ namespace OdyTools.Editors
 
             // Add to ObservableCollection (DataGrid is bound to this)
             _creatureRows.Add(creatureRow);
+            MarkDocumentDirty();
         }
 
         private void RemoveSelectedCreature()
@@ -1068,6 +922,7 @@ namespace OdyTools.Editors
                     _creatureRows.RemoveAt(selectedIndex);
                 }
             }
+            MarkDocumentDirty();
         }
 
         public override void SaveAs()
@@ -1249,12 +1104,7 @@ namespace OdyTools.Editors
                 // Show the editor - user will set the resref when saving
                 OdyTools.Editors.WindowUtils.AddWindow(nssEditor, show: true);
 #else
-                var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
-                    "Standalone Mode",
-                    "NSS editor is not available in standalone UTE mode.",
-                    MsBox.Avalonia.Enums.ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info);
-                msgBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Standalone Mode", "NSS editor is not available in standalone UTE mode.", MsBox.Avalonia.Enums.ButtonEnum.Ok, IconType.Info);
 #endif
                 // Update the combo box with the suggested script name
                 // User can change this before saving
@@ -1327,12 +1177,7 @@ namespace OdyTools.Editors
                     else
                     {
                         // Show "not found" message
-                        var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                            "Resource Not Found",
-                            $"Script '{scriptName}' not found in installation.\n\nSearched for:\n- {scriptName}.nss\n- {scriptName}.ncs",
-                            ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Info);
-                        msgBox.ShowAsync();
+                        _ = DialogHelper.ShowAsync("Resource Not Found", $"Script '{scriptName}' not found in installation.\n\nSearched for:\n- {scriptName}.nss\n- {scriptName}.ncs", ButtonEnum.Ok, IconType.Info);
                     }
                 }
             }
@@ -1481,12 +1326,7 @@ namespace OdyTools.Editors
                 // Show the editor
                 OdyTools.Editors.WindowUtils.AddWindow(utpEditor, show: true);
 #else
-                var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
-                    "Standalone Mode",
-                    "UTP editor is not available in standalone UTE mode.",
-                    MsBox.Avalonia.Enums.ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info);
-                msgBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Standalone Mode", "UTP editor is not available in standalone UTE mode.", MsBox.Avalonia.Enums.ButtonEnum.Ok, IconType.Info);
 #endif
                 // Optionally add the new creature to the encounter table
                 // User can manually add it via the Add button after creating
@@ -1548,12 +1388,7 @@ namespace OdyTools.Editors
                 else
                 {
                     // Show "not found" message
-                    var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                        "Resource Not Found",
-                        $"Creature '{creatureResRef}' not found in installation.\n\nSearched for:\n- {creatureResRef}.utp",
-                        ButtonEnum.Ok,
-                        MsBox.Avalonia.Enums.Icon.Info);
-                    msgBox.ShowAsync();
+                    _ = DialogHelper.ShowAsync("Resource Not Found", $"Creature '{creatureResRef}' not found in installation.\n\nSearched for:\n- {creatureResRef}.utp", ButtonEnum.Ok, IconType.Info);
                 }
             }
             catch (Exception ex)

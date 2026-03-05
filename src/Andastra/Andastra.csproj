@@ -84,7 +84,6 @@
     <ProjectReference Include="UI\Andastra.UI.csproj" />
     <ProjectReference Include="..\BioWare\BioWare.csproj" />
     <PackageReference Include="ini-parser-netstandard" Version="2.5.3" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
     <!-- Explicitly resolve transitive dependencies from Microsoft.Extensions.* 10.0.1 -->
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
@@ -135,5 +134,6 @@
   <ItemGroup>
     <Compile Remove="**\obj\**\*.AssemblyAttributes.cs" />
     <Compile Remove="**\obj\**\*.NETCoreApp,Version=*.AssemblyAttributes.cs" />
+    <Compile Remove="**\obj\**\*.AssemblyInfo.cs" />
   </ItemGroup>
 </Project>

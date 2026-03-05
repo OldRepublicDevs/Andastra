@@ -27,6 +27,8 @@ using FontFamily = Avalonia.Media.FontFamily;
 using SolidColorBrush = Avalonia.Media.SolidColorBrush;
 using Color = Avalonia.Media.Color;
 using Colors = Avalonia.Media.Colors;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyPatch.UI.Views
 {
@@ -41,6 +43,7 @@ namespace OdyPatch.UI.Views
         private ComboBox _foregroundComboBox;
         private ComboBox _backgroundComboBox;
 
+        public RteEditorWindow() : this(null) { }
         public RteEditorWindow(string initialDirectory = null)
         {
             InitializeComponent();
@@ -215,13 +218,8 @@ namespace OdyPatch.UI.Views
                 return true;
             }
 
-            MsBox.Avalonia.Base.IMsBox<ButtonResult> messageBox = MessageBoxManager.GetMessageBoxStandard(
-                "Unsaved changes",
-                "You have unsaved changes. Do you want to discard them?",
-                ButtonEnum.YesNo,
-                MsBox.Avalonia.Enums.Icon.Warning);
 
-            return await messageBox.ShowAsync() == ButtonResult.Yes;
+            return await DialogHelper.ShowAsync("Unsaved changes", "You have unsaved changes. Do you want to discard them?", ButtonEnum.YesNo, IconType.Warning)== ButtonResult.Yes;
         }
 
         private async Task<IStorageFolder> GetStartLocationAsync()

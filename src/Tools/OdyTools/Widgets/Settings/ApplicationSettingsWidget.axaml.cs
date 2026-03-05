@@ -7,9 +7,8 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using OdyTools.Data;
 using OdyTools.Dialogs;
+using OdyTools.Utils;
 using FontInfo = OdyTools.Dialogs.FontInfo;
-using MsBox.Avalonia;
-using MsBox.Avalonia.Enums;
 
 namespace OdyTools.Widgets.Settings
 {
@@ -26,6 +25,10 @@ namespace OdyTools.Widgets.Settings
         private StackPanel _verticalLayout3;
         private GlobalSettings _settings;
         private List<EnvironmentVariable> _environmentVariables;
+        private CheckBox _backupsEnabledCheck;
+        private NumericUpDown _backupCountSpin;
+        private CheckBox _crashRecoveryEnabledCheck;
+        private NumericUpDown _crashRecoveryIntervalSpin;
 
         public ApplicationSettingsWidget()
         {
@@ -138,7 +141,7 @@ namespace OdyTools.Widgets.Settings
 
         private async void SelectFont()
         {
-            Window parentWindow = GetParentWindow();
+            Window parentWindow = ControlTreeHelper.GetParentWindow(this);
             if (parentWindow == null)
             {
                 return;
@@ -229,8 +232,107 @@ namespace OdyTools.Widgets.Settings
             // Populate environment variables from settings
             PopulateEnvironmentVariables();
 
-            // Populate miscellaneous settings
-            // Settings binding (when settings are fully available)
+            PopulateSaveResilienceSettings();
+        }
+
+        private void PopulateSaveResilienceSettings()
+        {
+            if (_verticalLayoutMisc == null)
+            {
+                return;
+            }
+
+            _verticalLayoutMisc.Children.Clear();
+
+            _verticalLayoutMisc.Children.Add(new TextBlock
+            {
+                Text = "Save & Recovery",
+                FontWeight = FontWeight.Bold,
+                Margin = new Thickness(0, 0, 0, 4)
+            });
+
+            _verticalLayoutMisc.Children.Add(new TextBlock
+            {
+                Text = $"Autosave is always enabled (every {GlobalSettings.ManagedAutosaveIntervalMinutes} minutes) and stored as a managed working copy in app local data.",
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 0, 0, 6)
+            });
+
+            _backupCountSpin = CreateNumericSettingRow(
+                _verticalLayoutMisc,
+                "Backup versions to keep:",
+                1,
+                50,
+                1,
+                _settings.MaxBackupCount,
+                _settings.BackupsEnabled,
+                value => _settings.MaxBackupCount = Math.Max(1, value),
+                out _backupsEnabledCheck,
+                "Create backups on save",
+                _settings.BackupsEnabled,
+                enabled => _settings.BackupsEnabled = enabled);
+
+            _crashRecoveryIntervalSpin = CreateNumericSettingRow(
+                _verticalLayoutMisc,
+                "Crash recovery interval (seconds):",
+                5,
+                300,
+                5,
+                _settings.CrashRecoveryIntervalSeconds,
+                _settings.CrashRecoveryEnabled,
+                value => _settings.CrashRecoveryIntervalSeconds = Math.Max(5, value),
+                out _crashRecoveryEnabledCheck,
+                "Enable crash recovery",
+                _settings.CrashRecoveryEnabled,
+                enabled => _settings.CrashRecoveryEnabled = enabled);
+        }
+
+        private NumericUpDown CreateNumericSettingRow(
+            Panel parent,
+            string label,
+            decimal min,
+            decimal max,
+            decimal increment,
+            decimal value,
+            bool enabled,
+            Action<int> onValueChanged,
+            out CheckBox toggle,
+            string toggleLabel,
+            bool toggleInitial,
+            Action<bool> onToggleChanged)
+        {
+            var numeric = new NumericUpDown
+            {
+                Minimum = min,
+                Maximum = max,
+                Increment = increment,
+                Value = value,
+                Width = 90,
+                IsEnabled = enabled
+            };
+
+            numeric.ValueChanged += (s, e) =>
+            {
+                onValueChanged?.Invoke(Convert.ToInt32(numeric.Value));
+            };
+
+            CheckBox localToggle = new CheckBox { Content = toggleLabel, IsChecked = toggleInitial };
+            localToggle.IsCheckedChanged += (s, e) =>
+            {
+                bool isEnabled = localToggle.IsChecked == true;
+                onToggleChanged?.Invoke(isEnabled);
+                numeric.IsEnabled = isEnabled;
+            };
+            parent.Children.Add(localToggle);
+
+            var row = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 8 };
+            row.Children.Add(new TextBlock { Text = label, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center });
+            row.Children.Add(numeric);
+            parent.Children.Add(row);
+
+            toggle = localToggle;
+
+            return numeric;
         }
 
         private void PopulateEnvironmentVariables()
@@ -240,16 +342,8 @@ namespace OdyTools.Widgets.Settings
                 return;
             }
 
-            // Load environment variables from settings
-            var envVarsDict = _settings.AppEnvVariables;
-            _environmentVariables = new List<EnvironmentVariable>();
-
-            foreach (var kvp in envVarsDict)
-            {
-                _environmentVariables.Add(new EnvironmentVariable(kvp.Key, kvp.Value));
-            }
-
-            _tableWidget.ItemsSource = _environmentVariables;
+            _environmentVariables = EnvironmentVariableGridHelper.FromDictionary(_settings.AppEnvVariables);
+            EnvironmentVariableGridHelper.RefreshGrid(_tableWidget, _environmentVariables);
         }
 
         private void ResetAttributes()
@@ -260,7 +354,7 @@ namespace OdyTools.Widgets.Settings
 
         private async void AddEnvironmentVariable()
         {
-            Window parentWindow = GetParentWindow();
+            Window parentWindow = ControlTreeHelper.GetParentWindow(this);
             if (parentWindow == null)
             {
                 return;
@@ -277,22 +371,16 @@ namespace OdyTools.Widgets.Settings
                 string value = result.Item2 ?? "";
 
                 // Check if key already exists
-                if (_environmentVariables.Any(ev => ev.Key.Equals(key, StringComparison.OrdinalIgnoreCase)))
+                if (HasEnvironmentVariableKey(key))
                 {
-                    var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                        "Duplicate Variable",
-                        $"An environment variable with key '{key}' already exists.",
-                        ButtonEnum.Ok,
-                        Icon.Warning);
-                    await msgBox.ShowAsync();
+                    await DialogHelper.ShowWarningAsync("Duplicate Variable", $"An environment variable with key '{key}' already exists.");
                     return;
                 }
 
                 // Add to list
                 var newVar = new EnvironmentVariable(key, value);
                 _environmentVariables.Add(newVar);
-                _tableWidget.ItemsSource = null;
-                _tableWidget.ItemsSource = _environmentVariables;
+                RefreshEnvironmentVariablesGrid();
 
                 // Save to settings
                 SaveEnvironmentVariable(key, value);
@@ -301,24 +389,14 @@ namespace OdyTools.Widgets.Settings
 
         private async void EditEnvironmentVariable()
         {
-            if (_tableWidget == null || _tableWidget.SelectedItem == null)
+            EnvironmentVariable selectedVar;
+            if (!TryGetSelectedEnvironmentVariable(out selectedVar))
             {
-                var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Edit Variable",
-                    "Please select a variable to edit.",
-                    ButtonEnum.Ok,
-                    Icon.Warning);
-                await msgBox.ShowAsync();
+                await DialogHelper.ShowWarningAsync("Edit Variable", "Please select a variable to edit.");
                 return;
             }
 
-            var selectedVar = _tableWidget.SelectedItem as EnvironmentVariable;
-            if (selectedVar == null)
-            {
-                return;
-            }
-
-            Window parentWindow = GetParentWindow();
+            Window parentWindow = ControlTreeHelper.GetParentWindow(this);
             if (parentWindow == null)
             {
                 return;
@@ -339,14 +417,9 @@ namespace OdyTools.Widgets.Settings
                 // If key changed, check for duplicates
                 if (!oldKey.Equals(newKey, StringComparison.OrdinalIgnoreCase))
                 {
-                    if (_environmentVariables.Any(ev => ev.Key.Equals(newKey, StringComparison.OrdinalIgnoreCase)))
+                    if (HasEnvironmentVariableKey(newKey, selectedVar))
                     {
-                        var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                            "Duplicate Variable",
-                            $"An environment variable with key '{newKey}' already exists.",
-                            ButtonEnum.Ok,
-                            Icon.Warning);
-                        await msgBox.ShowAsync();
+                        await DialogHelper.ShowWarningAsync("Duplicate Variable", $"An environment variable with key '{newKey}' already exists.");
                         return;
                     }
 
@@ -359,8 +432,7 @@ namespace OdyTools.Widgets.Settings
                 selectedVar.Value = newValue;
 
                 // Refresh the DataGrid
-                _tableWidget.ItemsSource = null;
-                _tableWidget.ItemsSource = _environmentVariables;
+                RefreshEnvironmentVariablesGrid();
 
                 // Save to settings
                 SaveEnvironmentVariable(newKey, newValue);
@@ -369,20 +441,10 @@ namespace OdyTools.Widgets.Settings
 
         private async void RemoveEnvironmentVariable()
         {
-            if (_tableWidget == null || _tableWidget.SelectedItem == null)
+            EnvironmentVariable selectedVar;
+            if (!TryGetSelectedEnvironmentVariable(out selectedVar))
             {
-                var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Remove Variable",
-                    "Please select a variable to remove.",
-                    ButtonEnum.Ok,
-                    Icon.Warning);
-                await msgBox.ShowAsync();
-                return;
-            }
-
-            var selectedVar = _tableWidget.SelectedItem as EnvironmentVariable;
-            if (selectedVar == null)
-            {
+                await DialogHelper.ShowWarningAsync("Remove Variable", "Please select a variable to remove.");
                 return;
             }
 
@@ -390,43 +452,36 @@ namespace OdyTools.Widgets.Settings
 
             // Remove from the list
             _environmentVariables.Remove(selectedVar);
-            _tableWidget.ItemsSource = null;
-            _tableWidget.ItemsSource = _environmentVariables;
+            RefreshEnvironmentVariablesGrid();
 
             // Remove from settings
             RemoveEnvironmentVariableFromSettings(key);
         }
 
+        private void RefreshEnvironmentVariablesGrid()
+        {
+            EnvironmentVariableGridHelper.RefreshGrid(_tableWidget, _environmentVariables);
+        }
+
+        private bool TryGetSelectedEnvironmentVariable(out EnvironmentVariable selected)
+        {
+            return EnvironmentVariableGridHelper.TryGetSelected(_tableWidget, out selected);
+        }
+
+        private bool HasEnvironmentVariableKey(string key, EnvironmentVariable except = null)
+        {
+            return EnvironmentVariableGridHelper.HasKey(_environmentVariables, key, except);
+        }
+
         private void RemoveEnvironmentVariableFromSettings(string key)
         {
-            var envVars = _settings.AppEnvVariables;
-            if (envVars.ContainsKey(key))
-            {
-                envVars.Remove(key);
-                _settings.AppEnvVariables = envVars;
-            }
+            EnvironmentVariableGridHelper.RemoveSetting(_settings, key);
         }
 
         private void SaveEnvironmentVariable(string key, string value)
         {
-            var envVars = _settings.AppEnvVariables;
-            envVars[key] = value;
-            _settings.AppEnvVariables = envVars;
+            EnvironmentVariableGridHelper.UpsertSetting(_settings, key, value);
         }
 
-        // Helper method to get the parent window for dialogs
-        private Window GetParentWindow()
-        {
-            Control current = this;
-            while (current != null)
-            {
-                if (current is Window window)
-                {
-                    return window;
-                }
-                current = current.Parent as Control;
-            }
-            return null;
-        }
     }
 }

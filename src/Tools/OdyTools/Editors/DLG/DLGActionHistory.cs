@@ -43,6 +43,7 @@ namespace OdyTools.Editors.DLG
 
             // Add to undo stack
             _undoStack.Push(action);
+            _editor.MarkDirtyFromActionHistory();
             _editor.NotifyActionHistoryChanged();
         }
 
@@ -62,6 +63,7 @@ namespace OdyTools.Editors.DLG
 
             // Add to redo stack
             _redoStack.Push(action);
+            _editor.MarkDirtyFromActionHistory();
             _editor.NotifyActionHistoryChanged();
         }
 
@@ -81,6 +83,7 @@ namespace OdyTools.Editors.DLG
 
             // Add to undo stack
             _undoStack.Push(action);
+            _editor.MarkDirtyFromActionHistory();
             _editor.NotifyActionHistoryChanged();
         }
 

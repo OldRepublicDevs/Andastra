@@ -16,6 +16,7 @@ namespace OdyTools.Editors
     {
         private TPC _tpc;
 
+        public OdyToolTPC() : this(null, null) { }
         public OdyToolTPC(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolTPC", "none",
                 new[] { ResourceType.TPC, ResourceType.TGA, ResourceType.JPG, ResourceType.PNG, ResourceType.BMP },

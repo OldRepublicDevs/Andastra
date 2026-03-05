@@ -77,7 +77,8 @@
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageReference Include="MicroCom.Runtime" Version="0.11.3" />
     <PackageReference Include="NetSparkleUpdater.SparkleUpdater" Version="3.0.4" />
-    <PackageReference Include="RtfDomParser" Version="7.0.0" />
+    <PackageReference Include="RtfDomParser" Version="7.0.0" Condition="'$(TargetFramework)' != 'net48'" />
+    <PackageReference Include="RtfDomParser" Version="1.0.0" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="System.Drawing.Common" Version="10.0.1" Condition="'$(TargetFramework)' != 'net48'" />
     <!-- Explicitly resolve transitive dependencies from Microsoft.Extensions.* 10.0.1 -->
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
@@ -99,6 +100,22 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Andastra\Andastra.csproj" Condition="'$(TargetFramework)' == 'net9.0'" />
     <ProjectReference Include="..\..\BioWare\BioWare.csproj" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="Simplecto.Avalonia.RichTextBox" Version="1.3.9" />
+    <PackageReference Include="Simplecto.Avalonia.RichTextBox" Version="1.3.9" Condition="'$(TargetFramework)' != 'net48'" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <Compile Remove="Views\MainWindow.axaml.cs" />
+    <Compile Remove="Views\RteEditorWindow.axaml.cs" />
+    <Compile Remove="Rte\RteDocumentConverter.cs" />
+    <AvaloniaXaml Remove="Views\MainWindow.axaml" />
+    <AvaloniaXaml Remove="Views\RteEditorWindow.axaml" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' != 'net48'">
+    <Compile Remove="Views\MainWindow.Net48.axaml.cs" />
+    <Compile Remove="Views\RteEditorWindow.Net48.axaml.cs" />
+    <Compile Remove="Rte\RteDocumentConverter.Net48.cs" />
+    <AvaloniaXaml Remove="Views\MainWindow.Net48.axaml" />
+    <AvaloniaXaml Remove="Views\RteEditorWindow.Net48.axaml" />
   </ItemGroup>
 </Project>

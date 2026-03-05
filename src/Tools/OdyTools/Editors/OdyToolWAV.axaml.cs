@@ -36,6 +36,7 @@ namespace OdyTools.Editors
 
         public OdyToolWAVUi Ui { get; private set; }
 
+        public OdyToolWAV() : this(null, null) { }
         public OdyToolWAV(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolWAV", "audio",
                 new[] { ResourceType.WAV, ResourceType.MP3 },

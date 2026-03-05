@@ -1,5 +1,6 @@
 <Project>
   <PropertyGroup>
+    <LangVersion>13.0</LangVersion>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <RestoreTreatWarningsAsErrors>false</RestoreTreatWarningsAsErrors>
     <GenerateMSBuildEditorConfigFile>false</GenerateMSBuildEditorConfigFile>
@@ -16,11 +17,17 @@
     <NoWarn>$(NoWarn);NU1102;NU1701;NU1702;MSB3277</NoWarn>
   </PropertyGroup>
 
+  <PropertyGroup Condition="$([System.String]::Copy('$(MSBuildProjectDirectory)').Contains('src\\Tools\\OdyTools\\Editors')) and $([System.String]::Copy('$(MSBuildProjectName)').EndsWith('.Standalone'))">
+    <MSBuildProjectExtensionsPath>$(MSBuildProjectDirectory)\obj\$(MSBuildProjectName)\</MSBuildProjectExtensionsPath>
+    <BaseIntermediateOutputPath>obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\</IntermediateOutputPath>
+    <BaseOutputPath>bin\$(MSBuildProjectName)\</BaseOutputPath>
+  </PropertyGroup>
+
   <!-- Provide .NET Framework reference assemblies via NuGet (no Developer Pack needed) -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3">
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
 

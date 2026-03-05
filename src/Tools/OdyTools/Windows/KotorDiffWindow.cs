@@ -5,6 +5,8 @@ using Avalonia.Markup.Xaml;
 using OdyTools.Data;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Windows
 {
@@ -70,12 +72,7 @@ namespace OdyTools.Windows
 
         public async void Compare()
         {
-            var box = MessageBoxManager.GetMessageBoxStandard(
-                "KotorDiff",
-                "KotorDiff comparison is not yet fully implemented. Use an external diff tool or wait for a future update.",
-                ButtonEnum.Ok,
-                MsBox.Avalonia.Enums.Icon.Info);
-            await box.ShowWindowDialogAsync(this);
+            await DialogHelper.ShowWindowAsync(this, "KotorDiff", "KotorDiff comparison is not yet fully implemented. Use an external diff tool or wait for a future update.", ButtonEnum.Ok, IconType.Info);
         }
     }
 

@@ -7,6 +7,8 @@ using Avalonia.Threading;
 using OdyTools.Widgets;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Dialogs
 {
@@ -211,12 +213,7 @@ namespace OdyTools.Dialogs
                 }
             }
 
-            var errorBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
-                _errorTitle,
-                errorMessage,
-                MsBox.Avalonia.Enums.ButtonEnum.Ok,
-                MsBox.Avalonia.Enums.Icon.Error);
-            errorBox.ShowAsync();
+            _ = DialogHelper.ShowAsync(_errorTitle, errorMessage, MsBox.Avalonia.Enums.ButtonEnum.Ok, IconType.Error);
         }
 
         private void OnProgress(int value, string taskType)

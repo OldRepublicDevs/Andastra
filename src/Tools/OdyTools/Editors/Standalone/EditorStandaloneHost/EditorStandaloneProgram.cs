@@ -4,7 +4,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Avalonia.ReactiveUI;
 
 namespace OdyTools.Editors.Standalone.EditorStandaloneHost
 {
@@ -64,8 +63,7 @@ namespace OdyTools.Editors.Standalone.EditorStandaloneHost
         public static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<EditorStandaloneApp>()
                 .UsePlatformDetect()
-                .LogToTrace()
-                .UseReactiveUI();
+                .LogToTrace();
 
         private static void ParseStartupArguments(string[] args)
         {

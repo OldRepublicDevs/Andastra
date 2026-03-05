@@ -11,6 +11,8 @@ using AvRichTextBox;
 using OdyPatch.UI.Rte;
 using OdyPatch.UI.ViewModels;
 using MsBox.Avalonia;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyPatch.UI.Views
 {
@@ -67,17 +69,12 @@ namespace OdyPatch.UI.Views
                     return;
                 }
 
-                MsBox.Avalonia.Base.IMsBox<MsBox.Avalonia.Enums.ButtonResult> messageBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
-                    "ALPHA VERSION WARNING",
-                    $"⚠️ WARNING: This is an ALPHA version ({Core.VersionLabel}) of OdyPatch\n\n" +
+                await DialogHelper.ShowAsync("ALPHA VERSION WARNING", $"⚠️ WARNING: This is an ALPHA version ({Core.VersionLabel}) of OdyPatch\n\n" +
                     "This version is for testing and demonstration purposes only.\n" +
                     "It is NOT intended for production use.\n\n" +
                     "Features may be incomplete, unstable, or contain bugs.\n" +
                     "Use at your own risk.\n\n" +
-                    "For production use, please use the stable release.",
-                    MsBox.Avalonia.Enums.ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Warning);
-                await messageBox.ShowAsync();
+                    "For production use, please use the stable release.", ButtonEnum.Ok, IconType.Warning);
             }
         }
 

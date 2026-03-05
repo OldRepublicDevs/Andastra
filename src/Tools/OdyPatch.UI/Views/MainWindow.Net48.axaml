@@ -1,0 +1,157 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:OdyPatch.UI.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="500"
+        x:Class="OdyPatch.UI.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="{Binding WindowTitle}"
+        Width="400" Height="500"
+        MinWidth="400" MinHeight="500">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="Tools">
+                <MenuItem Header="Validate INI" Command="{Binding ValidateIniCommand}"/>
+                <MenuItem Header="Uninstall Mod / Restore Backup" Command="{Binding UninstallModCommand}"/>
+                <MenuItem Header="Fix permissions to file/folder..." Command="{Binding FixPermissionsCommand}"/>
+                <MenuItem Header="Fix iOS Case Sensitivity" Command="{Binding FixCaseSensitivityCommand}"/>
+                <MenuItem Header="Create info.rte..." Command="{Binding CreateRteCommand}"/>
+            </MenuItem>
+
+            <MenuItem Header="Help">
+                <MenuItem Header="DeadlyStream">
+                    <MenuItem Header="Discord" Command="{Binding OpenUrlCommand}" CommandParameter="https://discord.gg/nDkHXfc36s"/>
+                    <MenuItem Header="Website" Command="{Binding OpenUrlCommand}" CommandParameter="https://deadlystream.com"/>
+                </MenuItem>
+                <MenuItem Header="KOTOR Community Portal">
+                    <MenuItem Header="Discord" Command="{Binding OpenUrlCommand}" CommandParameter="https://discord.com/invite/kotor"/>
+                    <MenuItem Header="Website" Command="{Binding OpenUrlCommand}" CommandParameter="https://kotor.neocities.org"/>
+                </MenuItem>
+            </MenuItem>
+
+            <MenuItem Header="About">
+                <MenuItem Header="Check for Updates" Command="{Binding CheckUpdatesCommand}"/>
+                <MenuItem Header="OdyPatch Home" Command="{Binding OpenUrlCommand}" CommandParameter="https://deadlystream.com/files/file/2243-OdyPatch"/>
+                <MenuItem Header="GitHub Source" Command="{Binding OpenUrlCommand}" CommandParameter="https://github.com/NickHugi/PyKotor"/>
+            </MenuItem>
+        </Menu>
+
+        <Grid DockPanel.Dock="Bottom" Margin="5,0,5,5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="0,5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0"
+                        Content="Exit"
+                        Command="{Binding ExitCommand}"
+                        MinWidth="60"
+                        Padding="10,5"/>
+
+                <Button Grid.Column="2"
+                        Content="Install"
+                        Command="{Binding InstallCommand}"
+                        IsEnabled="{Binding CanInstall}"
+                        MinWidth="60"
+                        Padding="10,5"/>
+            </Grid>
+
+            <ProgressBar Grid.Row="1"
+                         Value="{Binding ProgressValue}"
+                         Maximum="{Binding ProgressMaximum}"
+                         Height="20"/>
+        </Grid>
+
+        <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="5,5,5,0">
+            <Border Grid.Row="0"
+                    Background="#FFD700"
+                    BorderBrush="#FFA500"
+                    BorderThickness="2"
+                    CornerRadius="3"
+                    Margin="0,0,0,5"
+                    Padding="8,6"
+                    IsVisible="{Binding IsAlphaVersion}">
+                <TextBlock Text="⚠️ ALPHA VERSION - NOT FOR PRODUCTION USE ⚠️"
+                           FontWeight="Bold"
+                           FontSize="11"
+                           Foreground="#8B0000"
+                           HorizontalAlignment="Center"
+                           TextWrapping="Wrap"/>
+            </Border>
+
+            <Grid Grid.Row="1" Margin="0,0,0,2" IsVisible="{Binding IsModSelectionVisible}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <ComboBox Grid.Column="0"
+                          ItemsSource="{Binding Namespaces}"
+                          SelectedItem="{Binding SelectedNamespace}"
+                          PlaceholderText="Select the mod to install"
+                          HorizontalAlignment="Stretch"/>
+
+                <Button Grid.Column="1"
+                        Content="Browse"
+                        Command="{Binding BrowseModCommand}"
+                        Margin="5,0,0,0"
+                        Padding="10,2"/>
+
+                <Button Grid.Column="2"
+                        Content="?"
+                        Command="{Binding ShowNamespaceInfoCommand}"
+                        Width="25"
+                        Margin="2,0,0,0"
+                        Padding="0,2"/>
+            </Grid>
+
+            <Grid Grid.Row="2" Margin="0,0,0,5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <ComboBox Grid.Column="0"
+                          ItemsSource="{Binding GamePaths}"
+                          SelectedItem="{Binding SelectedGamePath}"
+                          PlaceholderText="Select your KOTOR directory path"
+                          HorizontalAlignment="Stretch"/>
+
+                <Button Grid.Column="1"
+                        Content="Browse"
+                        Command="{Binding BrowseGamePathCommand}"
+                        Margin="5,0,0,0"
+                        Padding="10,2"/>
+            </Grid>
+
+            <Border Grid.Row="3"
+                    BorderBrush="{DynamicResource SystemBaseLowColor}"
+                    BorderThickness="1"
+                    Padding="0">
+                <ScrollViewer x:Name="LogScrollViewer"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                    <TextBlock x:Name="LogTextBlock"
+                               TextWrapping="Wrap"
+                               FontFamily="Helvetica, Arial, sans-serif"
+                               FontSize="9"
+                               Padding="5"/>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </DockPanel>
+</Window>

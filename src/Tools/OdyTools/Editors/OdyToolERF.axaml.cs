@@ -19,8 +19,10 @@ using BioWare.Common;
 using BioWare.Resource;
 using OdyTools.Common;
 using OdyTools.Data;
+using OdyTools.Utils;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using IconType = MsBox.Avalonia.Enums.Icon;
 using ERFResource = BioWare.Resource.Formats.ERF.ERFResource;
 using RIMResource = BioWare.Resource.Formats.RIM.RIMResource;
 
@@ -31,6 +33,38 @@ namespace OdyTools.Editors
         private const int MinEditorWidth = 520;
         private const int MinEditorHeight = 380;
         private const int UndoMaxLevels = 30;
+        private static readonly (string menuItemName, string localizationKey)[] MenuLocalizationItems =
+        {
+            ("actionNew", "New"),
+            ("actionOpen", "Open"),
+            ("actionSave", "Save"),
+            ("actionSaveAs", "Save As"),
+            ("actionRevert", "Revert"),
+            ("actionExit", "Exit"),
+            ("actionUndo", "Undo"),
+            ("actionRedo", "Redo"),
+            ("actionFind", "Find..."),
+            ("actionFindNext", "Find Next"),
+            ("actionRemove", "Remove"),
+            ("actionExtract", "Extract"),
+            ("actionOpenResource", "Open Resource"),
+            ("ctxExtract", "Extract to..."),
+            ("ctxRename", "Rename"),
+            ("ctxOpen", "Open"),
+            ("ctxRemove", "Remove"),
+            ("ctxFind", "Find..."),
+            ("menuLanguage", "Language"),
+        };
+
+        private static readonly (string menuItemName, ToolsetLanguage language)[] UiLanguageItems =
+        {
+            ("actionLangEnglish", ToolsetLanguage.English),
+            ("actionLangFrench", ToolsetLanguage.French),
+            ("actionLangGerman", ToolsetLanguage.German),
+            ("actionLangItalian", ToolsetLanguage.Italian),
+            ("actionLangSpanish", ToolsetLanguage.Spanish),
+            ("actionLangPolish", ToolsetLanguage.Polish),
+        };
 
         private ObservableCollection<ERFResourceViewModel> _sourceResources;
         private CollectionViewSource _filteredResources;
@@ -51,6 +85,7 @@ namespace OdyTools.Editors
         private string _findText = "";
         private bool _findMatchCase;
 
+        public OdyToolERF() : this(null, null) { }
         public OdyToolERF(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolERF", "none",
                 new[] { ResourceType.RIM, ResourceType.ERF, ResourceType.MOD, ResourceType.SAV, ResourceType.BIF },
@@ -146,16 +181,18 @@ namespace OdyTools.Editors
             });
             _tableView.ItemsSource = _filteredResources.View;
             var ctx = new ContextMenu();
-            var extractItem = new MenuItem { Header = "Extract to..." };
-            extractItem.Click += (s, e) => _ = RunExtractAsync();
-            _ctxRename = new MenuItem { Header = "Rename" };
-            _ctxRename.Click += (s, e) => _ = RenameSelectedAsync();
-            var openItem = new MenuItem { Header = "Open" };
-            openItem.Click += (s, e) => OpenSelected();
-            var removeItem = new MenuItem { Header = "Remove" };
-            removeItem.Click += (s, e) => RemoveSelected();
-            var findItem = new MenuItem { Header = "Find..." };
-            findItem.Click += (s, e) => ShowFindDialog();
+            MenuItem CreateContextItem(string header, Action onClick)
+            {
+                var item = new MenuItem { Header = header };
+                item.Click += (s, e) => onClick();
+                return item;
+            }
+
+            var extractItem = CreateContextItem("Extract to...", () => _ = RunExtractAsync());
+            _ctxRename = CreateContextItem("Rename", () => _ = RenameSelectedAsync());
+            var openItem = CreateContextItem("Open", OpenSelected);
+            var removeItem = CreateContextItem("Remove", RemoveSelected);
+            var findItem = CreateContextItem("Find...", ShowFindDialog);
             ctx.Items.Add(extractItem);
             ctx.Items.Add(_ctxRename);
             ctx.Items.Add(openItem);
@@ -172,12 +209,12 @@ namespace OdyTools.Editors
 
         private void SetupUI()
         {
-            _tableView = EditorHelpers.FindControlSafe<DataGrid>(this, "tableView") ?? this.FindControl<DataGrid>("tableView");
-            _extractButton = EditorHelpers.FindControlSafe<Button>(this, "extractButton") ?? this.FindControl<Button>("extractButton");
-            _loadButton = EditorHelpers.FindControlSafe<Button>(this, "loadButton") ?? this.FindControl<Button>("loadButton");
-            _unloadButton = EditorHelpers.FindControlSafe<Button>(this, "unloadButton") ?? this.FindControl<Button>("unloadButton");
-            _openButton = EditorHelpers.FindControlSafe<Button>(this, "openButton") ?? this.FindControl<Button>("openButton");
-            _refreshButton = EditorHelpers.FindControlSafe<Button>(this, "refreshButton") ?? this.FindControl<Button>("refreshButton");
+            _tableView = EditorHelpers.FindControlSafe<DataGrid>(this, "tableView");
+            _extractButton = EditorHelpers.FindControlSafe<Button>(this, "extractButton");
+            _loadButton = EditorHelpers.FindControlSafe<Button>(this, "loadButton");
+            _unloadButton = EditorHelpers.FindControlSafe<Button>(this, "unloadButton");
+            _openButton = EditorHelpers.FindControlSafe<Button>(this, "openButton");
+            _refreshButton = EditorHelpers.FindControlSafe<Button>(this, "refreshButton");
             _filterEdit = EditorHelpers.FindControlSafe<TextBox>(this, "filterEdit");
             _statusText = EditorHelpers.FindControlSafe<TextBlock>(this, "statusText");
             if (_tableView != null)
@@ -199,32 +236,10 @@ namespace OdyTools.Editors
                 if (_loadButton != null) { _loadButton.Content = Localization.Tr("Add"); ToolTip.SetTip(_loadButton, Localization.Tr("Add resources to archive")); }
                 if (_unloadButton != null) { _unloadButton.Content = Localization.Tr("Remove"); ToolTip.SetTip(_unloadButton, Localization.Tr("Remove selected resources")); }
                 if (_refreshButton != null) { _refreshButton.Content = Localization.Tr("Reload"); ToolTip.SetTip(_refreshButton, Localization.Tr("Reload from disk")); }
-                void SetMenuHeader(string name, string key) { var c = EditorHelpers.FindControlSafe<MenuItem>(this, name); if (c != null) c.Header = "_" + Localization.Tr(key); }
-                SetMenuHeader("actionNew", "New");
-                SetMenuHeader("actionOpen", "Open");
-                SetMenuHeader("actionSave", "Save");
-                SetMenuHeader("actionSaveAs", "Save As");
-                SetMenuHeader("actionRevert", "Revert");
-                SetMenuHeader("actionExit", "Exit");
-                SetMenuHeader("actionUndo", "Undo");
-                SetMenuHeader("actionRedo", "Redo");
-                SetMenuHeader("actionFind", "Find...");
-                SetMenuHeader("actionFindNext", "Find Next");
-                SetMenuHeader("actionRemove", "Remove");
-                SetMenuHeader("actionExtract", "Extract");
-                SetMenuHeader("actionOpenResource", "Open Resource");
-                SetMenuHeader("ctxExtract", "Extract to...");
-                SetMenuHeader("ctxRename", "Rename");
-                SetMenuHeader("ctxOpen", "Open");
-                SetMenuHeader("ctxRemove", "Remove");
-                SetMenuHeader("ctxFind", "Find...");
-                SetMenuHeader("menuLanguage", "Language");
-                var fileMenu = EditorHelpers.FindControlSafe<MenuItem>(this, "actionNew")?.Parent as MenuItem;
-                if (fileMenu != null) fileMenu.Header = "_" + Localization.Tr("File");
-                var editMenu = EditorHelpers.FindControlSafe<MenuItem>(this, "actionUndo")?.Parent as MenuItem;
-                if (editMenu != null) editMenu.Header = "_" + Localization.Tr("Edit");
-                var toolsMenu = EditorHelpers.FindControlSafe<MenuItem>(this, "actionExtract")?.Parent as MenuItem;
-                if (toolsMenu != null) toolsMenu.Header = "_" + Localization.Tr("Tools");
+                EditorHelpers.SetLocalizedMenuHeaders(this, MenuLocalizationItems);
+                EditorHelpers.SetLocalizedParentMenuHeader(this, "actionNew", "File");
+                EditorHelpers.SetLocalizedParentMenuHeader(this, "actionUndo", "Edit");
+                EditorHelpers.SetLocalizedParentMenuHeader(this, "actionExtract", "Tools");
                 if (_tableView?.Columns != null && _tableView.Columns.Count >= 4)
                 {
                     _tableView.Columns[0].Header = Localization.Tr("ResRef");
@@ -238,26 +253,11 @@ namespace OdyTools.Editors
 
         private void SetupSignals()
         {
-            if (_extractButton != null)
-                _extractButton.Click += (s, e) => _ = RunExtractAsync();
-
-            if (_loadButton != null)
-            {
-                _loadButton.Click += (s, e) => _ = RunAddFilesAsync();
-            }
-
-            if (_unloadButton != null)
-            {
-                _unloadButton.Click += (s, e) => RemoveSelected();
-            }
-
-            if (_openButton != null)
-            {
-                _openButton.Click += (s, e) => OpenSelected();
-            }
-
-            if (_refreshButton != null)
-                _refreshButton.Click += (s, e) => _ = RunRefreshAsync();
+            EditorHelpers.BindClick(_extractButton, () => _ = RunExtractAsync());
+            EditorHelpers.BindClick(_loadButton, () => _ = RunAddFilesAsync());
+            EditorHelpers.BindClick(_unloadButton, RemoveSelected);
+            EditorHelpers.BindClick(_openButton, OpenSelected);
+            EditorHelpers.BindClick(_refreshButton, () => _ = RunRefreshAsync());
 
             if (_tableView != null)
             {
@@ -276,39 +276,46 @@ namespace OdyTools.Editors
 
         private void SetupMenuHandlers()
         {
-            void Bind(string name, Action handler)
+            var menuHandlers = new (string menuItemName, Action handler)[]
             {
-                try
-                {
-                    var item = EditorHelpers.FindControlSafe<MenuItem>(this, name) ?? this.FindControl<MenuItem>(name);
-                    if (item != null) item.Click += (s, e) => handler();
-                }
-                catch { }
+                ("actionNew", () => _ = RunNewAsync()),
+                ("actionOpen", () => _ = RunOpenAsync()),
+                ("actionSave", Save),
+                ("actionSaveAs", () => _ = RunSaveAsAsync()),
+                ("actionRevert", () => _ = RunRevertAsync()),
+                ("actionExit", Close),
+                ("actionUndo", Undo),
+                ("actionRedo", Redo),
+                ("actionFind", ShowFindDialog),
+                ("actionFindNext", FindNextMatch),
+                ("actionExtract", () => _ = RunExtractAsync()),
+                ("actionOpenResource", OpenSelected),
+                ("actionRemove", RemoveSelected),
+                ("ctxExtract", () => _ = RunExtractAsync()),
+                ("ctxRename", () => _ = RenameSelectedAsync()),
+                ("ctxOpen", OpenSelected),
+                ("ctxRemove", RemoveSelected),
+                ("ctxFind", ShowFindDialog),
+            };
+
+            foreach (var (menuItemName, handler) in menuHandlers)
+            {
+                EditorHelpers.BindMenuClick(this, menuItemName, handler);
             }
-            Bind("actionNew", () => _ = RunNewAsync());
-            Bind("actionOpen", () => _ = RunOpenAsync());
-            Bind("actionSave", () => Save());
-            Bind("actionSaveAs", () => _ = RunSaveAsAsync());
-            Bind("actionRevert", () => _ = RunRevertAsync());
-            Bind("actionExit", () => Close());
-            Bind("actionUndo", () => Undo());
-            Bind("actionRedo", () => Redo());
-            Bind("actionFind", () => ShowFindDialog());
-            Bind("actionFindNext", () => FindNextMatch());
-            Bind("actionExtract", () => _ = RunExtractAsync());
-            Bind("actionOpenResource", () => OpenSelected());
-            Bind("actionRemove", () => RemoveSelected());
-            Bind("ctxExtract", () => _ = RunExtractAsync());
-            Bind("ctxRename", () => _ = RenameSelectedAsync());
-            Bind("ctxOpen", () => OpenSelected());
-            Bind("ctxRemove", () => RemoveSelected());
-            Bind("ctxFind", () => ShowFindDialog());
-            Bind("actionLangEnglish", () => { Localization.SetLanguage(ToolsetLanguage.English); RefreshLocalizedStrings(); });
-            Bind("actionLangFrench", () => { Localization.SetLanguage(ToolsetLanguage.French); RefreshLocalizedStrings(); });
-            Bind("actionLangGerman", () => { Localization.SetLanguage(ToolsetLanguage.German); RefreshLocalizedStrings(); });
-            Bind("actionLangItalian", () => { Localization.SetLanguage(ToolsetLanguage.Italian); RefreshLocalizedStrings(); });
-            Bind("actionLangSpanish", () => { Localization.SetLanguage(ToolsetLanguage.Spanish); RefreshLocalizedStrings(); });
-            Bind("actionLangPolish", () => { Localization.SetLanguage(ToolsetLanguage.Polish); RefreshLocalizedStrings(); });
+
+            foreach (var (menuItemName, language) in UiLanguageItems)
+            {
+                BindLanguageMenu(menuItemName, language);
+            }
+        }
+
+        private void BindLanguageMenu(string menuItemName, ToolsetLanguage language)
+        {
+            EditorHelpers.BindMenuClick(this, menuItemName, () =>
+            {
+                Localization.SetLanguage(language);
+                RefreshLocalizedStrings();
+            });
         }
 
         private void PushState()
@@ -471,7 +478,7 @@ namespace OdyTools.Editors
         {
             if (string.IsNullOrEmpty(_findText) || _tableView == null)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Find"), Localization.Tr("Enter text to search for."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                _ = DialogHelper.ShowWindowAsync(this, Localization.Tr("Find"), Localization.Tr("Enter text to search for."), ButtonEnum.Ok, IconType.Info);
                 return;
             }
             DoFilter(_findText);
@@ -480,7 +487,7 @@ namespace OdyTools.Editors
                 || (_findMatchCase ? r.Type : r.Type?.ToLowerInvariant()).Contains(_findMatchCase ? _findText : _findText.ToLowerInvariant())).ToList();
             if (list.Count == 0)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Find"), Localization.Tr("No matches found."), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info).ShowWindowDialogAsync(this);
+                _ = DialogHelper.ShowWindowAsync(this, Localization.Tr("Find"), Localization.Tr("No matches found."), ButtonEnum.Ok, IconType.Info);
                 return;
             }
             var current = _tableView.SelectedItem as ERFResourceViewModel;
@@ -592,12 +599,7 @@ namespace OdyTools.Editors
         {
             if (restype != ResourceType.RIM && restype != ResourceType.ERF && restype != ResourceType.MOD && restype != ResourceType.SAV)
             {
-                var box = MessageBoxManager.GetMessageBoxStandard(
-                    Localization.Tr("Unable to load file"),
-                    Localization.Tr("The file specified is not a MOD/ERF type file."),
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                _ = box.ShowWindowDialogAsync(this);
+                _ = DialogHelper.ShowWindowAsync(this, Localization.Tr("Unable to load file"), Localization.Tr("The file specified is not a MOD/ERF type file."), ButtonEnum.Ok, IconType.Error);
                 return;
             }
             _hasChanges = false;
@@ -674,8 +676,6 @@ namespace OdyTools.Editors
 
         public override void Save()
         {
-            _hasChanges = false;
-            ClearDirty();
             if (string.IsNullOrEmpty(_filepath))
             {
                 SaveAs();
@@ -685,9 +685,8 @@ namespace OdyTools.Editors
             if (_refreshButton != null)
                 _refreshButton.IsEnabled = true;
 
-            var (data, _) = Build();
-            _revert = data;
-            File.WriteAllBytes(_filepath, data);
+            base.Save();
+            _hasChanges = false;
         }
 
         private async Task RunExtractAsync()
@@ -695,12 +694,7 @@ namespace OdyTools.Editors
             var selected = GetSelectedViewModels();
             if (selected.Count == 0)
             {
-                var box = MessageBoxManager.GetMessageBoxStandard(
-                    Localization.Tr("Extract"),
-                    Localization.Tr("No resources selected. Select one or more resources to extract."),
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info);
-                await box.ShowWindowDialogAsync(this);
+                await DialogHelper.ShowWindowAsync(this, Localization.Tr("Extract"), Localization.Tr("No resources selected. Select one or more resources to extract."), ButtonEnum.Ok, IconType.Info);
                 return;
             }
 
@@ -741,14 +735,9 @@ namespace OdyTools.Editors
                 ? Localization.Trf("Extracted {0} resource(s) to:\n{1}", successCount, folderPath)
                 : Localization.Tr("No files were extracted.");
             if (failed.Count > 0)
-                message += "\n\nFailed: " + string.Join("\n", failed.Take(5)) + (failed.Count > 5 ? "\n" + Localization.Trf("... and {0} more", failed.Count - 5) : "");
-            var resultIcon = successCount > 0 ? MsBox.Avalonia.Enums.Icon.Info : MsBox.Avalonia.Enums.Icon.Error;
-            var resultBox = MessageBoxManager.GetMessageBoxStandard(
-                Localization.Tr("Extract"),
-                message,
-                MsBox.Avalonia.Enums.ButtonEnum.Ok,
-                resultIcon);
-            await resultBox.ShowWindowDialogAsync(this);
+                message += "\n\nFailed: " + DialogHelper.BuildTruncatedList(failed, 5);
+            var resultIcon = successCount > 0 ? IconType.Info : IconType.Error;
+            await DialogHelper.ShowWindowAsync(this, Localization.Tr("Extract"), message, ButtonEnum.Ok, resultIcon);
         }
 
         private static byte[] GetResourceData(ERFResourceViewModel vm)
@@ -782,7 +771,7 @@ namespace OdyTools.Editors
             if (selected.Count == 0) return;
             PushState();
             _hasChanges = true;
-            MarkDirty();
+            MarkDocumentDirty();
             foreach (var item in selected)
                 _sourceResources.Remove(item);
             UpdateStatusBar();
@@ -793,22 +782,12 @@ namespace OdyTools.Editors
             var selected = GetSelectedViewModels();
             if (selected.Count == 0)
             {
-                var box = MessageBoxManager.GetMessageBoxStandard(
-                    Localization.Tr("Open"),
-                    Localization.Tr("No resources selected. Select one or more resources to open."),
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info);
-                _ = box.ShowWindowDialogAsync(this);
+                _ = DialogHelper.ShowWindowAsync(this, Localization.Tr("Open"), Localization.Tr("No resources selected. Select one or more resources to open."), ButtonEnum.Ok, IconType.Info);
                 return;
             }
             if (string.IsNullOrEmpty(_filepath))
             {
-                var box = MessageBoxManager.GetMessageBoxStandard(
-                    Localization.Tr("Cannot edit resource"),
-                    Localization.Tr("This archive must be saved to disk first. Save the file and try again."),
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                _ = box.ShowWindowDialogAsync(this);
+                _ = DialogHelper.ShowWindowAsync(this, Localization.Tr("Cannot edit resource"), Localization.Tr("This archive must be saved to disk first. Save the file and try again."), ButtonEnum.Ok, IconType.Error);
                 return;
             }
             // Build list of resources to open (capture data now; opening is deferred)
@@ -823,12 +802,7 @@ namespace OdyTools.Editors
             }
             if (toOpen.Count == 0)
             {
-                var box = MessageBoxManager.GetMessageBoxStandard(
-                    Localization.Tr("Open"),
-                    Localization.Tr("No valid resources could be opened (missing data or unknown type)."),
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Warning);
-                _ = box.ShowWindowDialogAsync(this);
+                _ = DialogHelper.ShowWindowAsync(this, Localization.Tr("Open"), Localization.Tr("No valid resources could be opened (missing data or unknown type)."), ButtonEnum.Ok, IconType.Warning);
                 return;
             }
             string filepath = _filepath;
@@ -846,12 +820,7 @@ namespace OdyTools.Editors
                 catch (Exception ex)
                 {
                     System.Console.WriteLine($"Error opening resource {resname}: {ex}");
-                    var errorBox = MessageBoxManager.GetMessageBoxStandard(
-                        Localization.Tr("Open failed"),
-                        Localization.Trf("Could not open {0}: {1}", resname + "." + (restype?.Extension ?? "?"), ex.Message),
-                        ButtonEnum.Ok,
-                        MsBox.Avalonia.Enums.Icon.Error);
-                    errorBox.ShowAsync();
+                    _ = DialogHelper.ShowAsync(Localization.Tr("Open failed"), Localization.Trf("Could not open {0}: {1}", resname + "." + (restype?.Extension ?? "?"), ex.Message), ButtonEnum.Ok, IconType.Error);
                 }
                 if (index + 1 < toOpen.Count)
                     Dispatcher.UIThread.Post(() => OpenNextResource(index + 1), DispatcherPriority.Loaded);
@@ -897,17 +866,14 @@ namespace OdyTools.Editors
             {
                 PushState();
                 _hasChanges = true;
-                MarkDirty();
+                MarkDocumentDirty();
                 if (_refreshButton != null) _refreshButton.IsEnabled = true;
                 UpdateStatusBar();
             }
             if (errors.Count > 0)
             {
-                string msg = Localization.Trf("Added {0} resource(s).\nFailed to add:\n", added) + string.Join("\n", errors.Take(10));
-                if (errors.Count > 10) msg += "\n" + Localization.Trf("... and {0} more", errors.Count - 10);
-                var addIcon = MsBox.Avalonia.Enums.Icon.Warning;
-                var box = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Add resources"), msg, MsBox.Avalonia.Enums.ButtonEnum.Ok, addIcon);
-                _ = box.ShowWindowDialogAsync(this);
+                string msg = Localization.Trf("Added {0} resource(s).\nFailed to add:\n", added) + DialogHelper.BuildTruncatedList(errors, 10);
+                _ = DialogHelper.ShowWindowAsync(this, Localization.Tr("Add resources"), msg, ButtonEnum.Ok, IconType.Warning);
             }
         }
 
@@ -925,12 +891,7 @@ namespace OdyTools.Editors
             if (_hasChanges && !await PromptConfirmAsync()) return;
             if (string.IsNullOrEmpty(_filepath))
             {
-                var box = MessageBoxManager.GetMessageBoxStandard(
-                    Localization.Tr("Nothing to refresh"),
-                    Localization.Tr("This archive was not loaded from a file, so there is nothing to refresh."),
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info);
-                await box.ShowWindowDialogAsync(this);
+                await DialogHelper.ShowWindowAsync(this, Localization.Tr("Nothing to refresh"), Localization.Tr("This archive was not loaded from a file, so there is nothing to refresh."), ButtonEnum.Ok, IconType.Info);
                 return;
             }
             Refresh();
@@ -957,12 +918,7 @@ namespace OdyTools.Editors
         /// <summary>Returns true if user chose to discard changes (proceed); false to cancel.</summary>
         private async Task<bool> PromptConfirmAsync()
         {
-            var box = MessageBoxManager.GetMessageBoxStandard(
-                Localization.Tr("Changes detected"),
-                Localization.Tr("The action you attempted would discard your changes. Continue?"),
-                ButtonEnum.YesNo,
-                MsBox.Avalonia.Enums.Icon.Question);
-            var result = await box.ShowWindowDialogAsync(this);
+            var result = await DialogHelper.ShowWindowAsync(this, Localization.Tr("Changes detected"), Localization.Tr("The action you attempted would discard your changes. Continue?"), ButtonEnum.YesNo, IconType.Question);
             return result == ButtonResult.Yes;
         }
 
@@ -1001,8 +957,7 @@ namespace OdyTools.Editors
             }
             catch (Exception ex)
             {
-                var box = MessageBoxManager.GetMessageBoxStandard(Localization.Tr("Open failed"), Localization.Trf("Could not open file: {0}", ex.Message), ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error);
-                await box.ShowWindowDialogAsync(this);
+                await DialogHelper.ShowWindowAsync(this, Localization.Tr("Open failed"), Localization.Trf("Could not open file: {0}", ex.Message), ButtonEnum.Ok, IconType.Error);
             }
         }
 
@@ -1075,10 +1030,7 @@ namespace OdyTools.Editors
                 string newResRef = (input.Text ?? "").Trim();
                 if (!ResRef.IsValid(newResRef))
                 {
-                    var box = MessageBoxManager.GetMessageBoxStandard(
-                        Localization.Tr("Invalid ResRef"),
-                        Localization.Tr("ResRefs must be ASCII, max 16 characters, and not contain <>:\"/\\|?*."));
-                    _ = box.ShowWindowDialogAsync(dialog);
+                    _ = DialogHelper.ShowWindowAsync(dialog, Localization.Tr("Invalid ResRef"), Localization.Tr("ResRefs must be ASCII, max 16 characters, and not contain <>:\"/\\|?*."), ButtonEnum.Ok, IconType.Warning);
                     return;
                 }
                 accepted = true;
@@ -1094,7 +1046,7 @@ namespace OdyTools.Editors
 
             PushState();
             _hasChanges = true;
-            MarkDirty();
+            MarkDocumentDirty();
             var newRef = new ResRef(newName);
             if (vm.ErfResource != null)
             {

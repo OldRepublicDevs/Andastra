@@ -131,29 +131,8 @@ namespace OdyTools.NET
                     var parts = fontString.Split('|');
                     if (parts.Length >= 2)
                     {
-                        string family = parts[0].Trim();
-                        if (double.TryParse(parts[1].Trim(), out double size))
+                        if (double.TryParse(parts[1].Trim(), out _))
                         {
-                            var fontFamily = new FontFamily(family);
-                            FontWeight weight = FontWeight.Normal;
-                            FontStyle style = FontStyle.Normal;
-
-                            // Parse weight if available
-                            if (parts.Length >= 4 && int.TryParse(parts[3].Trim(), out int weightValue))
-                            {
-                                weight = weightValue >= 700 ? FontWeight.Bold : FontWeight.Normal;
-                            }
-
-                            // Parse style if available
-                            if (parts.Length >= 3)
-                            {
-                                string styleStr = parts[2].Trim().ToLowerInvariant();
-                                if (styleStr.Contains("italic"))
-                                {
-                                    style = FontStyle.Italic;
-                                }
-                            }
-
                             // Apply font globally using FontApplicationHelper
                             // In Avalonia, we apply fonts via styles to achieve the same effect
                             OdyTools.Utils.FontApplicationHelper.ApplyGlobalFont(fontString);

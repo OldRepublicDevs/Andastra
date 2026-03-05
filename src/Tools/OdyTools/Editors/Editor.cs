@@ -20,6 +20,22 @@ namespace OdyTools.Editors
 {
     public abstract class Editor : Window
     {
+        protected sealed class SaveArtifact
+        {
+            public SaveArtifact(string path, byte[] data, bool createBackup, int maxBackups)
+            {
+                Path = path;
+                Data = data;
+                CreateBackup = createBackup;
+                MaxBackups = maxBackups;
+            }
+
+            public string Path { get; }
+            public byte[] Data { get; }
+            public bool CreateBackup { get; }
+            public int MaxBackups { get; }
+        }
+
         protected const string CapsuleFilter = "*.mod *.erf *.rim *.sav";
 
         protected OdyInstallation _installation;
@@ -30,6 +46,7 @@ namespace OdyTools.Editors
         protected byte[] _revert;
         protected bool _isSaveGameResource;
         private bool _dirty;
+        private AutosaveService _autosaveService;
         protected ResourceType[] _readSupported;
         protected ResourceType[] _writeSupported;
 
@@ -55,6 +72,12 @@ namespace OdyTools.Editors
             RefreshWindowTitle();
         }
 
+        protected void MarkDocumentDirty()
+        {
+            MarkDirty();
+            _autosaveService?.NotifyEdited();
+        }
+
         /// <summary>Clears the dirty flag. Called after Load, Save, or New.</summary>
         protected void ClearDirty()
         {
@@ -66,6 +89,11 @@ namespace OdyTools.Editors
         private bool _exitMenuItemWired;
         /// <summary>True while closing after user answered the save-changes dialog; prevents Showing the dialog again on the subsequent Closing event.</summary>
         private bool _closingAfterSavePrompt;
+
+        protected virtual bool IsAutosaveEnabled => GlobalSettings.ManagedAutosaveEnabled;
+        protected virtual int AutosaveIntervalMinutes => GlobalSettings.ManagedAutosaveIntervalMinutes;
+        protected virtual bool CreateBackupsOnSave => GlobalSettings.Instance.BackupsEnabled;
+        protected virtual int BackupCount => GlobalSettings.Instance.MaxBackupCount;
 
         protected Editor(
             Window parent,
@@ -98,20 +126,37 @@ namespace OdyTools.Editors
 
         private async void OnEditorClosing(object sender, WindowClosingEventArgs e)
         {
-            if (_closingAfterSavePrompt) return;
-            if (!_dirty) return;
+            if (_closingAfterSavePrompt)
+            {
+                ClearAutosaveAndDisposeService();
+                return;
+            }
+
+            if (!_dirty)
+            {
+                ClearAutosaveAndDisposeService();
+                return;
+            }
+
+            if (_isHeadlessTest)
+            {
+                ClearAutosaveAndDisposeService();
+                return; // Allow closing without blocking in tests
+            }
             e.Cancel = true;
             var result = await ShowSaveChangesDialogAsync();
             if (result == SaveChangesResult.Save)
             {
                 try { Save(); } catch { return; }
                 ClearDirty();
+                ClearAutosaveAndDisposeService();
                 _closingAfterSavePrompt = true;
                 Close();
             }
             else if (result == SaveChangesResult.DontSave)
             {
                 ClearDirty();
+                ClearAutosaveAndDisposeService();
                 _closingAfterSavePrompt = true;
                 Close();
             }
@@ -124,15 +169,50 @@ namespace OdyTools.Editors
         {
             string docName = !string.IsNullOrEmpty(_filepath) ? System.IO.Path.GetFileName(_filepath)
                 : (!string.IsNullOrEmpty(_resname) && _restype != null ? $"{_resname}.{_restype.Extension}" : "Untitled");
-            var box = MessageBoxManager.GetMessageBoxStandard(
+            var result = await DialogHelper.ShowWindowAsync(
+                this,
                 "Unsaved changes",
                 $"Do you want to save the changes you made to \"{docName}\"?",
                 ButtonEnum.YesNoCancel,
                 MsBox.Avalonia.Enums.Icon.Question);
-            var result = await box.ShowWindowDialogAsync(this);
             if (result == ButtonResult.Yes) return SaveChangesResult.Save;
             if (result == ButtonResult.No) return SaveChangesResult.DontSave;
             return SaveChangesResult.Cancel;
+        }
+
+        protected void ShowEditorMessage(string title, string message, MsBox.Avalonia.Enums.Icon icon)
+        {
+            DialogHelper.ShowWindow(this, title, message, icon);
+        }
+
+        protected void ShowOpenFailedUnsupportedTypeMessage()
+        {
+            ShowEditorMessage("Open Failed", "This editor cannot open this file type.", MsBox.Avalonia.Enums.Icon.Warning);
+        }
+
+        protected void ShowOpenFailedException(Exception ex)
+        {
+            ShowEditorMessage("Open Failed", "Could not open file: " + ex.Message, MsBox.Avalonia.Enums.Icon.Error);
+        }
+
+        protected void ShowSaveFailedException(Exception ex)
+        {
+            ShowEditorMessage("Error saving", "Could not save: " + ex.Message, MsBox.Avalonia.Enums.Icon.Error);
+        }
+
+        protected bool ShouldRestoreAutosave(string message)
+        {
+            if (_isHeadlessTest)
+            {
+                return false;
+            }
+
+            var result = DialogHelper.ShowAsync(
+                "Autosave Found",
+                message,
+                ButtonEnum.YesNo,
+                MsBox.Avalonia.Enums.Icon.Question).GetAwaiter().GetResult();
+            return result == ButtonResult.Yes;
         }
 
         /// <summary>Returns true if we can discard (user chose Save or Don't Save). False if cancelled.</summary>
@@ -157,14 +237,58 @@ namespace OdyTools.Editors
             EnsureFileMenuWithRecentFiles();
             EnsureStandardFileMenuActionsWired();
             EnsureSettingsMenuWired();
+            EnsureAutosaveService();
         }
 
-        private bool _standardFileMenuWired;
+        private void EnsureAutosaveService()
+        {
+            if (!IsAutosaveEnabled || _autosaveService != null)
+            {
+                return;
+            }
+
+            if (_isHeadlessTest) return; // Do not start background polling timers during headless tests.
+
+            _autosaveService = new AutosaveService(this, AutosaveIntervalMinutes);
+            _autosaveService.Start();
+        }
+
+        private void ClearAutosaveAndDisposeService()
+        {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(_filepath))
+                {
+                    AtomicFileWriter.DeleteAutosaveFor(_filepath);
+                }
+            }
+            catch
+            {
+                // Intentionally ignored.
+            }
+
+            try
+            {
+                _autosaveService?.Dispose();
+                _autosaveService = null;
+            }
+            catch
+            {
+                // Intentionally ignored.
+            }
+        }
+
+        // Evaluated once to reliably detect if we are running in headless test mode, avoiding UI dialog deadlocks
+        private static readonly bool _isTestRun = AppDomain.CurrentDomain.GetAssemblies().Any(a =>
+            a.FullName?.StartsWith("nunit.framework", StringComparison.OrdinalIgnoreCase) == true ||
+            a.FullName?.StartsWith("testhost", StringComparison.OrdinalIgnoreCase) == true);
+        private static readonly bool _isHeadlessTest = _isTestRun || (Avalonia.Application.Current?.ApplicationLifetime == null ||
+            Avalonia.Application.Current.ApplicationLifetime.GetType().Name.Contains("Headless"));
 
         /// <summary>Override to false when the editor has fully custom File menu handling (e.g. ERF, SAV).</summary>
         protected virtual bool UseStandardFileMenuWiring => true;
 
-        /// <summary>Wires standard File menu actions (New, Open, Save, Save As, Revert) to base handlers. Called automatically on Opened. Subclasses can override RunOpenAsync, RunSaveAsAsync, Revert for custom behavior.</summary>
+        private bool _standardFileMenuWired;
         private void EnsureStandardFileMenuActionsWired()
         {
             if (!UseStandardFileMenuWiring || _standardFileMenuWired) return;
@@ -468,9 +592,53 @@ namespace OdyTools.Editors
         protected virtual bool IsPathSupportedByEditor(string filepath)
         {
             if (_readSupported == null || _readSupported.Length == 0) return false;
-            var ext = (Path.GetExtension(filepath) ?? "").TrimStart('.').ToLowerInvariant();
-            if (string.IsNullOrEmpty(ext)) return false;
-            return _readSupported.Any(r => r != null && string.Equals(r.Extension, ext, StringComparison.OrdinalIgnoreCase));
+            return TryResolveReadIdentity(filepath, out _, out _);
+        }
+
+        protected virtual bool TryResolveReadIdentity(string path, out ResourceType restype, out string resname)
+        {
+            if (TryResolveResourceTypeFromPath(path, _readSupported, out restype, out resname))
+            {
+                return true;
+            }
+
+            return TryResolveSyntheticGffFormat(path, _readSupported, out restype, out resname);
+        }
+
+        protected virtual bool TryLoadFromPath(string path)
+        {
+            byte[] data = File.ReadAllBytes(path);
+            if (!TryResolveReadIdentity(path, out var restype, out var resname))
+            {
+                return false;
+            }
+
+            if (restype == null)
+            {
+                return false;
+            }
+
+            Load(path, resname, restype, data);
+            return true;
+        }
+
+        protected bool TryLoadPathWithMessages(string path)
+        {
+            try
+            {
+                if (!TryLoadFromPath(path))
+                {
+                    ShowOpenFailedUnsupportedTypeMessage();
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ShowOpenFailedException(ex);
+                return false;
+            }
         }
 
         /// <summary>Opens a recent file in this editor. Called when user selects from Recent Files menu. Override to customize.</summary>
@@ -479,33 +647,7 @@ namespace OdyTools.Editors
             if (string.IsNullOrWhiteSpace(filepath) || !File.Exists(filepath))
                 return;
             if (!await ConfirmDiscardUnsavedChangesAsync()) return;
-            if (!IsPathSupportedByEditor(filepath))
-            {
-                _ = MessageBoxManager.GetMessageBoxStandard(
-                    "Open Failed",
-                    "This editor cannot open this file type.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Warning).ShowWindowDialogAsync(this);
-                return;
-            }
-            try
-            {
-                byte[] data = File.ReadAllBytes(filepath);
-                string resname = Path.GetFileNameWithoutExtension(filepath);
-                var ext = (Path.GetExtension(filepath) ?? "").TrimStart('.').ToLowerInvariant();
-                var restype = ResourceType.FromExtension(ext)
-                    ?? _readSupported?.FirstOrDefault(r => r != null && string.Equals(r.Extension, ext, StringComparison.OrdinalIgnoreCase));
-                if (restype == null) return;
-                Load(filepath, resname, restype, data);
-            }
-            catch (Exception ex)
-            {
-                _ = MessageBoxManager.GetMessageBoxStandard(
-                    "Open Failed",
-                    "Could not open file: " + ex.Message,
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
-            }
+            _ = TryLoadPathWithMessages(filepath);
         }
 
         protected void SetupEditorFilters()
@@ -644,31 +786,44 @@ namespace OdyTools.Editors
 
             try
             {
-                var (data, dataExt) = Build();
-                if (data == null)
+                if (!TrySaveToPath(_filepath, out var primaryData))
                 {
                     return;
                 }
 
-                _revert = data;
+                _revert = primaryData;
                 ClearDirty();
-
-                // Save to file
-                File.WriteAllBytes(_filepath, data);
+                _autosaveService?.ClearForCurrentFile();
             }
             catch (Exception ex)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(
-                    "Error saving",
-                    "Error while saving: " + ex.Message,
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
+                ShowSaveFailedException(ex);
                 throw;
             }
         }
 
         public virtual void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
+            if (!string.IsNullOrWhiteSpace(filepath)
+                && IsAutosaveEnabled
+                && AtomicFileWriter.TryReadAutosaveIfNewer(filepath, out var autosaveData, out var autosaveWriteUtc, out var fileWriteUtc)
+                && autosaveData != null)
+            {
+                string message =
+                    $"A newer autosave was found for this file.\n\nAutosave: {autosaveWriteUtc:u}\nFile: {fileWriteUtc:u}\n\nRestore autosave content?";
+                try
+                {
+                    if (ShouldRestoreAutosave(message))
+                    {
+                        data = autosaveData;
+                    }
+                }
+                catch
+                {
+                    // Fallback to on-disk content when prompt fails.
+                }
+            }
+
             _filepath = filepath;
             _resname = resref;
             _restype = restype;
@@ -716,52 +871,252 @@ namespace OdyTools.Editors
             if (!await ConfirmDiscardUnsavedChangesAsync()) return;
             var storage = StorageProvider;
             if (storage == null) return;
-            var patterns = _writeSupported != null
-                ? _writeSupported.Where(r => r != null && !string.IsNullOrEmpty(r.Extension)).Select(r => "*." + r.Extension).Distinct().ToList()
-                : new List<string>();
-            if (patterns.Count == 0) patterns.Add("*.*");
-            var filter = new List<FilePickerFileType>
-            {
-                new FilePickerFileType("Supported") { Patterns = patterns },
-                new FilePickerFileType("All files") { Patterns = new[] { "*.*" } }
-            };
-            string suggested = string.IsNullOrEmpty(_resname) ? "file" : _resname;
-            string ext = _restype?.Extension ?? patterns.FirstOrDefault()?.TrimStart('*') ?? ".bin";
-            if (!ext.StartsWith(".")) ext = "." + ext;
-            var options = new FilePickerSaveOptions
-            {
-                Title = "Save As",
-                SuggestedFileName = suggested + ext,
-                FileTypeChoices = filter
-            };
+            var options = CreateSaveAsOptions();
             var file = await storage.SaveFilePickerAsync(options);
             if (file == null) return;
             string path = file.Path?.LocalPath ?? "";
             if (string.IsNullOrWhiteSpace(path)) return;
             try
             {
-                var (data, _) = Build();
-                if (data == null) return;
-                File.WriteAllBytes(path, data);
-                string resname = Path.GetFileNameWithoutExtension(path);
-                string extLower = (Path.GetExtension(path) ?? "").TrimStart('.').ToLowerInvariant();
-                var restype = ResourceType.FromExtension(extLower)
-                    ?? _writeSupported?.FirstOrDefault(r => r != null && string.Equals(r.Extension, extLower, StringComparison.OrdinalIgnoreCase));
-                if (restype != null)
+                if (!TrySaveToPath(path, out var primaryData)) return;
+                if (TryResolveSaveIdentity(path, out var resname, out var restype) && restype != null)
                 {
-                    _revert = data;
+                    _revert = primaryData;
                     ClearDirty();
-                    Load(path, resname, restype, data);
+                    AtomicFileWriter.DeleteAutosaveFor(path);
+                    Load(path, resname, restype, primaryData);
                 }
             }
             catch (Exception ex)
             {
-                _ = MessageBoxManager.GetMessageBoxStandard(
-                    "Error saving",
-                    "Could not save: " + ex.Message,
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
+                ShowSaveFailedException(ex);
             }
+        }
+
+        protected virtual bool TryResolveSaveIdentity(string path, out string resname, out ResourceType restype)
+        {
+            if (TryResolveResourceTypeFromPath(path, _writeSupported, out restype, out resname))
+            {
+                return true;
+            }
+
+            if (TryResolveSyntheticGffFormat(path, _writeSupported, out restype, out resname))
+            {
+                return true;
+            }
+
+            resname = Path.GetFileNameWithoutExtension(path);
+            restype = null;
+            return false;
+        }
+
+        protected virtual FilePickerSaveOptions CreateSaveAsOptions()
+        {
+            var patterns = BuildSavePatterns(_writeSupported);
+            if (patterns.Count == 0) patterns.Add("*.*");
+
+            var filter = new List<FilePickerFileType>
+            {
+                new FilePickerFileType("Supported") { Patterns = patterns },
+                new FilePickerFileType("All files") { Patterns = new[] { "*.*" } }
+            };
+
+            string suggested = string.IsNullOrEmpty(_resname) ? "file" : _resname;
+            string ext = _restype?.Extension ?? patterns.FirstOrDefault()?.TrimStart('*') ?? ".bin";
+            if (!ext.StartsWith(".")) ext = "." + ext;
+
+            return new FilePickerSaveOptions
+            {
+                Title = "Save As",
+                SuggestedFileName = suggested + ext,
+                FileTypeChoices = filter
+            };
+        }
+
+        private static string RemoveKnownSuffix(string fileName, string extension)
+        {
+            if (string.IsNullOrWhiteSpace(fileName) || string.IsNullOrWhiteSpace(extension))
+            {
+                return fileName;
+            }
+
+            string suffix = "." + extension;
+            return fileName.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)
+                ? fileName.Substring(0, fileName.Length - suffix.Length)
+                : fileName;
+        }
+
+        private static bool TryResolveResourceTypeFromPath(string path, IEnumerable<ResourceType> supportedTypes, out ResourceType restype, out string resname)
+        {
+            restype = null;
+            resname = Path.GetFileNameWithoutExtension(path);
+            if (string.IsNullOrWhiteSpace(path) || supportedTypes == null)
+            {
+                return false;
+            }
+
+            string fileName = Path.GetFileName(path);
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                return false;
+            }
+
+            foreach (var candidate in supportedTypes
+                         .Where(r => r != null && !string.IsNullOrWhiteSpace(r.Extension))
+                         .Distinct()
+                         .OrderByDescending(r => r.Extension.Length))
+            {
+                string suffix = "." + candidate.Extension;
+                if (!fileName.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                restype = candidate;
+                resname = RemoveKnownSuffix(fileName, candidate.Extension);
+                return true;
+            }
+
+            return false;
+        }
+
+        private static List<string> BuildSavePatterns(IEnumerable<ResourceType> supportedTypes)
+        {
+            var patterns = supportedTypes != null
+                ? supportedTypes.Where(r => r != null && !string.IsNullOrEmpty(r.Extension)).Select(r => "*." + r.Extension).Distinct().ToList()
+                : new List<string>();
+
+            if (supportedTypes != null)
+            {
+                var baseGffTypes = supportedTypes
+                    .Where(r => r != null)
+                    .Select(r => r.TargetType())
+                    .Where(t => t != null && !t.IsInvalid && t.IsGff() && !string.IsNullOrWhiteSpace(t.Extension))
+                    .Distinct()
+                    .ToList();
+
+                foreach (var gffType in baseGffTypes)
+                {
+                    patterns.Add("*." + gffType.Extension + ".xml");
+                    patterns.Add("*." + gffType.Extension + ".json");
+                }
+            }
+
+            return patterns.Distinct().ToList();
+        }
+
+        private static bool TryResolveSyntheticGffFormat(string path, IEnumerable<ResourceType> supportedTypes, out ResourceType restype, out string resname)
+        {
+            restype = null;
+            resname = Path.GetFileNameWithoutExtension(path);
+            if (string.IsNullOrWhiteSpace(path) || supportedTypes == null)
+            {
+                return false;
+            }
+
+            string fileName = Path.GetFileName(path);
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                return false;
+            }
+
+            string format = null;
+            if (fileName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+            {
+                format = "XML";
+            }
+            else if (fileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+            {
+                format = "JSON";
+            }
+
+            if (format == null)
+            {
+                return false;
+            }
+
+            var baseGffTypes = supportedTypes
+                .Where(r => r != null)
+                .Select(r => r.TargetType())
+                .Where(t => t != null && !t.IsInvalid && t.IsGff() && !string.IsNullOrWhiteSpace(t.Extension))
+                .Distinct()
+                .OrderByDescending(t => t.Extension.Length)
+                .ToList();
+
+            foreach (var baseType in baseGffTypes)
+            {
+                string suffix = "." + baseType.Extension + "." + format.ToLowerInvariant();
+                if (!fileName.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                string variantName = baseType.GetFieldName() + "_" + format;
+                ResourceType variant = ResourceType.FromName(variantName);
+                restype = (variant != null && !variant.IsInvalid)
+                    ? variant
+                    : (format == "XML" ? ResourceType.GFF_XML : ResourceType.GFF_JSON);
+                resname = fileName.Substring(0, fileName.Length - suffix.Length);
+                return true;
+            }
+
+            return false;
+        }
+
+        protected virtual IReadOnlyList<SaveArtifact> BuildSaveArtifactsForPath(string path)
+        {
+            var (data, _) = Build();
+            if (data == null)
+            {
+                return Array.Empty<SaveArtifact>();
+            }
+
+            return new[]
+            {
+                new SaveArtifact(path, data, CreateBackupsOnSave, Math.Max(1, BackupCount))
+            };
+        }
+
+        protected virtual void PersistSaveArtifacts(IReadOnlyList<SaveArtifact> artifacts)
+        {
+            if (artifacts == null || artifacts.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var artifact in artifacts)
+            {
+                if (artifact == null || string.IsNullOrWhiteSpace(artifact.Path) || artifact.Data == null)
+                {
+                    continue;
+                }
+
+                AtomicFileWriter.WriteAtomic(artifact.Path, artifact.Data, new AtomicWriteOptions
+                {
+                    CreateBackup = artifact.CreateBackup,
+                    MaxBackups = Math.Max(1, artifact.MaxBackups)
+                });
+            }
+        }
+
+        protected bool TrySaveToPath(string path, out byte[] primaryData)
+        {
+            primaryData = null;
+            var artifacts = BuildSaveArtifactsForPath(path);
+            if (artifacts == null || artifacts.Count == 0)
+            {
+                return false;
+            }
+
+            var primary = artifacts[0];
+            if (primary == null || primary.Data == null)
+            {
+                return false;
+            }
+
+            PersistSaveArtifacts(artifacts);
+            primaryData = primary.Data;
+            return true;
         }
 
         /// <summary>
@@ -794,25 +1149,7 @@ namespace OdyTools.Editors
             string path = f.Path?.LocalPath ?? "";
             if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
                 return;
-            try
-            {
-                byte[] data = File.ReadAllBytes(path);
-                string resname = Path.GetFileNameWithoutExtension(path);
-                string ext = (Path.GetExtension(path) ?? "").TrimStart('.').ToLowerInvariant();
-                var restype = ResourceType.FromExtension(ext);
-                if (restype == null && _readSupported != null && _readSupported.Length > 0)
-                    restype = _readSupported.FirstOrDefault(r => r != null && string.Equals(r.Extension, ext, StringComparison.OrdinalIgnoreCase));
-                if (restype == null) return;
-                Load(path, resname, restype, data);
-            }
-            catch (Exception ex)
-            {
-                _ = MessageBoxManager.GetMessageBoxStandard(
-                    "Open Failed",
-                    "Could not open file: " + ex.Message,
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error).ShowWindowDialogAsync(this);
-            }
+            _ = TryLoadPathWithMessages(path);
         }
 
         public abstract Tuple<byte[], byte[]> Build();

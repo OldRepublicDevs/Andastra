@@ -11,6 +11,8 @@ using Avalonia.Markup.Xaml;
 using BioWare.Common;
 using BioWare.Extract;
 using OdyTools.Data;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Dialogs
 {
@@ -262,12 +264,7 @@ namespace OdyTools.Dialogs
                     // Create FileResource from LocationResult if not set
                     if (!File.Exists(locationResult.FilePath))
                     {
-                        var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
-                            "Error",
-                            $"Resource file not found at:\n{locationResult.FilePath}",
-                            MsBox.Avalonia.Enums.ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Error);
-                        msgBox.ShowAsync();
+                        _ = DialogHelper.ShowAsync("Error", $"Resource file not found at:\n{locationResult.FilePath}", MsBox.Avalonia.Enums.ButtonEnum.Ok, IconType.Error);
                         return;
                     }
 
@@ -290,12 +287,7 @@ namespace OdyTools.Dialogs
             }
             catch (Exception ex)
             {
-                var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
-                    "Error",
-                    $"Error opening resource:\n{ex.Message}",
-                    MsBox.Avalonia.Enums.ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Error);
-                msgBox.ShowAsync();
+                _ = DialogHelper.ShowAsync("Error", $"Error opening resource:\n{ex.Message}", MsBox.Avalonia.Enums.ButtonEnum.Ok, IconType.Error);
             }
         }
 
@@ -357,4 +349,3 @@ namespace OdyTools.Dialogs
         }
     }
 }
-

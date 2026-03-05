@@ -99,6 +99,35 @@ namespace OdyTools.Data
             Save();
         }
 
+        public int RemoveValues(params string[] names)
+        {
+            if (names == null || names.Length == 0)
+            {
+                return 0;
+            }
+
+            int removed = 0;
+            foreach (string name in names)
+            {
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    continue;
+                }
+
+                if (_values.Remove(name))
+                {
+                    removed++;
+                }
+            }
+
+            if (removed > 0)
+            {
+                Save();
+            }
+
+            return removed;
+        }
+
         public SettingsProperty<T> GetProperty<T>(string name)
         {
             var prop = GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);

@@ -41,6 +41,7 @@ namespace OdyTools.Editors
         private Button _removeInstanceButton;
         private TextBlock _statusText;
 
+        public OdyToolGIT() : this(null, null) { }
         public OdyToolGIT(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolGIT", "git",
                 new[] { ResourceType.GIT },
@@ -85,15 +86,31 @@ namespace OdyTools.Editors
 
             if (_instanceList != null)
             {
+                void BindLostFocus(TextBox textBox)
+                {
+                    if (textBox != null)
+                    {
+                        textBox.LostFocus += (s, e) => SaveDetailToInstance();
+                    }
+                }
+
+                void BindValueChanged(NumericUpDown numericUpDown)
+                {
+                    if (numericUpDown != null)
+                    {
+                        numericUpDown.ValueChanged += (s, e) => SaveDetailToInstance();
+                    }
+                }
+
                 _instanceList.SelectionChanged += OnInstanceListSelectionChanged;
                 if (_filterEdit != null)
                     _filterEdit.TextChanged += (s, e) => ApplyFilter();
-                if (_detailResRef != null) _detailResRef.LostFocus += (s, e) => SaveDetailToInstance();
-                if (_detailPosX != null) _detailPosX.ValueChanged += (s, e) => SaveDetailToInstance();
-                if (_detailPosY != null) _detailPosY.ValueChanged += (s, e) => SaveDetailToInstance();
-                if (_detailPosZ != null) _detailPosZ.ValueChanged += (s, e) => SaveDetailToInstance();
-                if (_detailBearing != null) _detailBearing.ValueChanged += (s, e) => SaveDetailToInstance();
-                if (_detailTag != null) _detailTag.LostFocus += (s, e) => SaveDetailToInstance();
+                BindLostFocus(_detailResRef);
+                BindValueChanged(_detailPosX);
+                BindValueChanged(_detailPosY);
+                BindValueChanged(_detailPosZ);
+                BindValueChanged(_detailBearing);
+                BindLostFocus(_detailTag);
                 if (_removeInstanceButton != null) _removeInstanceButton.Click += (s, e) => RemoveSelectedInstance();
                 RebuildInstanceList();
                 UpdateStatusBar();
@@ -109,30 +126,12 @@ namespace OdyTools.Editors
 
         private void SetupMenuHandlers()
         {
-            void Bind(string name, Action handler)
-            {
-                var item = EditorHelpers.FindControlSafe<MenuItem>(this, name);
-                if (item != null) item.Click += (s, e) => handler();
-            }
             // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
         }
 
         protected override async System.Threading.Tasks.Task RunSaveAsAsync()
         {
-            var provider = (this as Window)?.StorageProvider;
-            if (provider == null) return;
-            var options = new Avalonia.Platform.Storage.FilePickerSaveOptions
-            {
-                Title = "Save As",
-                SuggestedFileName = (string.IsNullOrEmpty(_resname) ? "area" : _resname) + ".git",
-                FileTypeChoices = new[] { new Avalonia.Platform.Storage.FilePickerFileType("GIT") { Patterns = new[] { "*.git" } } }
-            };
-            var file = await provider.SaveFilePickerAsync(options);
-            if (file == null) return;
-            _filepath = file.Path.LocalPath;
-            if (string.IsNullOrWhiteSpace(_filepath)) return;
-            RefreshWindowTitle();
-            Save();
+            await base.RunSaveAsAsync();
             UpdateStatusBar();
         }
 

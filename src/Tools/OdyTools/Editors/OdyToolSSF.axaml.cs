@@ -16,6 +16,8 @@ using OdyTools.Data;
 using OdyTools.Widgets;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Editors
 {
@@ -92,6 +94,7 @@ namespace OdyTools.Editors
         private bool _undoRedoInProgress;
         private int _findStrref = -1;
 
+        public OdyToolSSF() : this(null, null) { }
         public OdyToolSSF(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolSSF", "soundset", new[] { ResourceType.SSF }, new[] { ResourceType.SSF }, installation)
         {
@@ -171,10 +174,8 @@ namespace OdyTools.Editors
 
             if (_talktableButton != null)
                 _talktableButton.Click += async (s, e) => await SelectTalkTable();
-            if (_stopPlayButton != null)
-                _stopPlayButton.Click += (s, e) => StopPlayback();
-            if (_previewPlayButton != null)
-                _previewPlayButton.Click += (s, e) => { if (_selectedSound.HasValue) PlaySoundForEntry(_selectedSound.Value); };
+            EditorHelpers.BindClick(_stopPlayButton, StopPlayback);
+            EditorHelpers.BindClick(_previewPlayButton, () => { if (_selectedSound.HasValue) PlaySoundForEntry(_selectedSound.Value); });
             if (_soundRowsPanel != null)
                 PopulateSoundRows(_soundRowsPanel);
             UpdatePreviewPanel();
@@ -191,6 +192,14 @@ namespace OdyTools.Editors
 
         private void PopulateSoundRows(StackPanel panel)
         {
+            void BindSelect(Control control, SSFSound sound)
+            {
+                if (control != null)
+                {
+                    control.GotFocus += (s, e) => SelectRow(sound);
+                }
+            }
+
             if (panel == null) return;
             panel.Children.Clear();
             _spinBySound.Clear();
@@ -249,10 +258,10 @@ namespace OdyTools.Editors
                     panel.Children.Add(row);
 
                     spin.ValueChanged += (s, e) => UpdateTextBoxes();
-                    spin.LostFocus += (s, e) => OnSpinCommitted();
-                    spin.GotFocus += (s, e) => SelectRow(sound);
-                    previewEdit.GotFocus += (s, e) => SelectRow(sound);
-                    soundEdit.GotFocus += (s, e) => SelectRow(sound);
+                    EditorHelpers.BindLostFocus(spin, OnSpinCommitted);
+                    BindSelect(spin, sound);
+                    BindSelect(previewEdit, sound);
+                    BindSelect(soundEdit, sound);
                     playBtn.Click += (s, e) => PlaySoundForEntry(sound);
                     row.PointerPressed += (s, e) => SelectRow(sound);
                 }
@@ -306,7 +315,7 @@ namespace OdyTools.Editors
 
         private void SetupSignals()
         {
-            Opened += (s, e) => { UpdateStatusBar(); if (_spinBySound?.Count > 0) FocusFirstSpin(); }; 
+            Opened += (s, e) => { UpdateStatusBar(); if (_spinBySound?.Count > 0) FocusFirstSpin(); };
             KeyDown += OnWindowKeyDown;
         }
 
@@ -318,16 +327,14 @@ namespace OdyTools.Editors
 
         private void SetupMenuHandlers()
         {
-            void Bind(string name, Action handler)
-            {
-                var item = EditorHelpers.FindControlSafe<MenuItem>(this, name) ?? this.FindControl<MenuItem>(name);
-                if (item != null) item.Click += (s, e) => handler();
-            }
             // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
-            Bind("actionUndo", () => Undo());
-            Bind("actionRedo", () => Redo());
-            Bind("actionFindStrref", () => ShowFindStrrefDialog());
-            Bind("actionFindStrrefNext", () => FindStrrefNext());
+            EditorHelpers.BindMenuClicks(this, new (string menuItemName, Action handler)[]
+            {
+                ("actionUndo", Undo),
+                ("actionRedo", Redo),
+                ("actionFindStrref", ShowFindStrrefDialog),
+                ("actionFindStrrefNext", FindStrrefNext),
+            });
         }
 
         private void OnSpinCommitted()
@@ -346,6 +353,7 @@ namespace OdyTools.Editors
                 _undoStack.Add(data);
                 if (_undoStack.Count > UndoMaxLevels) _undoStack.RemoveAt(0);
                 _redoStack.Clear();
+                MarkDocumentDirty();
             }
             catch { }
         }
@@ -577,8 +585,7 @@ namespace OdyTools.Editors
             {
                 try
                 {
-                    var box = MessageBoxManager.GetMessageBoxStandard("OdyToolSSF", message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info);
-                    _ = box.ShowWindowDialogAsync(this);
+                    DialogHelper.ShowWindow(this, "OdyToolSSF", message, IconType.Info);
                 }
                 catch { }
             });

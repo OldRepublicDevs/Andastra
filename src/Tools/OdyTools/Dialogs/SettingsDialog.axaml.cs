@@ -6,6 +6,8 @@ using OdyTools.Data;
 using OdyTools.Widgets.Settings;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using OdyTools.Utils;
+using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Dialogs
 {
@@ -30,6 +32,7 @@ namespace OdyTools.Dialogs
         // Dialog result property (true if OK clicked, false if Cancel or closed)
         public bool? Result { get; private set; }
 
+        public SettingsDialog() : this(null) { }
         public SettingsDialog(Window parent = null)
         {
             InitializeComponent();
@@ -328,24 +331,14 @@ namespace OdyTools.Dialogs
 
         public async void OnResetAllSettings()
         {
-            var confirmBox = MessageBoxManager.GetMessageBoxStandard(
-                "Reset All Settings",
-                "Are you sure you want to reset all settings to their default values? This action cannot be undone.",
-                ButtonEnum.YesNo,
-                MsBox.Avalonia.Enums.Icon.Question);
 
-            var confirmResult = await confirmBox.ShowAsync();
+            var confirmResult = await DialogHelper.ShowAsync("Reset All Settings", "Are you sure you want to reset all settings to their default values? This action cannot be undone.", ButtonEnum.YesNo, IconType.Question);
 
             if (confirmResult == ButtonResult.Yes)
             {
                 _settings.Clear();
 
-                var infoBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Settings Reset",
-                    "All settings have been cleared and reset to their default values.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info);
-                await infoBox.ShowAsync();
+                await DialogHelper.ShowAsync("Settings Reset", "All settings have been cleared and reset to their default values.", ButtonEnum.Ok, IconType.Info);
 
                 _isResetting = true;
                 Close(true);

@@ -33,6 +33,127 @@ namespace BioWare.Resource
     [PublicAPI]
     public static class ResourceAuto
     {
+        private static byte[] ReadSourceBytes(object source)
+        {
+            if (source is string sourcePath)
+            {
+                return File.ReadAllBytes(sourcePath);
+            }
+
+            return source as byte[];
+        }
+
+        /// <summary>
+        /// Reads a resource model from either file path or in-memory bytes.
+        /// </summary>
+        private static T ReadFromSource<T>(object source, Func<string, T> readFromPath, Func<byte[], T> readFromBytes)
+        {
+            if (source is string sourcePath)
+            {
+                return readFromPath(sourcePath);
+            }
+
+            return readFromBytes(source as byte[]);
+        }
+
+        private static TLK ReadTlkFromSource(object source)
+        {
+            return ReadFromSource(source, s => TLKAuto.ReadTlk(s), data => TLKAuto.ReadTlk(data));
+        }
+
+        private static SSF ReadSsfFromSource(object source)
+        {
+            return ReadFromSource(source, s => SSFAuto.ReadSsf(s), data => SSFAuto.ReadSsf(data));
+        }
+
+        private static ERF ReadErfFromSource(object source)
+        {
+            return ReadFromSource(source, s => ERFAuto.ReadErf(s), data => ERFAuto.ReadErf(data));
+        }
+
+        private static RIM ReadRimFromSource(object source)
+        {
+            return ReadFromSource(source, s => RIMAuto.ReadRim(s), data => RIMAuto.ReadRim(data));
+        }
+
+        private static PCC ReadPccFromSource(object source)
+        {
+            return ReadFromSource(source, s => PCCAuto.ReadPcc(s), data => PCCAuto.ReadPcc(data));
+        }
+
+        private static NCS ReadNcsFromSource(object source)
+        {
+            return ReadFromSource(source, s => NCSAuto.ReadNcs(s), data => NCSAuto.ReadNcs(data));
+        }
+
+        private static BWM ReadBwmFromSource(object source)
+        {
+            return ReadFromSource(source, s => BWMAuto.ReadBwm(s), data => BWMAuto.ReadBwm(data));
+        }
+
+        /// <summary>
+        /// Converts a GFF generic resource to bytes through its dismantle function and binary type.
+        /// </summary>
+        private static byte[] BytesFromGffGeneric<TResource>(
+            TResource resource,
+            Func<TResource, BioWareGame, GFF> dismantle,
+            ResourceType binaryType,
+            BioWareGame game)
+        {
+            GFF gff = dismantle(resource, game);
+            return GFFAuto.BytesGff(gff, binaryType);
+        }
+
+        private static byte[] BytesMdl(MDL mdl)
+        {
+            using (var ms = new MemoryStream())
+            {
+                MDLAuto.WriteMdl(mdl, ms);
+                return ms.ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Attempts a resource parse probe and suppresses exceptions.
+        /// Returns null when the probe fails.
+        /// </summary>
+        [CanBeNull]
+        private static byte[] TryReadProbe(Func<byte[]> probe)
+        {
+            try
+            {
+                return probe();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Runs parse probes in order and returns the first successful byte payload.
+        /// Returns null when all probes fail.
+        /// </summary>
+        [CanBeNull]
+        private static byte[] ReadFirstSuccessfulProbe(params Func<byte[]>[] probes)
+        {
+            if (probes == null)
+            {
+                return null;
+            }
+
+            foreach (Func<byte[]> probe in probes)
+            {
+                byte[] result = TryReadProbe(probe);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+
+            return null;
+        }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/resource_auto.py:58-123
         // Original: def read_resource(source: SOURCE_TYPES, resource_type: ResourceType | None = None) -> bytes:
         public static byte[] ReadResource(object source, ResourceType resourceType = null)
@@ -64,10 +185,11 @@ namespace BioWare.Resource
             {
                 string ext = resourceType.Extension?.ToLowerInvariant() ?? "";
                 string resourceExt = ext.StartsWith(".") ? ext.Substring(1) : ext;
+                ResourceType extensionResourceType = ResourceType.FromExtension(resourceExt);
 
                 if (resourceType.Category == "Talk Tables")
                 {
-                    TLK tlk = source is string s ? TLKAuto.ReadTlk(s) : TLKAuto.ReadTlk(source as byte[]);
+                    TLK tlk = ReadTlkFromSource(source);
                     return TLKAuto.BytesTlk(tlk);
                 }
                 if (resourceType == ResourceType.TGA || resourceType == ResourceType.TPC)
@@ -77,12 +199,12 @@ namespace BioWare.Resource
                 }
                 if (resourceExt == "ssf")
                 {
-                    SSF ssf = source is string s2 ? SSFAuto.ReadSsf(s2) : SSFAuto.ReadSsf(source as byte[]);
+                    SSF ssf = ReadSsfFromSource(source);
                     return SSFAuto.BytesSsf(ssf);
                 }
                 if (resourceExt == "2da")
                 {
-                    byte[] data2da = source is string s3 ? File.ReadAllBytes(s3) : source as byte[];
+                    byte[] data2da = ReadSourceBytes(source);
                     var reader2da = new TwoDABinaryReader(data2da);
                     TwoDA twoda = reader2da.Load();
                     return TwoDAAuto.Bytes2DA(twoda);
@@ -92,44 +214,40 @@ namespace BioWare.Resource
                     LIP lip = LIPAuto.ReadLip(source);
                     return LIPAuto.BytesLip(lip);
                 }
-                if (ResourceType.FromExtension(resourceExt) == ResourceType.ERF ||
-                    ResourceType.FromExtension(resourceExt) == ResourceType.MOD ||
-                    ResourceType.FromExtension(resourceExt) == ResourceType.SAV ||
-                    ResourceType.FromExtension(resourceExt) == ResourceType.HAK)
+                if (extensionResourceType == ResourceType.ERF ||
+                    extensionResourceType == ResourceType.MOD ||
+                    extensionResourceType == ResourceType.SAV ||
+                    extensionResourceType == ResourceType.HAK)
                 {
-                    ERF erf = source is string s4 ? ERFAuto.ReadErf(s4) : ERFAuto.ReadErf(source as byte[]);
+                    ERF erf = ReadErfFromSource(source);
                     return ERFAuto.BytesErf(erf);
                 }
                 if (resourceExt == "rim")
                 {
-                    RIM rim = source is string s5 ? RIMAuto.ReadRim(s5) : RIMAuto.ReadRim(source as byte[]);
+                    RIM rim = ReadRimFromSource(source);
                     return RIMAuto.BytesRim(rim);
                 }
                 if (resourceExt == "pcc" || resourceExt == "upk")
                 {
-                    PCC pcc = source is string s6 ? PCCAuto.ReadPcc(s6) : PCCAuto.ReadPcc(source as byte[]);
+                    PCC pcc = ReadPccFromSource(source);
                     return PCCAuto.BytesPcc(pcc);
                 }
                 if (resourceType.Extension?.ToUpperInvariant() == "GFF" || GFFContentExtensions.Contains(resourceType.Extension?.ToUpperInvariant() ?? ""))
                 {
-                    byte[] dataGff = source is string s6 ? File.ReadAllBytes(s6) : source as byte[];
+                    byte[] dataGff = ReadSourceBytes(source);
                     var readerGff = new GFFBinaryReader(dataGff);
                     GFF gff = readerGff.Load();
                     return GFFAuto.BytesGff(gff, ResourceType.GFF);
                 }
                 if (resourceExt == "ncs")
                 {
-                    NCS ncs = source is string s8 ? NCSAuto.ReadNcs(s8) : NCSAuto.ReadNcs(source as byte[]);
+                    NCS ncs = ReadNcsFromSource(source);
                     return NCSAuto.BytesNcs(ncs);
                 }
                 if (resourceExt == "mdl")
                 {
                     MDL mdl = MDLAuto.ReadMdl(source);
-                    using (var ms = new MemoryStream())
-                    {
-                        MDLAuto.WriteMdl(mdl, ms);
-                        return ms.ToArray();
-                    }
+                    return BytesMdl(mdl);
                 }
                 if (resourceExt == "vis")
                 {
@@ -148,7 +266,7 @@ namespace BioWare.Resource
                 }
                 if (resourceType.Category == "Walkmeshes")
                 {
-                    BWM bwm = source is string s9 ? BWMAuto.ReadBwm(s9) : BWMAuto.ReadBwm(source as byte[]);
+                    BWM bwm = ReadBwmFromSource(source);
                     return BWMAuto.BytesBwm(bwm);
                 }
             }
@@ -164,110 +282,82 @@ namespace BioWare.Resource
         // Original: def read_unknown_resource(source: SOURCE_TYPES) -> bytes:
         public static byte[] ReadUnknownResource(object source)
         {
-            try
-            {
-                TLK tlk = source is string s ? TLKAuto.ReadTlk(s) : TLKAuto.ReadTlk(source as byte[]);
-                return TLKAuto.BytesTlk(tlk);
-            }
-            catch { }
-
-            try
-            {
-                SSF ssf = source is string s2 ? SSFAuto.ReadSsf(s2) : SSFAuto.ReadSsf(source as byte[]);
-                return SSFAuto.BytesSsf(ssf);
-            }
-            catch { }
-
-            try
-            {
-                byte[] data2da = source is string s3 ? File.ReadAllBytes(s3) : source as byte[];
-                var reader2da = new TwoDABinaryReader(data2da);
-                TwoDA twoda = reader2da.Load();
-                return TwoDAAuto.Bytes2DA(twoda);
-            }
-            catch { }
-
-            try
-            {
-                LIP lip = LIPAuto.ReadLip(source);
-                return LIPAuto.BytesLip(lip);
-            }
-            catch { }
-
-            try
-            {
-                TPC tpc = TPCAuto.ReadTpc(source);
-                return TPCAuto.BytesTpc(tpc);
-            }
-            catch { }
-
-            try
-            {
-                ERF erf = source is string s4 ? ERFAuto.ReadErf(s4) : ERFAuto.ReadErf(source as byte[]);
-                return ERFAuto.BytesErf(erf);
-            }
-            catch { }
-
-            try
-            {
-                RIM rim = source is string s5 ? RIMAuto.ReadRim(s5) : RIMAuto.ReadRim(source as byte[]);
-                return RIMAuto.BytesRim(rim);
-            }
-            catch { }
-
-            try
-            {
-                NCS ncs = source is string s6 ? NCSAuto.ReadNcs(s6) : NCSAuto.ReadNcs(source as byte[]);
-                return NCSAuto.BytesNcs(ncs);
-            }
-            catch { }
-
-            try
-            {
-                byte[] dataGff = source is string s7 ? File.ReadAllBytes(s7) : source as byte[];
-                var readerGff = new GFFBinaryReader(dataGff);
-                GFF gff = readerGff.Load();
-                return GFFAuto.BytesGff(gff, ResourceType.GFF);
-            }
-            catch { }
-            try
-            {
-                MDL mdl = MDLAuto.ReadMdl(source);
-                using (var ms = new MemoryStream())
+            byte[] result = ReadFirstSuccessfulProbe(
+                () =>
                 {
-                    MDLAuto.WriteMdl(mdl, ms);
-                    return ms.ToArray();
-                }
-            }
-            catch { }
-
-            try
-            {
-                VIS vis = VISAuto.ReadVis(source);
-                return VISAuto.BytesVis(vis);
-            }
-            catch { }
-
-            try
-            {
-                BioWare.Resource.Formats.LYT.LYT lyt = LYTAuto.ReadLyt(source);
-                return LYTAuto.BytesLyt(lyt);
-            }
-            catch { }
-
-            try
-            {
-                LTR ltr = LTRAuto.ReadLtr(source);
-                return LTRAuto.BytesLtr(ltr);
-            }
-            catch { }
-
-            try
-            {
-                BWM bwm = source is string s8 ? BWMAuto.ReadBwm(s8) : BWMAuto.ReadBwm(source as byte[]);
-                return BWMAuto.BytesBwm(bwm);
-            }
-            catch { }
+                    TLK tlk = ReadTlkFromSource(source);
+                    return TLKAuto.BytesTlk(tlk);
+                },
+                () =>
+                {
+                    SSF ssf = ReadSsfFromSource(source);
+                    return SSFAuto.BytesSsf(ssf);
+                },
+                () =>
+                {
+                    byte[] data2da = ReadSourceBytes(source);
+                    var reader2da = new TwoDABinaryReader(data2da);
+                    TwoDA twoda = reader2da.Load();
+                    return TwoDAAuto.Bytes2DA(twoda);
+                },
+                () =>
+                {
+                    LIP lip = LIPAuto.ReadLip(source);
+                    return LIPAuto.BytesLip(lip);
+                },
+                () =>
+                {
+                    TPC tpc = TPCAuto.ReadTpc(source);
+                    return TPCAuto.BytesTpc(tpc);
+                },
+                () =>
+                {
+                    ERF erf = ReadErfFromSource(source);
+                    return ERFAuto.BytesErf(erf);
+                },
+                () =>
+                {
+                    RIM rim = ReadRimFromSource(source);
+                    return RIMAuto.BytesRim(rim);
+                },
+                () =>
+                {
+                    NCS ncs = ReadNcsFromSource(source);
+                    return NCSAuto.BytesNcs(ncs);
+                },
+                () =>
+                {
+                    byte[] dataGff = ReadSourceBytes(source);
+                    var readerGff = new GFFBinaryReader(dataGff);
+                    GFF gff = readerGff.Load();
+                    return GFFAuto.BytesGff(gff, ResourceType.GFF);
+                },
+                () =>
+                {
+                    MDL mdl = MDLAuto.ReadMdl(source);
+                    return BytesMdl(mdl);
+                },
+                () =>
+                {
+                    VIS vis = VISAuto.ReadVis(source);
+                    return VISAuto.BytesVis(vis);
+                },
+                () =>
+                {
+                    BioWare.Resource.Formats.LYT.LYT lyt = LYTAuto.ReadLyt(source);
+                    return LYTAuto.BytesLyt(lyt);
+                },
+                () =>
+                {
+                    LTR ltr = LTRAuto.ReadLtr(source);
+                    return LTRAuto.BytesLtr(ltr);
+                },
+                () =>
+                {
+                    BWM bwm = ReadBwmFromSource(source);
+                    return BWMAuto.BytesBwm(bwm);
+                });
+            if (result != null) return result;
 
             throw new ArgumentException("Source resource data not recognized as any kotor file formats.");
         }
@@ -298,9 +388,7 @@ namespace BioWare.Resource
             }
             if (resource is IFO ifo)
             {
-                // IFO doesn't have a BytesIfo method, so use DismantleIfo + BytesGff
-                GFF ifoGff = IFOHelpers.DismantleIfo(ifo, BioWareGame.K2);
-                return GFFAuto.BytesGff(ifoGff, IFO.BinaryType);
+                return BytesFromGffGeneric(ifo, IFOHelpers.DismantleIfo, IFO.BinaryType, BioWareGame.K2);
             }
             if (resource is JRL jrl)
             {
@@ -316,33 +404,23 @@ namespace BioWare.Resource
             }
             if (resource is UTD utd)
             {
-                // UTD doesn't have a BytesUtd method, so use DismantleUtd + BytesGff
-                GFF utdGff = UTDHelpers.DismantleUtd(utd, BioWareGame.K2);
-                return GFFAuto.BytesGff(utdGff, UTD.BinaryType);
+                return BytesFromGffGeneric(utd, (value, game) => UTDHelpers.DismantleUtd(value, game), UTD.BinaryType, BioWareGame.K2);
             }
             if (resource is UTE ute)
             {
-                // UTE doesn't have a BytesUte method, so use DismantleUte + BytesGff
-                GFF uteGff = UTEHelpers.DismantleUte(ute, BioWareGame.K2);
-                return GFFAuto.BytesGff(uteGff, UTE.BinaryType);
+                return BytesFromGffGeneric(ute, (value, game) => UTEHelpers.DismantleUte(value, game), UTE.BinaryType, BioWareGame.K2);
             }
             if (resource is UTM utm)
             {
-                // UTM doesn't have a BytesUtm method, so use DismantleUtm + BytesGff
-                GFF utmGff = UTMHelpers.DismantleUtm(utm, BioWareGame.K2);
-                return GFFAuto.BytesGff(utmGff, UTM.BinaryType);
+                return BytesFromGffGeneric(utm, (value, game) => UTMHelpers.DismantleUtm(value, game), UTM.BinaryType, BioWareGame.K2);
             }
             if (resource is UTP utp)
             {
-                // UTP doesn't have a BytesUtp method, so use DismantleUtp + BytesGff
-                GFF utpGff = UTPHelpers.DismantleUtp(utp, BioWareGame.K2);
-                return GFFAuto.BytesGff(utpGff, UTP.BinaryType);
+                return BytesFromGffGeneric(utp, (value, game) => UTPHelpers.DismantleUtp(value, game), UTP.BinaryType, BioWareGame.K2);
             }
             if (resource is UTS uts)
             {
-                // UTS doesn't have a BytesUts method, so use DismantleUts + BytesGff
-                GFF utsGff = UTSHelpers.DismantleUts(uts, BioWareGame.K2);
-                return GFFAuto.BytesGff(utsGff, UTS.BinaryType);
+                return BytesFromGffGeneric(uts, (value, game) => UTSHelpers.DismantleUts(value, game), UTS.BinaryType, BioWareGame.K2);
             }
             if (resource is UTW utw)
             {
@@ -382,11 +460,7 @@ namespace BioWare.Resource
             }
             if (resource is MDL mdl)
             {
-                using (var ms = new MemoryStream())
-                {
-                    MDLAuto.WriteMdl(mdl, ms);
-                    return ms.ToArray();
-                }
+                return BytesMdl(mdl);
             }
             if (resource is NCS ncs)
             {
@@ -424,6 +498,46 @@ namespace BioWare.Resource
         {
             "ARE", "IFO", "GIT", "UTC", "UTI", "UTD", "UTE", "UTP", "UTS", "UTT", "UTW", "DLG", "CNV", "JRL", "PTH"
         };
+
+        /// <summary>
+        /// Loads a known binary resource by type id.
+        /// Returns null for unsupported type ids.
+        /// </summary>
+        [CanBeNull]
+        private static object LoadKnownBinaryResource(byte[] data, int typeId)
+        {
+            switch (typeId)
+            {
+                case 2002: // ERF
+                    return new ERFBinaryReader(data).Load();
+
+                case 2005: // GFF
+                    return new GFFBinaryReader(data).Load();
+
+                case 2008: // RIM
+                    return new RIMBinaryReader(data).Load();
+
+                case 10000: // PCC
+                case 10001: // UPK
+                    return new PCCBinaryReader(data).Load();
+
+                case 2017: // SSF
+                    return new SSFBinaryReader(data).Load();
+
+                case 2018: // TLK
+                    return new TLKBinaryReader(data).Load();
+
+                case 2019: // 2DA
+                    return new TwoDABinaryReader(data).Load();
+
+                case 2034: // CNV
+                    return CNVHelper.ReadCnv(data);
+
+                default:
+                    return null;
+            }
+        }
+
         /// <summary>
         /// Automatically loads a resource from file data based on its type.
         /// </summary>
@@ -440,43 +554,7 @@ namespace BioWare.Resource
 
             try
             {
-                switch (resourceType.TypeId)
-                {
-                    case 2002: // ERF
-                        var erfReader = new ERFBinaryReader(data);
-                        return erfReader.Load();
-
-                    case 2005: // GFF
-                        var gffReader = new GFFBinaryReader(data);
-                        return gffReader.Load();
-
-                    case 2008: // RIM
-                        var rimReader = new RIMBinaryReader(data);
-                        return rimReader.Load();
-
-                    case 10000: // PCC
-                    case 10001: // UPK
-                        var pccReader = new PCCBinaryReader(data);
-                        return pccReader.Load();
-
-                    case 2017: // SSF
-                        var ssfReader = new SSFBinaryReader(data);
-                        return ssfReader.Load();
-
-                    case 2018: // TLK
-                        var tlkReader = new TLKBinaryReader(data);
-                        return tlkReader.Load();
-
-                    case 2019: // 2DA
-                        var twodaReader = new TwoDABinaryReader(data);
-                        return twodaReader.Load();
-                    case 2034: // CNV
-                        return CNVHelper.ReadCnv(data);
-
-                    // Add more resource types as they are implemented
-                    default:
-                        return null;
-                }
+                return LoadKnownBinaryResource(data, resourceType.TypeId);
             }
             catch
             {

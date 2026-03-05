@@ -18,6 +18,8 @@ using BioWare.Resource;
 using BioWare.Resource.Formats.TwoDA;
 using OdyTools.Common;
 using OdyTools.Data;
+using OdyTools.Editors.TwoDACommands;
+using OdyTools.Utils;
 
 namespace OdyTools.Editors
 {
@@ -57,6 +59,11 @@ namespace OdyTools.Editors
         private MenuItem _ctxInsertRowBelow;
 
         private const int UndoMaxLevels = 30;
+
+        // Command-based undo/redo (replaces snapshot-based legacy stacks)
+        private readonly TwoDACommandStack _commandStack = new TwoDACommandStack(100);
+
+        // Legacy snapshot stacks (deprecated, will gradually migrate operations to command-based)
         private readonly List<(List<List<string>> rows, List<string> headers)> _undoStack = new List<(List<List<string>>, List<string>)>();
         private readonly List<(List<List<string>> rows, List<string> headers)> _redoStack = new List<(List<List<string>>, List<string>)>();
         private bool _undoRedoInProgress;
@@ -72,6 +79,18 @@ namespace OdyTools.Editors
         private Avalonia.Point _rowDragStartPoint;
         private bool _columnSelectionActive;
         private static readonly IBrush ColumnHighlightBrush = new SolidColorBrush(Avalonia.Media.Color.Parse("#E3F2FD"));
+        private readonly Dictionary<int, ColumnValidationMode> _columnValidationRules = new Dictionary<int, ColumnValidationMode>();
+
+        // Column filter state
+        private int _filterColumnIndex = -1;
+        private HashSet<string> _filterAllowedValues = new HashSet<string>();
+        private List<ObservableCollection<string>> _allRowsBeforeFilter = new List<ObservableCollection<string>>();
+        private bool _isColumnFilterActive = false;
+
+        // View options
+        private double _zoomLevel = 1.0;
+        private bool _textWrappingEnabled = false;
+        private HashSet<int> _hiddenColumnIndices = new HashSet<int>();
 
         /// <summary>
         /// Parameterless constructor required by Avalonia XAML runtime loader (AVLN3001).
@@ -89,6 +108,11 @@ namespace OdyTools.Editors
             _verticalHeaderOption = VerticalHeaderOption.None;
             _verticalHeaderColumn = "";
             _columnHeaders = new List<string>();
+
+            // Wire command stack events
+            _commandStack.CommandExecuted += (s, cmd) => MarkDocumentDirty();
+            _commandStack.Undone += (s, e) => UpdateStatusBar();
+            _commandStack.Redone += (s, e) => UpdateStatusBar();
 
             InitializeComponent();
             SetupUI();
@@ -516,7 +540,7 @@ namespace OdyTools.Editors
         private void PushState()
         {
             if (_undoRedoInProgress) return;
-            MarkDirty();
+            MarkDocumentDirty();
             while (_redoStack.Count > 0) _redoStack.RemoveAt(_redoStack.Count - 1);
             var rows = _sourceData.Select(r => r.ToList()).ToList();
             var headers = new List<string>(_columnHeaders);
@@ -529,6 +553,15 @@ namespace OdyTools.Editors
 
         private void Undo()
         {
+            // Prefer command-based undo if available
+            if (_commandStack.CanUndo)
+            {
+                _commandStack.Undo();
+                UpdateFormulaBarAndStatus();
+                return;
+            }
+
+            // Fallback: legacy snapshot undo
             if (_undoStack.Count == 0) return;
             _undoRedoInProgress = true;
             try
@@ -546,6 +579,15 @@ namespace OdyTools.Editors
 
         private void Redo()
         {
+            // Prefer command-based redo if available
+            if (_commandStack.CanRedo)
+            {
+                _commandStack.Redo();
+                UpdateFormulaBarAndStatus();
+                return;
+            }
+
+            // Fallback: legacy snapshot redo
             if (_redoStack.Count == 0) return;
             _undoRedoInProgress = true;
             try
@@ -727,72 +769,83 @@ namespace OdyTools.Editors
 
         private void SetupMenuHandlers()
         {
-            void Bind(string name, Action handler)
+            // actionNew, actionOpen, actionSave, actionRevert, actionExit wired by base Editor (actionSaveAs->RunSaveAsAsync(null))
+            void Bind(Action handler, params string[] controlNames)
             {
-                try
+                foreach (string controlName in controlNames)
                 {
-                    var item = this.FindControl<MenuItem>(name);
-                    if (item != null) item.Click += (s, e) => handler();
+                    EditorHelpers.BindMenuOrButtonClick(this, controlName, handler);
                 }
-                catch { }
-                try
-                {
-                    var button = this.FindControl<Button>(name);
-                    if (button != null) button.Click += (s, e) => handler();
-                }
-                catch { }
             }
 
-            // actionNew, actionOpen, actionSave, actionRevert, actionExit wired by base Editor (actionSaveAs->RunSaveAsAsync(null))
-            Bind("actionSaveAs2DA", () => _ = RunSaveAsAsyncCore(false));
-            Bind("actionSaveAsCSV", () => _ = RunSaveAsAsyncCore(true));
-            Bind("actionUndo", () => Undo());
-            Bind("actionRedo", () => Redo());
-            Bind("actionCopy", () => CopySelection());
-            Bind("actionCut", () => CutSelection());
-            Bind("actionPaste", () => PasteSelection());
-            Bind("actionPasteTransposed", () => PasteTransposed());
-            Bind("actionClearCell", () => ClearCell());
-            Bind("actionFind", () => ShowFindDialog());
-            Bind("actionReplace", () => ShowReplaceDialog());
-            Bind("actionGoToRow", () => ShowGoToRowDialog());
-            Bind("actionSelectAll", () => SelectAllRows());
-            Bind("actionSelectColumn", () => SelectCurrentColumn());
-            Bind("actionToggleFilter", () => ToggleFilter());
-            Bind("actionToggleSidebar", () => ToggleSidebar());
-            Bind("actionInsertRow", () => InsertRow());
-            Bind("actionInsertRowAbove", () => InsertRowAbove());
-            Bind("actionInsertRowBelow", () => InsertRowBelow());
-            Bind("actionInsertRows", () => InsertMultipleRows());
-            Bind("actionDuplicateRow", () => DuplicateRow());
-            Bind("actionRemoveRows", () => RemoveSelectedRows());
-            Bind("actionMoveRowUp", () => MoveSelectedRowsUp());
-            Bind("actionMoveRowDown", () => MoveSelectedRowsDown());
-            Bind("actionFillDown", () => FillDown());
-            Bind("actionAddColumn", () => _ = AddColumnAsync());
-            Bind("actionRenameColumn", () => _ = RenameColumnAsync());
-            Bind("actionRemoveColumn", () => RemoveColumn());
-            Bind("actionMoveColumnLeft", () => MoveCurrentColumnLeft());
-            Bind("actionMoveColumnRight", () => MoveCurrentColumnRight());
-            Bind("actionSortAsc", () => SortRows(ascending: true));
-            Bind("actionSortDesc", () => SortRows(ascending: false));
-            Bind("actionRedoRowLabels", () => RedoRowLabels());
-            Bind("addColumnButton", () => AddColumnQuick());
-            Bind("tbInsertRowSidebar", () => InsertRow());
-            Bind("tbInsertRowAbove", () => InsertRowAbove());
-            Bind("tbInsertRowBelow", () => InsertRowBelow());
-            Bind("tbDuplicateRow", () => DuplicateRow());
-            Bind("tbRemoveRowsSidebar", () => RemoveSelectedRows());
-            Bind("tbMoveRowUpSidebar", () => MoveSelectedRowsUp());
-            Bind("tbMoveRowDownSidebar", () => MoveSelectedRowsDown());
-            Bind("tbSelectColumn", () => SelectCurrentColumn());
-            Bind("tbAddColumnSidebar", () => AddColumnQuick());
-            Bind("tbRemoveColumnSidebar", () => RemoveColumn());
-            Bind("tbMoveColumnLeftSidebar", () => MoveCurrentColumnLeft());
-            Bind("tbMoveColumnRightSidebar", () => MoveCurrentColumnRight());
-            Bind("tbSortAscSidebar", () => SortRows(ascending: true));
-            Bind("tbSortDescSidebar", () => SortRows(ascending: false));
-            Bind("tbClearFilter", () =>
+            void BindLanguage(string controlName, ToolsetLanguage language)
+            {
+                EditorHelpers.BindMenuOrButtonClick(this, controlName, () =>
+                {
+                    Localization.SetLanguage(language);
+                    RefreshLocalizedStrings();
+                });
+            }
+
+            Bind(() => _ = RunSaveAsAsyncCore(false), "actionSaveAs2DA");
+            Bind(() => _ = RunSaveAsAsyncCore(true), "actionSaveAsCSV");
+            Bind(Undo, "actionUndo");
+            Bind(Redo, "actionRedo");
+            Bind(CopySelection, "actionCopy", "ctxCopy");
+            Bind(CutSelection, "actionCut", "ctxCut");
+            Bind(PasteSelection, "actionPaste", "ctxPaste");
+            Bind(PasteTransposed, "actionPasteTransposed", "ctxPasteTransposed");
+            Bind(ClearCell, "actionClearCell", "ctxClearCell");
+            Bind(ShowFindDialog, "actionFind");
+            Bind(ShowReplaceDialog, "actionReplace");
+            Bind(ShowGoToRowDialog, "actionGoToRow", "tbGoToRow");
+            Bind(SelectAllRows, "actionSelectAll", "tbSelectAll");
+            Bind(SelectCurrentColumn, "actionSelectColumn", "tbSelectColumn");
+            Bind(ToggleFilter, "actionToggleFilter");
+            Bind(ToggleSidebar, "actionToggleSidebar");
+            Bind(InsertRow, "actionInsertRow", "tbInsertRowSidebar", "ctxInsertRow");
+            Bind(InsertRowAbove, "actionInsertRowAbove", "tbInsertRowAbove", "ctxInsertRowAbove");
+            Bind(InsertRowBelow, "actionInsertRowBelow", "tbInsertRowBelow", "ctxInsertRowBelow");
+            Bind(InsertMultipleRows, "actionInsertRows", "ctxInsertRows");
+            Bind(DuplicateRow, "actionDuplicateRow", "tbDuplicateRow", "ctxDuplicateRow");
+            Bind(RemoveSelectedRows, "actionRemoveRows", "tbRemoveRowsSidebar", "ctxRemoveRows");
+            Bind(MoveSelectedRowsUp, "actionMoveRowUp", "tbMoveRowUpSidebar", "ctxMoveRowUp");
+            Bind(MoveSelectedRowsDown, "actionMoveRowDown", "tbMoveRowDownSidebar", "ctxMoveRowDown");
+            Bind(FillDown, "actionFillDown", "tbFillDown", "ctxFillDown");
+            Bind(() => _ = AddColumnAsync(), "actionAddColumn");
+            Bind(() => _ = RenameColumnAsync(), "actionRenameColumn", "tbRenameColumn", "ctxRenameColumn");
+            Bind(RemoveColumn, "actionRemoveColumn", "tbRemoveColumnSidebar");
+            Bind(MoveCurrentColumnLeft, "actionMoveColumnLeft", "tbMoveColumnLeftSidebar", "ctxMoveColumnLeft");
+            Bind(MoveCurrentColumnRight, "actionMoveColumnRight", "tbMoveColumnRightSidebar", "ctxMoveColumnRight");
+            Bind(() => SortRows(ascending: true), "actionSortAsc", "tbSortAscSidebar", "ctxSortAsc");
+            Bind(() => SortRows(ascending: false), "actionSortDesc", "tbSortDescSidebar", "ctxSortDesc");
+            Bind(RedoRowLabels, "actionRedoRowLabels", "tbRedoRowLabels");
+
+            // Python parity: advanced features
+            Bind(ShowMultiLevelSortDialog, "actionMultiLevelSort", "ctxMultiLevelSort");
+            Bind(TransposeTable, "actionTransposeTable", "ctxTranspose");
+            Bind(RemoveDuplicateRows, "actionRemoveDuplicateRows", "ctxRemoveDuplicates");
+            Bind(FillRight, "actionFillRight", "ctxFillRight");
+            Bind(DuplicateColumn, "actionDuplicateColumn", "ctxDuplicateColumn");
+            Bind(SelectBlankCells, "actionSelectBlankCells");
+            Bind(SelectCellsWithContent, "actionSelectCellsWithContent");
+            Bind(ShowBulkEditDialog, "actionBulkEdit");
+            Bind(ShowColumnStatisticsDialog, "actionColumnStats");
+            Bind(ShowSetValidationRuleDialog, "actionSetValidation");
+            Bind(ValidateDataAndShowReport, "actionValidateData");
+            Bind(AutocompleteCurrentCell, "actionAutocompleteCell");
+            Bind(ShowColumnFilterDialog, "actionColumnFilter");
+            Bind(ClearColumnFilter, "actionClearColumnFilter");
+            Bind(() => SetZoomLevel(1.0), "actionZoom100");
+            Bind(() => SetZoomLevel(1.25), "actionZoom125");
+            Bind(() => SetZoomLevel(1.5), "actionZoom150");
+            Bind(() => SetZoomLevel(2.0), "actionZoom200");
+            Bind(ToggleTextWrapping, "actionToggleTextWrap");
+            Bind(AutoFitAllColumns, "actionAutoFitColumns");
+            Bind(ShowManageColumnsDialog, "actionManageColumns");
+
+            Bind(AddColumnQuick, "addColumnButton", "tbAddColumnSidebar");
+            EditorHelpers.BindMenuOrButtonClick(this, "tbClearFilter", () =>
             {
                 if (_filterEdit != null)
                 {
@@ -800,38 +853,13 @@ namespace OdyTools.Editors
                     DoFilter("");
                 }
             });
-            Bind("tbSelectAll", () => SelectAllRows());
-            Bind("tbFillDown", () => FillDown());
-            Bind("tbGoToRow", () => ShowGoToRowDialog());
-            Bind("tbRenameColumn", () => _ = RenameColumnAsync());
-            Bind("tbRedoRowLabels", () => RedoRowLabels());
 
-            Bind("ctxCut", () => CutSelection());
-            Bind("ctxCopy", () => CopySelection());
-            Bind("ctxPaste", () => PasteSelection());
-            Bind("ctxPasteTransposed", () => PasteTransposed());
-            Bind("ctxClearCell", () => ClearCell());
-            Bind("ctxInsertRow", () => InsertRow());
-            Bind("ctxInsertRowAbove", () => InsertRowAbove());
-            Bind("ctxInsertRowBelow", () => InsertRowBelow());
-            Bind("ctxInsertRows", () => InsertMultipleRows());
-            Bind("ctxDuplicateRow", () => DuplicateRow());
-            Bind("ctxRemoveRows", () => RemoveSelectedRows());
-            Bind("ctxMoveRowUp", () => MoveSelectedRowsUp());
-            Bind("ctxMoveRowDown", () => MoveSelectedRowsDown());
-            Bind("ctxFillDown", () => FillDown());
-            Bind("ctxRenameColumn", () => _ = RenameColumnAsync());
-            Bind("ctxMoveColumnLeft", () => MoveCurrentColumnLeft());
-            Bind("ctxMoveColumnRight", () => MoveCurrentColumnRight());
-            Bind("ctxSortAsc", () => SortRows(ascending: true));
-            Bind("ctxSortDesc", () => SortRows(ascending: false));
-
-            Bind("actionLangEnglish", () => { Localization.SetLanguage(ToolsetLanguage.English); RefreshLocalizedStrings(); });
-            Bind("actionLangFrench", () => { Localization.SetLanguage(ToolsetLanguage.French); RefreshLocalizedStrings(); });
-            Bind("actionLangGerman", () => { Localization.SetLanguage(ToolsetLanguage.German); RefreshLocalizedStrings(); });
-            Bind("actionLangItalian", () => { Localization.SetLanguage(ToolsetLanguage.Italian); RefreshLocalizedStrings(); });
-            Bind("actionLangSpanish", () => { Localization.SetLanguage(ToolsetLanguage.Spanish); RefreshLocalizedStrings(); });
-            Bind("actionLangPolish", () => { Localization.SetLanguage(ToolsetLanguage.Polish); RefreshLocalizedStrings(); });
+            BindLanguage("actionLangEnglish", ToolsetLanguage.English);
+            BindLanguage("actionLangFrench", ToolsetLanguage.French);
+            BindLanguage("actionLangGerman", ToolsetLanguage.German);
+            BindLanguage("actionLangItalian", ToolsetLanguage.Italian);
+            BindLanguage("actionLangSpanish", ToolsetLanguage.Spanish);
+            BindLanguage("actionLangPolish", ToolsetLanguage.Polish);
         }
 
         private void RefreshLocalizedStrings()
@@ -1001,6 +1029,9 @@ namespace OdyTools.Editors
             });
             for (int i = 0; i < _columnHeaders.Count; i++)
             {
+                // Skip hidden columns
+                if (_hiddenColumnIndices.Contains(i)) continue;
+
                 int index = i + 1;
                 _twodaTable.Columns.Add(new DataGridTextColumn
                 {
@@ -1093,6 +1124,15 @@ namespace OdyTools.Editors
 
         private void LoadMain(byte[] data)
         {
+            // Clear any active filter when loading new data
+            if (_isColumnFilterActive)
+            {
+                _allRowsBeforeFilter.Clear();
+                _filterColumnIndex = -1;
+                _filterAllowedValues.Clear();
+                _isColumnFilterActive = false;
+            }
+
             if (data == null || data.Length == 0)
             {
                 // Clear all data for null/empty input (don't call New() which adds a starter row)
@@ -1288,8 +1328,12 @@ namespace OdyTools.Editors
             _restype = ResourceType.TwoDA;
             _sourceData.Clear();
             _columnHeaders.Clear();
+
+            // Clear both command-based and legacy undo stacks
+            _commandStack.Clear();
             _undoStack.Clear();
             _redoStack.Clear();
+
             // Pre-existing empty table: one data column and one row so the user can click and type immediately.
             _columnHeaders.Add("Column1");
             _sourceData.Add(new ObservableCollection<string> { "", "" }); // row label + one cell
@@ -1796,7 +1840,7 @@ namespace OdyTools.Editors
                 newRow.Add("");
             }
             _sourceData.Add(newRow);
-            RedoRowLabels();
+            RecalculateRowLabels();
             SetItemDisplayData(_sourceData.Count - 1);
             UpdateStatusBar();
         }
@@ -1858,7 +1902,7 @@ namespace OdyTools.Editors
                     _sourceData.Add(newRow);
                 SetItemDisplayData(insertIndex + i);
             }
-            RedoRowLabels();
+            RecalculateRowLabels();
             SetItemDisplayData(Math.Min(insertIndex, _sourceData.Count - 1));
             UpdateStatusBar();
         }
@@ -1870,7 +1914,7 @@ namespace OdyTools.Editors
                 PushState();
                 var newRow = new ObservableCollection<string>(selectedRow);
                 _sourceData.Add(newRow);
-                RedoRowLabels();
+                RecalculateRowLabels();
                 SetItemDisplayData(_sourceData.Count - 1);
                 UpdateStatusBar();
             }
@@ -1900,7 +1944,7 @@ namespace OdyTools.Editors
             {
                 _sourceData.Insert(insertIndex, newRow);
             }
-            RedoRowLabels();
+            RecalculateRowLabels();
             SetItemDisplayData(insertIndex);
             UpdateStatusBar();
         }
@@ -1925,7 +1969,7 @@ namespace OdyTools.Editors
             {
                 _sourceData.Remove(item);
             }
-            RedoRowLabels();
+            RecalculateRowLabels();
             UpdateStatusBar();
         }
 
@@ -1946,7 +1990,7 @@ namespace OdyTools.Editors
                 _sourceData.Insert(idx - 1, row);
             }
             RestoreSelectedRowsByIndices(selected.Select(i => i - 1).ToList());
-            RedoRowLabels();
+            RecalculateRowLabels();
             UpdateStatusBar();
         }
 
@@ -1967,7 +2011,7 @@ namespace OdyTools.Editors
                 _sourceData.Insert(idx + 1, row);
             }
             RestoreSelectedRowsByIndices(selected.Select(i => i + 1).ToList());
-            RedoRowLabels();
+            RecalculateRowLabels();
             UpdateStatusBar();
         }
 
@@ -1982,7 +2026,7 @@ namespace OdyTools.Editors
             _sourceData.RemoveAt(from);
             if (to > from) to--;
             _sourceData.Insert(to, row);
-            RedoRowLabels();
+            RecalculateRowLabels();
             RestoreSelectedRowsByIndices(new List<int> { to });
             UpdateStatusBar();
         }
@@ -2198,38 +2242,30 @@ namespace OdyTools.Editors
         public void SortRows(bool ascending)
         {
             int colIdx = GetCurrentColumnIndex();
-            if (colIdx < 0) colIdx = 1;
+            int headerIndex = colIdx - 1;
+            if (headerIndex < 0 || headerIndex >= _columnHeaders.Count) headerIndex = 0;
             if (_sourceData.Count == 0) return;
-            PushState();
 
-            // Preserve CurrentColumn across the Clear/Add cycle which can reset DataGrid state
+            // Preserve CurrentColumn across the sort
             var savedColumn = _twodaTable?.CurrentColumn;
 
-            var list = _sourceData.ToList();
-            list.Sort((a, b) =>
+            var command = new SortCommand(_sourceData, headerIndex, ascending, () =>
             {
-                string va = colIdx < a.Count ? (a[colIdx] ?? "").Trim() : "";
-                string vb = colIdx < b.Count ? (b[colIdx] ?? "").Trim() : "";
-                int cmpStr = string.Compare(va, vb, StringComparison.OrdinalIgnoreCase);
-                return ascending ? cmpStr : -cmpStr;
-            });
-            _sourceData.Clear();
-            foreach (var row in list) _sourceData.Add(row);
-
-            // Restore CurrentColumn so subsequent sorts target the same column
-            if (savedColumn != null && _twodaTable != null && _sourceData.Count > 0)
-            {
-                try
+                // Restore CurrentColumn so subsequent sorts target the same column
+                if (savedColumn != null && _twodaTable != null && _sourceData.Count > 0)
                 {
-                    // DataGrid requires a SelectedItem before setting CurrentColumn
-                    if (_twodaTable.SelectedItem == null)
-                        _twodaTable.SelectedItem = _sourceData[0];
-                    _twodaTable.CurrentColumn = savedColumn;
+                    try
+                    {
+                        if (_twodaTable.SelectedItem == null)
+                            _twodaTable.SelectedItem = _sourceData[0];
+                        _twodaTable.CurrentColumn = savedColumn;
+                    }
+                    catch { /* Headless or no visual tree */ }
                 }
-                catch { /* Headless or no visual tree */ }
-            }
+                UpdateStatusBar();
+            });
 
-            UpdateStatusBar();
+            _commandStack.Execute(command);
         }
 
         public void FillDown()
@@ -2356,13 +2392,16 @@ namespace OdyTools.Editors
             await dialog.ShowDialog(this as Window);
             if (_renameColumnResult != null)
             {
-                PushState();
-                _columnHeaders[colIdx - 1] = _renameColumnResult;
-                if (_twodaTable != null && colIdx < _twodaTable.Columns.Count)
+                var command = new RenameColumnCommand(_columnHeaders, colIdx - 1, currentName, _renameColumnResult, () =>
                 {
-                    _twodaTable.Columns[colIdx].Header = _renameColumnResult;
-                }
-                UpdateStatusBar();
+                    if (_twodaTable != null && colIdx < _twodaTable.Columns.Count)
+                    {
+                        _twodaTable.Columns[colIdx].Header = _columnHeaders[colIdx - 1];
+                    }
+                    UpdateStatusBar();
+                });
+
+                _commandStack.Execute(command);
             }
         }
 
@@ -2382,15 +2421,13 @@ namespace OdyTools.Editors
             var newRow = new ObservableCollection<string>();
             for (int i = 0; i < colCount; i++) newRow.Add("");
             _sourceData.Insert(insertIndex, newRow);
-            RedoRowLabels();
+            RecalculateRowLabels();
             SetItemDisplayData(insertIndex);
             UpdateStatusBar();
         }
 
-        public void RedoRowLabels()
+        private void RecalculateRowLabels()
         {
-            if (_sourceData.Count == 0) return;
-            PushState();
             for (int i = 0; i < _sourceData.Count; i++)
             {
                 if (_sourceData[i].Count > 0)
@@ -2398,6 +2435,14 @@ namespace OdyTools.Editors
                     _sourceData[i][0] = i.ToString();
                 }
             }
+        }
+
+        public void RedoRowLabels()
+        {
+            if (_sourceData.Count == 0) return;
+
+            var command = new RedoRowLabelsCommand(_sourceData);
+            _commandStack.Execute(command);
             UpdateStatusBar();
         }
 
@@ -2491,14 +2536,18 @@ namespace OdyTools.Editors
             int colIdx = GetCurrentColumnIndex();
             int headerIndex = colIdx - 1;
             if (headerIndex <= 0 || headerIndex >= _columnHeaders.Count) return;
-            PushState();
-            SwapDataColumns(headerIndex, headerIndex - 1);
-            RebuildGridColumns();
-            if (_twodaTable != null && headerIndex < _twodaTable.Columns.Count)
+
+            var command = new MoveColumnCommand(_sourceData, _columnHeaders, headerIndex, headerIndex - 1, () =>
             {
-                _twodaTable.CurrentColumn = _twodaTable.Columns[headerIndex];
-            }
-            UpdateStatusBar();
+                RebuildGridColumns();
+                if (_twodaTable != null && headerIndex < _twodaTable.Columns.Count)
+                {
+                    _twodaTable.CurrentColumn = _twodaTable.Columns[headerIndex];
+                }
+                UpdateStatusBar();
+            });
+
+            _commandStack.Execute(command);
         }
 
         public void MoveCurrentColumnRight()
@@ -2506,14 +2555,18 @@ namespace OdyTools.Editors
             int colIdx = GetCurrentColumnIndex();
             int headerIndex = colIdx - 1;
             if (headerIndex < 0 || headerIndex >= _columnHeaders.Count - 1) return;
-            PushState();
-            SwapDataColumns(headerIndex, headerIndex + 1);
-            RebuildGridColumns();
-            if (_twodaTable != null && headerIndex + 2 < _twodaTable.Columns.Count)
+
+            var command = new MoveColumnCommand(_sourceData, _columnHeaders, headerIndex, headerIndex + 1, () =>
             {
-                _twodaTable.CurrentColumn = _twodaTable.Columns[headerIndex + 2];
-            }
-            UpdateStatusBar();
+                RebuildGridColumns();
+                if (_twodaTable != null && headerIndex + 2 < _twodaTable.Columns.Count)
+                {
+                    _twodaTable.CurrentColumn = _twodaTable.Columns[headerIndex + 2];
+                }
+                UpdateStatusBar();
+            });
+
+            _commandStack.Execute(command);
         }
 
         private void SwapDataColumns(int leftHeaderIndex, int rightHeaderIndex)
@@ -2551,6 +2604,809 @@ namespace OdyTools.Editors
         {
             // Row header display can be extended here if needed.
         }
+
+        // ===== PYTHON PARITY: ADVANCED FEATURES =====
+
+        /// <summary>Shows multi-level sort dialog (primary + up to 2 then-by columns) matching PyKotor functionality.</summary>
+        public async void ShowMultiLevelSortDialog()
+        {
+            if (_columnHeaders.Count == 0) return;
+
+            var dialog = new Window
+            {
+                Title = "Sort",
+                Width = 400,
+                Height = 300,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+
+            var panel = new StackPanel { Margin = new Avalonia.Thickness(12), Spacing = 8 };
+
+            // Primary sort
+            panel.Children.Add(new TextBlock { Text = "Sort by:", FontWeight = FontWeight.Bold });
+            var primaryCol = new ComboBox { ItemsSource = _columnHeaders.ToList(), SelectedIndex = 0 };
+            panel.Children.Add(primaryCol);
+            var primaryOrder = new ComboBox { ItemsSource = new[] { "Ascending", "Descending" }, SelectedIndex = 0 };
+            panel.Children.Add(primaryOrder);
+
+            // Then by 1
+            panel.Children.Add(new TextBlock { Text = "Then by:", FontWeight = FontWeight.Bold, Margin = new Avalonia.Thickness(0, 8, 0, 0) });
+            var thenBy1Col = new ComboBox { ItemsSource = new List<string> { "— None —" }.Concat(_columnHeaders), SelectedIndex = 0 };
+            panel.Children.Add(thenBy1Col);
+            var thenBy1Order = new ComboBox { ItemsSource = new[] { "Ascending", "Descending" }, SelectedIndex = 0 };
+            panel.Children.Add(thenBy1Order);
+
+            // Then by 2
+            panel.Children.Add(new TextBlock { Text = "Then by:", FontWeight = FontWeight.Bold, Margin = new Avalonia.Thickness(0, 8, 0, 0) });
+            var thenBy2Col = new ComboBox { ItemsSource = new List<string> { "— None —" }.Concat(_columnHeaders), SelectedIndex = 0 };
+            panel.Children.Add(thenBy2Col);
+            var thenBy2Order = new ComboBox { ItemsSource = new[] { "Ascending", "Descending" }, SelectedIndex = 0 };
+            panel.Children.Add(thenBy2Order);
+
+            // Buttons
+            var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Avalonia.Thickness(0, 12, 0, 0), Spacing = 8 };
+            var ok = new Button { Content = "OK" };
+            var cancel = new Button { Content = "Cancel" };
+            buttons.Children.Add(ok);
+            buttons.Children.Add(cancel);
+            panel.Children.Add(buttons);
+
+            dialog.Content = new ScrollViewer { Content = panel };
+
+            bool result = false;
+            ok.Click += (s, e) => { result = true; dialog.Close(); };
+            cancel.Click += (s, e) => dialog.Close();
+
+            await dialog.ShowDialog(this as Window);
+
+            if (!result) return;
+
+            // Build sort levels list
+            var sortLevels = new List<(int columnIndex, bool ascending)>();
+
+            // Primary is always included
+            sortLevels.Add((primaryCol.SelectedIndex, primaryOrder.SelectedIndex == 0));
+
+            // Then by 1
+            if (thenBy1Col.SelectedIndex > 0)
+            {
+                sortLevels.Add((thenBy1Col.SelectedIndex - 1, thenBy1Order.SelectedIndex == 0));
+            }
+
+            // Then by 2
+            if (thenBy2Col.SelectedIndex > 0)
+            {
+                sortLevels.Add((thenBy2Col.SelectedIndex - 1, thenBy2Order.SelectedIndex == 0));
+            }
+
+            // Execute multi-level sort command
+            var command = new MultiLevelSortCommand(_sourceData, sortLevels, () => UpdateStatusBar());
+            _commandStack.Execute(command);
+            RebuildGridColumns();
+            UpdateStatusBar();
+        }
+
+        /// <summary>Transposes the entire table (rows become columns, columns become rows).</summary>
+        public void TransposeTable()
+        {
+            if (_sourceData.Count == 0) return;
+
+            var command = new TransposeCommand(_sourceData, _columnHeaders, () =>
+            {
+                RebuildGridColumns();
+                UpdateStatusBar();
+            });
+
+            _commandStack.Execute(command);
+            RebuildGridColumns();
+            UpdateStatusBar();
+        }
+
+        /// <summary>Removes duplicate rows, keeping only the first occurrence of each unique row.</summary>
+        public void RemoveDuplicateRows()
+        {
+            if (_sourceData.Count == 0) return;
+
+            var command = new RemoveDuplicateRowsCommand(_sourceData, () => UpdateStatusBar());
+            _commandStack.Execute(command);
+            UpdateStatusBar();
+        }
+
+        /// <summary>Fills right: copies the leftmost selected cell value rightward across the selection.</summary>
+        public void FillRight()
+        {
+            var selected = _twodaTable?.SelectedItems?.Cast<ObservableCollection<string>>().ToList();
+            if (selected == null || selected.Count == 0) return;
+
+            int startCol = GetCurrentColumnIndex();
+            if (startCol < 0) startCol = 1;
+
+            // For each selected row, fill right from current column to end of selection
+            var changes = new List<(int row, int col, string oldValue, string newValue)>();
+
+            foreach (var row in selected)
+            {
+                int rowIndex = _sourceData.IndexOf(row);
+                if (rowIndex < 0 || startCol >= row.Count) continue;
+
+                string fillValue = row[startCol];
+
+                // Fill from startCol+1 to end of row (or a reasonable limit)
+                for (int col = startCol + 1; col < row.Count; col++)
+                {
+                    if (row[col] != fillValue)
+                    {
+                        changes.Add((rowIndex, col, row[col], fillValue));
+                    }
+                }
+            }
+
+            if (changes.Count > 0)
+            {
+                var command = new BatchSetCellsCommand(_sourceData, changes, "Fill right");
+                _commandStack.Execute(command);
+                UpdateStatusBar();
+            }
+        }
+
+        /// <summary>Duplicates the current column (inserted immediately to the right).</summary>
+        public void DuplicateColumn()
+        {
+            int colIdx = GetCurrentColumnIndex();
+            int headerIndex = colIdx - 1;
+
+            if (headerIndex < 0 || headerIndex >= _columnHeaders.Count) return;
+
+            var command = new DuplicateColumnCommand(_sourceData, _columnHeaders, headerIndex, () =>
+            {
+                RebuildGridColumns();
+                UpdateStatusBar();
+            });
+
+            _commandStack.Execute(command);
+            RebuildGridColumns();
+            UpdateStatusBar();
+        }
+
+        /// <summary>Selects all blank (empty or whitespace-only) cells in the current column.</summary>
+        public void SelectBlankCells()
+        {
+            int colIdx = GetCurrentColumnIndex();
+            if (colIdx < 0 || _sourceData.Count == 0) return;
+
+            _twodaTable.SelectedItems.Clear();
+
+            foreach (var row in _sourceData)
+            {
+                if (colIdx < row.Count && string.IsNullOrWhiteSpace(row[colIdx]))
+                {
+                    _twodaTable.SelectedItems.Add(row);
+                }
+            }
+
+            UpdateFormulaBarAndStatus();
+        }
+
+        /// <summary>Selects all cells with content (non-blank) in the current column.</summary>
+        public void SelectCellsWithContent()
+        {
+            int colIdx = GetCurrentColumnIndex();
+            if (colIdx < 0 || _sourceData.Count == 0) return;
+
+            _twodaTable.SelectedItems.Clear();
+
+            foreach (var row in _sourceData)
+            {
+                if (colIdx < row.Count && !string.IsNullOrWhiteSpace(row[colIdx]))
+                {
+                    _twodaTable.SelectedItems.Add(row);
+                }
+            }
+
+            UpdateFormulaBarAndStatus();
+        }
+
+        public async void ShowBulkEditDialog()
+        {
+            if (_sourceData.Count == 0) return;
+            int colIdx = GetCurrentColumnIndex();
+            if (colIdx < 0) colIdx = 1;
+
+            var dialog = new Window
+            {
+                Title = "Bulk Edit Selected",
+                Width = 420,
+                Height = 260,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+
+            var panel = new StackPanel { Margin = new Avalonia.Thickness(12), Spacing = 8 };
+            panel.Children.Add(new TextBlock { Text = "Find:" });
+            var findBox = new TextBox { Watermark = "Text to find (optional)" };
+            panel.Children.Add(findBox);
+            panel.Children.Add(new TextBlock { Text = "Replace with:" });
+            var replaceBox = new TextBox { Watermark = "Replacement" };
+            panel.Children.Add(replaceBox);
+            panel.Children.Add(new TextBlock { Text = "Prefix:" });
+            var prefixBox = new TextBox { Watermark = "Optional prefix" };
+            panel.Children.Add(prefixBox);
+            panel.Children.Add(new TextBlock { Text = "Suffix:" });
+            var suffixBox = new TextBox { Watermark = "Optional suffix" };
+            panel.Children.Add(suffixBox);
+
+            var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Avalonia.Thickness(0, 8, 0, 0) };
+            var apply = new Button { Content = "Apply" };
+            var cancel = new Button { Content = "Cancel" };
+            buttons.Children.Add(apply);
+            buttons.Children.Add(cancel);
+            panel.Children.Add(buttons);
+            dialog.Content = panel;
+
+            bool confirmed = false;
+            apply.Click += (s, e) => { confirmed = true; dialog.Close(); };
+            cancel.Click += (s, e) => dialog.Close();
+
+            await dialog.ShowDialog(this as Window);
+            if (!confirmed) return;
+
+            string find = findBox.Text ?? "";
+            string replace = replaceBox.Text ?? "";
+            string prefix = prefixBox.Text ?? "";
+            string suffix = suffixBox.Text ?? "";
+
+            var selectedRows = _twodaTable?.SelectedItems?.Cast<ObservableCollection<string>>().ToList() ?? new List<ObservableCollection<string>>();
+            if (selectedRows.Count == 0 && _twodaTable?.SelectedItem is ObservableCollection<string> single)
+            {
+                selectedRows.Add(single);
+            }
+            if (selectedRows.Count == 0) return;
+
+            var changes = new List<(int row, int col, string oldValue, string newValue)>();
+            foreach (var row in selectedRows)
+            {
+                int rowIndex = _sourceData.IndexOf(row);
+                if (rowIndex < 0 || colIdx >= row.Count) continue;
+
+                string oldValue = row[colIdx] ?? "";
+                string newValue = oldValue;
+                if (!string.IsNullOrEmpty(find))
+                {
+                    newValue = ReplaceAllInString(newValue, find, replace, true);
+                }
+                else if (!string.IsNullOrEmpty(replace))
+                {
+                    newValue = replace;
+                }
+                newValue = prefix + newValue + suffix;
+                if (newValue != oldValue)
+                {
+                    changes.Add((rowIndex, colIdx, oldValue, newValue));
+                }
+            }
+
+            if (changes.Count > 0)
+            {
+                _commandStack.Execute(new BatchSetCellsCommand(_sourceData, changes, "Bulk edit"));
+                UpdateStatusBar();
+            }
+        }
+
+        public async void ShowColumnStatisticsDialog()
+        {
+            if (_sourceData.Count == 0) return;
+            int colIdx = GetCurrentColumnIndex();
+            if (colIdx <= 0 || colIdx > _columnHeaders.Count) return;
+
+            string header = _columnHeaders[colIdx - 1];
+            var values = _sourceData.Select(r => colIdx < r.Count ? (r[colIdx] ?? "") : "").ToList();
+            int total = values.Count;
+            int blank = values.Count(v => string.IsNullOrWhiteSpace(v));
+            int nonBlank = total - blank;
+            int unique = values.Distinct().Count();
+            var numeric = values.Select(v => double.TryParse(v, out var n) ? (double?)n : null).Where(v => v.HasValue).Select(v => v.Value).ToList();
+
+            var dialog = new Window
+            {
+                Title = $"Column Statistics: {header}",
+                Width = 420,
+                Height = 320,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+
+            var text = $"Total Cells: {total}\nNon-Blank: {nonBlank}\nBlank: {blank}\nUnique: {unique}";
+            if (numeric.Count > 0)
+            {
+                text += $"\nNumeric Values: {numeric.Count}\nSum: {numeric.Sum():0.####}\nAvg: {numeric.Average():0.####}\nMin: {numeric.Min():0.####}\nMax: {numeric.Max():0.####}";
+            }
+
+            var panel = new StackPanel { Margin = new Avalonia.Thickness(12), Spacing = 8 };
+            panel.Children.Add(new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap });
+            var closeBtn = new Button { Content = "Close", HorizontalAlignment = HorizontalAlignment.Left };
+            closeBtn.Click += (s, e) => dialog.Close();
+            panel.Children.Add(closeBtn);
+            dialog.Content = panel;
+            await dialog.ShowDialog(this as Window);
+        }
+
+        public async void ShowColumnFilterDialog()
+        {
+            if (_columnHeaders.Count == 0) return;
+
+            var dialog = new Window
+            {
+                Title = "Filter by Column Values",
+                Width = 450,
+                Height = 550,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+
+            var panel = new StackPanel { Margin = new Avalonia.Thickness(12), Spacing = 8 };
+
+            panel.Children.Add(new TextBlock { Text = "Select Column:", FontWeight = FontWeight.Bold });
+            var columnCombo = new ComboBox { ItemsSource = _columnHeaders.ToList(), SelectedIndex = 0 };
+            panel.Children.Add(columnCombo);
+
+            var checkboxContainer = new StackPanel { Spacing = 4 };
+            var scrollViewer = new ScrollViewer { Content = checkboxContainer, Height = 300, Margin = new Avalonia.Thickness(0, 8, 0, 0) };
+            panel.Children.Add(scrollViewer);
+
+            var selectButtons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Avalonia.Thickness(0, 8, 0, 0) };
+            var selectAllBtn = new Button { Content = "Select All" };
+            var selectNoneBtn = new Button { Content = "Select None" };
+            selectButtons.Children.Add(selectAllBtn);
+            selectButtons.Children.Add(selectNoneBtn);
+            panel.Children.Add(selectButtons);
+
+            var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Avalonia.Thickness(0, 12, 0, 0), Spacing = 8 };
+            var applyBtn = new Button { Content = "Apply Filter" };
+            var cancelBtn = new Button { Content = "Cancel" };
+            buttons.Children.Add(applyBtn);
+            buttons.Children.Add(cancelBtn);
+            panel.Children.Add(buttons);
+
+            dialog.Content = panel;
+
+            List<CheckBox> currentCheckboxes = new List<CheckBox>();
+
+            Action populateCheckboxes = () =>
+            {
+                checkboxContainer.Children.Clear();
+                currentCheckboxes.Clear();
+
+                int colIndex = columnCombo.SelectedIndex;
+                if (colIndex < 0 || colIndex >= _columnHeaders.Count) return;
+
+                var sourceRows = _isColumnFilterActive ? _allRowsBeforeFilter : _sourceData.ToList();
+                var uniqueValues = new HashSet<string>();
+
+                foreach (var row in sourceRows)
+                {
+                    if (colIndex + 1 < row.Count)
+                    {
+                        string cellValue = row[colIndex + 1] ?? "";
+                        uniqueValues.Add(cellValue);
+                    }
+                }
+
+                var sortedValues = uniqueValues.OrderBy(v => v).ToList();
+
+                foreach (var value in sortedValues)
+                {
+                    string displayValue = string.IsNullOrEmpty(value) ? "(blank)" : value;
+                    var checkbox = new CheckBox { Content = displayValue };
+
+                    if (_isColumnFilterActive && colIndex == _filterColumnIndex)
+                    {
+                        checkbox.IsChecked = _filterAllowedValues.Contains(value);
+                    }
+                    else
+                    {
+                        checkbox.IsChecked = true;
+                    }
+
+                    currentCheckboxes.Add(checkbox);
+                    checkboxContainer.Children.Add(checkbox);
+                }
+            };
+
+            columnCombo.SelectionChanged += (s, e) => populateCheckboxes();
+            selectAllBtn.Click += (s, e) => { foreach (var cb in currentCheckboxes) cb.IsChecked = true; };
+            selectNoneBtn.Click += (s, e) => { foreach (var cb in currentCheckboxes) cb.IsChecked = false; };
+
+            populateCheckboxes();
+
+            bool result = false;
+            applyBtn.Click += async (s, e) =>
+            {
+                if (!currentCheckboxes.Any(cb => cb.IsChecked == true))
+                {
+                    await ShowInfoDialog("Filter Error", "Please select at least one value to filter by.");
+                    return;
+                }
+                result = true;
+                dialog.Close();
+            };
+            cancelBtn.Click += (s, e) => dialog.Close();
+
+            await dialog.ShowDialog(this as Window);
+
+            if (!result) return;
+
+            var allowedValues = new HashSet<string>();
+            foreach (var cb in currentCheckboxes)
+            {
+                if (cb.IsChecked == true)
+                {
+                    string displayValue = cb.Content?.ToString() ?? "";
+                    string actualValue = displayValue == "(blank)" ? "" : displayValue;
+                    allowedValues.Add(actualValue);
+                }
+            }
+
+            ApplyColumnFilter(columnCombo.SelectedIndex, allowedValues);
+        }
+
+        private void ApplyColumnFilter(int columnIndex, HashSet<string> allowedValues)
+        {
+            if (columnIndex < 0 || columnIndex >= _columnHeaders.Count || allowedValues.Count == 0) return;
+
+            if (!_isColumnFilterActive)
+            {
+                _allRowsBeforeFilter = _sourceData.Select(row => new ObservableCollection<string>(row)).ToList();
+            }
+
+            _filterColumnIndex = columnIndex;
+            _filterAllowedValues = allowedValues;
+            _isColumnFilterActive = true;
+
+            var filteredRows = _allRowsBeforeFilter.Where(row =>
+            {
+                if (columnIndex + 1 >= row.Count) return false;
+                string cellValue = row[columnIndex + 1] ?? "";
+                return allowedValues.Contains(cellValue);
+            }).ToList();
+
+            _sourceData.Clear();
+            foreach (var row in filteredRows)
+            {
+                _sourceData.Add(new ObservableCollection<string>(row));
+            }
+
+            UpdateStatusBar();
+        }
+
+        public void ClearColumnFilter()
+        {
+            if (!_isColumnFilterActive) return;
+
+            _sourceData.Clear();
+            foreach (var row in _allRowsBeforeFilter)
+            {
+                _sourceData.Add(new ObservableCollection<string>(row));
+            }
+
+            _allRowsBeforeFilter.Clear();
+            _filterColumnIndex = -1;
+            _filterAllowedValues.Clear();
+            _isColumnFilterActive = false;
+
+            UpdateStatusBar();
+        }
+
+        private void SetZoomLevel(double level)
+        {
+            _zoomLevel = level;
+            if (_twodaTable == null) return;
+
+            // Apply zoom to font size
+            _twodaTable.FontSize = 12 * _zoomLevel;
+
+            // Recalculate row height
+            var rowHeight = (int)(RowHeightEstimate * _zoomLevel);
+            _twodaTable.RowHeight = rowHeight;
+
+            UpdateStatusBar();
+        }
+
+        private void ToggleTextWrapping()
+        {
+            _textWrappingEnabled = !_textWrappingEnabled;
+            if (_twodaTable == null) return;
+
+            // Rebuild columns to apply text wrapping
+            RebuildGridColumns();
+
+            UpdateStatusBar();
+        }
+
+        private void AutoFitAllColumns()
+        {
+            if (_twodaTable == null || _twodaTable.Columns.Count == 0) return;
+
+            foreach (var column in _twodaTable.Columns)
+            {
+                if (column is DataGridTextColumn textColumn)
+                {
+                    // Calculate max content width for this column
+                    int colIndex = _twodaTable.Columns.IndexOf(column);
+                    int maxWidth = MinColumnWidth;
+
+                    // Check header width
+                    string headerText = textColumn.Header?.ToString() ?? "";
+                    int headerWidth = (int)(headerText.Length * 8 * _zoomLevel) + 20;
+                    maxWidth = Math.Max(maxWidth, headerWidth);
+
+                    // Check cell content widths
+                    foreach (var row in _sourceData)
+                    {
+                        if (colIndex < row.Count)
+                        {
+                            string cellText = row[colIndex] ?? "";
+                            int cellWidth = (int)(cellText.Length * 8 * _zoomLevel) + 20;
+                            maxWidth = Math.Max(maxWidth, cellWidth);
+                        }
+                    }
+
+                    // Cap at reasonable maximum
+                    maxWidth = Math.Min(maxWidth, 500);
+                    column.Width = new DataGridLength(maxWidth);
+                }
+            }
+
+            UpdateStatusBar();
+        }
+
+        public async void ShowManageColumnsDialog()
+        {
+            if (_columnHeaders.Count == 0) return;
+
+            var dialog = new Window
+            {
+                Title = "Manage Columns",
+                Width = 400,
+                Height = 500,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+
+            var panel = new StackPanel { Margin = new Avalonia.Thickness(12), Spacing = 8 };
+
+            panel.Children.Add(new TextBlock
+            {
+                Text = "Select columns to show:",
+                FontWeight = FontWeight.Bold
+            });
+
+            var scrollViewer = new ScrollViewer { Height = 350 };
+            var checkBoxPanel = new StackPanel { Spacing = 4 };
+            scrollViewer.Content = checkBoxPanel;
+            panel.Children.Add(scrollViewer);
+
+            // Create checkbox for each column
+            var columnCheckBoxes = new List<CheckBox>();
+            for (int i = 0; i < _columnHeaders.Count; i++)
+            {
+                var checkbox = new CheckBox
+                {
+                    Content = _columnHeaders[i],
+                    IsChecked = !_hiddenColumnIndices.Contains(i)
+                };
+                columnCheckBoxes.Add(checkbox);
+                checkBoxPanel.Children.Add(checkbox);
+            }
+
+            // Buttons
+            var selectButtons = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 8,
+                Margin = new Avalonia.Thickness(0, 8, 0, 0)
+            };
+            var showAllBtn = new Button { Content = "Show All" };
+            var hideAllBtn = new Button { Content = "Hide All" };
+            selectButtons.Children.Add(showAllBtn);
+            selectButtons.Children.Add(hideAllBtn);
+            panel.Children.Add(selectButtons);
+
+            var buttons = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 8,
+                Margin = new Avalonia.Thickness(0, 12, 0, 0)
+            };
+            var okBtn = new Button { Content = "OK" };
+            var cancelBtn = new Button { Content = "Cancel" };
+            buttons.Children.Add(okBtn);
+            buttons.Children.Add(cancelBtn);
+            panel.Children.Add(buttons);
+
+            dialog.Content = panel;
+
+            // Button handlers
+            showAllBtn.Click += (s, e) =>
+            {
+                foreach (var cb in columnCheckBoxes)
+                    cb.IsChecked = true;
+            };
+
+            hideAllBtn.Click += (s, e) =>
+            {
+                foreach (var cb in columnCheckBoxes)
+                    cb.IsChecked = false;
+            };
+
+            bool result = false;
+            okBtn.Click += async (s, e) =>
+            {
+                // Check if at least one column is visible
+                if (!columnCheckBoxes.Any(cb => cb.IsChecked == true))
+                {
+                    await ShowInfoDialog("Column Visibility", "At least one column must be visible.");
+                    return;
+                }
+                result = true;
+                dialog.Close();
+            };
+            cancelBtn.Click += (s, e) => dialog.Close();
+
+            await dialog.ShowDialog(this as Window);
+
+            if (!result) return;
+
+            // Update hidden columns
+            _hiddenColumnIndices.Clear();
+            for (int i = 0; i < columnCheckBoxes.Count; i++)
+            {
+                if (columnCheckBoxes[i].IsChecked != true)
+                {
+                    _hiddenColumnIndices.Add(i);
+                }
+            }
+
+            // Rebuild grid to reflect changes
+            RebuildGridColumns();
+
+            UpdateStatusBar();
+        }
+
+        public async void ShowSetValidationRuleDialog()
+        {
+            if (_columnHeaders.Count == 0) return;
+            int colIdx = GetCurrentColumnIndex();
+            if (colIdx <= 0 || colIdx > _columnHeaders.Count) colIdx = 1;
+            int headerIdx = colIdx - 1;
+
+            var dialog = new Window
+            {
+                Title = "Set Validation Rule",
+                Width = 360,
+                Height = 180,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+
+            var panel = new StackPanel { Margin = new Avalonia.Thickness(12), Spacing = 8 };
+            panel.Children.Add(new TextBlock { Text = $"Column: {_columnHeaders[headerIdx]}" });
+            var modeBox = new ComboBox
+            {
+                ItemsSource = new[] { "None", "Required", "Numeric" },
+                SelectedIndex = _columnValidationRules.TryGetValue(headerIdx, out var mode) ? (int)mode : 0
+            };
+            panel.Children.Add(modeBox);
+            var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+            var ok = new Button { Content = "OK" };
+            var cancel = new Button { Content = "Cancel" };
+            buttons.Children.Add(ok);
+            buttons.Children.Add(cancel);
+            panel.Children.Add(buttons);
+            dialog.Content = panel;
+
+            bool confirmed = false;
+            ok.Click += (s, e) => { confirmed = true; dialog.Close(); };
+            cancel.Click += (s, e) => dialog.Close();
+
+            await dialog.ShowDialog(this as Window);
+            if (!confirmed) return;
+
+            _columnValidationRules[headerIdx] = (ColumnValidationMode)modeBox.SelectedIndex;
+            UpdateStatusBar();
+        }
+
+        public async void ValidateDataAndShowReport()
+        {
+            if (_columnValidationRules.Count == 0)
+            {
+                await ShowInfoDialog("Validation", "No validation rules configured.");
+                return;
+            }
+
+            var issues = new List<string>();
+            foreach (var rule in _columnValidationRules)
+            {
+                int headerIdx = rule.Key;
+                var mode = rule.Value;
+                if (mode == ColumnValidationMode.None || headerIdx < 0 || headerIdx >= _columnHeaders.Count) continue;
+
+                int col = headerIdx + 1;
+                for (int row = 0; row < _sourceData.Count; row++)
+                {
+                    string value = col < _sourceData[row].Count ? (_sourceData[row][col] ?? "") : "";
+                    bool invalid;
+                    if (mode == ColumnValidationMode.Required)
+                    {
+                        invalid = string.IsNullOrWhiteSpace(value);
+                    }
+                    else if (mode == ColumnValidationMode.Numeric)
+                    {
+                        double parsed;
+                        invalid = !string.IsNullOrWhiteSpace(value) && !double.TryParse(value, out parsed);
+                    }
+                    else
+                    {
+                        invalid = false;
+                    }
+                    if (invalid)
+                    {
+                        issues.Add($"Row {row}, Column '{_columnHeaders[headerIdx]}': '{value}'");
+                    }
+                }
+            }
+
+            string message = issues.Count == 0
+                ? "Validation passed. No issues found."
+                : $"Found {issues.Count} issue(s):\n\n" + DialogHelper.BuildTruncatedList(issues, 30);
+            await ShowInfoDialog("Validation Report", message);
+        }
+
+        public void AutocompleteCurrentCell()
+        {
+            int colIdx = GetCurrentColumnIndex();
+            if (colIdx <= 0) return;
+            if (!(_twodaTable?.SelectedItem is ObservableCollection<string> selectedRow)) return;
+            int rowIdx = _sourceData.IndexOf(selectedRow);
+            if (rowIdx < 0 || colIdx >= selectedRow.Count) return;
+
+            string current = selectedRow[colIdx] ?? "";
+            if (string.IsNullOrWhiteSpace(current)) return;
+
+            var candidates = _sourceData
+                .Where((r, i) => i != rowIdx && colIdx < r.Count)
+                .Select(r => r[colIdx] ?? "")
+                .Where(v => !string.IsNullOrWhiteSpace(v) && v.StartsWith(current, StringComparison.OrdinalIgnoreCase))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(v => v.Length)
+                .ToList();
+
+            if (candidates.Count == 0) return;
+            string match = candidates[0];
+            if (string.Equals(match, current, StringComparison.Ordinal)) return;
+
+            _commandStack.Execute(new SetCellCommand(_sourceData, rowIdx, colIdx, current, match));
+            UpdateStatusBar();
+        }
+
+        private async Task ShowInfoDialog(string title, string text)
+        {
+            var dialog = new Window
+            {
+                Title = title,
+                Width = 520,
+                Height = 360,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+            var panel = new StackPanel { Margin = new Avalonia.Thickness(12), Spacing = 8 };
+            panel.Children.Add(new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap });
+            var closeBtn = new Button { Content = "Close", HorizontalAlignment = HorizontalAlignment.Left };
+            closeBtn.Click += (s, e) => dialog.Close();
+            panel.Children.Add(closeBtn);
+            dialog.Content = new ScrollViewer { Content = panel };
+            await dialog.ShowDialog(this as Window);
+        }
+    }
+
+    public enum ColumnValidationMode
+    {
+        None = 0,
+        Required = 1,
+        Numeric = 2
     }
 
     public enum VerticalHeaderOption

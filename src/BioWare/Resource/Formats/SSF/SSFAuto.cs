@@ -15,6 +15,8 @@ namespace BioWare.Resource.Formats.SSF
     /// </summary>
     public static class SSFAuto
     {
+        private const string UnsupportedSsfFormatMessage = "Unsupported format specified; use SSF or SSF_XML.";
+
         /// <summary>
         /// Returns what format the SSF data is believed to be in.
         /// This function performs a basic check and does not guarantee accuracy of the result or integrity of the data.
@@ -89,6 +91,34 @@ namespace BioWare.Resource.Formats.SSF
         }
 
         /// <summary>
+        /// Reads SSF data using the appropriate reader for the detected format.
+        /// Consolidates repeated source dispatch logic.
+        /// </summary>
+        private static SSF ReadSsfFromSource(object source, int offset, int size, ResourceType format)
+        {
+            if (format == ResourceType.SSF)
+            {
+                if (source is string filepath)
+                {
+                    var reader = new SSFBinaryReader(filepath, offset, size);
+                    return reader.Load();
+                }
+
+                byte[] data = ResourceAutoHelpers.SourceDispatcher.ToBytes(source);
+                var binReader = new SSFBinaryReader(data, offset, size);
+                return binReader.Load();
+            }
+
+            if (format == ResourceType.SSF_XML)
+            {
+                var reader = new SSFXMLReader(source, offset, size);
+                return reader.Load();
+            }
+
+            throw new ArgumentException(UnsupportedSsfFormatMessage, nameof(format));
+        }
+
+        /// <summary>
         /// Reads the SSF data from the source location with the specified format (SSF or SSF_XML).
         /// The file format is automatically determined before parsing the data if not specified.
         /// 1:1 port of Python read_ssf function.
@@ -103,59 +133,8 @@ namespace BioWare.Resource.Formats.SSF
                 throw new ArgumentException("Failed to determine the format of the SSF file.");
             }
 
-            if (format == ResourceType.SSF)
-            {
-                int sizeValue = size ?? 0;
-                if (source is string filepath)
-                {
-                    var reader = new SSFBinaryReader(filepath, offset, sizeValue);
-                    return reader.Load();
-                }
-                if (source is byte[] data)
-                {
-                    var reader = new SSFBinaryReader(data, offset, sizeValue);
-                    return reader.Load();
-                }
-                if (source is Stream stream)
-                {
-                    var reader = new SSFBinaryReader(stream, offset, sizeValue);
-                    return reader.Load();
-                }
-                throw new ArgumentException("Source must be string, byte[], or Stream");
-            }
-
-            if (format == ResourceType.SSF_XML)
-            {
-                int sizeValue = size ?? 0;
-                var reader = new SSFXMLReader(source, offset, sizeValue);
-                if (source is string filepath)
-                {
-                    // Check if the string is XML content (starts with '<') or a file path
-                    if (!string.IsNullOrWhiteSpace(filepath) && filepath.TrimStart().StartsWith("<"))
-                    {
-                        // Raw XML content - use Load() method which handles offset/size
-                        return reader.Load();
-                    }
-                    else
-                    {
-                        // File path - use Load() method which handles offset/size
-                        return reader.Load();
-                    }
-                }
-                if (source is byte[] bytes)
-                {
-                    // Use Load() method which handles offset/size
-                    return reader.Load();
-                }
-                if (source is Stream stream)
-                {
-                    // Use Load() method which handles offset/size
-                    return reader.Load();
-                }
-                throw new ArgumentException("Source must be XML content, file path, byte array, or stream.");
-            }
-
-            throw new ArgumentException("Unsupported format specified; use SSF or SSF_XML.");
+            int sizeValue = size ?? 0;
+            return ReadSsfFromSource(source, offset, sizeValue, format);
         }
 
         /// <summary>
@@ -173,20 +152,18 @@ namespace BioWare.Resource.Formats.SSF
         /// </summary>
         public static void WriteSsf(SSF ssf, string target, ResourceType fileFormat)
         {
+            ValidateSsfFormat(fileFormat, nameof(fileFormat));
+
             if (fileFormat == ResourceType.SSF)
             {
                 var writer = new SSFBinaryWriter(ssf);
                 byte[] data = writer.Write();
                 File.WriteAllBytes(target, data);
             }
-            else if (fileFormat == ResourceType.SSF_XML)
+            else
             {
                 var writer = new SSFXMLWriter(ssf);
                 writer.Write(target);
-            }
-            else
-            {
-                throw new ArgumentException("Unsupported format specified; use SSF or SSF_XML.");
             }
         }
 
@@ -198,19 +175,28 @@ namespace BioWare.Resource.Formats.SSF
         public static byte[] BytesSsf(SSF ssf, [CanBeNull] ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.SSF;
+            ValidateSsfFormat(format, nameof(fileFormat));
+
             if (format == ResourceType.SSF)
             {
                 var writer = new SSFBinaryWriter(ssf);
                 return writer.Write();
             }
-            else if (format == ResourceType.SSF_XML)
+            else
             {
                 var writer = new SSFXMLWriter(ssf);
                 return writer.Write();
             }
-            else
+        }
+
+        /// <summary>
+        /// Validates SSF serialization format support.
+        /// </summary>
+        private static void ValidateSsfFormat(ResourceType format, string formatParamName)
+        {
+            if (format != ResourceType.SSF && format != ResourceType.SSF_XML)
             {
-                throw new ArgumentException("Unsupported format specified; use SSF or SSF_XML.");
+                throw new ArgumentException(UnsupportedSsfFormatMessage, formatParamName);
             }
         }
     }

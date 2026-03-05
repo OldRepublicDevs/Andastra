@@ -673,7 +673,7 @@ namespace BioWare.Extract.SaveData
             }
 
             byte[] bytes = new GFFBinaryWriter(gff).Write();
-            File.WriteAllBytes(_partyTablePath, bytes);
+            SaveFolderIO.WriteBytesAtomic(_partyTablePath, bytes);
         }
 
         /// <summary>
