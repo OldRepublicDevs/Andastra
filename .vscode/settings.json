@@ -1,18 +1,21 @@
 {
   "avalonia.dotnetSdkVersion": "8.0",
-  "files.autoSaveWorkspaceFilesOnly": true,
-  "files.autoSaveWhenNoErrors": false,
-  "files.autoSave": "onFocusChange",
+  "chat.mcp.discovery.enabled": {
+    "cursor-workspace": true
+  },
   "dotrush.roslyn.projectOrSolutionFiles": [
     "Andastra.sln"
   ],
+  "files.autoSave": "onFocusChange",
+  "files.autoSaveWhenNoErrors": false,
+  "files.autoSaveWorkspaceFilesOnly": true,
   "files.exclude": {
     "**/.history/**": true
   },
-  "search.exclude": {
+  "files.watcherExclude": {
     "**/.history/**": true
   },
-  "files.watcherExclude": {
+  "search.exclude": {
     "**/.history/**": true
   }
 }

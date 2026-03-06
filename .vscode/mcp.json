@@ -1,32 +1,47 @@
 {
   "servers": {
-		"agentdecompile-proxy": {
-			"type": "stdio",
-			"command": "uvx",
-			"args": [
-				"--refresh",
-				"--from",
-        "git+https://github.com/bolabaden/agentdecompile",
-				"agentdecompile-server",
-				"--transport",
-				"stdio",
-				"--backend-url",
-				"http://170.9.241.140:8080",
-				"--mcp-server-url",
-				"http://127.0.0.1:8080",
-				"--ghidra-server-host",
-				"170.9.241.140",
-				"--server-port",
-				"13100",
-				"--server-username",
-				"OpenKotOR",
-				"--server-password",
-				"MuchaShakaPaka",
-				"--ghidra-server-repository",
-				"Odyssey"
-			]
-		}
   },
   "inputs": [
+    {
+      "id": "ad-http-host",
+      "type": "promptString",
+      "description": "Hostname for the Agent Decompile HTTP server",
+      "default": "localhost"
+    },
+    {
+      "id": "ad-http-port",
+      "type": "promptString",
+      "description": "Port for the Agent Decompile HTTP server",
+      "default": "8080"
+    },
+    {
+      "id": "ad-http-ghidra-server-host",
+      "type": "promptString",
+      "description": "Hostname for the Ghidra server (used by the Agent Decompile HTTP server)",
+      "default": "localhost"
+    },
+    {
+      "id": "ad-http-ghidra-server-port",
+      "type": "promptString",
+      "description": "Port for the Ghidra server (used by the Agent Decompile HTTP server)",
+      "default": "13100"
+    },
+    {
+      "id": "ghidra-server-username",
+      "type": "promptString",
+      "description": "Username for authenticating with the Ghidra server",
+      "default": "OpenKotOR"
+    },
+    {
+      "id": "ghidra-server-password",
+      "type": "promptString",
+      "description": "Password for authenticating with the Ghidra server",
+    },
+    {
+      "id": "ghidra-server-repository",
+      "type": "promptString",
+      "description": "Ghidra repository to use for decompilation",
+      "default": ""
+    }
   ]
 }

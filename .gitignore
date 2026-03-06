@@ -72,3 +72,4 @@ helper_scripts/test_kaitai_*.ps1
 dist/
 publish_*.log
 *.log
+agentdecompile_projects/

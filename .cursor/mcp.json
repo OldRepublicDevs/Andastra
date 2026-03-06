@@ -1,19 +1,27 @@
 {
   "mcpServers": {
-    "pyghidra": {
-        "command": "uvx",
-        "args": [
-            "pyghidra-mcp",
-            "--project-path",
-            "C:/Users/boden/AndastraGhidraProject.gpr",
-            "--host",
-            "170.9.241.140",
-            "--port",
-            "8000"
-        ],
-        "env": {
-            "GHIDRA_INSTALL_DIR": "C:/Users/boden/Downloads/ghidra_12.0_PUBLIC_20251205/ghidra_12.0_PUBLIC"
-        }
+    "roslyn-navicode": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "C:/GitHub/mcp/RoslynMCP/RoslynMcpServer"
+      ],
+      "env": {
+        "DOTNET_ENVIRONMENT": "Production",
+        "LOG_LEVEL": "Information"
+      }
+    },
+    "ai_context": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "--refresh",
+        "--from",
+        "git+https://github.com/doobidoo/mcp-memory-service",
+        "mcp-memory-service"
+      ]
     }
   }
 }
