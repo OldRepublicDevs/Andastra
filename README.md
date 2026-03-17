@@ -248,11 +248,7 @@ When contributing to Andastra:
 
 ## License
 
-This project is licensed under the Business Source License 1.1 (BSL-1.1). See the [LICENSE](LICENSE) file for details.
-
-**Important**: The BSL is not an Open Source license. The Licensed Work will transition to the GNU General Public License v2.0 or later on 2029-12-31 (Change Date).
-
-**Production Use**: Use of this software in a production environment, to provide services to third parties, or to generate revenue requires explicit authorization from the Licensor.
+This project is licensed under AGPLv3. See the [LICENSE](LICENSE) file for details.
 
 ## Status
 
