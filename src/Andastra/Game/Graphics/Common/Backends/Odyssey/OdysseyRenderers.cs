@@ -45,8 +45,8 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Loads and converts MDL mesh data to OpenGL buffers for room rendering.
-        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Room mesh loading and OpenGL buffer creation
-        /// /K1/k1_win_gog_swkotor.exe: PartTriMesh @ 0x00445840, findalltrimeshparts @ 0x004461d0, SpawnRoom @ 0x00456f30
+        /// Based on the recovered room-mesh loading behavior in /K1_swkotor and /TSL_swkotor2.
+        /// Reference: /K1_swkotor @ 0x00445840, /K1_swkotor @ 0x004461d0, /K1_swkotor @ 0x00456f30
         /// Original engine recursively finds all trimesh parts and converts them to OpenGL VBO/IBO buffers.
         /// </summary>
         public IRoomMeshData LoadRoomMesh(string modelResRef, MDL mdl)
@@ -114,8 +114,8 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Recursively extracts geometry from MDL node hierarchy.
-        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: findalltrimeshparts recursively processes all trimesh nodes
-        /// /K1/k1_win_gog_swkotor.exe: findalltrimeshparts @ 0x004461d0 (recursively finds all PartTriMesh instances)
+        /// Based on the recovered room-mesh traversal behavior in /K1_swkotor and /TSL_swkotor2.
+        /// Reference: /K1_swkotor @ 0x004461d0 (recursively finds all PartTriMesh instances)
         /// </summary>
         private void ExtractNodeGeometry([NotNull] MDLNode node, Matrix4x4 parentTransform, [NotNull] List<VertexPositionNormalTexture> vertices, [NotNull] List<int> indices)
         {
@@ -188,8 +188,8 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Extracts geometry from an MDL mesh and applies transform.
-        /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: PartTriMesh processes vertex and face data
-        /// /K1/k1_win_gog_swkotor.exe: PartTriMesh @ 0x00445840 (processes trimesh vertex/face data)
+        /// Based on the recovered mesh extraction behavior in /K1_swkotor and /TSL_swkotor2.
+        /// Reference: /K1_swkotor @ 0x00445840 (processes trimesh vertex/face data)
         /// </summary>
         private void ExtractMeshGeometry([NotNull] MDLMesh mesh, Matrix4x4 transform, [NotNull] List<VertexPositionNormalTexture> vertices, [NotNull] List<int> indices)
         {
@@ -275,7 +275,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// <summary>
     /// Odyssey room mesh data implementation.
     /// Stores OpenGL VBO/IBO buffers for room mesh rendering.
-    /// Based on k1_win_gog_swkotor.exe/k2_win_gog_aspyr_swkotor2.exe: Room mesh data structure with vertex/index buffers
+    /// Based on the recovered room-mesh buffer layout in /K1_swkotor and /TSL_swkotor2.
     /// </summary>
     public class OdysseyRoomMeshData : IRoomMeshData, IDisposable
     {

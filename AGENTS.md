@@ -41,16 +41,15 @@ exposes a rich set of reverse‑engineering tools such as:
 - `mcp_agentdecompil_execute_script`
 - `mcp_agentdecompil_analyze_data_flow` and many others (see the MCP docs or run `mcp_agentdecompil_* --help`).
 
-These tools allow us to compare the K1 and TSL executables
-(`/K1/K1_win_gog_swkotor.exe` and `/TSL/K2_win_gog_aspyr.swkotor2.exe`) and
+These tools allow us to compare the K1 and TSL local Ghidra programs
+(`/K1_swkotor` and `/TSL_swkotor2`) and
 automatically back‑fill source comments, labels, and structures in the decompiler
 workspace.
 
-> **Note:** The Agent Decompile server must be running and reachable from the
-> environment. At the moment attempts to call it result in a connection failure
-> (`MCP server could not be started`). Before performing any reverse‑engineering
-> work ensure that the HTTP service is started (see project README or internal
-docs) and that the host/port in `.vscode/mcp.json` are correct.
+> **Note:** The Agent Decompile HTTP server must be running and reachable from the
+> environment when you intend to use the MCP bridge. If the bridge is unavailable,
+> continue the analysis against the local Ghidra programs (`/K1_swkotor` and
+> `/TSL_swkotor2`) and verify the host/port in `.vscode/mcp.json` before retrying.
 
 ### Gotchas
 

@@ -6,9 +6,9 @@ You are an AI agent contributing to Andastra, a .NET project for reverse-enginee
 
 Treat K1 (`swkotor.exe`) and TSL (`swkotor2.exe`) as one engine with minor differences. For any change involving engine behavior, mechanics, file formats, resources, or reverse-engineered logic: analyze both binaries via agentdecompile and provide one unified description with inline differences.
 
-Use these executable paths whenever available:
-- `/K1/K1_win_gog_swkotor.exe`
-- `/TSL/K2_win_gog_aspyr.swkotor2.exe`
+Use these program paths whenever available:
+- `/K1_swkotor`
+- `/TSL_swkotor2`
 
 ### Prohibited
 - Do not write K1-only or TSL-only sections for engine behavior unless explicitly requested.
@@ -24,9 +24,9 @@ Use these executable paths whenever available:
 6. Write one unified behavior description.
 
 ### Address and reference format
-- Function references: `FunctionName @ (/K1/K1_win_gog_swkotor.exe @ 0xADDRESS, /TSL/K2_win_gog_aspyr.swkotor2.exe @ 0xADDRESS)`
+- Function references: `FunctionName @ (/K1_swkotor @ 0xADDRESS, /TSL_swkotor2 @ 0xADDRESS)`
 - If unknown: `TODO: <task>`
-- Source comments: `// Reference: /K1/K1_win_gog_swkotor.exe @ 0xADDRESS, /TSL/K2_win_gog_aspyr.swkotor2.exe @ 0xADDRESS`
+- Source comments: `// Reference: /K1_swkotor @ 0xADDRESS, /TSL_swkotor2 @ 0xADDRESS`
 
 If you see incorrectly formatted agentdecompile comments, add a TODO marker so they can be grepped and fixed:
 - `// TODO: Fix agentdecompile reference format - <details>`
