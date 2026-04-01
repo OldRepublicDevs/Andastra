@@ -1,0 +1,79 @@
+[
+  {
+    "k1_addr": "0x406c70",
+    "tsl_addr": "0x40ec10",
+    "name": "CExoString::StringCopy",
+    "class": "CExoString",
+    "method": "StringCopy",
+    "k1_sz": 113,
+    "tsl_sz": 105,
+    "n_named": 2,
+    "via": "triple_fp_size_callee_count_named"
+  },
+  {
+    "k1_addr": "0x652ad0",
+    "tsl_addr": "0x4c1a40",
+    "name": "CSWCMessage::HandleServerToPlayerEndGame",
+    "class": "CSWCMessage",
+    "method": "HandleServerToPlayerEndGame",
+    "k1_sz": 33,
+    "tsl_sz": 45,
+    "n_named": 2,
+    "via": "triple_fp_size_callee_count_named"
+  },
+  {
+    "k1_addr": "0x5d1370",
+    "tsl_addr": "0x640f80",
+    "name": "CScriptCompilerIncludeFileStackEntry::~CScriptCompilerIncludeFileStackEntry",
+    "class": "CScriptCompilerIncludeFileStackEntry",
+    "method": "~CScriptCompilerIncludeFileStackEntry",
+    "k1_sz": 76,
+    "tsl_sz": 94,
+    "n_named": 2,
+    "via": "triple_fp_size_callee_count_named"
+  },
+  {
+    "k1_addr": "0x4e1b80",
+    "tsl_addr": "0x73f2a0",
+    "name": "OnRemoveArcaneSpellFailure",
+    "class": "",
+    "method": "OnRemoveArcaneSpellFailure",
+    "k1_sz": 149,
+    "tsl_sz": 153,
+    "n_named": 2,
+    "via": "triple_fp_size_callee_count_named"
+  },
+  {
+    "k1_addr": "0x4b1650",
+    "tsl_addr": "0x7b4920",
+    "name": "CServerExoAppInternal::Initialize",
+    "class": "CServerExoAppInternal",
+    "method": "Initialize",
+    "k1_sz": 46,
+    "tsl_sz": 49,
+    "n_named": 2,
+    "via": "triple_fp_size_callee_count_named"
+  },
+  {
+    "k1_addr": "0x4873c0",
+    "tsl_addr": "0x878d00",
+    "name": "GetSkinSphereMapVP",
+    "class": "",
+    "method": "GetSkinSphereMapVP",
+    "k1_sz": 153,
+    "tsl_sz": 148,
+    "n_named": 2,
+    "via": "triple_fp_size_callee_count_named"
+  },
+  {
+    "k1_addr": "0x44bee0",
+    "tsl_addr": "0x8d7fc0",
+    "name": "AurResGetLast",
+    "class": "",
+    "method": "AurResGetLast",
+    "k1_sz": 68,
+    "tsl_sz": 72,
+    "n_named": 2,
+    "via": "triple_fp_size_callee_count_named"
+  }
+]

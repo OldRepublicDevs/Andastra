@@ -1,0 +1,68 @@
+[
+  {
+    "k1_addr": "0x46ef10",
+    "tsl_addr": "0x883240",
+    "name": "GLRender::DrawAxisAlignedFrame",
+    "class": "GLRender",
+    "method": "DrawAxisAlignedFrame",
+    "k1_sz": 328,
+    "tsl_sz": 686,
+    "n_callees": 27,
+    "via": "callee_size_fingerprint"
+  },
+  {
+    "k1_addr": "0x401a30",
+    "tsl_addr": "0x409060",
+    "name": "initCinematicBackdrop",
+    "class": "",
+    "method": "initCinematicBackdrop",
+    "k1_sz": 384,
+    "tsl_sz": 511,
+    "n_callees": 15,
+    "via": "callee_size_fingerprint"
+  },
+  {
+    "k1_addr": "0x424230",
+    "tsl_addr": "0x825a30",
+    "name": "GLRender::CreateProcessedCubeTexture",
+    "class": "GLRender",
+    "method": "CreateProcessedCubeTexture",
+    "k1_sz": 845,
+    "tsl_sz": 1167,
+    "n_callees": 11,
+    "via": "callee_size_fingerprint"
+  },
+  {
+    "k1_addr": "0x450bb0",
+    "tsl_addr": "0x85ca50",
+    "name": "Scene::RenderMotionBlur",
+    "class": "Scene",
+    "method": "RenderMotionBlur",
+    "k1_sz": 125,
+    "tsl_sz": 217,
+    "n_callees": 10,
+    "via": "callee_size_fingerprint"
+  },
+  {
+    "k1_addr": "0x4510e0",
+    "tsl_addr": "0x85e270",
+    "name": "RenderPaths",
+    "class": "",
+    "method": "RenderPaths",
+    "k1_sz": 259,
+    "tsl_sz": 361,
+    "n_callees": 10,
+    "via": "callee_size_fingerprint"
+  },
+  {
+    "k1_addr": "0x4503a0",
+    "tsl_addr": "0x859930",
+    "name": "Scene::DoDistortionBuckets",
+    "class": "Scene",
+    "method": "DoDistortionBuckets",
+    "k1_sz": 154,
+    "tsl_sz": 236,
+    "n_callees": 8,
+    "via": "callee_size_fingerprint"
+  }
+]

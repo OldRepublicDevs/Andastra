@@ -1,0 +1,269 @@
+[
+  {
+    "k1_addr": "0x60b750",
+    "tsl_addr": "0x410200",
+    "name": "CSWCCreaturePartyStatus::CSWCCreaturePartyStatus",
+    "class": "CSWCCreaturePartyStatus",
+    "method": "CSWCCreaturePartyStatus",
+    "callees": [
+      "CExoString",
+      "operator="
+    ],
+    "callers": [
+      "HandleServerToPlayerCreatureUpdate_Update"
+    ],
+    "via": "joint_callee_caller_fingerprint"
+  },
+  {
+    "k1_addr": "0x63d1d0",
+    "tsl_addr": "0x4771c0",
+    "name": "CSWCObject::NewVocalization",
+    "class": "CSWCObject",
+    "method": "NewVocalization",
+    "callees": [
+      "CExoSoundSource",
+      "operator_new"
+    ],
+    "callers": [
+      "HandleServerToPlayerChat"
+    ],
+    "via": "joint_callee_caller_fingerprint"
+  },
+  {
+    "k1_addr": "0x628750",
+    "tsl_addr": "0x4d1300",
+    "name": "CGuiInGame::SetReplyData",
+    "class": "CGuiInGame",
+    "method": "SetReplyData",
+    "callees": [
+      "operator=",
+      "operator_new"
+    ],
+    "callers": [
+      "HandleDialogReplies"
+    ],
+    "via": "joint_callee_caller_fingerprint"
+  },
+  {
+    "k1_addr": "0x6288f0",
+    "tsl_addr": "0x4d1550",
+    "name": "CGuiInGame::GetCameraAnimationName",
+    "class": "CGuiInGame",
+    "method": "GetCameraAnimationName",
+    "callees": [
+      "CExoString",
+      "operator=",
+      "~CExoString"
+    ],
+    "callers": [
+      "SetAnimatedCamera"
+    ],
+    "via": "joint_callee_caller_fingerprint"
+  },
+  {
+    "k1_addr": "0x59b310",
+    "tsl_addr": "0x4ecc30",
+    "name": "CSWSpell::CSWSpell",
+    "class": "CSWSpell",
+    "method": "CSWSpell",
+    "callees": [
+      "CExoString",
+      "CResRef",
+      "operator="
+    ],
+    "callers": [],
+    "via": "joint_callee_caller_fingerprint"
+  },
+  {
+    "k1_addr": "0x683bb0",
+    "tsl_addr": "0x5068c0",
+    "name": "CSWCDoor::CSWCDoor",
+    "class": "CSWCDoor",
+    "method": "CSWCDoor",
+    "callees": [
+      "CExoString",
+      "CSWCObject",
+      "GetWorldTime",
+      "GetWorldTimer",
+      "operator="
+    ],
+    "callers": [
+      "HandleServerToPlayerDoorUpdate_Add"
+    ],
+    "via": "joint_callee_caller_fingerprint"
+  },
+  {
+    "k1_addr": "0x682270",
+    "tsl_addr": "0x5347d0",
+    "name": "CSWCPlaceable::CSWCPlaceable",
+    "class": "CSWCPlaceable",
+    "method": "CSWCPlaceable",
+    "callees": [
+      "CExoString",
+      "CSWCObject",
+      "GetWorldTime",
+      "GetWorldTimer",
+      "operator="
+    ],
+    "callers": [
+      "AddPlaceableObjectStatic",
+      "HandleServerToPlayerPlaceableUpdate_Add"
+    ],
+    "via": "joint_callee_caller_fingerprint"
+  },
+  {
+    "k1_addr": "0x682e20",
+    "tsl_addr": "0x5371e0",
+    "name": "CSWCPlaceable::SetAppearance",
+    "class": "CSWCPlaceable",
+    "method": "SetAppearance",
+    "callees": [
+      "CExoString",
+      "GetINTEntry",
+      "~CExoString"
+    ],
+    "callers": [
+      "AddPlaceableObjectStatic",
+      "HandleServerToPlayerPlaceableUpdate_Add"
+    ],
+    "via": "joint_callee_caller_fingerprint"
+  },
+  {
+    "k1_addr": "0x6914d0",
+    "tsl_addr": "0x5380e0",
+    "name": "CSWCTrigger::SetCursor",
+    "class": "CSWCTrigger",
+    "method": "SetCursor",
+    "callees": [
+      "CExoString",
+      "GetINTEntry",
+      "~CExoString"
+    ],
+    "callers": [
+      "HandleServerToPlayerTriggerUpdate_Add"
+    ],
+    "via": "joint_callee_caller_fingerprint"
+  },
+  {
+    "k1_addr": "0x6754d0",
+    "tsl_addr": "0x53ecd0",
+    "name": "CClientMsgSysAdmin::GetTokenPair",
+    "class": "CClientMsgSysAdmin",
+    "method": "GetTokenPair",
+    "callees": [
+      "CExoString",
+      "operator=",
+      "~CExoString"
+    ],
+    "callers": [
+      "HandleServerToSysAdminMessage"
+    ],
+    "via": "joint_callee_caller_fingerprint"
+  },
+  {
+    "k1_addr": "0x66b200",
+    "tsl_addr": "0x55aa20",
+    "name": "CSWCSoundObject::CSWCSoundObject",
+    "class": "CSWCSoundObject",
+    "method": "CSWCSoundObject",
+    "callees": [
+      "CSWCObject",
+      "operator_new"
+    ],
+    "callers": [
+      "LoadArea"
+    ],
+    "via": "joint_callee_caller_fingerprint"
+  },
+  {
+    "k1_addr": "0x407d50",
+    "tsl_addr": "0x61d550",
+    "name": "CExoResMan::ServiceFromImage",
+    "class": "CExoResMan",
+    "method": "ServiceFromImage",
+    "callees": [
+      "GetAtPos",
+      "GetNext"
+    ],
+    "callers": [
+      "Demand",
+      "Update"
+    ],
+    "via": "joint_callee_caller_fingerprint"
+  },
+  {
+    "k1_addr": "0x40d030",
+    "tsl_addr": "0x62c910",
+    "name": "CExoKeyTable::CExoKeyTable",
+    "class": "CExoKeyTable",
+    "method": "CExoKeyTable",
+    "callees": [
+      "CExoString",
+      "operator="
+    ],
+    "callers": [
+      "AddKeyTable"
+    ],
+    "via": "joint_callee_caller_fingerprint"
+  },
+  {
+    "k1_addr": "0x405d10",
+    "tsl_addr": "0x633790",
+    "name": "CExoArrayList<CExoString>::CExoArrayList",
+    "class": "CExoArrayList<CExoString>",
+    "method": "CExoArrayList",
+    "callees": [
+      "Add",
+      "CExoString"
+    ],
+    "callers": [
+      "PlayMoviesAsync"
+    ],
+    "via": "joint_callee_caller_fingerprint"
+  },
+  {
+    "k1_addr": "0x5d7ba0",
+    "tsl_addr": "0x638020",
+    "name": "CExoSoundInternal::AddToNonPlayingStreamingLoopingList",
+    "class": "CExoSoundInternal",
+    "method": "AddToNonPlayingStreamingLoopingList",
+    "callees": [
+      "AddHead"
+    ],
+    "callers": [
+      "Play",
+      "Render"
+    ],
+    "via": "joint_callee_caller_fingerprint"
+  },
+  {
+    "k1_addr": "0x5be830",
+    "tsl_addr": "0x7e6110",
+    "name": "CSWSFaction::Initialise",
+    "class": "CSWSFaction",
+    "method": "Initialise",
+    "callees": [
+      "CExoString",
+      "operator=",
+      "~CExoString"
+    ],
+    "callers": [
+      "CSWSFaction"
+    ],
+    "via": "joint_callee_caller_fingerprint"
+  },
+  {
+    "k1_addr": "0x5cb120",
+    "tsl_addr": "0x7f3b00",
+    "name": "CSWLevelStats::SetSkillRankChange",
+    "class": "CSWLevelStats",
+    "method": "SetSkillRankChange",
+    "callees": [],
+    "callers": [
+      "AutoLevelup",
+      "HandlePlayerToServerLevelUpMessage",
+      "ReadStatsFromGff"
+    ],
+    "via": "joint_callee_caller_fingerprint"
+  }
+]
