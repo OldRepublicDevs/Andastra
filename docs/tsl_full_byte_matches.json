@@ -1,0 +1,12 @@
+[
+  {
+    "k1_addr": "0x00704288",
+    "tsl_addr": "0x00931d28",
+    "name": "_inverseTrigInternal_checkNanInf",
+    "class": "",
+    "method": "_inverseTrigInternal_checkNanInf",
+    "k1_size": 22,
+    "tsl_size": 22,
+    "via": "full_byte_masked_fingerprint"
+  }
+]

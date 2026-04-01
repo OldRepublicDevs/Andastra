@@ -1,0 +1,20 @@
+[
+  {
+    "k1_addr": "0x00704288",
+    "tsl_addr": "0x00931d28",
+    "name": "_inverseTrigInternal_checkNanInf",
+    "class": "",
+    "method": "_inverseTrigInternal_checkNanInf",
+    "static_bytes": 62,
+    "via": "flirt_pattern_match"
+  },
+  {
+    "k1_addr": "0x00705920",
+    "tsl_addr": "0x00924c30",
+    "name": "_strcat",
+    "class": "",
+    "method": "_strcat",
+    "static_bytes": 64,
+    "via": "flirt_pattern_match"
+  }
+]

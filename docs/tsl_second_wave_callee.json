@@ -1,0 +1,152 @@
+[
+  {
+    "k1_addr": "0x5cb1b0",
+    "tsl_addr": "0x44e5b0",
+    "name": "CSWLevelStats::CSWLevelStats",
+    "class": "CSWLevelStats",
+    "method": "CSWLevelStats",
+    "named_callees": [
+      "`eh_vector_constructor_iterator'",
+      "operator_new"
+    ],
+    "via": "second_wave_callee_name_fingerprint"
+  },
+  {
+    "k1_addr": "0x652ad0",
+    "tsl_addr": "0x4c1a40",
+    "name": "CSWCMessage::HandleServerToPlayerEndGame",
+    "class": "CSWCMessage",
+    "method": "HandleServerToPlayerEndGame",
+    "named_callees": [
+      "ReadCExoString",
+      "~CExoString"
+    ],
+    "via": "second_wave_callee_name_fingerprint"
+  },
+  {
+    "k1_addr": "0x628750",
+    "tsl_addr": "0x4d1300",
+    "name": "CGuiInGame::SetReplyData",
+    "class": "CGuiInGame",
+    "method": "SetReplyData",
+    "named_callees": [
+      "operator=",
+      "operator_new"
+    ],
+    "via": "second_wave_callee_name_fingerprint"
+  },
+  {
+    "k1_addr": "0x66c420",
+    "tsl_addr": "0x53a5f0",
+    "name": "CSWMiniGameObject::LoadScripts",
+    "class": "CSWMiniGameObject",
+    "method": "LoadScripts",
+    "named_callees": [
+      "CResRef",
+      "ReadFieldCResRef"
+    ],
+    "via": "second_wave_callee_name_fingerprint"
+  },
+  {
+    "k1_addr": "0x59d860",
+    "tsl_addr": "0x60c330",
+    "name": "CSWSExpression::NewNode",
+    "class": "CSWSExpression",
+    "method": "NewNode",
+    "named_callees": [
+      "CExoString",
+      "operator_new"
+    ],
+    "via": "second_wave_callee_name_fingerprint"
+  },
+  {
+    "k1_addr": "0x4077b0",
+    "tsl_addr": "0x61c890",
+    "name": "CExoResMan::Malloc",
+    "class": "CExoResMan",
+    "method": "Malloc",
+    "named_callees": [
+      "FreeChunk",
+      "operator_new"
+    ],
+    "via": "second_wave_callee_name_fingerprint"
+  },
+  {
+    "k1_addr": "0x59b310",
+    "tsl_addr": "0x62fa20",
+    "name": "CSWSpell::CSWSpell",
+    "class": "CSWSpell",
+    "method": "CSWSpell",
+    "named_callees": [
+      "CExoString",
+      "CResRef",
+      "operator="
+    ],
+    "via": "second_wave_callee_name_fingerprint"
+  },
+  {
+    "k1_addr": "0x4cac30",
+    "tsl_addr": "0x6a6760",
+    "name": "CSWSObject::AddActionNodeParameter",
+    "class": "CSWSObject",
+    "method": "AddActionNodeParameter",
+    "named_callees": [
+      "CExoString",
+      "operator=",
+      "operator_new"
+    ],
+    "via": "second_wave_callee_name_fingerprint"
+  },
+  {
+    "k1_addr": "0x4c6830",
+    "tsl_addr": "0x730ca0",
+    "name": "NWPlayerCharacterList_st::NWPlayerCharacterList_st",
+    "class": "NWPlayerCharacterList_st",
+    "method": "NWPlayerCharacterList_st",
+    "named_callees": [
+      "CExoLocString",
+      "CResRef"
+    ],
+    "via": "second_wave_callee_name_fingerprint"
+  },
+  {
+    "k1_addr": "0x4b1580",
+    "tsl_addr": "0x7b2920",
+    "name": "CServerExoAppInternal::GetModuleName",
+    "class": "CServerExoAppInternal",
+    "method": "GetModuleName",
+    "named_callees": [
+      "CExoString",
+      "GetModule"
+    ],
+    "via": "second_wave_callee_name_fingerprint"
+  },
+  {
+    "k1_addr": "0x590820",
+    "tsl_addr": "0x7ed360",
+    "name": "CSWSEncounter::ReadEncounterScriptsFromGff",
+    "class": "CSWSEncounter",
+    "method": "ReadEncounterScriptsFromGff",
+    "named_callees": [
+      "CExoString",
+      "CResRef",
+      "ReadFieldCResRef",
+      "operator=",
+      "self_return",
+      "~CExoString"
+    ],
+    "via": "second_wave_callee_name_fingerprint"
+  },
+  {
+    "k1_addr": "0x479430",
+    "tsl_addr": "0x852370",
+    "name": "VertexPrimitiveDangly::VertexPrimitiveDangly",
+    "class": "VertexPrimitiveDangly",
+    "method": "VertexPrimitiveDangly",
+    "named_callees": [
+      "VertexPrimitiveFlat",
+      "operator_new"
+    ],
+    "via": "second_wave_callee_name_fingerprint"
+  }
+]
