@@ -1,4 +1,4 @@
-# Ghidra TSL rename script  (676 entries)
+# Ghidra TSL rename script  (732 entries)
 from ghidra.program.model.symbol import SourceType
 fm = currentProgram.getFunctionManager()
 sm = currentProgram.getSymbolTable()
@@ -8791,5 +8791,733 @@ try:
     else: errors += 1
 except Exception as e:
     print('ERR 0x60FD90: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x72F830))
+    if fn:
+        fn.setName('SavePlayers', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x72F830: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x59BAA0))
+    if fn:
+        fn.setName('PopulateItemListBox', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x59BAA0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x698570))
+    if fn:
+        fn.setName('TransferGold', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x698570: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x444550))
+    if fn:
+        fn.setName('ChangeCharacter', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x444550: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x556BA0))
+    if fn:
+        fn.setName('PlayAmbientSound', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x556BA0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x599200))
+    if fn:
+        fn.setName('HandleInputEvent', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x599200: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x7EFAC0))
+    if fn:
+        fn.setName('CreateDefaultFactions', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x7EFAC0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x8063A0))
+    if fn:
+        fn.setName('HandlePlayerToServerAreaMessage', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x8063A0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x431A30))
+    if fn:
+        fn.setName('UnloadModule', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x431A30: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x44B360))
+    if fn:
+        fn.setName('CrownFutureLeader', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x44B360: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x5F77B0))
+    if fn:
+        fn.setName('HandleInputEvent', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x5F77B0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x6372E0))
+    if fn:
+        fn.setName('PlayOneShotSound', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x6372E0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x424B60))
+    if fn:
+        fn.setName('GetEquipmentForcePowers', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x424B60: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x60DFD0))
+    if fn:
+        fn.setName('Uninitialize', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x60DFD0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x4758F0))
+    if fn:
+        fn.setName('AddVisualEffect', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x4758F0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x5446A0))
+    if fn:
+        fn.setName('Control', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x5446A0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x5FA090))
+    if fn:
+        fn.setName('HandleInputEvent', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x5FA090: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x430BD0))
+    if fn:
+        fn.setName('ClearPauseExclusionList', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CClientExoAppInternal', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CClientExoAppInternal', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x430BD0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x4ED270))
+    if fn:
+        fn.setName('GetSubRadialSpell', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CSWSpell', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CSWSpell', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x4ED270: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x58A840))
+    if fn:
+        fn.setName('Insert', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CExoArrayList<short>', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CExoArrayList<short>', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x58A840: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x75B5D0))
+    if fn:
+        fn.setName('SaveServerCharacter', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CSWSPlayer', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CSWSPlayer', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x75B5D0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x4FA9F0))
+    if fn:
+        fn.setName('CSWCVisualEffectOnObject', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CSWCVisualEffectOnObject', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CSWCVisualEffectOnObject', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x4FA9F0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x5324A0))
+    if fn:
+        fn.setName('StopLoadFromLayout', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x5324A0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x70ABA0))
+    if fn:
+        fn.setName('TestDirectLine', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x70ABA0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x6A3C20))
+    if fn:
+        fn.setName('GetSpotCheckDistance', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x6A3C20: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x472080))
+    if fn:
+        fn.setName('operator_', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x472080: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x605D50))
+    if fn:
+        fn.setName('operator_', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x605D50: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x8FDF30))
+    if fn:
+        fn.setName('Enable', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x8FDF30: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x48F080))
+    if fn:
+        fn.setName('CExoString', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x48F080: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x4CE500))
+    if fn:
+        fn.setName('_CSWGuiLabel', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x4CE500: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x6FCEF0))
+    if fn:
+        fn.setName('operator_', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x6FCEF0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x7E7810))
+    if fn:
+        fn.setName('GetPosition', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x7E7810: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x5FAE20))
+    if fn:
+        fn.setName('AddChosenFeat', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x5FAE20: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x6CD530))
+    if fn:
+        fn.setName('UpdateSubareasOnJumpPosition', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x6CD530: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x8B77D0))
+    if fn:
+        fn.setName('InitializeBranch', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x8B77D0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x9103B0))
+    if fn:
+        fn.setName('GetSafeMargin', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x9103B0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x721670))
+    if fn:
+        fn.setName('PositionWalkable', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CSWSArea', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CSWSArea', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x721670: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x819BE0))
+    if fn:
+        fn.setName('AurTextureGetReference', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x819BE0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x8C2F40))
+    if fn:
+        fn.setName('AddDependency', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CAurBehavior', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CAurBehavior', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x8C2F40: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x5EB170))
+    if fn:
+        fn.setName('CSWMGBehaviorTrack', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CSWMGBehaviorTrack', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CSWMGBehaviorTrack', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x5EB170: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x855F80))
+    if fn:
+        fn.setName('SetShot', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CSWBehaviorCameraDialog', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CSWBehaviorCameraDialog', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x855F80: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x7341F0))
+    if fn:
+        fn.setName('ClippedLineSegmentWalkable', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CSWSRoom', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CSWSRoom', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x7341F0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x734230))
+    if fn:
+        fn.setName('NoNonWalkPolysOnRoom', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CSWSRoom', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CSWSRoom', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x734230: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x7342C0))
+    if fn:
+        fn.setName('GetAdjacentRoom', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CSWSRoom', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CSWSRoom', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x7342C0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x88E150))
+    if fn:
+        fn.setName('RenderEnvironmentMappedVP', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x88E150: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x88E2D0))
+    if fn:
+        fn.setName('RenderEMLMVP', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x88E2D0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x5FA540))
+    if fn:
+        fn.setName('OnRecommendButton', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                '', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x5FA540: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x5DD640))
+    if fn:
+        fn.setName('CSWMGTargettingParameters', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CSWMGTargettingParameters', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CSWMGTargettingParameters', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x5DD640: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x5FB0C0))
+    if fn:
+        fn.setName('BuildAvailableList', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CSWGuiFeatsCharGen', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CSWGuiFeatsCharGen', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x5FB0C0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x707520))
+    if fn:
+        fn.setName('InSubAreas', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CSWSArea', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CSWSArea', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x707520: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x4E7D80))
+    if fn:
+        fn.setName('CSWCameraFreeLook', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CSWCameraFreeLook', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CSWCameraFreeLook', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x4E7D80: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x5B0020))
+    if fn:
+        fn.setName('CSWGuiDialogTop', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CSWGuiDialogTop', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CSWGuiDialogTop', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x5B0020: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x5D8990))
+    if fn:
+        fn.setName('CAurBehavior', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CAurBehavior', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CAurBehavior', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x5D8990: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x5FAFB0))
+    if fn:
+        fn.setName('RemoveChosenFeat', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CSWGuiFeatsCharGen', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CSWGuiFeatsCharGen', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x5FAFB0: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x491A90))
+    if fn:
+        fn.setName('HasFeatPrereq', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CSWCLevelUpStats', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CSWCLevelUpStats', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x491A90: '+str(e)); errors += 1
+
+try:
+    fn = fm.getFunctionAt(toAddr(0x4937C0))
+    if fn:
+        fn.setName('FeatAcquired', SourceType.USER_DEFINED)
+        nsobj = sm.getNamespace('CSWCLevelUpStats', currentProgram.getGlobalNamespace())
+        if nsobj is None:
+            nsobj = sm.createNameSpace(currentProgram.getGlobalNamespace(),
+                'CSWCLevelUpStats', SourceType.USER_DEFINED)
+        fn.setParentNamespace(nsobj); renamed += 1
+    else: errors += 1
+except Exception as e:
+    print('ERR 0x4937C0: '+str(e)); errors += 1
 
 print('renamed={} errors={}'.format(renamed, errors))
