@@ -29058,6 +29058,907 @@
       "class": "CSWGuiScrollBar",
       "method": "HitCheckScrollbar",
       "via": "caller_name_fingerprint"
+    },
+    {
+      "k1_addr": "0x60b750",
+      "tsl_addr": "0x410200",
+      "name": "CSWCCreaturePartyStatus::CSWCCreaturePartyStatus",
+      "class": "CSWCCreaturePartyStatus",
+      "method": "CSWCCreaturePartyStatus",
+      "callees": [
+        "CExoString",
+        "operator="
+      ],
+      "callers": [
+        "HandleServerToPlayerCreatureUpdate_Update"
+      ],
+      "via": "joint_callee_caller_fingerprint"
+    },
+    {
+      "k1_addr": "0x63d1d0",
+      "tsl_addr": "0x4771c0",
+      "name": "CSWCObject::NewVocalization",
+      "class": "CSWCObject",
+      "method": "NewVocalization",
+      "callees": [
+        "CExoSoundSource",
+        "operator_new"
+      ],
+      "callers": [
+        "HandleServerToPlayerChat"
+      ],
+      "via": "joint_callee_caller_fingerprint"
+    },
+    {
+      "k1_addr": "0x628750",
+      "tsl_addr": "0x4d1300",
+      "name": "CGuiInGame::SetReplyData",
+      "class": "CGuiInGame",
+      "method": "SetReplyData",
+      "callees": [
+        "operator=",
+        "operator_new"
+      ],
+      "callers": [
+        "HandleDialogReplies"
+      ],
+      "via": "joint_callee_caller_fingerprint"
+    },
+    {
+      "k1_addr": "0x6288f0",
+      "tsl_addr": "0x4d1550",
+      "name": "CGuiInGame::GetCameraAnimationName",
+      "class": "CGuiInGame",
+      "method": "GetCameraAnimationName",
+      "callees": [
+        "CExoString",
+        "operator=",
+        "~CExoString"
+      ],
+      "callers": [
+        "SetAnimatedCamera"
+      ],
+      "via": "joint_callee_caller_fingerprint"
+    },
+    {
+      "k1_addr": "0x59b310",
+      "tsl_addr": "0x4ecc30",
+      "name": "CSWSpell::CSWSpell",
+      "class": "CSWSpell",
+      "method": "CSWSpell",
+      "callees": [
+        "CExoString",
+        "CResRef",
+        "operator="
+      ],
+      "callers": [],
+      "via": "joint_callee_caller_fingerprint"
+    },
+    {
+      "k1_addr": "0x683bb0",
+      "tsl_addr": "0x5068c0",
+      "name": "CSWCDoor::CSWCDoor",
+      "class": "CSWCDoor",
+      "method": "CSWCDoor",
+      "callees": [
+        "CExoString",
+        "CSWCObject",
+        "GetWorldTime",
+        "GetWorldTimer",
+        "operator="
+      ],
+      "callers": [
+        "HandleServerToPlayerDoorUpdate_Add"
+      ],
+      "via": "joint_callee_caller_fingerprint"
+    },
+    {
+      "k1_addr": "0x682270",
+      "tsl_addr": "0x5347d0",
+      "name": "CSWCPlaceable::CSWCPlaceable",
+      "class": "CSWCPlaceable",
+      "method": "CSWCPlaceable",
+      "callees": [
+        "CExoString",
+        "CSWCObject",
+        "GetWorldTime",
+        "GetWorldTimer",
+        "operator="
+      ],
+      "callers": [
+        "AddPlaceableObjectStatic",
+        "HandleServerToPlayerPlaceableUpdate_Add"
+      ],
+      "via": "joint_callee_caller_fingerprint"
+    },
+    {
+      "k1_addr": "0x682e20",
+      "tsl_addr": "0x5371e0",
+      "name": "CSWCPlaceable::SetAppearance",
+      "class": "CSWCPlaceable",
+      "method": "SetAppearance",
+      "callees": [
+        "CExoString",
+        "GetINTEntry",
+        "~CExoString"
+      ],
+      "callers": [
+        "AddPlaceableObjectStatic",
+        "HandleServerToPlayerPlaceableUpdate_Add"
+      ],
+      "via": "joint_callee_caller_fingerprint"
+    },
+    {
+      "k1_addr": "0x6914d0",
+      "tsl_addr": "0x5380e0",
+      "name": "CSWCTrigger::SetCursor",
+      "class": "CSWCTrigger",
+      "method": "SetCursor",
+      "callees": [
+        "CExoString",
+        "GetINTEntry",
+        "~CExoString"
+      ],
+      "callers": [
+        "HandleServerToPlayerTriggerUpdate_Add"
+      ],
+      "via": "joint_callee_caller_fingerprint"
+    },
+    {
+      "k1_addr": "0x6754d0",
+      "tsl_addr": "0x53ecd0",
+      "name": "CClientMsgSysAdmin::GetTokenPair",
+      "class": "CClientMsgSysAdmin",
+      "method": "GetTokenPair",
+      "callees": [
+        "CExoString",
+        "operator=",
+        "~CExoString"
+      ],
+      "callers": [
+        "HandleServerToSysAdminMessage"
+      ],
+      "via": "joint_callee_caller_fingerprint"
+    },
+    {
+      "k1_addr": "0x66b200",
+      "tsl_addr": "0x55aa20",
+      "name": "CSWCSoundObject::CSWCSoundObject",
+      "class": "CSWCSoundObject",
+      "method": "CSWCSoundObject",
+      "callees": [
+        "CSWCObject",
+        "operator_new"
+      ],
+      "callers": [
+        "LoadArea"
+      ],
+      "via": "joint_callee_caller_fingerprint"
+    },
+    {
+      "k1_addr": "0x407d50",
+      "tsl_addr": "0x61d550",
+      "name": "CExoResMan::ServiceFromImage",
+      "class": "CExoResMan",
+      "method": "ServiceFromImage",
+      "callees": [
+        "GetAtPos",
+        "GetNext"
+      ],
+      "callers": [
+        "Demand",
+        "Update"
+      ],
+      "via": "joint_callee_caller_fingerprint"
+    },
+    {
+      "k1_addr": "0x40d030",
+      "tsl_addr": "0x62c910",
+      "name": "CExoKeyTable::CExoKeyTable",
+      "class": "CExoKeyTable",
+      "method": "CExoKeyTable",
+      "callees": [
+        "CExoString",
+        "operator="
+      ],
+      "callers": [
+        "AddKeyTable"
+      ],
+      "via": "joint_callee_caller_fingerprint"
+    },
+    {
+      "k1_addr": "0x405d10",
+      "tsl_addr": "0x633790",
+      "name": "CExoArrayList<CExoString>::CExoArrayList",
+      "class": "CExoArrayList<CExoString>",
+      "method": "CExoArrayList",
+      "callees": [
+        "Add",
+        "CExoString"
+      ],
+      "callers": [
+        "PlayMoviesAsync"
+      ],
+      "via": "joint_callee_caller_fingerprint"
+    },
+    {
+      "k1_addr": "0x5d7ba0",
+      "tsl_addr": "0x638020",
+      "name": "CExoSoundInternal::AddToNonPlayingStreamingLoopingList",
+      "class": "CExoSoundInternal",
+      "method": "AddToNonPlayingStreamingLoopingList",
+      "callees": [
+        "AddHead"
+      ],
+      "callers": [
+        "Play",
+        "Render"
+      ],
+      "via": "joint_callee_caller_fingerprint"
+    },
+    {
+      "k1_addr": "0x5be830",
+      "tsl_addr": "0x7e6110",
+      "name": "CSWSFaction::Initialise",
+      "class": "CSWSFaction",
+      "method": "Initialise",
+      "callees": [
+        "CExoString",
+        "operator=",
+        "~CExoString"
+      ],
+      "callers": [
+        "CSWSFaction"
+      ],
+      "via": "joint_callee_caller_fingerprint"
+    },
+    {
+      "k1_addr": "0x5cb120",
+      "tsl_addr": "0x7f3b00",
+      "name": "CSWLevelStats::SetSkillRankChange",
+      "class": "CSWLevelStats",
+      "method": "SetSkillRankChange",
+      "callees": [],
+      "callers": [
+        "AutoLevelup",
+        "HandlePlayerToServerLevelUpMessage",
+        "ReadStatsFromGff"
+      ],
+      "via": "joint_callee_caller_fingerprint"
+    },
+    {
+      "k1_addr": "0x406c70",
+      "tsl_addr": "0x40ec10",
+      "name": "CExoString::StringCopy",
+      "class": "CExoString",
+      "method": "StringCopy",
+      "k1_sz": 113,
+      "tsl_sz": 105,
+      "n_named": 2,
+      "via": "triple_fp_size_callee_count_named"
+    },
+    {
+      "k1_addr": "0x652ad0",
+      "tsl_addr": "0x4c1a40",
+      "name": "CSWCMessage::HandleServerToPlayerEndGame",
+      "class": "CSWCMessage",
+      "method": "HandleServerToPlayerEndGame",
+      "k1_sz": 33,
+      "tsl_sz": 45,
+      "n_named": 2,
+      "via": "triple_fp_size_callee_count_named"
+    },
+    {
+      "k1_addr": "0x5d1370",
+      "tsl_addr": "0x640f80",
+      "name": "CScriptCompilerIncludeFileStackEntry::~CScriptCompilerIncludeFileStackEntry",
+      "class": "CScriptCompilerIncludeFileStackEntry",
+      "method": "~CScriptCompilerIncludeFileStackEntry",
+      "k1_sz": 76,
+      "tsl_sz": 94,
+      "n_named": 2,
+      "via": "triple_fp_size_callee_count_named"
+    },
+    {
+      "k1_addr": "0x4e1b80",
+      "tsl_addr": "0x73f2a0",
+      "name": "OnRemoveArcaneSpellFailure",
+      "class": "",
+      "method": "OnRemoveArcaneSpellFailure",
+      "k1_sz": 149,
+      "tsl_sz": 153,
+      "n_named": 2,
+      "via": "triple_fp_size_callee_count_named"
+    },
+    {
+      "k1_addr": "0x4b1650",
+      "tsl_addr": "0x7b4920",
+      "name": "CServerExoAppInternal::Initialize",
+      "class": "CServerExoAppInternal",
+      "method": "Initialize",
+      "k1_sz": 46,
+      "tsl_sz": 49,
+      "n_named": 2,
+      "via": "triple_fp_size_callee_count_named"
+    },
+    {
+      "k1_addr": "0x4873c0",
+      "tsl_addr": "0x878d00",
+      "name": "GetSkinSphereMapVP",
+      "class": "",
+      "method": "GetSkinSphereMapVP",
+      "k1_sz": 153,
+      "tsl_sz": 148,
+      "n_named": 2,
+      "via": "triple_fp_size_callee_count_named"
+    },
+    {
+      "k1_addr": "0x44bee0",
+      "tsl_addr": "0x8d7fc0",
+      "name": "AurResGetLast",
+      "class": "",
+      "method": "AurResGetLast",
+      "k1_sz": 68,
+      "tsl_sz": 72,
+      "n_named": 2,
+      "via": "triple_fp_size_callee_count_named"
+    },
+    {
+      "k1_addr": "0x5ed8d0",
+      "tsl_addr": "0x40d0b0",
+      "name": "CClientExoApp::SetVideoMode",
+      "class": "CClientExoApp",
+      "method": "SetVideoMode",
+      "k1_sz": 18,
+      "tsl_sz": 30,
+      "named_callee": "SetVideoMode",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x690940",
+      "tsl_addr": "0x40df30",
+      "name": "CSWCVisualEffect::DoVFXRumble",
+      "class": "CSWCVisualEffect",
+      "method": "DoVFXRumble",
+      "k1_sz": 28,
+      "tsl_sz": 37,
+      "named_callee": "LookUpAndPerformRumbleWithCutOff",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x5edb50",
+      "tsl_addr": "0x445190",
+      "name": "CClientExoApp::AddMoveToModuleMovie",
+      "class": "CClientExoApp",
+      "method": "AddMoveToModuleMovie",
+      "k1_sz": 28,
+      "tsl_sz": 34,
+      "named_callee": "AddMovieToExoArrayList",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x605870",
+      "tsl_addr": "0x454d00",
+      "name": "CSWCArea::SetFog",
+      "class": "CSWCArea",
+      "method": "SetFog",
+      "k1_sz": 69,
+      "tsl_sz": 103,
+      "named_callee": "SetFogColor",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x60a690",
+      "tsl_addr": "0x4581e0",
+      "name": "setstrength",
+      "class": "",
+      "method": "setstrength",
+      "k1_sz": 16,
+      "tsl_sz": 19,
+      "named_callee": "CheatSetAbility",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x60abb0",
+      "tsl_addr": "0x458680",
+      "name": "revealmap",
+      "class": "",
+      "method": "revealmap",
+      "k1_sz": 28,
+      "tsl_sz": 31,
+      "named_callee": "GetCheatsTurnedOn",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x63d830",
+      "tsl_addr": "0x472ab0",
+      "name": "CSWCObject::SetLoopingAnimation",
+      "class": "CSWCObject",
+      "method": "SetLoopingAnimation",
+      "k1_sz": 28,
+      "tsl_sz": 42,
+      "named_callee": "AnimationLooping",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x63cab0",
+      "tsl_addr": "0x475420",
+      "name": "CSWCObject::RemoveAllFireForgetAnimations",
+      "class": "CSWCObject",
+      "method": "RemoveAllFireForgetAnimations",
+      "k1_sz": 32,
+      "tsl_sz": 53,
+      "named_callee": "RemoveTopFireForgetAnimation",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x63d0a0",
+      "tsl_addr": "0x477070",
+      "name": "CSWCObject::SetGroundNormal",
+      "class": "CSWCObject",
+      "method": "SetGroundNormal",
+      "k1_sz": 145,
+      "tsl_sz": 152,
+      "named_callee": "RotationArc",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x63e510",
+      "tsl_addr": "0x4773c0",
+      "name": "QueuedCallbackFunction",
+      "class": "",
+      "method": "QueuedCallbackFunction",
+      "k1_sz": 20,
+      "tsl_sz": 30,
+      "named_callee": "QueuedCallback",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x63d3f0",
+      "tsl_addr": "0x477520",
+      "name": "CSWCObject::ClientServerSyncHandler_Animation",
+      "class": "CSWCObject",
+      "method": "ClientServerSyncHandler_Animation",
+      "k1_sz": 69,
+      "tsl_sz": 105,
+      "named_callee": "AnimationFireAndForget",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x699d10",
+      "tsl_addr": "0x4f4de0",
+      "name": "NVThunkHeadWieldAnimBase_ShowHeadItem",
+      "class": "",
+      "method": "NVThunkHeadWieldAnimBase_ShowHeadItem",
+      "k1_sz": 8,
+      "tsl_sz": 8,
+      "named_callee": "ShowHeadItem",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x699960",
+      "tsl_addr": "0x4f4e10",
+      "name": "NVThunkHeadWieldAnimBase_SetAnimation",
+      "class": "",
+      "method": "NVThunkHeadWieldAnimBase_SetAnimation",
+      "k1_sz": 8,
+      "tsl_sz": 8,
+      "named_callee": "SetAnimation",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x637cc0",
+      "tsl_addr": "0x5999f0",
+      "name": "CSWCameraOnAStick::CameraFreeStyleControl",
+      "class": "CSWCameraOnAStick",
+      "method": "CameraFreeStyleControl",
+      "k1_sz": 932,
+      "tsl_sz": 566,
+      "named_callee": "YawPitchRoll",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x5e93e0",
+      "tsl_addr": "0x60cc30",
+      "name": "CExoDebug::FlushScriptLogFile",
+      "class": "CExoDebug",
+      "method": "FlushScriptLogFile",
+      "k1_sz": 27,
+      "tsl_sz": 30,
+      "named_callee": "Flush",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x5f2f20",
+      "tsl_addr": "0x63f130",
+      "name": "CClientExoAppInternal::HurryDeathSequence",
+      "class": "CClientExoAppInternal",
+      "method": "HurryDeathSequence",
+      "k1_sz": 53,
+      "tsl_sz": 88,
+      "named_callee": "StartGlobalFade",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x5d0770",
+      "tsl_addr": "0x64a240",
+      "name": "CAvoidCreature::IsPathClear",
+      "class": "CAvoidCreature",
+      "method": "IsPathClear",
+      "k1_sz": 198,
+      "tsl_sz": 168,
+      "named_callee": "SideClearOfObstructions",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x4aeb70",
+      "tsl_addr": "0x64c8d0",
+      "name": "CServerExoApp::GetNormalOfPoint",
+      "class": "CServerExoApp",
+      "method": "GetNormalOfPoint",
+      "k1_sz": 25,
+      "tsl_sz": 35,
+      "named_callee": "GetNormalOfPoint",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x587710",
+      "tsl_addr": "0x6699d0",
+      "name": "CSWSPlaceable::GetItemCount",
+      "class": "CSWSPlaceable",
+      "method": "GetItemCount",
+      "k1_sz": 91,
+      "tsl_sz": 95,
+      "named_callee": "ItemListGetItem",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x5136b0",
+      "tsl_addr": "0x67d2f0",
+      "name": "CSWSCreature::AIActionCheckForceFollowObject",
+      "class": "CSWSCreature",
+      "method": "AIActionCheckForceFollowObject",
+      "k1_sz": 266,
+      "tsl_sz": 164,
+      "named_callee": "AddActionToFront",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x4eb1b0",
+      "tsl_addr": "0x6b5880",
+      "name": "CSWSCreature::ClearActivities",
+      "class": "CSWSCreature",
+      "method": "ClearActivities",
+      "k1_sz": 496,
+      "tsl_sz": 320,
+      "named_callee": "SetActivity",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x511080",
+      "tsl_addr": "0x6c9d80",
+      "name": "CSWSCreature::AIActionAreaWait",
+      "class": "CSWSCreature",
+      "method": "AIActionAreaWait",
+      "k1_sz": 40,
+      "tsl_sz": 64,
+      "named_callee": "GetArea",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x567ba0",
+      "tsl_addr": "0x7ca150",
+      "name": "CSWSMessage::WriteGameObjUpdate_WorkRemaining",
+      "class": "CSWSMessage",
+      "method": "WriteGameObjUpdate_WorkRemaining",
+      "k1_sz": 113,
+      "tsl_sz": 113,
+      "named_callee": "WriteBYTE",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x5c8f30",
+      "tsl_addr": "0x7f61a0",
+      "name": "CSWSSoundObject::CSWSSoundObject",
+      "class": "CSWSSoundObject",
+      "method": "CSWSSoundObject",
+      "k1_sz": 233,
+      "tsl_sz": 359,
+      "named_callee": "CSWSObject",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x437c10",
+      "tsl_addr": "0x843670",
+      "name": "MdlNodeEmitter::InternalPostProcess",
+      "class": "MdlNodeEmitter",
+      "method": "InternalPostProcess",
+      "k1_sz": 44,
+      "tsl_sz": 70,
+      "named_callee": "AsModel",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x4404d0",
+      "tsl_addr": "0x84c420",
+      "name": "Gob::GetCutsceneDummyPosition",
+      "class": "Gob",
+      "method": "GetCutsceneDummyPosition",
+      "k1_sz": 125,
+      "tsl_sz": 154,
+      "named_callee": "FindPart",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x47bffd",
+      "tsl_addr": "0x8f3cdb",
+      "name": "Catch@0047bffd",
+      "class": "",
+      "method": "Catch@0047bffd",
+      "k1_sz": 45,
+      "tsl_sz": 32,
+      "named_callee": "__CxxThrowException@8",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x70f3b0",
+      "tsl_addr": "0x907780",
+      "name": "CAuroraProcessedTexture::GetProcessedTextureDataSize",
+      "class": "CAuroraProcessedTexture",
+      "method": "GetProcessedTextureDataSize",
+      "k1_sz": 48,
+      "tsl_sz": 65,
+      "named_callee": "GetDemands",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x40c120",
+      "tsl_addr": "0x910360",
+      "name": "CSWGuiManager::HideAllPanels",
+      "class": "CSWGuiManager",
+      "method": "HideAllPanels",
+      "k1_sz": 46,
+      "tsl_sz": 75,
+      "named_callee": "SetVisible",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x419bd0",
+      "tsl_addr": "0x91b5a0",
+      "name": "CSWGuiListBox::SetSelectOnLeftClick",
+      "class": "CSWGuiListBox",
+      "method": "SetSelectOnLeftClick",
+      "k1_sz": 234,
+      "tsl_sz": 379,
+      "named_callee": "setMaxValue",
+      "pass": 1,
+      "via": "single_callee_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x60d5c0",
+      "tsl_addr": "0x41cec0",
+      "name": "CSWCCreature::SetPortraitId",
+      "class": "CSWCCreature",
+      "method": "SetPortraitId",
+      "k1_sz": 58,
+      "tsl_sz": 89,
+      "shared_callees": [
+        "SetPortraitId",
+        "void_return"
+      ],
+      "pass": 2,
+      "via": "k1_common_subset_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x5cb1b0",
+      "tsl_addr": "0x42c320",
+      "name": "CSWLevelStats::CSWLevelStats",
+      "class": "CSWLevelStats",
+      "method": "CSWLevelStats",
+      "k1_sz": 186,
+      "tsl_sz": 324,
+      "shared_callees": [
+        "`eh_vector_constructor_iterator'",
+        "operator_new"
+      ],
+      "pass": 2,
+      "via": "k1_common_subset_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x4ccd30",
+      "tsl_addr": "0x456350",
+      "name": "CSWSObject::DeleteCurrentAIAction",
+      "class": "CSWSObject",
+      "method": "DeleteCurrentAIAction",
+      "k1_sz": 71,
+      "tsl_sz": 64,
+      "shared_callees": [
+        "RemoveHead",
+        "~CSWSObjectActionNode"
+      ],
+      "pass": 2,
+      "via": "k1_common_subset_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x5d1260",
+      "tsl_addr": "0x51c2c0",
+      "name": "CScriptCompilerIdListEntry::~CScriptCompilerIdListEntry",
+      "class": "CScriptCompilerIdListEntry",
+      "method": "~CScriptCompilerIdListEntry",
+      "k1_sz": 240,
+      "tsl_sz": 334,
+      "shared_callees": [
+        "`eh_vector_destructor_iterator'",
+        "~CExoString"
+      ],
+      "pass": 2,
+      "via": "k1_common_subset_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x66c420",
+      "tsl_addr": "0x53a5f0",
+      "name": "CSWMiniGameObject::LoadScripts",
+      "class": "CSWMiniGameObject",
+      "method": "LoadScripts",
+      "k1_sz": 287,
+      "tsl_sz": 353,
+      "shared_callees": [
+        "CResRef",
+        "ReadFieldCResRef"
+      ],
+      "pass": 2,
+      "via": "k1_common_subset_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x6c4ad0",
+      "tsl_addr": "0x58a510",
+      "name": "CSWGuiUpgrade::~CSWGuiUpgrade",
+      "class": "CSWGuiUpgrade",
+      "method": "~CSWGuiUpgrade",
+      "k1_sz": 161,
+      "tsl_sz": 231,
+      "shared_callees": [
+        "ClearItems",
+        "`eh_vector_destructor_iterator'"
+      ],
+      "pass": 2,
+      "via": "k1_common_subset_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x5d5870",
+      "tsl_addr": "0x639a50",
+      "name": "CExoSoundSource::CExoSoundSource",
+      "class": "CExoSoundSource",
+      "method": "CExoSoundSource",
+      "k1_sz": 135,
+      "tsl_sz": 168,
+      "shared_callees": [
+        "CExoSoundSourceInternal",
+        "operator_new"
+      ],
+      "pass": 2,
+      "via": "k1_common_subset_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x4c6830",
+      "tsl_addr": "0x730ca0",
+      "name": "NWPlayerCharacterList_st::NWPlayerCharacterList_st",
+      "class": "NWPlayerCharacterList_st",
+      "method": "NWPlayerCharacterList_st",
+      "k1_sz": 107,
+      "tsl_sz": 147,
+      "shared_callees": [
+        "CExoLocString",
+        "CResRef"
+      ],
+      "pass": 2,
+      "via": "k1_common_subset_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x5610b0",
+      "tsl_addr": "0x75cb00",
+      "name": "CSWSPlayer::GetPlayerName",
+      "class": "CSWSPlayer",
+      "method": "GetPlayerName",
+      "k1_sz": 79,
+      "tsl_sz": 136,
+      "shared_callees": [
+        "CExoString",
+        "GetPlayerInfo"
+      ],
+      "pass": 2,
+      "via": "k1_common_subset_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x590820",
+      "tsl_addr": "0x7ed360",
+      "name": "CSWSEncounter::ReadEncounterScriptsFromGff",
+      "class": "CSWSEncounter",
+      "method": "ReadEncounterScriptsFromGff",
+      "k1_sz": 567,
+      "tsl_sz": 1025,
+      "shared_callees": [
+        "CExoString",
+        "CResRef",
+        "ReadFieldCResRef",
+        "operator="
+      ],
+      "pass": 2,
+      "via": "k1_common_subset_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x43fa10",
+      "tsl_addr": "0x846160",
+      "name": "MdlNode::ParseFieldDispatch",
+      "class": "MdlNode",
+      "method": "ParseFieldDispatch",
+      "k1_sz": 316,
+      "tsl_sz": 418,
+      "shared_callees": [
+        "InternalParseField",
+        "void_return"
+      ],
+      "pass": 2,
+      "via": "k1_common_subset_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x4171e0",
+      "tsl_addr": "0x914fa0",
+      "name": "CSWGuiTextParams::operator=",
+      "class": "CSWGuiTextParams",
+      "method": "operator=",
+      "k1_sz": 145,
+      "tsl_sz": 235,
+      "shared_callees": [
+        "SetTextObject",
+        "operator="
+      ],
+      "pass": 2,
+      "via": "k1_common_subset_size_fingerprint"
+    },
+    {
+      "k1_addr": "0x6fa5ac",
+      "tsl_addr": "0x92ba03",
+      "name": "_FindAndUnlinkFrame",
+      "class": "",
+      "method": "_FindAndUnlinkFrame",
+      "k1_sz": 76,
+      "tsl_sz": 49,
+      "shared_callees": [
+        "__getptd",
+        "_inconsistency"
+      ],
+      "pass": 2,
+      "via": "k1_common_subset_size_fingerprint"
     }
   ],
   "reverse_callee_disambig_pairs": 6,
