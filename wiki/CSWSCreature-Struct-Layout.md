@@ -31,8 +31,11 @@ Reference: `/K1_GOG_full @ TODO`, `/TSL_GOG_swkotor2 @ 0x00683A70`
 | +0xFB  | 1    | byte     | `nClassType[2]`        | Class slot 2 type. |
 | +0xF8  | ?    | ?        | TODO: class multiplier field | Used in alignment multiplier calculation — exact type TBD. |
 | +0xFD  | ?    | byte/short | `nClassCount`        | Number of active class entries. Derived from `0x18A - 0x8D`. TODO: Verify. |
-| +0x18A | 2    | short    | `nGoodEvil`            | Alignment: 0 = pure evil, 50 = neutral, 100 = pure good. |
+| +0x12E | 2    | short    | `nForcePoints`         | Current force points. GFF field "ForcePoints" (short). Confirmed via TSL `SaveStats @ 0x006F0190`. K1 address TODO. |
+| +0x130 | 2    | short    | `nForceBaseline`       | Baseline/max force points. Confirmed adjacent to ForcePoints in TSL `SaveStats`. K1 address TODO. |
+| +0x18A | 2    | short    | `nGoodEvil`            | Alignment: 0 = pure evil, 50 = neutral, 100 = pure good. GFF field "GoodEvil" (BYTE). Confirmed via `SaveStats`/`ReadStatsFromGff` in both games. |
 | +0x18C | 1    | byte (signed) | `nGoodEvilDelta`  | Pending alignment change applied during `HandleAlignmentInfluence`. |
+| +0x???  | 1    | char (signed) | `nBaseNPCAlignment` | **TSL-only.** GFF field "BaseCNPCAlignment" (CHAR). Defaults to `good_evil` when absent. Clamped to [-1, 100]. Confirmed via TSL `ReadStatsFromGff @ 0x006EC350` and `SaveStats @ 0x006F0190`. Offset within struct TBD — TODO: determine via analyze-data-flow. |
 
 ### Class Array Layout
 
@@ -128,10 +131,38 @@ Used by `CSWSCreature::HandleAlignmentInfluence` to resolve NPC tags → party t
 
 - [ ] `TODO: Find CSWSCreature::GetGoodEvil @ K1` and `@ TSL` — verify alignment read path
 - [ ] `TODO: Find CSWSCreature::SetAlignment` in both games — verify write path confirms `+0x1198+0x18A`
-- [ ] `TODO: Map remaining CSWSCreatureStats fields` (HP, base abilities, skills, feats bitfield, force points)
+- [ ] `TODO: Find CSWSCreature::GetGoodEvil @ K1` and `@ TSL` — verify alignment read path
+- [ ] `TODO: Find CSWSCreature::SetAlignment` in both games — verify write path confirms `+0x1198+0x18A`
+- [ ] `TODO: Determine nBaseNPCAlignment offset` in CSWSCreatureStats — run analyze-data-flow on `TSL ReadStatsFromGff @ 0x006EC350`
+- [ ] `TODO: Map remaining CSWSCreatureStats fields` (HP, base abilities, skills, feats bitfield)
 - [ ] `TODO: Verify nClassCount offset (+0xFD)` with CSWSCreature::GetNumClasses decompilation
 - [ ] `TODO: Map CSWSCreature vtable @ K1 + TSL` — many virtual methods untested
+- [ ] `TODO: Confirm nForceBaseline field name` — verify +0x130 is max/base force, not some other force-related short
+- [ ] `TODO: Find CSWSCreatureStats::SaveStats @ K1` — verify K1 also writes ForcePoints from pStats+0x12E
 
-AgentDecompile status: Partially completed - Missing K1 address for `CSWSCreature::HandleAlignmentInfluence`, all CSWSCreature vtable offsets, and most CSWSCreatureStats fields. TODO find them :(
+## Confirmed Serializer Paths
 
-<!-- Reference: /TSL_GOG_swkotor2 @ 0x00683A70 -->
+| Function | K1 | TSL | Notes |
+|----------|----|-----|---------|
+| `CSWSCreatureStats::SaveStats`      | `0x005B1B90` | `0x006F0190` | Writes GoodEvil, ForcePoints; TSL also writes BaseCNPCAlignment |
+| `CSWSCreatureStats::ReadStatsFromGff` | `0x005AFCE0` | `0x006EC350` | Reads GoodEvil (clamp 0–100); TSL also reads BaseCNPCAlignment (default=good_evil, clamp -1–100) |
+
+TSL `ReadStatsFromGff @ 0x006EC350` key excerpt:
+```c
+this->good_evil = clamp(ReadFieldBYTE("GoodEvil", prev=this->good_evil), 0, 100);
+char bna = ReadFieldCHAR("BaseCNPCAlignment", default=-1);
+if (bna == -1) bna = (char)this->good_evil;
+this->base_npc_alignment = clamp(bna, -1, 100);  // -1 = no override
+```
+
+TSL `SaveStats @ 0x006F0190` key excerpt:
+```c
+WriteFieldBYTE("GoodEvil", this->good_evil);
+WriteFieldCHAR("BaseCNPCAlignment", this->base_npc_alignment);
+// pStats = *(CSWSCreature + 0x1198)
+WriteFieldSHORT("ForcePoints", *(short*)(pStats + 0x12E));
+```
+
+AgentDecompile status: Partially completed - Missing K1 address for `CSWSCreature::HandleAlignmentInfluence` and `nBaseNPCAlignment` struct offset, all CSWSCreature vtable offsets. TODO find them :(
+
+<!-- Reference: /TSL_GOG_swkotor2 @ 0x00683A70, /K1_GOG_full @ TODO -->
