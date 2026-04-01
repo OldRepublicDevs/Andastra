@@ -2,7 +2,7 @@
   "seed_pairs": 3754,
   "cascade_pairs": 3246,
   "shared_callee_pairs": 0,
-  "total_pairs": 3966,
+  "total_pairs": 3263,
   "matches": [
     {
       "k1_addr": "0x0046EE00",
@@ -27897,6 +27897,161 @@
       "class": "CSWGuiQuickPanel",
       "method": "CancelledByChild",
       "via": "cascade2_from_0x006F9BA0"
+    },
+    {
+      "k1_addr": "0x0060C980",
+      "tsl_addr": "0x00419C50",
+      "name": "CSWCCreature::UpdateRelativePerception",
+      "class": "CSWCCreature",
+      "method": "UpdateRelativePerception",
+      "via": "reverse_callee_caller_disambig",
+      "caller_overlap": 2
+    },
+    {
+      "k1_addr": "0x00678EC0",
+      "tsl_addr": "0x004955D0",
+      "name": "CSWPortrait::CSWPortrait",
+      "class": "CSWPortrait",
+      "method": "CSWPortrait",
+      "via": "reverse_callee_caller_disambig",
+      "caller_overlap": 3
+    },
+    {
+      "k1_addr": "0x00550D10",
+      "tsl_addr": "0x0050E900",
+      "name": "CSWRules::GetWeightedDamageAmount",
+      "class": "CSWRules",
+      "method": "GetWeightedDamageAmount",
+      "via": "reverse_callee_caller_disambig",
+      "caller_overlap": 1
+    },
+    {
+      "k1_addr": "0x004ECE80",
+      "tsl_addr": "0x00693AC0",
+      "name": "CSWSCreature::ComputeArmourClass",
+      "class": "CSWSCreature",
+      "method": "ComputeArmourClass",
+      "via": "reverse_callee_caller_disambig",
+      "caller_overlap": 1
+    },
+    {
+      "k1_addr": "0x004F5F70",
+      "tsl_addr": "0x0069E3B0",
+      "name": "CSWSCreature::RemoveCombatInvisibilityEffects",
+      "class": "CSWSCreature",
+      "method": "RemoveCombatInvisibilityEffects",
+      "via": "reverse_callee_caller_disambig",
+      "caller_overlap": 1
+    },
+    {
+      "k1_addr": "0x00506F20",
+      "tsl_addr": "0x00717CA0",
+      "name": "CSWSArea::GetFirstObjectIndiceByX",
+      "class": "CSWSArea",
+      "method": "GetFirstObjectIndiceByX",
+      "via": "reverse_callee_caller_disambig",
+      "caller_overlap": 8
+    },
+    {
+      "k1_addr": "0x00613A70",
+      "tsl_addr": "0x00419DC0",
+      "name": "CSWCCreature::UpdateRelativePerception",
+      "class": "CSWCCreature",
+      "method": "UpdateRelativePerception",
+      "via": "reverse_callee_exact",
+      "callee_count": 2
+    },
+    {
+      "k1_addr": "0x006179C0",
+      "tsl_addr": "0x004206A0",
+      "name": "CSWCCreature::GetModel",
+      "class": "CSWCCreature",
+      "method": "GetModel",
+      "via": "reverse_callee_exact",
+      "callee_count": 2
+    },
+    {
+      "k1_addr": "0x005F2C90",
+      "tsl_addr": "0x00448240",
+      "name": "CClientExoAppInternal::BarkString",
+      "class": "CClientExoAppInternal",
+      "method": "BarkString",
+      "via": "reverse_callee_exact",
+      "callee_count": 2
+    },
+    {
+      "k1_addr": "0x0060F560",
+      "tsl_addr": "0x004774E0",
+      "name": "CSWCObject::BarkBubble",
+      "class": "CSWCObject",
+      "method": "BarkBubble",
+      "via": "reverse_callee_exact",
+      "callee_count": 2
+    },
+    {
+      "k1_addr": "0x006AB220",
+      "tsl_addr": "0x00571A00",
+      "name": "CSWGuiInGameOptions::OnEnterSlot",
+      "class": "CSWGuiInGameOptions",
+      "method": "OnEnterSlot",
+      "via": "reverse_callee_set",
+      "callee_count": 2
+    },
+    {
+      "k1_addr": "0x006E62A0",
+      "tsl_addr": "0x005E5700",
+      "name": "CSWGuiInGameGameplay::OnAutoLevelUp",
+      "class": "CSWGuiInGameGameplay",
+      "method": "OnAutoLevelUp",
+      "via": "reverse_callee_exact",
+      "callee_count": 3
+    },
+    {
+      "k1_addr": "0x004EFA80",
+      "tsl_addr": "0x0068EF60",
+      "name": "CSWSCreature::GetForceItemMask",
+      "class": "CSWSCreature",
+      "method": "GetForceItemMask",
+      "via": "reverse_callee_set",
+      "callee_count": 4
+    },
+    {
+      "k1_addr": "0x00508710",
+      "tsl_addr": "0x00722D30",
+      "name": "CSWSArea::ClearObjects",
+      "class": "CSWSArea",
+      "method": "ClearObjects",
+      "via": "reverse_callee_exact",
+      "callee_count": 2
+    },
+    {
+      "k1_addr": "0x00506FE0",
+      "tsl_addr": "0x0077FF30",
+      "name": "CSWSArea::UpdatePositionInObjectsArray",
+      "class": "CSWSArea",
+      "method": "UpdatePositionInObjectsArray",
+      "via": "reverse_callee_set",
+      "callee_count": 2
+    },
+    {
+      "k1_addr": "0x004E94B0",
+      "tsl_addr": "0x007C6430",
+      "name": "CSWSItemPropertyHandler::RemoveSpecialWalk",
+      "class": "CSWSItemPropertyHandler",
+      "method": "RemoveSpecialWalk",
+      "via": "reverse_callee_exact",
+      "callee_count": 3
+    },
+    {
+      "k1_addr": "0x0041A980",
+      "tsl_addr": "0x009169F0",
+      "name": "CSWGuiNavigable::HandleMouseOver",
+      "class": "CSWGuiNavigable",
+      "method": "HandleMouseOver",
+      "via": "reverse_callee_set",
+      "callee_count": 2
     }
-  ]
+  ],
+  "reverse_callee_disambig_pairs": 6,
+  "reverse_callee_pairs": 11
 }
