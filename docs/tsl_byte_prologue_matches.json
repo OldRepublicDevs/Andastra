@@ -1,0 +1,62 @@
+[
+  {
+    "k1_addr": "0x0050d350",
+    "tsl_addr": "0x00723600",
+    "name": "NVThunkAreaResHelper_destructor",
+    "class": "",
+    "method": "NVThunkAreaResHelper_destructor",
+    "k1_size": 11,
+    "tsl_size": 11,
+    "via": "byte_prologue_fingerprint"
+  },
+  {
+    "k1_addr": "0x00705920",
+    "tsl_addr": "0x00924c30",
+    "name": "_strcat",
+    "class": "",
+    "method": "_strcat",
+    "k1_size": 101,
+    "tsl_size": 232,
+    "via": "byte_prologue_fingerprint"
+  },
+  {
+    "k1_addr": "0x007041a0",
+    "tsl_addr": "0x00931c40",
+    "name": "_x87FloatMathInternal_007041a0",
+    "class": "",
+    "method": "_x87FloatMathInternal_007041a0",
+    "k1_size": 74,
+    "tsl_size": 23,
+    "via": "byte_prologue_fingerprint"
+  },
+  {
+    "k1_addr": "0x00704200",
+    "tsl_addr": "0x00931ca0",
+    "name": "exp2",
+    "class": "",
+    "method": "exp2",
+    "k1_size": 21,
+    "tsl_size": 21,
+    "via": "byte_prologue_fingerprint"
+  },
+  {
+    "k1_addr": "0x00704215",
+    "tsl_addr": "0x00931cb5",
+    "name": "__load_CW",
+    "class": "",
+    "method": "__load_CW",
+    "k1_size": 23,
+    "tsl_size": 23,
+    "via": "byte_prologue_fingerprint"
+  },
+  {
+    "k1_addr": "0x00704288",
+    "tsl_addr": "0x00931d28",
+    "name": "_inverseTrigInternal_checkNanInf",
+    "class": "",
+    "method": "_inverseTrigInternal_checkNanInf",
+    "k1_size": 22,
+    "tsl_size": 22,
+    "via": "byte_prologue_fingerprint"
+  }
+]
