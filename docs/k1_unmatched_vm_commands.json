@@ -1,0 +1,581 @@
+{
+  "total": 144,
+  "commands": [
+    {
+      "name": "DestroyGameDefinedStructure",
+      "addr": "0x00548360"
+    },
+    {
+      "name": "ExecuteCommand",
+      "addr": "0x0052C0D0"
+    },
+    {
+      "name": "ExecuteCommandActionEquipItem",
+      "addr": "0x005355F0"
+    },
+    {
+      "name": "ExecuteCommandActionEquipMostEffectiveArmor",
+      "addr": "0x0052C880"
+    },
+    {
+      "name": "ExecuteCommandActionFollowLeader",
+      "addr": "0x0052CBE0"
+    },
+    {
+      "name": "ExecuteCommandActionInteractObject",
+      "addr": "0x0052CC70"
+    },
+    {
+      "name": "ExecuteCommandActionLockActions",
+      "addr": "0x0052CFF0"
+    },
+    {
+      "name": "ExecuteCommandActionPauseConversation",
+      "addr": "0x0052D330"
+    },
+    {
+      "name": "ExecuteCommandActionUseSkill",
+      "addr": "0x0052D9B0"
+    },
+    {
+      "name": "ExecuteCommandAddAvailableNPCByObject",
+      "addr": "0x0052DC40"
+    },
+    {
+      "name": "ExecuteCommandAddJournalWorldEntry",
+      "addr": "0x00548640"
+    },
+    {
+      "name": "ExecuteCommandAurPostString",
+      "addr": "0x005CB350"
+    },
+    {
+      "name": "ExecuteCommandCancelPostDialogCharacterSwitch",
+      "addr": "0x00547D20"
+    },
+    {
+      "name": "ExecuteCommandClearAllEffects",
+      "addr": "0x00545D40"
+    },
+    {
+      "name": "ExecuteCommandDelayCommand",
+      "addr": "0x0052FE30"
+    },
+    {
+      "name": "ExecuteCommandDeleteJournalWorldEntry",
+      "addr": "0x00548B20"
+    },
+    {
+      "name": "ExecuteCommandDeleteJournalWorldEntryStrref",
+      "addr": "0x00548BE0"
+    },
+    {
+      "name": "ExecuteCommandDestroyObject",
+      "addr": "0x0052FF20"
+    },
+    {
+      "name": "ExecuteCommandDisableVideoEffect",
+      "addr": "0x00547220"
+    },
+    {
+      "name": "ExecuteCommandDisplayFeedBackText",
+      "addr": "0x00530170"
+    },
+    {
+      "name": "ExecuteCommandDistanceConversions",
+      "addr": "0x005302F0"
+    },
+    {
+      "name": "ExecuteCommandDoSinglePlayerAutoSave",
+      "addr": "0x00530660"
+    },
+    {
+      "name": "ExecuteCommandDuplicateHeadAppearance",
+      "addr": "0x00546F90"
+    },
+    {
+      "name": "ExecuteCommandEffectComplex",
+      "addr": "0x005313F0"
+    },
+    {
+      "name": "ExecuteCommandEnableVideoEffect",
+      "addr": "0x005471E0"
+    },
+    {
+      "name": "ExecuteCommandEndGame",
+      "addr": "0x00535570"
+    },
+    {
+      "name": "ExecuteCommandEventConversation",
+      "addr": "0x005358C0"
+    },
+    {
+      "name": "ExecuteCommandExportAllCharacters",
+      "addr": "0x00535C70"
+    },
+    {
+      "name": "ExecuteCommandFloatToInt",
+      "addr": "0x00535FB0"
+    },
+    {
+      "name": "ExecuteCommandGetAttemptedAttackTarget",
+      "addr": "0x00536860"
+    },
+    {
+      "name": "ExecuteCommandGetAttemptedMovementTarget",
+      "addr": "0x00536900"
+    },
+    {
+      "name": "ExecuteCommandGetAttemptedSpellTarget",
+      "addr": "0x005368B0"
+    },
+    {
+      "name": "ExecuteCommandGetBlockingDoor",
+      "addr": "0x00536A80"
+    },
+    {
+      "name": "ExecuteCommandGetButtonMashCheck",
+      "addr": "0x00546A10"
+    },
+    {
+      "name": "ExecuteCommandGetCheatCode",
+      "addr": "0x00547E90"
+    },
+    {
+      "name": "ExecuteCommandGetCurrentAction",
+      "addr": "0x00549040"
+    },
+    {
+      "name": "ExecuteCommandGetDifficultyModifier",
+      "addr": "0x005474F0"
+    },
+    {
+      "name": "ExecuteCommandGetEncounterData",
+      "addr": "0x00537E30"
+    },
+    {
+      "name": "ExecuteCommandGetEnteringObject",
+      "addr": "0x00537EE0"
+    },
+    {
+      "name": "ExecuteCommandGetGameDifficulty",
+      "addr": "0x00538CA0"
+    },
+    {
+      "name": "ExecuteCommandGetGlobalString",
+      "addr": "0x00538ED0"
+    },
+    {
+      "name": "ExecuteCommandGetHitDice",
+      "addr": "0x00539570"
+    },
+    {
+      "name": "ExecuteCommandGetInPersistentObject",
+      "addr": "0x00549360"
+    },
+    {
+      "name": "ExecuteCommandGetInventoryDisturbItem",
+      "addr": "0x00539820"
+    },
+    {
+      "name": "ExecuteCommandGetInventoryDisturbType",
+      "addr": "0x00539870"
+    },
+    {
+      "name": "ExecuteCommandGetIsConversationActive",
+      "addr": "0x0053EF70"
+    },
+    {
+      "name": "ExecuteCommandGetIsDawn",
+      "addr": "0x005398C0"
+    },
+    {
+      "name": "ExecuteCommandGetIsDay",
+      "addr": "0x00539900"
+    },
+    {
+      "name": "ExecuteCommandGetIsDead",
+      "addr": "0x0053ECB0"
+    },
+    {
+      "name": "ExecuteCommandGetIsDusk",
+      "addr": "0x00539BD0"
+    },
+    {
+      "name": "ExecuteCommandGetIsNight",
+      "addr": "0x00539DE0"
+    },
+    {
+      "name": "ExecuteCommandGetIsPC",
+      "addr": "0x0053F1C0"
+    },
+    {
+      "name": "ExecuteCommandGetIsPlayableRacialType",
+      "addr": "0x00539ED0"
+    },
+    {
+      "name": "ExecuteCommandGetIsTalentValid",
+      "addr": "0x00539F90"
+    },
+    {
+      "name": "ExecuteCommandGetItemInSlot",
+      "addr": "0x0053A2C0"
+    },
+    {
+      "name": "ExecuteCommandGetLastClosedBy",
+      "addr": "0x0053AC60"
+    },
+    {
+      "name": "ExecuteCommandGetLastConversation",
+      "addr": "0x0053F010"
+    },
+    {
+      "name": "ExecuteCommandGetLastDamager",
+      "addr": "0x0053AD40"
+    },
+    {
+      "name": "ExecuteCommandGetLastDisarmed",
+      "addr": "0x0053ADB0"
+    },
+    {
+      "name": "ExecuteCommandGetLastDisturbed",
+      "addr": "0x0053AE50"
+    },
+    {
+      "name": "ExecuteCommandGetLastHostileActor",
+      "addr": "0x0053AF40"
+    },
+    {
+      "name": "ExecuteCommandGetLastKiller",
+      "addr": "0x0053B080"
+    },
+    {
+      "name": "ExecuteCommandGetLastLocked",
+      "addr": "0x0053B0E0"
+    },
+    {
+      "name": "ExecuteCommandGetLastOpenedBy",
+      "addr": "0x0053B170"
+    },
+    {
+      "name": "ExecuteCommandGetLastPazaakResult",
+      "addr": "0x0053B1E0"
+    },
+    {
+      "name": "ExecuteCommandGetLastUnlocked",
+      "addr": "0x0053B4E0"
+    },
+    {
+      "name": "ExecuteCommandGetLastUsedBy",
+      "addr": "0x0053B570"
+    },
+    {
+      "name": "ExecuteCommandGetLoadFromSaveGame",
+      "addr": "0x0053B730"
+    },
+    {
+      "name": "ExecuteCommandGetMetaMagicFeat",
+      "addr": "0x0053BD80"
+    },
+    {
+      "name": "ExecuteCommandGetMineInfo",
+      "addr": "0x0054C0E0"
+    },
+    {
+      "name": "ExecuteCommandGetModule",
+      "addr": "0x0053BDF0"
+    },
+    {
+      "name": "ExecuteCommandGetModuleItemStuff",
+      "addr": "0x0053BE30"
+    },
+    {
+      "name": "ExecuteCommandGetNearestObject",
+      "addr": "0x0054B550"
+    },
+    {
+      "name": "ExecuteCommandGetObjectInShape",
+      "addr": "0x0054A260"
+    },
+    {
+      "name": "ExecuteCommandGetPC",
+      "addr": "0x0053C920"
+    },
+    {
+      "name": "ExecuteCommandGetPCLevellingUp",
+      "addr": "0x0053C980"
+    },
+    {
+      "name": "ExecuteCommandGetPCSpeaker",
+      "addr": "0x0053C9C0"
+    },
+    {
+      "name": "ExecuteCommandGetPartyAIStyle",
+      "addr": "0x005459A0"
+    },
+    {
+      "name": "ExecuteCommandGetPartyMemberCount",
+      "addr": "0x0053C8F0"
+    },
+    {
+      "name": "ExecuteCommandGetPlaceableIllumination",
+      "addr": "0x0053CA00"
+    },
+    {
+      "name": "ExecuteCommandGetRunScriptVar",
+      "addr": "0x0053D020"
+    },
+    {
+      "name": "ExecuteCommandGetSelectedPlanet",
+      "addr": "0x00546970"
+    },
+    {
+      "name": "ExecuteCommandGetSoloMode",
+      "addr": "0x00546AF0"
+    },
+    {
+      "name": "ExecuteCommandGetSpellCastItem",
+      "addr": "0x0053D250"
+    },
+    {
+      "name": "ExecuteCommandGetSubScreenID",
+      "addr": "0x005464D0"
+    },
+    {
+      "name": "ExecuteCommandGetTimeHour",
+      "addr": "0x0053E020"
+    },
+    {
+      "name": "ExecuteCommandGetTimeMillisecond",
+      "addr": "0x0053E060"
+    },
+    {
+      "name": "ExecuteCommandGetTimeMinute",
+      "addr": "0x0053E0A0"
+    },
+    {
+      "name": "ExecuteCommandGetTimeSecond",
+      "addr": "0x0053E0E0"
+    },
+    {
+      "name": "ExecuteCommandHoldWorldFadeInForDialog",
+      "addr": "0x00547E30"
+    },
+    {
+      "name": "ExecuteCommandIntToFloat",
+      "addr": "0x0053EAA0"
+    },
+    {
+      "name": "ExecuteCommandIsCreditSequenceInProgress",
+      "addr": "0x005473B0"
+    },
+    {
+      "name": "ExecuteCommandIsMoviePlaying",
+      "addr": "0x005481E0"
+    },
+    {
+      "name": "ExecuteCommandNoClicksFor",
+      "addr": "0x00547DC0"
+    },
+    {
+      "name": "ExecuteCommandPauseGame",
+      "addr": "0x00546590"
+    },
+    {
+      "name": "ExecuteCommandPlayMovieQueue",
+      "addr": "0x005482D0"
+    },
+    {
+      "name": "ExecuteCommandPlayRumblePattern",
+      "addr": "0x00541120"
+    },
+    {
+      "name": "ExecuteCommandPrintInteger",
+      "addr": "0x00541640"
+    },
+    {
+      "name": "ExecuteCommandPrintObject",
+      "addr": "0x00541770"
+    },
+    {
+      "name": "ExecuteCommandQueueMovie",
+      "addr": "0x00548210"
+    },
+    {
+      "name": "ExecuteCommandRandomName",
+      "addr": "0x00541A30"
+    },
+    {
+      "name": "ExecuteCommandResetDialogState",
+      "addr": "0x00547BC0"
+    },
+    {
+      "name": "ExecuteCommandSWMG_GetCameraClipping",
+      "addr": "0x005CBE90"
+    },
+    {
+      "name": "ExecuteCommandSWMG_GetLateralAccelerationPerSecond",
+      "addr": "0x005CD280"
+    },
+    {
+      "name": "ExecuteCommandSWMG_GetMiniGameCounts",
+      "addr": "0x005CBFB0"
+    },
+    {
+      "name": "ExecuteCommandSWMG_GetPlayer",
+      "addr": "0x005CBF70"
+    },
+    {
+      "name": "ExecuteCommandSWMG_GetPlayerFloatInfo",
+      "addr": "0x005CCC60"
+    },
+    {
+      "name": "ExecuteCommandSWMG_GetPlayerVectorInfo",
+      "addr": "0x005CCD20"
+    },
+    {
+      "name": "ExecuteCommandSWMG_SetCameraClip",
+      "addr": "0x005CBF00"
+    },
+    {
+      "name": "ExecuteCommandSWMG_SetLateralAccelerationPerSecond",
+      "addr": "0x005CD230"
+    },
+    {
+      "name": "ExecuteCommandSWMG_SetPlayerFloatInfo",
+      "addr": "0x005CCE70"
+    },
+    {
+      "name": "ExecuteCommandSWMG_SetPlayerVectorInfo",
+      "addr": "0x005CCF30"
+    },
+    {
+      "name": "ExecuteCommandSWMG_SetSpeedBlurEffect",
+      "addr": "0x00543550"
+    },
+    {
+      "name": "ExecuteCommandSetButtonMashCheck",
+      "addr": "0x00546A40"
+    },
+    {
+      "name": "ExecuteCommandSetEncounterData",
+      "addr": "0x00542760"
+    },
+    {
+      "name": "ExecuteCommandSetForcePowerUnsuccessful",
+      "addr": "0x00543740"
+    },
+    {
+      "name": "ExecuteCommandSetGalaxyMapPlanetAvailable",
+      "addr": "0x005467F0"
+    },
+    {
+      "name": "ExecuteCommandSetGalaxyMapPlanetSelectable",
+      "addr": "0x005468B0"
+    },
+    {
+      "name": "ExecuteCommandSetGlobalFadeIn",
+      "addr": "0x00546010"
+    },
+    {
+      "name": "ExecuteCommandSetGlobalFadeOut",
+      "addr": "0x005460D0"
+    },
+    {
+      "name": "ExecuteCommandSetGoodEvilValue",
+      "addr": "0x00547BE0"
+    },
+    {
+      "name": "ExecuteCommandSetListenString",
+      "addr": "0x00543030"
+    },
+    {
+      "name": "ExecuteCommandSetMusicVolume",
+      "addr": "0x00547EF0"
+    },
+    {
+      "name": "ExecuteCommandSetNPCSelectability",
+      "addr": "0x00543300"
+    },
+    {
+      "name": "ExecuteCommandSetPartyAIStyle",
+      "addr": "0x00545C50"
+    },
+    {
+      "name": "ExecuteCommandSetPlaceableIllumination",
+      "addr": "0x00543360"
+    },
+    {
+      "name": "ExecuteCommandSetReturnStrref",
+      "addr": "0x005434C0"
+    },
+    {
+      "name": "ExecuteCommandSetSoloMode",
+      "addr": "0x00547CE0"
+    },
+    {
+      "name": "ExecuteCommandSetTutorialWindowsEnabled",
+      "addr": "0x005472F0"
+    },
+    {
+      "name": "ExecuteCommandShipBuild",
+      "addr": "0x00543840"
+    },
+    {
+      "name": "ExecuteCommandShowPartySelectionGUI",
+      "addr": "0x005438B0"
+    },
+    {
+      "name": "ExecuteCommandShowTutorialWindow",
+      "addr": "0x00547340"
+    },
+    {
+      "name": "ExecuteCommandShowUpgradeScreen",
+      "addr": "0x00543990"
+    },
+    {
+      "name": "ExecuteCommandSoundObjectFadeAndStop",
+      "addr": "0x00543E60"
+    },
+    {
+      "name": "ExecuteCommandSoundObjectPlay",
+      "addr": "0x00543BE0"
+    },
+    {
+      "name": "ExecuteCommandSoundObjectStop",
+      "addr": "0x00543E10"
+    },
+    {
+      "name": "ExecuteCommandStopRumblePattern",
+      "addr": "0x005446C0"
+    },
+    {
+      "name": "ExecuteCommandStringConversions",
+      "addr": "0x00544710"
+    },
+    {
+      "name": "ExecuteCommandSuppressStatusSummaryEntry",
+      "addr": "0x00547E50"
+    },
+    {
+      "name": "ExecuteCommandYavinHackCloseDoor",
+      "addr": "0x00548310"
+    },
+    {
+      "name": "GetEqualGameDefinedStructure",
+      "addr": "0x0052C510"
+    },
+    {
+      "name": "RunScriptCallback",
+      "addr": "0x0052C100"
+    },
+    {
+      "name": "~CSWVirtualMachineCommands",
+      "addr": "0x004B16E0"
+    },
+    {
+      "name": "~CSWVirtualMachineCommands",
+      "addr": "0x0052C070"
+    }
+  ]
+}
