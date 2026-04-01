@@ -1,1 +1,52 @@
-[]
+[
+  {
+    "k1_addr": "0x4d2ff0",
+    "tsl_addr": "0x770ec0",
+    "name": "CSWSCombatRoundAction::CSWSCombatRoundAction",
+    "class": "CSWSCombatRoundAction",
+    "method": "CSWSCombatRoundAction",
+    "ns": "CSWSCombatRoundAction",
+    "ns_pairs": 5,
+    "via": "positional_ordering"
+  },
+  {
+    "k1_addr": "0x4d7270",
+    "tsl_addr": "0x54c040",
+    "name": "CScriptEvent::operator==",
+    "class": "CScriptEvent",
+    "method": "operator==",
+    "ns": "CScriptEvent",
+    "ns_pairs": 8,
+    "via": "positional_ordering"
+  },
+  {
+    "k1_addr": "0x4d7590",
+    "tsl_addr": "0x6a4d30",
+    "name": "CScriptEvent::~CScriptEvent",
+    "class": "CScriptEvent",
+    "method": "~CScriptEvent",
+    "ns": "CScriptEvent",
+    "ns_pairs": 8,
+    "via": "positional_ordering"
+  },
+  {
+    "k1_addr": "0x5e6810",
+    "tsl_addr": "0x60fce0",
+    "name": "CExoAliasList::CExoAliasList",
+    "class": "CExoAliasList",
+    "method": "CExoAliasList",
+    "ns": "CExoAliasList",
+    "ns_pairs": 6,
+    "via": "positional_ordering"
+  },
+  {
+    "k1_addr": "0x5e69b0",
+    "tsl_addr": "0x60fd90",
+    "name": "CExoAliasList::~CExoAliasList",
+    "class": "CExoAliasList",
+    "method": "~CExoAliasList",
+    "ns": "CExoAliasList",
+    "ns_pairs": 6,
+    "via": "positional_ordering"
+  }
+]
