@@ -73,3 +73,4 @@ dist/
 publish_*.log
 *.log
 agentdecompile_projects/
+.history/

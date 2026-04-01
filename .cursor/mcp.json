@@ -12,16 +12,6 @@
         "DOTNET_ENVIRONMENT": "Production",
         "LOG_LEVEL": "Information"
       }
-    },
-    "ai_context": {
-      "type": "stdio",
-      "command": "uvx",
-      "args": [
-        "--refresh",
-        "--from",
-        "git+https://github.com/doobidoo/mcp-memory-service",
-        "mcp-memory-service"
-      ]
     }
   }
 }

@@ -1148,13 +1148,9 @@ namespace BioWare.Common
         /// <summary>
         /// Returns a list of UTI resources for this module.
         /// </summary>
-        /// <remarks>
-        /// NOTE: Python implementation has a bug - it checks for ResourceType.UTD instead of ResourceType.UTI.
-        /// Matching Python exactly as per 1:1 porting requirements.
-        /// </remarks>
         public List<ModuleResource> Items()
         {
-            return _resources.Values.Where(resource => resource.GetResType() == ResourceType.UTD).ToList();
+            return _resources.Values.Where(resource => resource.GetResType() == ResourceType.UTI).ToList();
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1247-1271
@@ -2088,9 +2084,9 @@ namespace BioWare.Common
                     }
                 }
 
-                if (loaded != null && loaded is T)
+                if (loaded != null && loaded is T t)
                 {
-                    _resourceObj = (T)loaded;
+                    _resourceObj = t;
                 }
                 else
                 {

@@ -1,11 +1,8 @@
 {
   "avalonia.dotnetSdkVersion": "8.0",
   "chat.mcp.discovery.enabled": {
-    "cursor-workspace": true
+    "cursor-workspace": false
   },
-  "dotrush.roslyn.projectOrSolutionFiles": [
-    "Andastra.sln"
-  ],
   "files.autoSave": "onFocusChange",
   "files.autoSaveWhenNoErrors": false,
   "files.autoSaveWorkspaceFilesOnly": true,

@@ -91,8 +91,7 @@ namespace BioWare.Tools
             var newModule = new ERF(ERFType.MOD);
 
             var gitRes = oldModule.Git();
-            var git = gitRes?.Resource() as GIT;
-            if (git == null)
+            if (!(gitRes?.Resource() is GIT git))
             {
                 throw new ArgumentException($"No GIT file found in module '{root}'");
             }
