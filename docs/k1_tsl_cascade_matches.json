@@ -67207,6 +67207,254 @@
       "method": "FeatAcquired",
       "n_anchors": 2,
       "via": "projected_caller_intersection"
+    },
+    {
+      "k1_addr": "0x5ed9c0",
+      "tsl_addr": "0x40d250",
+      "name": "CClientExoApp::StopMenuMusic",
+      "class": "CClientExoApp",
+      "method": "StopMenuMusic",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x5c4c00",
+      "tsl_addr": "0x4894b0",
+      "name": "CTwoDimArrays::GetIPRPParamTable",
+      "class": "CTwoDimArrays",
+      "method": "GetIPRPParamTable",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x6a7ca0",
+      "tsl_addr": "0x5b07a0",
+      "name": "CSWGuiDialogCinematic::SetExtent",
+      "class": "CSWGuiDialogCinematic",
+      "method": "SetExtent",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x6effa0",
+      "tsl_addr": "0x5f5a80",
+      "name": "CSWGuiQuickPanel::GetCurrentName",
+      "class": "CSWGuiQuickPanel",
+      "method": "GetCurrentName",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x4ae850",
+      "tsl_addr": "0x64be70",
+      "name": "CServerExoApp::Initialize",
+      "class": "CServerExoApp",
+      "method": "Initialize",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x4ae940",
+      "tsl_addr": "0x64c090",
+      "name": "CServerExoApp::MovePlayerToArea",
+      "class": "CServerExoApp",
+      "method": "MovePlayerToArea",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x4b19c0",
+      "tsl_addr": "0x7bb0d0",
+      "name": "CServerExoAppInternal::GetWaypointByGameObjectID",
+      "class": "CServerExoAppInternal",
+      "method": "GetWaypointByGameObjectID",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x4b1ab0",
+      "tsl_addr": "0x7bb220",
+      "name": "CServerExoAppInternal::GetStoreByGameObjectID",
+      "class": "CServerExoAppInternal",
+      "method": "GetStoreByGameObjectID",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x46f410",
+      "tsl_addr": "0x897bb0",
+      "name": "StaticPartNeedsMat",
+      "class": "",
+      "method": "StaticPartNeedsMat",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x47b070",
+      "tsl_addr": "0x8f5530",
+      "name": "Material::SetMaterialColor",
+      "class": "Material",
+      "method": "SetMaterialColor",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "tsl_addr": "0x5d1d20",
+      "k1_addr": "0x6ca250",
+      "name": "LoadPCAutoSave",
+      "class": "",
+      "method": "LoadPCAutoSave",
+      "via": "vote_callee_projection",
+      "votes": 17,
+      "total_anchors": 23,
+      "tsl_sz": 2923,
+      "k1_sz": 2110
+    },
+    {
+      "tsl_addr": "0x5cd8f0",
+      "k1_addr": "0x6c4d70",
+      "name": "OnPanelAdded",
+      "class": "",
+      "method": "OnPanelAdded",
+      "via": "vote_callee_projection",
+      "votes": 8,
+      "total_anchors": 13,
+      "tsl_sz": 1201,
+      "k1_sz": 1485
+    },
+    {
+      "tsl_addr": "0x6969a0",
+      "k1_addr": "0x4fd1e0",
+      "name": "Rest",
+      "class": "",
+      "method": "Rest",
+      "via": "vote_callee_projection",
+      "votes": 7,
+      "total_anchors": 11,
+      "tsl_sz": 716,
+      "k1_sz": 643
+    },
+    {
+      "tsl_addr": "0x4132e0",
+      "k1_addr": "0x61a980",
+      "name": "AnimationUpdate",
+      "class": "",
+      "method": "AnimationUpdate",
+      "via": "vote_callee_projection",
+      "votes": 4,
+      "total_anchors": 7,
+      "tsl_sz": 592,
+      "k1_sz": 441
+    },
+    {
+      "tsl_addr": "0x705d10",
+      "k1_addr": "0x4c0fa0",
+      "name": "ComputeSafeLocationInDirection",
+      "class": "",
+      "method": "ComputeSafeLocationInDirection",
+      "via": "vote_callee_projection",
+      "votes": 4,
+      "total_anchors": 8,
+      "tsl_sz": 1094,
+      "k1_sz": 1075
+    },
+    {
+      "tsl_addr": "0x7d85f0",
+      "k1_addr": "0x56e360",
+      "name": "WriteRepositoryUpdate",
+      "class": "",
+      "method": "WriteRepositoryUpdate",
+      "via": "vote_callee_projection",
+      "votes": 4,
+      "total_anchors": 6,
+      "tsl_sz": 830,
+      "k1_sz": 642
+    },
+    {
+      "tsl_addr": "0x506820",
+      "k1_addr": "0x683f00",
+      "name": "MoveNextDoorState",
+      "class": "",
+      "method": "MoveNextDoorState",
+      "via": "vote_callee_projection",
+      "votes": 3,
+      "total_anchors": 4,
+      "tsl_sz": 160,
+      "k1_sz": 129
+    },
+    {
+      "tsl_addr": "0x5ef6f0",
+      "k1_addr": "0x6ed610",
+      "name": "CreateOption",
+      "class": "",
+      "method": "CreateOption",
+      "via": "vote_callee_projection",
+      "votes": 3,
+      "total_anchors": 7,
+      "tsl_sz": 1021,
+      "k1_sz": 787
+    },
+    {
+      "k1_addr": "0x6f2d30",
+      "tsl_addr": "0x4952b0",
+      "name": "CSWGuiFeatsCharGen::DetermineFeat",
+      "class": "CSWGuiFeatsCharGen",
+      "method": "DetermineFeat",
+      "dominant_ns": "CSWGuiFeatsCharGen",
+      "ns_caller_count": 2,
+      "via": "ns_cluster_fingerprint"
+    },
+    {
+      "k1_addr": "0x4aebf0",
+      "tsl_addr": "0x64cab0",
+      "name": "CServerExoApp::ExecuteLoadModule",
+      "class": "CServerExoApp",
+      "method": "ExecuteLoadModule",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x4aed30",
+      "tsl_addr": "0x40d640",
+      "name": "CServerExoApp::SetMoveToModuleStartWaypoint",
+      "class": "CServerExoApp",
+      "method": "SetMoveToModuleStartWaypoint",
+      "n_anchors": 2,
+      "via": "projected_caller_intersection"
+    },
+    {
+      "k1_addr": "0x63c170",
+      "tsl_addr": "0x474420",
+      "name": "CSWCObject::AnimationStationary",
+      "class": "CSWCObject",
+      "method": "AnimationStationary",
+      "n_anchors": 2,
+      "via": "projected_caller_intersection"
+    },
+    {
+      "k1_addr": "0x410630",
+      "tsl_addr": "0x4dfab0",
+      "name": "CResGFF::CResGFF",
+      "class": "CResGFF",
+      "method": "CResGFF",
+      "n_anchors": 2,
+      "via": "projected_caller_intersection"
+    },
+    {
+      "k1_addr": "0x4aed00",
+      "tsl_addr": "0x64b940",
+      "name": "CServerExoApp::SetLoadingModule",
+      "class": "CServerExoApp",
+      "method": "SetLoadingModule",
+      "n_anchors": 2,
+      "via": "projected_caller_intersection"
+    },
+    {
+      "k1_addr": "0x5560e0",
+      "tsl_addr": "0x669990",
+      "name": "CItemRepository::ItemListGetItemObjectID",
+      "class": "CItemRepository",
+      "method": "ItemListGetItemObjectID",
+      "n_anchors": 2,
+      "via": "projected_caller_intersection"
+    },
+    {
+      "k1_addr": "0x566f20",
+      "tsl_addr": "0x7ca390",
+      "name": "CSWSMessage::AddActiveItemPropertiesToMessage",
+      "class": "CSWSMessage",
+      "method": "AddActiveItemPropertiesToMessage",
+      "n_anchors": 2,
+      "via": "projected_caller_intersection"
     }
   ],
   "reverse_callee_disambig_pairs": 6,
