@@ -67455,6 +67455,103 @@
       "method": "AddActiveItemPropertiesToMessage",
       "n_anchors": 2,
       "via": "projected_caller_intersection"
+    },
+    {
+      "k1_addr": "0x5ee1b0",
+      "tsl_addr": "0x40e4d0",
+      "name": "CClientExoApp::FadeAndStopStreamingSoundSource",
+      "class": "CClientExoApp",
+      "method": "FadeAndStopStreamingSoundSource",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x60fd80",
+      "tsl_addr": "0x42a670",
+      "name": "CSWCCreature::GetReticlePoint",
+      "class": "CSWCCreature",
+      "method": "GetReticlePoint",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x60af10",
+      "tsl_addr": "0x458ad0",
+      "name": "givesitharmour",
+      "class": "",
+      "method": "givesitharmour",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x63daa0",
+      "tsl_addr": "0x475a80",
+      "name": "CSWCObject::StopAllVisualEffects",
+      "class": "CSWCObject",
+      "method": "StopAllVisualEffects",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x683d00",
+      "tsl_addr": "0x5072c0",
+      "name": "CSWCDoor::SetAnimationWithoutTrigger",
+      "class": "CSWCDoor",
+      "method": "SetAnimationWithoutTrigger",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x67d1c0",
+      "tsl_addr": "0x54d3c0",
+      "name": "CSWGuiTutorial::PlaceAbove",
+      "class": "CSWGuiTutorial",
+      "method": "PlaceAbove",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x6db590",
+      "tsl_addr": "0x5ebdc0",
+      "name": "CSWMGBehaviorTrackAndFire::CSWMGBehaviorTrackAndFire",
+      "class": "CSWMGBehaviorTrackAndFire",
+      "method": "CSWMGBehaviorTrackAndFire",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x4ae8c0",
+      "tsl_addr": "0x64bf60",
+      "name": "CServerExoApp::RunModule",
+      "class": "CServerExoApp",
+      "method": "RunModule",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x4d39b0",
+      "tsl_addr": "0x775d20",
+      "name": "CSWSCombatRound::AddSWSpellAction",
+      "class": "CSWSCombatRound",
+      "method": "AddSWSpellAction",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x4d3a90",
+      "tsl_addr": "0x775f40",
+      "name": "CSWSCombatRound::AddSWItemSpellAction",
+      "class": "CSWSCombatRound",
+      "method": "AddSWItemSpellAction",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x4d3b30",
+      "tsl_addr": "0x776060",
+      "name": "CSWSCombatRound::AddCutsceneMoveActions",
+      "class": "CSWSCombatRound",
+      "method": "AddCutsceneMoveActions",
+      "via": "cascade_translated_callee_fingerprint"
+    },
+    {
+      "k1_addr": "0x63f400",
+      "tsl_addr": "0x475b50",
+      "name": "CSWCObject::DeleteVisualEffect",
+      "class": "CSWCObject",
+      "method": "DeleteVisualEffect",
+      "n_anchors": 2,
+      "via": "projected_callee_intersection"
     }
   ],
   "reverse_callee_disambig_pairs": 6,
