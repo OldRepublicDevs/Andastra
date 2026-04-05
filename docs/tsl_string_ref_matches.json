@@ -1,0 +1,45 @@
+[
+  {
+    "k1_addr": "0x0067BC40",
+    "tsl_addr": "0x0053D6A0",
+    "name": "PopulateModules",
+    "class": "CSWGuiMainMenu",
+    "method": "PopulateModules",
+    "via": "string_ref_fingerprint[5]",
+    "strings": [
+      ":modules",
+      "MODULES:",
+      "_s.rim",
+      "live%d",
+      "zzzzzzzz.zzz"
+    ]
+  },
+  {
+    "k1_addr": "0x006D12B0",
+    "tsl_addr": "0x00572CC0",
+    "name": "CSWBehaviorCameraCombat",
+    "class": "CSWBehaviorCameraCombat",
+    "method": "CSWBehaviorCameraCombat",
+    "via": "string_ref_fingerprint[5]",
+    "strings": [
+      "DISTANCE",
+      "HEIGHT",
+      "PITCH",
+      "ROTATION",
+      "SPEED",
+      "VIEWANGLE"
+    ]
+  },
+  {
+    "k1_addr": "0x00703EB8",
+    "tsl_addr": "0x0093815C",
+    "name": "_internal_wctime",
+    "class": "",
+    "method": "_internal_wctime",
+    "via": "string_ref_fingerprint[2]",
+    "strings": [
+      "JanFebMarAprMayJunJulAugSepOctNovDec",
+      "SunMonTueWedThuFriSat"
+    ]
+  }
+]
