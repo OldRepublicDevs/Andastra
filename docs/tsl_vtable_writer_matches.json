@@ -1,0 +1,786 @@
+[
+  {
+    "k1_addr": "0x00413D80",
+    "tsl_addr": "0x00620920",
+    "name": "~C2DA",
+    "class": "C2DA",
+    "method": "~C2DA",
+    "via_k1": "vtable_writer:C2DA:unique"
+  },
+  {
+    "k1_addr": "0x0049FA70",
+    "tsl_addr": "0x008C2F70",
+    "name": "~CAurBehavior",
+    "class": "CAurBehavior",
+    "method": "~CAurBehavior",
+    "via_k1": "vtable_writer:CAurBehavior:unique"
+  },
+  {
+    "k1_addr": "0x0049FCE0",
+    "tsl_addr": "0x008C3920",
+    "name": "~CAurBehaviorAttach",
+    "class": "CAurBehaviorAttach",
+    "method": "~CAurBehaviorAttach",
+    "via_k1": "vtable_writer:CAurBehaviorAttach:unique"
+  },
+  {
+    "k1_addr": "0x0049FE40",
+    "tsl_addr": "0x008C43E0",
+    "name": "CAurBehaviorAttachNoOrientation",
+    "class": "CAurBehaviorAttachNoOrientation",
+    "method": "CAurBehaviorAttachNoOrientation",
+    "via_k1": "vtable_writer:CAurBehaviorAttachNoOrientation:unique"
+  },
+  {
+    "k1_addr": "0x0049FDC0",
+    "tsl_addr": "0x008C3D20",
+    "name": "CAurBehaviorAttachTranslate",
+    "class": "CAurBehaviorAttachTranslate",
+    "method": "CAurBehaviorAttachTranslate",
+    "via_k1": "vtable_writer:CAurBehaviorAttachTranslate:unique"
+  },
+  {
+    "k1_addr": "0x005EE360",
+    "tsl_addr": "0x0040C490",
+    "name": "~CClientExoApp",
+    "class": "CClientExoApp",
+    "method": "~CClientExoApp",
+    "via_k1": "vtable_writer:CClientExoApp:unique"
+  },
+  {
+    "k1_addr": "0x005DFD50",
+    "tsl_addr": "0x00612480",
+    "name": "CExoInputeventDesc2ButtonAxis",
+    "class": "CExoInputeventDesc2ButtonAxis",
+    "method": "CExoInputeventDesc2ButtonAxis",
+    "via_k1": "vtable_writer:CExoInputeventDesc2ButtonAxis:unique"
+  },
+  {
+    "k1_addr": "0x005DB480",
+    "tsl_addr": "0x0063DC90",
+    "name": "~CExoSoundSourceInternal",
+    "class": "CExoSoundSourceInternal",
+    "method": "~CExoSoundSourceInternal",
+    "via_k1": "vtable_writer:CExoSoundSourceInternal:unique"
+  },
+  {
+    "k1_addr": "0x005DE7E0",
+    "tsl_addr": "0x00629430",
+    "name": "~CLYT",
+    "class": "CLYT",
+    "method": "~CLYT",
+    "via_k1": "vtable_writer:CLYT:unique"
+  },
+  {
+    "k1_addr": "0x00409D40",
+    "tsl_addr": "0x0061AB00",
+    "name": "~CRes",
+    "class": "CRes",
+    "method": "~CRes",
+    "via_k1": "vtable_writer:CRes:unique"
+  },
+  {
+    "k1_addr": "0x005CEAD0",
+    "tsl_addr": "0x007F7A30",
+    "name": "~CResBWM",
+    "class": "CResBWM",
+    "method": "~CResBWM",
+    "via_k1": "vtable_writer:CResBWM:unique"
+  },
+  {
+    "k1_addr": "0x0070C6B0",
+    "tsl_addr": "0x00633BB0",
+    "name": "~CResLIP",
+    "class": "CResLIP",
+    "method": "~CResLIP",
+    "via_k1": "vtable_writer:CResLIP:unique"
+  },
+  {
+    "k1_addr": "0x005CEA80",
+    "tsl_addr": "0x007F7980",
+    "name": "~CResMDL",
+    "class": "CResMDL",
+    "method": "~CResMDL",
+    "via_k1": "vtable_writer:CResMDL:unique"
+  },
+  {
+    "k1_addr": "0x005D4C50",
+    "tsl_addr": "0x00646E50",
+    "name": "~CResNCS",
+    "class": "CResNCS",
+    "method": "~CResNCS",
+    "via_k1": "vtable_writer:CResNCS:unique"
+  },
+  {
+    "k1_addr": "0x006DB670",
+    "tsl_addr": "0x00578E40",
+    "name": "~CResSSF",
+    "class": "CResSSF",
+    "method": "~CResSSF",
+    "via_k1": "vtable_writer:CResSSF:unique"
+  },
+  {
+    "k1_addr": "0x007129E0",
+    "tsl_addr": "0x009439D0",
+    "name": "~CResTGA",
+    "class": "CResTGA",
+    "method": "~CResTGA",
+    "via_k1": "vtable_writer:CResTGA:unique"
+  },
+  {
+    "k1_addr": "0x00712EE0",
+    "tsl_addr": "0x009443E0",
+    "name": "~CResTPC",
+    "class": "CResTPC",
+    "method": "~CResTPC",
+    "via_k1": "vtable_writer:CResTPC:unique"
+  },
+  {
+    "k1_addr": "0x00710D80",
+    "tsl_addr": "0x0090C530",
+    "name": "~CResVIS",
+    "class": "CResVIS",
+    "method": "~CResVIS",
+    "via_k1": "vtable_writer:CResVIS:unique"
+  },
+  {
+    "k1_addr": "0x0058F7A0",
+    "tsl_addr": "0x00559F40",
+    "name": "~CSWArea",
+    "class": "CSWArea",
+    "method": "~CSWArea",
+    "via_k1": "vtable_writer:CSWArea:unique"
+  },
+  {
+    "k1_addr": "0x00691030",
+    "tsl_addr": "0x00559BD0",
+    "name": "~CSWBehaviorAttachSound",
+    "class": "CSWBehaviorAttachSound",
+    "method": "~CSWBehaviorAttachSound",
+    "via_k1": "vtable_writer:CSWBehaviorAttachSound:unique"
+  },
+  {
+    "k1_addr": "0x0068E0D0",
+    "tsl_addr": "0x005568F0",
+    "name": "~CSWCAmbientSound",
+    "class": "CSWCAmbientSound",
+    "method": "~CSWCAmbientSound",
+    "via_k1": "vtable_writer:CSWCAmbientSound:unique"
+  },
+  {
+    "k1_addr": "0x0069E140",
+    "tsl_addr": "0x004C79D0",
+    "name": "~CSWCAnimBase",
+    "class": "CSWCAnimBase",
+    "method": "~CSWCAnimBase",
+    "via_k1": "vtable_writer:CSWCAnimBase:unique"
+  },
+  {
+    "k1_addr": "0x006E4E70",
+    "tsl_addr": "0x005DA5E0",
+    "name": "~CSWCAnimBasePlaceable",
+    "class": "CSWCAnimBasePlaceable",
+    "method": "~CSWCAnimBasePlaceable",
+    "via_k1": "vtable_writer:CSWCAnimBasePlaceable:unique"
+  },
+  {
+    "k1_addr": "0x0069CD10",
+    "tsl_addr": "0x004F7B00",
+    "name": "~CSWCAnimBaseTW",
+    "class": "CSWCAnimBaseTW",
+    "method": "~CSWCAnimBaseTW",
+    "via_k1": "vtable_writer:CSWCAnimBaseTW:unique"
+  },
+  {
+    "k1_addr": "0x0060A0F0",
+    "tsl_addr": "0x0044F6B0",
+    "name": "~CSWCArea",
+    "class": "CSWCArea",
+    "method": "~CSWCArea",
+    "via_k1": "vtable_writer:CSWCArea:unique"
+  },
+  {
+    "k1_addr": "0x006D9820",
+    "tsl_addr": "0x00582200",
+    "name": "~CSWCAreaOfEffectObject",
+    "class": "CSWCAreaOfEffectObject",
+    "method": "~CSWCAreaOfEffectObject",
+    "via_k1": "vtable_writer:CSWCAreaOfEffectObject:unique"
+  },
+  {
+    "k1_addr": "0x006170D0",
+    "tsl_addr": "0x00410E80",
+    "name": "~CSWCCreature",
+    "class": "CSWCCreature",
+    "method": "~CSWCCreature",
+    "via_k1": "vtable_writer:CSWCCreature:unique"
+  },
+  {
+    "k1_addr": "0x00683F90",
+    "tsl_addr": "0x00506A80",
+    "name": "~CSWCDoor",
+    "class": "CSWCDoor",
+    "method": "~CSWCDoor",
+    "via_k1": "vtable_writer:CSWCDoor:unique"
+  },
+  {
+    "k1_addr": "0x00646CD0",
+    "tsl_addr": "0x0047E460",
+    "name": "~CSWCItem",
+    "class": "CSWCItem",
+    "method": "~CSWCItem",
+    "via_k1": "vtable_writer:CSWCItem:unique"
+  },
+  {
+    "k1_addr": "0x0064B2D0",
+    "tsl_addr": "0x00490650",
+    "name": "CSWCLevelUpStats",
+    "class": "CSWCLevelUpStats",
+    "method": "CSWCLevelUpStats",
+    "via_k1": "vtable_writer:CSWCLevelUpStats:unique"
+  },
+  {
+    "k1_addr": "0x006925B0",
+    "tsl_addr": "0x0055C5C0",
+    "name": "~CSWCMapPin",
+    "class": "CSWCMapPin",
+    "method": "~CSWCMapPin",
+    "via_k1": "vtable_writer:CSWCMapPin:unique"
+  },
+  {
+    "k1_addr": "0x0064B530",
+    "tsl_addr": "0x00496570",
+    "name": "~CSWCMessage",
+    "class": "CSWCMessage",
+    "method": "~CSWCMessage",
+    "via_k1": "vtable_writer:CSWCMessage:unique"
+  },
+  {
+    "k1_addr": "0x00683200",
+    "tsl_addr": "0x00534A80",
+    "name": "~CSWCPlaceable",
+    "class": "CSWCPlaceable",
+    "method": "~CSWCPlaceable",
+    "via_k1": "vtable_writer:CSWCPlaceable:unique"
+  },
+  {
+    "k1_addr": "0x0064B460",
+    "tsl_addr": "0x004A6750",
+    "name": "CSWCPlayer",
+    "class": "CSWCPlayer",
+    "method": "CSWCPlayer",
+    "via_k1": "vtable_writer:CSWCPlayer:unique"
+  },
+  {
+    "k1_addr": "0x006912F0",
+    "tsl_addr": "0x00537820",
+    "name": "~CSWCTrigger",
+    "class": "CSWCTrigger",
+    "method": "~CSWCTrigger",
+    "via_k1": "vtable_writer:CSWCTrigger:unique"
+  },
+  {
+    "k1_addr": "0x00596B80",
+    "tsl_addr": "0x00723620",
+    "name": "CSWCollisionMesh",
+    "class": "CSWCollisionMesh",
+    "method": "CSWCollisionMesh",
+    "via_k1": "vtable_writer:CSWCollisionMesh:unique"
+  },
+  {
+    "k1_addr": "0x006F6BF0",
+    "tsl_addr": "0x006010F0",
+    "name": "~CSWGuiAbilitiesCharGen",
+    "class": "CSWGuiAbilitiesCharGen",
+    "method": "~CSWGuiAbilitiesCharGen",
+    "via_k1": "vtable_writer:CSWGuiAbilitiesCharGen:unique"
+  },
+  {
+    "k1_addr": "0x006A9770",
+    "tsl_addr": "0x005B23E0",
+    "name": "CSWGuiBarkBubble",
+    "class": "CSWGuiBarkBubble",
+    "method": "CSWGuiBarkBubble",
+    "via_k1": "vtable_writer:CSWGuiBarkBubble:unique"
+  },
+  {
+    "k1_addr": "0x004151C0",
+    "tsl_addr": "0x00913030",
+    "name": "~CSWGuiBorder",
+    "class": "CSWGuiBorder",
+    "method": "~CSWGuiBorder",
+    "via_k1": "vtable_writer:CSWGuiBorder:unique"
+  },
+  {
+    "k1_addr": "0x00686AB0",
+    "tsl_addr": "0x0051C110",
+    "name": "CSWGuiCharButton",
+    "class": "CSWGuiCharButton",
+    "method": "CSWGuiCharButton",
+    "via_k1": "vtable_writer:CSWGuiCharButton:unique"
+  },
+  {
+    "k1_addr": "0x006DB720",
+    "tsl_addr": "0x005DE6B0",
+    "name": "~CSWGuiClassSelection",
+    "class": "CSWGuiClassSelection",
+    "method": "~CSWGuiClassSelection",
+    "via_k1": "vtable_writer:CSWGuiClassSelection:unique"
+  },
+  {
+    "k1_addr": "0x006A7C20",
+    "tsl_addr": "0x005B06F0",
+    "name": "~CSWGuiDialogCinematic",
+    "class": "CSWGuiDialogCinematic",
+    "method": "~CSWGuiDialogCinematic",
+    "via_k1": "vtable_writer:CSWGuiDialogCinematic:unique"
+  },
+  {
+    "k1_addr": "0x006A8110",
+    "tsl_addr": "0x005B17E0",
+    "name": "~CSWGuiDialogComputer",
+    "class": "CSWGuiDialogComputer",
+    "method": "~CSWGuiDialogComputer",
+    "via_k1": "vtable_writer:CSWGuiDialogComputer:unique"
+  },
+  {
+    "k1_addr": "0x006A8520",
+    "tsl_addr": "0x005B2260",
+    "name": "~CSWGuiDialogComputerCamera",
+    "class": "CSWGuiDialogComputerCamera",
+    "method": "~CSWGuiDialogComputerCamera",
+    "via_k1": "vtable_writer:CSWGuiDialogComputerCamera:unique"
+  },
+  {
+    "k1_addr": "0x006A8930",
+    "tsl_addr": "0x005AF0D0",
+    "name": "CSWGuiDialogLetterbox",
+    "class": "CSWGuiDialogLetterbox",
+    "method": "CSWGuiDialogLetterbox",
+    "via_k1": "vtable_writer:CSWGuiDialogLetterbox:unique"
+  },
+  {
+    "k1_addr": "0x0041C740",
+    "tsl_addr": "0x005D7D00",
+    "name": "~CSWGuiEditbox",
+    "class": "CSWGuiEditbox",
+    "method": "~CSWGuiEditbox",
+    "via_k1": "vtable_writer:CSWGuiEditbox:unique"
+  },
+  {
+    "k1_addr": "0x006F2A50",
+    "tsl_addr": "0x005F9830",
+    "name": "~CSWGuiFeatsCharGen",
+    "class": "CSWGuiFeatsCharGen",
+    "method": "~CSWGuiFeatsCharGen",
+    "via_k1": "vtable_writer:CSWGuiFeatsCharGen:unique"
+  },
+  {
+    "k1_addr": "0x0068B7C0",
+    "tsl_addr": "0x005226B0",
+    "name": "AddFloatyText",
+    "class": "CSWGuiFloatyText",
+    "method": "AddFloatyText",
+    "via_k1": "vtable_writer:CSWGuiFloatyText:unique"
+  },
+  {
+    "k1_addr": "0x00415AD0",
+    "tsl_addr": "0x009147E0",
+    "name": "~CSWGuiImage",
+    "class": "CSWGuiImage",
+    "method": "~CSWGuiImage",
+    "via_k1": "vtable_writer:CSWGuiImage:unique"
+  },
+  {
+    "k1_addr": "0x006ABAF0",
+    "tsl_addr": "0x00592F90",
+    "name": "~CSWGuiInGameAbilities",
+    "class": "CSWGuiInGameAbilities",
+    "method": "~CSWGuiInGameAbilities",
+    "via_k1": "vtable_writer:CSWGuiInGameAbilities:unique"
+  },
+  {
+    "k1_addr": "0x006C7D50",
+    "tsl_addr": "0x005ACA30",
+    "name": "CSWGuiInGameAreaTransition",
+    "class": "CSWGuiInGameAreaTransition",
+    "method": "CSWGuiInGameAreaTransition",
+    "via_k1": "vtable_writer:CSWGuiInGameAreaTransition:unique"
+  },
+  {
+    "k1_addr": "0x006AF970",
+    "tsl_addr": "0x00597870",
+    "name": "~CSWGuiInGameCharacter",
+    "class": "CSWGuiInGameCharacter",
+    "method": "~CSWGuiInGameCharacter",
+    "via_k1": "vtable_writer:CSWGuiInGameCharacter:unique"
+  },
+  {
+    "k1_addr": "0x006B8840",
+    "tsl_addr": "0x0059E5A0",
+    "name": "~CSWGuiInGameEquip",
+    "class": "CSWGuiInGameEquip",
+    "method": "~CSWGuiInGameEquip",
+    "via_k1": "vtable_writer:CSWGuiInGameEquip:unique"
+  },
+  {
+    "k1_addr": "0x006B40C0",
+    "tsl_addr": "0x0059AF60",
+    "name": "~CSWGuiInGameInventory",
+    "class": "CSWGuiInGameInventory",
+    "method": "~CSWGuiInGameInventory",
+    "via_k1": "vtable_writer:CSWGuiInGameInventory:unique"
+  },
+  {
+    "k1_addr": "0x00626820",
+    "tsl_addr": "0x0052A170",
+    "name": "~CSWGuiInGameMessages",
+    "class": "CSWGuiInGameMessages",
+    "method": "~CSWGuiInGameMessages",
+    "via_k1": "vtable_writer:CSWGuiInGameMessages:unique"
+  },
+  {
+    "k1_addr": "0x006EC3D0",
+    "tsl_addr": "0x005EF380",
+    "name": "~CSWGuiInGameOptKeyMappings",
+    "class": "CSWGuiInGameOptKeyMappings",
+    "method": "~CSWGuiInGameOptKeyMappings",
+    "via_k1": "vtable_writer:CSWGuiInGameOptKeyMappings:unique"
+  },
+  {
+    "k1_addr": "0x006ACC50",
+    "tsl_addr": "0x0058A3A0",
+    "name": "CSWGuiInGameSkillEntry",
+    "class": "CSWGuiInGameSkillEntry",
+    "method": "CSWGuiInGameSkillEntry",
+    "via_k1": "vtable_writer:CSWGuiInGameSkillEntry:unique"
+  },
+  {
+    "k1_addr": "0x006C2270",
+    "tsl_addr": "0x005AD390",
+    "name": "CSWGuiInGameSoloModeQuery",
+    "class": "CSWGuiInGameSoloModeQuery",
+    "method": "CSWGuiInGameSoloModeQuery",
+    "via_k1": "vtable_writer:CSWGuiInGameSoloModeQuery:unique"
+  },
+  {
+    "k1_addr": "0x006E7B70",
+    "tsl_addr": "0x005E86C0",
+    "name": "~CSWGuiLevelUpCharGen",
+    "class": "CSWGuiLevelUpCharGen",
+    "method": "~CSWGuiLevelUpCharGen",
+    "via_k1": "vtable_writer:CSWGuiLevelUpCharGen:unique"
+  },
+  {
+    "k1_addr": "0x0041B060",
+    "tsl_addr": "0x0091B1A0",
+    "name": "~CSWGuiListBox",
+    "class": "CSWGuiListBox",
+    "method": "~CSWGuiListBox",
+    "via_k1": "vtable_writer:CSWGuiListBox:unique"
+  },
+  {
+    "k1_addr": "0x0068B170",
+    "tsl_addr": "0x0051C510",
+    "name": "~CSWGuiMainInterface",
+    "class": "CSWGuiMainInterface",
+    "method": "~CSWGuiMainInterface",
+    "via_k1": "vtable_writer:CSWGuiMainInterface:unique"
+  },
+  {
+    "k1_addr": "0x006942D0",
+    "tsl_addr": "0x00564A70",
+    "name": "~CSWGuiMapHider",
+    "class": "CSWGuiMapHider",
+    "method": "~CSWGuiMapHider",
+    "via_k1": "vtable_writer:CSWGuiMapHider:unique"
+  },
+  {
+    "k1_addr": "0x006BED70",
+    "tsl_addr": "0x0058A8B0",
+    "name": "CSWGuiPartySelectionData",
+    "class": "CSWGuiPartySelectionButton",
+    "method": "CSWGuiPartySelectionData",
+    "via_k1": "vtable_writer:CSWGuiPartySelectionButton:unique"
+  },
+  {
+    "k1_addr": "0x0067E540",
+    "tsl_addr": "0x00552940",
+    "name": "~CSWGuiPazaakGame",
+    "class": "CSWGuiPazaakGame",
+    "method": "~CSWGuiPazaakGame",
+    "via_k1": "vtable_writer:CSWGuiPazaakGame:unique"
+  },
+  {
+    "k1_addr": "0x0067E2B0",
+    "tsl_addr": "0x0054F300",
+    "name": "~CSWGuiPazaakStart",
+    "class": "CSWGuiPazaakStart",
+    "method": "~CSWGuiPazaakStart",
+    "via_k1": "vtable_writer:CSWGuiPazaakStart:unique"
+  },
+  {
+    "k1_addr": "0x006CA110",
+    "tsl_addr": "0x005D0790",
+    "name": "~CSWGuiSaveLoad",
+    "class": "CSWGuiSaveLoad",
+    "method": "~CSWGuiSaveLoad",
+    "via_k1": "vtable_writer:CSWGuiSaveLoad:unique"
+  },
+  {
+    "k1_addr": "0x00419E40",
+    "tsl_addr": "0x0091A0D0",
+    "name": "~CSWGuiScrollBar",
+    "class": "CSWGuiScrollBar",
+    "method": "~CSWGuiScrollBar",
+    "via_k1": "vtable_writer:CSWGuiScrollBar:unique"
+  },
+  {
+    "k1_addr": "0x006F47E0",
+    "tsl_addr": "0x005FD330",
+    "name": "~CSWGuiSkillsCharGen",
+    "class": "CSWGuiSkillsCharGen",
+    "method": "~CSWGuiSkillsCharGen",
+    "via_k1": "vtable_writer:CSWGuiSkillsCharGen:unique"
+  },
+  {
+    "k1_addr": "0x006C1470",
+    "tsl_addr": "0x005A8E80",
+    "name": "~CSWGuiStore",
+    "class": "CSWGuiStore",
+    "method": "~CSWGuiStore",
+    "via_k1": "vtable_writer:CSWGuiStore:unique"
+  },
+  {
+    "k1_addr": "0x00415FF0",
+    "tsl_addr": "0x00915660",
+    "name": "~CSWGuiText",
+    "class": "CSWGuiText",
+    "method": "~CSWGuiText",
+    "via_k1": "vtable_writer:CSWGuiText:unique"
+  },
+  {
+    "k1_addr": "0x006277C0",
+    "tsl_addr": "0x005313A0",
+    "name": "CSWGuiToolTipPanel",
+    "class": "CSWGuiToolTipPanel",
+    "method": "CSWGuiToolTipPanel",
+    "via_k1": "vtable_writer:CSWGuiToolTipPanel:unique"
+  },
+  {
+    "k1_addr": "0x006C47A0",
+    "tsl_addr": "0x005B8880",
+    "name": "~CSWGuiUpgradeItemSelect",
+    "class": "CSWGuiUpgradeItemSelect",
+    "method": "~CSWGuiUpgradeItemSelect",
+    "via_k1": "vtable_writer:CSWGuiUpgradeItemSelect:unique"
+  },
+  {
+    "k1_addr": "0x006C4450",
+    "tsl_addr": "0x005B7250",
+    "name": "~CSWGuiUpgradeSelection",
+    "class": "CSWGuiUpgradeSelection",
+    "method": "~CSWGuiUpgradeSelection",
+    "via_k1": "vtable_writer:CSWGuiUpgradeSelection:unique"
+  },
+  {
+    "k1_addr": "0x006DAFE0",
+    "tsl_addr": "0x005EC080",
+    "name": "CSWMGBehaviorBullet",
+    "class": "CSWMGBehaviorBullet",
+    "method": "CSWMGBehaviorBullet",
+    "via_k1": "vtable_writer:CSWMGBehaviorBullet:unique"
+  },
+  {
+    "k1_addr": "0x00674800",
+    "tsl_addr": "0x005DC4A0",
+    "name": "~CSWMGGunBank",
+    "class": "CSWMGGunBank",
+    "method": "~CSWMGGunBank",
+    "via_k1": "vtable_writer:CSWMGGunBank:unique"
+  },
+  {
+    "k1_addr": "0x00674860",
+    "tsl_addr": "0x005DCFF0",
+    "name": "CSWMGTargettingGunBank",
+    "class": "CSWMGTargettingGunBank",
+    "method": "CSWMGTargettingGunBank",
+    "via_k1": "vtable_writer:CSWMGTargettingGunBank:unique"
+  },
+  {
+    "k1_addr": "0x0064B530",
+    "tsl_addr": "0x0054A510",
+    "name": "~CSWCMessage",
+    "class": "CSWMessage",
+    "method": "~CSWCMessage",
+    "via_k1": "vtable_writer:CSWMessage:unique"
+  },
+  {
+    "k1_addr": "0x00671E40",
+    "tsl_addr": "0x0055E7E0",
+    "name": "AddEnemy",
+    "class": "CSWMiniEnemy",
+    "method": "AddEnemy",
+    "via_k1": "vtable_writer:CSWMiniEnemy:unique"
+  },
+  {
+    "k1_addr": "0x00551440",
+    "tsl_addr": "0x0050AB20",
+    "name": "~CSWRules",
+    "class": "CSWRules",
+    "method": "~CSWRules",
+    "via_k1": "vtable_writer:CSWRules:unique"
+  },
+  {
+    "k1_addr": "0x005A4880",
+    "tsl_addr": "0x0074D530",
+    "name": "~CSWSDialog",
+    "class": "CSWSDialog",
+    "method": "~CSWSDialog",
+    "via_k1": "vtable_writer:CSWSDialog:unique"
+  },
+  {
+    "k1_addr": "0x004D82B0",
+    "tsl_addr": "0x00736240",
+    "name": "~CSWSEffectListHandler",
+    "class": "CSWSEffectListHandler",
+    "method": "~CSWSEffectListHandler",
+    "via_k1": "vtable_writer:CSWSEffectListHandler:unique"
+  },
+  {
+    "k1_addr": "0x004E53A0",
+    "tsl_addr": "0x007C17D0",
+    "name": "~CSWSItemPropertyHandler",
+    "class": "CSWSItemPropertyHandler",
+    "method": "~CSWSItemPropertyHandler",
+    "via_k1": "vtable_writer:CSWSItemPropertyHandler:unique"
+  },
+  {
+    "k1_addr": "0x005209A0",
+    "tsl_addr": "0x007FC570",
+    "name": "~CSWSMessage",
+    "class": "CSWSMessage",
+    "method": "~CSWSMessage",
+    "via_k1": "vtable_writer:CSWSMessage:unique"
+  },
+  {
+    "k1_addr": "0x0057A210",
+    "tsl_addr": "0x0080AC30",
+    "name": "~CSWSRules",
+    "class": "CSWSRules",
+    "method": "~CSWSRules",
+    "via_k1": "vtable_writer:CSWSRules:unique"
+  },
+  {
+    "k1_addr": "0x005C8660",
+    "tsl_addr": "0x007F6340",
+    "name": "~CSWSSoundObject",
+    "class": "CSWSSoundObject",
+    "method": "~CSWSSoundObject",
+    "via_k1": "vtable_writer:CSWSSoundObject:unique"
+  },
+  {
+    "k1_addr": "0x0058EEF0",
+    "tsl_addr": "0x0075D370",
+    "name": "~CSWSTrigger",
+    "class": "CSWSTrigger",
+    "method": "~CSWSTrigger",
+    "via_k1": "vtable_writer:CSWSTrigger:unique"
+  },
+  {
+    "k1_addr": "0x0052C070",
+    "tsl_addr": "0x0077B430",
+    "name": "~CSWVirtualMachineCommands",
+    "class": "CSWVirtualMachineCommands",
+    "method": "~CSWVirtualMachineCommands",
+    "via_k1": "vtable_writer:CSWVirtualMachineCommands:unique"
+  },
+  {
+    "k1_addr": "0x0041F2B0",
+    "tsl_addr": "0x00817020",
+    "name": "~LifeTextureController",
+    "class": "LifeTextureController",
+    "method": "~LifeTextureController",
+    "via_k1": "vtable_writer:LifeTextureController:unique"
+  },
+  {
+    "k1_addr": "0x00440140",
+    "tsl_addr": "0x00849480",
+    "name": "~Part",
+    "class": "Part",
+    "method": "~Part",
+    "via_k1": "vtable_writer:Part:unique"
+  },
+  {
+    "k1_addr": "0x00447E30",
+    "tsl_addr": "0x00848FF0",
+    "name": "InternalCreateInstance",
+    "class": "PartAABB",
+    "method": "InternalCreateInstance",
+    "via_k1": "vtable_writer:PartAABB:unique"
+  },
+  {
+    "k1_addr": "0x00447DD0",
+    "tsl_addr": "0x00848EA0",
+    "name": "InternalCreateInstance",
+    "class": "PartAnimMesh",
+    "method": "InternalCreateInstance",
+    "via_k1": "vtable_writer:PartAnimMesh:unique"
+  },
+  {
+    "k1_addr": "0x00440320",
+    "tsl_addr": "0x0084AF50",
+    "name": "~PartLight",
+    "class": "PartLight",
+    "method": "~PartLight",
+    "via_k1": "vtable_writer:PartLight:unique"
+  },
+  {
+    "k1_addr": "0x00447820",
+    "tsl_addr": "0x00848D80",
+    "name": "~PartReference",
+    "class": "PartReference",
+    "method": "~PartReference",
+    "via_k1": "vtable_writer:PartReference:unique"
+  },
+  {
+    "k1_addr": "0x00440230",
+    "tsl_addr": "0x00849870",
+    "name": "~PartTriMesh",
+    "class": "PartTriMesh",
+    "method": "~PartTriMesh",
+    "via_k1": "vtable_writer:PartTriMesh:unique"
+  },
+  {
+    "k1_addr": "0x0041F350",
+    "tsl_addr": "0x008170A0",
+    "name": "~PerlinTextureController",
+    "class": "PerlinTextureController",
+    "method": "~PerlinTextureController",
+    "via_k1": "vtable_writer:PerlinTextureController:unique"
+  },
+  {
+    "k1_addr": "0x0041F3F0",
+    "tsl_addr": "0x00817120",
+    "name": "~RandomTextureController",
+    "class": "RandomTextureController",
+    "method": "~RandomTextureController",
+    "via_k1": "vtable_writer:RandomTextureController:unique"
+  },
+  {
+    "k1_addr": "0x00458BE0",
+    "tsl_addr": "0x00857150",
+    "name": "~Scene",
+    "class": "Scene",
+    "method": "~Scene",
+    "via_k1": "vtable_writer:Scene:unique"
+  },
+  {
+    "k1_addr": "0x004793A0",
+    "tsl_addr": "0x008E8290",
+    "name": "VertexPrimitiveAnim",
+    "class": "VertexPrimitiveAnim",
+    "method": "VertexPrimitiveAnim",
+    "via_k1": "vtable_writer:VertexPrimitiveAnim:unique"
+  }
+]

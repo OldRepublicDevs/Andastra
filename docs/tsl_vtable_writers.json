@@ -1,0 +1,1680 @@
+{
+  "std::ios_base": {
+    "4209936": "FUN_00403d10",
+    "4210128": "FUN_00403dd0",
+    "4210400": "FUN_00403ee0",
+    "4202944": "FUN_004021c0",
+    "4202880": "FUN_00402180",
+    "4203904": "FUN_00402580",
+    "4204224": "FUN_004026c0",
+    "4201920": "FUN_00401dc0"
+  },
+  "std::std::D::DU?$char_traits::?$basic_ios": {
+    "4209936": "FUN_00403d10",
+    "4210128": "FUN_00403dd0",
+    "4210400": "FUN_00403ee0",
+    "4202944": "FUN_004021c0",
+    "4203904": "FUN_00402580",
+    "4204224": "FUN_004026c0",
+    "4201920": "FUN_00401dc0"
+  },
+  "std::std::D::DU?$char_traits::?$basic_filebuf": {
+    "4210240": "FUN_00403e40",
+    "4205504": "FUN_00402bc0",
+    "4203904": "FUN_00402580"
+  },
+  "std::std::D::DU?$char_traits::?$basic_ifstream": {
+    "4205504": "FUN_00402bc0",
+    "4203904": "FUN_00402580"
+  },
+  "std::std::D::DU?$char_traits::?$basic_istream": {
+    "4210400": "FUN_00403ee0",
+    "4205504": "FUN_00402bc0",
+    "4203904": "FUN_00402580",
+    "4204272": "FUN_004026f0"
+  },
+  "std::std::D::DU?$char_traits::?$basic_streambuf": {
+    "4204304": "FUN_00402710",
+    "4215808": "FUN_00405400"
+  },
+  "std::ios_base::failure": {
+    "4212800": "FUN_00404840",
+    "4212736": "FUN_00404800",
+    "4212880": "FUN_00404890",
+    "4211952": "FUN_004044f0"
+  },
+  "std::runtime_error": {
+    "4212800": "FUN_00404840",
+    "4212736": "FUN_00404800",
+    "4211952": "FUN_004044f0",
+    "4212592": "FUN_00404770",
+    "4212512": "FUN_00404720"
+  },
+  "std::D::?$ctype": {
+    "4219552": "FUN_004062a0",
+    "4217904": "FUN_00405c30"
+  },
+  "std::ctype_base": {
+    "4218992": "FUN_00406070",
+    "4219552": "FUN_004062a0",
+    "4219696": "FUN_00406330",
+    "4217904": "FUN_00405c30"
+  },
+  "std::locale::facet": {
+    "9704097": "FUN_009412a1",
+    "9704633": "~_Locimp",
+    "4220928": "FUN_00406800",
+    "4218944": "FUN_00406040",
+    "4218992": "FUN_00406070",
+    "4219552": "FUN_004062a0",
+    "4219696": "FUN_00406330",
+    "4220368": "FUN_004065d0",
+    "4220736": "FUN_00406740",
+    "4217904": "FUN_00405c30"
+  },
+  "std::bad_alloc": {
+    "9386000": "FUN_008f3810",
+    "9386096": "FUN_008f3870",
+    "9386688": "FUN_008f3ac0",
+    "9386592": "FUN_008f3a60",
+    "9573164": "bad_alloc",
+    "4220128": "FUN_004064e0",
+    "4220224": "FUN_00406540",
+    "4220256": "FUN_00406560",
+    "4220320": "FUN_004065a0",
+    "8806384": "FUN_00865ff0",
+    "5456544": "FUN_005342a0"
+  },
+  "std::DDH::?$codecvt": {
+    "4220928": "FUN_00406800",
+    "4220368": "FUN_004065d0"
+  },
+  "std::codecvt_base": {
+    "4220928": "FUN_00406800",
+    "4220368": "FUN_004065d0",
+    "4220736": "FUN_00406740"
+  },
+  "CClientExoApp": {
+    "4244432": "CClientExoApp",
+    "4244624": "_CClientExoApp"
+  },
+  "CBaseExoApp": {
+    "6600256": "CServerExoApp",
+    "4244432": "CClientExoApp"
+  },
+  "CSWCCreature": {
+    "4263552": "_CSWCCreature",
+    "4260528": "CSWCCreature"
+  },
+  "CSWTlkTable": {
+    "4412336": "StartServices"
+  },
+  "CSWCArea": {
+    "4519600": "_CSWCArea",
+    "4517680": "CSWCArea"
+  },
+  "CGameObject": {
+    "4628688": "FUN_0046a0d0",
+    "4625104": "CGameObject",
+    "7509200": "ClearPlayerOnDestroyGame",
+    "4519440": "FUN_0044f610",
+    "4519472": "FUN_0044f630",
+    "4519600": "_CSWCArea",
+    "4663120": "_CSWCObject",
+    "7433088": "_CSWSArea",
+    "6970672": "_CSWSObject"
+  },
+  "CSWCModule": {
+    "4628688": "FUN_0046a0d0",
+    "4627664": "FUN_00469cd0"
+  },
+  "CSWCObject": {
+    "4661680": "CSWCObject",
+    "4663120": "_CSWCObject"
+  },
+  "CSWCItem": {
+    "4710896": "CSWCItem",
+    "4711520": "_CSWCItem"
+  },
+  "CSWCCreatureStats": {
+    "4778320": "FUN_0048e950",
+    "4779600": "FUN_0048ee50"
+  },
+  "CSWCLevelUpStats": {
+    "4785744": "CSWCLevelUpStats"
+  },
+  "CSoundSet": {
+    "4807328": "basic_filebuf<>",
+    "4807488": "FUN_00495b40"
+  },
+  "$0IAM::VCResSSF::?$CResHelper": {
+    "4809264": "FUN_00496230",
+    "4809344": "CResHelper"
+  },
+  "CSWCMessage": {
+    "4810096": "_CSWCMessage",
+    "4810016": "CSWCMessage"
+  },
+  "CSWCPlayer": {
+    "4876112": "CSWCPlayer"
+  },
+  "CSWCAnimBase": {
+    "5011920": "~concurrent_queue<>",
+    "5011120": "CSWCAnimBase"
+  },
+  "CSWGuiControllerLossBox": {
+    "5040976": "Initialize",
+    "5038352": "InitializeGlobal"
+  },
+  "CSWGuiLabel": {
+    "5356336": "FUN_0051bb30",
+    "5357296": "FUN_0051bef0",
+    "6009104": "FUN_005bb110",
+    "5813840": "FUN_0058b650",
+    "5814080": "FUN_0058b740",
+    "5680192": "FUN_0056ac40",
+    "5484016": "FUN_0053adf0",
+    "5877600": "_CSWGuiInGameInventory",
+    "5415280": "_CSWGuiInGameMessages",
+    "5809424": "_CSWGuiUpgrade",
+    "6264880": "_CSWGuiFeatsCharGen",
+    "5343296": "CSWGuiMainInterface",
+    "5998720": "_CSWGuiUpgradeItemSelect",
+    "5672656": "FUN_00568ed0",
+    "5934720": "_CSWGuiStore",
+    "5607072": "_CSWGuiInGameCredits",
+    "5669904": "FUN_00568410",
+    "6194880": "_CSWGuiLevelUpCharGen",
+    "5700816": "FUN_0056fcd0",
+    "6160304": "FUN_005dffb0",
+    "5567232": "_CSWGuiPazaakStart",
+    "6222720": "_CSWGuiInGameOptKeyMappings",
+    "5829744": "FUN_0058f470",
+    "5695536": "FUN_0056e830",
+    "5434912": "FUN_0052ee20",
+    "5562672": "FUN_0054e130",
+    "5039088": "FUN_004ce3f0",
+    "5957072": "FUN_005ae5d0",
+    "5891488": "_CSWGuiInGameEquip",
+    "6153904": "_CSWGuiClassSelection",
+    "5954544": "FUN_005adbf0",
+    "6214512": "FUN_005ed370",
+    "6279984": "_CSWGuiSkillsCharGen",
+    "5952640": "FUN_005ad480",
+    "6081008": "FUN_005cc9f0",
+    "5951200": "FUN_005acee0",
+    "5488944": "FUN_0053c130",
+    "5358272": "_CScriptCompilerIdListEntry",
+    "5948304": "FUN_005ac390",
+    "5358864": "_CSWGuiMainInterface",
+    "5555632": "FUN_0054c5b0",
+    "5978112": "FUN_005b3800",
+    "6306352": "FUN_00603a30",
+    "5648560": "FUN_005630b0",
+    "5384240": "_CSWGuiLabel",
+    "5581120": "_CSWGuiPazaakGame",
+    "5320512": "Initialize",
+    "5844880": "_CSWGuiInGameAbilities",
+    "5972576": "_CSWGuiDialogComputerCamera",
+    "5710864": "FUN_00572410",
+    "6038928": "FUN_005c2590",
+    "5973408": "_CSWGuiBarkBubble",
+    "6166608": "FUN_005e1850",
+    "5446432": "FUN_00531b20",
+    "6295792": "_CSWGuiAbilitiesCharGen",
+    "5444768": "FUN_005314a0",
+    "5969680": "FUN_005b1710",
+    "5705168": "FUN_00570dd0",
+    "5836288": "FUN_00590e00",
+    "5505200": "FUN_005400b0",
+    "6096784": "_CSWGuiSaveLoad",
+    "5863536": "_CSWGuiInGameCharacter",
+    "9533920": "FUN_009179e0",
+    "5405360": "FUN_00527ab0",
+    "6127088": "FUN_005d7df0",
+    "6061760": "FUN_005c7ec0",
+    "5993040": "_CSWGuiUpgradeSelection",
+    "5863328": "~CMFCToolBarButtonsListButton",
+    "6187456": "FUN_005e69c0",
+    "5664224": "FUN_00566de0",
+    "6254336": "FUN_005f6f00",
+    "5923264": "FUN_005a61c0",
+    "5988048": "FUN_005b5ed0",
+    "6250128": "FUN_005f5e90",
+    "6181440": "FUN_005e5240",
+    "6311680": "FUN_00604f00"
+  },
+  "CSWGuiObject": {
+    "5039360": "_CSWGuiLabel",
+    "5039488": "FUN_004ce580",
+    "5039520": "_CSWGuiObject",
+    "9489200": "CSWGuiPanel",
+    "9489632": "_CSWGuiPanel",
+    "9530416": "CSWGuiControl"
+  },
+  "CSWGuiControl": {
+    "5039360": "_CSWGuiLabel",
+    "9530416": "CSWGuiControl"
+  },
+  "CSWGuiNavigable": {
+    "9548192": "_CSWGuiListBox",
+    "5679872": "FUN_0056ab00",
+    "5039664": "FUN_004ce630",
+    "5039808": "FUN_004ce6c0",
+    "5039840": "FUN_004ce6e0",
+    "6126848": "_CSWGuiEditbox",
+    "9529648": "CSWGuiNavigable"
+  },
+  "CSWGuiButton": {
+    "5039664": "FUN_004ce630",
+    "5319232": "CSWGuiButton"
+  },
+  "CSWCameraOnAStick": {
+    "5126208": "~XQAT",
+    "5124800": "FUN_004e32c0",
+    "5123168": "CSWCameraOnAStick"
+  },
+  "CSWBehaviorCamera": {
+    "5146688": "FUN_004e8840",
+    "5124800": "FUN_004e32c0",
+    "5123168": "CSWCameraOnAStick",
+    "5143936": "CSWCameraFreeLook",
+    "5144432": "FUN_004e7f70"
+  },
+  "CSWCameraFreeLook": {
+    "5145296": "FUN_004e82d0",
+    "5143936": "CSWCameraFreeLook",
+    "5144432": "FUN_004e7f70"
+  },
+  "CSWCameraDeath": {
+    "5146688": "FUN_004e8840",
+    "5147024": "FUN_004e8990"
+  },
+  "CSWCameraNavigate": {
+    "5149888": "FUN_004e94c0",
+    "5150000": "_CSWCameraNavigate"
+  },
+  "CSWItem": {
+    "5163888": "CSWItem",
+    "5164000": "FUN_004ecbe0"
+  },
+  "CSWPlayerControl": {
+    "5178064": "FUN_004f02d0"
+  },
+  "CSWPlayerControlCamRelative": {
+    "5178864": "CSWPlayerControlCamRelative"
+  },
+  "CSWAnimBase": {
+    "5191504": "FUN_004f3750",
+    "5191600": "FUN_004f37b0"
+  },
+  "CSWCAnimBaseHeadWield": {
+    "5191760": "CSWCAnimBaseHeadWield",
+    "5192032": "FUN_004f3960"
+  },
+  "CSWCAnimBaseWield": {
+    "5197968": "FUN_004f5090",
+    "5197600": "CSWCAnimBaseWield"
+  },
+  "CSWCAnimBaseHead": {
+    "5204288": "FUN_004f6940",
+    "5203952": "CSWCAnimBaseHead"
+  },
+  "CSWCAnimBaseTW": {
+    "5208352": "CSWCAnimBaseTW",
+    "5208832": "FID_conflict:~ctype<char>"
+  },
+  "CSWCVisualEffect": {
+    "5214400": "CSWCVisualEffect",
+    "5214848": "_CSWCVisualEffect"
+  },
+  "CSWCDoor": {
+    "5269696": "CSWCDoor",
+    "5270144": "_CSWCDoor"
+  },
+  "CSWRules": {
+    "5286688": "_CSWRules",
+    "5285088": "CSWRules"
+  },
+  "CSWGuiMainInterface::CSWGuiHelpPanel": {
+    "5343296": "CSWGuiMainInterface"
+  },
+  "CSWGuiMainInterface::CSWGuiActionMenuIos": {
+    "5343296": "CSWGuiMainInterface"
+  },
+  "CSWGuiLabelHilight": {
+    "5356336": "FUN_0051bb30",
+    "5422784": "FUN_0052bec0",
+    "5415008": "FUN_0052a060",
+    "5809056": "CSWGuiInGameSkillEntry",
+    "5343296": "CSWGuiMainInterface",
+    "9560352": "LoadProtoItem",
+    "5400016": "FUN_005265d0"
+  },
+  "CSWGuiMainInterface": {
+    "5343296": "CSWGuiMainInterface",
+    "5358864": "_CSWGuiMainInterface"
+  },
+  "CSWGuiButtonToggle": {
+    "5356512": "_CSWGuiButtonToggle",
+    "5680016": "FUN_0056ab90",
+    "5680192": "FUN_0056ac40",
+    "9536976": "CSWGuiSlider",
+    "5358864": "_CSWGuiMainInterface",
+    "5710864": "FUN_00572410",
+    "5705168": "FUN_00570dd0",
+    "6181440": "FUN_005e5240"
+  },
+  "CSWGuiMainInterface::CSWGamepadMenuIos": {
+    "5356656": "CSWGuiSaveLoad"
+  },
+  "CSWGuiProgressBar": {
+    "5357296": "FUN_0051bef0",
+    "9541776": "CSWGuiProgressBar",
+    "5357696": "~CSWGuiProgressBar",
+    "5358096": "FUN_0051c210",
+    "5505024": "~CMFCToolBarButtonsListButton",
+    "5505200": "FUN_005400b0"
+  },
+  "CSWGuiCharButton": {
+    "5357840": "CSWGuiCharButton"
+  },
+  "CSWGuiProgressBarReveal": {
+    "5358096": "FUN_0051c210",
+    "5358640": "FUN_0051c430"
+  },
+  "CSWGuiFloatyText": {
+    "5383856": "AddFloatyText"
+  },
+  "CSWGuiBlackenedLabel": {
+    "5972064": "CSWGuiDialogComputerCamera",
+    "5383856": "AddFloatyText",
+    "5856944": "CSWGuiInGameCharacter"
+  },
+  "CSWGuiInGameMenu": {
+    "5400016": "FUN_005265d0"
+  },
+  "CSWGuiInGameMessages": {
+    "5415280": "_CSWGuiInGameMessages",
+    "5411648": "CSWGuiInGameMenu"
+  },
+  "CSWGuiMessageBox": {
+    "5425504": "CSWGuiMessageBox",
+    "5424448": "CSWGuiMessageBox"
+  },
+  "CSWGuiStatusSummary": {
+    "5432512": "FUN_0052e4c0"
+  },
+  "CSWGuiToolTipPanel": {
+    "5444512": "CSWGuiToolTipPanel"
+  },
+  "CSWGuiDeathDisplay": {
+    "5445648": "FUN_00531810"
+  },
+  "AspyrFloatingButtonIcon": {
+    "5448992": "FUN_00532520"
+  },
+  "std::length_error": {
+    "9370320": "FUN_008efad0",
+    "5455552": "FUN_00533ec0",
+    "5455696": "FUN_00533f50",
+    "5455616": "FUN_00533f00",
+    "9703617": "FUN_009410c1",
+    "9372432": "FUN_008f0310",
+    "8803552": "FUN_008654e0"
+  },
+  "std::logic_error": {
+    "8863168": "FUN_00873dc0",
+    "5455328": "FUN_00533de0",
+    "5455472": "FUN_00533e70",
+    "5455552": "FUN_00533ec0",
+    "8863232": "FUN_00873e00",
+    "5455616": "FUN_00533f00",
+    "5455744": "FUN_00533f80"
+  },
+  "CSWCPlaceable": {
+    "5458560": "_CSWCPlaceable",
+    "5457872": "CSWCPlaceable"
+  },
+  "CSWCTrigger": {
+    "5470240": "_CSWCTrigger",
+    "5469792": "CSWCTrigger"
+  },
+  "CSWMiniGameObject": {
+    "5480672": "FUN_0053a0e0",
+    "5480368": "FUN_00539fb0"
+  },
+  "CSWGuiLegalScreen": {
+    "5482336": "FUN_0053a760"
+  },
+  "CSWDemoScreen": {
+    "5483376": "FUN_0053ab70"
+  },
+  "CSWGui3DSceneView": {
+    "6076928": "FUN_005cba00",
+    "5488624": "FUN_0053bff0",
+    "5484864": "CSWGuiMainMenu",
+    "6009104": "FUN_005bb110",
+    "5814080": "FUN_0058b740",
+    "5810752": "CSWGuiPartySelection",
+    "6005200": "CSWGuiUpgrade",
+    "6194880": "_CSWGuiLevelUpCharGen",
+    "6153648": "CSWGuiClassSelChar",
+    "6153776": "FUN_005de630",
+    "6214512": "FUN_005ed370",
+    "6081008": "FUN_005cc9f0",
+    "5488768": "_CSWGui3DSceneView",
+    "5488944": "FUN_0053c130",
+    "6210160": "CSWGuiMainCharGen",
+    "6306352": "FUN_00603a30",
+    "6303472": "CSWGuiPortraitCharGen",
+    "5863536": "_CSWGuiInGameCharacter",
+    "6190544": "CSWGuiLevelUpCharGen",
+    "5664224": "FUN_00566de0",
+    "5661504": "CSWGuiInGameGalaxyMap",
+    "5856944": "CSWGuiInGameCharacter"
+  },
+  "CSWGuiMainMenu": {
+    "5484864": "CSWGuiMainMenu",
+    "5488944": "FUN_0053c130"
+  },
+  "CSWGuiLoadScreen": {
+    "5503904": "CSWGuiLoadScreen"
+  },
+  "CSWTrackFollower": {
+    "5507344": "FUN_00540910",
+    "5507872": "FUN_00540b20"
+  },
+  "CSWMiniPlayer": {
+    "5516560": "FUN_00542d10",
+    "5517248": "FUN_00542fc0"
+  },
+  "CSWMGObstacle": {
+    "5527568": "FUN_00545810",
+    "5527824": "FUN_00545910"
+  },
+  "CSWMessage": {
+    "5546992": "CSWMessage",
+    "5547280": "FUN_0054a510"
+  },
+  "CSWGuiActivatedButton": {
+    "5554496": "CSWGuiTutorial"
+  },
+  "CSWGuiPazaakCard": {
+    "5555296": "FUN_0054c460",
+    "5555632": "FUN_0054c5b0"
+  },
+  "CSWGuiTutorial": {
+    "5558304": "sprintf"
+  },
+  "CSWGuiSpeedButton": {
+    "5559952": "CSWGuiWagerPopup",
+    "5856944": "CSWGuiInGameCharacter"
+  },
+  "CSWGuiWagerPopup": {
+    "5559952": "CSWGuiWagerPopup"
+  },
+  "CSWGuiPazaakStart": {
+    "5567232": "_CSWGuiPazaakStart",
+    "5563824": "CSWGuiPazaakStart"
+  },
+  "CSWGuiPazaakGame": {
+    "5581120": "_CSWGuiPazaakGame",
+    "5575408": "CSWGuiPazaakGame"
+  },
+  "CSWCAmbientSound": {
+    "5597424": "_CSWCAmbientSound",
+    "5596496": "CSWCAmbientSound"
+  },
+  "CSWAmbientSound": {
+    "5597424": "_CSWCAmbientSound",
+    "7433088": "_CSWSArea",
+    "5597008": "FUN_00556750",
+    "5597136": "FUN_005567d0"
+  },
+  "CSWGuiInGameCredits": {
+    "5605696": "CSWGuiInGameCredits",
+    "5607072": "_CSWGuiInGameCredits"
+  },
+  "CSWBehaviorAttachSound": {
+    "5610112": "CSWBehaviorAttachSound",
+    "5610448": "_CSWBehaviorAttachSound"
+  },
+  "CSWArea": {
+    "5610784": "CSWArea",
+    "5611328": "_CSWArea"
+  },
+  "CSWCSoundObject": {
+    "5614112": "CSWCSoundObject",
+    "5614736": "_CSWCSoundObject"
+  },
+  "CSWCMapPin": {
+    "5620976": "CSWCMapPin",
+    "5621184": "_CSWCMapPin"
+  },
+  "CSWMiniGame": {
+    "5622624": "FUN_0055cb60",
+    "5621360": "FUN_0055c670"
+  },
+  "CSWMiniEnemy": {
+    "5629920": "AddEnemy"
+  },
+  "$0HNM::VCResARE::?$CResHelper": {
+    "5643488": "_CResHelper",
+    "5643408": "CResHelper"
+  },
+  "CResARE": {
+    "5643664": "SetResRef"
+  },
+  "CSWCRoom": {
+    "5644512": "FUN_005620e0",
+    "5644448": "FUN_005620a0"
+  },
+  "CSWRoom": {
+    "5645008": "FUN_005622d0",
+    "5645200": "FUN_00562390"
+  },
+  "CSWGuiInGameMap": {
+    "5646528": "CSWGuiInGameMap"
+  },
+  "CSWGuiMapHider": {
+    "5655152": "_CSWGuiMapHider",
+    "5653904": "CSWGuiMapHider"
+  },
+  "CSWGuiInGameGalaxyMap": {
+    "5661504": "CSWGuiInGameGalaxyMap"
+  },
+  "CSWGuiOptionsMain": {
+    "5668208": "CSWGuiInGameOptions"
+  },
+  "CSWGuiOptionsFeedback": {
+    "5671584": "CSWGuiContainer",
+    "5672656": "FUN_00568ed0"
+  },
+  "CSWGuiOptionsCheckbox": {
+    "5683840": "CSWGuiOptionsGraphicsAdvanced",
+    "5676784": "FUN_00569ef0",
+    "5672992": "FUN_00569020",
+    "5709088": "CSWGuiOptionsMouse",
+    "5703104": "CSWGuiOptionsGraphics",
+    "6187424": "FUN_005e69a0",
+    "6177728": "CSWGuiInGameMessages"
+  },
+  "CSWGuiOptionsGraphics": {
+    "5676784": "FUN_00569ef0"
+  },
+  "CSWGuiSlider": {
+    "5679872": "FUN_0056ab00",
+    "9538704": "FUN_00918c90"
+  },
+  "CSWGuiOptionsGraphicsAdvanced": {
+    "5683840": "CSWGuiOptionsGraphicsAdvanced"
+  },
+  "CSWGuiOptionsResolution": {
+    "5693008": "CSWGuiQuestItem"
+  },
+  "CSWGuiOptionsSound": {
+    "5697808": "FUN_0056f110"
+  },
+  "CSWGuiOptionsSoundAdvanced": {
+    "5703104": "CSWGuiOptionsGraphics"
+  },
+  "CSWGuiOptionsMouse": {
+    "5709088": "CSWGuiOptionsMouse"
+  },
+  "CSWBehaviorCameraCombat": {
+    "5713088": "CSWBehaviorCameraCombat"
+  },
+  "CSWBehaviorCameraDialog": {
+    "5720480": "FUN_005749a0",
+    "5720944": "~XQAT"
+  },
+  "CResSSF": {
+    "5737952": "CResTGA",
+    "5738048": "_CResSSF"
+  },
+  "CSWCProjectile": {
+    "5739232": "_CSWCProjectile",
+    "5738176": "Play"
+  },
+  "CSWCAreaOfEffectObject": {
+    "5775872": "_CSWCAreaOfEffectObject",
+    "5775200": "CSWCAreaOfEffectObject"
+  },
+  "CSWGuiTutorialBox": {
+    "5793648": "CSWGuiMessageBox"
+  },
+  "CSWGuiSkillFlow": {
+    "5796816": "CSWGuiSkillFlow"
+  },
+  "CSWGuiSkillInfoBox": {
+    "5808272": "CSWGuiSkillInfoBox",
+    "5809424": "_CSWGuiUpgrade"
+  },
+  "CSWGuiInGameSkillEntry": {
+    "5809056": "CSWGuiInGameSkillEntry"
+  },
+  "CSWGuiPartySelectionButton": {
+    "5810352": "CSWGuiPartySelectionData"
+  },
+  "CSWGuiRadioButton": {
+    "5813840": "FUN_0058b650",
+    "5810416": "_CSWGuiRadioButton",
+    "5810352": "CSWGuiPartySelectionData",
+    "6115392": "FUN_005d5040",
+    "6115648": "CSWGuiSaveLoadEntry",
+    "5917024": "CSWGuiInGameItemEntry",
+    "5917280": "FUN_005a4a60",
+    "5917360": "FUN_005a4ab0",
+    "6114736": "ExecuteCommandQueueMovie"
+  },
+  "CSWGuiPartySelection": {
+    "5810752": "CSWGuiPartySelection"
+  },
+  "CSWGuiInGameOptions": {
+    "5827712": "CSWGuiOptionsMain"
+  },
+  "CSWGuiInGameJournal": {
+    "5836288": "FUN_00590e00",
+    "5833104": "CSWGuiInGameJournal"
+  },
+  "CSWGuiJournalItemEntry": {
+    "5839824": "PopulateItemListBox"
+  },
+  "CSWGuiInGameAbilities": {
+    "5844880": "_CSWGuiInGameAbilities",
+    "5841680": "CSWGuiMainInterfaceChar"
+  },
+  "CSWGuiSliderReadOnly": {
+    "5856944": "CSWGuiInGameCharacter"
+  },
+  "CSWGuiInGameCharacter": {
+    "5863536": "_CSWGuiInGameCharacter",
+    "5856944": "CSWGuiInGameCharacter"
+  },
+  "CSWGuiInGameInventory": {
+    "5877600": "_CSWGuiInGameInventory",
+    "5873776": "CSWGuiInGameInventory"
+  },
+  "CSWGuiInGameEquip": {
+    "5891488": "_CSWGuiInGameEquip",
+    "5886240": "CSWGuiInGameEquip"
+  },
+  "CSWGuiInGameItemEntry": {
+    "5917024": "CSWGuiInGameItemEntry"
+  },
+  "CSWGuiContainer": {
+    "5921344": "FUN_005a5a40"
+  },
+  "CSWGuiStoreItemEntry": {
+    "5927664": "CSWUpgradeItemEntry"
+  },
+  "CSWGuiStore": {
+    "5934720": "_CSWGuiStore",
+    "5931408": "CSWGuiStore"
+  },
+  "CSWGuiFade": {
+    "5947952": "CSWGuiFade"
+  },
+  "CSWGuiInGameAreaTransition": {
+    "5950000": "CSWGuiInGameAreaTransition"
+  },
+  "CSWGuiInGameSoloModeQuery": {
+    "5952400": "CSWGuiInGameSoloModeQuery"
+  },
+  "CSWGuiInGamePause": {
+    "5953856": "CSWGuiInGamePause"
+  },
+  "CSWGuiDialog": {
+    "5956656": "CSWGuiDialog"
+  },
+  "CSWGuiDialogLetterbox": {
+    "5959888": "CSWGuiDialogLetterbox"
+  },
+  "CSWGuiDialogTop": {
+    "5963040": "DrawSafeRegion"
+  },
+  "CSWGuiDialogCinematic": {
+    "5964240": "CSWGuiDialogCinematic",
+    "5965552": "_CSWGuiDialogCinematic"
+  },
+  "CSWGuiDialogComputer": {
+    "5969888": "_CSWGuiDialogComputer",
+    "5967216": "CSWGuiDialogComputer"
+  },
+  "CSWGuiDialogComputerCamera": {
+    "5972064": "CSWGuiDialogComputerCamera",
+    "5972576": "_CSWGuiDialogComputerCamera"
+  },
+  "CSWGuiBarkBubble": {
+    "5972960": "CSWGuiBarkBubble",
+    "5973408": "_CSWGuiBarkBubble"
+  },
+  "CSWGuiExamine": {
+    "5977280": "CSWGuiExamine"
+  },
+  "CSWGuiCreateItemSubMenu": {
+    "5977616": "CSWGuiCreateItemSubMenu"
+  },
+  "CSWGuiPowersFeatsSkillsDebugMenu": {
+    "5981264": "CSWGuiPowersFeatsSkillsDebugMenu"
+  },
+  "CSWGuiLoadModuleDebugMenu": {
+    "5985456": "CSWGuiLoadModuleDebugMenu"
+  },
+  "CSWGuiCreateItemMenu": {
+    "5989056": "FUN_005b62c0"
+  },
+  "CSWGuiUpgradeSelection": {
+    "5993040": "_CSWGuiUpgradeSelection",
+    "5990928": "CSWGuiUpgradeSelection"
+  },
+  "CSWGuiUpgradeItemSelect": {
+    "5998720": "_CSWGuiUpgradeItemSelect",
+    "5997744": "CSWGuiUpgradeItemSelect"
+  },
+  "CSWGuiUpgrade": {
+    "6009104": "FUN_005bb110",
+    "6005200": "CSWGuiUpgrade"
+  },
+  "CSWUpgradeItemEntry": {
+    "6030144": "CSWGuiStoreItemEntry"
+  },
+  "CSWGuiCreateItem": {
+    "6038928": "FUN_005c2590",
+    "6034416": "FUN_005c13f0"
+  },
+  "CSWGuiCreateMedicalItem": {
+    "6061760": "FUN_005c7ec0",
+    "6057824": "FUN_005c6f60"
+  },
+  "CSWGuiSwoopUpgrade": {
+    "6076928": "FUN_005cba00",
+    "6081008": "FUN_005cc9f0"
+  },
+  "CSWGuiSaveLoad": {
+    "6094080": "CSWGuiOptionsSound",
+    "6096784": "_CSWGuiSaveLoad"
+  },
+  "CSWGuiSaveLoadEntry": {
+    "6115648": "CSWGuiSaveLoadEntry",
+    "6114736": "ExecuteCommandQueueMovie"
+  },
+  "CSWGuiSaveGameEditBox": {
+    "6126208": "CSWGuiSaveNamePanel"
+  },
+  "CSWGuiSaveNamePanel": {
+    "6126208": "CSWGuiSaveNamePanel"
+  },
+  "CSWGuiEditbox": {
+    "9563808": "CSWGuiEditbox",
+    "6126848": "_CSWGuiEditbox"
+  },
+  "CSWRK4Acceleration": {
+    "6130064": "CAurBehavior"
+  },
+  "CSWRK4SplitAcceleration": {
+    "6134048": "CSWRK4SplitAcceleration"
+  },
+  "CSWCAnimBaseVisualEffect": {
+    "6134352": "FID_conflict:~ctype<char>",
+    "6134304": "FUN_005d9a20"
+  },
+  "CSWCAnimBaseDoor": {
+    "6135088": "FUN_005d9d30",
+    "6135184": "FID_conflict:~ctype<char>"
+  },
+  "CSWCAnimBasePlaceable": {
+    "6137312": "FID_conflict:~ctype<char>",
+    "6137216": "CSWCAnimBasePlaceable"
+  },
+  "CSWCAnimBaseTrigger": {
+    "6139968": "FID_conflict:~ctype<char>",
+    "6139872": "FUN_005dafe0"
+  },
+  "CSWMGGunBank": {
+    "6144880": "CSWMGGunBank",
+    "6145184": "_CSWMGGunBank"
+  },
+  "CSWMGTargettingGunBank": {
+    "6148080": "CSWMGTargettingGunBank"
+  },
+  "CSWGuiClassSelection": {
+    "6153904": "_CSWGuiClassSelection",
+    "6149744": "CSWGuiOptionsResolution"
+  },
+  "CSWGuiTitleMovies": {
+    "6159200": "CSWGuiQuickOrCustomPanel",
+    "6160304": "FUN_005dffb0"
+  },
+  "CSWGuiTitleMusic": {
+    "6166608": "FUN_005e1850",
+    "6163616": "CSWGuiInGameAbilities"
+  },
+  "CSWGuiInGameGameplay": {
+    "6177728": "CSWGuiInGameMessages"
+  },
+  "CSWGuiInGameAutoPause": {
+    "6185664": "CSWGuiInGameAutoPause"
+  },
+  "CSWCAnimBaseProjectile": {
+    "6189600": "FUN_005e7220",
+    "6189696": "FID_conflict:~ctype<char>"
+  },
+  "CSWGuiLevelUpCharGen": {
+    "6194880": "_CSWGuiLevelUpCharGen",
+    "6190544": "CSWGuiLevelUpCharGen"
+  },
+  "CSWMGBehaviorFire": {
+    "6205200": "CSWMGBehaviorFire"
+  },
+  "CSWMGBehaviorTrack": {
+    "6205808": "CSWMGBehaviorTrack"
+  },
+  "CSWMGBehaviorTrackAndFire": {
+    "6208960": "CSWMGBehaviorTrackAndFire"
+  },
+  "CSWMGBehaviorBullet": {
+    "6209664": "CSWMGBehaviorBullet"
+  },
+  "CSWGuiMainCharGen": {
+    "6210160": "CSWGuiMainCharGen"
+  },
+  "CSWGuiInGameOptKeyMappings": {
+    "6222720": "_CSWGuiInGameOptKeyMappings",
+    "6221008": "CSWGuiInGameOptKeyMappings"
+  },
+  "CSWGuiKeyMapButton": {
+    "6227296": "CSWGuiKeyMapButton"
+  },
+  "CSWGuiLevelUpPanel": {
+    "6232416": "FUN_005f1960"
+  },
+  "CSWGuiCustomPanel": {
+    "6239360": "CSWGuiCustomPanel"
+  },
+  "CSWGuiQuickPanel": {
+    "6244432": "CSWGuiQuickPanel"
+  },
+  "CSWGuiQuickOrCustomPanel": {
+    "6249152": "LoadFromLayout"
+  },
+  "CSWGuiPowersLevelUp": {
+    "6254336": "FUN_005f6f00",
+    "6251376": "CSWGuiPowersLevelUp"
+  },
+  "CSWGuiFeatsCharGen": {
+    "6264880": "_CSWGuiFeatsCharGen",
+    "6261904": "CSWGuiFeatsCharGen"
+  },
+  "CSWGuiSkillsCharGen": {
+    "6272400": "CSWGuiSkillsCharGen",
+    "6279984": "_CSWGuiSkillsCharGen"
+  },
+  "CSWGuiAbilitiesCharGen": {
+    "6288224": "CSWGuiAbilitiesCharGen",
+    "6295792": "_CSWGuiAbilitiesCharGen"
+  },
+  "CSWGuiPortraitCharGen": {
+    "6303472": "CSWGuiPortraitCharGen"
+  },
+  "CSWGuiNameChargen": {
+    "6310672": "CSWGuiNameChargen"
+  },
+  "CExoInputInternal": {
+    "6364432": "RemoveGroup",
+    "6360592": "CExoInputInternal"
+  },
+  "CExoInputEventDescDetailed": {
+    "6367280": "FUN_00612830",
+    "6365632": "FUN_006121c0",
+    "6366384": "FUN_006124b0"
+  },
+  "CExoInputEventDesc": {
+    "6370528": "ExecuteCommandDeleteJournalWorldEntryStrref",
+    "6367712": "FUN_006129e0",
+    "6365632": "FUN_006121c0",
+    "6366384": "FUN_006124b0",
+    "6378720": "FUN_006154e0"
+  },
+  "CExoInputeventDesc2ButtonAxis": {
+    "6366336": "CExoInputeventDesc2ButtonAxis"
+  },
+  "CExoInput": {
+    "6382464": "CExoInput",
+    "6382672": "FUN_00616450"
+  },
+  "CRes": {
+    "6400544": "CRes",
+    "6400768": "_CRes"
+  },
+  "C2DA": {
+    "6424864": "~CMFCFilterChunkValueImpl",
+    "6424544": "C2DA"
+  },
+  "$0HOB::VCRes2DA::?$CResHelper": {
+    "6434128": "_CResHelper_CResMDX_3008_",
+    "6434048": "FUN_00622d00"
+  },
+  "CResGFF": {
+    "6435120": "CResGFF",
+    "6435600": "FUN_00623310",
+    "6434800": "CResGFF"
+  },
+  "CLIP": {
+    "6450848": "FUN_00626ea0",
+    "6450960": "FUN_00626f10"
+  },
+  "$0LLM::VCResLIP::?$CResHelper": {
+    "6451648": "CEncounterListEntry",
+    "6451728": "_CResHelper"
+  },
+  "CTlkTable": {
+    "6452624": "CTlkTable",
+    "6452800": "_CTlkTable"
+  },
+  "CLYT": {
+    "6460224": "CLYT",
+    "6460464": "_CLYT"
+  },
+  "$0LLI::VCResLYT::?$CResHelper": {
+    "6465616": "_CResHelper",
+    "6465536": "FUN_0062a800"
+  },
+  "CExoPackedFile": {
+    "6490400": "FUN_00630920",
+    "6490512": "FUN_00630990"
+  },
+  "CExoResFile": {
+    "6490576": "FUN_006309d0",
+    "6490736": "FID_conflict:~ctype<char>"
+  },
+  "CExoEncapsulatedFile": {
+    "6493248": "CMFCFilterChunkValueImpl",
+    "6493408": "~CMFCFilterChunkValueImpl"
+  },
+  "CExoResourceImageFile": {
+    "6500080": "CMFCRibbonProgressBar",
+    "6500224": "FID_conflict:~ctype<char>"
+  },
+  "CRes2DA": {
+    "6502768": "CStatusBar",
+    "6502912": "FUN_00633a00"
+  },
+  "CResLIP": {
+    "6503232": "CResARE",
+    "6503344": "_CResLIP"
+  },
+  "CResLYT": {
+    "6503456": "CResIFO",
+    "6503568": "FUN_00633c90"
+  },
+  "CExoSoundSource": {
+    "6527568": "CExoSoundSource",
+    "6527792": "CExoSoundSource",
+    "6528000": "FUN_00639c00"
+  },
+  "CExoSoundSourceInternal": {
+    "6543760": "CExoSoundSourceInternal",
+    "6544528": "_CExoSoundSourceInternal"
+  },
+  "$03::VCResWave::?$CResHelper": {
+    "6551136": "FUN_0063f660",
+    "6551216": "_CResHelper"
+  },
+  "$0HNJ::VCResNSS::?$CResHelper": {
+    "6559136": "_CResHelper"
+  },
+  "CVirtualMachineInternal": {
+    "6564384": "FUN_00642a20",
+    "6563760": "FUN_006427b0"
+  },
+  "$0HNK::VCResNCS::?$CResHelper": {
+    "6580976": "FUN_00646af0",
+    "6581056": "_CResHelper_CResTGA_3_"
+  },
+  "CResNCS": {
+    "6581728": "CResSSF",
+    "6581840": "_CResNCS"
+  },
+  "CServerExoApp": {
+    "6600256": "CServerExoApp",
+    "6600448": "_CServerExoApp"
+  },
+  "CSWSItemPropertyHandler": {
+    "6606064": "CServerAIMaster",
+    "8132560": "_CSWSItemPropertyHandler"
+  },
+  "CItemPropertyApplierRemover": {
+    "6606064": "CServerAIMaster",
+    "6606464": "FUN_0064ce80",
+    "8132736": "FUN_007c1880",
+    "8132560": "_CSWSItemPropertyHandler"
+  },
+  "CSWSEffectListHandler": {
+    "6606064": "CServerAIMaster",
+    "7561792": "_CSWSEffectListHandler"
+  },
+  "CGameEffectApplierRemover": {
+    "6606064": "CServerAIMaster",
+    "6606416": "FUN_0064ce50",
+    "7561792": "_CSWSEffectListHandler",
+    "7561968": "FUN_007362f0"
+  },
+  "CSWSItem": {
+    "6699280": "_CSWSItem",
+    "6698192": "CSWSItem"
+  },
+  "CSWInventory": {
+    "6791712": "FUN_0067a220",
+    "6791840": "FUN_0067a2a0"
+  },
+  "CSWSCreature": {
+    "6794080": "CSWSCreature",
+    "6799600": "~CSWSCreature"
+  },
+  "CSWSObject": {
+    "6970672": "_CSWSObject",
+    "6968800": "CSWSObject"
+  },
+  "CSWRoomSurfaceMesh": {
+    "7408592": "FUN_00710bd0",
+    "7407520": "FUN_007107a0"
+  },
+  "CSWSArea": {
+    "7433088": "_CSWSArea",
+    "7431520": "CSWSArea"
+  },
+  "CSWCollisionMesh": {
+    "7484960": "CSWCollisionMesh",
+    "7485296": "_CSWCollisionMesh"
+  },
+  "CSWSModule": {
+    "7509200": "ClearPlayerOnDestroyGame",
+    "7507488": "CSWCModule"
+  },
+  "$0HNO::VCResIFO::?$CResHelper": {
+    "7551072": "_CResHelper",
+    "7550992": "FUN_00733810"
+  },
+  "CResIFO": {
+    "7551248": "SetResRef"
+  },
+  "CSWSRoom": {
+    "7552768": "FUN_00733f00",
+    "7552928": "FUN_00733fa0"
+  },
+  "CSWSDialog": {
+    "7655504": "CSWSDialog",
+    "7656752": "_CSWSDialog"
+  },
+  "CSWSPlayer": {
+    "7707248": "FUN_00759a70",
+    "7708192": "FUN_00759e20"
+  },
+  "CSWSTrigger": {
+    "7721840": "_CSWSTrigger",
+    "7720832": "CSWSTrigger"
+  },
+  "CSWSDoor": {
+    "7742528": "_CSWSDoor",
+    "7741216": "CSWSDoor"
+  },
+  "CSWSPlaceable": {
+    "7770416": "CSWSPlaceable",
+    "7771552": "_CSWSPlaceable"
+  },
+  "CVirtualMachineCmdImplementer": {
+    "7844912": "_CSWVirtualMachineCommands",
+    "7845072": "_CVirtualMachineCmdImplementer",
+    "7845040": "FUN_0077b4b0",
+    "8099552": "StartServices"
+  },
+  "CSWVirtualMachineCommands": {
+    "7844912": "_CSWVirtualMachineCommands",
+    "8099552": "StartServices"
+  },
+  "CSWSStore": {
+    "8127264": "CSWSStore",
+    "8127632": "_CSWSStore"
+  },
+  "CSWSAreaOfEffectObject": {
+    "8282512": "CSWSAreaOfEffectObject",
+    "8283072": "_CSWSAreaOfEffectObject"
+  },
+  "CSWSEncounter": {
+    "8294736": "CSWSEncounter",
+    "8295712": "_CSWSEncounter"
+  },
+  "CSWSAmbientSound": {
+    "8342128": "CSWSAmbientSound"
+  },
+  "CSWSWaypoint": {
+    "8345680": "_CSWSWaypoint",
+    "8345424": "CSWSWaypoint"
+  },
+  "CSWSSoundObject": {
+    "8348064": "CSWSSoundObject",
+    "8348480": "_CSWSSoundObject"
+  },
+  "CResMDL": {
+    "8354048": "CResMDL",
+    "8354176": "_CResMDL"
+  },
+  "CResBWM": {
+    "8354256": "CResBWM",
+    "8354352": "_CResBWM"
+  },
+  "CSWDoorSurfaceMesh": {
+    "8354640": "FUN_007f7b50",
+    "8354592": "FUN_007f7b20"
+  },
+  "CSWPlaceableSurfaceMesh": {
+    "8358096": "FUN_007f88d0",
+    "8358144": "FUN_007f8900"
+  },
+  "CSWSClient": {
+    "8360128": "FUN_007f90c0",
+    "8360224": "FUN_007f9120"
+  },
+  "CSWSMessage": {
+    "8373616": "_CSWSMessage",
+    "8373536": "CSWSMessage"
+  },
+  "CSWSSysAdmin": {
+    "8432576": "FUN_0080abc0",
+    "8432480": "FUN_0080ab60"
+  },
+  "CSWSRules": {
+    "8432608": "CSWSRules",
+    "8432688": "_CSWSRules"
+  },
+  "CSWNameGen": {
+    "8459680": "FID_conflict:~ctype<char>",
+    "8459568": "FUN_00811530"
+  },
+  "$0HPE::VCResLTR::?$CResHelper": {
+    "8466160": "FUN_00812ef0",
+    "8466240": "_CResHelper"
+  },
+  "CResLTR": {
+    "8466912": "CResDDS",
+    "8467136": "FUN_008132c0"
+  },
+  "CAurTexture": {
+    "8477424": "FUN_00815af0",
+    "8471856": "FUN_00814530"
+  },
+  "CAurTextureBasic": {
+    "8477568": "FUN_00815b80",
+    "8476416": "FUN_00815700"
+  },
+  "RingDistortTextureController": {
+    "8483184": "_RingDistortTextureController",
+    "8479152": "ParseField"
+  },
+  "RandomTextureController": {
+    "8483104": "_RandomTextureController",
+    "8479152": "ParseField"
+  },
+  "PerlinTextureController": {
+    "8482976": "_PerlinTextureController",
+    "8479152": "ParseField"
+  },
+  "LifeTextureController": {
+    "8482848": "_LifeTextureController",
+    "8479152": "ParseField"
+  },
+  "DirtyTextureController": {
+    "8483264": "FUN_008171c0",
+    "8479152": "ParseField"
+  },
+  "?A0xcca37c09::RequestPoolManagerVBO": {
+    "8502816": "RequestPoolManagerVBO",
+    "8503600": "FUN_0081c130"
+  },
+  "?A0xcca37c09::RequestPoolManager": {
+    "8502816": "RequestPoolManagerVBO",
+    "8506272": "RequestPoolManagerSys",
+    "8506656": "FUN_0081cd20",
+    "8503424": "FUN_0081c080",
+    "8503312": "FUN_0081c010",
+    "8503600": "FUN_0081c130"
+  },
+  "?A0xcca37c09::RequestPoolManagerSys": {
+    "8506272": "RequestPoolManagerSys",
+    "8506656": "FUN_0081cd20"
+  },
+  "PartLightsaber": {
+    "8682768": "FUN_00847d10",
+    "8683232": "FUN_00847ee0"
+  },
+  "PartDanglyMesh": {
+    "8683632": "FUN_00848070",
+    "8684128": "FUN_00848260"
+  },
+  "PartSkin": {
+    "8684288": "FUN_00848300",
+    "8863360": "FUN_00873e80"
+  },
+  "PartCamera": {
+    "8686576": "InternalCreateInstance"
+  },
+  "PartReference": {
+    "8686768": "InternalCreateInstance",
+    "8686976": "_PartReference"
+  },
+  "PartAnimMesh": {
+    "8687264": "InternalCreateInstance"
+  },
+  "PartAABB": {
+    "8687600": "InternalCreateInstance"
+  },
+  "Part": {
+    "8688400": "Part",
+    "8688768": "_Part"
+  },
+  "CAurPart": {
+    "8688400": "Part",
+    "8688768": "_Part",
+    "8688688": "FUN_00849430",
+    "8688720": "FUN_00849450"
+  },
+  "PartTriMesh": {
+    "8689776": "_PartTriMesh",
+    "8689040": "PartTriMesh"
+  },
+  "PartProjection": {
+    "8690064": "FUN_00849990",
+    "8690256": "FUN_00849a50"
+  },
+  "PartLight": {
+    "8695328": "PartLight",
+    "8695632": "_PartLight"
+  },
+  "Gob": {
+    "8696128": "Gob",
+    "8701808": "FUN_0084c770"
+  },
+  "CAurObject": {
+    "8698768": "FUN_0084bb90",
+    "8698672": "FUN_0084bb30",
+    "8696128": "Gob",
+    "8701808": "FUN_0084c770"
+  },
+  "CAurPathInfo": {
+    "8698592": "FUN_0084bae0",
+    "8698624": "_CAurPathInfo",
+    "8825664": "FUN_0086ab40",
+    "8701808": "FUN_0084c770"
+  },
+  "CAurObjectLightContainer": {
+    "8698832": "FUN_0084bbd0",
+    "8698960": "FUN_0084bc50"
+  },
+  "Scene": {
+    "8745296": "_Scene",
+    "8743136": "Scene"
+  },
+  "CAurScene": {
+    "8745296": "_Scene",
+    "8743136": "Scene",
+    "8744880": "FUN_00856fb0",
+    "8744912": "_CAurScene"
+  },
+  "funcholderbase": {
+    "8815840": "FUN_008684e0",
+    "8815888": "FUN_00868510",
+    "8815936": "FUN_00868540",
+    "8809888": "FUN_00866da0"
+  },
+  "P6AXXZ::?$funcholder": {
+    "8815840": "FUN_008684e0"
+  },
+  "Z::P6AXPAD::?$funcholder": {
+    "8815888": "FUN_00868510"
+  },
+  "Z::P6AXH::?$funcholder": {
+    "8815936": "FUN_00868540"
+  },
+  "CAurInternal": {
+    "8816288": "FUN_008686a0",
+    "8816464": "FUN_00868750"
+  },
+  "CAurora": {
+    "8816288": "FUN_008686a0",
+    "8816368": "FUN_008686f0",
+    "8816464": "FUN_00868750"
+  },
+  "CAurInternalGL": {
+    "8824528": "FUN_0086a6d0",
+    "8820752": "FUN_00869810"
+  },
+  "PartBeam": {
+    "8845168": "FUN_0086f770"
+  },
+  "PartShadow": {
+    "8845168": "FUN_0086f770"
+  },
+  "std::out_of_range": {
+    "8863168": "FUN_00873dc0",
+    "8863232": "FUN_00873e00",
+    "8863312": "FUN_00873e50",
+    "8861568": "FUN_00873780",
+    "9382368": "FUN_008f29e0",
+    "9703646": "FUN_009410de"
+  },
+  "Particle": {
+    "9048688": "FUN_008a1270",
+    "9049008": "FUN_008a13b0"
+  },
+  "ChunkyParticle": {
+    "9061312": "FUN_008a43c0",
+    "9061536": "FUN_008a44a0"
+  },
+  "PartEmitter": {
+    "9063168": "FUN_008a4b00",
+    "9061840": "FUN_008a45d0"
+  },
+  "FountainEmitter": {
+    "9132816": "FUN_008b5b10"
+  },
+  "ExplosionEmitter": {
+    "9136128": "FUN_008b6800"
+  },
+  "SingleEmitter": {
+    "9137824": "FUN_008b6ea0"
+  },
+  "LightningEmitter": {
+    "9139264": "FUN_008b7440",
+    "9139728": "FUN_008b7610"
+  },
+  "Camera": {
+    "9174592": "Camera",
+    "9175568": "FUN_008c0210"
+  },
+  "CAurCamera": {
+    "9174592": "Camera",
+    "9175008": "FUN_008bffe0",
+    "9175040": "FUN_008c0000",
+    "9175568": "FUN_008c0210"
+  },
+  "CAurBehavior": {
+    "9187136": "AddDependency",
+    "9187184": "_CAurBehavior"
+  },
+  "CAurBehaviorAttach": {
+    "9189664": "_CAurBehaviorAttach",
+    "9188832": "CAurBehaviorAttach"
+  },
+  "CAurBehaviorAttachTranslate": {
+    "9190688": "CAurBehaviorAttachTranslate"
+  },
+  "CAurBehaviorAttachRotate": {
+    "9191808": "FUN_008c4180"
+  },
+  "CAurBehaviorAttachNoOrientation": {
+    "9192416": "CAurBehaviorAttachNoOrientation"
+  },
+  "CAurBehaviorCameraFollow": {
+    "9192608": "FUN_008c44a0",
+    "9193120": "FUN_008c46a0"
+  },
+  "CAurGUIStringInternal": {
+    "9243440": "FUN_008d0b30",
+    "9242032": "FUN_008d05b0"
+  },
+  "CAurGUIString": {
+    "9243440": "FUN_008d0b30",
+    "9242032": "FUN_008d05b0",
+    "9242576": "FUN_008d07d0",
+    "9242608": "FUN_008d07f0"
+  },
+  "CAurGUIDraw": {
+    "9254432": "FUN_008d3620",
+    "9254464": "FUN_008d3640"
+  },
+  "CAurGUIImageInternal": {
+    "9255296": "FUN_008d3980",
+    "9255488": "FUN_008d3a40",
+    "9254496": "CAurGUIImageInternal"
+  },
+  "CAurGUIImage": {
+    "9255296": "FUN_008d3980",
+    "9255488": "FUN_008d3a40",
+    "9254496": "CAurGUIImageInternal",
+    "9254656": "FUN_008d3700",
+    "9254688": "FUN_008d3720"
+  },
+  "PartTrigger": {
+    "9262560": "FUN_008d55e0",
+    "9262960": "FUN_008d5770"
+  },
+  "TextureController": {
+    "9277488": "FUN_008d9030",
+    "9277264": "FUN_008d8f50"
+  },
+  "WaterTextureController": {
+    "9282528": "FUN_008da3e0",
+    "9282720": "FUN_008da4a0"
+  },
+  "WaveTextureController": {
+    "9286576": "FUN_008db3b0",
+    "9286688": "FUN_008db420"
+  },
+  "ArturoTextureController": {
+    "9289904": "FUN_008dc0b0",
+    "9289744": "FUN_008dc010"
+  },
+  "CycleTIDTextureController": {
+    "9292720": "FUN_008dcbb0",
+    "9292784": "_CycleTIDTextureController"
+  },
+  "VertexPrimitive": {
+    "9338288": "VertexPrimitive",
+    "9338432": "FUN_008e7e40"
+  },
+  "VertexPrimitiveFlat": {
+    "9339088": "VertexPrimitiveFlat",
+    "9338464": "~VertexPrimitiveFlat"
+  },
+  "VertexPrimitiveSkinned": {
+    "9340000": "FUN_008e8460",
+    "9338640": "FUN_008e7f10"
+  },
+  "VertexPrimitiveDangly": {
+    "9339744": "FUN_008e8360",
+    "9338720": "~CGestureConfig"
+  },
+  "VertexPrimitiveAnim": {
+    "9338880": "_VertexPrimitiveAnim",
+    "9339536": "VertexPrimitiveAnim"
+  },
+  "CustomAnimation": {
+    "9394224": "FUN_008f5830",
+    "9394112": "TaskStack"
+  },
+  "LookAtAnimation": {
+    "9394480": "FUN_008f5930",
+    "9395024": "FUN_008f5b50"
+  },
+  "LightManager": {
+    "9436848": "FUN_008ffeb0",
+    "9437472": "FUN_00900120"
+  },
+  "CAuroraModel": {
+    "9467504": "FUN_00907670",
+    "9467664": "FUN_00907710"
+  },
+  "$0HNC::VCResMDL::?$CResHelper": {
+    "9467936": "_CResHelper",
+    "9467856": "FUN_009077d0"
+  },
+  "CAuroraCompressedTexture": {
+    "9468608": "FUN_00907ac0",
+    "9468768": "FUN_00907b60"
+  },
+  "$0HPB::VCResDDS::?$CResHelper": {
+    "9469152": "FUN_00907ce0",
+    "9469232": "_CResHelper"
+  },
+  "CAuroraLayeredTexture": {
+    "9476336": "FUN_009098f0",
+    "9476176": "FUN_00909850"
+  },
+  "$05::VCResPLT::?$CResHelper": {
+    "9476768": "_CResHelper",
+    "9476688": "FUN_00909a50"
+  },
+  "CAuroraTexture": {
+    "9477600": "FUN_00909de0",
+    "9477440": "FUN_00909d40"
+  },
+  "$02::VCResTGA::?$CResHelper": {
+    "9478400": "FUN_0090a100",
+    "9478480": "_CResHelper_CResDDS_2033_"
+  },
+  "CAuroraProcessedTexture": {
+    "9479152": "FUN_0090a3f0",
+    "9479312": "FUN_0090a490"
+  },
+  "$0LLP::VCResTPC::?$CResHelper": {
+    "9480896": "_CResHelper",
+    "9480816": "FUN_0090aa70"
+  },
+  "CAuroraVisibility": {
+    "9481568": "FUN_0090ad60",
+    "9481728": "FUN_0090ae00"
+  },
+  "$0LLJ::VCResVIS::?$CResHelper": {
+    "9481920": "_CResHelper",
+    "9481840": "FUN_0090ae70"
+  },
+  "CAuroraTXI": {
+    "9482592": "FUN_0090b160",
+    "9482752": "FUN_0090b200"
+  },
+  "$0HOG::VCResTXI::?$CResHelper": {
+    "9482928": "FUN_0090b2b0",
+    "9483008": "_CResHelper"
+  },
+  "CAuroraModelX": {
+    "9483680": "FUN_0090b5a0",
+    "9483840": "FUN_0090b640"
+  },
+  "$0LMA::VCResMDX::?$CResHelper": {
+    "9483952": "FUN_0090b6b0",
+    "9484032": "_CResHelper"
+  },
+  "CAurora16BitTexture": {
+    "9484704": "FUN_0090b9a0",
+    "9484864": "FUN_0090ba40"
+  },
+  "$0IAL::VCRes4PC::?$CResHelper": {
+    "9485440": "_CResHelper",
+    "9485360": "FUN_0090bc30"
+  },
+  "CResDDS": {
+    "9486256": "FUN_0090bfb0",
+    "9486112": "CStatusBar"
+  },
+  "CResPLT": {
+    "9486512": "CWnd",
+    "9486672": "FUN_0090c150"
+  },
+  "CResVIS": {
+    "9487536": "CResPLT",
+    "9487664": "_CResVIS"
+  },
+  "CResTXI": {
+    "9487824": "FUN_0090c5d0",
+    "9487696": "CResVIS"
+  },
+  "CResMDX": {
+    "9487856": "CResTPC",
+    "9487984": "FUN_0090c670"
+  },
+  "CRes4PC": {
+    "9488016": "CStatusBar",
+    "9488160": "FUN_0090c720"
+  },
+  "CSWGuiPanel": {
+    "9489200": "CSWGuiPanel",
+    "9489632": "_CSWGuiPanel"
+  },
+  "CSWGuiBorder": {
+    "9515056": "_CSWGuiBorder",
+    "9514528": "CSWGuiBorder"
+  },
+  "CSWGuiDrawable": {
+    "9515056": "_CSWGuiBorder",
+    "9514528": "CSWGuiBorder",
+    "9514896": "FUN_00912f90",
+    "9514784": "FUN_00912f20",
+    "9528080": "CSWGuiScene",
+    "9528560": "FUN_009164f0",
+    "9524592": "CSWGuiText",
+    "9524832": "_CSWGuiText",
+    "9520736": "CSWGuiImage",
+    "9521120": "_CSWGuiImage"
+  },
+  "CSWGuiImage": {
+    "9520736": "CSWGuiImage",
+    "9521120": "_CSWGuiImage"
+  },
+  "CSWGuiText": {
+    "9524592": "CSWGuiText",
+    "9524832": "_CSWGuiText"
+  },
+  "CSWGuiEditText": {
+    "9526784": "CSWGuiEditText"
+  },
+  "CSWGuiScene": {
+    "9528080": "CSWGuiScene",
+    "9528560": "FUN_009164f0"
+  },
+  "CSWGuiScrollBar": {
+    "9543888": "_CSWGuiScrollBar",
+    "9543648": "CSWGuiScrollBar"
+  },
+  "CSWGuiListBox": {
+    "9548192": "_CSWGuiListBox",
+    "9547424": "CSWGuiListBox"
+  },
+  "type_info": {
+    "9575736": "~type_info"
+  },
+  "std::exception": {
+    "9584605": "FUN_00923fdd",
+    "9584622": "exception",
+    "9584827": "~exception",
+    "9584705": "exception",
+    "9584734": "exception"
+  },
+  "std::bad_cast": {
+    "9584862": "FUN_009240de",
+    "9584892": "FUN_009240fc",
+    "9584965": "FUN_00924145"
+  },
+  "std::bad_exception": {
+    "9615084": "bad_exception",
+    "9615125": "FUN_0092b715",
+    "9618082": "FUN_0092c2a2"
+  },
+  "std::locale::_Locimp": {
+    "9704633": "~_Locimp",
+    "9704560": "_Locimp"
+  },
+  "CResWave": {
+    "9712832": "FUN_009434c0",
+    "9712688": "CStatusBar"
+  },
+  "CResTGA": {
+    "9714128": "_CResTGA",
+    "9713936": "CResNCS"
+  },
+  "CResTPC": {
+    "9716704": "_CResTPC",
+    "9716528": "CResLIP"
+  }
+}

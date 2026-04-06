@@ -1,0 +1,6130 @@
+[
+  {
+    "k1_addr": "0x0049F670",
+    "tsl_addr": "0x008C4420",
+    "name": "Control",
+    "class": "CAurBehaviorAttachNoOrientation",
+    "method": "Control",
+    "via_k1": "vtable_aligned:CAurBehaviorAttachNoOrientation:shift0"
+  },
+  {
+    "k1_addr": "0x0049FE70",
+    "tsl_addr": "0x008C4410",
+    "name": "GetType",
+    "class": "CAurBehaviorAttachNoOrientation",
+    "method": "GetType",
+    "via_k1": "vtable_aligned:CAurBehaviorAttachNoOrientation:shift0"
+  },
+  {
+    "k1_addr": "0x005EE350",
+    "tsl_addr": "0x0040C470",
+    "name": "GetFPS",
+    "class": "CClientExoApp",
+    "method": "GetFPS",
+    "via_k1": "vtable_aligned:CClientExoApp:shift0"
+  },
+  {
+    "k1_addr": "0x005ED7A0",
+    "tsl_addr": "0x0040CE40",
+    "name": "ContinueMessageProcessing",
+    "class": "CClientExoApp",
+    "method": "ContinueMessageProcessing",
+    "via_k1": "vtable_aligned:CClientExoApp:shift0"
+  },
+  {
+    "k1_addr": "0x005ED6E0",
+    "tsl_addr": "0x0040CCB0",
+    "name": "GetNetLayer",
+    "class": "CClientExoApp",
+    "method": "GetNetLayer",
+    "via_k1": "vtable_aligned:CClientExoApp:shift0"
+  },
+  {
+    "k1_addr": "0x005ED890",
+    "tsl_addr": "0x0040D020",
+    "name": "ShutDownToMainMenu",
+    "class": "CClientExoApp",
+    "method": "ShutDownToMainMenu",
+    "via_k1": "vtable_aligned:CClientExoApp:shift0"
+  },
+  {
+    "k1_addr": "0x005ED520",
+    "tsl_addr": "0x0040C8D0",
+    "name": "GetConnectionLib",
+    "class": "CClientExoApp",
+    "method": "GetConnectionLib",
+    "via_k1": "vtable_aligned:CClientExoApp:shift0"
+  },
+  {
+    "k1_addr": "0x005ED8A0",
+    "tsl_addr": "0x0040D040",
+    "name": "SetApplicationIdsMatch",
+    "class": "CClientExoApp",
+    "method": "SetApplicationIdsMatch",
+    "via_k1": "vtable_aligned:CClientExoApp:shift0"
+  },
+  {
+    "k1_addr": "0x005CEA90",
+    "tsl_addr": "0x007F7950",
+    "name": "~CResMDL",
+    "class": "CResMDL",
+    "method": "~CResMDL",
+    "via_k1": "vtable_aligned:CResMDL:shift0"
+  },
+  {
+    "k1_addr": "0x0063BAD0",
+    "tsl_addr": "0x004E7F40",
+    "name": "~CSWCameraFreeLook",
+    "class": "CSWCameraFreeLook",
+    "method": "~CSWCameraFreeLook",
+    "via_k1": "vtable_aligned:CSWCameraFreeLook:shift0"
+  },
+  {
+    "k1_addr": "0x0063A6B0",
+    "tsl_addr": "0x004E7F30",
+    "name": "GetType",
+    "class": "CSWCameraFreeLook",
+    "method": "GetType",
+    "via_k1": "vtable_aligned:CSWCameraFreeLook:shift0"
+  },
+  {
+    "k1_addr": "0x006F70C0",
+    "tsl_addr": "0x006010C0",
+    "name": "~CSWGuiAbilitiesCharGen",
+    "class": "CSWGuiAbilitiesCharGen",
+    "method": "~CSWGuiAbilitiesCharGen",
+    "via_k1": "vtable_aligned:CSWGuiAbilitiesCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiAbilitiesCharGen",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiAbilitiesCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiAbilitiesCharGen",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiAbilitiesCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x006F6DB0",
+    "tsl_addr": "0x006014D0",
+    "name": "OnPanelAdded",
+    "class": "CSWGuiAbilitiesCharGen",
+    "method": "OnPanelAdded",
+    "via_k1": "vtable_aligned:CSWGuiAbilitiesCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiAbilitiesCharGen",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiAbilitiesCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiAbilitiesCharGen",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiAbilitiesCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiAbilitiesCharGen",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiAbilitiesCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiAbilitiesCharGen",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiAbilitiesCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiAbilitiesCharGen",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiAbilitiesCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiAbilitiesCharGen",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiAbilitiesCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiAbilitiesCharGen",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiAbilitiesCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x006AA020",
+    "tsl_addr": "0x005B2570",
+    "name": "~CSWGuiBarkBubble",
+    "class": "CSWGuiBarkBubble",
+    "method": "~CSWGuiBarkBubble",
+    "via_k1": "vtable_aligned:CSWGuiBarkBubble:shift0"
+  },
+  {
+    "k1_addr": "0x006A9FD0",
+    "tsl_addr": "0x005B3450",
+    "name": "SetExtent",
+    "class": "CSWGuiBarkBubble",
+    "method": "SetExtent",
+    "via_k1": "vtable_aligned:CSWGuiBarkBubble:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiBarkBubble",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiBarkBubble:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiBarkBubble",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiBarkBubble:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiBarkBubble",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiBarkBubble:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiBarkBubble",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiBarkBubble:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiBarkBubble",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiBarkBubble:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiBarkBubble",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiBarkBubble:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiBarkBubble",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiBarkBubble:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiBarkBubble",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiBarkBubble:shift0"
+  },
+  {
+    "k1_addr": "0x006DC330",
+    "tsl_addr": "0x005DE580",
+    "name": "~CSWGuiClassSelection",
+    "class": "CSWGuiClassSelection",
+    "method": "~CSWGuiClassSelection",
+    "via_k1": "vtable_aligned:CSWGuiClassSelection:shift0"
+  },
+  {
+    "k1_addr": "0x006DC030",
+    "tsl_addr": "0x005DF4F0",
+    "name": "Draw",
+    "class": "CSWGuiClassSelection",
+    "method": "Draw",
+    "via_k1": "vtable_aligned:CSWGuiClassSelection:shift0"
+  },
+  {
+    "k1_addr": "0x006DBD30",
+    "tsl_addr": "0x005DEFB0",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiClassSelection",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiClassSelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiClassSelection",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiClassSelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiClassSelection",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiClassSelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiClassSelection",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiClassSelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiClassSelection",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiClassSelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiClassSelection",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiClassSelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiClassSelection",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiClassSelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiClassSelection",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiClassSelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiClassSelection",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiClassSelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiClassSelection",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiClassSelection:shift0"
+  },
+  {
+    "k1_addr": "0x006B8030",
+    "tsl_addr": "0x005A6190",
+    "name": "~CSWGuiContainer",
+    "class": "CSWGuiContainer",
+    "method": "~CSWGuiContainer",
+    "via_k1": "vtable_aligned:CSWGuiContainer:shift0"
+  },
+  {
+    "k1_addr": "0x006B8770",
+    "tsl_addr": "0x005A7170",
+    "name": "Update",
+    "class": "CSWGuiContainer",
+    "method": "Update",
+    "via_k1": "vtable_aligned:CSWGuiContainer:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiContainer",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiContainer:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiContainer",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiContainer:shift0"
+  },
+  {
+    "k1_addr": "0x006B51D0",
+    "tsl_addr": "0x005A71D0",
+    "name": "OnPanelAdded",
+    "class": "CSWGuiContainer",
+    "method": "OnPanelAdded",
+    "via_k1": "vtable_aligned:CSWGuiContainer:shift0"
+  },
+  {
+    "k1_addr": "0x006B5250",
+    "tsl_addr": "0x005A72D0",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiContainer",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiContainer:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiContainer",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiContainer:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiContainer",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiContainer:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiContainer",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiContainer:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiContainer",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiContainer:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiContainer",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiContainer:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiContainer",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiContainer:shift0"
+  },
+  {
+    "k1_addr": "0x006AA830",
+    "tsl_addr": "0x005B3550",
+    "name": "~CSWGuiMessageBox",
+    "class": "CSWGuiControllerLossBox",
+    "method": "~CSWGuiMessageBox",
+    "via_k1": "vtable_aligned:CSWGuiControllerLossBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiControllerLossBox",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiControllerLossBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiControllerLossBox",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiControllerLossBox:shift0"
+  },
+  {
+    "k1_addr": "0x00627220",
+    "tsl_addr": "0x0052E3F0",
+    "name": "OnPanelAdded",
+    "class": "CSWGuiControllerLossBox",
+    "method": "OnPanelAdded",
+    "via_k1": "vtable_aligned:CSWGuiControllerLossBox:shift0"
+  },
+  {
+    "k1_addr": "0x00625A00",
+    "tsl_addr": "0x0052E260",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiControllerLossBox",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiControllerLossBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiControllerLossBox",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiControllerLossBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiControllerLossBox",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiControllerLossBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiControllerLossBox",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiControllerLossBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiControllerLossBox",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiControllerLossBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiControllerLossBox",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiControllerLossBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiControllerLossBox",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiControllerLossBox:shift0"
+  },
+  {
+    "k1_addr": "0x00625270",
+    "tsl_addr": "0x0052D3B0",
+    "name": "SetCancelButtonMessage",
+    "class": "CSWGuiControllerLossBox",
+    "method": "SetCancelButtonMessage",
+    "via_k1": "vtable_aligned:CSWGuiControllerLossBox:shift0"
+  },
+  {
+    "k1_addr": "0x00625280",
+    "tsl_addr": "0x0052D3D0",
+    "name": "HideButtons",
+    "class": "CSWGuiControllerLossBox",
+    "method": "HideButtons",
+    "via_k1": "vtable_aligned:CSWGuiControllerLossBox:shift0"
+  },
+  {
+    "k1_addr": "0x006252A0",
+    "tsl_addr": "0x0052D3F0",
+    "name": "ResetButtonMessage",
+    "class": "CSWGuiControllerLossBox",
+    "method": "ResetButtonMessage",
+    "via_k1": "vtable_aligned:CSWGuiControllerLossBox:shift0"
+  },
+  {
+    "k1_addr": "0x006BDDE0",
+    "tsl_addr": "0x005B37D0",
+    "name": "~CSWGuiCreateItemSubMenu",
+    "class": "CSWGuiCreateItemSubMenu",
+    "method": "~CSWGuiCreateItemSubMenu",
+    "via_k1": "vtable_aligned:CSWGuiCreateItemSubMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiCreateItemSubMenu",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiCreateItemSubMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiCreateItemSubMenu",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiCreateItemSubMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiCreateItemSubMenu",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiCreateItemSubMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiCreateItemSubMenu",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiCreateItemSubMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiCreateItemSubMenu",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiCreateItemSubMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiCreateItemSubMenu",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiCreateItemSubMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiCreateItemSubMenu",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiCreateItemSubMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiCreateItemSubMenu",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiCreateItemSubMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiCreateItemSubMenu",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiCreateItemSubMenu:shift0"
+  },
+  {
+    "k1_addr": "0x006EFB20",
+    "tsl_addr": "0x005F3960",
+    "name": "~CSWGuiCustomPanel",
+    "class": "CSWGuiCustomPanel",
+    "method": "~CSWGuiCustomPanel",
+    "via_k1": "vtable_aligned:CSWGuiCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x006EF610",
+    "tsl_addr": "0x005F3F10",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiCustomPanel",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiCustomPanel",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiCustomPanel",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiCustomPanel",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiCustomPanel",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiCustomPanel",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiCustomPanel",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiCustomPanel",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiCustomPanel",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiCustomPanel",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x006A8680",
+    "tsl_addr": "0x005AE5A0",
+    "name": "~CSWGuiDialog",
+    "class": "CSWGuiDialog",
+    "method": "~CSWGuiDialog",
+    "via_k1": "vtable_aligned:CSWGuiDialog:shift0"
+  },
+  {
+    "k1_addr": "0x006A7230",
+    "tsl_addr": "0x005AEE50",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiDialog",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiDialog:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiDialog",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiDialog:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiDialog",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiDialog:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiDialog",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiDialog:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiDialog",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiDialog:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiDialog",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiDialog:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiDialog",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiDialog:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiDialog",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiDialog:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiDialog",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiDialog:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiDialog",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiDialog:shift0"
+  },
+  {
+    "k1_addr": "0x006A7110",
+    "tsl_addr": "0x0090E430",
+    "name": "SelectReply",
+    "class": "CSWGuiDialog",
+    "method": "SelectReply",
+    "via_k1": "vtable_aligned:CSWGuiDialog:shift0"
+  },
+  {
+    "k1_addr": "0x006A7C90",
+    "tsl_addr": "0x005AE720",
+    "name": "SetOwner",
+    "class": "CSWGuiDialog",
+    "method": "SetOwner",
+    "via_k1": "vtable_aligned:CSWGuiDialog:shift0"
+  },
+  {
+    "k1_addr": "0x006A7390",
+    "tsl_addr": "0x005AEB70",
+    "name": "HandleSelectReply",
+    "class": "CSWGuiDialog",
+    "method": "HandleSelectReply",
+    "via_k1": "vtable_aligned:CSWGuiDialog:shift0"
+  },
+  {
+    "k1_addr": "0x006A94C0",
+    "tsl_addr": "0x005B1680",
+    "name": "~CSWGuiDialogComputer",
+    "class": "CSWGuiDialogComputer",
+    "method": "~CSWGuiDialogComputer",
+    "via_k1": "vtable_aligned:CSWGuiDialogComputer:shift0"
+  },
+  {
+    "k1_addr": "0x006A81E0",
+    "tsl_addr": "0x005B18E0",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiDialogComputer",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiDialogComputer:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiDialogComputer",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiDialogComputer:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiDialogComputer",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiDialogComputer:shift0"
+  },
+  {
+    "k1_addr": "0x006A6E00",
+    "tsl_addr": "0x005B1D40",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiDialogComputer",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiDialogComputer:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiDialogComputer",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiDialogComputer:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiDialogComputer",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiDialogComputer:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiDialogComputer",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiDialogComputer:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiDialogComputer",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiDialogComputer:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiDialogComputer",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiDialogComputer:shift0"
+  },
+  {
+    "k1_addr": "0x006A6E20",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiDialogComputer",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiDialogComputer:shift0"
+  },
+  {
+    "k1_addr": "0x0040A9C0",
+    "tsl_addr": "0x005B1D70",
+    "name": "ResetFont",
+    "class": "CSWGuiDialogComputer",
+    "method": "ResetFont",
+    "via_k1": "vtable_aligned:CSWGuiDialogComputer:shift0"
+  },
+  {
+    "k1_addr": "0x006A7110",
+    "tsl_addr": "0x0090E430",
+    "name": "SelectReply",
+    "class": "CSWGuiDialogComputer",
+    "method": "SelectReply",
+    "via_k1": "vtable_aligned:CSWGuiDialogComputer:shift0"
+  },
+  {
+    "k1_addr": "0x006A7C90",
+    "tsl_addr": "0x005B1960",
+    "name": "SetOwner",
+    "class": "CSWGuiDialogComputer",
+    "method": "SetOwner",
+    "via_k1": "vtable_aligned:CSWGuiDialogComputer:shift0"
+  },
+  {
+    "k1_addr": "0x006A7390",
+    "tsl_addr": "0x005AEB70",
+    "name": "HandleSelectReply",
+    "class": "CSWGuiDialogComputer",
+    "method": "HandleSelectReply",
+    "via_k1": "vtable_aligned:CSWGuiDialogComputer:shift0"
+  },
+  {
+    "k1_addr": "0x006A89F0",
+    "tsl_addr": "0x005AF1F0",
+    "name": "~CSWGuiDialogLetterbox",
+    "class": "CSWGuiDialogLetterbox",
+    "method": "~CSWGuiDialogLetterbox",
+    "via_k1": "vtable_aligned:CSWGuiDialogLetterbox:shift0"
+  },
+  {
+    "k1_addr": "0x006A7440",
+    "tsl_addr": "0x005AF380",
+    "name": "SetExtent",
+    "class": "CSWGuiDialogLetterbox",
+    "method": "SetExtent",
+    "via_k1": "vtable_aligned:CSWGuiDialogLetterbox:shift0"
+  },
+  {
+    "k1_addr": "0x006A7680",
+    "tsl_addr": "0x005AF9B0",
+    "name": "Draw",
+    "class": "CSWGuiDialogLetterbox",
+    "method": "Draw",
+    "via_k1": "vtable_aligned:CSWGuiDialogLetterbox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiDialogLetterbox",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiDialogLetterbox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiDialogLetterbox",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiDialogLetterbox:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiDialogLetterbox",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiDialogLetterbox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiDialogLetterbox",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiDialogLetterbox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiDialogLetterbox",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiDialogLetterbox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiDialogLetterbox",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiDialogLetterbox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiDialogLetterbox",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiDialogLetterbox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiDialogLetterbox",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiDialogLetterbox:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiDialogLetterbox",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiDialogLetterbox:shift0"
+  },
+  {
+    "k1_addr": "0x006A8AD0",
+    "tsl_addr": "0x00531470",
+    "name": "~CSWGuiDialogTop",
+    "class": "CSWGuiDialogTop",
+    "method": "~CSWGuiDialogTop",
+    "via_k1": "vtable_aligned:CSWGuiDialogTop:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiDialogTop",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiDialogTop:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiDialogTop",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiDialogTop:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiDialogTop",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiDialogTop:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiDialogTop",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiDialogTop:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiDialogTop",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiDialogTop:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiDialogTop",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiDialogTop:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiDialogTop",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiDialogTop:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiDialogTop",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiDialogTop:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiDialogTop",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiDialogTop:shift0"
+  },
+  {
+    "k1_addr": "0x00417440",
+    "tsl_addr": "0x00915E90",
+    "name": "~CSWGuiEditText",
+    "class": "CSWGuiEditText",
+    "method": "~CSWGuiEditText",
+    "via_k1": "vtable_aligned:CSWGuiEditText:shift0"
+  },
+  {
+    "k1_addr": "0x006AA830",
+    "tsl_addr": "0x005B3550",
+    "name": "~CSWGuiMessageBox",
+    "class": "CSWGuiExamine",
+    "method": "~CSWGuiMessageBox",
+    "via_k1": "vtable_aligned:CSWGuiExamine:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiExamine",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiExamine:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiExamine",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiExamine:shift0"
+  },
+  {
+    "k1_addr": "0x00625A00",
+    "tsl_addr": "0x0052E260",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiExamine",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiExamine:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiExamine",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiExamine:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiExamine",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiExamine:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiExamine",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiExamine:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiExamine",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiExamine:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiExamine",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiExamine:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiExamine",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiExamine:shift0"
+  },
+  {
+    "k1_addr": "0x00625270",
+    "tsl_addr": "0x0052D3B0",
+    "name": "SetCancelButtonMessage",
+    "class": "CSWGuiExamine",
+    "method": "SetCancelButtonMessage",
+    "via_k1": "vtable_aligned:CSWGuiExamine:shift0"
+  },
+  {
+    "k1_addr": "0x00625280",
+    "tsl_addr": "0x0052D3D0",
+    "name": "HideButtons",
+    "class": "CSWGuiExamine",
+    "method": "HideButtons",
+    "via_k1": "vtable_aligned:CSWGuiExamine:shift0"
+  },
+  {
+    "k1_addr": "0x006252A0",
+    "tsl_addr": "0x0052D3F0",
+    "name": "ResetButtonMessage",
+    "class": "CSWGuiExamine",
+    "method": "ResetButtonMessage",
+    "via_k1": "vtable_aligned:CSWGuiExamine:shift0"
+  },
+  {
+    "k1_addr": "0x00624900",
+    "tsl_addr": "0x005AC360",
+    "name": "~CSWGuiFade",
+    "class": "CSWGuiFade",
+    "method": "~CSWGuiFade",
+    "via_k1": "vtable_aligned:CSWGuiFade:shift0"
+  },
+  {
+    "k1_addr": "0x006246A0",
+    "tsl_addr": "0x005AC8E0",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiFade",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiFade:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiFade",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiFade:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiFade",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiFade:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiFade",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiFade:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiFade",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiFade:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiFade",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiFade:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiFade",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiFade:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiFade",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiFade:shift0"
+  },
+  {
+    "k1_addr": "0x006F2F10",
+    "tsl_addr": "0x005F9800",
+    "name": "~CSWGuiFeatsCharGen",
+    "class": "CSWGuiFeatsCharGen",
+    "method": "~CSWGuiFeatsCharGen",
+    "via_k1": "vtable_aligned:CSWGuiFeatsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x006F2CC0",
+    "tsl_addr": "0x005FAA40",
+    "name": "Draw",
+    "class": "CSWGuiFeatsCharGen",
+    "method": "Draw",
+    "via_k1": "vtable_aligned:CSWGuiFeatsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiFeatsCharGen",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiFeatsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiFeatsCharGen",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiFeatsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiFeatsCharGen",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiFeatsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiFeatsCharGen",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiFeatsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiFeatsCharGen",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiFeatsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiFeatsCharGen",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiFeatsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiFeatsCharGen",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiFeatsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiFeatsCharGen",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiFeatsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiFeatsCharGen",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiFeatsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x00416E70",
+    "tsl_addr": "0x00914770",
+    "name": "~CSWGuiImage",
+    "class": "CSWGuiImage",
+    "method": "~CSWGuiImage",
+    "via_k1": "vtable_aligned:CSWGuiImage:shift0"
+  },
+  {
+    "k1_addr": "0x00415B70",
+    "tsl_addr": "0x00914900",
+    "name": "SetExtent",
+    "class": "CSWGuiImage",
+    "method": "SetExtent",
+    "via_k1": "vtable_aligned:CSWGuiImage:shift0"
+  },
+  {
+    "k1_addr": "0x00415C90",
+    "tsl_addr": "0x00914C80",
+    "name": "Draw",
+    "class": "CSWGuiImage",
+    "method": "Draw",
+    "via_k1": "vtable_aligned:CSWGuiImage:shift0"
+  },
+  {
+    "k1_addr": "0x006ACC30",
+    "tsl_addr": "0x00592F60",
+    "name": "~CSWGuiInGameAbilities",
+    "class": "CSWGuiInGameAbilities",
+    "method": "~CSWGuiInGameAbilities",
+    "via_k1": "vtable_aligned:CSWGuiInGameAbilities:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiInGameAbilities",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiInGameAbilities:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiInGameAbilities",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiInGameAbilities:shift0"
+  },
+  {
+    "k1_addr": "0x006ADC20",
+    "tsl_addr": "0x00593910",
+    "name": "OnPanelAdded",
+    "class": "CSWGuiInGameAbilities",
+    "method": "OnPanelAdded",
+    "via_k1": "vtable_aligned:CSWGuiInGameAbilities:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiInGameAbilities",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameAbilities:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiInGameAbilities",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameAbilities:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiInGameAbilities",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameAbilities:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiInGameAbilities",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameAbilities:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiInGameAbilities",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameAbilities:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiInGameAbilities",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiInGameAbilities:shift0"
+  },
+  {
+    "k1_addr": "0x006C8170",
+    "tsl_addr": "0x005ACEB0",
+    "name": "~CSWGuiInGameAreaTransition",
+    "class": "CSWGuiInGameAreaTransition",
+    "method": "~CSWGuiInGameAreaTransition",
+    "via_k1": "vtable_aligned:CSWGuiInGameAreaTransition:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiInGameAreaTransition",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiInGameAreaTransition:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiInGameAreaTransition",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiInGameAreaTransition:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiInGameAreaTransition",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiInGameAreaTransition:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiInGameAreaTransition",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameAreaTransition:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiInGameAreaTransition",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameAreaTransition:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiInGameAreaTransition",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameAreaTransition:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiInGameAreaTransition",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameAreaTransition:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiInGameAreaTransition",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiInGameAreaTransition:shift0"
+  },
+  {
+    "k1_addr": "0x006E7A70",
+    "tsl_addr": "0x005E6970",
+    "name": "~CSWGuiInGameAutoPause",
+    "class": "CSWGuiInGameAutoPause",
+    "method": "~CSWGuiInGameAutoPause",
+    "via_k1": "vtable_aligned:CSWGuiInGameAutoPause:shift0"
+  },
+  {
+    "k1_addr": "0x006E74C0",
+    "tsl_addr": "0x005E6F10",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiInGameAutoPause",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiInGameAutoPause:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiInGameAutoPause",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiInGameAutoPause:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiInGameAutoPause",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiInGameAutoPause:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiInGameAutoPause",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiInGameAutoPause:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiInGameAutoPause",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameAutoPause:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiInGameAutoPause",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameAutoPause:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiInGameAutoPause",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameAutoPause:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiInGameAutoPause",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameAutoPause:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiInGameAutoPause",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiInGameAutoPause:shift0"
+  },
+  {
+    "k1_addr": "0x006B2200",
+    "tsl_addr": "0x00597770",
+    "name": "~CSWGuiInGameCharacter",
+    "class": "CSWGuiInGameCharacter",
+    "method": "~CSWGuiInGameCharacter",
+    "via_k1": "vtable_aligned:CSWGuiInGameCharacter:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiInGameCharacter",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiInGameCharacter:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiInGameCharacter",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiInGameCharacter:shift0"
+  },
+  {
+    "k1_addr": "0x006AE980",
+    "tsl_addr": "0x005991E0",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiInGameCharacter",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiInGameCharacter:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiInGameCharacter",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameCharacter:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiInGameCharacter",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameCharacter:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiInGameCharacter",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameCharacter:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiInGameCharacter",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameCharacter:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiInGameCharacter",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameCharacter:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiInGameCharacter",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiInGameCharacter:shift0"
+  },
+  {
+    "k1_addr": "0x0068F6D0",
+    "tsl_addr": "0x00558E70",
+    "name": "~CSWGuiInGameCredits",
+    "class": "CSWGuiInGameCredits",
+    "method": "~CSWGuiInGameCredits",
+    "via_k1": "vtable_aligned:CSWGuiInGameCredits:shift0"
+  },
+  {
+    "k1_addr": "0x0068F880",
+    "tsl_addr": "0x00559120",
+    "name": "Draw",
+    "class": "CSWGuiInGameCredits",
+    "method": "Draw",
+    "via_k1": "vtable_aligned:CSWGuiInGameCredits:shift0"
+  },
+  {
+    "k1_addr": "0x0068F350",
+    "tsl_addr": "0x005592F0",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiInGameCredits",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiInGameCredits:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiInGameCredits",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiInGameCredits:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiInGameCredits",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiInGameCredits:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiInGameCredits",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiInGameCredits:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiInGameCredits",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameCredits:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiInGameCredits",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameCredits:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiInGameCredits",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameCredits:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiInGameCredits",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameCredits:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiInGameCredits",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameCredits:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiInGameCredits",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiInGameCredits:shift0"
+  },
+  {
+    "k1_addr": "0x006B9450",
+    "tsl_addr": "0x0059E540",
+    "name": "~CSWGuiInGameEquip",
+    "class": "CSWGuiInGameEquip",
+    "method": "~CSWGuiInGameEquip",
+    "via_k1": "vtable_aligned:CSWGuiInGameEquip:shift0"
+  },
+  {
+    "k1_addr": "0x006BB510",
+    "tsl_addr": "0x0059F8A0",
+    "name": "Draw",
+    "class": "CSWGuiInGameEquip",
+    "method": "Draw",
+    "via_k1": "vtable_aligned:CSWGuiInGameEquip:shift0"
+  },
+  {
+    "k1_addr": "0x006BA3F0",
+    "tsl_addr": "0x005A2B60",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiInGameEquip",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiInGameEquip:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiInGameEquip",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiInGameEquip:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiInGameEquip",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiInGameEquip:shift0"
+  },
+  {
+    "k1_addr": "0x006B8E10",
+    "tsl_addr": "0x0059FB80",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiInGameEquip",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiInGameEquip:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiInGameEquip",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameEquip:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiInGameEquip",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameEquip:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiInGameEquip",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameEquip:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiInGameEquip",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameEquip:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiInGameEquip",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameEquip:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiInGameEquip",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiInGameEquip:shift0"
+  },
+  {
+    "k1_addr": "0x006958A0",
+    "tsl_addr": "0x00566DB0",
+    "name": "~CSWGuiInGameGalaxyMap",
+    "class": "CSWGuiInGameGalaxyMap",
+    "method": "~CSWGuiInGameGalaxyMap",
+    "via_k1": "vtable_aligned:CSWGuiInGameGalaxyMap:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiInGameGalaxyMap",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiInGameGalaxyMap:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiInGameGalaxyMap",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiInGameGalaxyMap:shift0"
+  },
+  {
+    "k1_addr": "0x006927D0",
+    "tsl_addr": "0x00567590",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiInGameGalaxyMap",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiInGameGalaxyMap:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiInGameGalaxyMap",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameGalaxyMap:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiInGameGalaxyMap",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameGalaxyMap:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiInGameGalaxyMap",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameGalaxyMap:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiInGameGalaxyMap",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameGalaxyMap:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiInGameGalaxyMap",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameGalaxyMap:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiInGameGalaxyMap",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiInGameGalaxyMap:shift0"
+  },
+  {
+    "k1_addr": "0x006E7110",
+    "tsl_addr": "0x005E5210",
+    "name": "~CSWGuiInGameGameplay",
+    "class": "CSWGuiInGameGameplay",
+    "method": "~CSWGuiInGameGameplay",
+    "via_k1": "vtable_aligned:CSWGuiInGameGameplay:shift0"
+  },
+  {
+    "k1_addr": "0x006E6180",
+    "tsl_addr": "0x005E5510",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiInGameGameplay",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiInGameGameplay:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiInGameGameplay",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiInGameGameplay:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiInGameGameplay",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiInGameGameplay:shift0"
+  },
+  {
+    "k1_addr": "0x006E6170",
+    "tsl_addr": "0x005E56E0",
+    "name": "OnPanelAdded",
+    "class": "CSWGuiInGameGameplay",
+    "method": "OnPanelAdded",
+    "via_k1": "vtable_aligned:CSWGuiInGameGameplay:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiInGameGameplay",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiInGameGameplay:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiInGameGameplay",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameGameplay:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiInGameGameplay",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameGameplay:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiInGameGameplay",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameGameplay:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiInGameGameplay",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameGameplay:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiInGameGameplay",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameGameplay:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiInGameGameplay",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiInGameGameplay:shift0"
+  },
+  {
+    "k1_addr": "0x006B4B90",
+    "tsl_addr": "0x0059AF30",
+    "name": "~CSWGuiInGameInventory",
+    "class": "CSWGuiInGameInventory",
+    "method": "~CSWGuiInGameInventory",
+    "via_k1": "vtable_aligned:CSWGuiInGameInventory:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiInGameInventory",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiInGameInventory:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiInGameInventory",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiInGameInventory:shift0"
+  },
+  {
+    "k1_addr": "0x006B4C30",
+    "tsl_addr": "0x0059B3C0",
+    "name": "OnPanelAdded",
+    "class": "CSWGuiInGameInventory",
+    "method": "OnPanelAdded",
+    "via_k1": "vtable_aligned:CSWGuiInGameInventory:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiInGameInventory",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameInventory:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiInGameInventory",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameInventory:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiInGameInventory",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameInventory:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiInGameInventory",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameInventory:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiInGameInventory",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameInventory:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiInGameInventory",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiInGameInventory:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiInGameJournal",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiInGameJournal:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiInGameJournal",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiInGameJournal:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiInGameJournal",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameJournal:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiInGameJournal",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameJournal:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiInGameJournal",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameJournal:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiInGameJournal",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameJournal:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiInGameJournal",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameJournal:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiInGameJournal",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiInGameJournal:shift0"
+  },
+  {
+    "k1_addr": "0x00695BD0",
+    "tsl_addr": "0x00563080",
+    "name": "~CSWGuiInGameMap",
+    "class": "CSWGuiInGameMap",
+    "method": "~CSWGuiInGameMap",
+    "via_k1": "vtable_aligned:CSWGuiInGameMap:shift0"
+  },
+  {
+    "k1_addr": "0x00692930",
+    "tsl_addr": "0x00563D30",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiInGameMap",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiInGameMap:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiInGameMap",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiInGameMap:shift0"
+  },
+  {
+    "k1_addr": "0x00693BA0",
+    "tsl_addr": "0x00563C10",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiInGameMap",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiInGameMap:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiInGameMap",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameMap:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiInGameMap",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameMap:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiInGameMap",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameMap:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiInGameMap",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameMap:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiInGameMap",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameMap:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiInGameMap",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiInGameMap:shift0"
+  },
+  {
+    "k1_addr": "0x006280E0",
+    "tsl_addr": "0x00527A80",
+    "name": "~CSWGuiInGameMenu",
+    "class": "CSWGuiInGameMenu",
+    "method": "~CSWGuiInGameMenu",
+    "via_k1": "vtable_aligned:CSWGuiInGameMenu:shift0"
+  },
+  {
+    "k1_addr": "0x00624C60",
+    "tsl_addr": "0x00528030",
+    "name": "Update",
+    "class": "CSWGuiInGameMenu",
+    "method": "Update",
+    "via_k1": "vtable_aligned:CSWGuiInGameMenu:shift0"
+  },
+  {
+    "k1_addr": "0x00624970",
+    "tsl_addr": "0x005292D0",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiInGameMenu",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiInGameMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiInGameMenu",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiInGameMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiInGameMenu",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiInGameMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiInGameMenu",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiInGameMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiInGameMenu",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiInGameMenu",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiInGameMenu",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiInGameMenu",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiInGameMenu",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiInGameMenu",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiInGameMenu:shift0"
+  },
+  {
+    "k1_addr": "0x00628240",
+    "tsl_addr": "0x0052A0D0",
+    "name": "~CSWGuiInGameMessages",
+    "class": "CSWGuiInGameMessages",
+    "method": "~CSWGuiInGameMessages",
+    "via_k1": "vtable_aligned:CSWGuiInGameMessages:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiInGameMessages",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiInGameMessages:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiInGameMessages",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiInGameMessages:shift0"
+  },
+  {
+    "k1_addr": "0x00626D90",
+    "tsl_addr": "0x0052B8F0",
+    "name": "OnPanelAdded",
+    "class": "CSWGuiInGameMessages",
+    "method": "OnPanelAdded",
+    "via_k1": "vtable_aligned:CSWGuiInGameMessages:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiInGameMessages",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiInGameMessages:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiInGameMessages",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameMessages:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiInGameMessages",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameMessages:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiInGameMessages",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameMessages:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiInGameMessages",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameMessages:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiInGameMessages",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameMessages:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiInGameMessages",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiInGameMessages:shift0"
+  },
+  {
+    "k1_addr": "0x006ECFB0",
+    "tsl_addr": "0x005EF350",
+    "name": "~CSWGuiInGameOptKeyMappings",
+    "class": "CSWGuiInGameOptKeyMappings",
+    "method": "~CSWGuiInGameOptKeyMappings",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptKeyMappings:shift0"
+  },
+  {
+    "k1_addr": "0x006EE040",
+    "tsl_addr": "0x005F0340",
+    "name": "Update",
+    "class": "CSWGuiInGameOptKeyMappings",
+    "method": "Update",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptKeyMappings:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiInGameOptKeyMappings",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptKeyMappings:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiInGameOptKeyMappings",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptKeyMappings:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiInGameOptKeyMappings",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptKeyMappings:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiInGameOptKeyMappings",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptKeyMappings:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiInGameOptKeyMappings",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptKeyMappings:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiInGameOptKeyMappings",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptKeyMappings:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiInGameOptKeyMappings",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptKeyMappings:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiInGameOptKeyMappings",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptKeyMappings:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiInGameOptKeyMappings",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptKeyMappings:shift0"
+  },
+  {
+    "k1_addr": "0x006AB790",
+    "tsl_addr": "0x0058F440",
+    "name": "~CSWGuiInGameOptions",
+    "class": "CSWGuiInGameOptions",
+    "method": "~CSWGuiInGameOptions",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptions:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiInGameOptions",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptions:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiInGameOptions",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptions:shift0"
+  },
+  {
+    "k1_addr": "0x006AB140",
+    "tsl_addr": "0x005900C0",
+    "name": "OnPanelAdded",
+    "class": "CSWGuiInGameOptions",
+    "method": "OnPanelAdded",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptions:shift0"
+  },
+  {
+    "k1_addr": "0x006AAAD0",
+    "tsl_addr": "0x00590160",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiInGameOptions",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptions:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiInGameOptions",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptions:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiInGameOptions",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptions:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiInGameOptions",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptions:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiInGameOptions",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptions:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiInGameOptions",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptions:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiInGameOptions",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiInGameOptions:shift0"
+  },
+  {
+    "k1_addr": "0x006C0580",
+    "tsl_addr": "0x005ADBC0",
+    "name": "~CSWGuiInGamePause",
+    "class": "CSWGuiInGamePause",
+    "method": "~CSWGuiInGamePause",
+    "via_k1": "vtable_aligned:CSWGuiInGamePause:shift0"
+  },
+  {
+    "k1_addr": "0x006C00B0",
+    "tsl_addr": "0x005AE020",
+    "name": "Draw",
+    "class": "CSWGuiInGamePause",
+    "method": "Draw",
+    "via_k1": "vtable_aligned:CSWGuiInGamePause:shift0"
+  },
+  {
+    "k1_addr": "0x00409E60",
+    "tsl_addr": "0x005AE300",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiInGamePause",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiInGamePause:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiInGamePause",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiInGamePause:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiInGamePause",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiInGamePause:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiInGamePause",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiInGamePause:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiInGamePause",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGamePause:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiInGamePause",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGamePause:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiInGamePause",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGamePause:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiInGamePause",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGamePause:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiInGamePause",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiInGamePause:shift0"
+  },
+  {
+    "k1_addr": "0x006C2540",
+    "tsl_addr": "0x005AD450",
+    "name": "~CSWGuiInGameSoloModeQuery",
+    "class": "CSWGuiInGameSoloModeQuery",
+    "method": "~CSWGuiInGameSoloModeQuery",
+    "via_k1": "vtable_aligned:CSWGuiInGameSoloModeQuery:shift0"
+  },
+  {
+    "k1_addr": "0x006C2400",
+    "tsl_addr": "0x005AD790",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiInGameSoloModeQuery",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiInGameSoloModeQuery:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiInGameSoloModeQuery",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiInGameSoloModeQuery:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiInGameSoloModeQuery",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiInGameSoloModeQuery:shift0"
+  },
+  {
+    "k1_addr": "0x00625A00",
+    "tsl_addr": "0x0052E260",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiInGameSoloModeQuery",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiInGameSoloModeQuery:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiInGameSoloModeQuery",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameSoloModeQuery:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiInGameSoloModeQuery",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameSoloModeQuery:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiInGameSoloModeQuery",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameSoloModeQuery:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiInGameSoloModeQuery",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameSoloModeQuery:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiInGameSoloModeQuery",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiInGameSoloModeQuery:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiInGameSoloModeQuery",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiInGameSoloModeQuery:shift0"
+  },
+  {
+    "k1_addr": "0x00625270",
+    "tsl_addr": "0x0052D3B0",
+    "name": "SetCancelButtonMessage",
+    "class": "CSWGuiInGameSoloModeQuery",
+    "method": "SetCancelButtonMessage",
+    "via_k1": "vtable_aligned:CSWGuiInGameSoloModeQuery:shift0"
+  },
+  {
+    "k1_addr": "0x00625280",
+    "tsl_addr": "0x0052D3D0",
+    "name": "HideButtons",
+    "class": "CSWGuiInGameSoloModeQuery",
+    "method": "HideButtons",
+    "via_k1": "vtable_aligned:CSWGuiInGameSoloModeQuery:shift0"
+  },
+  {
+    "k1_addr": "0x006252A0",
+    "tsl_addr": "0x0052D3F0",
+    "name": "ResetButtonMessage",
+    "class": "CSWGuiInGameSoloModeQuery",
+    "method": "ResetButtonMessage",
+    "via_k1": "vtable_aligned:CSWGuiInGameSoloModeQuery:shift0"
+  },
+  {
+    "k1_addr": "0x006E89D0",
+    "tsl_addr": "0x005E8690",
+    "name": "~CSWGuiLevelUpCharGen",
+    "class": "CSWGuiLevelUpCharGen",
+    "method": "~CSWGuiLevelUpCharGen",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x006E9A50",
+    "tsl_addr": "0x005E8D00",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiLevelUpCharGen",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiLevelUpCharGen",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiLevelUpCharGen",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x006E7B40",
+    "tsl_addr": "0x005E8CB0",
+    "name": "OnPanelAdded",
+    "class": "CSWGuiLevelUpCharGen",
+    "method": "OnPanelAdded",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiLevelUpCharGen",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiLevelUpCharGen",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiLevelUpCharGen",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiLevelUpCharGen",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiLevelUpCharGen",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiLevelUpCharGen",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiLevelUpCharGen",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x006EEE70",
+    "tsl_addr": "0x005F24A0",
+    "name": "~CSWGuiLevelUpPanel",
+    "class": "CSWGuiLevelUpPanel",
+    "method": "~CSWGuiLevelUpPanel",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpPanel:shift0"
+  },
+  {
+    "k1_addr": "0x006EE720",
+    "tsl_addr": "0x005F28D0",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiLevelUpPanel",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiLevelUpPanel",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiLevelUpPanel",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpPanel:shift0"
+  },
+  {
+    "k1_addr": "0x006EE6C0",
+    "tsl_addr": "0x005F25A0",
+    "name": "OnPanelAdded",
+    "class": "CSWGuiLevelUpPanel",
+    "method": "OnPanelAdded",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiLevelUpPanel",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiLevelUpPanel",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiLevelUpPanel",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiLevelUpPanel",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiLevelUpPanel",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiLevelUpPanel",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiLevelUpPanel",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiLevelUpPanel:shift0"
+  },
+  {
+    "k1_addr": "0x006D0240",
+    "tsl_addr": "0x005B5EA0",
+    "name": "~CSWGuiLoadModuleDebugMenu",
+    "class": "CSWGuiLoadModuleDebugMenu",
+    "method": "~CSWGuiLoadModuleDebugMenu",
+    "via_k1": "vtable_aligned:CSWGuiLoadModuleDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x006D02C0",
+    "tsl_addr": "0x005B5F70",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiLoadModuleDebugMenu",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiLoadModuleDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiLoadModuleDebugMenu",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiLoadModuleDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiLoadModuleDebugMenu",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiLoadModuleDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiLoadModuleDebugMenu",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiLoadModuleDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiLoadModuleDebugMenu",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiLoadModuleDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiLoadModuleDebugMenu",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiLoadModuleDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiLoadModuleDebugMenu",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiLoadModuleDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiLoadModuleDebugMenu",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiLoadModuleDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiLoadModuleDebugMenu",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiLoadModuleDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiLoadModuleDebugMenu",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiLoadModuleDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0067AB60",
+    "tsl_addr": "0x00540080",
+    "name": "~CSWGuiLoadScreen",
+    "class": "CSWGuiLoadScreen",
+    "method": "~CSWGuiLoadScreen",
+    "via_k1": "vtable_aligned:CSWGuiLoadScreen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiLoadScreen",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiLoadScreen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiLoadScreen",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiLoadScreen:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x00540290",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiLoadScreen",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiLoadScreen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiLoadScreen",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiLoadScreen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiLoadScreen",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiLoadScreen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiLoadScreen",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiLoadScreen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiLoadScreen",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiLoadScreen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiLoadScreen",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiLoadScreen:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiLoadScreen",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiLoadScreen:shift0"
+  },
+  {
+    "k1_addr": "0x006EBEE0",
+    "tsl_addr": "0x005ED340",
+    "name": "~CSWGuiMainCharGen",
+    "class": "CSWGuiMainCharGen",
+    "method": "~CSWGuiMainCharGen",
+    "via_k1": "vtable_aligned:CSWGuiMainCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiMainCharGen",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiMainCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiMainCharGen",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiMainCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiMainCharGen",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiMainCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiMainCharGen",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiMainCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiMainCharGen",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiMainCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiMainCharGen",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiMainCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiMainCharGen",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiMainCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiMainCharGen",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiMainCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiMainCharGen",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiMainCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0068D3B0",
+    "tsl_addr": "0x0051BEC0",
+    "name": "~CSWGuiMainInterface",
+    "class": "CSWGuiMainInterface",
+    "method": "~CSWGuiMainInterface",
+    "via_k1": "vtable_aligned:CSWGuiMainInterface:shift0"
+  },
+  {
+    "k1_addr": "0x00409E60",
+    "tsl_addr": "0x00518020",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiMainInterface",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiMainInterface:shift0"
+  },
+  {
+    "k1_addr": "0x00686B70",
+    "tsl_addr": "0x0051CB20",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiMainInterface",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiMainInterface:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiMainInterface",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiMainInterface:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x00524EA0",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiMainInterface",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiMainInterface:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiMainInterface",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiMainInterface:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiMainInterface",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiMainInterface:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiMainInterface",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiMainInterface:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiMainInterface",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiMainInterface:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiMainInterface",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiMainInterface:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiMainInterface",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiMainInterface:shift0"
+  },
+  {
+    "k1_addr": "0x0067AC10",
+    "tsl_addr": "0x0053CB40",
+    "name": "Draw",
+    "class": "CSWGuiMainMenu",
+    "method": "Draw",
+    "via_k1": "vtable_aligned:CSWGuiMainMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiMainMenu",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiMainMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiMainMenu",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiMainMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiMainMenu",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiMainMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiMainMenu",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiMainMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiMainMenu",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiMainMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiMainMenu",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiMainMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiMainMenu",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiMainMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiMainMenu",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiMainMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiMainMenu",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiMainMenu:shift0"
+  },
+  {
+    "k1_addr": "0x00627080",
+    "tsl_addr": "0x005B3550",
+    "name": "~CSWGuiMessageBox",
+    "class": "CSWGuiMessageBox",
+    "method": "~CSWGuiMessageBox",
+    "via_k1": "vtable_aligned:CSWGuiMessageBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiMessageBox",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiMessageBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiMessageBox",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiMessageBox:shift0"
+  },
+  {
+    "k1_addr": "0x00625A00",
+    "tsl_addr": "0x0052E260",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiMessageBox",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiMessageBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiMessageBox",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiMessageBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiMessageBox",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiMessageBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiMessageBox",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiMessageBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiMessageBox",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiMessageBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiMessageBox",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiMessageBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiMessageBox",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiMessageBox:shift0"
+  },
+  {
+    "k1_addr": "0x00625270",
+    "tsl_addr": "0x0052D3B0",
+    "name": "SetCancelButtonMessage",
+    "class": "CSWGuiMessageBox",
+    "method": "SetCancelButtonMessage",
+    "via_k1": "vtable_aligned:CSWGuiMessageBox:shift0"
+  },
+  {
+    "k1_addr": "0x00625280",
+    "tsl_addr": "0x0052D3D0",
+    "name": "HideButtons",
+    "class": "CSWGuiMessageBox",
+    "method": "HideButtons",
+    "via_k1": "vtable_aligned:CSWGuiMessageBox:shift0"
+  },
+  {
+    "k1_addr": "0x006252A0",
+    "tsl_addr": "0x0052D3F0",
+    "name": "ResetButtonMessage",
+    "class": "CSWGuiMessageBox",
+    "method": "ResetButtonMessage",
+    "via_k1": "vtable_aligned:CSWGuiMessageBox:shift0"
+  },
+  {
+    "k1_addr": "0x006FA2C0",
+    "tsl_addr": "0x00604ED0",
+    "name": "~CSWGuiNameChargen",
+    "class": "CSWGuiNameChargen",
+    "method": "~CSWGuiNameChargen",
+    "via_k1": "vtable_aligned:CSWGuiNameChargen:shift0"
+  },
+  {
+    "k1_addr": "0x006FA220",
+    "tsl_addr": "0x00605190",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiNameChargen",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiNameChargen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiNameChargen",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiNameChargen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiNameChargen",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiNameChargen:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiNameChargen",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiNameChargen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiNameChargen",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiNameChargen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiNameChargen",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiNameChargen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiNameChargen",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiNameChargen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiNameChargen",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiNameChargen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiNameChargen",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiNameChargen:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiNameChargen",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiNameChargen:shift0"
+  },
+  {
+    "k1_addr": "0x006E12E0",
+    "tsl_addr": "0x00568EA0",
+    "name": "~CSWGuiOptionsFeedback",
+    "class": "CSWGuiOptionsFeedback",
+    "method": "~CSWGuiOptionsFeedback",
+    "via_k1": "vtable_aligned:CSWGuiOptionsFeedback:shift0"
+  },
+  {
+    "k1_addr": "0x006DE430",
+    "tsl_addr": "0x00569480",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiOptionsFeedback",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiOptionsFeedback:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiOptionsFeedback",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiOptionsFeedback:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiOptionsFeedback",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiOptionsFeedback:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiOptionsFeedback",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiOptionsFeedback:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiOptionsFeedback",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsFeedback:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiOptionsFeedback",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsFeedback:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiOptionsFeedback",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsFeedback:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiOptionsFeedback",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsFeedback:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiOptionsFeedback",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsFeedback:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiOptionsFeedback",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiOptionsFeedback:shift0"
+  },
+  {
+    "k1_addr": "0x006E3420",
+    "tsl_addr": "0x0056AC10",
+    "name": "~CSWGuiOptionsGraphics",
+    "class": "CSWGuiOptionsGraphics",
+    "method": "~CSWGuiOptionsGraphics",
+    "via_k1": "vtable_aligned:CSWGuiOptionsGraphics:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiOptionsGraphics",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiOptionsGraphics:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiOptionsGraphics",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiOptionsGraphics:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiOptionsGraphics",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiOptionsGraphics:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiOptionsGraphics",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsGraphics:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiOptionsGraphics",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsGraphics:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiOptionsGraphics",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsGraphics:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiOptionsGraphics",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsGraphics:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiOptionsGraphics",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsGraphics:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiOptionsGraphics",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiOptionsGraphics:shift0"
+  },
+  {
+    "k1_addr": "0x006E1F20",
+    "tsl_addr": "0x0056C9B0",
+    "name": "~CSWGuiOptionsGraphicsAdvanced",
+    "class": "CSWGuiOptionsGraphicsAdvanced",
+    "method": "~CSWGuiOptionsGraphicsAdvanced",
+    "via_k1": "vtable_aligned:CSWGuiOptionsGraphicsAdvanced:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiOptionsGraphicsAdvanced",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiOptionsGraphicsAdvanced:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiOptionsGraphicsAdvanced",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiOptionsGraphicsAdvanced:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiOptionsGraphicsAdvanced",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiOptionsGraphicsAdvanced:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiOptionsGraphicsAdvanced",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsGraphicsAdvanced:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiOptionsGraphicsAdvanced",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsGraphicsAdvanced:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiOptionsGraphicsAdvanced",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsGraphicsAdvanced:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiOptionsGraphicsAdvanced",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsGraphicsAdvanced:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiOptionsGraphicsAdvanced",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsGraphicsAdvanced:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiOptionsGraphicsAdvanced",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiOptionsGraphicsAdvanced:shift0"
+  },
+  {
+    "k1_addr": "0x006E42A0",
+    "tsl_addr": "0x005683E0",
+    "name": "~CSWGuiOptionsMain",
+    "class": "CSWGuiOptionsMain",
+    "method": "~CSWGuiOptionsMain",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMain:shift0"
+  },
+  {
+    "k1_addr": "0x006DFF10",
+    "tsl_addr": "0x00568550",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiOptionsMain",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMain:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiOptionsMain",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMain:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiOptionsMain",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMain:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiOptionsMain",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMain:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiOptionsMain",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMain:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiOptionsMain",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMain:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiOptionsMain",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMain:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiOptionsMain",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMain:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiOptionsMain",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMain:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiOptionsMain",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMain:shift0"
+  },
+  {
+    "k1_addr": "0x006E2990",
+    "tsl_addr": "0x005723E0",
+    "name": "~CSWGuiOptionsMouse",
+    "class": "CSWGuiOptionsMouse",
+    "method": "~CSWGuiOptionsMouse",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMouse:shift0"
+  },
+  {
+    "k1_addr": "0x006E6180",
+    "tsl_addr": "0x005725E0",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiOptionsMouse",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMouse:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiOptionsMouse",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMouse:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiOptionsMouse",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMouse:shift0"
+  },
+  {
+    "k1_addr": "0x006E6170",
+    "tsl_addr": "0x005E56E0",
+    "name": "OnPanelAdded",
+    "class": "CSWGuiOptionsMouse",
+    "method": "OnPanelAdded",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMouse:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiOptionsMouse",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMouse:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiOptionsMouse",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMouse:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiOptionsMouse",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMouse:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiOptionsMouse",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMouse:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiOptionsMouse",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMouse:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiOptionsMouse",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMouse:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiOptionsMouse",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiOptionsMouse:shift0"
+  },
+  {
+    "k1_addr": "0x006E0C50",
+    "tsl_addr": "0x0056E800",
+    "name": "~CSWGuiOptionsResolution",
+    "class": "CSWGuiOptionsResolution",
+    "method": "~CSWGuiOptionsResolution",
+    "via_k1": "vtable_aligned:CSWGuiOptionsResolution:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiOptionsResolution",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiOptionsResolution:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiOptionsResolution",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiOptionsResolution:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiOptionsResolution",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiOptionsResolution:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiOptionsResolution",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsResolution:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiOptionsResolution",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsResolution:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiOptionsResolution",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsResolution:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiOptionsResolution",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsResolution:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiOptionsResolution",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsResolution:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiOptionsResolution",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiOptionsResolution:shift0"
+  },
+  {
+    "k1_addr": "0x006E3C40",
+    "tsl_addr": "0x0056FCA0",
+    "name": "~CSWGuiOptionsSound",
+    "class": "CSWGuiOptionsSound",
+    "method": "~CSWGuiOptionsSound",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSound:shift0"
+  },
+  {
+    "k1_addr": "0x006DDB90",
+    "tsl_addr": "0x0056FF70",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiOptionsSound",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSound:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiOptionsSound",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSound:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiOptionsSound",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSound:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiOptionsSound",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSound:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiOptionsSound",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSound:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiOptionsSound",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSound:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiOptionsSound",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSound:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiOptionsSound",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSound:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiOptionsSound",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSound:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiOptionsSound",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSound:shift0"
+  },
+  {
+    "k1_addr": "0x006E2500",
+    "tsl_addr": "0x00570DA0",
+    "name": "~CSWGuiOptionsSoundAdvanced",
+    "class": "CSWGuiOptionsSoundAdvanced",
+    "method": "~CSWGuiOptionsSoundAdvanced",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSoundAdvanced:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiOptionsSoundAdvanced",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSoundAdvanced:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiOptionsSoundAdvanced",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSoundAdvanced:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiOptionsSoundAdvanced",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSoundAdvanced:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiOptionsSoundAdvanced",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSoundAdvanced:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiOptionsSoundAdvanced",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSoundAdvanced:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiOptionsSoundAdvanced",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSoundAdvanced:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiOptionsSoundAdvanced",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSoundAdvanced:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiOptionsSoundAdvanced",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSoundAdvanced:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiOptionsSoundAdvanced",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiOptionsSoundAdvanced:shift0"
+  },
+  {
+    "k1_addr": "0x006BFF90",
+    "tsl_addr": "0x0058B5A0",
+    "name": "~CSWGuiPartySelection",
+    "class": "CSWGuiPartySelection",
+    "method": "~CSWGuiPartySelection",
+    "via_k1": "vtable_aligned:CSWGuiPartySelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiPartySelection",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiPartySelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiPartySelection",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiPartySelection:shift0"
+  },
+  {
+    "k1_addr": "0x006BE490",
+    "tsl_addr": "0x0058C530",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiPartySelection",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiPartySelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiPartySelection",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPartySelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiPartySelection",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPartySelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiPartySelection",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPartySelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiPartySelection",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPartySelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiPartySelection",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPartySelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiPartySelection",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiPartySelection:shift0"
+  },
+  {
+    "k1_addr": "0x0067FF80",
+    "tsl_addr": "0x00552910",
+    "name": "~CSWGuiPazaakGame",
+    "class": "CSWGuiPazaakGame",
+    "method": "~CSWGuiPazaakGame",
+    "via_k1": "vtable_aligned:CSWGuiPazaakGame:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiPazaakGame",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiPazaakGame:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiPazaakGame",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiPazaakGame:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiPazaakGame",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiPazaakGame:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiPazaakGame",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPazaakGame:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiPazaakGame",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPazaakGame:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiPazaakGame",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPazaakGame:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiPazaakGame",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPazaakGame:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiPazaakGame",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPazaakGame:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiPazaakGame",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiPazaakGame:shift0"
+  },
+  {
+    "k1_addr": "0x0067F730",
+    "tsl_addr": "0x0054F2D0",
+    "name": "~CSWGuiPazaakStart",
+    "class": "CSWGuiPazaakStart",
+    "method": "~CSWGuiPazaakStart",
+    "via_k1": "vtable_aligned:CSWGuiPazaakStart:shift0"
+  },
+  {
+    "k1_addr": "0x006816F0",
+    "tsl_addr": "0x005500D0",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiPazaakStart",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiPazaakStart:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiPazaakStart",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiPazaakStart:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiPazaakStart",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiPazaakStart:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiPazaakStart",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiPazaakStart:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiPazaakStart",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPazaakStart:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiPazaakStart",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPazaakStart:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiPazaakStart",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPazaakStart:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiPazaakStart",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPazaakStart:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiPazaakStart",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPazaakStart:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiPazaakStart",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiPazaakStart:shift0"
+  },
+  {
+    "k1_addr": "0x006F9A30",
+    "tsl_addr": "0x00603A00",
+    "name": "~CSWGuiPortraitCharGen",
+    "class": "CSWGuiPortraitCharGen",
+    "method": "~CSWGuiPortraitCharGen",
+    "via_k1": "vtable_aligned:CSWGuiPortraitCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x006F8FF0",
+    "tsl_addr": "0x00603C80",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiPortraitCharGen",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiPortraitCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiPortraitCharGen",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiPortraitCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiPortraitCharGen",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiPortraitCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x006F89D0",
+    "tsl_addr": "0x00603C40",
+    "name": "OnPanelAdded",
+    "class": "CSWGuiPortraitCharGen",
+    "method": "OnPanelAdded",
+    "via_k1": "vtable_aligned:CSWGuiPortraitCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiPortraitCharGen",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiPortraitCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiPortraitCharGen",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPortraitCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiPortraitCharGen",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPortraitCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiPortraitCharGen",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPortraitCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiPortraitCharGen",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPortraitCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiPortraitCharGen",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPortraitCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiPortraitCharGen",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiPortraitCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x006CF6F0",
+    "tsl_addr": "0x005B5EA0",
+    "name": "~CSWGuiPowersFeatsSkillsDebugMenu",
+    "class": "CSWGuiPowersFeatsSkillsDebugMenu",
+    "method": "~CSWGuiPowersFeatsSkillsDebugMenu",
+    "via_k1": "vtable_aligned:CSWGuiPowersFeatsSkillsDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x006CF7B0",
+    "tsl_addr": "0x005B45D0",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiPowersFeatsSkillsDebugMenu",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiPowersFeatsSkillsDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiPowersFeatsSkillsDebugMenu",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiPowersFeatsSkillsDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiPowersFeatsSkillsDebugMenu",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiPowersFeatsSkillsDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiPowersFeatsSkillsDebugMenu",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiPowersFeatsSkillsDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiPowersFeatsSkillsDebugMenu",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPowersFeatsSkillsDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiPowersFeatsSkillsDebugMenu",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPowersFeatsSkillsDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiPowersFeatsSkillsDebugMenu",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPowersFeatsSkillsDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiPowersFeatsSkillsDebugMenu",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPowersFeatsSkillsDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiPowersFeatsSkillsDebugMenu",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiPowersFeatsSkillsDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiPowersFeatsSkillsDebugMenu",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiPowersFeatsSkillsDebugMenu:shift0"
+  },
+  {
+    "k1_addr": "0x006F0D30",
+    "tsl_addr": "0x005F5E60",
+    "name": "~CSWGuiQuickOrCustomPanel",
+    "class": "CSWGuiQuickOrCustomPanel",
+    "method": "~CSWGuiQuickOrCustomPanel",
+    "via_k1": "vtable_aligned:CSWGuiQuickOrCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x006F0E10",
+    "tsl_addr": "0x005F5FB0",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiQuickOrCustomPanel",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiQuickOrCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiQuickOrCustomPanel",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiQuickOrCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiQuickOrCustomPanel",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiQuickOrCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiQuickOrCustomPanel",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiQuickOrCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiQuickOrCustomPanel",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiQuickOrCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiQuickOrCustomPanel",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiQuickOrCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiQuickOrCustomPanel",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiQuickOrCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiQuickOrCustomPanel",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiQuickOrCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiQuickOrCustomPanel",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiQuickOrCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiQuickOrCustomPanel",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiQuickOrCustomPanel:shift0"
+  },
+  {
+    "k1_addr": "0x006F06E0",
+    "tsl_addr": "0x005F4C20",
+    "name": "~CSWGuiQuickPanel",
+    "class": "CSWGuiQuickPanel",
+    "method": "~CSWGuiQuickPanel",
+    "via_k1": "vtable_aligned:CSWGuiQuickPanel:shift0"
+  },
+  {
+    "k1_addr": "0x006F0280",
+    "tsl_addr": "0x005F4D50",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiQuickPanel",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiQuickPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiQuickPanel",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiQuickPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiQuickPanel",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiQuickPanel:shift0"
+  },
+  {
+    "k1_addr": "0x006F0260",
+    "tsl_addr": "0x005F4D20",
+    "name": "OnPanelAdded",
+    "class": "CSWGuiQuickPanel",
+    "method": "OnPanelAdded",
+    "via_k1": "vtable_aligned:CSWGuiQuickPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiQuickPanel",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiQuickPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiQuickPanel",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiQuickPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiQuickPanel",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiQuickPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiQuickPanel",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiQuickPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiQuickPanel",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiQuickPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiQuickPanel",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiQuickPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiQuickPanel",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiQuickPanel:shift0"
+  },
+  {
+    "k1_addr": "0x006CB0C0",
+    "tsl_addr": "0x005D0760",
+    "name": "~CSWGuiSaveLoad",
+    "class": "CSWGuiSaveLoad",
+    "method": "~CSWGuiSaveLoad",
+    "via_k1": "vtable_aligned:CSWGuiSaveLoad:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiSaveLoad",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiSaveLoad:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiSaveLoad",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiSaveLoad:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiSaveLoad",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiSaveLoad:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiSaveLoad",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiSaveLoad:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiSaveLoad",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiSaveLoad:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiSaveLoad",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiSaveLoad:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiSaveLoad",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiSaveLoad:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiSaveLoad",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiSaveLoad:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiSaveLoad",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiSaveLoad:shift0"
+  },
+  {
+    "k1_addr": "0x006CDFA0",
+    "tsl_addr": "0x0058A370",
+    "name": "~CSWGuiSkillInfoBox",
+    "class": "CSWGuiSkillInfoBox",
+    "method": "~CSWGuiSkillInfoBox",
+    "via_k1": "vtable_aligned:CSWGuiSkillInfoBox:shift0"
+  },
+  {
+    "k1_addr": "0x006CD3C0",
+    "tsl_addr": "0x0058A6F0",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiSkillInfoBox",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiSkillInfoBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiSkillInfoBox",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiSkillInfoBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiSkillInfoBox",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiSkillInfoBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0058A7C0",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiSkillInfoBox",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiSkillInfoBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiSkillInfoBox",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiSkillInfoBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiSkillInfoBox",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiSkillInfoBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiSkillInfoBox",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiSkillInfoBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiSkillInfoBox",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiSkillInfoBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiSkillInfoBox",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiSkillInfoBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiSkillInfoBox",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiSkillInfoBox:shift0"
+  },
+  {
+    "k1_addr": "0x006F4BD0",
+    "tsl_addr": "0x005FD300",
+    "name": "~CSWGuiSkillsCharGen",
+    "class": "CSWGuiSkillsCharGen",
+    "method": "~CSWGuiSkillsCharGen",
+    "via_k1": "vtable_aligned:CSWGuiSkillsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiSkillsCharGen",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiSkillsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiSkillsCharGen",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiSkillsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x006F49A0",
+    "tsl_addr": "0x005FD700",
+    "name": "OnPanelAdded",
+    "class": "CSWGuiSkillsCharGen",
+    "method": "OnPanelAdded",
+    "via_k1": "vtable_aligned:CSWGuiSkillsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiSkillsCharGen",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiSkillsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiSkillsCharGen",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiSkillsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiSkillsCharGen",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiSkillsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiSkillsCharGen",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiSkillsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiSkillsCharGen",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiSkillsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiSkillsCharGen",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiSkillsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiSkillsCharGen",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiSkillsCharGen:shift0"
+  },
+  {
+    "k1_addr": "0x006284E0",
+    "tsl_addr": "0x0052EDF0",
+    "name": "~CSWGuiStatusSummary",
+    "class": "CSWGuiStatusSummary",
+    "method": "~CSWGuiStatusSummary",
+    "via_k1": "vtable_aligned:CSWGuiStatusSummary:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiStatusSummary",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiStatusSummary:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiStatusSummary",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiStatusSummary:shift0"
+  },
+  {
+    "k1_addr": "0x00624A60",
+    "tsl_addr": "0x00530C10",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiStatusSummary",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiStatusSummary:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiStatusSummary",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiStatusSummary:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiStatusSummary",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiStatusSummary:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiStatusSummary",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiStatusSummary:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiStatusSummary",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiStatusSummary:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiStatusSummary",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiStatusSummary:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiStatusSummary",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiStatusSummary:shift0"
+  },
+  {
+    "k1_addr": "0x006C1820",
+    "tsl_addr": "0x005A8E50",
+    "name": "~CSWGuiStore",
+    "class": "CSWGuiStore",
+    "method": "~CSWGuiStore",
+    "via_k1": "vtable_aligned:CSWGuiStore:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiStore",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiStore:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiStore",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiStore:shift0"
+  },
+  {
+    "k1_addr": "0x006C1650",
+    "tsl_addr": "0x005A9410",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiStore",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiStore:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiStore",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiStore:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiStore",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiStore:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiStore",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiStore:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiStore",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiStore:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiStore",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiStore:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiStore",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiStore:shift0"
+  },
+  {
+    "k1_addr": "0x006DDAF0",
+    "tsl_addr": "0x005DFF80",
+    "name": "~CSWGuiTitleMovies",
+    "class": "CSWGuiTitleMovies",
+    "method": "~CSWGuiTitleMovies",
+    "via_k1": "vtable_aligned:CSWGuiTitleMovies:shift0"
+  },
+  {
+    "k1_addr": "0x006DCE80",
+    "tsl_addr": "0x005E01C0",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiTitleMovies",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiTitleMovies:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiTitleMovies",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiTitleMovies:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiTitleMovies",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiTitleMovies:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiTitleMovies",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiTitleMovies:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiTitleMovies",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiTitleMovies:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiTitleMovies",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiTitleMovies:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiTitleMovies",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiTitleMovies:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiTitleMovies",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiTitleMovies:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiTitleMovies",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiTitleMovies:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiTitleMovies",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiTitleMovies:shift0"
+  },
+  {
+    "k1_addr": "0x00627910",
+    "tsl_addr": "0x00531470",
+    "name": "~CSWGuiToolTipPanel",
+    "class": "CSWGuiToolTipPanel",
+    "method": "~CSWGuiToolTipPanel",
+    "via_k1": "vtable_aligned:CSWGuiToolTipPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiToolTipPanel",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiToolTipPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiToolTipPanel",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiToolTipPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiToolTipPanel",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiToolTipPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiToolTipPanel",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiToolTipPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiToolTipPanel",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiToolTipPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiToolTipPanel",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiToolTipPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiToolTipPanel",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiToolTipPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiToolTipPanel",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiToolTipPanel:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiToolTipPanel",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiToolTipPanel:shift0"
+  },
+  {
+    "k1_addr": "0x006AA830",
+    "tsl_addr": "0x005B3550",
+    "name": "~CSWGuiMessageBox",
+    "class": "CSWGuiTutorialBox",
+    "method": "~CSWGuiMessageBox",
+    "via_k1": "vtable_aligned:CSWGuiTutorialBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiTutorialBox",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiTutorialBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiTutorialBox",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiTutorialBox:shift0"
+  },
+  {
+    "k1_addr": "0x006AA860",
+    "tsl_addr": "0x00586840",
+    "name": "OnPanelAdded",
+    "class": "CSWGuiTutorialBox",
+    "method": "OnPanelAdded",
+    "via_k1": "vtable_aligned:CSWGuiTutorialBox:shift0"
+  },
+  {
+    "k1_addr": "0x00625A00",
+    "tsl_addr": "0x0052E260",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiTutorialBox",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiTutorialBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiTutorialBox",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiTutorialBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiTutorialBox",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiTutorialBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiTutorialBox",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiTutorialBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiTutorialBox",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiTutorialBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiTutorialBox",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiTutorialBox:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiTutorialBox",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiTutorialBox:shift0"
+  },
+  {
+    "k1_addr": "0x00625270",
+    "tsl_addr": "0x0052D3B0",
+    "name": "SetCancelButtonMessage",
+    "class": "CSWGuiTutorialBox",
+    "method": "SetCancelButtonMessage",
+    "via_k1": "vtable_aligned:CSWGuiTutorialBox:shift0"
+  },
+  {
+    "k1_addr": "0x00625280",
+    "tsl_addr": "0x0052D3D0",
+    "name": "HideButtons",
+    "class": "CSWGuiTutorialBox",
+    "method": "HideButtons",
+    "via_k1": "vtable_aligned:CSWGuiTutorialBox:shift0"
+  },
+  {
+    "k1_addr": "0x006252A0",
+    "tsl_addr": "0x0052D3F0",
+    "name": "ResetButtonMessage",
+    "class": "CSWGuiTutorialBox",
+    "method": "ResetButtonMessage",
+    "via_k1": "vtable_aligned:CSWGuiTutorialBox:shift0"
+  },
+  {
+    "k1_addr": "0x006C6100",
+    "tsl_addr": "0x005BB0E0",
+    "name": "~CSWGuiUpgrade",
+    "class": "CSWGuiUpgrade",
+    "method": "~CSWGuiUpgrade",
+    "via_k1": "vtable_aligned:CSWGuiUpgrade:shift0"
+  },
+  {
+    "k1_addr": "0x006C6A80",
+    "tsl_addr": "0x005BFFD0",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiUpgrade",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiUpgrade:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiUpgrade",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiUpgrade:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiUpgrade",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiUpgrade:shift0"
+  },
+  {
+    "k1_addr": "0x006C25F0",
+    "tsl_addr": "0x005BCE30",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiUpgrade",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiUpgrade:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiUpgrade",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiUpgrade:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiUpgrade",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiUpgrade:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiUpgrade",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiUpgrade:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiUpgrade",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiUpgrade:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiUpgrade",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiUpgrade:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiUpgrade",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiUpgrade:shift0"
+  },
+  {
+    "k1_addr": "0x006C5B70",
+    "tsl_addr": "0x005B8850",
+    "name": "~CSWGuiUpgradeItemSelect",
+    "class": "CSWGuiUpgradeItemSelect",
+    "method": "~CSWGuiUpgradeItemSelect",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeItemSelect:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiUpgradeItemSelect",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeItemSelect:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiUpgradeItemSelect",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeItemSelect:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiUpgradeItemSelect",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeItemSelect:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiUpgradeItemSelect",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeItemSelect:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiUpgradeItemSelect",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeItemSelect:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiUpgradeItemSelect",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeItemSelect:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiUpgradeItemSelect",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeItemSelect:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiUpgradeItemSelect",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeItemSelect:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiUpgradeItemSelect",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeItemSelect:shift0"
+  },
+  {
+    "k1_addr": "0x006C5B50",
+    "tsl_addr": "0x005B7220",
+    "name": "~CSWGuiUpgradeSelection",
+    "class": "CSWGuiUpgradeSelection",
+    "method": "~CSWGuiUpgradeSelection",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeSelection:shift0"
+  },
+  {
+    "k1_addr": "0x006C2B10",
+    "tsl_addr": "0x005B76F0",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiUpgradeSelection",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeSelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiUpgradeSelection",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeSelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiUpgradeSelection",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeSelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiUpgradeSelection",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeSelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiUpgradeSelection",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeSelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiUpgradeSelection",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeSelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiUpgradeSelection",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeSelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiUpgradeSelection",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeSelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiUpgradeSelection",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeSelection:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiUpgradeSelection",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiUpgradeSelection:shift0"
+  },
+  {
+    "k1_addr": "0x0067F630",
+    "tsl_addr": "0x0054E100",
+    "name": "~CSWGuiWagerPopup",
+    "class": "CSWGuiWagerPopup",
+    "method": "~CSWGuiWagerPopup",
+    "via_k1": "vtable_aligned:CSWGuiWagerPopup:shift0"
+  },
+  {
+    "k1_addr": "0x006C00B0",
+    "tsl_addr": "0x005AE020",
+    "name": "Draw",
+    "class": "CSWGuiWagerPopup",
+    "method": "Draw",
+    "via_k1": "vtable_aligned:CSWGuiWagerPopup:shift0"
+  },
+  {
+    "k1_addr": "0x0040B690",
+    "tsl_addr": "0x0090CF60",
+    "name": "HitCheckMouse",
+    "class": "CSWGuiWagerPopup",
+    "method": "HitCheckMouse",
+    "via_k1": "vtable_aligned:CSWGuiWagerPopup:shift0"
+  },
+  {
+    "k1_addr": "0x0040B630",
+    "tsl_addr": "0x004CE320",
+    "name": "GetActiveControl",
+    "class": "CSWGuiWagerPopup",
+    "method": "GetActiveControl",
+    "via_k1": "vtable_aligned:CSWGuiWagerPopup:shift0"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0090D940",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiWagerPopup",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_aligned:CSWGuiWagerPopup:shift0"
+  },
+  {
+    "k1_addr": "0x0040B640",
+    "tsl_addr": "0x004CE340",
+    "name": "OnAButtonPressed",
+    "class": "CSWGuiWagerPopup",
+    "method": "OnAButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiWagerPopup:shift0"
+  },
+  {
+    "k1_addr": "0x0040B650",
+    "tsl_addr": "0x004CE350",
+    "name": "OnBButtonPressed",
+    "class": "CSWGuiWagerPopup",
+    "method": "OnBButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiWagerPopup:shift0"
+  },
+  {
+    "k1_addr": "0x0040B660",
+    "tsl_addr": "0x004CE370",
+    "name": "OnXButtonPressed",
+    "class": "CSWGuiWagerPopup",
+    "method": "OnXButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiWagerPopup:shift0"
+  },
+  {
+    "k1_addr": "0x0040B670",
+    "tsl_addr": "0x004CE390",
+    "name": "OnYButtonPressed",
+    "class": "CSWGuiWagerPopup",
+    "method": "OnYButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiWagerPopup:shift0"
+  },
+  {
+    "k1_addr": "0x0040B680",
+    "tsl_addr": "0x004CE3B0",
+    "name": "OnBlackButtonPressed",
+    "class": "CSWGuiWagerPopup",
+    "method": "OnBlackButtonPressed",
+    "via_k1": "vtable_aligned:CSWGuiWagerPopup:shift0"
+  },
+  {
+    "k1_addr": "0x0040A900",
+    "tsl_addr": "0x004CE3D0",
+    "name": "GetFullScreenBG",
+    "class": "CSWGuiWagerPopup",
+    "method": "GetFullScreenBG",
+    "via_k1": "vtable_aligned:CSWGuiWagerPopup:shift0"
+  },
+  {
+    "k1_addr": "0x006DB610",
+    "tsl_addr": "0x005EB250",
+    "name": "~CSWMGBehaviorTrack",
+    "class": "CSWMGBehaviorTrackAndFire",
+    "method": "~CSWMGBehaviorTrack",
+    "via_k1": "vtable_aligned:CSWMGBehaviorTrackAndFire:shift0"
+  },
+  {
+    "k1_addr": "0x006DB600",
+    "tsl_addr": "0x005EBE40",
+    "name": "GetType",
+    "class": "CSWMGBehaviorTrackAndFire",
+    "method": "GetType",
+    "via_k1": "vtable_aligned:CSWMGBehaviorTrackAndFire:shift0"
+  },
+  {
+    "k1_addr": "0x004634A0",
+    "tsl_addr": "0x008DCBF0",
+    "name": "~CycleTIDTextureController",
+    "class": "CycleTIDTextureController",
+    "method": "~CycleTIDTextureController",
+    "via_k1": "vtable_aligned:CycleTIDTextureController:shift0"
+  },
+  {
+    "k1_addr": "0x00460970",
+    "tsl_addr": "0x008DCC90",
+    "name": "Control",
+    "class": "CycleTIDTextureController",
+    "method": "Control",
+    "via_k1": "vtable_aligned:CycleTIDTextureController:shift0"
+  },
+  {
+    "k1_addr": "0x004634D0",
+    "tsl_addr": "0x008DCC30",
+    "name": "ParseField",
+    "class": "CycleTIDTextureController",
+    "method": "ParseField",
+    "via_k1": "vtable_aligned:CycleTIDTextureController:shift0"
+  },
+  {
+    "k1_addr": "0x0041F3D0",
+    "tsl_addr": "0x008170F0",
+    "name": "~RandomTextureController",
+    "class": "RandomTextureController",
+    "method": "~RandomTextureController",
+    "via_k1": "vtable_aligned:RandomTextureController:shift0"
+  },
+  {
+    "k1_addr": "0x00462800",
+    "tsl_addr": "0x008DCE00",
+    "name": "Control",
+    "class": "RandomTextureController",
+    "method": "Control",
+    "via_k1": "vtable_aligned:RandomTextureController:shift0"
+  },
+  {
+    "k1_addr": "0x004609F0",
+    "tsl_addr": "0x008DCD50",
+    "name": "Init",
+    "class": "RandomTextureController",
+    "method": "Init",
+    "via_k1": "vtable_aligned:RandomTextureController:shift0"
+  },
+  {
+    "k1_addr": "0x00463290",
+    "tsl_addr": "0x008DB3F0",
+    "name": "~WaveTextureController",
+    "class": "WaveTextureController",
+    "method": "~WaveTextureController",
+    "via_k1": "vtable_aligned:WaveTextureController:shift0"
+  },
+  {
+    "k1_addr": "0x00462030",
+    "tsl_addr": "0x008DB650",
+    "name": "Control",
+    "class": "WaveTextureController",
+    "method": "Control",
+    "via_k1": "vtable_aligned:WaveTextureController:shift0"
+  },
+  {
+    "k1_addr": "0x00460000",
+    "tsl_addr": "0x008DB4A0",
+    "name": "Init",
+    "class": "WaveTextureController",
+    "method": "Init",
+    "via_k1": "vtable_aligned:WaveTextureController:shift0"
+  },
+  {
+    "k1_addr": "0x00463310",
+    "tsl_addr": "0x008DA030",
+    "name": "ParseField",
+    "class": "WaveTextureController",
+    "method": "ParseField",
+    "via_k1": "vtable_aligned:WaveTextureController:shift0"
+  }
+]
