@@ -1,1 +1,27 @@
-[]
+[
+  {
+    "addr": 4248208,
+    "name": "BuildSpawnList",
+    "ns": "CSWSEncounter"
+  },
+  {
+    "addr": 5123040,
+    "name": "Add",
+    "ns": "CExoArrayList<CAurTriangleListElem>"
+  },
+  {
+    "addr": 8318368,
+    "name": "CalculateSpawnPool",
+    "ns": "CSWSEncounter"
+  },
+  {
+    "addr": 7067920,
+    "name": "Add",
+    "ns": ""
+  },
+  {
+    "addr": 5140192,
+    "name": "AddTriangle",
+    "ns": "CAurTriangleBin"
+  }
+]

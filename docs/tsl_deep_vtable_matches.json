@@ -1,0 +1,10 @@
+[
+  {
+    "k1_addr": "0x00421430",
+    "tsl_addr": "0x00815580",
+    "name": "glImage",
+    "class": "CAurTextureBasic",
+    "method": "glImage",
+    "via_k1": "vtable_deep:CAurTextureBasic:slot43(off+0,anchors45)"
+  }
+]

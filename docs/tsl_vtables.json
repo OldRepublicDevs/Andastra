@@ -209,7 +209,7 @@
         {
           "offset": 1,
           "fn_addr": 4212448,
-          "fn_name": "FUN_004046e0"
+          "fn_name": "runtime_error::what"
         }
       ]
     },
@@ -220,12 +220,12 @@
         {
           "offset": 0,
           "fn_addr": 4212512,
-          "fn_name": "FUN_00404720"
+          "fn_name": "runtime_error::~runtime_error"
         },
         {
           "offset": 1,
           "fn_addr": 4212448,
-          "fn_name": "FUN_004046e0"
+          "fn_name": "runtime_error::what"
         }
       ]
     },
@@ -324,7 +324,7 @@
         {
           "offset": 1,
           "fn_addr": 9584849,
-          "fn_name": "FUN_009240d1"
+          "fn_name": "exception::what"
         }
       ]
     },
@@ -407,7 +407,7 @@
         {
           "offset": 0,
           "fn_addr": 5088048,
-          "fn_name": "FUN_004da330"
+          "fn_name": "CSWSScriptVarTable::void_return"
         },
         {
           "offset": 1,
@@ -2051,7 +2051,7 @@
         {
           "offset": 34,
           "fn_addr": 4714096,
-          "fn_name": "FUN_0047ee70"
+          "fn_name": "NVThunkSWCItmSWCObject_SetOrientation"
         },
         {
           "offset": 35,
@@ -2936,7 +2936,7 @@
         {
           "offset": 14,
           "fn_addr": 9534240,
-          "fn_name": "FUN_00917b20"
+          "fn_name": "CSWGuiBlackenedLabel::Draw"
         },
         {
           "offset": 15,
@@ -3741,7 +3741,7 @@
         {
           "offset": 0,
           "fn_addr": 5124752,
-          "fn_name": "FUN_004e3290"
+          "fn_name": "~CSWCameraOnAStick"
         },
         {
           "offset": 1,
@@ -3797,7 +3797,7 @@
         {
           "offset": 2,
           "fn_addr": 5124656,
-          "fn_name": "FUN_004e3230"
+          "fn_name": "CSWMGBehaviorBullet::Control"
         },
         {
           "offset": 3,
@@ -4098,7 +4098,7 @@
         {
           "offset": 10,
           "fn_addr": 5179728,
-          "fn_name": "FUN_004f0950"
+          "fn_name": "CSWPlayerControlCamRelative::Control"
         },
         {
           "offset": 11,
@@ -4375,12 +4375,12 @@
         {
           "offset": 50,
           "fn_addr": 5197232,
-          "fn_name": "FUN_004f4db0"
+          "fn_name": "NVThunkHeadWieldAnimBase_AddAnimationFlag"
         },
         {
           "offset": 51,
           "fn_addr": 5197424,
-          "fn_name": "FUN_004f4e70"
+          "fn_name": "NVThunkHeadWieldAnimBase_RemoveAnimationFlag"
         },
         {
           "offset": 52,
@@ -4746,7 +4746,7 @@
         {
           "offset": 61,
           "fn_addr": 5203648,
-          "fn_name": "FUN_004f66c0"
+          "fn_name": "NVThunkWieldAnimBase_SetAnimationOnSubObjectINternal"
         }
       ]
     },
@@ -7253,7 +7253,7 @@
         {
           "offset": 1,
           "fn_addr": 9542128,
-          "fn_name": "FUN_009199f0"
+          "fn_name": "CSWGuiSkillFlow::SetExtent"
         },
         {
           "offset": 2,
@@ -8348,7 +8348,7 @@
         {
           "offset": 13,
           "fn_addr": 5407344,
-          "fn_name": "FUN_00528270"
+          "fn_name": "CSWGuiInGameInventory::UpdatePortraits"
         },
         {
           "offset": 14,
@@ -8841,7 +8841,7 @@
         {
           "offset": 18,
           "fn_addr": 5436176,
-          "fn_name": "FUN_0052f310"
+          "fn_name": "CSWGuiStatusSummary::OnPanelAdded"
         },
         {
           "offset": 19,
@@ -9400,7 +9400,7 @@
         {
           "offset": 1,
           "fn_addr": 4212448,
-          "fn_name": "FUN_004046e0"
+          "fn_name": "runtime_error::what"
         }
       ]
     },
@@ -9416,7 +9416,7 @@
         {
           "offset": 1,
           "fn_addr": 4212448,
-          "fn_name": "FUN_004046e0"
+          "fn_name": "runtime_error::what"
         }
       ]
     },
@@ -10878,7 +10878,7 @@
         {
           "offset": 15,
           "fn_addr": 5497952,
-          "fn_name": "FUN_0053e460"
+          "fn_name": "CSWGuiMainMenu::HandleInputEvent"
         },
         {
           "offset": 16,
@@ -12571,7 +12571,7 @@
         {
           "offset": 1,
           "fn_addr": 5598768,
-          "fn_name": "FUN_00556e30"
+          "fn_name": "CSWCAmbientSound::SetMusicDelay"
         },
         {
           "offset": 2,
@@ -12829,7 +12829,7 @@
         {
           "offset": 3,
           "fn_addr": 9190064,
-          "fn_name": "FUN_008c3ab0"
+          "fn_name": "CSWBehaviorAttachSound::Message"
         },
         {
           "offset": 4,
@@ -15987,7 +15987,7 @@
         {
           "offset": 4,
           "fn_addr": 5713776,
-          "fn_name": "FUN_00572f70"
+          "fn_name": "CSWBehaviorCameraCombat::GetType"
         },
         {
           "offset": 5,
@@ -16666,7 +16666,7 @@
         {
           "offset": 32,
           "fn_addr": 5783392,
-          "fn_name": "FUN_00583f60"
+          "fn_name": "CSWCAreaOfEffectObject::UnloadModel"
         },
         {
           "offset": 33,
@@ -19798,7 +19798,7 @@
         {
           "offset": 15,
           "fn_addr": 5923824,
-          "fn_name": "FUN_005a63f0"
+          "fn_name": "CSWGuiContainer::HandleInputEvent"
         },
         {
           "offset": 16,
@@ -23144,7 +23144,7 @@
         {
           "offset": 18,
           "fn_addr": 6013344,
-          "fn_name": "FUN_005bc1a0"
+          "fn_name": "CSWGuiUpgrade::OnPanelAdded"
         },
         {
           "offset": 19,
@@ -23924,7 +23924,7 @@
         {
           "offset": 15,
           "fn_addr": 6097840,
-          "fn_name": "FUN_005d0bb0"
+          "fn_name": "CSWGuiSaveLoad::HandleInputEvent"
         },
         {
           "offset": 16,
@@ -24407,7 +24407,7 @@
         {
           "offset": 0,
           "fn_addr": 6127040,
-          "fn_name": "FUN_005d7dc0"
+          "fn_name": "~CSWGuiSaveNamePanel"
         },
         {
           "offset": 1,
@@ -26050,7 +26050,7 @@
         {
           "offset": 1,
           "fn_addr": 6146720,
-          "fn_name": "FUN_005dcaa0"
+          "fn_name": "Die"
         },
         {
           "offset": 2,
@@ -26444,7 +26444,7 @@
         {
           "offset": 13,
           "fn_addr": 6170224,
-          "fn_name": "FUN_005e2670"
+          "fn_name": "CSWGuiPowersLevelUp::Draw"
         },
         {
           "offset": 14,
@@ -27294,7 +27294,7 @@
         {
           "offset": 3,
           "fn_addr": 9190064,
-          "fn_name": "FUN_008c3ab0"
+          "fn_name": "CSWBehaviorAttachSound::Message"
         },
         {
           "offset": 4,
@@ -27350,7 +27350,7 @@
         {
           "offset": 3,
           "fn_addr": 9190064,
-          "fn_name": "FUN_008c3ab0"
+          "fn_name": "CSWBehaviorAttachSound::Message"
         },
         {
           "offset": 4,
@@ -27401,7 +27401,7 @@
         {
           "offset": 3,
           "fn_addr": 9190064,
-          "fn_name": "FUN_008c3ab0"
+          "fn_name": "CSWBehaviorAttachSound::Message"
         },
         {
           "offset": 4,
@@ -29078,7 +29078,7 @@
         {
           "offset": 15,
           "fn_addr": 6296848,
-          "fn_name": "FUN_00601510"
+          "fn_name": "DetermineClass"
         },
         {
           "offset": 16,
@@ -29563,7 +29563,7 @@
         {
           "offset": 0,
           "fn_addr": 6434752,
-          "fn_name": "FUN_00622fc0"
+          "fn_name": "Unwind@0073aa70"
         }
       ]
     },
@@ -30144,7 +30144,7 @@
         {
           "offset": 0,
           "fn_addr": 6551392,
-          "fn_name": "FUN_0063f760"
+          "fn_name": "Unwind@0073a770"
         }
       ]
     },
@@ -30155,7 +30155,7 @@
         {
           "offset": 0,
           "fn_addr": 6559312,
-          "fn_name": "FUN_00641650"
+          "fn_name": "Unwind@00724240"
         }
       ]
     },
@@ -30332,7 +30332,7 @@
         {
           "offset": 1,
           "fn_addr": 7562000,
-          "fn_name": "FUN_00736310"
+          "fn_name": "CServerAIMaster::CExoLinkedList"
         },
         {
           "offset": 2,
@@ -31325,7 +31325,7 @@
         {
           "offset": 0,
           "fn_addr": 7484928,
-          "fn_name": "FUN_00723600"
+          "fn_name": "NVThunkAreaResHelper_destructor"
         },
         {
           "offset": 1,
@@ -31471,7 +31471,7 @@
         {
           "offset": 0,
           "fn_addr": 7484944,
-          "fn_name": "FUN_00723610"
+          "fn_name": "NVThunkAreaGameObject_destructor"
         }
       ]
     },
@@ -31741,7 +31741,7 @@
         {
           "offset": 0,
           "fn_addr": 7552224,
-          "fn_name": "FUN_00733ce0"
+          "fn_name": "Unwind@0073ab70"
         }
       ]
     },
@@ -32801,7 +32801,7 @@
         {
           "offset": 0,
           "fn_addr": 8127584,
-          "fn_name": "FUN_007c0460"
+          "fn_name": "CSWSStore::~CSWSStore"
         },
         {
           "offset": 1,
@@ -32951,7 +32951,7 @@
         {
           "offset": 30,
           "fn_addr": 8130800,
-          "fn_name": "FUN_007c10f0"
+          "fn_name": "CSWSStore::EventHandler"
         },
         {
           "offset": 31,
@@ -34536,7 +34536,7 @@
         {
           "offset": 0,
           "fn_addr": 8466864,
-          "fn_name": "FUN_008131b0"
+          "fn_name": "Unwind@0073a9b0"
         }
       ]
     },
@@ -34824,7 +34824,7 @@
         {
           "offset": 0,
           "fn_addr": 8477376,
-          "fn_name": "FUN_00815ac0"
+          "fn_name": "~CAurTextureBasic"
         },
         {
           "offset": 1,
@@ -35285,27 +35285,27 @@
         {
           "offset": 0,
           "fn_addr": 8503552,
-          "fn_name": "FUN_0081c100"
+          "fn_name": "RequestPoolManagerVBO::~RequestPoolManagerVBO"
         },
         {
           "offset": 1,
           "fn_addr": 8504016,
-          "fn_name": "FUN_0081c2d0"
+          "fn_name": "RequestPoolManagerVBO::RequestPoolGeneric"
         },
         {
           "offset": 2,
           "fn_addr": 8504880,
-          "fn_name": "FUN_0081c630"
+          "fn_name": "RequestPoolManagerVBO::LockPool"
         },
         {
           "offset": 3,
           "fn_addr": 8505168,
-          "fn_name": "FUN_0081c750"
+          "fn_name": "RequestPoolManagerVBO::UnlockPool"
         },
         {
           "offset": 4,
           "fn_addr": 8505296,
-          "fn_name": "FUN_0081c7d0"
+          "fn_name": "RequestPoolManagerVBO::GetPool"
         },
         {
           "offset": 5,
@@ -35315,17 +35315,17 @@
         {
           "offset": 6,
           "fn_addr": 8506112,
-          "fn_name": "FUN_0081cb00"
+          "fn_name": "RequestPoolManagerVBO::DeletePool"
         },
         {
           "offset": 7,
           "fn_addr": 8505680,
-          "fn_name": "FUN_0081c950"
+          "fn_name": "RequestPoolManagerVBO::ResizePool"
         },
         {
           "offset": 8,
           "fn_addr": 8505632,
-          "fn_name": "FUN_0081c920"
+          "fn_name": "RequestPoolManagerVBO::GetPoolSize"
         },
         {
           "offset": 9,
@@ -35335,12 +35335,12 @@
         {
           "offset": 10,
           "fn_addr": 8502336,
-          "fn_name": "FUN_0081bc40"
+          "fn_name": "RequestPoolManagerVBO::BackUpPoolManager"
         },
         {
           "offset": 11,
           "fn_addr": 8502576,
-          "fn_name": "FUN_0081bd30"
+          "fn_name": "RequestPoolManagerVBO::RestorePoolManager"
         }
       ]
     },
@@ -35417,22 +35417,22 @@
         {
           "offset": 0,
           "fn_addr": 8506608,
-          "fn_name": "FUN_0081ccf0"
+          "fn_name": "RequestPoolManagerSys::~RequestPoolManagerSys"
         },
         {
           "offset": 1,
           "fn_addr": 8507120,
-          "fn_name": "FUN_0081cef0"
+          "fn_name": "RequestPoolManagerSys::RequestPoolGeneric"
         },
         {
           "offset": 2,
           "fn_addr": 8507744,
-          "fn_name": "FUN_0081d160"
+          "fn_name": "RequestPoolManagerSys::LockPool"
         },
         {
           "offset": 3,
           "fn_addr": 8507872,
-          "fn_name": "FUN_0081d1e0"
+          "fn_name": "RequestPoolManagerSys::UnlockPool"
         },
         {
           "offset": 4,
@@ -35447,17 +35447,17 @@
         {
           "offset": 6,
           "fn_addr": 8507936,
-          "fn_name": "FUN_0081d220"
+          "fn_name": "RequestPoolManagerSys::DeletePool"
         },
         {
           "offset": 7,
           "fn_addr": 8506880,
-          "fn_name": "FUN_0081ce00"
+          "fn_name": "RequestPoolManagerSys::ResizePool"
         },
         {
           "offset": 8,
           "fn_addr": 8507088,
-          "fn_name": "FUN_0081ced0"
+          "fn_name": "RequestPoolManagerSys::GetPoolSize"
         },
         {
           "offset": 9,
@@ -35483,7 +35483,7 @@
         {
           "offset": 0,
           "fn_addr": 8683184,
-          "fn_name": "FUN_00847eb0"
+          "fn_name": "~PartLightsaber"
         },
         {
           "offset": 1,
@@ -35679,7 +35679,7 @@
         {
           "offset": 0,
           "fn_addr": 8684080,
-          "fn_name": "FUN_00848230"
+          "fn_name": "~PartDanglyMesh"
         },
         {
           "offset": 1,
@@ -35990,7 +35990,7 @@
         {
           "offset": 23,
           "fn_addr": 9013056,
-          "fn_name": "FUN_00898740"
+          "fn_name": "PartSkin::Project"
         },
         {
           "offset": 24,
@@ -36010,7 +36010,7 @@
         {
           "offset": 27,
           "fn_addr": 8864768,
-          "fn_name": "FUN_00874400"
+          "fn_name": "PartSkin::PostProcess"
         },
         {
           "offset": 28,
@@ -37575,7 +37575,7 @@
         {
           "offset": 12,
           "fn_addr": 8729008,
-          "fn_name": "FUN_008531b0"
+          "fn_name": "ReplaceTexture"
         },
         {
           "offset": 13,
@@ -37625,7 +37625,7 @@
         {
           "offset": 22,
           "fn_addr": 8731536,
-          "fn_name": "FUN_00853b90"
+          "fn_name": "Gob::SetBehavior"
         },
         {
           "offset": 23,
@@ -37690,7 +37690,7 @@
         {
           "offset": 35,
           "fn_addr": 8705952,
-          "fn_name": "FUN_0084d7a0"
+          "fn_name": "Gob::HitCheck"
         },
         {
           "offset": 36,
@@ -37730,7 +37730,7 @@
         {
           "offset": 43,
           "fn_addr": 8734128,
-          "fn_name": "FUN_008545b0"
+          "fn_name": "AurPixelShadersAvailable"
         },
         {
           "offset": 44,
@@ -37845,7 +37845,7 @@
         {
           "offset": 66,
           "fn_addr": 8731328,
-          "fn_name": "FUN_00853ac0"
+          "fn_name": "Gob::GetBehavior"
         },
         {
           "offset": 67,
@@ -38663,7 +38663,7 @@
         {
           "offset": 0,
           "fn_addr": 8698960,
-          "fn_name": "FUN_0084bc50"
+          "fn_name": "CAurObjectLightContainer::~CAurObjectLightContainer"
         }
       ]
     },
@@ -38964,7 +38964,7 @@
         {
           "offset": 58,
           "fn_addr": 8755504,
-          "fn_name": "FUN_00859930"
+          "fn_name": "Scene::DoLightSaberBucket"
         },
         {
           "offset": 59,
@@ -39014,7 +39014,7 @@
         {
           "offset": 68,
           "fn_addr": 8763024,
-          "fn_name": "FUN_0085b690"
+          "fn_name": "Scene::DoEmitterBucket"
         },
         {
           "offset": 69,
@@ -39034,7 +39034,7 @@
         {
           "offset": 72,
           "fn_addr": 8796784,
-          "fn_name": "FUN_00863a70"
+          "fn_name": "Scene::RenderOnlyGobs"
         },
         {
           "offset": 73,
@@ -39885,7 +39885,7 @@
         {
           "offset": 1,
           "fn_addr": 4212448,
-          "fn_name": "FUN_004046e0"
+          "fn_name": "runtime_error::what"
         }
       ]
     },
@@ -39906,7 +39906,7 @@
         {
           "offset": 2,
           "fn_addr": 9049056,
-          "fn_name": "FUN_008a13e0"
+          "fn_name": "Particle::initialize"
         }
       ]
     },
@@ -40888,7 +40888,7 @@
         {
           "offset": 12,
           "fn_addr": 8729008,
-          "fn_name": "FUN_008531b0"
+          "fn_name": "ReplaceTexture"
         },
         {
           "offset": 13,
@@ -41003,7 +41003,7 @@
         {
           "offset": 35,
           "fn_addr": 8705952,
-          "fn_name": "FUN_0084d7a0"
+          "fn_name": "Gob::HitCheck"
         },
         {
           "offset": 36,
@@ -41043,7 +41043,7 @@
         {
           "offset": 43,
           "fn_addr": 8734128,
-          "fn_name": "FUN_008545b0"
+          "fn_name": "AurPixelShadersAvailable"
         },
         {
           "offset": 44,
@@ -41862,7 +41862,7 @@
         {
           "offset": 3,
           "fn_addr": 9190064,
-          "fn_name": "FUN_008c3ab0"
+          "fn_name": "CSWBehaviorAttachSound::Message"
         },
         {
           "offset": 4,
@@ -42015,7 +42015,7 @@
         {
           "offset": 3,
           "fn_addr": 9190064,
-          "fn_name": "FUN_008c3ab0"
+          "fn_name": "CSWBehaviorAttachSound::Message"
         },
         {
           "offset": 4,
@@ -42102,7 +42102,7 @@
         {
           "offset": 1,
           "fn_addr": 9243392,
-          "fn_name": "FUN_008d0b00"
+          "fn_name": "~CAurGUIStringInternal"
         },
         {
           "offset": 2,
@@ -42252,7 +42252,7 @@
         {
           "offset": 31,
           "fn_addr": 9248272,
-          "fn_name": "FUN_008d1e10"
+          "fn_name": "AddPartToMeshBuckets"
         }
       ]
     },
@@ -43014,7 +43014,7 @@
         {
           "offset": 5,
           "fn_addr": 9340080,
-          "fn_name": "FUN_008e84b0"
+          "fn_name": "VertexPrimitiveFlat::BuildVertexArrays"
         },
         {
           "offset": 6,
@@ -43065,7 +43065,7 @@
         {
           "offset": 0,
           "fn_addr": 9338672,
-          "fn_name": "FUN_008e7f30"
+          "fn_name": "~VertexPrimitiveSkinned"
         },
         {
           "offset": 1,
@@ -43110,7 +43110,7 @@
         {
           "offset": 9,
           "fn_addr": 9341408,
-          "fn_name": "FUN_008e89e0"
+          "fn_name": "VertexPrimitiveSkinned::ReconnectArraysVAR"
         },
         {
           "offset": 10,
@@ -43141,7 +43141,7 @@
         {
           "offset": 0,
           "fn_addr": 9338832,
-          "fn_name": "FUN_008e7fd0"
+          "fn_name": "~VertexPrimitiveDangly"
         },
         {
           "offset": 1,
@@ -43339,7 +43339,7 @@
         {
           "offset": 4,
           "fn_addr": 9398176,
-          "fn_name": "FUN_008f67a0"
+          "fn_name": "LookAtAnimation::BuildAnimation"
         }
       ]
     },
@@ -43492,7 +43492,7 @@
         {
           "offset": 0,
           "fn_addr": 9468560,
-          "fn_name": "FUN_00907a90"
+          "fn_name": "CResHelper<CResLYT,3000>::~CResHelper"
         }
       ]
     },
@@ -43547,7 +43547,7 @@
         {
           "offset": 0,
           "fn_addr": 9477552,
-          "fn_name": "FUN_00909db0"
+          "fn_name": "Unwind@0073a7d0"
         }
       ]
     },
@@ -43580,7 +43580,7 @@
         {
           "offset": 0,
           "fn_addr": 9481520,
-          "fn_name": "FUN_0090ad30"
+          "fn_name": "Unwind@0073a9f0"
         }
       ]
     },
@@ -43591,7 +43591,7 @@
         {
           "offset": 0,
           "fn_addr": 9481680,
-          "fn_name": "FUN_0090add0"
+          "fn_name": "~CAuroraVisibility"
         }
       ]
     },
@@ -43602,7 +43602,7 @@
         {
           "offset": 0,
           "fn_addr": 9482544,
-          "fn_name": "FUN_0090b130"
+          "fn_name": "Unwind@0073aa30"
         }
       ]
     },
@@ -43613,7 +43613,7 @@
         {
           "offset": 0,
           "fn_addr": 9482704,
-          "fn_name": "FUN_0090b1d0"
+          "fn_name": "~CAuroraTXI"
         }
       ]
     },
@@ -43635,7 +43635,7 @@
         {
           "offset": 0,
           "fn_addr": 9483792,
-          "fn_name": "FUN_0090b610"
+          "fn_name": "~CAuroraModelX"
         }
       ]
     },
@@ -43803,7 +43803,7 @@
         {
           "offset": 0,
           "fn_addr": 9487936,
-          "fn_name": "FUN_0090c640"
+          "fn_name": "~CResMDX"
         },
         {
           "offset": 1,
@@ -44186,7 +44186,7 @@
         {
           "offset": 4,
           "fn_addr": 5088048,
-          "fn_name": "FUN_004da330"
+          "fn_name": "CSWSScriptVarTable::void_return"
         }
       ]
     },
@@ -44630,12 +44630,12 @@
         {
           "offset": 0,
           "fn_addr": 9584932,
-          "fn_name": "FUN_00924124"
+          "fn_name": "exception::~exception"
         },
         {
           "offset": 1,
           "fn_addr": 9584849,
-          "fn_name": "FUN_009240d1"
+          "fn_name": "exception::what"
         }
       ]
     },
@@ -44651,7 +44651,7 @@
         {
           "offset": 1,
           "fn_addr": 9584849,
-          "fn_name": "FUN_009240d1"
+          "fn_name": "exception::what"
         },
         {
           "offset": 2,
@@ -44682,7 +44682,7 @@
         {
           "offset": 1,
           "fn_addr": 9584849,
-          "fn_name": "FUN_009240d1"
+          "fn_name": "exception::what"
         }
       ]
     },
@@ -44786,12 +44786,12 @@
         {
           "offset": 3,
           "fn_addr": 9716976,
-          "fn_name": "FUN_009444f0"
+          "fn_name": "CResTPC::OnResourceFreed"
         },
         {
           "offset": 4,
           "fn_addr": 9717072,
-          "fn_name": "FUN_00944550"
+          "fn_name": "CResTPC::OnResourceServiced"
         }
       ]
     }

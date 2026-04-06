@@ -1,8 +1,8 @@
 {
   "seed_pairs": 3754,
-  "cascade_pairs": 10653,
+  "cascade_pairs": 10818,
   "shared_callee_pairs": 0,
-  "total_pairs": 7707,
+  "total_pairs": 7871,
   "matches": [
     {
       "k1_addr": "0x0046EE00",
@@ -93021,6 +93021,1385 @@
       "class": "",
       "method": "Parse_Quaternion",
       "via_k1": "bidir:callers=2,callees=1"
+    },
+    {
+      "k1_addr": "0x00610A70",
+      "tsl_addr": "0x00420A10",
+      "name": "PlayDrawAnimation",
+      "class": "CSWCCreature",
+      "method": "PlayDrawAnimation",
+      "via_k1": "threehop_caller:triples=4"
+    },
+    {
+      "k1_addr": "0x0064A1F0",
+      "tsl_addr": "0x00490060",
+      "name": "SetClass",
+      "class": "CSWCLevelUpStats",
+      "method": "SetClass",
+      "via_k1": "threehop_caller:triples=2"
+    },
+    {
+      "k1_addr": "0x00673080",
+      "tsl_addr": "0x0055D580",
+      "name": "SWMGExplodeBullet",
+      "class": "SWMGExplodeBullet",
+      "method": "SWMGExplodeBullet",
+      "via_k1": "threehop_caller:triples=2"
+    },
+    {
+      "k1_addr": "0x006E7EC0",
+      "tsl_addr": "0x005E8E00",
+      "name": "SetNameString",
+      "class": "CSWGuiLevelUpCharGen",
+      "method": "SetNameString",
+      "via_k1": "threehop_caller:triples=2"
+    },
+    {
+      "k1_addr": "0x0040EE80",
+      "tsl_addr": "0x0060C2F0",
+      "name": "CExoResFile",
+      "class": "CExoResFile",
+      "method": "CExoResFile",
+      "via_k1": "threehop_caller:triples=2"
+    },
+    {
+      "k1_addr": "0x004A6640",
+      "tsl_addr": "0x00844E00",
+      "name": "WindManager",
+      "class": "WindManager",
+      "method": "WindManager",
+      "via_k1": "threehop_caller:triples=2"
+    },
+    {
+      "k1_addr": "0x0045C270",
+      "tsl_addr": "0x008C2CC0",
+      "name": "SetSize",
+      "class": "CExoArrayList<Plane>",
+      "method": "SetSize",
+      "via_k1": "threehop_caller:triples=2"
+    },
+    {
+      "k1_addr": "0x0060E7C0",
+      "tsl_addr": "0x00475460",
+      "name": "StopAmbientPauseAnim",
+      "class": "CSWCCreature",
+      "method": "StopAmbientPauseAnim",
+      "via_k1": "single_caller_singleton_k1:StopAmbientPauseAnim"
+    },
+    {
+      "k1_addr": "0x0064A2A0",
+      "tsl_addr": "0x006F4C30",
+      "name": "SetClassLevel",
+      "class": "CSWCLevelUpStats",
+      "method": "SetClassLevel",
+      "via_k1": "single_callee_singleton_tsl:callee_CSWCCreatureStats::InitializeCombatInformation"
+    },
+    {
+      "k1_addr": "0x004851E0",
+      "tsl_addr": "0x008CE9B0",
+      "name": "Animation",
+      "class": "",
+      "method": "Animation",
+      "via_k1": "parent_elim:size_ordered_n2:parent=BuildAnimation"
+    },
+    {
+      "k1_addr": "0x00437C50",
+      "tsl_addr": "0x008F6EC0",
+      "name": "allocate",
+      "class": "",
+      "method": "allocate",
+      "via_k1": "parent_elim:size_ordered_n2:parent=BuildAnimation"
+    },
+    {
+      "k1_addr": "0x0059BA20",
+      "tsl_addr": "0x0062B650",
+      "name": "Load",
+      "class": "",
+      "method": "Load",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x005A0360",
+      "tsl_addr": "0x00757080",
+      "name": "CSWSDialogNode::operator=",
+      "class": "CSWSDialogNode",
+      "method": "operator=",
+      "via_k1": "threehop_caller_fingerprint"
+    },
+    {
+      "k1_addr": "0x0059F140",
+      "tsl_addr": "0x00757110",
+      "name": "CSWSDialogBase::operator=",
+      "class": "CSWSDialogBase",
+      "method": "operator=",
+      "via": "cascade2_from_0x005A0360"
+    },
+    {
+      "k1_addr": "0x470d30",
+      "tsl_addr": "0x8f5080",
+      "name": "PartTriMesh::GetRenderPath",
+      "class": "PartTriMesh",
+      "method": "GetRenderPath",
+      "n_anchors": 2,
+      "via": "projected_callee_intersection"
+    },
+    {
+      "tsl_addr": "0x531810",
+      "k1_addr": "0x6272a0",
+      "name": "CSWGuiStatusSummary",
+      "class": "",
+      "method": "CSWGuiStatusSummary",
+      "via": "vote_callee_projection",
+      "votes": 6,
+      "total_anchors": 10,
+      "tsl_sz": 724,
+      "k1_sz": 1302
+    },
+    {
+      "k1_addr": "0x005A5EE0",
+      "tsl_addr": "0x006E1150",
+      "name": "GetSpellGainWithBonus",
+      "class": "CSWSCreatureStats",
+      "method": "GetSpellGainWithBonus",
+      "via_k1": "single_callee_singleton_tsl:callee_IsJedi"
+    },
+    {
+      "k1_addr": "0x005CD970",
+      "tsl_addr": "0x004907A0",
+      "name": "GetDescriptionText",
+      "class": "CSWSkill",
+      "method": "GetDescriptionText",
+      "via_k1": "single_caller_singleton_tsl:parent_CSWGuiSkillsCharGen::CSWGuiSkillsCharGen"
+    },
+    {
+      "k1_addr": "0x00710E10",
+      "tsl_addr": "0x0061A800",
+      "name": "CResMDX::CResMDX",
+      "class": "CResMDX",
+      "method": "CResMDX",
+      "via": "cascade2_from_0x0070FE60"
+    },
+    {
+      "k1_addr": "0x00691F00",
+      "tsl_addr": "0x0042A170",
+      "name": "CSWCTrigger::GetTargetActions",
+      "class": "CSWCTrigger",
+      "method": "GetTargetActions",
+      "via": "cascade2_from_0x00619C20"
+    },
+    {
+      "k1_addr": "0x00619B10",
+      "tsl_addr": "0x00536580",
+      "name": "CSWCCreature::GetHostileInterfaceActions",
+      "class": "CSWCCreature",
+      "method": "GetHostileInterfaceActions",
+      "via": "cascade2_from_0x00619C20"
+    },
+    {
+      "k1_addr": "0x0063F600",
+      "tsl_addr": "0x00413720",
+      "name": "CSWCameraOnAStick::GetPosition",
+      "class": "CSWCameraOnAStick",
+      "method": "GetPosition",
+      "via": "cascade2_from_0x006413C0"
+    },
+    {
+      "k1_addr": "0x006D4640",
+      "tsl_addr": "0x0057ABE0",
+      "name": "SetBehaviorListBallistic",
+      "class": "",
+      "method": "SetBehaviorListBallistic",
+      "via": "cascade2_from_0x006D6EE0"
+    },
+    {
+      "k1_addr": "0x006D4930",
+      "tsl_addr": "0x0057F4D0",
+      "name": "CSWCProjectile::SetBehaviorListBurstUp",
+      "class": "CSWCProjectile",
+      "method": "SetBehaviorListBurstUp",
+      "via": "cascade2_from_0x006D6EE0"
+    },
+    {
+      "k1_addr": "0x006D4B10",
+      "tsl_addr": "0x0057CB90",
+      "name": "CSWCProjectile::SetBehaviorListAccelerating",
+      "class": "CSWCProjectile",
+      "method": "SetBehaviorListAccelerating",
+      "via": "cascade2_from_0x006D6EE0"
+    },
+    {
+      "k1_addr": "0x006D6A90",
+      "tsl_addr": "0x0057CD30",
+      "name": "CSWCProjectile::SetBehaviorListDoubleBallistic",
+      "class": "CSWCProjectile",
+      "method": "SetBehaviorListDoubleBallistic",
+      "via": "cascade2_from_0x006D6EE0"
+    },
+    {
+      "k1_addr": "0x00648320",
+      "tsl_addr": "0x005890A0",
+      "name": "CSWCCreatureStats::ClearFeats",
+      "class": "CSWCCreatureStats",
+      "method": "ClearFeats",
+      "via": "cascade2_from_0x006F3460"
+    },
+    {
+      "k1_addr": "0x006486E0",
+      "tsl_addr": "0x005FA2C0",
+      "name": "CSWCCreatureStats::GetFeat",
+      "class": "CSWCCreatureStats",
+      "method": "GetFeat",
+      "via": "cascade2_from_0x006F3460"
+    },
+    {
+      "k1_addr": "0x0044CE50",
+      "tsl_addr": "0x00866620",
+      "name": "AurPrintString",
+      "class": "",
+      "method": "AurPrintString",
+      "via": "cascade2_from_0x0044D010"
+    },
+    {
+      "k1_addr": "0x0043E240",
+      "tsl_addr": "0x008FDDE0",
+      "name": "Model::AddRef",
+      "class": "Model",
+      "method": "AddRef",
+      "via": "cascade2_from_0x00458790"
+    },
+    {
+      "k1_addr": "0x005F1B90",
+      "tsl_addr": "0x0090EE40",
+      "name": "CClientExoAppInternal::StopLoadMusic",
+      "class": "CClientExoAppInternal",
+      "method": "StopLoadMusic",
+      "via": "cascade2_from_0x005F6E20"
+    },
+    {
+      "k1_addr": "0x006AEE30",
+      "tsl_addr": "0x00597FF0",
+      "name": "CSWGuiInGameCharacter::UpdatePortraits",
+      "class": "CSWGuiInGameCharacter",
+      "method": "UpdatePortraits",
+      "via": "cascade2_from_0x006B2220"
+    },
+    {
+      "k1_addr": "0x006A4000",
+      "tsl_addr": "0x00501010",
+      "name": "CSWCVisualEffectOnObject::ApplyDeleteModel",
+      "class": "CSWCVisualEffectOnObject",
+      "method": "ApplyDeleteModel",
+      "via": "cascade2_from_0x006A54D0"
+    },
+    {
+      "k1_addr": "0x00690910",
+      "tsl_addr": "0x00477C30",
+      "name": "CSWCVisualEffect::UnloadCachedVFX",
+      "class": "CSWCVisualEffect",
+      "method": "UnloadCachedVFX",
+      "via": "cascade2_from_0x005F8470"
+    },
+    {
+      "k1_addr": "0x005EDF10",
+      "tsl_addr": "0x008C2F40",
+      "name": "CClientExoApp::EnableVideoEffect",
+      "class": "CClientExoApp",
+      "method": "EnableVideoEffect",
+      "via": "cascade2_from_0x0063A5D0"
+    },
+    {
+      "k1_addr": "0x005E0B80",
+      "tsl_addr": "0x00611D10",
+      "name": "CExoInputInternal::~CExoInputInternal",
+      "class": "CExoInputInternal",
+      "method": "~CExoInputInternal",
+      "via": "cascade2_from_0x005E2340"
+    },
+    {
+      "k1_addr": "0x006A0480",
+      "tsl_addr": "0x0044E290",
+      "name": "CSWCVisualEffectOnObject::IsDone",
+      "class": "CSWCVisualEffectOnObject",
+      "method": "IsDone",
+      "via": "cascade2_from_0x0063F490"
+    },
+    {
+      "k1_addr": "0x006386D0",
+      "tsl_addr": "0x008C2F70",
+      "name": "CSWCameraNavigate::~CSWCameraNavigate",
+      "class": "CSWCameraNavigate",
+      "method": "~CSWCameraNavigate",
+      "via": "cascade2_from_0x006386B0"
+    },
+    {
+      "k1_addr": "0x006ED570",
+      "tsl_addr": "0x004CE630",
+      "name": "CSWGuiKeyMapButton::~CSWGuiKeyMapButton",
+      "class": "CSWGuiKeyMapButton",
+      "method": "~CSWGuiKeyMapButton",
+      "via": "cascade2_from_0x006ED550"
+    },
+    {
+      "k1_addr": "0x006BE360",
+      "tsl_addr": "0x004CE630",
+      "name": "CSWGuiRadioButton::~CSWGuiRadioButton",
+      "class": "CSWGuiRadioButton",
+      "method": "~CSWGuiRadioButton",
+      "via": "cascade2_from_0x006B60D0"
+    },
+    {
+      "k1_addr": "0x00644A30",
+      "tsl_addr": "0x004CE630",
+      "name": "CSWGuiButton::~CSWGuiButton",
+      "class": "CSWGuiButton",
+      "method": "~CSWGuiButton",
+      "via": "cascade2_from_0x0067EFA0"
+    },
+    {
+      "k1_addr": "0x004741A0",
+      "tsl_addr": "0x0080C170",
+      "name": "ProcessFaces",
+      "class": "",
+      "method": "ProcessFaces",
+      "via": "cascade2_from_0x00474220"
+    },
+    {
+      "k1_addr": "0x004269F0",
+      "tsl_addr": "0x008986C0",
+      "name": "GLRender::BuildShadowArray",
+      "class": "GLRender",
+      "method": "BuildShadowArray",
+      "via": "cascade2_from_0x00474220"
+    },
+    {
+      "k1_addr": "0x00460CF0",
+      "tsl_addr": "0x008D9030",
+      "name": "TextureController::~TextureController",
+      "class": "TextureController",
+      "method": "~TextureController",
+      "via": "cascade2_from_0x00462AE0"
+    },
+    {
+      "k1_addr": "0x006AA850",
+      "tsl_addr": "0x004CE3F0",
+      "name": "CSWGuiMessageBox::~CSWGuiMessageBox",
+      "class": "CSWGuiMessageBox",
+      "method": "~CSWGuiMessageBox",
+      "via": "cascade2_from_0x006AA830"
+    },
+    {
+      "k1_addr": "0x006ABEC0",
+      "tsl_addr": "0x0040D070",
+      "name": "CSWGuiInGameAbilities::UpdatePortraits",
+      "class": "CSWGuiInGameAbilities",
+      "method": "UpdatePortraits",
+      "via": "cascade2_from_0x006ADC20"
+    },
+    {
+      "k1_addr": "0x004634C0",
+      "tsl_addr": "0x008D9030",
+      "name": "CycleTIDTextureController::~CycleTIDTextureController",
+      "class": "CycleTIDTextureController",
+      "method": "~CycleTIDTextureController",
+      "via": "cascade2_from_0x004634A0"
+    },
+    {
+      "k1_addr": "0x00447370",
+      "tsl_addr": "0x008C2F70",
+      "name": "Gob::RemoveAttachment",
+      "class": "Gob",
+      "method": "RemoveAttachment",
+      "via": "cascade2_from_0x0049FCE0"
+    },
+    {
+      "k1_addr": "0x00670B20",
+      "tsl_addr": "0x00472750",
+      "name": "BulletDie",
+      "class": "",
+      "method": "BulletDie",
+      "via": "cascade2_from_0x006912F0"
+    },
+    {
+      "k1_addr": "0x00419A20",
+      "tsl_addr": "0x00915660",
+      "name": "CSWGuiControl::~CSWGuiControl",
+      "class": "CSWGuiControl",
+      "method": "~CSWGuiControl",
+      "via": "cascade2_from_0x0041C740"
+    },
+    {
+      "k1_addr": "0x004BB570",
+      "tsl_addr": "0x00413280",
+      "name": "CWalkHitInfo::Initialize",
+      "class": "CWalkHitInfo",
+      "method": "Initialize",
+      "via": "cascade2_from_0x004BC0E0"
+    },
+    {
+      "k1_addr": "0x005F2AE0",
+      "tsl_addr": "0x004DC340",
+      "name": "CClientExoAppInternal::LoadScreenExists",
+      "class": "CClientExoAppInternal",
+      "method": "LoadScreenExists",
+      "via": "cascade2_from_0x005F7500"
+    },
+    {
+      "k1_addr": "0x0068FDD0",
+      "tsl_addr": "0x00444B60",
+      "name": "CSWRumblePattern::GetMagnitudes",
+      "class": "CSWRumblePattern",
+      "method": "GetMagnitudes",
+      "via": "cascade2_from_0x005F7500"
+    },
+    {
+      "k1_addr": "0x00423F90",
+      "tsl_addr": "0x00826A60",
+      "name": "GLRender::CreateCubeTexture",
+      "class": "GLRender",
+      "method": "CreateCubeTexture",
+      "via": "cascade2_from_0x00420970"
+    },
+    {
+      "k1_addr": "0x00424980",
+      "tsl_addr": "0x008143F0",
+      "name": "GLRender::CreateTexture",
+      "class": "GLRender",
+      "method": "CreateTexture",
+      "via": "cascade2_from_0x00420970"
+    },
+    {
+      "k1_addr": "0x007041B7",
+      "tsl_addr": "0x00931CCC",
+      "name": "_x87FloatMathInternal_007041b7",
+      "class": "",
+      "method": "_x87FloatMathInternal_007041b7",
+      "via": "cascade2_from_0x006FC0FD"
+    },
+    {
+      "k1_addr": "0x006A47B0",
+      "tsl_addr": "0x00502080",
+      "name": "CSWCVisualEffectOnObject::RemoveEnvironmentMap",
+      "class": "CSWCVisualEffectOnObject",
+      "method": "RemoveEnvironmentMap",
+      "via": "cascade2_from_0x006A56F0"
+    },
+    {
+      "k1_addr": "0x006A1610",
+      "tsl_addr": "0x00501DF0",
+      "name": "CSWCVisualEffectOnObject::RemoveDistortion",
+      "class": "CSWCVisualEffectOnObject",
+      "method": "RemoveDistortion",
+      "via": "cascade2_from_0x006A56F0"
+    },
+    {
+      "k1_addr": "0x005EDF20",
+      "tsl_addr": "0x0081B710",
+      "name": "CClientExoApp::DisableVideoEffect",
+      "class": "CClientExoApp",
+      "method": "DisableVideoEffect",
+      "via": "cascade2_from_0x0063A6C0"
+    },
+    {
+      "k1_addr": "0x00555DE0",
+      "tsl_addr": "0x00668830",
+      "name": "CItemRepository::~CItemRepository",
+      "class": "CItemRepository",
+      "method": "~CItemRepository",
+      "via": "cascade2_from_0x00563D40"
+    },
+    {
+      "k1_addr": "0x005C58F0",
+      "tsl_addr": "0x00778B60",
+      "name": "CSWSJournal::~CSWSJournal",
+      "class": "CSWSJournal",
+      "method": "~CSWSJournal",
+      "via": "cascade2_from_0x00563D40"
+    },
+    {
+      "k1_addr": "0x0068F3A0",
+      "tsl_addr": "0x005594D0",
+      "name": "CSWGuiInGameCredits::SetText",
+      "class": "CSWGuiInGameCredits",
+      "method": "SetText",
+      "via": "cascade2_from_0x0068F6F0"
+    },
+    {
+      "k1_addr": "0x0045F580",
+      "tsl_addr": "0x0086AB80",
+      "name": "glSetVSync?",
+      "class": "",
+      "method": "glSetVSync?",
+      "via": "cascade2_from_0x0044EE90"
+    },
+    {
+      "k1_addr": "0x004AB1E0",
+      "tsl_addr": "0x00413280",
+      "name": "VectorMultiply",
+      "class": "",
+      "method": "VectorMultiply",
+      "via": "cascade2_from_0x0046F490"
+    },
+    {
+      "k1_addr": "0x006FA8B2",
+      "tsl_addr": "0x0060BAC0",
+      "name": "FID_conflict:__time32",
+      "class": "",
+      "method": "FID_conflict:__time32",
+      "via": "cascade2_from_0x005DD080"
+    },
+    {
+      "k1_addr": "0x005F7710",
+      "tsl_addr": "0x00856330",
+      "name": "CClientExoAppInternal::EnableVideoEffect",
+      "class": "CClientExoAppInternal",
+      "method": "EnableVideoEffect",
+      "via": "cascade2_from_0x005EDF10"
+    },
+    {
+      "k1_addr": "0x0063CE10",
+      "tsl_addr": "0x0040C910",
+      "name": "CSWCObject::RestoreEnvMap",
+      "class": "CSWCObject",
+      "method": "RestoreEnvMap",
+      "via": "cascade2_from_0x006A47B0"
+    },
+    {
+      "k1_addr": "0x005F40E0",
+      "tsl_addr": "0x00866270",
+      "name": "CClientExoAppInternal::DisableVideoEffect",
+      "class": "CClientExoAppInternal",
+      "method": "DisableVideoEffect",
+      "via": "cascade2_from_0x005EDF20"
+    },
+    {
+      "k1_addr": "0x0049ED40",
+      "tsl_addr": "0x00817660",
+      "name": "CAurBehaviorAttachTranslate::Message",
+      "class": "CAurBehaviorAttachTranslate",
+      "method": "Message",
+      "via": "shared_callee_intersection[4]",
+      "shared_callee_count": 4
+    },
+    {
+      "k1_addr": "0x004D5E60",
+      "tsl_addr": "0x00772BD0",
+      "name": "~CSWSCombatRound",
+      "class": "CSWSCombatRound",
+      "method": "~CSWSCombatRound",
+      "via_k1": "single_caller_singleton_tsl:parent_CSWSCreature::~CSWSCreature"
+    },
+    {
+      "k1_addr": "0x007042AB",
+      "tsl_addr": "0x00925A7F",
+      "name": "__FPU_internal",
+      "class": "",
+      "method": "__FPU_internal",
+      "via_k1": "single_caller_singleton_tsl:parent_start"
+    },
+    {
+      "k1_addr": "0x006346F0",
+      "tsl_addr": "0x0040DE20",
+      "name": "InvertFormation",
+      "class": "CSWParty",
+      "method": "InvertFormation",
+      "via_k1": "single_caller_singleton_k1:InvertFormation"
+    },
+    {
+      "k1_addr": "0x00710E40",
+      "tsl_addr": "0x0090C670",
+      "name": "~CResMDX",
+      "class": "CResMDX",
+      "method": "~CResMDX",
+      "via_k1": "vtable_writer:CResMDX:unique"
+    },
+    {
+      "k1_addr": "0x00714780",
+      "tsl_addr": "0x004CE580",
+      "name": "Unwind@00714780",
+      "class": "CSWGuiObject",
+      "method": "Unwind@00714780",
+      "via_k1": "vtable_writer:CSWGuiObject:unique"
+    },
+    {
+      "k1_addr": "0x00463470",
+      "tsl_addr": "0x008DCBB0",
+      "name": "CycleTIDTextureController",
+      "class": "CycleTIDTextureController",
+      "method": "CycleTIDTextureController",
+      "via_k1": "vtable_writer:CycleTIDTextureController:unique"
+    },
+    {
+      "k1_addr": "0x6bec90",
+      "tsl_addr": "0x58e2e0",
+      "name": "CSWGuiPartySelection::ConfirmPartySelection",
+      "class": "CSWGuiPartySelection",
+      "method": "ConfirmPartySelection",
+      "named_callee_count": 2,
+      "named_callees": [
+        "AcceptParty",
+        "GetInGameGui"
+      ],
+      "via": "callee_name_fingerprint"
+    },
+    {
+      "k1_addr": "0x005E3F90",
+      "tsl_addr": "0x00617C50",
+      "name": "CExoRawInputInternal::ShutDownDirectInput",
+      "class": "CExoRawInputInternal",
+      "method": "ShutDownDirectInput",
+      "via_k1": "twohop_caller_fingerprint"
+    },
+    {
+      "k1_addr": "0x0049EDA0",
+      "tsl_addr": "0x008CE200",
+      "name": "Message",
+      "class": "",
+      "method": "Message",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x005471E0",
+      "tsl_addr": "0x008C44A0",
+      "name": "ExecuteCommandEnableVideoEffect",
+      "class": "",
+      "method": "ExecuteCommandEnableVideoEffect",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x00710E80",
+      "tsl_addr": "0x0090C640",
+      "name": "~CResMDX",
+      "class": "",
+      "method": "~CResMDX",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x649520",
+      "tsl_addr": "0x490010",
+      "name": "CSWCCreatureStats::ClearKnownSpells",
+      "class": "CSWCCreatureStats",
+      "method": "ClearKnownSpells",
+      "n_anchors": 2,
+      "via": "projected_caller_intersection"
+    },
+    {
+      "k1_addr": "0x6303b0",
+      "tsl_addr": "0x43b020",
+      "name": "CGuiInGame::~CGuiInGame",
+      "class": "CGuiInGame",
+      "method": "~CGuiInGame",
+      "n_anchors": 2,
+      "via": "projected_callee_intersection"
+    },
+    {
+      "tsl_addr": "0x5772e0",
+      "k1_addr": "0x6bc600",
+      "name": "GetSideUnobstructed",
+      "class": "",
+      "method": "GetSideUnobstructed",
+      "via": "vote_callee_projection",
+      "votes": 4,
+      "total_anchors": 7,
+      "tsl_sz": 3008,
+      "k1_sz": 2222
+    },
+    {
+      "k1_addr": "0x5d10f0",
+      "tsl_addr": "0x646310",
+      "name": "CVirtualMachine::SaveScriptSituation",
+      "class": "CVirtualMachine",
+      "method": "SaveScriptSituation",
+      "ns": "CVirtualMachine",
+      "ns_pairs": 30,
+      "via": "positional_ordering"
+    },
+    {
+      "k1_addr": "0x00423D80",
+      "tsl_addr": "0x008256B0",
+      "name": "MakeLookUpTexture",
+      "class": "GLRender",
+      "method": "MakeLookUpTexture",
+      "via_k1": "single_callee_singleton_tsl:callee_gluBuild2DMipmaps"
+    },
+    {
+      "k1_addr": "0x006BCEC0",
+      "tsl_addr": "0x00578C00",
+      "name": "AddCalculatedLineOfAction",
+      "class": "CSWBehaviorCameraDialog",
+      "method": "AddCalculatedLineOfAction",
+      "via_k1": "single_callee_singleton_k1:AddCalculatedLineOfAction"
+    },
+    {
+      "k1_addr": "0x006BB590",
+      "tsl_addr": "0x005B2390",
+      "name": "SetShot",
+      "class": "CSWBehaviorCameraDialog",
+      "method": "SetShot",
+      "via_k1": "single_caller_singleton_tsl:parent_CGuiInGame::SetComputerCameraShot"
+    },
+    {
+      "k1_addr": "0x006495A0",
+      "tsl_addr": "0x005EA9D0",
+      "name": "GetKnownSpell",
+      "class": "CSWCCreatureStats",
+      "method": "GetKnownSpell",
+      "via_k1": "single_caller_singleton_tsl:parent_CSWGuiLevelUpCharGen::ClearPowers"
+    },
+    {
+      "k1_addr": "0x00468970",
+      "tsl_addr": "0x008CE920",
+      "name": "Insert",
+      "class": "CExoArrayList<AurKey<char[32]>>",
+      "method": "Insert",
+      "via_k1": "single_caller_singleton_tsl:parent_InternalParseField"
+    },
+    {
+      "k1_addr": "0x005E3DC0",
+      "tsl_addr": "0x00617A90",
+      "name": "ShutDownDirectInput",
+      "class": "CExoRawInputInternal",
+      "method": "ShutDownDirectInput",
+      "via_k1": "single_caller_singleton_tsl:parent_CExoRawInputInternal"
+    },
+    {
+      "k1_addr": "0x005E0350",
+      "tsl_addr": "0x006162B0",
+      "name": "CExoLinkedList",
+      "class": "CExoLinkedList<CExoInputEventDesc*>",
+      "method": "CExoLinkedList",
+      "via_k1": "single_caller_singleton_k1:CExoLinkedList"
+    },
+    {
+      "k1_addr": "0x006BB610",
+      "tsl_addr": "0x00578D10",
+      "name": "GetLineOfActionSide",
+      "class": "CSWBehaviorCameraDialog",
+      "method": "GetLineOfActionSide",
+      "via_k1": "single_caller_singleton_k1:GetLineOfActionSide"
+    },
+    {
+      "k1_addr": "0x0041FBD0",
+      "tsl_addr": "0x008269C0",
+      "name": "ImageQuarterRotated",
+      "class": "",
+      "method": "ImageQuarterRotated",
+      "via_k1": "threehop_caller:triples=2"
+    },
+    {
+      "k1_addr": "0x004639B0",
+      "tsl_addr": "0x008CF830",
+      "name": "CExoArrayList<AurKey<char[32]>>::allocate",
+      "class": "CExoArrayList<AurKey<char[32]>>",
+      "method": "allocate",
+      "via": "cascade2_from_0x00468970"
+    },
+    {
+      "k1_addr": "0x0041F4D0",
+      "tsl_addr": "0x00815E40",
+      "name": "AurTextureCalculateHashID",
+      "class": "",
+      "method": "AurTextureCalculateHashID",
+      "via_k1": "single_callee_singleton_k1:AurTextureCalculateHashID"
+    },
+    {
+      "k1_addr": "0x004205C0",
+      "tsl_addr": "0x00814600",
+      "name": "GetReferencedTexture",
+      "class": "CAurTextureBasic",
+      "method": "GetReferencedTexture",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot2(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041EBF0",
+      "tsl_addr": "0x00814630",
+      "name": "IsCubeMap",
+      "class": "CAurTextureBasic",
+      "method": "IsCubeMap",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot3(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x004205D0",
+      "tsl_addr": "0x00814680",
+      "name": "IsInvalid",
+      "class": "CAurTextureBasic",
+      "method": "IsInvalid",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot4(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041EE70",
+      "tsl_addr": "0x00814AE0",
+      "name": "IsDiffuseBumpMap",
+      "class": "CAurTextureBasic",
+      "method": "IsDiffuseBumpMap",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot5(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041EEB0",
+      "tsl_addr": "0x00814B50",
+      "name": "IsSpecularBumpMap",
+      "class": "CAurTextureBasic",
+      "method": "IsSpecularBumpMap",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot6(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041EEF0",
+      "tsl_addr": "0x00814BC0",
+      "name": "IsBumpMap",
+      "class": "CAurTextureBasic",
+      "method": "IsBumpMap",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot7(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041EF50",
+      "tsl_addr": "0x00814C60",
+      "name": "IsNormalMap",
+      "class": "CAurTextureBasic",
+      "method": "IsNormalMap",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot8(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041EF80",
+      "tsl_addr": "0x00814CC0",
+      "name": "IsUsingGlobalAlpha",
+      "class": "CAurTextureBasic",
+      "method": "IsUsingGlobalAlpha",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot9(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041EC10",
+      "tsl_addr": "0x008146D0",
+      "name": "IsFullyLoaded",
+      "class": "CAurTextureBasic",
+      "method": "IsFullyLoaded",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot10(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041ED40",
+      "tsl_addr": "0x00814910",
+      "name": "IsEnvironmentMapped",
+      "class": "CAurTextureBasic",
+      "method": "IsEnvironmentMapped",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot11(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041EC30",
+      "tsl_addr": "0x00814710",
+      "name": "IsProcessed",
+      "class": "CAurTextureBasic",
+      "method": "IsProcessed",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot12(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041EC50",
+      "tsl_addr": "0x00814750",
+      "name": "IsTxiLoaded",
+      "class": "CAurTextureBasic",
+      "method": "IsTxiLoaded",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot13(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041EFA0",
+      "tsl_addr": "0x00814D00",
+      "name": "GetFontInfo",
+      "class": "CAurTextureBasic",
+      "method": "GetFontInfo",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot14(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041EFC0",
+      "tsl_addr": "0x00814D40",
+      "name": "GetImage",
+      "class": "CAurTextureBasic",
+      "method": "GetImage",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot15(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041EFE0",
+      "tsl_addr": "0x00814D80",
+      "name": "GetName",
+      "class": "CAurTextureBasic",
+      "method": "GetName",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot16(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041F000",
+      "tsl_addr": "0x00814DF0",
+      "name": "GetFileRange",
+      "class": "CAurTextureBasic",
+      "method": "GetFileRange",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot17(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041F020",
+      "tsl_addr": "0x00814E40",
+      "name": "GetWidth",
+      "class": "CAurTextureBasic",
+      "method": "GetWidth",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot18(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041F040",
+      "tsl_addr": "0x00814E80",
+      "name": "GetHeight",
+      "class": "CAurTextureBasic",
+      "method": "GetHeight",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot19(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041F060",
+      "tsl_addr": "0x00814EC0",
+      "name": "GetBPP",
+      "class": "CAurTextureBasic",
+      "method": "GetBPP",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot20(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041F080",
+      "tsl_addr": "0x00814FC0",
+      "name": "GetNumMipMaps",
+      "class": "CAurTextureBasic",
+      "method": "GetNumMipMaps",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot21(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041F0A0",
+      "tsl_addr": "0x00815000",
+      "name": "GetNumX",
+      "class": "CAurTextureBasic",
+      "method": "GetNumX",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot22(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041F0C0",
+      "tsl_addr": "0x00815050",
+      "name": "GetNumY",
+      "class": "CAurTextureBasic",
+      "method": "GetNumY",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot23(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041F140",
+      "tsl_addr": "0x008150A0",
+      "name": "GetClamp",
+      "class": "CAurTextureBasic",
+      "method": "GetClamp",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot24(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041F1A0",
+      "tsl_addr": "0x00815200",
+      "name": "GetCompressedSize",
+      "class": "CAurTextureBasic",
+      "method": "GetCompressedSize",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot25(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041F180",
+      "tsl_addr": "0x008152D0",
+      "name": "GetEnvMapAlpha",
+      "class": "CAurTextureBasic",
+      "method": "GetEnvMapAlpha",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot26(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041F0E0",
+      "tsl_addr": "0x00815290",
+      "name": "GetMipMap",
+      "class": "CAurTextureBasic",
+      "method": "GetMipMap",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot27(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041F100",
+      "tsl_addr": "0x008150F0",
+      "name": "GetFilter",
+      "class": "CAurTextureBasic",
+      "method": "GetFilter",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot28(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041F120",
+      "tsl_addr": "0x00815130",
+      "name": "GetMapTexelsToPixels",
+      "class": "CAurTextureBasic",
+      "method": "GetMapTexelsToPixels",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot29(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041F160",
+      "tsl_addr": "0x008151C0",
+      "name": "GetBumpMapScaling",
+      "class": "CAurTextureBasic",
+      "method": "GetBumpMapScaling",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot30(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041EDD0",
+      "tsl_addr": "0x00815250",
+      "name": "GetBumpIntensity",
+      "class": "CAurTextureBasic",
+      "method": "GetBumpIntensity",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot31(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041EDF0",
+      "tsl_addr": "0x008149D0",
+      "name": "GetSpecularBumpIntensity",
+      "class": "CAurTextureBasic",
+      "method": "GetSpecularBumpIntensity",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot32(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041EE30",
+      "tsl_addr": "0x00814A20",
+      "name": "GetDiffuseBumpIntensity",
+      "class": "CAurTextureBasic",
+      "method": "GetDiffuseBumpIntensity",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot33(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041ED60",
+      "tsl_addr": "0x00814A80",
+      "name": "GetSpecularColor",
+      "class": "CAurTextureBasic",
+      "method": "GetSpecularColor",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot34(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041F1C0",
+      "tsl_addr": "0x00814950",
+      "name": "GetCompressionFormat",
+      "class": "CAurTextureBasic",
+      "method": "GetCompressionFormat",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot35(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041ED20",
+      "tsl_addr": "0x00815310",
+      "name": "GetTxiSize",
+      "class": "CAurTextureBasic",
+      "method": "GetTxiSize",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot36(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041EC90",
+      "tsl_addr": "0x008148D0",
+      "name": "GetTxiData",
+      "class": "CAurTextureBasic",
+      "method": "GetTxiData",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot37(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041F1F0",
+      "tsl_addr": "0x008147E0",
+      "name": "GetTextureFormat",
+      "class": "CAurTextureBasic",
+      "method": "GetTextureFormat",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot38(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041F260",
+      "tsl_addr": "0x00815360",
+      "name": "SetTextureFormat",
+      "class": "CAurTextureBasic",
+      "method": "SetTextureFormat",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot39(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041ECB0",
+      "tsl_addr": "0x00815400",
+      "name": "SetTxiData",
+      "class": "CAurTextureBasic",
+      "method": "SetTxiData",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot40(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041EC70",
+      "tsl_addr": "0x00814820",
+      "name": "SetTxiLoaded",
+      "class": "CAurTextureBasic",
+      "method": "SetTxiLoaded",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot41(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x0041F3B0",
+      "tsl_addr": "0x00814790",
+      "name": "IncrementTIDIndex",
+      "class": "CAurTextureBasic",
+      "method": "IncrementTIDIndex",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot42(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x004214B0",
+      "tsl_addr": "0x00817860",
+      "name": "Bind",
+      "class": "CAurTextureBasic",
+      "method": "Bind",
+      "via_k1": "vtable_deep:CAurTextureBasic:slot45(off+0,anchors3)"
+    },
+    {
+      "k1_addr": "0x00590B10",
+      "tsl_addr": "0x0043B0A0",
+      "name": "PadOutCreatureCount",
+      "class": "",
+      "method": "PadOutCreatureCount",
+      "via_k1": "partial_callee_jaccard:0.50"
+    },
+    {
+      "k1_addr": "0x005F3650",
+      "tsl_addr": "0x00449360",
+      "name": "GetLoadMusicByModuleName",
+      "class": "",
+      "method": "GetLoadMusicByModuleName",
+      "via_k1": "partial_callee_jaccard:0.60"
+    },
+    {
+      "k1_addr": "0x00606E30",
+      "tsl_addr": "0x00456390",
+      "name": "AddPlaceableObjectLight",
+      "class": "",
+      "method": "AddPlaceableObjectLight",
+      "via_k1": "partial_callee_jaccard:0.60"
+    },
+    {
+      "k1_addr": "0x005BCDA0",
+      "tsl_addr": "0x0050F150",
+      "name": "LoadAttackBonusTable",
+      "class": "",
+      "method": "LoadAttackBonusTable",
+      "via_k1": "partial_callee_jaccard:0.50"
+    },
+    {
+      "k1_addr": "0x00675F10",
+      "tsl_addr": "0x005461C0",
+      "name": "SortItemsByName",
+      "class": "",
+      "method": "SortItemsByName",
+      "via_k1": "partial_callee_jaccard:0.83"
+    },
+    {
+      "k1_addr": "0x005E8C60",
+      "tsl_addr": "0x005473A0",
+      "name": "Insert",
+      "class": "",
+      "method": "Insert",
+      "via_k1": "partial_callee_jaccard:0.57"
+    },
+    {
+      "k1_addr": "0x005E6D20",
+      "tsl_addr": "0x006087F0",
+      "name": "CreateResourceExtensionTable",
+      "class": "",
+      "method": "CreateResourceExtensionTable",
+      "via_k1": "partial_callee_jaccard:1.00"
+    },
+    {
+      "k1_addr": "0x004DDD50",
+      "tsl_addr": "0x00661330",
+      "name": "OnApplyVampiricRegeneration",
+      "class": "",
+      "method": "OnApplyVampiricRegeneration",
+      "via_k1": "partial_callee_jaccard:0.50"
+    },
+    {
+      "k1_addr": "0x004E3480",
+      "tsl_addr": "0x00747CB0",
+      "name": "OnRemoveUltraVision",
+      "class": "",
+      "method": "OnRemoveUltraVision",
+      "via_k1": "partial_callee_jaccard:0.50"
+    },
+    {
+      "k1_addr": "0x004D5CB0",
+      "tsl_addr": "0x007728E0",
+      "name": "CSWSCombatRound",
+      "class": "",
+      "method": "CSWSCombatRound",
+      "via_k1": "partial_callee_jaccard:0.60"
+    },
+    {
+      "k1_addr": "0x00593270",
+      "tsl_addr": "0x007EE300",
+      "name": "LoadFractionalCRData",
+      "class": "",
+      "method": "LoadFractionalCRData",
+      "via_k1": "partial_callee_jaccard:0.57"
+    },
+    {
+      "k1_addr": "0x004710B0",
+      "tsl_addr": "0x0088E030",
+      "name": "RenderLightmappedVP",
+      "class": "",
+      "method": "RenderLightmappedVP",
+      "via_k1": "partial_callee_jaccard:0.75"
+    },
+    {
+      "k1_addr": "0x00464880",
+      "tsl_addr": "0x008C5F90",
+      "name": "Parse<char*>",
+      "class": "",
+      "method": "Parse<char*>",
+      "via_k1": "partial_callee_jaccard:0.50"
+    },
+    {
+      "k1_addr": "0x0045E6B0",
+      "tsl_addr": "0x008DBB50",
+      "name": "ImageBuildPerlin",
+      "class": "",
+      "method": "ImageBuildPerlin",
+      "via_k1": "partial_callee_jaccard:0.50"
+    },
+    {
+      "k1_addr": "0x0070C6E0",
+      "tsl_addr": "0x00905E80",
+      "name": "GetLayeredRaster",
+      "class": "",
+      "method": "GetLayeredRaster",
+      "via_k1": "partial_callee_jaccard:0.80"
+    },
+    {
+      "k1_addr": "0x0070C790",
+      "tsl_addr": "0x00905F30",
+      "name": "GetRaster",
+      "class": "",
+      "method": "GetRaster",
+      "via_k1": "partial_callee_jaccard:0.80"
+    },
+    {
+      "k1_addr": "0x005298A0",
+      "tsl_addr": "0x009161A0",
+      "name": "SetValueString",
+      "class": "",
+      "method": "SetValueString",
+      "via_k1": "partial_callee_jaccard:0.71"
+    },
+    {
+      "k1_addr": "0x005E8BA0",
+      "tsl_addr": "0x00608770",
+      "name": "CExoBaseInternal",
+      "class": "CExoBaseInternal",
+      "method": "CExoBaseInternal",
+      "via_k1": "single_callee_singleton_k1:CExoBaseInternal"
+    },
+    {
+      "k1_addr": "0x005EDD00",
+      "tsl_addr": "0x0040DA20",
+      "name": "GetLoadMusicByModuleName",
+      "class": "CClientExoApp",
+      "method": "GetLoadMusicByModuleName",
+      "via_k1": "single_callee_singleton_k1:GetLoadMusicByModuleName"
+    },
+    {
+      "k1_addr": "0x0070E970",
+      "tsl_addr": "0x00908050",
+      "name": "GetLayeredTextureInternal",
+      "class": "CAuroraInterface",
+      "method": "GetLayeredTextureInternal",
+      "via_k1": "single_caller_singleton_k1:GetLayeredTextureInternal"
+    },
+    {
+      "k1_addr": "0x0052BFC0",
+      "tsl_addr": "0x0041CF20",
+      "name": "AppendToScriptsRun",
+      "class": "",
+      "method": "AppendToScriptsRun",
+      "via_k1": "partial_callee_jaccard:0.50"
+    },
+    {
+      "k1_addr": "0x004A73F0",
+      "tsl_addr": "0x004E2A90",
+      "name": "allocate",
+      "class": "",
+      "method": "allocate",
+      "via_k1": "partial_callee_jaccard:0.50"
+    },
+    {
+      "k1_addr": "0x005BCD30",
+      "tsl_addr": "0x0050F080",
+      "name": "GetSpellGain",
+      "class": "CSWSCreatureStats",
+      "method": "GetSpellGain",
+      "via_k1": "parent_elim:1to1:parent=GetSpellGainWithBonus"
+    },
+    {
+      "k1_addr": "0x0070E8B0",
+      "tsl_addr": "0x00907FD0",
+      "name": "GetTextureInternal",
+      "class": "",
+      "method": "GetTextureInternal",
+      "via_k1": "parent_elim:1to1:parent=GetRaster"
+    },
+    {
+      "k1_addr": "0x00550590",
+      "tsl_addr": "0x0050DDE0",
+      "name": "LoadSkillInfo",
+      "class": "",
+      "method": "LoadSkillInfo",
+      "via_k1": "combined_fp_jaccard:0.50"
+    },
+    {
+      "k1_addr": "0x006A6E20",
+      "tsl_addr": "0x0077E650",
+      "name": "GetFullScreenBG",
+      "class": "",
+      "method": "GetFullScreenBG",
+      "via_k1": "combined_fp_jaccard:0.50"
+    },
+    {
+      "k1_addr": "0x0070D510",
+      "tsl_addr": "0x00905FE0",
+      "name": "GetProcessedRaster",
+      "class": "",
+      "method": "GetProcessedRaster",
+      "via_k1": "combined_fp_jaccard:0.50"
+    },
+    {
+      "k1_addr": "0x005DF9D0",
+      "tsl_addr": "0x005D88D0",
+      "name": "FormatCandidateList",
+      "class": "",
+      "method": "FormatCandidateList",
+      "via_k1": "partial_callee_jaccard:0.50"
+    },
+    {
+      "k1_addr": "0x005935D0",
+      "tsl_addr": "0x0040D290",
+      "name": "BuildSpawnList",
+      "class": "CSWSEncounter",
+      "method": "BuildSpawnList",
+      "via_k1": "single_callee_singleton_tsl:callee_PadOutCreatureCount"
+    },
+    {
+      "k1_addr": "0x004A77C0",
+      "tsl_addr": "0x004E2BE0",
+      "name": "Add",
+      "class": "CExoArrayList<CAurTriangleListElem>",
+      "method": "Add",
+      "via_k1": "single_callee_singleton_tsl:callee_allocate"
+    },
+    {
+      "k1_addr": "0x005931D0",
+      "tsl_addr": "0x007EEDA0",
+      "name": "CalculateSpawnPool",
+      "class": "CSWSEncounter",
+      "method": "CalculateSpawnPool",
+      "via_k1": "single_caller_singleton_tsl:parent_CSWSEncounter::CSWSEncounter"
+    },
+    {
+      "k1_addr": "0x004A8230",
+      "tsl_addr": "0x006BD910",
+      "name": "Add",
+      "class": "",
+      "method": "Add",
+      "via_k1": "partial_callee_jaccard:0.50"
+    },
+    {
+      "k1_addr": "0x004A7860",
+      "tsl_addr": "0x004E6EE0",
+      "name": "AddTriangle",
+      "class": "CAurTriangleBin",
+      "method": "AddTriangle",
+      "via_k1": "single_callee_singleton_tsl:callee_operator_"
     }
   ]
 }
