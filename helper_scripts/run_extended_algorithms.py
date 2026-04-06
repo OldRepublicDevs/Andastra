@@ -83,6 +83,18 @@ run("merge_any.py", "docs/tsl_string_ref_matches.json")
 after = cascade_count()
 log("string_ref merged: +{} (now {})".format(after - before, after))
 
+log("Running single_callee_cascade...")
+before = cascade_count()
+run("single_callee_cascade.py")
+after = cascade_count()
+log("single_callee_cascade merged: +{} (now {})".format(after - before, after))
+
+log("Running local_cascade_multi (single_caller + callee+size)...")
+before = cascade_count()
+run("local_cascade_multi.py")
+after = cascade_count()
+log("local_cascade_multi merged: +{} (now {})".format(after - before, after))
+
 log("Phase 1 done. Cascade: {}".format(cascade_count()))
 
 # ── Phase 2: Standard convergence loop ───────────────────────────────────────
