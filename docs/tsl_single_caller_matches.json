@@ -1,0 +1,2098 @@
+[
+  {
+    "k1_addr": "0x005F5720",
+    "tsl_addr": "0x00409F70",
+    "name": "CreateCaptureEventFile",
+    "class": "",
+    "method": "CreateCaptureEventFile",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0067D060",
+    "tsl_addr": "0x0054CEF0",
+    "name": "HandleMouseCapturedMovement",
+    "class": "",
+    "method": "HandleMouseCapturedMovement",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00528EC0",
+    "tsl_addr": "0x00651190",
+    "name": "AddIdentifier",
+    "class": "",
+    "method": "AddIdentifier",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00519E30",
+    "tsl_addr": "0x007FC890",
+    "name": "AIActionSetMine",
+    "class": "",
+    "method": "AIActionSetMine",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00485130",
+    "tsl_addr": "0x008F6AB0",
+    "name": "PlayOutOfOrderAnimation",
+    "class": "",
+    "method": "PlayOutOfOrderAnimation",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006391A0",
+    "tsl_addr": "0x004E42C0",
+    "name": "Control_UpdateCameraDesiredOrientation",
+    "class": "",
+    "method": "Control_UpdateCameraDesiredOrientation",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006E0CF0",
+    "tsl_addr": "0x0056AEE0",
+    "name": "HandleInputEvent",
+    "class": "",
+    "method": "HandleInputEvent",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005EDA00",
+    "tsl_addr": "0x0042E160",
+    "name": "QueryExitProgram",
+    "class": "",
+    "method": "QueryExitProgram",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004DCC90",
+    "tsl_addr": "0x00747810",
+    "name": "OnRemoveTimestop",
+    "class": "",
+    "method": "OnRemoveTimestop",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0055EE10",
+    "tsl_addr": "0x006648E0",
+    "name": "NVThunkItemGameObject_EventHandler",
+    "class": "",
+    "method": "NVThunkItemGameObject_EventHandler",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0058D8C0",
+    "tsl_addr": "0x0075D880",
+    "name": "GetClosestPointWithinTrigger",
+    "class": "",
+    "method": "GetClosestPointWithinTrigger",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00602D40",
+    "tsl_addr": "0x0044D5B0",
+    "name": "PlayMovieQueue",
+    "class": "",
+    "method": "PlayMovieQueue",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005ED7B0",
+    "tsl_addr": "0x0042DF60",
+    "name": "Initialize",
+    "class": "",
+    "method": "Initialize",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0046B1E0",
+    "tsl_addr": "0x0086D2A0",
+    "name": "~nodedata",
+    "class": "",
+    "method": "~nodedata",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004B7470",
+    "tsl_addr": "0x00728D40",
+    "name": "LoadCharacterStart",
+    "class": "",
+    "method": "LoadCharacterStart",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00577000",
+    "tsl_addr": "0x007D37E0",
+    "name": "CreateNewLastUpdateObject",
+    "class": "",
+    "method": "CreateNewLastUpdateObject",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00422AF0",
+    "tsl_addr": "0x00817210",
+    "name": "Init",
+    "class": "",
+    "method": "Init",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00425CA0",
+    "tsl_addr": "0x00828610",
+    "name": "SetViewTransform",
+    "class": "",
+    "method": "SetViewTransform",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005BFA30",
+    "tsl_addr": "0x007E5FD0",
+    "name": "TransferLeadership",
+    "class": "",
+    "method": "TransferLeadership",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00572DC0",
+    "tsl_addr": "0x007D5C70",
+    "name": "WriteGameObjUpdate_PlayerUpdate",
+    "class": "",
+    "method": "WriteGameObjUpdate_PlayerUpdate",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005DF5C0",
+    "tsl_addr": "0x00616850",
+    "name": "SetMouseCursor",
+    "class": "",
+    "method": "SetMouseCursor",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004FB1E0",
+    "tsl_addr": "0x0068E130",
+    "name": "ApplyDeathExperience",
+    "class": "",
+    "method": "ApplyDeathExperience",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00408E30",
+    "tsl_addr": "0x0061DEE0",
+    "name": "ReadRaw",
+    "class": "",
+    "method": "ReadRaw",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0040F990",
+    "tsl_addr": "0x0040CF30",
+    "name": "AddResourceImageContents",
+    "class": "",
+    "method": "AddResourceImageContents",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004EAF70",
+    "tsl_addr": "0x00646610",
+    "name": "Save",
+    "class": "",
+    "method": "Save",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006C82F0",
+    "tsl_addr": "0x00793290",
+    "name": "HandleKeyPress",
+    "class": "",
+    "method": "HandleKeyPress",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0046A3C0",
+    "tsl_addr": "0x008CD210",
+    "name": "InternalParseField",
+    "class": "",
+    "method": "InternalParseField",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0047B560",
+    "tsl_addr": "0x008F49B0",
+    "name": "InitializeTextures",
+    "class": "",
+    "method": "InitializeTextures",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004AE870",
+    "tsl_addr": "0x0064BEB0",
+    "name": "PlayerListChange",
+    "class": "",
+    "method": "PlayerListChange",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004AE6F0",
+    "tsl_addr": "0x0064B840",
+    "name": "LoadGame",
+    "class": "",
+    "method": "LoadGame",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004C8960",
+    "tsl_addr": "0x005DF060",
+    "name": "SaveModuleStart",
+    "class": "",
+    "method": "SaveModuleStart",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004C6BD0",
+    "tsl_addr": "0x00729900",
+    "name": "ComputeInterAreaPath",
+    "class": "",
+    "method": "ComputeInterAreaPath",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005278D0",
+    "tsl_addr": "0x007A8B70",
+    "name": "HandlePlayerToServerJournalMessage",
+    "class": "",
+    "method": "HandlePlayerToServerJournalMessage",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004FAF20",
+    "tsl_addr": "0x00689B60",
+    "name": "UpdateCombatRoundTimer",
+    "class": "",
+    "method": "UpdateCombatRoundTimer",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004F1FD0",
+    "tsl_addr": "0x00662E40",
+    "name": "DoSpotDetection",
+    "class": "",
+    "method": "DoSpotDetection",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004FA390",
+    "tsl_addr": "0x00684F40",
+    "name": "UpdateMineCheck",
+    "class": "",
+    "method": "UpdateMineCheck",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005B5EA0",
+    "tsl_addr": "0x00691380",
+    "name": "SendAttackSummaryFeedback",
+    "class": "",
+    "method": "SendAttackSummaryFeedback",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0051E6A0",
+    "tsl_addr": "0x006D7870",
+    "name": "AIActionDrive",
+    "class": "",
+    "method": "AIActionDrive",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00671C40",
+    "tsl_addr": "0x00626F80",
+    "name": "CSWMiniGame",
+    "class": "",
+    "method": "CSWMiniGame",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0050D6C0",
+    "tsl_addr": "0x00717360",
+    "name": "EventHandler",
+    "class": "",
+    "method": "EventHandler",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0051C360",
+    "tsl_addr": "0x006D1100",
+    "name": "WalkUpdateLocation_QuickWalk_FollowLeader",
+    "class": "",
+    "method": "WalkUpdateLocation_QuickWalk_FollowLeader",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005665C0",
+    "tsl_addr": "0x0058BB10",
+    "name": "Save",
+    "class": "",
+    "method": "Save",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004B5C50",
+    "tsl_addr": "0x007BAA10",
+    "name": "LoadCharacterFinish",
+    "class": "",
+    "method": "LoadCharacterFinish",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00523380",
+    "tsl_addr": "0x006DAB70",
+    "name": "HandlePlayerToServerCharacterSheetMessage",
+    "class": "",
+    "method": "HandlePlayerToServerCharacterSheetMessage",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004CDD30",
+    "tsl_addr": "0x006AED70",
+    "name": "BroadcastSafeProjectile",
+    "class": "",
+    "method": "BroadcastSafeProjectile",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00517410",
+    "tsl_addr": "0x006DB6A0",
+    "name": "AIActionPickUpItem",
+    "class": "",
+    "method": "AIActionPickUpItem",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00513EC0",
+    "tsl_addr": "0x00800EA0",
+    "name": "AIActionUnequipItem",
+    "class": "",
+    "method": "AIActionUnequipItem",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00510C20",
+    "tsl_addr": "0x006C7E70",
+    "name": "AIActionEncounterCreatureDestroySelf",
+    "class": "",
+    "method": "AIActionEncounterCreatureDestroySelf",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005BB590",
+    "tsl_addr": "0x006571B0",
+    "name": "ResolveRangedAttack",
+    "class": "",
+    "method": "ResolveRangedAttack",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005BBBF0",
+    "tsl_addr": "0x006C44B0",
+    "name": "AIActionPhysicalAttacks",
+    "class": "",
+    "method": "AIActionPhysicalAttacks",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0050AAA0",
+    "tsl_addr": "0x004215F0",
+    "name": "PackAreaIntoMessage",
+    "class": "",
+    "method": "PackAreaIntoMessage",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005D2260",
+    "tsl_addr": "0x00909D40",
+    "name": "ReadScriptFile",
+    "class": "",
+    "method": "ReadScriptFile",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005DB1C0",
+    "tsl_addr": "0x0063EA70",
+    "name": "Resume",
+    "class": "",
+    "method": "Resume",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006C9A90",
+    "tsl_addr": "0x0040CF50",
+    "name": "CopyGameToFutureGame",
+    "class": "",
+    "method": "CopyGameToFutureGame",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005DE1A0",
+    "tsl_addr": "0x0064BA30",
+    "name": "ImportFiles",
+    "class": "",
+    "method": "ImportFiles",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005DF4F0",
+    "tsl_addr": "0x00616630",
+    "name": "WriteEventToFile",
+    "class": "",
+    "method": "WriteEventToFile",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005E7760",
+    "tsl_addr": "0x0060B800",
+    "name": "AddAlias",
+    "class": "",
+    "method": "AddAlias",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006CB0E0",
+    "tsl_addr": "0x0040E3C0",
+    "name": "LoadGame",
+    "class": "",
+    "method": "LoadGame",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005EDDD0",
+    "tsl_addr": "0x0040DBC0",
+    "name": "EndPazaakGame",
+    "class": "",
+    "method": "EndPazaakGame",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00602C90",
+    "tsl_addr": "0x00439570",
+    "name": "StallServerCode",
+    "class": "",
+    "method": "StallServerCode",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0061A2D0",
+    "tsl_addr": "0x00411B60",
+    "name": "PlayFootstep",
+    "class": "",
+    "method": "PlayFootstep",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00619950",
+    "tsl_addr": "0x00429B20",
+    "name": "GetCombatFeatsSkills",
+    "class": "",
+    "method": "GetCombatFeatsSkills",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00689410",
+    "tsl_addr": "0x00514B40",
+    "name": "PopulateMenus",
+    "class": "",
+    "method": "PopulateMenus",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00631D80",
+    "tsl_addr": "0x004DC660",
+    "name": "HandleDialogEntry",
+    "class": "",
+    "method": "HandleDialogEntry",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00688610",
+    "tsl_addr": "0x00523720",
+    "name": "OnSoloButtonPressed",
+    "class": "",
+    "method": "OnSoloButtonPressed",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006C5E90",
+    "tsl_addr": "0x005C98A0",
+    "name": "FinishUpgrading",
+    "class": "",
+    "method": "FinishUpgrading",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00636A30",
+    "tsl_addr": "0x0047B6A0",
+    "name": "ProcessPoint",
+    "class": "",
+    "method": "ProcessPoint",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006631C0",
+    "tsl_addr": "0x004BD130",
+    "name": "HandleServerToPlayerSafeProjectile",
+    "class": "",
+    "method": "HandleServerToPlayerSafeProjectile",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00663810",
+    "tsl_addr": "0x004C1E20",
+    "name": "HandleServerToPlayerMapPin",
+    "class": "",
+    "method": "HandleServerToPlayerMapPin",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00605E50",
+    "tsl_addr": "0x00457340",
+    "name": "RestartMiniGame",
+    "class": "",
+    "method": "RestartMiniGame",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00678B20",
+    "tsl_addr": "0x00645270",
+    "name": "CSoundSet",
+    "class": "",
+    "method": "CSoundSet",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00698B10",
+    "tsl_addr": "0x0048A280",
+    "name": "CreateBodyAppearance",
+    "class": "",
+    "method": "CreateBodyAppearance",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006A94E0",
+    "tsl_addr": "0x005B1960",
+    "name": "SetReplies",
+    "class": "",
+    "method": "SetReplies",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006C9D50",
+    "tsl_addr": "0x005D7880",
+    "name": "HandleOkButton",
+    "class": "",
+    "method": "HandleOkButton",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006CB820",
+    "tsl_addr": "0x005D3DF0",
+    "name": "PromptForSaveName",
+    "class": "",
+    "method": "PromptForSaveName",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006ABCE0",
+    "tsl_addr": "0x00594580",
+    "name": "CreatePowerList",
+    "class": "",
+    "method": "CreatePowerList",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00641DC0",
+    "tsl_addr": "0x0046E440",
+    "name": "RestoreCamera",
+    "class": "",
+    "method": "RestoreCamera",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006E0470",
+    "tsl_addr": "0x0056CFF0",
+    "name": "OnDefault",
+    "class": "",
+    "method": "OnDefault",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006EE780",
+    "tsl_addr": "0x005F32A0",
+    "name": "OnSelectAcceptButton",
+    "class": "",
+    "method": "OnSelectAcceptButton",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0070C590",
+    "tsl_addr": "0x0090A3F0",
+    "name": "LoadLip",
+    "class": "",
+    "method": "LoadLip",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0070DD60",
+    "tsl_addr": "0x0090AD60",
+    "name": "CAuroraLayeredTexture",
+    "class": "",
+    "method": "CAuroraLayeredTexture",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0070EFA0",
+    "tsl_addr": "0x00495AA0",
+    "name": "CAuroraTexture",
+    "class": "",
+    "method": "CAuroraTexture",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0070F270",
+    "tsl_addr": "0x0090B160",
+    "name": "CAuroraVisibility",
+    "class": "",
+    "method": "CAuroraVisibility",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0070F980",
+    "tsl_addr": "0x0090B5A0",
+    "name": "CAuroraProcessedTexture",
+    "class": "",
+    "method": "CAuroraProcessedTexture",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0070FD10",
+    "tsl_addr": "0x0090B9A0",
+    "name": "CAuroraTXI",
+    "class": "",
+    "method": "CAuroraTXI",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0070FFE0",
+    "tsl_addr": "0x00639EC0",
+    "name": "CAuroraModelX",
+    "class": "",
+    "method": "CAuroraModelX",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00710300",
+    "tsl_addr": "0x00907670",
+    "name": "CAuroraModel",
+    "class": "",
+    "method": "CAuroraModel",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006DA9B0",
+    "tsl_addr": "0x0042B6E0",
+    "name": "AIUpdate",
+    "class": "",
+    "method": "AIUpdate",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005D49B0",
+    "tsl_addr": "0x00623130",
+    "name": "~CVirtualMachineInternal",
+    "class": "",
+    "method": "~CVirtualMachineInternal",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004CB5A0",
+    "tsl_addr": "0x0074D760",
+    "name": "StopSoundPlayingInDialog",
+    "class": "",
+    "method": "StopSoundPlayingInDialog",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004E0750",
+    "tsl_addr": "0x0073A040",
+    "name": "OnApplyHeal",
+    "class": "",
+    "method": "OnApplyHeal",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005014A0",
+    "tsl_addr": "0x0069A450",
+    "name": "GetFilteredEffectList",
+    "class": "",
+    "method": "GetFilteredEffectList",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00593C50",
+    "tsl_addr": "0x007A68D0",
+    "name": "SetActive",
+    "class": "",
+    "method": "SetActive",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005B6C40",
+    "tsl_addr": "0x00658540",
+    "name": "ResolveRangedAnimations",
+    "class": "",
+    "method": "ResolveRangedAnimations",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0070CF30",
+    "tsl_addr": "0x00906C20",
+    "name": "LoadTexturePack",
+    "class": "",
+    "method": "LoadTexturePack",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004B8300",
+    "tsl_addr": "0x0062CC70",
+    "name": "DoPCAutosave",
+    "class": "",
+    "method": "DoPCAutosave",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005EDA80",
+    "tsl_addr": "0x0040D400",
+    "name": "ShowLoadScreen",
+    "class": "",
+    "method": "ShowLoadScreen",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0061AD60",
+    "tsl_addr": "0x004529A0",
+    "name": "AIUpdate",
+    "class": "",
+    "method": "AIUpdate",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006A7EF0",
+    "tsl_addr": "0x005B0B30",
+    "name": "Reset",
+    "class": "",
+    "method": "Reset",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006CD530",
+    "tsl_addr": "0x00588120",
+    "name": "~CSWGuiSkillFlowChart",
+    "class": "",
+    "method": "~CSWGuiSkillFlowChart",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0061D750",
+    "tsl_addr": "0x00469000",
+    "name": "SetFrameBuffer",
+    "class": "",
+    "method": "SetFrameBuffer",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006E06D0",
+    "tsl_addr": "0x0056D820",
+    "name": "OnAnisotropyRight",
+    "class": "",
+    "method": "OnAnisotropyRight",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005132E0",
+    "tsl_addr": "0x006D9AF0",
+    "name": "AIActionForceFollowObject",
+    "class": "",
+    "method": "AIActionForceFollowObject",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005D63F0",
+    "tsl_addr": "0x0063A950",
+    "name": "ReInitialize",
+    "class": "",
+    "method": "ReInitialize",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0040CC50",
+    "tsl_addr": "0x0090F820",
+    "name": "Draw",
+    "class": "",
+    "method": "Draw",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006DD100",
+    "tsl_addr": "0x00918C90",
+    "name": "PopulateMovies",
+    "class": "",
+    "method": "PopulateMovies",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0041B670",
+    "tsl_addr": "0x0091EB00",
+    "name": "HandleMouseCapturedMovement",
+    "class": "",
+    "method": "HandleMouseCapturedMovement",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004B2520",
+    "tsl_addr": "0x007C0210",
+    "name": "HasEnoughDiskSpaceForSaveGame",
+    "class": "",
+    "method": "HasEnoughDiskSpaceForSaveGame",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004AEAA0",
+    "tsl_addr": "0x00699BA0",
+    "name": "UpDatePlayerPosition",
+    "class": "",
+    "method": "UpDatePlayerPosition",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004AEBB0",
+    "tsl_addr": "0x0064C940",
+    "name": "ShrinkLineByCreatures",
+    "class": "",
+    "method": "ShrinkLineByCreatures",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0057D9D0",
+    "tsl_addr": "0x006BAE10",
+    "name": "AIActionUnlockObject",
+    "class": "",
+    "method": "AIActionUnlockObject",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005DF490",
+    "tsl_addr": "0x00616560",
+    "name": "SetEventRepeatable",
+    "class": "",
+    "method": "SetEventRepeatable",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005E11D0",
+    "tsl_addr": "0x00612830",
+    "name": "ScaleEvent",
+    "class": "",
+    "method": "ScaleEvent",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0062F780",
+    "tsl_addr": "0x004E08B0",
+    "name": "UpdateControllerPauseState",
+    "class": "",
+    "method": "UpdateControllerPauseState",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00647030",
+    "tsl_addr": "0x0047F580",
+    "name": "NVThunkSWCItmSWCObject_SetPosition",
+    "class": "",
+    "method": "NVThunkSWCItmSWCObject_SetPosition",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006A5000",
+    "tsl_addr": "0x00503A70",
+    "name": "ReAttachVisualEffect",
+    "class": "",
+    "method": "ReAttachVisualEffect",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006B9470",
+    "tsl_addr": "0x005A0180",
+    "name": "OnEnterSlot",
+    "class": "",
+    "method": "OnEnterSlot",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006EFF60",
+    "tsl_addr": "0x005F55F0",
+    "name": "PortraitCreationCompleted",
+    "class": "",
+    "method": "PortraitCreationCompleted",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004D20D0",
+    "tsl_addr": "0x007718B0",
+    "name": "AddDamage",
+    "class": "",
+    "method": "AddDamage",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0066E6B0",
+    "tsl_addr": "0x00542200",
+    "name": "DoObstacleHitCheck",
+    "class": "",
+    "method": "DoObstacleHitCheck",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0067EDE0",
+    "tsl_addr": "0x00555AB0",
+    "name": "HandlePlayHandCard",
+    "class": "",
+    "method": "HandlePlayHandCard",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006ED480",
+    "tsl_addr": "0x005F0260",
+    "name": "SetCaptureEvent",
+    "class": "",
+    "method": "SetCaptureEvent",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006F3CF0",
+    "tsl_addr": "0x005FB430",
+    "name": "OnDoubleClick",
+    "class": "",
+    "method": "OnDoubleClick",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006AE5F0",
+    "tsl_addr": "0x005939B0",
+    "name": "HandleInputEvent",
+    "class": "",
+    "method": "HandleInputEvent",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0066EDA0",
+    "tsl_addr": "0x00543730",
+    "name": "DoFollowerHitCheck",
+    "class": "",
+    "method": "DoFollowerHitCheck",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0055CFA0",
+    "tsl_addr": "0x00666F70",
+    "name": "SaveContainerItems",
+    "class": "",
+    "method": "SaveContainerItems",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00617330",
+    "tsl_addr": "0x0041AEE0",
+    "name": "UpdateAttackData",
+    "class": "",
+    "method": "UpdateAttackData",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00692B00",
+    "tsl_addr": "0x0040D7D0",
+    "name": "ReturnToEbonHawk",
+    "class": "",
+    "method": "ReturnToEbonHawk",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005F7330",
+    "tsl_addr": "0x0075E400",
+    "name": "UpdateDeathSequence",
+    "class": "",
+    "method": "UpdateDeathSequence",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00411570",
+    "tsl_addr": "0x00623310",
+    "name": "~CResGFF",
+    "class": "",
+    "method": "~CResGFF",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0045E180",
+    "tsl_addr": "0x008D7B80",
+    "name": "ImageReadS3TCHeader",
+    "class": "",
+    "method": "ImageReadS3TCHeader",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x007079E4",
+    "tsl_addr": "0x0093357B",
+    "name": "_x87FloatMathInternal_007079e4",
+    "class": "",
+    "method": "_x87FloatMathInternal_007079e4",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006E6710",
+    "tsl_addr": "0x005E6020",
+    "name": "OnEnterDiff",
+    "class": "",
+    "method": "OnEnterDiff",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006C4880",
+    "tsl_addr": "0x005BCF40",
+    "name": "OnControlEntered",
+    "class": "",
+    "method": "OnControlEntered",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006C5370",
+    "tsl_addr": "0x005CA2B0",
+    "name": "OnControlEntered",
+    "class": "",
+    "method": "OnControlEntered",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0064AFC0",
+    "tsl_addr": "0x0048E950",
+    "name": "CSWCCreatureStats",
+    "class": "",
+    "method": "CSWCCreatureStats",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005A4D90",
+    "tsl_addr": "0x006E5580",
+    "name": "GetUnarmedDamageRoll",
+    "class": "",
+    "method": "GetUnarmedDamageRoll",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005EDBB0",
+    "tsl_addr": "0x0040D720",
+    "name": "BarkString",
+    "class": "",
+    "method": "BarkString",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005ED9A0",
+    "tsl_addr": "0x0043A890",
+    "name": "AddObjectModelDirectlyToIgnoreList",
+    "class": "",
+    "method": "AddObjectModelDirectlyToIgnoreList",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0063BAF0",
+    "tsl_addr": "0x004E7F70",
+    "name": "CSWCameraFreeLook",
+    "class": "",
+    "method": "CSWCameraFreeLook",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0044B900",
+    "tsl_addr": "0x00855DF0",
+    "name": "AurControlPart",
+    "class": "",
+    "method": "AurControlPart",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004FB4B0",
+    "tsl_addr": "0x00690AD0",
+    "name": "DoListenDetection",
+    "class": "",
+    "method": "DoListenDetection",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004BDB00",
+    "tsl_addr": "0x0070F7E0",
+    "name": "PathPointDFSGenerateSuccessors",
+    "class": "",
+    "method": "PathPointDFSGenerateSuccessors",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005D0160",
+    "tsl_addr": "0x00649370",
+    "name": "FindEntryAndExit",
+    "class": "",
+    "method": "FindEntryAndExit",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004BC0E0",
+    "tsl_addr": "0x00710260",
+    "name": "SetHitInfoForCreature",
+    "class": "",
+    "method": "SetHitInfoForCreature",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00641CD0",
+    "tsl_addr": "0x0044ED20",
+    "name": "~CSWCModule",
+    "class": "",
+    "method": "~CSWCModule",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0064A4C0",
+    "tsl_addr": "0x00492C40",
+    "name": "CanChooseFeat",
+    "class": "",
+    "method": "CanChooseFeat",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006B7E30",
+    "tsl_addr": "0x005A4040",
+    "name": "CloseDescription",
+    "class": "",
+    "method": "CloseDescription",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004C8B90",
+    "tsl_addr": "0x0072F300",
+    "name": "SaveModuleIFOFinish",
+    "class": "",
+    "method": "SaveModuleIFOFinish",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004B11C0",
+    "tsl_addr": "0x0064DA00",
+    "name": "ClearEventQueue",
+    "class": "",
+    "method": "ClearEventQueue",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005B8050",
+    "tsl_addr": "0x00658E90",
+    "name": "SignalDamage",
+    "class": "",
+    "method": "SignalDamage",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005078D0",
+    "tsl_addr": "0x00720170",
+    "name": "SaveTriggers",
+    "class": "",
+    "method": "SaveTriggers",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005DB980",
+    "tsl_addr": "0x00638F00",
+    "name": "SetFixedVariance",
+    "class": "",
+    "method": "SetFixedVariance",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00678820",
+    "tsl_addr": "0x00495BC0",
+    "name": "GetStrres",
+    "class": "",
+    "method": "GetStrres",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006222F0",
+    "tsl_addr": "0x0042A5D0",
+    "name": "HandleMouseOver",
+    "class": "",
+    "method": "HandleMouseOver",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006A69E0",
+    "tsl_addr": "0x00502820",
+    "name": "UpdateHardCodedVisualEffect",
+    "class": "",
+    "method": "UpdateHardCodedVisualEffect",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005D1C40",
+    "tsl_addr": "0x00641870",
+    "name": "AssignLocationToLocation",
+    "class": "",
+    "method": "AssignLocationToLocation",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00693BC0",
+    "tsl_addr": "0x007AF440",
+    "name": "HandleInputEvent",
+    "class": "",
+    "method": "HandleInputEvent",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005F4C60",
+    "tsl_addr": "0x0044D730",
+    "name": "StartCreditSequence",
+    "class": "",
+    "method": "StartCreditSequence",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006732F0",
+    "tsl_addr": "0x0055D9C0",
+    "name": "DoHitCheck",
+    "class": "",
+    "method": "DoHitCheck",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00628670",
+    "tsl_addr": "0x004D00E0",
+    "name": "SetConversationType",
+    "class": "",
+    "method": "SetConversationType",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005D4270",
+    "tsl_addr": "0x00645AF0",
+    "name": "RunScriptFile",
+    "class": "",
+    "method": "RunScriptFile",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006F4BF0",
+    "tsl_addr": "0x005FE500",
+    "name": "OnEnterPointsButton",
+    "class": "",
+    "method": "OnEnterPointsButton",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006491A0",
+    "tsl_addr": "0x00493400",
+    "name": "AddDefaultPackageSkills",
+    "class": "",
+    "method": "AddDefaultPackageSkills",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004640F0",
+    "tsl_addr": "0x008CE5B0",
+    "name": "BinaryFindModel",
+    "class": "",
+    "method": "BinaryFindModel",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004C84A0",
+    "tsl_addr": "0x00469CD0",
+    "name": "CSWSModule",
+    "class": "",
+    "method": "CSWSModule",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006EE480",
+    "tsl_addr": "0x005F43C0",
+    "name": "OnSelectSkillsButton",
+    "class": "",
+    "method": "OnSelectSkillsButton",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005B6210",
+    "tsl_addr": "0x006BBB10",
+    "name": "AIActionCombat",
+    "class": "",
+    "method": "AIActionCombat",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0060A8F0",
+    "tsl_addr": "0x0079C250",
+    "name": "setcharisma",
+    "class": "",
+    "method": "setcharisma",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00578520",
+    "tsl_addr": "0x007D35E0",
+    "name": "SendServerToPlayerGameObjUpdate",
+    "class": "",
+    "method": "SendServerToPlayerGameObjUpdate",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00510FD0",
+    "tsl_addr": "0x006C8E60",
+    "name": "AIActionEquipItem",
+    "class": "",
+    "method": "AIActionEquipItem",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0045D930",
+    "tsl_addr": "0x008C2C40",
+    "name": "NewCAurCamera",
+    "class": "",
+    "method": "NewCAurCamera",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005E3E80",
+    "tsl_addr": "0x00617350",
+    "name": "CExoRawInputInternal",
+    "class": "",
+    "method": "CExoRawInputInternal",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00477B60",
+    "tsl_addr": "0x008972E0",
+    "name": "Draw",
+    "class": "",
+    "method": "Draw",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0044D4F0",
+    "tsl_addr": "0x00866BD0",
+    "name": "AurPrintf",
+    "class": "",
+    "method": "AurPrintf",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00487570",
+    "tsl_addr": "0x00878E50",
+    "name": "ExecuteSkinTransforms",
+    "class": "",
+    "method": "ExecuteSkinTransforms",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00458E70",
+    "tsl_addr": "0x0085F600",
+    "name": "NewCAurScene",
+    "class": "",
+    "method": "NewCAurScene",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006FB7B2",
+    "tsl_addr": "0x0093CAC9",
+    "name": "_free",
+    "class": "",
+    "method": "_free",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x007000AD",
+    "tsl_addr": "0x0092A98C",
+    "name": "_vfprintf",
+    "class": "",
+    "method": "_vfprintf",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006FD95D",
+    "tsl_addr": "0x0092820C",
+    "name": "__time",
+    "class": "",
+    "method": "__time",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006FACA4",
+    "tsl_addr": "0x0092416C",
+    "name": "_internal_fclose",
+    "class": "",
+    "method": "_internal_fclose",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006FD65B",
+    "tsl_addr": "0x00922685",
+    "name": "__fflush_lk",
+    "class": "",
+    "method": "__fflush_lk",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x007092C8",
+    "tsl_addr": "0x0093D1A8",
+    "name": "__controlfp",
+    "class": "",
+    "method": "__controlfp",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00707D4C",
+    "tsl_addr": "0x009338B3",
+    "name": "_x87FloatMathInternal_00707d4c",
+    "class": "",
+    "method": "_x87FloatMathInternal_00707d4c",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006FAD9D",
+    "tsl_addr": "0x0092471B",
+    "name": "fopen",
+    "class": "",
+    "method": "fopen",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x007062BC",
+    "tsl_addr": "0x00934EAC",
+    "name": "time_locale_handler",
+    "class": "",
+    "method": "time_locale_handler",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x007089F8",
+    "tsl_addr": "0x009220F6",
+    "name": "FID_conflict:_ungetc",
+    "class": "",
+    "method": "FID_conflict:_ungetc",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00709631",
+    "tsl_addr": "0x0093ED44",
+    "name": "___getenv_lk",
+    "class": "",
+    "method": "___getenv_lk",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006FAE75",
+    "tsl_addr": "0x0092445F",
+    "name": "staticInitFloatingPointSystem",
+    "class": "",
+    "method": "staticInitFloatingPointSystem",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006FEF50",
+    "tsl_addr": "0x0092C7B5",
+    "name": "__tls_init",
+    "class": "",
+    "method": "__tls_init",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006FA8EB",
+    "tsl_addr": "0x009283CD",
+    "name": "__fread_lk",
+    "class": "",
+    "method": "__fread_lk",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0045A2F0",
+    "tsl_addr": "0x008D1840",
+    "name": "WrapStrings",
+    "class": "",
+    "method": "WrapStrings",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00700858",
+    "tsl_addr": "0x0092F8FE",
+    "name": "internal_sscanf",
+    "class": "",
+    "method": "internal_sscanf",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006FEE5F",
+    "tsl_addr": "0x00928020",
+    "name": "__handle_divide_by_0",
+    "class": "",
+    "method": "__handle_divide_by_0",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006FCFF0",
+    "tsl_addr": "0x00932F00",
+    "name": "fasin",
+    "class": "",
+    "method": "fasin",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006FCBAF",
+    "tsl_addr": "0x00921D48",
+    "name": "~type_info",
+    "class": "",
+    "method": "~type_info",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00487020",
+    "tsl_addr": "0x004DCC30",
+    "name": "LookAtAnimation",
+    "class": "",
+    "method": "LookAtAnimation",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005D9400",
+    "tsl_addr": "0x00607660",
+    "name": "~CExoSoundInternal",
+    "class": "",
+    "method": "~CExoSoundInternal",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0059FF50",
+    "tsl_addr": "0x00752480",
+    "name": "SetDialogDelay",
+    "class": "",
+    "method": "SetDialogDelay",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00703D63",
+    "tsl_addr": "0x00915130",
+    "name": "__initTimeZone",
+    "class": "",
+    "method": "__initTimeZone",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006191F0",
+    "tsl_addr": "0x004264B0",
+    "name": "GetHostileForcePowers",
+    "class": "",
+    "method": "GetHostileForcePowers",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0064A870",
+    "tsl_addr": "0x00494150",
+    "name": "GetMenuInfo",
+    "class": "",
+    "method": "GetMenuInfo",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0056B140",
+    "tsl_addr": "0x007E3CF0",
+    "name": "SendServerToPlayerCharacterDownloadFail",
+    "class": "",
+    "method": "SendServerToPlayerCharacterDownloadFail",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00589240",
+    "tsl_addr": "0x00768760",
+    "name": "GetNearestActionPoint",
+    "class": "",
+    "method": "GetNearestActionPoint",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006ED930",
+    "tsl_addr": "0x005EFAF0",
+    "name": "FillListWithEvents",
+    "class": "",
+    "method": "FillListWithEvents",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00615960",
+    "tsl_addr": "0x00422FA0",
+    "name": "DriveAnimationUpdate",
+    "class": "",
+    "method": "DriveAnimationUpdate",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006B8410",
+    "tsl_addr": "0x005A6B10",
+    "name": "SetupGiveMode",
+    "class": "",
+    "method": "SetupGiveMode",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005E6500",
+    "tsl_addr": "0x00607D90",
+    "name": "CExoBase",
+    "class": "",
+    "method": "CExoBase",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x007090FB",
+    "tsl_addr": "0x0093D026",
+    "name": "_double_decompose",
+    "class": "",
+    "method": "_double_decompose",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004EDB00",
+    "tsl_addr": "0x00698E30",
+    "name": "GetJournal",
+    "class": "",
+    "method": "GetJournal",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00688100",
+    "tsl_addr": "0x005229B0",
+    "name": "UpdateAndDrawFogOfWar",
+    "class": "",
+    "method": "UpdateAndDrawFogOfWar",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00480490",
+    "tsl_addr": "0x008EB9E0",
+    "name": "FindAllStrips",
+    "class": "",
+    "method": "FindAllStrips",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0052AD10",
+    "tsl_addr": "0x00653500",
+    "name": "Save",
+    "class": "",
+    "method": "Save",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004AE6E0",
+    "tsl_addr": "0x0064B810",
+    "name": "SaveGame",
+    "class": "",
+    "method": "SaveGame",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0067C3F0",
+    "tsl_addr": "0x0053CF90",
+    "name": "OnLoadGamePicked",
+    "class": "",
+    "method": "OnLoadGamePicked",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00641540",
+    "tsl_addr": "0x0046E1D0",
+    "name": "SetCombatCamera",
+    "class": "",
+    "method": "SetCombatCamera",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006FBCE2",
+    "tsl_addr": "0x0093832A",
+    "name": "___wctime",
+    "class": "",
+    "method": "___wctime",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0063AD60",
+    "tsl_addr": "0x004E32C0",
+    "name": "CSWCameraOnAStick",
+    "class": "",
+    "method": "CSWCameraOnAStick",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0044EC60",
+    "tsl_addr": "0x0086A6D0",
+    "name": "~CAurInternalGL",
+    "class": "",
+    "method": "~CAurInternalGL",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0069B870",
+    "tsl_addr": "0x004F7490",
+    "name": "EnableBumpedOutShell",
+    "class": "",
+    "method": "EnableBumpedOutShell",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00699C10",
+    "tsl_addr": "0x004F49F0",
+    "name": "GetBoundingRect",
+    "class": "",
+    "method": "GetBoundingRect",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0069B570",
+    "tsl_addr": "0x004F6FF0",
+    "name": "RestoreTexture",
+    "class": "",
+    "method": "RestoreTexture",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0069B4F0",
+    "tsl_addr": "0x004F6F40",
+    "name": "RestoreTexture",
+    "class": "",
+    "method": "RestoreTexture",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00699640",
+    "tsl_addr": "0x004F46E0",
+    "name": "SetAnimationOnSubObject",
+    "class": "",
+    "method": "SetAnimationOnSubObject",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00646930",
+    "tsl_addr": "0x0047F1D0",
+    "name": "NVThunkSWCItmSWCObject_SetArea",
+    "class": "",
+    "method": "NVThunkSWCItmSWCObject_SetArea",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0067D0D0",
+    "tsl_addr": "0x0054CFA0",
+    "name": "HandleLMouseUp",
+    "class": "",
+    "method": "HandleLMouseUp",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0041CE20",
+    "tsl_addr": "0x0091B950",
+    "name": "HandleInputEvent",
+    "class": "",
+    "method": "HandleInputEvent",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0067CC90",
+    "tsl_addr": "0x0054C370",
+    "name": "SetEnabled",
+    "class": "",
+    "method": "SetEnabled",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006E1300",
+    "tsl_addr": "0x00569020",
+    "name": "PopulateOptionsListbox",
+    "class": "",
+    "method": "PopulateOptionsListbox",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0067CD00",
+    "tsl_addr": "0x0054C670",
+    "name": "Load",
+    "class": "",
+    "method": "Load",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004F3830",
+    "tsl_addr": "0x00697F80",
+    "name": "DoDamage",
+    "class": "",
+    "method": "DoDamage",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00443820",
+    "tsl_addr": "0x00853C00",
+    "name": "AttachToObject",
+    "class": "",
+    "method": "AttachToObject",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004012C0",
+    "tsl_addr": "0x00401930",
+    "name": "~CAppManager",
+    "class": "",
+    "method": "~CAppManager",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005E0E20",
+    "tsl_addr": "0x006121C0",
+    "name": "CreateNewEvent",
+    "class": "",
+    "method": "CreateNewEvent",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0070C6C0",
+    "tsl_addr": "0x00633B80",
+    "name": "~CResLIP",
+    "class": "",
+    "method": "~CResLIP",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00712C90",
+    "tsl_addr": "0x009439A0",
+    "name": "~CResTGA",
+    "class": "",
+    "method": "~CResTGA",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00713170",
+    "tsl_addr": "0x009443B0",
+    "name": "~CResTPC",
+    "class": "",
+    "method": "~CResTPC",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00710D90",
+    "tsl_addr": "0x0090C500",
+    "name": "~CResVIS",
+    "class": "",
+    "method": "~CResVIS",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006D9890",
+    "tsl_addr": "0x005821D0",
+    "name": "~CSWCAreaOfEffectObject",
+    "class": "",
+    "method": "~CSWCAreaOfEffectObject",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x007297E0",
+    "tsl_addr": "0x00951E50",
+    "name": "Unwind@007297e0",
+    "class": "",
+    "method": "Unwind@007297e0",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006A8DC0",
+    "tsl_addr": "0x005B06C0",
+    "name": "~CSWGuiDialogCinematic",
+    "class": "",
+    "method": "~CSWGuiDialogCinematic",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006A9750",
+    "tsl_addr": "0x005B2230",
+    "name": "~CSWGuiDialogComputerCamera",
+    "class": "",
+    "method": "~CSWGuiDialogComputerCamera",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0040BAD0",
+    "tsl_addr": "0x00912510",
+    "name": "CSWGuiManager",
+    "class": "",
+    "method": "CSWGuiManager",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00719C20",
+    "tsl_addr": "0x00971730",
+    "name": "Unwind@00719c20",
+    "class": "",
+    "method": "Unwind@00719c20",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004AF390",
+    "tsl_addr": "0x0064CEB0",
+    "name": "~CSWSEffectListHandler",
+    "class": "",
+    "method": "~CSWSEffectListHandler",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0041F330",
+    "tsl_addr": "0x00817070",
+    "name": "~PerlinTextureController",
+    "class": "",
+    "method": "~PerlinTextureController",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00442D70",
+    "tsl_addr": "0x00852370",
+    "name": "PartInitMaterial",
+    "class": "",
+    "method": "PartInitMaterial",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0071CC80",
+    "tsl_addr": "0x00977C20",
+    "name": "Unwind@0071cc80",
+    "class": "",
+    "method": "Unwind@0071cc80",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x007089A3",
+    "tsl_addr": "0x0092496E",
+    "name": "__sopen",
+    "class": "",
+    "method": "__sopen",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006FC24D",
+    "tsl_addr": "0x00927220",
+    "name": "_pow_internal",
+    "class": "",
+    "method": "_pow_internal",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x004480C0",
+    "tsl_addr": "0x00847C20",
+    "name": "InternalCreateInstance",
+    "class": "",
+    "method": "InternalCreateInstance",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0049E630",
+    "tsl_addr": "0x0086F770",
+    "name": "AurPartTriggerCreate",
+    "class": "",
+    "method": "AurPartTriggerCreate",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00451DC0",
+    "tsl_addr": "0x00860700",
+    "name": "ComputePartBBox",
+    "class": "",
+    "method": "ComputePartBBox",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x006A9BB0",
+    "tsl_addr": "0x005B2D30",
+    "name": "Pause",
+    "class": "",
+    "method": "Pause",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005D5A20",
+    "tsl_addr": "0x00639F20",
+    "name": "Stop",
+    "class": "",
+    "method": "Stop",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005F7500",
+    "tsl_addr": "0x00449B50",
+    "name": "UpdateRumble",
+    "class": "",
+    "method": "UpdateRumble",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005B6980",
+    "tsl_addr": "0x006567A0",
+    "name": "CreateNewAttackActions",
+    "class": "",
+    "method": "CreateNewAttackActions",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005ED340",
+    "tsl_addr": "0x0040C570",
+    "name": "JournalUpdated",
+    "class": "",
+    "method": "JournalUpdated",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005ED670",
+    "tsl_addr": "0x0040CBB0",
+    "name": "SendSaveGameRequest",
+    "class": "",
+    "method": "SendSaveGameRequest",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x005ED680",
+    "tsl_addr": "0x0040CBE0",
+    "name": "SendLoadGameRequest",
+    "class": "",
+    "method": "SendLoadGameRequest",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x00563A80",
+    "tsl_addr": "0x00703E20",
+    "name": "SetPartyFollowState",
+    "class": "",
+    "method": "SetPartyFollowState",
+    "via_k1": "single_caller_match"
+  },
+  {
+    "k1_addr": "0x0049B680",
+    "tsl_addr": "0x008A4E40",
+    "name": "RenderFunc",
+    "class": "",
+    "method": "RenderFunc",
+    "via_k1": "single_caller_match"
+  }
+]

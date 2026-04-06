@@ -1,0 +1,50 @@
+[
+  {
+    "k1_addr": "0x007089E8",
+    "tsl_addr": "0x00924A85",
+    "name": "__unlock_fhandle",
+    "class": "",
+    "method": "__unlock_fhandle",
+    "via_k1": "opcode_fp:hash=9bb9d037"
+  },
+  {
+    "k1_addr": "0x006FC412",
+    "tsl_addr": "0x00927482",
+    "name": "_test_whether_TOS_is_int",
+    "class": "",
+    "method": "_test_whether_TOS_is_int",
+    "via_k1": "opcode_fp:hash=dc54a213"
+  },
+  {
+    "k1_addr": "0x00704200",
+    "tsl_addr": "0x00931CA0",
+    "name": "exp2",
+    "class": "",
+    "method": "exp2",
+    "via_k1": "opcode_fp:hash=08212dd8"
+  },
+  {
+    "k1_addr": "0x00704215",
+    "tsl_addr": "0x00931CB5",
+    "name": "__load_CW",
+    "class": "",
+    "method": "__load_CW",
+    "via_k1": "opcode_fp:hash=1ace7891"
+  },
+  {
+    "k1_addr": "0x0070422C",
+    "tsl_addr": "0x00931CCC",
+    "name": "__convertTOStoQNaN",
+    "class": "",
+    "method": "__convertTOStoQNaN",
+    "via_k1": "opcode_fp:hash=6aaf120f"
+  },
+  {
+    "k1_addr": "0x00704288",
+    "tsl_addr": "0x00931D28",
+    "name": "_inverseTrigInternal_checkNanInf",
+    "class": "",
+    "method": "_inverseTrigInternal_checkNanInf",
+    "via_k1": "opcode_fp:hash=97dc1d89"
+  }
+]
