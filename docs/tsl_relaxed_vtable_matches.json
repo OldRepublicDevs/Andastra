@@ -1,0 +1,66 @@
+[
+  {
+    "k1_addr": "0x006F2F30",
+    "tsl_addr": "0x005F9C20",
+    "name": "OnPanelAdded",
+    "class": "CSWGuiFeatsCharGen",
+    "method": "OnPanelAdded",
+    "via_k1": "vtable_relaxed:CSWGuiFeatsCharGen:slot18(off+0)"
+  },
+  {
+    "k1_addr": "0x006B3ED0",
+    "tsl_addr": "0x0059C6D0",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiInGameInventory",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_relaxed:CSWGuiInGameInventory:slot15(off+0)"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x00540290",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiLoadScreen",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_relaxed:CSWGuiLoadScreen:slot19(off+0)"
+  },
+  {
+    "k1_addr": "0x00409E60",
+    "tsl_addr": "0x00518020",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiMainInterface",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_relaxed:CSWGuiMainInterface:slot15(off+0)"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x00524EA0",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiMainInterface",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_relaxed:CSWGuiMainInterface:slot19(off+0)"
+  },
+  {
+    "k1_addr": "0x006E6180",
+    "tsl_addr": "0x005725E0",
+    "name": "HandleInputEvent",
+    "class": "CSWGuiOptionsMouse",
+    "method": "HandleInputEvent",
+    "via_k1": "vtable_relaxed:CSWGuiOptionsMouse:slot15(off+0)"
+  },
+  {
+    "k1_addr": "0x0040C170",
+    "tsl_addr": "0x0058A7C0",
+    "name": "OnPanelRemoved",
+    "class": "CSWGuiSkillInfoBox",
+    "method": "OnPanelRemoved",
+    "via_k1": "vtable_relaxed:CSWGuiSkillInfoBox:slot19(off+0)"
+  },
+  {
+    "k1_addr": "0x0040B760",
+    "tsl_addr": "0x005AC1C0",
+    "name": "Draw",
+    "class": "CSWGuiStore",
+    "method": "Draw",
+    "via_k1": "vtable_relaxed:CSWGuiStore:slot13(off+0)"
+  }
+]
