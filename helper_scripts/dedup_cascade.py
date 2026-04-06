@@ -48,7 +48,7 @@ matches = cas["matches"]
 print("Starting cascade size:", len(matches))
 
 # Pass 1: resolve TSL duplicates (keep highest via_score)
-tsl_best = {}
+tsl_best: dict[str, dict] = {}
 for m in matches:
     tsl = m["tsl_addr"]
     score = via_score(m)
@@ -70,7 +70,7 @@ if tsl_removed:
 deduped_tsl = list(tsl_best.values())
 
 # Pass 2: resolve K1 duplicates (keep highest via_score)
-k1_best = {}
+k1_best: dict[str, dict] = {}
 for m in deduped_tsl:
     k1 = m["k1_addr"]
     score = via_score(m)

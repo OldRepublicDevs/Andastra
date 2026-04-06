@@ -83,7 +83,7 @@ def run_wave(k1_cg, tsl_cg, k1_to_tsl, matched_k1, matched_tsl, max_callees):
     for fn in tsl_cg["functions"]:
         if not fn["n"].startswith("FUN_") or fn["a"] in matched_tsl:
             continue
-        callees_raw = fn.get("callees", [])
+        callees_raw = fn.get("c", [])
         callees = build_callee_set(callees_raw)
         if not callees or len(callees) > max_callees:
             continue

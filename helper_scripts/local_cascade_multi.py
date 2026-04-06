@@ -95,7 +95,7 @@ def wave_callee_set(k1_cg, tsl_cg, k1_to_tsl, matched_k1, matched_tsl, max_calle
     for fn in tsl_cg["functions"]:
         if not fn["n"].startswith("FUN_") or fn["a"] in matched_tsl:
             continue
-        callees = build_callee_set_fn(fn.get("callees", []))
+        callees = build_callee_set_fn(fn.get("c", []))
         if not callees or len(callees) > max_callees:
             continue
         tsl_set_to_funcs[callees].append(fn["a"])
@@ -129,7 +129,7 @@ def wave_single_caller(k1_cg, tsl_cg, k1_to_tsl, matched_k1, matched_tsl):
 
     tsl_caller_of = defaultdict(set)
     for fn in tsl_cg["functions"]:
-        for c in fn.get("callees", []):
+        for c in fn.get("c", []):
             ca = c if isinstance(c, int) else c["a"]
             tsl_caller_of[ca].add(fn["a"])
 
@@ -187,7 +187,7 @@ def wave_callee_size(k1_cg, tsl_cg, k1_to_tsl, matched_k1, matched_tsl, k1_sizes
     for fn in tsl_cg["functions"]:
         if not fn["n"].startswith("FUN_") or fn["a"] in matched_tsl:
             continue
-        callees = build_callee_set_fn(fn.get("callees", []))
+        callees = build_callee_set_fn(fn.get("c", []))
         if not callees or len(callees) > max_callees:
             continue
         tsl_set_to_funcs[callees].append((fn["a"], tsl_sizes.get(fn["a"], 0)))
