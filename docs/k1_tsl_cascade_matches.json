@@ -82386,6 +82386,273 @@
       "method": "~CSWGuiMainCharGen",
       "n_anchors": 2,
       "via": "projected_callee_intersection"
+    },
+    {
+      "k1_addr": "0x560b30",
+      "tsl_addr": "0x759d50",
+      "name": "CSWSPlayerCharSheetGUI::CSWSPlayerCharSheetGUI",
+      "class": "CSWSPlayerCharSheetGUI",
+      "method": "CSWSPlayerCharSheetGUI",
+      "named_callee_count": 2,
+      "named_callees": [
+        "CSWCreatureStatsUpdate",
+        "operator_new"
+      ],
+      "via": "callee_name_fingerprint"
+    },
+    {
+      "k1_addr": "0x0041CAD0",
+      "tsl_addr": "0x0056AB90",
+      "name": "~CSWGuiButtonToggle",
+      "class": "",
+      "method": "~CSWGuiButtonToggle",
+      "via_k1": "callee_set_wrap|size=2"
+    },
+    {
+      "k1_addr": "0x00456AF0",
+      "tsl_addr": "0x00857AE0",
+      "name": "Reset",
+      "class": "",
+      "method": "Reset",
+      "via_k1": "callee_set_wrap|size=1"
+    },
+    {
+      "k1_addr": "0x005814D0",
+      "tsl_addr": "0x00713170",
+      "name": "CheckAABBLineOfSight",
+      "class": "",
+      "method": "CheckAABBLineOfSight",
+      "via_k1": "callee_set_wrap|size=1"
+    },
+    {
+      "k1_addr": "0x005D5B30",
+      "tsl_addr": "0x0063A170",
+      "name": "Resume",
+      "class": "",
+      "method": "Resume",
+      "via_k1": "callee_set_wrap|size=1"
+    },
+    {
+      "k1_addr": "0x0066E110",
+      "tsl_addr": "0x007BCA50",
+      "name": "RemoveGunBank",
+      "class": "",
+      "method": "RemoveGunBank",
+      "via_k1": "callee_set_wrap|size=1"
+    },
+    {
+      "k1_addr": "0x006717F0",
+      "tsl_addr": "0x0055F290",
+      "name": "SetPlayer",
+      "class": "",
+      "method": "SetPlayer",
+      "via_k1": "callee_set_wrap|size=1"
+    },
+    {
+      "k1_addr": "0x006A5F00",
+      "tsl_addr": "0x004FD100",
+      "name": "HideVisualEffect",
+      "class": "",
+      "method": "HideVisualEffect",
+      "via_k1": "callee_set_wrap|size=1"
+    },
+    {
+      "k1_addr": "0x005D8110",
+      "tsl_addr": "0x00638B60",
+      "name": "ApplyNewVolume",
+      "class": "",
+      "method": "ApplyNewVolume",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x0070A9DE",
+      "tsl_addr": "0x00931E2C",
+      "name": "DisplayVisCPPCookieError?",
+      "class": "",
+      "method": "DisplayVisCPPCookieError?",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x00423490",
+      "tsl_addr": "0x00819C20",
+      "name": "AurTextureGet",
+      "class": "",
+      "method": "AurTextureGet",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x0067DB50",
+      "tsl_addr": "0x005555A0",
+      "name": "HandleQuitDialog",
+      "class": "",
+      "method": "HandleQuitDialog",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x0067EF00",
+      "tsl_addr": "0x00555EC0",
+      "name": "HandleHandCardDrop",
+      "class": "",
+      "method": "HandleHandCardDrop",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x00560BA0",
+      "tsl_addr": "0x00758FF0",
+      "name": "SetCreatureDisplayed",
+      "class": "",
+      "method": "SetCreatureDisplayed",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x006198E0",
+      "tsl_addr": "0x00428130",
+      "name": "GetHostileItems",
+      "class": "",
+      "method": "GetHostileItems",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x006EFF80",
+      "tsl_addr": "0x005F5610",
+      "name": "NameCreationCompleted",
+      "class": "",
+      "method": "NameCreationCompleted",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x0045B200",
+      "tsl_addr": "0x008D3A40",
+      "name": "~CAurGUIImageInternal",
+      "class": "",
+      "method": "~CAurGUIImageInternal",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x004615A0",
+      "tsl_addr": "0x008DA050",
+      "name": "Control",
+      "class": "",
+      "method": "Control",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x00610840",
+      "tsl_addr": "0x0042BB30",
+      "name": "UpdateRollingFootstepSound",
+      "class": "",
+      "method": "UpdateRollingFootstepSound",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x0063BBD0",
+      "tsl_addr": "0x004486E0",
+      "name": "CSWCameraDeath",
+      "class": "",
+      "method": "CSWCameraDeath",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x00649A70",
+      "tsl_addr": "0x00492AA0",
+      "name": "ClearPackage",
+      "class": "",
+      "method": "ClearPackage",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x005ECB50",
+      "tsl_addr": "0x0060D5F0",
+      "name": "~CExoLocStringInternal",
+      "class": "",
+      "method": "~CExoLocStringInternal",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x005E6960",
+      "tsl_addr": "0x008D8010",
+      "name": "Read",
+      "class": "",
+      "method": "Read",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x00446E10",
+      "tsl_addr": "0x008537C0",
+      "name": "SetTextureAttributes",
+      "class": "",
+      "method": "SetTextureAttributes",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x005797A0",
+      "tsl_addr": "0x00734410",
+      "name": "ClearLineOfSight",
+      "class": "",
+      "method": "ClearLineOfSight",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x006A9C10",
+      "tsl_addr": "0x005B2D90",
+      "name": "Resume",
+      "class": "",
+      "method": "Resume",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x00674930",
+      "tsl_addr": "0x0064C270",
+      "name": "GunDie",
+      "class": "",
+      "method": "GunDie",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x006EB010",
+      "tsl_addr": "0x005EE730",
+      "name": "ClearAbilities",
+      "class": "",
+      "method": "ClearAbilities",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x006EF540",
+      "tsl_addr": "0x005F4710",
+      "name": "ClearAbilities",
+      "class": "",
+      "method": "ClearAbilities",
+      "via_k1": "callee_set_wrap|size=1"
+    },
+    {
+      "k1_addr": "0x6a49a0",
+      "tsl_addr": "0x502080",
+      "name": "CSWCVisualEffectOnObject::RemoveFOV",
+      "class": "CSWCVisualEffectOnObject",
+      "method": "RemoveFOV",
+      "n_anchors": 2,
+      "via": "projected_caller_intersection"
+    },
+    {
+      "k1_addr": "0x6a4580",
+      "tsl_addr": "0x501630",
+      "name": "CSWCVisualEffectOnObject::ApplyFOV",
+      "class": "CSWCVisualEffectOnObject",
+      "method": "ApplyFOV",
+      "n_anchors": 2,
+      "via": "projected_callee_intersection"
+    },
+    {
+      "tsl_addr": "0x60ba20",
+      "k1_addr": "0x5e69e0",
+      "name": "~CExoFile",
+      "class": "",
+      "method": "~CExoFile",
+      "via": "vote_caller_projection",
+      "votes": 11,
+      "total_anchors": 16,
+      "tsl_sz": 35,
+      "k1_sz": 26
     }
   ],
   "reverse_callee_disambig_pairs": 6,
