@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "k1_addr": "0x0062EC20",
+    "tsl_addr": "0x004DF1F0",
+    "name": "CGuiInGame::GetAreaTranstionPosition",
+    "class": "CGuiInGame",
+    "method": "GetAreaTranstionPosition",
+    "via": "twohop_caller_v3"
+  }
+]
