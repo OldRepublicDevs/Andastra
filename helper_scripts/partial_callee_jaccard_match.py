@@ -26,9 +26,9 @@ from __future__ import annotations
 
 import json
 
-MIN_CALLEES = 3      # minimum named callees needed
-MIN_JACCARD = 0.50   # minimum Jaccard similarity to accept a match
-SCORE_MARGIN = 0.15  # second-best must be at least this much worse to accept
+MIN_CALLEES = 2      # minimum named callees needed
+MIN_JACCARD = 0.40   # minimum Jaccard similarity to accept a match
+SCORE_MARGIN = 0.12  # second-best must be at least this much worse to accept
 
 K1_CG = "docs/k1_call_graph.json"
 TSL_CG = "docs/tsl_call_graph.json"

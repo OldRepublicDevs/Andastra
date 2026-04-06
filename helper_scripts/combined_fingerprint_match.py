@@ -24,8 +24,8 @@ from __future__ import annotations
 
 import json
 
-MIN_COMBINED = 4     # minimum entries in combined (callers + callees)
-MIN_JACCARD = 0.45   # minimum Jaccard to accept
+MIN_COMBINED = 3     # minimum entries in combined (callers + callees)
+MIN_JACCARD = 0.40   # minimum Jaccard to accept
 SCORE_MARGIN = 0.15  # clear margin over second-best
 
 K1_CG = "docs/k1_call_graph.json"
