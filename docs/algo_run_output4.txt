@@ -1,0 +1,314 @@
+[23:10:13] === run_extended_algorithms.py start ===
+[23:10:13] Initial cascade: 9219
+[23:10:13] --- Phase 1: New fingerprint algorithms ---
+[23:10:13] Running joint_fingerprint_match...
+[23:10:13]   joint_fingerprint_match.py  => Wave 1: 0 new matches — converged
+
+Total new matches across all waves: 0
+Matched TSL functions: 6238 -> 6238
+Wrote 0 matches to docs/tsl_joint_fingerprint_matches.json
+[23:10:13]   merge_any.py docs/tsl_joint_fingerprint_matches.json => Added 0  Skipped(dup): 0  Total now: 9219
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:10:13] joint_fingerprint merged: +0 (now 9219)
+[23:10:13] Running triple_fp_match...
+[23:10:14]   triple_fp_match.py  => Unique K1 triple fingerprints: 5,261
+Named-only unique: 4,626  non-unique groups: 443
+Matches: 0
+Wrote 0 to docs/tsl_triple_fp_matches.json
+[23:10:14]   merge_any.py docs/tsl_triple_fp_matches.json => Added 0  Skipped(dup): 0  Total now: 9219
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:10:15] triple_fp merged: +0 (now 9219)
+[23:10:15] Running caller_name_match...
+[23:10:15]   caller_name_match.py  => K1 unique caller fingerprints (>=2 named callers): 2846
+TSL FUN_xxx to check: 5527
+New matches found: 0
+
+Wrote 0 matches to docs/tsl_caller_name_matches.json
+[23:10:15]   merge_any.py docs/tsl_caller_name_matches.json => Added 0  Skipped(dup): 0  Total now: 9219
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:10:15] caller_name merged: +0 (now 9219)
+[23:10:15] Running ordered_seq_match...
+[23:10:16]   ordered_seq_match.py  => Unique K1 fingerprints: 5,275
+Matches: 0
+Wrote 0 matches to docs/tsl_ordered_seq_matches.json
+[23:10:16]   merge_any.py docs/tsl_ordered_seq_matches.json => Added 0  Skipped(dup): 0  Total now: 9219
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:10:16] ordered_seq merged: +0 (now 9219)
+[23:10:16] Running string_ref_match...
+[23:10:16]   string_ref_match.py  => K1 unique string fingerprints (>=2 strings): 636
+TSL unmatched functions with string fingerprints: 130
+Matches: 0
+Wrote 0 to docs/tsl_string_ref_matches.json
+[23:10:17]   merge_any.py docs/tsl_string_ref_matches.json => Added 0  Skipped(dup): 0  Total now: 9219
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:10:17] string_ref merged: +0 (now 9219)
+[23:10:17] Running single_callee_cascade...
+[23:10:17]   single_callee_cascade.py  => [23:10:17] Wave 1: 0 new matches
+[23:10:17] Converged.
+[23:10:17] Total added: 0 (cascade now 9219)
+[23:10:17] Pending renames: 2
+[23:10:17] Wrote rename script with 2 entries
+[23:10:17] single_callee_cascade merged: +0 (now 9219)
+[23:10:17] Running local_cascade_multi (single_caller + callee+size)...
+[23:10:22]   local_cascade_multi.py  => Total now: 9219
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:10:22]   string_ref: ped(dup): 0  Total now: 9219
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:10:22]   single_callee_cascade: [23:10:22] Wave 1: 0 new matches | [23:10:22] Converged. | [23:10:22] Total added: 0 (cascade now 9219) | [23:10:22] Pending renames: 1 | [23:10:22] Wrote rename script with 1 entries
+[23:10:22]   FUN_xxx remaining (approx): 5528
+[23:10:22]   Cascade now: 9219
+[23:10:22] Converged at wave 1.
+[23:10:22] === FINAL cascade: 9219 === Pending renames: 1
+[23:10:22] local_cascade_multi merged: +0 (now 9219)
+[23:10:22] Phase 1 done. Cascade: 9219
+[23:10:22] --- Phase 2: Standard convergence loop ---
+[23:10:22] -- Round 1 --
+[23:10:24]   cascade_translated_match.py  => Cascade translations applied to tsl_vname: 1
+Total TSL FUN_xxx remaining: 5,527
+Wave 1: 1 new matches
+  0x774710 -> 0x4d2970  CSWSCombatRound::CheckActionLengthAtTime
+Wave 2: 0 new matches — converged
+
+Total new matches: 1  (6238 -> 6239)
+Wrote 1 to docs/tsl_cascade_translated_matches.json
+[23:10:24]   projected_intersection_match.py  => dleServerToPlayerPopUpGUIPanel
+  0x4e8840 -> 0x63a770      anchors=2  CSWCameraDeath::SetTarget
+  0x540b20 -> 0x66e000      anchors=2  CSWTrackFollower::~CSWTrackFollower
+  0x550df0 -> 0x67d3d0      anchors=2  CSWGuiPazaakStart::HandleQuitDialog
+  0x555660 -> 0x680790      anchors=2  CSWGuiPazaakGame::HandleHandcardAction
+  0x55b6b0 -> 0x66b190      anchors=2  CSWCSoundObject::FadeAndStop
+  0x55c240 -> 0x6d57b0      anchors=2  CSWCProjectile::CSWCProjectile
+  0x5d7ef0 -> 0x6c8410      anchors=2  CSWGuiSaveNamePanel::OnPanelAdded
+
+Total: 79  Wrote to docs/tsl_projected_intersection_matches.json
+[23:10:25]   vote_callee_projection.py  => Vote projection results: 9
+  0x7b6860 -> 0x4b5f90  votes=8/14  SetEstimatedSaveSize
+  0x6dd200 -> 0x514270  votes=6/9  AIActionCounterSpell
+  0x4282c0 -> 0x6193a0  votes=4/9  CreateUsableItemEntry
+  0x428490 -> 0x6197d0  votes=4/6  GetUsableItems
+  0x5247c0 -> 0x688e10  votes=4/5  CreateEntry
+  0x536450 -> 0x6c0f40  votes=4/5  OnControlInvAButton
+  0x5b78d0 -> 0x6ea000  votes=4/16  CSWGuiScriptSelect
+  0x4de610 -> 0x62e550  votes=3/4  ShowSoloModeQuery
+  0x56cf00 -> 0x6defe0  votes=3/3  SetNewOptions
+Wrote 9 to docs/tsl_vote_projection_matches.json
+[23:10:26]   vote_caller_projection.py  => -> 0x419da0  votes=15/26  ~CSWGuiButton
+  0x9118a0 -> 0x40a1c0  votes=5/5  CaptureMouse
+  0x542c90 -> 0x66d5d0  votes=4/5  GetPosition
+  0x8255c0 -> 0x423ee0  votes=4/4  RequestPool
+  0x857a30 -> 0x456a60  votes=4/5  ClearOutput
+  0x8d5370 -> 0x45a170  votes=4/4  FlushBuffer
+  0x8d9ac0 -> 0x461060  votes=4/4  Height2Channel
+  0x4c92d0 -> 0x6a03e0  votes=3/3  Hilite
+  0x7e44a0 -> 0x66dcc0  votes=3/15  remove
+  0x80ba90 -> 0x4aadf0  votes=3/3  cosineLUT
+  0x868590 -> 0x44da60  votes=3/3  AurEnableHeadLight
+  0x873000 -> 0x46bc80  votes=3/4  operator=
+Wrote 12 to docs/tsl_vote_caller_matches.json
+[23:10:46]   ns_cluster_positional_match.py  => tach
+  0x8c46a0 -> 0x49f0e0      ns=CAurBehaviorCameraFo  pairs=5  CAurBehaviorCameraFollow::GetTargetWorldPosition
+  0x8c52e0 -> 0x49ffa0      ns=CAurBehaviorCameraFo  pairs=5  CAurBehaviorCameraFollow::~CAurBehaviorCameraFollow
+  0x80bad0 -> 0x463320      ns=ArturoTextureControl  pairs=8  ArturoTextureController::ArturoTextureController
+  0x8dc0b0 -> 0x463380      ns=ArturoTextureControl  pairs=8  ArturoTextureController::~ArturoTextureController
+  0x8f4340 -> 0x4477f0      ns=Part  pairs=6  Part::~Part
+
+Wrote 0 to docs/tsl_ns_cluster_matches.json
+Wrote 15 to docs/tsl_positional_matches.json
+[23:10:47]   merge_ct_matches.py  => Added 1  (total now 9220)
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:10:47]   merge_projected.py  => Added 79  Skipped(dup): 0  Total now: 9299
+Pending renames: 81
+Wrote rename script: 81 entries
+[23:10:48]   merge_any.py docs/tsl_vote_projection_matches.json => Added 8  Skipped(dup): 1  Total now: 9307
+Pending renames: 89
+Wrote 89 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:10:48]   merge_any.py docs/tsl_vote_caller_matches.json => Added 5  Skipped(dup): 7  Total now: 9312
+Pending renames: 94
+Wrote 94 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:10:48]   merge_ns_positional.py  => Added 15  Skipped(dup): 0  (total now 9327)
+Pending renames: 109
+Wrote 109 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:10:49] Round 1 done: 9219 -> 9327 (+108)
+[23:10:49] -- Round 2 --
+[23:10:50]   cascade_translated_match.py  => Cascade translations applied to tsl_vname: 109
+Total TSL FUN_xxx remaining: 5,419
+Wave 1: 0 new matches — converged
+
+Total new matches: 0  (6346 -> 6346)
+Wrote 0 to docs/tsl_cascade_translated_matches.json
+[23:10:50]   projected_intersection_match.py  => e::SellItemCallback
+  0x5d7fe0 -> 0x6c8460      anchors=2  CSWGuiSaveNamePanel::OnPanelRemoved
+  0x5f4e20 -> 0x6f0220      anchors=2  CSWGuiQuickPanel::ConfirmCancel
+  0x6c83d0 -> 0x515860      anchors=2  CSWSCreature::CanEquipMiscellaneous
+  0x713550 -> 0x580920      anchors=2  CSWRoomSurfaceMesh::CheckAABBNode
+  0x8441b0 -> 0x4555b0      anchors=2  CExoArrayList<CExoArrayList<CAurTriangleBin*>>::allocate
+  0x86e830 -> 0x46b4c0      anchors=2  HitPartOnBSPNode
+  0x91ea00 -> 0x41a700      anchors=2  CSWGuiListBox::HandleLMouseUp
+
+Total: 16  Wrote to docs/tsl_projected_intersection_matches.json
+[23:10:51]   vote_callee_projection.py  => Vote projection results: 1
+  0x8533e0 -> 0x446910  votes=3/4  ReplaceTextureSubtree
+Wrote 1 to docs/tsl_vote_projection_matches.json
+[23:10:52]   vote_caller_projection.py  => Vote caller projection results: 0
+Wrote 0 to docs/tsl_vote_caller_matches.json
+[23:11:08]   ns_cluster_positional_match.py  => Approach A (namespace clustering): 0 matches
+
+Approach B (positional ordering): 4 matches
+  0x8d6940 -> 0x5eb9f0      ns=CExoFileInternal  pairs=8  CExoFileInternal::Read
+  0x8d6a10 -> 0x5eba40      ns=CExoFileInternal  pairs=8  CExoFileInternal::Read
+  0x8d6a70 -> 0x5ebc50      ns=CExoFileInternal  pairs=8  CExoFileInternal::ReadAsyncComplete
+  0x9164f0 -> 0x67ac50      ns=CSWGui3DSceneView  pairs=13  CSWGui3DSceneView::~CSWGui3DSceneView
+
+Wrote 0 to docs/tsl_ns_cluster_matches.json
+Wrote 4 to docs/tsl_positional_matches.json
+[23:11:08]   merge_ct_matches.py  => Added 0  (total now 9327)
+Pending renames: 109
+Wrote 109 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:11:09]   merge_projected.py  => Added 16  Skipped(dup): 0  Total now: 9343
+Pending renames: 125
+Wrote rename script: 125 entries
+[23:11:09]   merge_any.py docs/tsl_vote_projection_matches.json => Added 1  Skipped(dup): 0  Total now: 9344
+Pending renames: 126
+Wrote 126 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:11:10]   merge_any.py docs/tsl_vote_caller_matches.json => Added 0  Skipped(dup): 0  Total now: 9344
+Pending renames: 126
+Wrote 126 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:11:10]   merge_ns_positional.py  => Added 4  Skipped(dup): 0  (total now 9348)
+Pending renames: 130
+Wrote 130 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:11:10] Round 2 done: 9327 -> 9348 (+21)
+[23:11:10] -- Round 3 --
+[23:11:12]   cascade_translated_match.py  => Cascade translations applied to tsl_vname: 130
+Total TSL FUN_xxx remaining: 5,398
+Wave 1: 0 new matches — converged
+
+Total new matches: 0  (6367 -> 6367)
+Wrote 0 to docs/tsl_cascade_translated_matches.json
+[23:11:13]   projected_intersection_match.py  => Approach 1 (caller projection): 0 matches
+
+Approach 2 (callee projection): 4 matches
+  0x5de630 -> 0x6958c0      anchors=3  CSWGuiInGameGalaxyMap::~CSWGuiInGameGalaxyMap
+  0x4fe0d0 -> 0x6a6950      anchors=2  CSWCVisualEffectOnObject::KillVisualEffect
+  0x610220 -> 0x5dbd30      anchors=2  CExoStreamingSoundSourceInternal::InitializeSource
+  0x819e40 -> 0x422ce0      anchors=2  AurTextureSetAttributes
+
+Total: 4  Wrote to docs/tsl_projected_intersection_matches.json
+[23:11:13]   vote_callee_projection.py  => Vote projection results: 0
+Wrote 0 to docs/tsl_vote_projection_matches.json
+[23:11:14]   vote_caller_projection.py  => Vote caller projection results: 0
+Wrote 0 to docs/tsl_vote_caller_matches.json
+[23:11:27]   ns_cluster_positional_match.py  => Approach A (namespace clustering): 0 matches
+
+Approach B (positional ordering): 0 matches
+
+Wrote 0 to docs/tsl_ns_cluster_matches.json
+Wrote 0 to docs/tsl_positional_matches.json
+[23:11:28]   merge_ct_matches.py  => Added 0  (total now 9348)
+Pending renames: 130
+Wrote 130 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:11:28]   merge_projected.py  => Added 4  Skipped(dup): 0  Total now: 9352
+Pending renames: 134
+Wrote rename script: 134 entries
+[23:11:28]   merge_any.py docs/tsl_vote_projection_matches.json => Added 0  Skipped(dup): 0  Total now: 9352
+Pending renames: 134
+Wrote 134 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:11:29]   merge_any.py docs/tsl_vote_caller_matches.json => Added 0  Skipped(dup): 0  Total now: 9352
+Pending renames: 134
+Wrote 134 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:11:29]   merge_ns_positional.py  => Added 0  Skipped(dup): 0  (total now 9352)
+Pending renames: 134
+Wrote 134 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:11:29] Round 3 done: 9348 -> 9352 (+4)
+[23:11:29] -- Round 4 --
+[23:11:30]   cascade_translated_match.py  => Cascade translations applied to tsl_vname: 134
+Total TSL FUN_xxx remaining: 5,394
+Wave 1: 0 new matches — converged
+
+Total new matches: 0  (6371 -> 6371)
+Wrote 0 to docs/tsl_cascade_translated_matches.json
+[23:11:30]   projected_intersection_match.py  => Approach 1 (caller projection): 1 matches
+  0x501ad0 -> 0x6a56f0      anchors=2  CSWCVisualEffectOnObject::RemoveHardCodedVisualEffect
+
+Approach 2 (callee projection): 1 matches
+  0x53bff0 -> 0x6ebf00      anchors=2  CSWGuiMainCharGen::~CSWGuiMainCharGen
+
+Total: 2  Wrote to docs/tsl_projected_intersection_matches.json
+[23:11:31]   vote_callee_projection.py  => Vote projection results: 0
+Wrote 0 to docs/tsl_vote_projection_matches.json
+[23:11:31]   vote_caller_projection.py  => Vote caller projection results: 0
+Wrote 0 to docs/tsl_vote_caller_matches.json
+[23:11:45]   ns_cluster_positional_match.py  => Approach A (namespace clustering): 0 matches
+
+Approach B (positional ordering): 0 matches
+
+Wrote 0 to docs/tsl_ns_cluster_matches.json
+Wrote 0 to docs/tsl_positional_matches.json
+[23:11:46]   merge_ct_matches.py  => Added 0  (total now 9352)
+Pending renames: 134
+Wrote 134 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:11:46]   merge_projected.py  => Added 2  Skipped(dup): 0  Total now: 9354
+Pending renames: 136
+Wrote rename script: 136 entries
+[23:11:47]   merge_any.py docs/tsl_vote_projection_matches.json => Added 0  Skipped(dup): 0  Total now: 9354
+Pending renames: 136
+Wrote 136 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:11:47]   merge_any.py docs/tsl_vote_caller_matches.json => Added 0  Skipped(dup): 0  Total now: 9354
+Pending renames: 136
+Wrote 136 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:11:48]   merge_ns_positional.py  => Added 0  Skipped(dup): 0  (total now 9354)
+Pending renames: 136
+Wrote 136 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:11:48] Round 4 done: 9352 -> 9354 (+2)
+[23:11:48] --- Phase 3: Re-run new algorithms post-convergence ---
+[23:11:49]   joint_fingerprint_match.py  => Wave 1: 0 new matches — converged
+
+Total new matches across all waves: 0
+Matched TSL functions: 6373 -> 6373
+Wrote 0 matches to docs/tsl_joint_fingerprint_matches.json
+[23:11:49]   merge_any.py docs/tsl_joint_fingerprint_matches.json => Added 0  Skipped(dup): 0  Total now: 9354
+Pending renames: 136
+Wrote 136 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:11:49] joint_fingerprint (pass2): +0
+[23:11:50]   triple_fp_match.py  => Unique K1 triple fingerprints: 5,261
+Named-only unique: 4,626  non-unique groups: 443
+Matches: 0
+Wrote 0 to docs/tsl_triple_fp_matches.json
+[23:11:51]   merge_any.py docs/tsl_triple_fp_matches.json => Added 0  Skipped(dup): 0  Total now: 9354
+Pending renames: 136
+Wrote 136 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:11:51] triple_fp (pass2): +0
+[23:11:51]   caller_name_match.py  => K1 unique caller fingerprints (>=2 named callers): 2846
+TSL FUN_xxx to check: 5392
+New matches found: 0
+
+Wrote 0 matches to docs/tsl_caller_name_matches.json
+[23:11:52]   merge_any.py docs/tsl_caller_name_matches.json => Added 0  Skipped(dup): 0  Total now: 9354
+Pending renames: 136
+Wrote 136 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:11:52] caller_name (pass2): +0
+[23:11:53]   ordered_seq_match.py  => Unique K1 fingerprints: 5,275
+Matches: 0
+Wrote 0 matches to docs/tsl_ordered_seq_matches.json
+[23:11:53]   merge_any.py docs/tsl_ordered_seq_matches.json => Added 0  Skipped(dup): 0  Total now: 9354
+Pending renames: 136
+Wrote 136 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:11:53] ordered_seq (pass2): +0
+[23:11:54]   string_ref_match.py  => K1 unique string fingerprints (>=2 strings): 636
+TSL unmatched functions with string fingerprints: 127
+Matches: 0
+Wrote 0 to docs/tsl_string_ref_matches.json
+[23:11:55]   merge_any.py docs/tsl_string_ref_matches.json => Added 0  Skipped(dup): 0  Total now: 9354
+Pending renames: 136
+Wrote 136 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:11:55] string_ref (pass2): +0
+[23:11:55] Phase 3 added: +0
+[23:11:55] === FINAL cascade: 9354 ===
+[23:11:55] DONE

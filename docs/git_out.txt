@@ -1,0 +1,38 @@
+ M .vscode/mcp.json
+ M docs/k1_tsl_cascade_matches.json
+ M docs/tsl_call_graph.json
+ M docs/tsl_caller_name_matches.json
+ M docs/tsl_joint_fingerprint_matches.json
+ M docs/tsl_projected_intersection_matches.json
+ M docs/tsl_triple_fp_matches.json
+ M helper_scripts/check_tsl.py
+ M helper_scripts/dedup_cascade.py
+ M helper_scripts/gen_batch_scripts.py
+ M helper_scripts/ghidra_batch_rename_tsl.py
+ M helper_scripts/ghidra_rename_tsl_batch1.py
+ M helper_scripts/merge_any.py
+ M helper_scripts/run_all_algorithms.py
+ M vendor/KotOR.js
+?? docs/algo_run_output.txt
+?? docs/git_out.txt
+?? docs/k1_func_string_refs.json
+?? docs/k1_string_refs.json
+?? docs/merge_out.txt
+?? docs/merge_string_output.txt
+?? docs/string_match_output.txt
+?? docs/string_ref_output.txt
+?? docs/tsl_func_string_refs.json
+?? docs/tsl_string_ref_matches.json
+?? docs/tsl_string_refs.json
+?? helper_scripts/_patch_journal.py
+?? helper_scripts/_patch_journal2.py
+?? helper_scripts/_tmp_bucket.py
+?? helper_scripts/_tmp_ct.py
+?? helper_scripts/_tmp_proj.py
+?? helper_scripts/_tmp_sigs_analysis.py
+?? helper_scripts/run_extended_algorithms.py
+?? helper_scripts/string_ref_match.py
+?? scripts/ghidra_bulk_rename_tsl_commands.py
+?? src/Tools/NCSDecomp/
+?? vendor/Kotor.NET/
+?? vendor/pykotor/

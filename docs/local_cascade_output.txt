@@ -1,0 +1,1940 @@
+
+[23:05:17] === local_cascade_multi.py start ===
+[23:05:17] Wave 1 — cascade: 9137
+[23:05:17]   callee_set: +0
+[23:05:17]   single_caller: +49
+[23:05:17]   callee+size: +3
+[23:05:18]   Running standard algorithms...
+[23:05:19]   joint_fp: ped(dup): 0  Total now: 9189
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:05:21]   caller_name: ped(dup): 0  Total now: 9189
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:05:22]   ordered_seq: ped(dup): 0  Total now: 9189
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:05:24]   string_ref: ped(dup): 0  Total now: 9190
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:05:26]   single_callee_cascade:  3 new matches | [23:05:25] Wave 3: 0 new matches | [23:05:25] Converged. | [23:05:25] Total added: 8 (cascade now 9198) | [23:05:25] Pending renames: 2 | [23:05:25] Wrote rename script with 2 entries
+[23:05:26]   FUN_xxx remaining (approx): 5555
+[23:05:26]   Cascade now: 9198
+[23:05:26] Wave 2 — cascade: 9198
+[23:05:26]   callee_set: +0
+[23:05:26]   single_caller: +13
+[23:05:26]   callee+size: +0
+[23:05:27]   Running standard algorithms...
+[23:05:29]   joint_fp: ped(dup): 0  Total now: 9211
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:05:30]   caller_name: ped(dup): 0  Total now: 9211
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:05:32]   ordered_seq: ped(dup): 0  Total now: 9211
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:05:33]   string_ref: ped(dup): 0  Total now: 9211
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:05:33]   single_callee_cascade: [23:05:33] Wave 1: 0 new matches | [23:05:33] Converged. | [23:05:33] Total added: 0 (cascade now 9211) | [23:05:33] Pending renames: 1 | [23:05:33] Wrote rename script with 1 entries
+[23:05:33]   FUN_xxx remaining (approx): 5536
+[23:05:33]   Cascade now: 9211
+[23:05:33] Wave 3 — cascade: 9211
+[23:05:33]   callee_set: +0
+[23:05:34]   single_caller: +4
+[23:05:34]   callee+size: +0
+[23:05:34]   Running standard algorithms...
+[23:05:35]   joint_fp: ped(dup): 0  Total now: 9215
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:05:37]   caller_name: ped(dup): 0  Total now: 9215
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:05:39]   ordered_seq: ped(dup): 0  Total now: 9215
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:05:40]   string_ref: ped(dup): 0  Total now: 9215
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:05:41]   single_callee_cascade:  1 new matches | [23:05:41] Wave 2: 0 new matches | [23:05:41] Converged. | [23:05:41] Total added: 1 (cascade now 9216) | [23:05:41] Pending renames: 1 | [23:05:41] Wrote rename script with 1 entries
+[23:05:41]   FUN_xxx remaining (approx): 5532
+[23:05:41]   Cascade now: 9216
+[23:05:42] Wave 4 — cascade: 9216
+[23:05:42]   callee_set: +0
+[23:05:42]   single_caller: +2
+[23:05:42]   callee+size: +0
+[23:05:43]   Running standard algorithms...
+[23:05:43]   joint_fp: ped(dup): 0  Total now: 9218
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:05:44]   caller_name: ped(dup): 0  Total now: 9218
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:05:45]   ordered_seq: ped(dup): 0  Total now: 9218
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:05:47]   string_ref: ped(dup): 0  Total now: 9218
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:05:47]   single_callee_cascade: [23:05:47] Wave 1: 0 new matches | [23:05:47] Converged. | [23:05:47] Total added: 0 (cascade now 9218) | [23:05:47] Pending renames: 1 | [23:05:47] Wrote rename script with 1 entries
+[23:05:47]   FUN_xxx remaining (approx): 5529
+[23:05:47]   Cascade now: 9218
+[23:05:48] Wave 5 — cascade: 9218
+[23:05:48]   callee_set: +0
+[23:05:48]   single_caller: +0
+[23:05:48]   callee+size: +0
+[23:05:49]   Running standard algorithms...
+[23:05:50]   joint_fp: ped(dup): 0  Total now: 9218
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:05:51]   caller_name: ped(dup): 0  Total now: 9218
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:05:52]   ordered_seq: ped(dup): 0  Total now: 9218
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:05:53]   string_ref: ped(dup): 0  Total now: 9218
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:05:53]   single_callee_cascade: [23:05:53] Wave 1: 0 new matches | [23:05:53] Converged. | [23:05:53] Total added: 0 (cascade now 9218) | [23:05:53] Pending renames: 1 | [23:05:53] Wrote rename script with 1 entries
+[23:05:53]   FUN_xxx remaining (approx): 5529
+[23:05:53]   Cascade now: 9218
+[23:05:53] Converged at wave 5.
+[23:05:54] === FINAL cascade: 9218 === Pending renames: 1
+
+[23:09:47] === local_cascade_multi.py start ===
+[23:09:47] Wave 1 — cascade: 9218
+[23:09:48]   callee_set: +0
+[23:09:48]   single_caller: +0
+[23:09:48]   callee+size: +0
+[23:09:48]   Running standard algorithms...
+[23:09:49]   joint_fp: ped(dup): 0  Total now: 9218
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:09:50]   caller_name: ped(dup): 0  Total now: 9219
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:09:51]   ordered_seq: ped(dup): 0  Total now: 9219
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:09:52]   string_ref: ped(dup): 0  Total now: 9219
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:09:52]   single_callee_cascade: [23:09:52] Wave 1: 0 new matches | [23:09:52] Converged. | [23:09:52] Total added: 0 (cascade now 9219) | [23:09:52] Pending renames: 2 | [23:09:52] Wrote rename script with 2 entries
+[23:09:52]   FUN_xxx remaining (approx): 5529
+[23:09:52]   Cascade now: 9219
+[23:09:52] Converged at wave 1.
+[23:09:52] === FINAL cascade: 9219 === Pending renames: 2
+
+[23:10:18] === local_cascade_multi.py start ===
+[23:10:18] Wave 1 — cascade: 9219
+[23:10:18]   callee_set: +0
+[23:10:18]   single_caller: +0
+[23:10:18]   callee+size: +0
+[23:10:19]   Running standard algorithms...
+[23:10:20]   joint_fp: ped(dup): 0  Total now: 9219
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:10:20]   caller_name: ped(dup): 0  Total now: 9219
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:10:21]   ordered_seq: ped(dup): 0  Total now: 9219
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:10:22]   string_ref: ped(dup): 0  Total now: 9219
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:10:22]   single_callee_cascade: [23:10:22] Wave 1: 0 new matches | [23:10:22] Converged. | [23:10:22] Total added: 0 (cascade now 9219) | [23:10:22] Pending renames: 1 | [23:10:22] Wrote rename script with 1 entries
+[23:10:22]   FUN_xxx remaining (approx): 5528
+[23:10:22]   Cascade now: 9219
+[23:10:22] Converged at wave 1.
+[23:10:22] === FINAL cascade: 9219 === Pending renames: 1
+
+[23:18:36] === local_cascade_multi.py start ===
+[23:18:36] Wave 1 — cascade: 9362
+[23:18:36]   callee_set: +0
+[23:18:36]   single_caller: +19
+[23:18:36]   callee+size: +0
+[23:18:37]   Running standard algorithms...
+[23:18:37]   joint_fp: ped(dup): 0  Total now: 9381
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:18:38]   caller_name: ped(dup): 0  Total now: 9381
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:18:39]   ordered_seq: ped(dup): 0  Total now: 9381
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:18:40]   string_ref: ped(dup): 0  Total now: 9381
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:18:40]   single_callee_cascade: [23:18:40] Wave 1: 0 new matches | [23:18:40] Converged. | [23:18:40] Total added: 0 (cascade now 9381) | [23:18:40] Pending renames: 1 | [23:18:40] Wrote rename script with 1 entries
+[23:18:40]   FUN_xxx remaining (approx): 5368
+[23:18:40]   Cascade now: 9381
+[23:18:40] Wave 2 — cascade: 9381
+[23:18:40]   callee_set: +0
+[23:18:40]   single_caller: +1
+[23:18:40]   callee+size: +0
+[23:18:41]   Running standard algorithms...
+[23:18:42]   joint_fp: ped(dup): 0  Total now: 9382
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:18:43]   caller_name: ped(dup): 0  Total now: 9382
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:18:43]   ordered_seq: ped(dup): 0  Total now: 9382
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:18:44]   string_ref: ped(dup): 0  Total now: 9382
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:18:45]   single_callee_cascade:  1 new matches | [23:18:45] Wave 2: 0 new matches | [23:18:45] Converged. | [23:18:45] Total added: 1 (cascade now 9383) | [23:18:45] Pending renames: 1 | [23:18:45] Wrote rename script with 1 entries
+[23:18:45]   FUN_xxx remaining (approx): 5367
+[23:18:45]   Cascade now: 9383
+[23:18:45] Wave 3 — cascade: 9383
+[23:18:45]   callee_set: +0
+[23:18:45]   single_caller: +0
+[23:18:45]   callee+size: +0
+[23:18:45]   Running standard algorithms...
+[23:18:46]   joint_fp: ped(dup): 0  Total now: 9383
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:18:47]   caller_name: ped(dup): 0  Total now: 9383
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:18:48]   ordered_seq: ped(dup): 0  Total now: 9383
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:18:49]   string_ref: ped(dup): 0  Total now: 9383
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:18:49]   single_callee_cascade: [23:18:49] Wave 1: 0 new matches | [23:18:49] Converged. | [23:18:49] Total added: 0 (cascade now 9383) | [23:18:49] Pending renames: 1 | [23:18:49] Wrote rename script with 1 entries
+[23:18:49]   FUN_xxx remaining (approx): 5366
+[23:18:49]   Cascade now: 9383
+[23:18:49] Converged at wave 3.
+[23:18:50] === FINAL cascade: 9383 === Pending renames: 1
+
+[23:27:29] === local_cascade_multi.py start ===
+[23:27:29] Wave 1 — cascade: 9445
+[23:27:29]   callee_set: +0
+[23:27:29]   single_caller: +6
+[23:27:30]   callee+size: +0
+[23:27:30]   Running standard algorithms...
+[23:27:31]   joint_fp: ped(dup): 0  Total now: 9451
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:27:32]   caller_name: ped(dup): 0  Total now: 9452
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:27:33]   ordered_seq: ped(dup): 0  Total now: 9452
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:27:33]   string_ref: ped(dup): 0  Total now: 9452
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:27:34]   single_callee_cascade: [23:27:34] Wave 1: 0 new matches | [23:27:34] Converged. | [23:27:34] Total added: 0 (cascade now 9452) | [23:27:34] Pending renames: 2 | [23:27:34] Wrote rename script with 2 entries
+[23:27:34]   FUN_xxx remaining (approx): 5298
+[23:27:34]   Cascade now: 9452
+[23:27:34] Wave 2 — cascade: 9452
+[23:27:34]   callee_set: +0
+[23:27:34]   single_caller: +1
+[23:27:34]   callee+size: +0
+[23:27:35]   Running standard algorithms...
+[23:27:35]   joint_fp: ped(dup): 0  Total now: 9453
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:27:37]   caller_name: ped(dup): 0  Total now: 9453
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:27:38]   ordered_seq: ped(dup): 0  Total now: 9453
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:27:39]   string_ref: ped(dup): 0  Total now: 9453
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:27:40]   single_callee_cascade: [23:27:39] Wave 1: 0 new matches | [23:27:39] Converged. | [23:27:39] Total added: 0 (cascade now 9453) | [23:27:40] Pending renames: 1 | [23:27:40] Wrote rename script with 1 entries
+[23:27:40]   FUN_xxx remaining (approx): 5296
+[23:27:40]   Cascade now: 9453
+[23:27:40] Wave 3 — cascade: 9453
+[23:27:40]   callee_set: +0
+[23:27:40]   single_caller: +1
+[23:27:40]   callee+size: +0
+[23:27:41]   Running standard algorithms...
+[23:27:41]   joint_fp: ped(dup): 0  Total now: 9454
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:27:42]   caller_name: ped(dup): 0  Total now: 9454
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:27:43]   ordered_seq: ped(dup): 0  Total now: 9454
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:27:44]   string_ref: ped(dup): 0  Total now: 9454
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:27:44]   single_callee_cascade: [23:27:44] Wave 1: 0 new matches | [23:27:44] Converged. | [23:27:44] Total added: 0 (cascade now 9454) | [23:27:44] Pending renames: 1 | [23:27:44] Wrote rename script with 1 entries
+[23:27:44]   FUN_xxx remaining (approx): 5295
+[23:27:44]   Cascade now: 9454
+[23:27:44] Wave 4 — cascade: 9454
+[23:27:44]   callee_set: +0
+[23:27:45]   single_caller: +0
+[23:27:45]   callee+size: +0
+[23:27:45]   Running standard algorithms...
+[23:27:46]   joint_fp: ped(dup): 0  Total now: 9454
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:27:47]   caller_name: ped(dup): 0  Total now: 9454
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:27:47]   ordered_seq: ped(dup): 0  Total now: 9454
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:27:48]   string_ref: ped(dup): 0  Total now: 9454
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:27:49]   single_callee_cascade: [23:27:49] Wave 1: 0 new matches | [23:27:49] Converged. | [23:27:49] Total added: 0 (cascade now 9454) | [23:27:49] Pending renames: 1 | [23:27:49] Wrote rename script with 1 entries
+[23:27:49]   FUN_xxx remaining (approx): 5295
+[23:27:49]   Cascade now: 9454
+[23:27:49] Converged at wave 4.
+[23:27:49] === FINAL cascade: 9454 === Pending renames: 1
+
+[23:35:16] === local_cascade_multi.py start ===
+[23:35:17] Wave 1 — cascade: 9464
+[23:35:17]   callee_set: +0
+[23:35:17]   single_caller: +1
+[23:35:17]   callee+size: +0
+[23:35:20]   Running standard algorithms...
+[23:35:22]   joint_fp: ped(dup): 0  Total now: 9466
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:35:23]   caller_name: ped(dup): 0  Total now: 9469
+Pending renames: 5
+Wrote 5 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:35:25]   ordered_seq: ped(dup): 0  Total now: 9469
+Pending renames: 5
+Wrote 5 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:35:29]   string_ref: ped(dup): 0  Total now: 9469
+Pending renames: 5
+Wrote 5 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:35:29]   single_callee_cascade: [23:35:29] Wave 1: 0 new matches | [23:35:29] Converged. | [23:35:29] Total added: 0 (cascade now 9469) | [23:35:29] Pending renames: 5 | [23:35:29] Wrote rename script with 5 entries
+[23:35:29]   FUN_xxx remaining (approx): 5284
+[23:35:29]   Cascade now: 9469
+[23:35:30] Wave 2 — cascade: 9469
+[23:35:30]   callee_set: +0
+[23:35:30]   single_caller: +0
+[23:35:30]   callee+size: +0
+[23:35:31]   Running standard algorithms...
+[23:35:32]   joint_fp: ped(dup): 0  Total now: 9469
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:35:33]   caller_name: ped(dup): 0  Total now: 9469
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:35:34]   ordered_seq: ped(dup): 0  Total now: 9469
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:35:35]   string_ref: ped(dup): 0  Total now: 9469
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:35:36]   single_callee_cascade: [23:35:35] Wave 1: 0 new matches | [23:35:35] Converged. | [23:35:35] Total added: 0 (cascade now 9469) | [23:35:36] Pending renames: 1 | [23:35:36] Wrote rename script with 1 entries
+[23:35:36]   FUN_xxx remaining (approx): 5280
+[23:35:36]   Cascade now: 9469
+[23:35:36] Converged at wave 2.
+[23:35:36] === FINAL cascade: 9469 === Pending renames: 1
+
+[23:37:07] === local_cascade_multi.py start ===
+[23:37:07] Wave 1 — cascade: 9471
+[23:37:07]   callee_set: +0
+[23:37:08]   single_caller: +0
+[23:37:08]   callee+size: +0
+[23:37:09]   Running standard algorithms...
+[23:37:14]   joint_fp: ped(dup): 0  Total now: 9471
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:37:16]   caller_name: ped(dup): 0  Total now: 9471
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:37:19]   ordered_seq: ped(dup): 0  Total now: 9471
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:37:20]   string_ref: ped(dup): 0  Total now: 9471
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:37:20]   single_callee_cascade: [23:37:20] Wave 1: 0 new matches | [23:37:20] Converged. | [23:37:20] Total added: 0 (cascade now 9471) | [23:37:20] Pending renames: 1 | [23:37:20] Wrote rename script with 1 entries
+[23:37:20]   FUN_xxx remaining (approx): 5278
+[23:37:20]   Cascade now: 9471
+[23:37:20] Converged at wave 1.
+[23:37:20] === FINAL cascade: 9471 === Pending renames: 1
+
+[23:47:27] === local_cascade_multi.py start ===
+[23:47:27] Wave 1 — cascade: 9533
+[23:47:27]   callee_set: +0
+[23:47:28]   single_caller: +14
+[23:47:28]   callee+size: +0
+[23:47:29]   Running standard algorithms...
+[23:47:31]   joint_fp: ped(dup): 0  Total now: 9548
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:47:34]   caller_name: ped(dup): 0  Total now: 9548
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:47:36]   ordered_seq: ped(dup): 0  Total now: 9548
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:47:37]   string_ref: ped(dup): 0  Total now: 9548
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:47:39]   single_callee_cascade:  1 new matches | [23:47:39] Wave 2: 0 new matches | [23:47:39] Converged. | [23:47:39] Total added: 1 (cascade now 9549) | [23:47:39] Pending renames: 2 | [23:47:39] Wrote rename script with 2 entries
+[23:47:39]   FUN_xxx remaining (approx): 5205
+[23:47:39]   Cascade now: 9549
+[23:47:39] Wave 2 — cascade: 9549
+[23:47:39]   callee_set: +0
+[23:47:40]   single_caller: +0
+[23:47:40]   callee+size: +0
+[23:47:41]   Running standard algorithms...
+[23:47:42]   joint_fp: ped(dup): 0  Total now: 9549
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:47:44]   caller_name: ped(dup): 0  Total now: 9549
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:47:45]   ordered_seq: ped(dup): 0  Total now: 9549
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:47:46]   string_ref: ped(dup): 0  Total now: 9549
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:47:47]   single_callee_cascade: [23:47:47] Wave 1: 0 new matches | [23:47:47] Converged. | [23:47:47] Total added: 0 (cascade now 9549) | [23:47:47] Pending renames: 1 | [23:47:47] Wrote rename script with 1 entries
+[23:47:47]   FUN_xxx remaining (approx): 5203
+[23:47:47]   Cascade now: 9549
+[23:47:47] Converged at wave 2.
+[23:47:47] === FINAL cascade: 9549 === Pending renames: 1
+
+[23:50:03] === local_cascade_multi.py start ===
+[23:50:03] Wave 1 — cascade: 9555
+[23:50:03]   callee_set: +0
+[23:50:03]   single_caller: +1
+[23:50:03]   callee+size: +0
+[23:50:03]   Running standard algorithms...
+[23:50:04]   joint_fp: ped(dup): 0  Total now: 9556
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:50:05]   caller_name: ped(dup): 0  Total now: 9556
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:50:06]   ordered_seq: ped(dup): 0  Total now: 9556
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:50:06]   string_ref: ped(dup): 0  Total now: 9556
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:50:07]   single_callee_cascade: [23:50:07] Wave 1: 0 new matches | [23:50:07] Converged. | [23:50:07] Total added: 0 (cascade now 9556) | [23:50:07] Pending renames: 1 | [23:50:07] Wrote rename script with 1 entries
+[23:50:07]   FUN_xxx remaining (approx): 5197
+[23:50:07]   Cascade now: 9556
+[23:50:07] Wave 2 — cascade: 9556
+[23:50:07]   callee_set: +0
+[23:50:07]   single_caller: +0
+[23:50:07]   callee+size: +0
+[23:50:08]   Running standard algorithms...
+[23:50:09]   joint_fp: ped(dup): 0  Total now: 9556
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:50:10]   caller_name: ped(dup): 0  Total now: 9556
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:50:12]   ordered_seq: ped(dup): 0  Total now: 9556
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:50:13]   string_ref: ped(dup): 0  Total now: 9556
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:50:13]   single_callee_cascade: [23:50:13] Wave 1: 0 new matches | [23:50:13] Converged. | [23:50:13] Total added: 0 (cascade now 9556) | [23:50:13] Pending renames: 1 | [23:50:13] Wrote rename script with 1 entries
+[23:50:13]   FUN_xxx remaining (approx): 5197
+[23:50:13]   Cascade now: 9556
+[23:50:13] Converged at wave 2.
+[23:50:14] === FINAL cascade: 9556 === Pending renames: 1
+
+[23:52:15] === local_cascade_multi.py start ===
+[23:52:16] Wave 1 — cascade: 9588
+[23:52:16]   callee_set: +1
+[23:52:16]   single_caller: +5
+[23:52:16]   callee+size: +0
+[23:52:16]   Running standard algorithms...
+[23:52:17]   joint_fp: ped(dup): 0  Total now: 9594
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:52:18]   caller_name: ped(dup): 0  Total now: 9595
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:52:19]   ordered_seq: ped(dup): 0  Total now: 9595
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:52:20]   string_ref: ped(dup): 0  Total now: 9595
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:52:20]   single_callee_cascade: [23:52:20] Wave 1: 0 new matches | [23:52:20] Converged. | [23:52:20] Total added: 0 (cascade now 9595) | [23:52:20] Pending renames: 2 | [23:52:20] Wrote rename script with 2 entries
+[23:52:20]   FUN_xxx remaining (approx): 5159
+[23:52:20]   Cascade now: 9595
+[23:52:20] Wave 2 — cascade: 9595
+[23:52:20]   callee_set: +0
+[23:52:21]   single_caller: +1
+[23:52:21]   callee+size: +0
+[23:52:22]   Running standard algorithms...
+[23:52:23]   joint_fp: ped(dup): 0  Total now: 9596
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:52:24]   caller_name: ped(dup): 0  Total now: 9596
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:52:25]   ordered_seq: ped(dup): 0  Total now: 9596
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:52:26]   string_ref: ped(dup): 0  Total now: 9596
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:52:26]   single_callee_cascade: [23:52:26] Wave 1: 0 new matches | [23:52:26] Converged. | [23:52:26] Total added: 0 (cascade now 9596) | [23:52:26] Pending renames: 1 | [23:52:26] Wrote rename script with 1 entries
+[23:52:26]   FUN_xxx remaining (approx): 5157
+[23:52:26]   Cascade now: 9596
+[23:52:27] Wave 3 — cascade: 9596
+[23:52:27]   callee_set: +0
+[23:52:27]   single_caller: +0
+[23:52:27]   callee+size: +0
+[23:52:28]   Running standard algorithms...
+[23:52:29]   joint_fp: ped(dup): 0  Total now: 9596
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:52:30]   caller_name: ped(dup): 0  Total now: 9596
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:52:31]   ordered_seq: ped(dup): 0  Total now: 9596
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:52:32]   string_ref: ped(dup): 0  Total now: 9596
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:52:32]   single_callee_cascade: [23:52:32] Wave 1: 0 new matches | [23:52:32] Converged. | [23:52:32] Total added: 0 (cascade now 9596) | [23:52:32] Pending renames: 1 | [23:52:32] Wrote rename script with 1 entries
+[23:52:32]   FUN_xxx remaining (approx): 5157
+[23:52:32]   Cascade now: 9596
+[23:52:32] Converged at wave 3.
+[23:52:32] === FINAL cascade: 9596 === Pending renames: 1
+
+[23:53:25] === local_cascade_multi.py start ===
+[23:53:25] Wave 1 — cascade: 9750
+[23:53:25]   callee_set: +6
+[23:53:25]   single_caller: +10
+[23:53:25]   callee+size: +0
+[23:53:26]   Running standard algorithms...
+[23:53:26]   joint_fp: ped(dup): 0  Total now: 9766
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:53:28]   caller_name: ped(dup): 0  Total now: 9766
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:53:28]   ordered_seq: ped(dup): 0  Total now: 9766
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:53:29]   string_ref: ped(dup): 0  Total now: 9767
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:53:29]   single_callee_cascade: [23:53:29] Wave 1: 0 new matches | [23:53:29] Converged. | [23:53:29] Total added: 0 (cascade now 9767) | [23:53:29] Pending renames: 2 | [23:53:29] Wrote rename script with 2 entries
+[23:53:29]   FUN_xxx remaining (approx): 4991
+[23:53:29]   Cascade now: 9767
+[23:53:30] Wave 2 — cascade: 9767
+[23:53:30]   callee_set: +0
+[23:53:30]   single_caller: +4
+[23:53:30]   callee+size: +0
+[23:53:30]   Running standard algorithms...
+[23:53:31]   joint_fp: ped(dup): 0  Total now: 9771
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:53:32]   caller_name: ped(dup): 0  Total now: 9771
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:53:32]   ordered_seq: ped(dup): 0  Total now: 9771
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:53:33]   string_ref: ped(dup): 0  Total now: 9771
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:53:33]   single_callee_cascade: [23:53:33] Wave 1: 0 new matches | [23:53:33] Converged. | [23:53:33] Total added: 0 (cascade now 9771) | [23:53:33] Pending renames: 1 | [23:53:33] Wrote rename script with 1 entries
+[23:53:33]   FUN_xxx remaining (approx): 4986
+[23:53:33]   Cascade now: 9771
+[23:53:33] Wave 3 — cascade: 9771
+[23:53:34]   callee_set: +0
+[23:53:34]   single_caller: +1
+[23:53:34]   callee+size: +0
+[23:53:34]   Running standard algorithms...
+[23:53:35]   joint_fp: ped(dup): 0  Total now: 9772
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:53:36]   caller_name: ped(dup): 0  Total now: 9772
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:53:38]   ordered_seq: ped(dup): 0  Total now: 9772
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:53:38]   string_ref: ped(dup): 0  Total now: 9772
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:53:39]   single_callee_cascade: [23:53:39] Wave 1: 0 new matches | [23:53:39] Converged. | [23:53:39] Total added: 0 (cascade now 9772) | [23:53:39] Pending renames: 1 | [23:53:39] Wrote rename script with 1 entries
+[23:53:39]   FUN_xxx remaining (approx): 4985
+[23:53:39]   Cascade now: 9772
+[23:53:39] Wave 4 — cascade: 9772
+[23:53:39]   callee_set: +0
+[23:53:39]   single_caller: +0
+[23:53:39]   callee+size: +0
+[23:53:40]   Running standard algorithms...
+[23:53:41]   joint_fp: ped(dup): 0  Total now: 9772
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:53:42]   caller_name: ped(dup): 0  Total now: 9772
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:53:43]   ordered_seq: ped(dup): 0  Total now: 9772
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:53:44]   string_ref: ped(dup): 0  Total now: 9772
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:53:45]   single_callee_cascade: [23:53:45] Wave 1: 0 new matches | [23:53:45] Converged. | [23:53:45] Total added: 0 (cascade now 9772) | [23:53:45] Pending renames: 1 | [23:53:45] Wrote rename script with 1 entries
+[23:53:45]   FUN_xxx remaining (approx): 4985
+[23:53:45]   Cascade now: 9772
+[23:53:45] Converged at wave 4.
+[23:53:45] === FINAL cascade: 9772 === Pending renames: 1
+
+[23:54:44] === local_cascade_multi.py start ===
+[23:54:44] Wave 1 — cascade: 9791
+[23:54:44]   callee_set: +1
+[23:54:45]   single_caller: +5
+[23:54:45]   callee+size: +0
+[23:54:45]   Running standard algorithms...
+[23:54:46]   joint_fp: ped(dup): 0  Total now: 9798
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:54:47]   caller_name: ped(dup): 0  Total now: 9798
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:54:48]   ordered_seq: ped(dup): 0  Total now: 9798
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:54:48]   string_ref: ped(dup): 0  Total now: 9798
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:54:49]   single_callee_cascade:  1 new matches | [23:54:49] Wave 2: 0 new matches | [23:54:49] Converged. | [23:54:49] Total added: 1 (cascade now 9799) | [23:54:49] Pending renames: 2 | [23:54:49] Wrote rename script with 2 entries
+[23:54:49]   FUN_xxx remaining (approx): 4960
+[23:54:49]   Cascade now: 9799
+[23:54:49] Wave 2 — cascade: 9799
+[23:54:49]   callee_set: +0
+[23:54:49]   single_caller: +3
+[23:54:49]   callee+size: +0
+[23:54:50]   Running standard algorithms...
+[23:54:51]   joint_fp: ped(dup): 0  Total now: 9802
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:54:52]   caller_name: ped(dup): 0  Total now: 9802
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:54:53]   ordered_seq: ped(dup): 0  Total now: 9802
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:54:53]   string_ref: ped(dup): 0  Total now: 9802
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:54:54]   single_callee_cascade:  1 new matches | [23:54:54] Wave 2: 0 new matches | [23:54:54] Converged. | [23:54:54] Total added: 1 (cascade now 9803) | [23:54:54] Pending renames: 1 | [23:54:54] Wrote rename script with 1 entries
+[23:54:54]   FUN_xxx remaining (approx): 4955
+[23:54:54]   Cascade now: 9803
+[23:54:54] Wave 3 — cascade: 9803
+[23:54:54]   callee_set: +0
+[23:54:54]   single_caller: +1
+[23:54:54]   callee+size: +0
+[23:54:54]   Running standard algorithms...
+[23:54:55]   joint_fp: ped(dup): 0  Total now: 9804
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:54:56]   caller_name: ped(dup): 0  Total now: 9804
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:54:57]   ordered_seq: ped(dup): 0  Total now: 9804
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:54:58]   string_ref: ped(dup): 0  Total now: 9804
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:54:58]   single_callee_cascade: [23:54:58] Wave 1: 0 new matches | [23:54:58] Converged. | [23:54:58] Total added: 0 (cascade now 9804) | [23:54:58] Pending renames: 1 | [23:54:58] Wrote rename script with 1 entries
+[23:54:58]   FUN_xxx remaining (approx): 4953
+[23:54:58]   Cascade now: 9804
+[23:54:58] Wave 4 — cascade: 9804
+[23:54:58]   callee_set: +0
+[23:54:58]   single_caller: +0
+[23:54:58]   callee+size: +0
+[23:54:59]   Running standard algorithms...
+[23:55:00]   joint_fp: ped(dup): 0  Total now: 9804
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:55:01]   caller_name: ped(dup): 0  Total now: 9804
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:55:01]   ordered_seq: ped(dup): 0  Total now: 9804
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:55:02]   string_ref: ped(dup): 0  Total now: 9804
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:55:02]   single_callee_cascade: [23:55:02] Wave 1: 0 new matches | [23:55:02] Converged. | [23:55:02] Total added: 0 (cascade now 9804) | [23:55:02] Pending renames: 1 | [23:55:02] Wrote rename script with 1 entries
+[23:55:02]   FUN_xxx remaining (approx): 4953
+[23:55:02]   Cascade now: 9804
+[23:55:02] Converged at wave 4.
+[23:55:02] === FINAL cascade: 9804 === Pending renames: 1
+
+[23:55:40] === local_cascade_multi.py start ===
+[23:55:40] Wave 1 — cascade: 9804
+[23:55:40]   callee_set: +0
+[23:55:40]   single_caller: +0
+[23:55:40]   callee+size: +0
+[23:55:41]   Running standard algorithms...
+[23:55:42]   joint_fp: ped(dup): 0  Total now: 9804
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:55:43]   caller_name: ped(dup): 0  Total now: 9804
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:55:44]   ordered_seq: ped(dup): 0  Total now: 9804
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:55:45]   string_ref: ped(dup): 0  Total now: 9804
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[23:55:45]   single_callee_cascade: [23:55:45] Wave 1: 0 new matches | [23:55:45] Converged. | [23:55:45] Total added: 0 (cascade now 9804) | [23:55:45] Pending renames: 1 | [23:55:45] Wrote rename script with 1 entries
+[23:55:45]   FUN_xxx remaining (approx): 4953
+[23:55:45]   Cascade now: 9804
+[23:55:45] Converged at wave 1.
+[23:55:45] === FINAL cascade: 9804 === Pending renames: 1
+
+[00:04:22] === local_cascade_multi.py start ===
+[00:04:23] Wave 1 — cascade: 10141
+[00:04:23]   callee_set: +8
+[00:04:23]   single_caller: +34
+[00:04:23]   callee+size: +0
+[00:04:24]   Running standard algorithms...
+[00:04:27]   joint_fp: ed(dup): 0  Total now: 10183
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:04:28]   caller_name: ed(dup): 0  Total now: 10184
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:04:29]   ordered_seq: ed(dup): 0  Total now: 10184
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:04:30]   string_ref: ed(dup): 0  Total now: 10184
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:04:31]   single_callee_cascade: 1 new matches | [00:04:31] Wave 2: 0 new matches | [00:04:31] Converged. | [00:04:31] Total added: 1 (cascade now 10185) | [00:04:31] Pending renames: 2 | [00:04:31] Wrote rename script with 2 entries
+[00:04:31]   FUN_xxx remaining (approx): 4579
+[00:04:31]   Cascade now: 10185
+[00:04:31] Wave 2 — cascade: 10185
+[00:04:31]   callee_set: +0
+[00:04:31]   single_caller: +8
+[00:04:31]   callee+size: +0
+[00:04:33]   Running standard algorithms...
+[00:04:34]   joint_fp: ed(dup): 0  Total now: 10193
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:04:34]   caller_name: ed(dup): 0  Total now: 10193
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:04:35]   ordered_seq: ed(dup): 0  Total now: 10193
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:04:36]   string_ref: ed(dup): 0  Total now: 10193
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:04:37]   single_callee_cascade: [00:04:37] Wave 1: 0 new matches | [00:04:37] Converged. | [00:04:37] Total added: 0 (cascade now 10193) | [00:04:37] Pending renames: 1 | [00:04:37] Wrote rename script with 1 entries
+[00:04:37]   FUN_xxx remaining (approx): 4570
+[00:04:37]   Cascade now: 10193
+[00:04:37] Wave 3 — cascade: 10193
+[00:04:37]   callee_set: +0
+[00:04:37]   single_caller: +1
+[00:04:37]   callee+size: +0
+[00:04:38]   Running standard algorithms...
+[00:04:39]   joint_fp: ed(dup): 0  Total now: 10194
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:04:40]   caller_name: ed(dup): 0  Total now: 10194
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:04:41]   ordered_seq: ed(dup): 0  Total now: 10194
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:04:42]   string_ref: ed(dup): 0  Total now: 10194
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:04:42]   single_callee_cascade: [00:04:42] Wave 1: 0 new matches | [00:04:42] Converged. | [00:04:42] Total added: 0 (cascade now 10194) | [00:04:42] Pending renames: 1 | [00:04:42] Wrote rename script with 1 entries
+[00:04:42]   FUN_xxx remaining (approx): 4569
+[00:04:42]   Cascade now: 10194
+[00:04:42] Wave 4 — cascade: 10194
+[00:04:43]   callee_set: +0
+[00:04:43]   single_caller: +0
+[00:04:43]   callee+size: +0
+[00:04:43]   Running standard algorithms...
+[00:04:44]   joint_fp: ed(dup): 0  Total now: 10194
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:04:45]   caller_name: ed(dup): 0  Total now: 10194
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:04:46]   ordered_seq: ed(dup): 0  Total now: 10194
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:04:47]   string_ref: ed(dup): 0  Total now: 10194
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:04:47]   single_callee_cascade: [00:04:47] Wave 1: 0 new matches | [00:04:47] Converged. | [00:04:47] Total added: 0 (cascade now 10194) | [00:04:47] Pending renames: 1 | [00:04:47] Wrote rename script with 1 entries
+[00:04:48]   FUN_xxx remaining (approx): 4569
+[00:04:48]   Cascade now: 10194
+[00:04:48] Converged at wave 4.
+[00:04:48] === FINAL cascade: 10194 === Pending renames: 1
+
+[00:06:13] === local_cascade_multi.py start ===
+[00:06:13] Wave 1 — cascade: 10244
+[00:06:13]   callee_set: +1
+[00:06:13]   single_caller: +4
+[00:06:13]   callee+size: +0
+[00:06:13]   Running standard algorithms...
+[00:06:15]   joint_fp: ed(dup): 0  Total now: 10249
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:06:17]   caller_name: ed(dup): 0  Total now: 10249
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:06:18]   ordered_seq: ed(dup): 0  Total now: 10249
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:06:18]   string_ref: ed(dup): 0  Total now: 10249
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:06:18]   single_callee_cascade: [00:06:18] Wave 1: 0 new matches | [00:06:18] Converged. | [00:06:18] Total added: 0 (cascade now 10249) | [00:06:18] Pending renames: 1 | [00:06:18] Wrote rename script with 1 entries
+[00:06:18]   FUN_xxx remaining (approx): 4514
+[00:06:18]   Cascade now: 10249
+[00:06:19] Wave 2 — cascade: 10249
+[00:06:19]   callee_set: +0
+[00:06:19]   single_caller: +1
+[00:06:19]   callee+size: +0
+[00:06:20]   Running standard algorithms...
+[00:06:21]   joint_fp: ed(dup): 0  Total now: 10250
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:06:22]   caller_name: ed(dup): 0  Total now: 10250
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:06:23]   ordered_seq: ed(dup): 0  Total now: 10250
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:06:24]   string_ref: ed(dup): 0  Total now: 10250
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:06:24]   single_callee_cascade: [00:06:24] Wave 1: 0 new matches | [00:06:24] Converged. | [00:06:24] Total added: 0 (cascade now 10250) | [00:06:24] Pending renames: 1 | [00:06:24] Wrote rename script with 1 entries
+[00:06:25]   FUN_xxx remaining (approx): 4514
+[00:06:25]   Cascade now: 10250
+[00:06:25] Wave 3 — cascade: 10250
+[00:06:25]   callee_set: +0
+[00:06:25]   single_caller: +0
+[00:06:25]   callee+size: +0
+[00:06:26]   Running standard algorithms...
+[00:06:27]   joint_fp: ed(dup): 0  Total now: 10250
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:06:28]   caller_name: ed(dup): 0  Total now: 10250
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:06:29]   ordered_seq: ed(dup): 0  Total now: 10250
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:06:30]   string_ref: ed(dup): 0  Total now: 10250
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:06:30]   single_callee_cascade: [00:06:30] Wave 1: 0 new matches | [00:06:30] Converged. | [00:06:30] Total added: 0 (cascade now 10250) | [00:06:30] Pending renames: 1 | [00:06:30] Wrote rename script with 1 entries
+[00:06:30]   FUN_xxx remaining (approx): 4514
+[00:06:30]   Cascade now: 10250
+[00:06:30] Converged at wave 3.
+[00:06:31] === FINAL cascade: 10250 === Pending renames: 1
+
+[00:06:54] === local_cascade_multi.py start ===
+[00:06:54] Wave 1 — cascade: 10254
+[00:06:54]   callee_set: +0
+[00:06:54]   single_caller: +0
+[00:06:54]   callee+size: +0
+[00:06:55]   Running standard algorithms...
+[00:06:56]   joint_fp: ed(dup): 0  Total now: 10254
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:06:57]   caller_name: ed(dup): 0  Total now: 10254
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:06:58]   ordered_seq: ed(dup): 0  Total now: 10254
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:06:59]   string_ref: ed(dup): 0  Total now: 10254
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:06:59]   single_callee_cascade: [00:06:59] Wave 1: 0 new matches | [00:06:59] Converged. | [00:06:59] Total added: 0 (cascade now 10254) | [00:06:59] Pending renames: 1 | [00:06:59] Wrote rename script with 1 entries
+[00:06:59]   FUN_xxx remaining (approx): 4510
+[00:06:59]   Cascade now: 10254
+[00:06:59] Converged at wave 1.
+[00:06:59] === FINAL cascade: 10254 === Pending renames: 1
+
+[00:07:38] === local_cascade_multi.py start ===
+[00:07:38] Wave 1 — cascade: 10257
+[00:07:38]   callee_set: +0
+[00:07:38]   single_caller: +0
+[00:07:38]   callee+size: +0
+[00:07:39]   Running standard algorithms...
+[00:07:40]   joint_fp: ed(dup): 0  Total now: 10257
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:07:41]   caller_name: ed(dup): 0  Total now: 10257
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:07:43]   ordered_seq: ed(dup): 0  Total now: 10257
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:07:43]   string_ref: ed(dup): 0  Total now: 10257
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:07:44]   single_callee_cascade: [00:07:43] Wave 1: 0 new matches | [00:07:43] Converged. | [00:07:43] Total added: 0 (cascade now 10257) | [00:07:44] Pending renames: 1 | [00:07:44] Wrote rename script with 1 entries
+[00:07:44]   FUN_xxx remaining (approx): 4507
+[00:07:44]   Cascade now: 10257
+[00:07:44] Converged at wave 1.
+[00:07:44] === FINAL cascade: 10257 === Pending renames: 1
+
+[00:08:19] === local_cascade_multi.py start ===
+[00:08:19] Wave 1 — cascade: 10257
+[00:08:19]   callee_set: +0
+[00:08:19]   single_caller: +0
+[00:08:19]   callee+size: +0
+[00:08:20]   Running standard algorithms...
+[00:08:22]   joint_fp: ed(dup): 0  Total now: 10257
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:08:23]   caller_name: ed(dup): 0  Total now: 10257
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:08:25]   ordered_seq: ed(dup): 0  Total now: 10257
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:08:26]   string_ref: ed(dup): 0  Total now: 10257
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:08:27]   single_callee_cascade: [00:08:27] Wave 1: 0 new matches | [00:08:27] Converged. | [00:08:27] Total added: 0 (cascade now 10257) | [00:08:27] Pending renames: 1 | [00:08:27] Wrote rename script with 1 entries
+[00:08:27]   FUN_xxx remaining (approx): 4507
+[00:08:27]   Cascade now: 10257
+[00:08:27] Converged at wave 1.
+[00:08:27] === FINAL cascade: 10257 === Pending renames: 1
+
+[00:11:18] === local_cascade_multi.py start ===
+[00:11:18] Wave 1 — cascade: 10285
+[00:11:18]   callee_set: +0
+[00:11:19]   single_caller: +2
+[00:11:19]   callee+size: +0
+[00:11:20]   Running standard algorithms...
+[00:11:21]   joint_fp: ed(dup): 0  Total now: 10287
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:11:23]   caller_name: ed(dup): 0  Total now: 10287
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:11:26]   ordered_seq: ed(dup): 0  Total now: 10287
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:11:27]   string_ref: ed(dup): 0  Total now: 10287
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:11:27]   single_callee_cascade: [00:11:27] Wave 1: 0 new matches | [00:11:27] Converged. | [00:11:27] Total added: 0 (cascade now 10287) | [00:11:27] Pending renames: 1 | [00:11:27] Wrote rename script with 1 entries
+[00:11:27]   FUN_xxx remaining (approx): 4477
+[00:11:27]   Cascade now: 10287
+[00:11:28] Wave 2 — cascade: 10287
+[00:11:28]   callee_set: +0
+[00:11:28]   single_caller: +1
+[00:11:28]   callee+size: +0
+[00:11:29]   Running standard algorithms...
+[00:11:33]   joint_fp: ed(dup): 0  Total now: 10288
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:11:34]   caller_name: ed(dup): 0  Total now: 10288
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:11:36]   ordered_seq: ed(dup): 0  Total now: 10288
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:11:37]   string_ref: ed(dup): 0  Total now: 10288
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:11:38]   single_callee_cascade: [00:11:38] Wave 1: 0 new matches | [00:11:38] Converged. | [00:11:38] Total added: 0 (cascade now 10288) | [00:11:38] Pending renames: 1 | [00:11:38] Wrote rename script with 1 entries
+[00:11:38]   FUN_xxx remaining (approx): 4476
+[00:11:38]   Cascade now: 10288
+[00:11:38] Wave 3 — cascade: 10288
+[00:11:38]   callee_set: +0
+[00:11:39]   single_caller: +1
+[00:11:39]   callee+size: +0
+[00:11:40]   Running standard algorithms...
+[00:11:41]   joint_fp: ed(dup): 0  Total now: 10289
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:11:43]   caller_name: ed(dup): 0  Total now: 10289
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:11:45]   ordered_seq: ed(dup): 0  Total now: 10289
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:11:46]   string_ref: ed(dup): 0  Total now: 10289
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:11:47]   single_callee_cascade: [00:11:46] Wave 1: 0 new matches | [00:11:46] Converged. | [00:11:46] Total added: 0 (cascade now 10289) | [00:11:46] Pending renames: 1 | [00:11:46] Wrote rename script with 1 entries
+[00:11:47]   FUN_xxx remaining (approx): 4475
+[00:11:47]   Cascade now: 10289
+[00:11:47] Wave 4 — cascade: 10289
+[00:11:47]   callee_set: +0
+[00:11:47]   single_caller: +0
+[00:11:47]   callee+size: +0
+[00:11:48]   Running standard algorithms...
+[00:11:49]   joint_fp: ed(dup): 0  Total now: 10289
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:11:50]   caller_name: ed(dup): 0  Total now: 10289
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:11:52]   ordered_seq: ed(dup): 0  Total now: 10289
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:11:53]   string_ref: ed(dup): 0  Total now: 10289
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:11:53]   single_callee_cascade: [00:11:53] Wave 1: 0 new matches | [00:11:53] Converged. | [00:11:53] Total added: 0 (cascade now 10289) | [00:11:53] Pending renames: 1 | [00:11:53] Wrote rename script with 1 entries
+[00:11:53]   FUN_xxx remaining (approx): 4475
+[00:11:53]   Cascade now: 10289
+[00:11:53] Converged at wave 4.
+[00:11:53] === FINAL cascade: 10289 === Pending renames: 1
+
+[00:12:27] === local_cascade_multi.py start ===
+[00:12:27] Wave 1 — cascade: 10292
+[00:12:27]   callee_set: +0
+[00:12:27]   single_caller: +1
+[00:12:27]   callee+size: +0
+[00:12:28]   Running standard algorithms...
+[00:12:29]   joint_fp: ed(dup): 0  Total now: 10293
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:12:30]   caller_name: ed(dup): 0  Total now: 10293
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:12:31]   ordered_seq: ed(dup): 0  Total now: 10293
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:12:32]   string_ref: ed(dup): 0  Total now: 10293
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:12:32]   single_callee_cascade: [00:12:32] Wave 1: 0 new matches | [00:12:32] Converged. | [00:12:32] Total added: 0 (cascade now 10293) | [00:12:32] Pending renames: 1 | [00:12:32] Wrote rename script with 1 entries
+[00:12:32]   FUN_xxx remaining (approx): 4471
+[00:12:32]   Cascade now: 10293
+[00:12:32] Wave 2 — cascade: 10293
+[00:12:32]   callee_set: +0
+[00:12:32]   single_caller: +1
+[00:12:33]   callee+size: +0
+[00:12:33]   Running standard algorithms...
+[00:12:35]   joint_fp: ed(dup): 0  Total now: 10294
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:12:36]   caller_name: ed(dup): 0  Total now: 10294
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:12:38]   ordered_seq: ed(dup): 0  Total now: 10294
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:12:40]   string_ref: ed(dup): 0  Total now: 10294
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:12:41]   single_callee_cascade: [00:12:41] Wave 1: 0 new matches | [00:12:41] Converged. | [00:12:41] Total added: 0 (cascade now 10294) | [00:12:41] Pending renames: 1 | [00:12:41] Wrote rename script with 1 entries
+[00:12:41]   FUN_xxx remaining (approx): 4470
+[00:12:41]   Cascade now: 10294
+[00:12:41] Wave 3 — cascade: 10294
+[00:12:41]   callee_set: +0
+[00:12:41]   single_caller: +0
+[00:12:41]   callee+size: +0
+[00:12:42]   Running standard algorithms...
+[00:12:43]   joint_fp: ed(dup): 0  Total now: 10294
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:12:43]   caller_name: ed(dup): 0  Total now: 10294
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:12:44]   ordered_seq: ed(dup): 0  Total now: 10294
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:12:45]   string_ref: ed(dup): 0  Total now: 10294
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:12:46]   single_callee_cascade: [00:12:46] Wave 1: 0 new matches | [00:12:46] Converged. | [00:12:46] Total added: 0 (cascade now 10294) | [00:12:46] Pending renames: 1 | [00:12:46] Wrote rename script with 1 entries
+[00:12:46]   FUN_xxx remaining (approx): 4470
+[00:12:46]   Cascade now: 10294
+[00:12:46] Converged at wave 3.
+[00:12:46] === FINAL cascade: 10294 === Pending renames: 1
+
+[00:13:11] === local_cascade_multi.py start ===
+[00:13:11] Wave 1 — cascade: 10296
+[00:13:12]   callee_set: +0
+[00:13:12]   single_caller: +0
+[00:13:12]   callee+size: +0
+[00:13:12]   Running standard algorithms...
+[00:13:13]   joint_fp: ed(dup): 0  Total now: 10296
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:13:15]   caller_name: ed(dup): 0  Total now: 10296
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:13:16]   ordered_seq: ed(dup): 0  Total now: 10296
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:13:16]   string_ref: ed(dup): 0  Total now: 10296
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:13:17]   single_callee_cascade: [00:13:17] Wave 1: 0 new matches | [00:13:17] Converged. | [00:13:17] Total added: 0 (cascade now 10296) | [00:13:17] Pending renames: 1 | [00:13:17] Wrote rename script with 1 entries
+[00:13:17]   FUN_xxx remaining (approx): 4468
+[00:13:17]   Cascade now: 10296
+[00:13:17] Converged at wave 1.
+[00:13:17] === FINAL cascade: 10296 === Pending renames: 1
+
+[00:13:44] === local_cascade_multi.py start ===
+[00:13:44] Wave 1 — cascade: 10296
+[00:13:44]   callee_set: +0
+[00:13:44]   single_caller: +0
+[00:13:44]   callee+size: +0
+[00:13:45]   Running standard algorithms...
+[00:13:46]   joint_fp: ed(dup): 0  Total now: 10296
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:13:46]   caller_name: ed(dup): 0  Total now: 10296
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:13:47]   ordered_seq: ed(dup): 0  Total now: 10296
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:13:48]   string_ref: ed(dup): 0  Total now: 10296
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:13:48]   single_callee_cascade: [00:13:48] Wave 1: 0 new matches | [00:13:48] Converged. | [00:13:48] Total added: 0 (cascade now 10296) | [00:13:48] Pending renames: 1 | [00:13:48] Wrote rename script with 1 entries
+[00:13:48]   FUN_xxx remaining (approx): 4468
+[00:13:48]   Cascade now: 10296
+[00:13:48] Converged at wave 1.
+[00:13:48] === FINAL cascade: 10296 === Pending renames: 1
+
+[00:18:14] === local_cascade_multi.py start ===
+[00:18:15] Wave 1 — cascade: 10301
+[00:18:15]   callee_set: +0
+[00:18:15]   single_caller: +0
+[00:18:15]   callee+size: +0
+[00:18:16]   Running standard algorithms...
+[00:18:17]   joint_fp: ed(dup): 0  Total now: 10301
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:18:18]   caller_name: ed(dup): 0  Total now: 10301
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:18:19]   ordered_seq: ed(dup): 0  Total now: 10301
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:18:20]   string_ref: ed(dup): 0  Total now: 10301
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:18:21]   single_callee_cascade: [00:18:20] Wave 1: 0 new matches | [00:18:20] Converged. | [00:18:20] Total added: 0 (cascade now 10301) | [00:18:20] Pending renames: 1 | [00:18:20] Wrote rename script with 1 entries
+[00:18:21]   FUN_xxx remaining (approx): 4463
+[00:18:21]   Cascade now: 10301
+[00:18:21] Converged at wave 1.
+[00:18:21] === FINAL cascade: 10301 === Pending renames: 1
+
+[00:20:53] === local_cascade_multi.py start ===
+[00:20:53] Wave 1 — cascade: 10431
+[00:20:53]   callee_set: +3
+[00:20:54]   single_caller: +9
+[00:20:54]   callee+size: +0
+[00:20:56]   Running standard algorithms...
+[00:20:59]   joint_fp: ed(dup): 0  Total now: 10444
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:21:00]   caller_name: ed(dup): 0  Total now: 10444
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:21:03]   ordered_seq: ed(dup): 0  Total now: 10444
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:21:04]   string_ref: ed(dup): 0  Total now: 10444
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:21:05]   single_callee_cascade: 1 new matches | [00:21:05] Wave 2: 0 new matches | [00:21:05] Converged. | [00:21:05] Total added: 1 (cascade now 10445) | [00:21:05] Pending renames: 2 | [00:21:05] Wrote rename script with 2 entries
+[00:21:05]   FUN_xxx remaining (approx): 4321
+[00:21:05]   Cascade now: 10445
+[00:21:05] Wave 2 — cascade: 10445
+[00:21:05]   callee_set: +0
+[00:21:05]   single_caller: +2
+[00:21:06]   callee+size: +0
+[00:21:06]   Running standard algorithms...
+[00:21:07]   joint_fp: ed(dup): 0  Total now: 10447
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:21:08]   caller_name: ed(dup): 0  Total now: 10447
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:21:09]   ordered_seq: ed(dup): 0  Total now: 10447
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:21:09]   string_ref: ed(dup): 0  Total now: 10447
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:21:10]   single_callee_cascade: [00:21:10] Wave 1: 0 new matches | [00:21:10] Converged. | [00:21:10] Total added: 0 (cascade now 10447) | [00:21:10] Pending renames: 1 | [00:21:10] Wrote rename script with 1 entries
+[00:21:10]   FUN_xxx remaining (approx): 4317
+[00:21:10]   Cascade now: 10447
+[00:21:10] Wave 3 — cascade: 10447
+[00:21:10]   callee_set: +0
+[00:21:10]   single_caller: +1
+[00:21:11]   callee+size: +0
+[00:21:11]   Running standard algorithms...
+[00:21:13]   joint_fp: ed(dup): 0  Total now: 10448
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:21:14]   caller_name: ed(dup): 0  Total now: 10448
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:21:16]   ordered_seq: ed(dup): 0  Total now: 10448
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:21:17]   string_ref: ed(dup): 0  Total now: 10448
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:21:17]   single_callee_cascade: [00:21:17] Wave 1: 0 new matches | [00:21:17] Converged. | [00:21:17] Total added: 0 (cascade now 10448) | [00:21:17] Pending renames: 1 | [00:21:17] Wrote rename script with 1 entries
+[00:21:17]   FUN_xxx remaining (approx): 4316
+[00:21:17]   Cascade now: 10448
+[00:21:18] Wave 4 — cascade: 10448
+[00:21:18]   callee_set: +0
+[00:21:18]   single_caller: +0
+[00:21:18]   callee+size: +0
+[00:21:19]   Running standard algorithms...
+[00:21:21]   joint_fp: ed(dup): 0  Total now: 10448
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:21:22]   caller_name: ed(dup): 0  Total now: 10448
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:21:26]   ordered_seq: ed(dup): 0  Total now: 10448
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:21:28]   string_ref: ed(dup): 0  Total now: 10448
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:21:28]   single_callee_cascade: [00:21:28] Wave 1: 0 new matches | [00:21:28] Converged. | [00:21:28] Total added: 0 (cascade now 10448) | [00:21:28] Pending renames: 1 | [00:21:28] Wrote rename script with 1 entries
+[00:21:28]   FUN_xxx remaining (approx): 4316
+[00:21:28]   Cascade now: 10448
+[00:21:28] Converged at wave 4.
+[00:21:28] === FINAL cascade: 10448 === Pending renames: 1
+
+[00:21:50] === local_cascade_multi.py start ===
+[00:21:50] Wave 1 — cascade: 10457
+[00:21:50]   callee_set: +2
+[00:21:51]   single_caller: +4
+[00:21:51]   callee+size: +0
+[00:21:52]   Running standard algorithms...
+[00:21:53]   joint_fp: ed(dup): 0  Total now: 10463
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:21:54]   caller_name: ed(dup): 0  Total now: 10464
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:21:57]   ordered_seq: ed(dup): 0  Total now: 10464
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:21:58]   string_ref: ed(dup): 0  Total now: 10464
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:21:58]   single_callee_cascade: [00:21:58] Wave 1: 0 new matches | [00:21:58] Converged. | [00:21:58] Total added: 0 (cascade now 10464) | [00:21:58] Pending renames: 2 | [00:21:58] Wrote rename script with 2 entries
+[00:21:58]   FUN_xxx remaining (approx): 4301
+[00:21:58]   Cascade now: 10464
+[00:21:59] Wave 2 — cascade: 10464
+[00:21:59]   callee_set: +0
+[00:21:59]   single_caller: +0
+[00:21:59]   callee+size: +0
+[00:22:00]   Running standard algorithms...
+[00:22:01]   joint_fp: ed(dup): 0  Total now: 10464
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:22:03]   caller_name: ed(dup): 0  Total now: 10464
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:22:04]   ordered_seq: ed(dup): 0  Total now: 10464
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:22:05]   string_ref: ed(dup): 0  Total now: 10464
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:22:05]   single_callee_cascade: [00:22:05] Wave 1: 0 new matches | [00:22:05] Converged. | [00:22:05] Total added: 0 (cascade now 10464) | [00:22:05] Pending renames: 1 | [00:22:05] Wrote rename script with 1 entries
+[00:22:05]   FUN_xxx remaining (approx): 4300
+[00:22:05]   Cascade now: 10464
+[00:22:05] Converged at wave 2.
+[00:22:05] === FINAL cascade: 10464 === Pending renames: 1
+
+[00:22:25] === local_cascade_multi.py start ===
+[00:22:25] Wave 1 — cascade: 10467
+[00:22:25]   callee_set: +0
+[00:22:26]   single_caller: +1
+[00:22:26]   callee+size: +0
+[00:22:26]   Running standard algorithms...
+[00:22:28]   joint_fp: ed(dup): 0  Total now: 10468
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:22:29]   caller_name: ed(dup): 0  Total now: 10468
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:22:30]   ordered_seq: ed(dup): 0  Total now: 10468
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:22:31]   string_ref: ed(dup): 0  Total now: 10468
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:22:32]   single_callee_cascade: [00:22:31] Wave 1: 0 new matches | [00:22:31] Converged. | [00:22:31] Total added: 0 (cascade now 10468) | [00:22:32] Pending renames: 1 | [00:22:32] Wrote rename script with 1 entries
+[00:22:32]   FUN_xxx remaining (approx): 4296
+[00:22:32]   Cascade now: 10468
+[00:22:32] Wave 2 — cascade: 10468
+[00:22:33]   callee_set: +0
+[00:22:33]   single_caller: +0
+[00:22:33]   callee+size: +0
+[00:22:34]   Running standard algorithms...
+[00:22:35]   joint_fp: ed(dup): 0  Total now: 10468
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:22:36]   caller_name: ed(dup): 0  Total now: 10468
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:22:37]   ordered_seq: ed(dup): 0  Total now: 10468
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:22:38]   string_ref: ed(dup): 0  Total now: 10468
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:22:39]   single_callee_cascade: [00:22:39] Wave 1: 0 new matches | [00:22:39] Converged. | [00:22:39] Total added: 0 (cascade now 10468) | [00:22:39] Pending renames: 1 | [00:22:39] Wrote rename script with 1 entries
+[00:22:39]   FUN_xxx remaining (approx): 4296
+[00:22:39]   Cascade now: 10468
+[00:22:39] Converged at wave 2.
+[00:22:39] === FINAL cascade: 10468 === Pending renames: 1
+
+[00:23:00] === local_cascade_multi.py start ===
+[00:23:00] Wave 1 — cascade: 10468
+[00:23:00]   callee_set: +0
+[00:23:01]   single_caller: +0
+[00:23:01]   callee+size: +0
+[00:23:02]   Running standard algorithms...
+[00:23:04]   joint_fp: ed(dup): 0  Total now: 10468
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:23:05]   caller_name: ed(dup): 0  Total now: 10468
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:23:07]   ordered_seq: ed(dup): 0  Total now: 10468
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:23:08]   string_ref: ed(dup): 0  Total now: 10468
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:23:09]   single_callee_cascade: [00:23:09] Wave 1: 0 new matches | [00:23:09] Converged. | [00:23:09] Total added: 0 (cascade now 10468) | [00:23:09] Pending renames: 1 | [00:23:09] Wrote rename script with 1 entries
+[00:23:09]   FUN_xxx remaining (approx): 4296
+[00:23:09]   Cascade now: 10468
+[00:23:09] Converged at wave 1.
+[00:23:09] === FINAL cascade: 10468 === Pending renames: 1
+
+[00:24:49] === local_cascade_multi.py start ===
+[00:24:49] Wave 1 — cascade: 10554
+[00:24:49]   callee_set: +4
+[00:24:49]   single_caller: +5
+[00:24:50]   callee+size: +0
+[00:24:50]   Running standard algorithms...
+[00:24:51]   joint_fp: ed(dup): 0  Total now: 10563
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:24:53]   caller_name: ed(dup): 0  Total now: 10563
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:24:55]   ordered_seq: ed(dup): 0  Total now: 10563
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:24:55]   string_ref: ed(dup): 0  Total now: 10563
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:24:56]   single_callee_cascade: 1 new matches | [00:24:56] Wave 2: 0 new matches | [00:24:56] Converged. | [00:24:56] Total added: 1 (cascade now 10564) | [00:24:56] Pending renames: 1 | [00:24:56] Wrote rename script with 1 entries
+[00:24:56]   FUN_xxx remaining (approx): 4201
+[00:24:56]   Cascade now: 10564
+[00:24:56] Wave 2 — cascade: 10564
+[00:24:56]   callee_set: +0
+[00:24:57]   single_caller: +3
+[00:24:57]   callee+size: +0
+[00:24:57]   Running standard algorithms...
+[00:24:59]   joint_fp: ed(dup): 0  Total now: 10567
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:25:00]   caller_name: ed(dup): 0  Total now: 10567
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:25:01]   ordered_seq: ed(dup): 0  Total now: 10567
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:25:02]   string_ref: ed(dup): 0  Total now: 10567
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:25:02]   single_callee_cascade: [00:25:02] Wave 1: 0 new matches | [00:25:02] Converged. | [00:25:02] Total added: 0 (cascade now 10567) | [00:25:02] Pending renames: 1 | [00:25:02] Wrote rename script with 1 entries
+[00:25:02]   FUN_xxx remaining (approx): 4197
+[00:25:02]   Cascade now: 10567
+[00:25:03] Wave 3 — cascade: 10567
+[00:25:03]   callee_set: +0
+[00:25:03]   single_caller: +0
+[00:25:03]   callee+size: +0
+[00:25:03]   Running standard algorithms...
+[00:25:04]   joint_fp: ed(dup): 0  Total now: 10567
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:25:05]   caller_name: ed(dup): 0  Total now: 10567
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:25:07]   ordered_seq: ed(dup): 0  Total now: 10567
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:25:08]   string_ref: ed(dup): 0  Total now: 10567
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:25:09]   single_callee_cascade: [00:25:09] Wave 1: 0 new matches | [00:25:09] Converged. | [00:25:09] Total added: 0 (cascade now 10567) | [00:25:09] Pending renames: 1 | [00:25:09] Wrote rename script with 1 entries
+[00:25:09]   FUN_xxx remaining (approx): 4197
+[00:25:09]   Cascade now: 10567
+[00:25:09] Converged at wave 3.
+[00:25:09] === FINAL cascade: 10567 === Pending renames: 1
+
+[00:25:35] === local_cascade_multi.py start ===
+[00:25:35] Wave 1 — cascade: 10578
+[00:25:35]   callee_set: +0
+[00:25:35]   single_caller: +0
+[00:25:35]   callee+size: +0
+[00:25:36]   Running standard algorithms...
+[00:25:38]   joint_fp: ed(dup): 0  Total now: 10578
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:25:41]   caller_name: ed(dup): 0  Total now: 10578
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:25:43]   ordered_seq: ed(dup): 0  Total now: 10578
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:25:45]   string_ref: ed(dup): 0  Total now: 10578
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:25:46]   single_callee_cascade: [00:25:45] Wave 1: 0 new matches | [00:25:45] Converged. | [00:25:45] Total added: 0 (cascade now 10578) | [00:25:45] Pending renames: 1 | [00:25:45] Wrote rename script with 1 entries
+[00:25:46]   FUN_xxx remaining (approx): 4186
+[00:25:46]   Cascade now: 10578
+[00:25:46] Converged at wave 1.
+[00:25:46] === FINAL cascade: 10578 === Pending renames: 1
+
+[00:26:23] === local_cascade_multi.py start ===
+[00:26:23] Wave 1 — cascade: 10581
+[00:26:23]   callee_set: +0
+[00:26:23]   single_caller: +0
+[00:26:23]   callee+size: +0
+[00:26:25]   Running standard algorithms...
+[00:26:33]   joint_fp: ed(dup): 0  Total now: 10581
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:26:36]   caller_name: ed(dup): 0  Total now: 10581
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:26:38]   ordered_seq: ed(dup): 0  Total now: 10581
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:26:39]   string_ref: ed(dup): 0  Total now: 10581
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:26:39]   single_callee_cascade: [00:26:39] Wave 1: 0 new matches | [00:26:39] Converged. | [00:26:39] Total added: 0 (cascade now 10581) | [00:26:39] Pending renames: 1 | [00:26:39] Wrote rename script with 1 entries
+[00:26:40]   FUN_xxx remaining (approx): 4183
+[00:26:40]   Cascade now: 10581
+[00:26:40] Converged at wave 1.
+[00:26:40] === FINAL cascade: 10581 === Pending renames: 1
+
+[00:27:16] === local_cascade_multi.py start ===
+[00:27:16] Wave 1 — cascade: 10582
+[00:27:17]   callee_set: +0
+[00:27:17]   single_caller: +0
+[00:27:17]   callee+size: +0
+[00:27:21]   Running standard algorithms...
+[00:27:23]   joint_fp: ed(dup): 0  Total now: 10582
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:27:26]   caller_name: ed(dup): 0  Total now: 10582
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:27:28]   ordered_seq: ed(dup): 0  Total now: 10582
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:27:30]   string_ref: ed(dup): 0  Total now: 10582
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:27:31]   single_callee_cascade: [00:27:30] Wave 1: 0 new matches | [00:27:30] Converged. | [00:27:30] Total added: 0 (cascade now 10582) | [00:27:30] Pending renames: 1 | [00:27:30] Wrote rename script with 1 entries
+[00:27:31]   FUN_xxx remaining (approx): 4182
+[00:27:31]   Cascade now: 10582
+[00:27:31] Converged at wave 1.
+[00:27:31] === FINAL cascade: 10582 === Pending renames: 1
+
+[00:28:08] === local_cascade_multi.py start ===
+[00:28:10] Wave 1 — cascade: 10582
+[00:28:10]   callee_set: +0
+[00:28:10]   single_caller: +0
+[00:28:10]   callee+size: +0
+[00:28:11]   Running standard algorithms...
+[00:28:12]   joint_fp: ed(dup): 0  Total now: 10582
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:28:13]   caller_name: ed(dup): 0  Total now: 10582
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:28:15]   ordered_seq: ed(dup): 0  Total now: 10582
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:28:16]   string_ref: ed(dup): 0  Total now: 10582
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:28:17]   single_callee_cascade: [00:28:17] Wave 1: 0 new matches | [00:28:17] Converged. | [00:28:17] Total added: 0 (cascade now 10582) | [00:28:17] Pending renames: 1 | [00:28:17] Wrote rename script with 1 entries
+[00:28:17]   FUN_xxx remaining (approx): 4182
+[00:28:17]   Cascade now: 10582
+[00:28:17] Converged at wave 1.
+[00:28:17] === FINAL cascade: 10582 === Pending renames: 1
+
+[00:31:25] === local_cascade_multi.py start ===
+[00:31:25] Wave 1 — cascade: 10622
+[00:31:26]   callee_set: +0
+[00:31:26]   single_caller: +6
+[00:31:26]   callee+size: +0
+[00:31:27]   Running standard algorithms...
+[00:31:29]   joint_fp: ed(dup): 0  Total now: 10628
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:31:31]   caller_name: ed(dup): 0  Total now: 10628
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:31:33]   ordered_seq: ed(dup): 0  Total now: 10628
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:31:34]   string_ref: ed(dup): 0  Total now: 10628
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:31:34]   single_callee_cascade: [00:31:34] Wave 1: 0 new matches | [00:31:34] Converged. | [00:31:34] Total added: 0 (cascade now 10628) | [00:31:34] Pending renames: 1 | [00:31:34] Wrote rename script with 1 entries
+[00:31:34]   FUN_xxx remaining (approx): 4141
+[00:31:34]   Cascade now: 10628
+[00:31:34] Wave 2 — cascade: 10628
+[00:31:35]   callee_set: +0
+[00:31:35]   single_caller: +1
+[00:31:35]   callee+size: +0
+[00:31:36]   Running standard algorithms...
+[00:31:39]   joint_fp: ed(dup): 0  Total now: 10629
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:31:41]   caller_name: ed(dup): 0  Total now: 10629
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:31:43]   ordered_seq: ed(dup): 0  Total now: 10629
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:31:44]   string_ref: ed(dup): 0  Total now: 10629
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:31:44]   single_callee_cascade: [00:31:44] Wave 1: 0 new matches | [00:31:44] Converged. | [00:31:44] Total added: 0 (cascade now 10629) | [00:31:44] Pending renames: 1 | [00:31:44] Wrote rename script with 1 entries
+[00:31:44]   FUN_xxx remaining (approx): 4140
+[00:31:44]   Cascade now: 10629
+[00:31:45] Wave 3 — cascade: 10629
+[00:31:45]   callee_set: +0
+[00:31:45]   single_caller: +0
+[00:31:45]   callee+size: +0
+[00:31:45]   Running standard algorithms...
+[00:31:47]   joint_fp: ed(dup): 0  Total now: 10629
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:31:48]   caller_name: ed(dup): 0  Total now: 10629
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:31:49]   ordered_seq: ed(dup): 0  Total now: 10629
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:31:50]   string_ref: ed(dup): 0  Total now: 10629
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:31:50]   single_callee_cascade: [00:31:50] Wave 1: 0 new matches | [00:31:50] Converged. | [00:31:50] Total added: 0 (cascade now 10629) | [00:31:50] Pending renames: 1 | [00:31:50] Wrote rename script with 1 entries
+[00:31:50]   FUN_xxx remaining (approx): 4140
+[00:31:50]   Cascade now: 10629
+[00:31:50] Converged at wave 3.
+[00:31:51] === FINAL cascade: 10629 === Pending renames: 1
+
+[00:32:20] === local_cascade_multi.py start ===
+[00:32:20] Wave 1 — cascade: 10633
+[00:32:21]   callee_set: +0
+[00:32:21]   single_caller: +0
+[00:32:21]   callee+size: +0
+[00:32:22]   Running standard algorithms...
+[00:32:24]   joint_fp: ed(dup): 0  Total now: 10633
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:32:26]   caller_name: ed(dup): 0  Total now: 10633
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:32:28]   ordered_seq: ed(dup): 0  Total now: 10633
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:32:29]   string_ref: ed(dup): 0  Total now: 10633
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:32:29]   single_callee_cascade: [00:32:29] Wave 1: 0 new matches | [00:32:29] Converged. | [00:32:29] Total added: 0 (cascade now 10633) | [00:32:29] Pending renames: 1 | [00:32:29] Wrote rename script with 1 entries
+[00:32:29]   FUN_xxx remaining (approx): 4137
+[00:32:29]   Cascade now: 10633
+[00:32:29] Converged at wave 1.
+[00:32:30] === FINAL cascade: 10633 === Pending renames: 1
+
+[00:33:22] === local_cascade_multi.py start ===
+[00:33:22] Wave 1 — cascade: 10633
+[00:33:22]   callee_set: +0
+[00:33:23]   single_caller: +0
+[00:33:23]   callee+size: +0
+[00:33:24]   Running standard algorithms...
+[00:33:28]   joint_fp: ed(dup): 0  Total now: 10633
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:33:33]   caller_name: ed(dup): 0  Total now: 10633
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:33:36]   ordered_seq: ed(dup): 0  Total now: 10633
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:33:40]   string_ref: ed(dup): 0  Total now: 10633
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:33:41]   single_callee_cascade: [00:33:41] Wave 1: 0 new matches | [00:33:41] Converged. | [00:33:41] Total added: 0 (cascade now 10633) | [00:33:41] Pending renames: 1 | [00:33:41] Wrote rename script with 1 entries
+[00:33:41]   FUN_xxx remaining (approx): 4137
+[00:33:41]   Cascade now: 10633
+[00:33:41] Converged at wave 1.
+[00:33:41] === FINAL cascade: 10633 === Pending renames: 1
+
+[00:36:09] === local_cascade_multi.py start ===
+[00:36:09] Wave 1 — cascade: 10653
+[00:36:09]   callee_set: +0
+[00:36:10]   single_caller: +0
+[00:36:10]   callee+size: +0
+[00:36:11]   Running standard algorithms...
+[00:36:13]   joint_fp: ed(dup): 0  Total now: 10653
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:36:14]   caller_name: ed(dup): 0  Total now: 10653
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:36:16]   ordered_seq: ed(dup): 0  Total now: 10653
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:36:18]   string_ref: ed(dup): 0  Total now: 10653
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:36:20]   single_callee_cascade: [00:36:19] Wave 1: 0 new matches | [00:36:19] Converged. | [00:36:19] Total added: 0 (cascade now 10653) | [00:36:20] Pending renames: 1 | [00:36:20] Wrote rename script with 1 entries
+[00:36:20]   FUN_xxx remaining (approx): 4117
+[00:36:20]   Cascade now: 10653
+[00:36:20] Converged at wave 1.
+[00:36:20] === FINAL cascade: 10653 === Pending renames: 1
+
+[00:36:48] === local_cascade_multi.py start ===
+[00:36:48] Wave 1 — cascade: 10653
+[00:36:48]   callee_set: +0
+[00:36:49]   single_caller: +0
+[00:36:49]   callee+size: +0
+[00:36:50]   Running standard algorithms...
+[00:36:51]   joint_fp: ed(dup): 0  Total now: 10653
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:36:54]   caller_name: ed(dup): 0  Total now: 10653
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:36:56]   ordered_seq: ed(dup): 0  Total now: 10653
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:36:57]   string_ref: ed(dup): 0  Total now: 10653
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:36:57]   single_callee_cascade: [00:36:57] Wave 1: 0 new matches | [00:36:57] Converged. | [00:36:57] Total added: 0 (cascade now 10653) | [00:36:57] Pending renames: 1 | [00:36:57] Wrote rename script with 1 entries
+[00:36:57]   FUN_xxx remaining (approx): 4117
+[00:36:57]   Cascade now: 10653
+[00:36:57] Converged at wave 1.
+[00:36:57] === FINAL cascade: 10653 === Pending renames: 1
+
+[00:40:25] === local_cascade_multi.py start ===
+[00:40:25] Wave 1 — cascade: 10664
+[00:40:25]   callee_set: +0
+[00:40:26]   single_caller: +1
+[00:40:26]   callee+size: +0
+[00:40:26]   Running standard algorithms...
+[00:40:27]   joint_fp: ed(dup): 0  Total now: 10665
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:40:28]   caller_name: ed(dup): 0  Total now: 10665
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:40:30]   ordered_seq: ed(dup): 0  Total now: 10665
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:40:31]   string_ref: ed(dup): 0  Total now: 10665
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:40:31]   single_callee_cascade: [00:40:31] Wave 1: 0 new matches | [00:40:31] Converged. | [00:40:31] Total added: 0 (cascade now 10665) | [00:40:31] Pending renames: 1 | [00:40:31] Wrote rename script with 1 entries
+[00:40:31]   FUN_xxx remaining (approx): 4105
+[00:40:31]   Cascade now: 10665
+[00:40:31] Wave 2 — cascade: 10665
+[00:40:31]   callee_set: +0
+[00:40:32]   single_caller: +0
+[00:40:32]   callee+size: +0
+[00:40:33]   Running standard algorithms...
+[00:40:34]   joint_fp: ed(dup): 0  Total now: 10665
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:40:35]   caller_name: ed(dup): 0  Total now: 10665
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:40:36]   ordered_seq: ed(dup): 0  Total now: 10665
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:40:37]   string_ref: ed(dup): 0  Total now: 10665
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:40:38]   single_callee_cascade: [00:40:37] Wave 1: 0 new matches | [00:40:37] Converged. | [00:40:37] Total added: 0 (cascade now 10665) | [00:40:38] Pending renames: 1 | [00:40:38] Wrote rename script with 1 entries
+[00:40:38]   FUN_xxx remaining (approx): 4105
+[00:40:38]   Cascade now: 10665
+[00:40:38] Converged at wave 2.
+[00:40:38] === FINAL cascade: 10665 === Pending renames: 1
+
+[00:41:02] === local_cascade_multi.py start ===
+[00:41:02] Wave 1 — cascade: 10665
+[00:41:02]   callee_set: +0
+[00:41:02]   single_caller: +0
+[00:41:02]   callee+size: +0
+[00:41:04]   Running standard algorithms...
+[00:41:05]   joint_fp: ed(dup): 0  Total now: 10665
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:41:06]   caller_name: ed(dup): 0  Total now: 10665
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:41:08]   ordered_seq: ed(dup): 0  Total now: 10665
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:41:10]   string_ref: ed(dup): 0  Total now: 10665
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[00:41:10]   single_callee_cascade: [00:41:10] Wave 1: 0 new matches | [00:41:10] Converged. | [00:41:10] Total added: 0 (cascade now 10665) | [00:41:10] Pending renames: 1 | [00:41:10] Wrote rename script with 1 entries
+[00:41:10]   FUN_xxx remaining (approx): 4105
+[00:41:10]   Cascade now: 10665
+[00:41:10] Converged at wave 1.
+[00:41:10] === FINAL cascade: 10665 === Pending renames: 1
+
+[04:13:07] === local_cascade_multi.py start ===
+[04:13:07] Wave 1 — cascade: 10667
+[04:13:07]   callee_set: +0
+[04:13:07]   single_caller: +0
+[04:13:07]   callee+size: +0
+[04:13:07]   Running standard algorithms...
+[04:13:09]   joint_fp: ed(dup): 0  Total now: 10667
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:13:10]   caller_name: ed(dup): 0  Total now: 10667
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:13:10]   ordered_seq: ed(dup): 0  Total now: 10667
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:13:11]   string_ref: ed(dup): 0  Total now: 10667
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:13:11]   single_callee_cascade: [04:13:11] Wave 1: 0 new matches | [04:13:11] Converged. | [04:13:11] Total added: 0 (cascade now 10667) | [04:13:11] Pending renames: 1 | [04:13:11] Wrote rename script with 1 entries
+[04:13:11]   FUN_xxx remaining (approx): 4103
+[04:13:11]   Cascade now: 10667
+[04:13:11] Converged at wave 1.
+[04:13:12] === FINAL cascade: 10667 === Pending renames: 1
+
+[04:33:31] === local_cascade_multi.py start ===
+[04:33:31] Wave 1 — cascade: 10730
+[04:33:31]   callee_set: +0
+[04:33:31]   single_caller: +3
+[04:33:31]   callee+size: +0
+[04:33:32]   Running standard algorithms...
+[04:33:33]   joint_fp: ed(dup): 0  Total now: 10733
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:33:34]   caller_name: ed(dup): 0  Total now: 10733
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:33:35]   ordered_seq: ed(dup): 0  Total now: 10733
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:33:36]   string_ref: ed(dup): 0  Total now: 10733
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:33:36]   single_callee_cascade: [04:33:36] Wave 1: 0 new matches | [04:33:36] Converged. | [04:33:36] Total added: 0 (cascade now 10733) | [04:33:36] Pending renames: 1 | [04:33:36] Wrote rename script with 1 entries
+[04:33:36]   FUN_xxx remaining (approx): 4079
+[04:33:36]   Cascade now: 10733
+[04:33:36] Wave 2 — cascade: 10733
+[04:33:37]   callee_set: +0
+[04:33:37]   single_caller: +0
+[04:33:37]   callee+size: +0
+[04:33:37]   Running standard algorithms...
+[04:33:38]   joint_fp: ed(dup): 0  Total now: 10733
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:33:40]   caller_name: ed(dup): 0  Total now: 10733
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:33:41]   ordered_seq: ed(dup): 0  Total now: 10733
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:33:42]   string_ref: ed(dup): 0  Total now: 10733
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:33:42]   single_callee_cascade: [04:33:42] Wave 1: 0 new matches | [04:33:42] Converged. | [04:33:42] Total added: 0 (cascade now 10733) | [04:33:42] Pending renames: 1 | [04:33:42] Wrote rename script with 1 entries
+[04:33:42]   FUN_xxx remaining (approx): 4079
+[04:33:42]   Cascade now: 10733
+[04:33:42] Converged at wave 2.
+[04:33:42] === FINAL cascade: 10733 === Pending renames: 1
+
+[04:35:10] === local_cascade_multi.py start ===
+[04:35:10] Wave 1 — cascade: 10746
+[04:35:10]   callee_set: +0
+[04:35:11]   single_caller: +0
+[04:35:11]   callee+size: +0
+[04:35:11]   Running standard algorithms...
+[04:35:12]   joint_fp: ed(dup): 0  Total now: 10746
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:35:14]   caller_name: ed(dup): 0  Total now: 10746
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:35:15]   ordered_seq: ed(dup): 0  Total now: 10746
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:35:17]   string_ref: ed(dup): 0  Total now: 10746
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:35:17]   single_callee_cascade: [04:35:17] Wave 1: 0 new matches | [04:35:17] Converged. | [04:35:17] Total added: 0 (cascade now 10746) | [04:35:17] Pending renames: 1 | [04:35:17] Wrote rename script with 1 entries
+[04:35:17]   FUN_xxx remaining (approx): 4066
+[04:35:17]   Cascade now: 10746
+[04:35:17] Converged at wave 1.
+[04:35:17] === FINAL cascade: 10746 === Pending renames: 1
+
+[04:36:01] === local_cascade_multi.py start ===
+[04:36:01] Wave 1 — cascade: 10748
+[04:36:01]   callee_set: +0
+[04:36:01]   single_caller: +0
+[04:36:01]   callee+size: +0
+[04:36:02]   Running standard algorithms...
+[04:36:03]   joint_fp: ed(dup): 0  Total now: 10748
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:36:03]   caller_name: ed(dup): 0  Total now: 10748
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:36:05]   ordered_seq: ed(dup): 0  Total now: 10748
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:36:05]   string_ref: ed(dup): 0  Total now: 10748
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:36:06]   single_callee_cascade: [04:36:06] Wave 1: 0 new matches | [04:36:06] Converged. | [04:36:06] Total added: 0 (cascade now 10748) | [04:36:06] Pending renames: 1 | [04:36:06] Wrote rename script with 1 entries
+[04:36:06]   FUN_xxx remaining (approx): 4064
+[04:36:06]   Cascade now: 10748
+[04:36:06] Converged at wave 1.
+[04:36:06] === FINAL cascade: 10748 === Pending renames: 1
+
+[04:36:39] === local_cascade_multi.py start ===
+[04:36:40] Wave 1 — cascade: 10748
+[04:36:40]   callee_set: +0
+[04:36:40]   single_caller: +0
+[04:36:40]   callee+size: +0
+[04:36:41]   Running standard algorithms...
+[04:36:43]   joint_fp: ed(dup): 0  Total now: 10748
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:36:45]   caller_name: ed(dup): 0  Total now: 10748
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:36:46]   ordered_seq: ed(dup): 0  Total now: 10748
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:36:47]   string_ref: ed(dup): 0  Total now: 10748
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[04:36:48]   single_callee_cascade: [04:36:47] Wave 1: 0 new matches | [04:36:47] Converged. | [04:36:47] Total added: 0 (cascade now 10748) | [04:36:48] Pending renames: 1 | [04:36:48] Wrote rename script with 1 entries
+[04:36:48]   FUN_xxx remaining (approx): 4064
+[04:36:48]   Cascade now: 10748
+[04:36:48] Converged at wave 1.
+[04:36:48] === FINAL cascade: 10748 === Pending renames: 1
+
+[05:53:07] === local_cascade_multi.py start ===
+[05:53:07] Wave 1 — cascade: 11252
+[05:53:07]   callee_set: +8
+[05:53:08]   single_caller: +15
+[05:53:08]   callee+size: +1
+[05:53:08]   Running standard algorithms...
+[05:53:10]   joint_fp: ed(dup): 0  Total now: 11276
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[05:53:11]   caller_name: ed(dup): 0  Total now: 11277
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[05:53:14]   ordered_seq: ed(dup): 0  Total now: 11277
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[05:53:15]   string_ref: ed(dup): 0  Total now: 11277
+Pending renames: 2
+Wrote 2 to helper_scripts/ghidra_batch_rename_tsl.py
+[05:53:16]   single_callee_cascade: 4 new matches | [05:53:16] Wave 2: 0 new matches | [05:53:16] Converged. | [05:53:16] Total added: 4 (cascade now 11281) | [05:53:16] Pending renames: 2 | [05:53:16] Wrote rename script with 2 entries
+[05:53:16]   FUN_xxx remaining (approx): 3538
+[05:53:16]   Cascade now: 11281
+[05:53:16] Wave 2 — cascade: 11281
+[05:53:16]   callee_set: +0
+[05:53:16]   single_caller: +1
+[05:53:16]   callee+size: +0
+[05:53:18]   Running standard algorithms...
+[05:53:19]   joint_fp: ed(dup): 0  Total now: 11282
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[05:53:20]   caller_name: ed(dup): 0  Total now: 11282
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[05:53:21]   ordered_seq: ed(dup): 0  Total now: 11282
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[05:53:23]   string_ref: ed(dup): 0  Total now: 11282
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[05:53:24]   single_callee_cascade: [05:53:23] Wave 1: 0 new matches | [05:53:23] Converged. | [05:53:23] Total added: 0 (cascade now 11282) | [05:53:24] Pending renames: 1 | [05:53:24] Wrote rename script with 1 entries
+[05:53:24]   FUN_xxx remaining (approx): 3532
+[05:53:24]   Cascade now: 11282
+[05:53:26] Wave 3 — cascade: 11282
+[05:53:26]   callee_set: +0
+[05:53:27]   single_caller: +0
+[05:53:27]   callee+size: +0
+[05:53:28]   Running standard algorithms...
+[05:53:29]   joint_fp: ed(dup): 0  Total now: 11282
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[05:53:30]   caller_name: ed(dup): 0  Total now: 11282
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[05:53:31]   ordered_seq: ed(dup): 0  Total now: 11282
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[05:53:33]   string_ref: ed(dup): 0  Total now: 11282
+Pending renames: 1
+Wrote 1 to helper_scripts/ghidra_batch_rename_tsl.py
+[05:53:34]   single_callee_cascade: [05:53:34] Wave 1: 0 new matches | [05:53:34] Converged. | [05:53:34] Total added: 0 (cascade now 11282) | [05:53:34] Pending renames: 1 | [05:53:34] Wrote rename script with 1 entries
+[05:53:34]   FUN_xxx remaining (approx): 3532
+[05:53:34]   Cascade now: 11282
+[05:53:34] Converged at wave 3.
+[05:53:34] === FINAL cascade: 11282 === Pending renames: 1

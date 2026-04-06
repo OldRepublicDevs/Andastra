@@ -7,7 +7,7 @@ text_off = 0x400
 text_sz  = 0x584800
 text = data[text_off:text_off+text_sz]
 
-hits = []
+hits: list[int] = []
 pos = 0
 while len(hits) < 10:
     i = text.find(b'\x55\x8B\xEC', pos)

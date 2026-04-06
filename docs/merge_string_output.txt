@@ -1,0 +1,3 @@
+Added 33  Skipped(dup): 0  Total now: 7737
+Pending renames: 55
+Wrote 55 to helper_scripts/ghidra_batch_rename_tsl.py

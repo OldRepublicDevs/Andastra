@@ -2,7 +2,7 @@
   "seed_pairs": 3754,
   "cascade_pairs": 10818,
   "shared_callee_pairs": 0,
-  "total_pairs": 11248,
+  "total_pairs": 11252,
   "matches": [
     {
       "k1_addr": "0x0046EE00",
@@ -98224,6 +98224,284 @@
       "method": "InternalControl",
       "via": "twohop_caller",
       "score": 0.6
+    },
+    {
+      "k1_addr": "0x006779D0",
+      "tsl_addr": "0x005051A0",
+      "name": "CSWCMessage::SendPlayerToServerCheat_Invulnerability",
+      "class": "CSWCMessage",
+      "method": "SendPlayerToServerCheat_Invulnerability",
+      "via": "cascade2_from_0x0060AA20"
+    },
+    {
+      "k1_addr": "0x004854D0",
+      "tsl_addr": "0x008F9030",
+      "name": "MdlNode::InternalControl",
+      "class": "MdlNode",
+      "method": "InternalControl",
+      "via": "cascade2_from_0x00485560"
+    },
+    {
+      "k1_addr": "0x00483330",
+      "tsl_addr": "0x008F7710",
+      "name": "NewController::Control",
+      "class": "NewController",
+      "method": "Control",
+      "via": "cascade2_from_0x004854D0"
+    },
+    {
+      "k1_addr": "0x00485250",
+      "tsl_addr": "0x008F8B50",
+      "name": "NewController::ReportKeys",
+      "class": "NewController",
+      "method": "ReportKeys",
+      "via": "cascade2_from_0x004854D0"
+    },
+    {
+      "k1_addr": "0x0041F9B0",
+      "tsl_addr": "0x008142C0",
+      "name": "LoadImagePLT",
+      "class": "",
+      "method": "LoadImagePLT",
+      "via_k1": "callee_set|csz=1"
+    },
+    {
+      "k1_addr": "0x005D5DE0",
+      "tsl_addr": "0x0063A8E0",
+      "name": "SetListenerOrientation",
+      "class": "",
+      "method": "SetListenerOrientation",
+      "via_k1": "callee_set|csz=1"
+    },
+    {
+      "k1_addr": "0x005D5DF0",
+      "tsl_addr": "0x0063A8B0",
+      "name": "SetListenerPosition",
+      "class": "",
+      "method": "SetListenerPosition",
+      "via_k1": "callee_set|csz=1"
+    },
+    {
+      "k1_addr": "0x0069BB60",
+      "tsl_addr": "0x004F7870",
+      "name": "NVThunkHeadAnimBase_EnableDistortion",
+      "class": "",
+      "method": "NVThunkHeadAnimBase_EnableDistortion",
+      "via_k1": "callee_set|csz=1"
+    },
+    {
+      "k1_addr": "0x0069BB70",
+      "tsl_addr": "0x004F77B0",
+      "name": "NVThunkHeadAnimBase_DisableDistortion",
+      "class": "",
+      "method": "NVThunkHeadAnimBase_DisableDistortion",
+      "via_k1": "callee_set|csz=1"
+    },
+    {
+      "k1_addr": "0x006CF020",
+      "tsl_addr": "0x005B47B0",
+      "name": "OnAddSkillPicked",
+      "class": "",
+      "method": "OnAddSkillPicked",
+      "via_k1": "callee_set|csz=1"
+    },
+    {
+      "k1_addr": "0x0070C850",
+      "tsl_addr": "0x00908130",
+      "name": "ReleaseLayeredRaster",
+      "class": "",
+      "method": "ReleaseLayeredRaster",
+      "via_k1": "callee_set|csz=1"
+    },
+    {
+      "k1_addr": "0x007217C0",
+      "tsl_addr": "0x0044DE70",
+      "name": "Unwind@007217c0",
+      "class": "",
+      "method": "Unwind@007217c0",
+      "via_k1": "callee_set|csz=1"
+    },
+    {
+      "k1_addr": "0x00450730",
+      "tsl_addr": "0x0081D2E0",
+      "name": "RenderStencilShadowsForThisLight",
+      "class": "",
+      "method": "RenderStencilShadowsForThisLight",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x00526910",
+      "tsl_addr": "0x007D0AB0",
+      "name": "HandlePlayerToServerParty",
+      "class": "",
+      "method": "HandlePlayerToServerParty",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x0070DDF0",
+      "tsl_addr": "0x009816A0",
+      "name": "~CAuroraLayeredTexture",
+      "class": "",
+      "method": "~CAuroraLayeredTexture",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x0070D340",
+      "tsl_addr": "0x00905D20",
+      "name": "~CAuroraInterface",
+      "class": "",
+      "method": "~CAuroraInterface",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x0060A460",
+      "tsl_addr": "0x006B5F90",
+      "name": "heal",
+      "class": "",
+      "method": "heal",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x00422210",
+      "tsl_addr": "0x008C5410",
+      "name": "ParseField",
+      "class": "",
+      "method": "ParseField",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x00464440",
+      "tsl_addr": "0x008CEC90",
+      "name": "Parse<AurGenericKey>",
+      "class": "",
+      "method": "Parse<AurGenericKey>",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x0069A8F0",
+      "tsl_addr": "0x004F6590",
+      "name": "EnableDistortion",
+      "class": "",
+      "method": "EnableDistortion",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x0069A980",
+      "tsl_addr": "0x004F6620",
+      "name": "DisableDistortion",
+      "class": "",
+      "method": "DisableDistortion",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x00699830",
+      "tsl_addr": "0x004F4B70",
+      "name": "EnableDistortion",
+      "class": "",
+      "method": "EnableDistortion",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x00699860",
+      "tsl_addr": "0x004F4BB0",
+      "name": "DisableDistortion",
+      "class": "",
+      "method": "DisableDistortion",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x006E68B0",
+      "tsl_addr": "0x005E5A20",
+      "name": "OnDefault",
+      "class": "",
+      "method": "OnDefault",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x006419A0",
+      "tsl_addr": "0x004E0060",
+      "name": "UpdateCameraFollow",
+      "class": "",
+      "method": "UpdateCameraFollow",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x0045E350",
+      "tsl_addr": "0x008D7E00",
+      "name": "ImageReadTGA",
+      "class": "",
+      "method": "ImageReadTGA",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x0041FA30",
+      "tsl_addr": "0x00817F00",
+      "name": "ConstructImage",
+      "class": "",
+      "method": "ConstructImage",
+      "via_k1": "single_caller_match"
+    },
+    {
+      "k1_addr": "0x004DDEC0",
+      "tsl_addr": "0x00747860",
+      "name": "OnApplyForceDrain",
+      "class": "",
+      "method": "OnApplyForceDrain",
+      "via_k1": "callee_set+size|csz=1|sz=90"
+    },
+    {
+      "k1_addr": "0x463b30",
+      "tsl_addr": "0x8c5600",
+      "name": "Parse_AurGenericKey",
+      "class": "",
+      "method": "Parse_AurGenericKey",
+      "named_caller_count": 2,
+      "named_callers": [
+        "AddGenericControllerSingle",
+        "Parse<AurGenericKey>"
+      ],
+      "via": "caller_name_fingerprint"
+    },
+    {
+      "k1_addr": "0x00699A90",
+      "tsl_addr": "0x004F4D20",
+      "name": "NVThunkHeadWieldAnimBase_EnableDistortion",
+      "class": "",
+      "method": "NVThunkHeadWieldAnimBase_EnableDistortion",
+      "via_k1": "callee_set_wrap|size=1"
+    },
+    {
+      "k1_addr": "0x00699AA0",
+      "tsl_addr": "0x004F4EF0",
+      "name": "NVThunkHeadWieldAnimBase_DisableDistortion",
+      "class": "",
+      "method": "NVThunkHeadWieldAnimBase_DisableDistortion",
+      "via_k1": "callee_set_wrap|size=1"
+    },
+    {
+      "k1_addr": "0x0069AA30",
+      "tsl_addr": "0x004F67D0",
+      "name": "NVThunkWieldAnimBase_EnableDistortion",
+      "class": "",
+      "method": "NVThunkWieldAnimBase_EnableDistortion",
+      "via_k1": "callee_set_wrap|size=1"
+    },
+    {
+      "k1_addr": "0x0069AA40",
+      "tsl_addr": "0x004F6730",
+      "name": "NVThunkWieldAnimBase_DisableDistortion",
+      "class": "",
+      "method": "NVThunkWieldAnimBase_DisableDistortion",
+      "via_k1": "callee_set_wrap|size=1"
+    },
+    {
+      "k1_addr": "0x004F0F90",
+      "tsl_addr": "0x007AD7E0",
+      "name": "GetPauseReadyAnimation",
+      "class": "",
+      "method": "GetPauseReadyAnimation",
+      "via_k1": "single_caller_match"
     }
-  ]
+  ],
+  "cascade2_pairs": 4
 }

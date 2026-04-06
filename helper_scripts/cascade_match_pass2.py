@@ -46,8 +46,8 @@ while queue:
     tsl_f = tsl_by_addr.get(tsl_a)
     if not k1_f or not tsl_f:
         continue
-    k1_c  = k1_f['c']
-    tsl_c = tsl_f['c']
+    k1_c  = k1_f.get('c', [])
+    tsl_c = tsl_f.get('c', [])
     if len(k1_c) != len(tsl_c) or not k1_c:
         continue
     for k1_t, tsl_t in zip(k1_c, tsl_c):
@@ -60,13 +60,13 @@ while queue:
             continue
         if is_auto(kf['n']) or not is_auto(tf['n']):
             continue
-        qname = (kf['ns'] + '::' + kf['n']) if kf['ns'] else kf['n']
+        qname = (kf.get('ns','') + '::' + kf['n']) if kf.get('ns') else kf['n']
         matched[k1_t] = tsl_t
         new_pairs.append({
             'k1_addr':  '0x%08X' % k1_t,
             'tsl_addr': '0x%08X' % tsl_t,
             'name':     qname,
-            'class':    kf['ns'],
+            'class':    kf.get('ns',''),
             'method':   kf['n'],
             'via':      'cascade2_from_0x%08X' % k1_a,
         })

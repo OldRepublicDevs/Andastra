@@ -1,19 +1,18 @@
 {
-  "servers": {
-    "roslyn_navicode": {
-      "type": "stdio",
-      "command": "dotnet",
-      "args": [
-        "run",
-        "--project",
-        "C:/GitHub/mcp/RoslynMCP/RoslynMcpServer"
-      ],
-      "env": {
-        "DOTNET_ENVIRONMENT": "Production",
-        "LOG_LEVEL": "Information"
-      }
-    }
-  },
-  "inputs": [
-  ]
+	"inputs": [],
+	"servers": {
+		"roslyn_navicode": {
+			"type": "stdio",
+			"command": "dotnet",
+			"args": [
+				"run",
+				"--project",
+				"C:/GitHub/mcp/RoslynMCP/RoslynMcpServer"
+			],
+			"env": {
+				"DOTNET_ENVIRONMENT": "Production",
+				"LOG_LEVEL": "Information"
+			}
+		}
+	}
 }

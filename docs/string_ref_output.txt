@@ -1,0 +1,7 @@
+K1 unique string fingerprints (>=2 strings): 636
+TSL unmatched functions with string fingerprints: 159
+Matches: 3
+  0x0053D6A0 -> 0x0067BC40  (PopulateModules) | [':modules', 'MODULES:', '_s.rim']
+  0x00572CC0 -> 0x006D12B0  (CSWBehaviorCameraCombat) | ['DISTANCE', 'HEIGHT', 'PITCH']
+  0x0093815C -> 0x00703EB8  (_internal_wctime) | ['JanFebMarAprMayJunJulAugSepOct', 'SunMonTueWedThuFriSat']
+Wrote 3 to docs/tsl_string_ref_matches.json

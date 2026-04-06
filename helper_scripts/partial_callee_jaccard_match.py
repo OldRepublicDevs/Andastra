@@ -53,7 +53,7 @@ def main():
     tsl_cg = json.load(open(TSL_CG, encoding="utf-8"))
     cascade = json.load(open(CASCADE, encoding="utf-8"))
 
-    k1_addr_name = {f["a"]: f["n"] for f in k1cg["functions"]}
+    k1_addr_name = {f["a"]: ((f.get("ns","")+"::"+f["n"]) if f.get("ns") else f["n"]) for f in k1cg["functions"]}
     tsl_addr_name = {f["a"]: f["n"] for f in tsl_cg["functions"]}
 
     matched_k1 = {parse_hex(m["k1_addr"]) for m in cascade["matches"]}
