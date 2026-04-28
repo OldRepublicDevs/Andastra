@@ -1,0 +1,65 @@
+name: Copilot Setup Steps (.NET CI)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Setup .NET (recommended by GitHub Docs)
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'   # adjust as needed
+        # GitHub Docs recommend setup-dotnet for consistent SDK behavior
+        # 
+
+      # 3. Cache NuGet packages (speeds up builds 30–90s)
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+        # NuGet caching guidance from CI/CD examples
+        # 
+
+      # 4. Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # 5. Build using EasyDesk/action-dotnet-build (your request)
+      - name: .NET Build
+        uses: EasyDesk/action-dotnet-build@v1.0.0
+        with:
+          build-args: ""                  # optional
+          build-configuration: Release    # default
+          path: .                         # default
+
+      # 6. Run tests
+      - name: Run tests
+        run: dotnet test --no-build --configuration Release
+
+      # 7. Publish test results (optional but common)
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: '**/*.trx'
+
+      # 8. Upload build artifacts (optional)
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: '**/bin/Release/**'
