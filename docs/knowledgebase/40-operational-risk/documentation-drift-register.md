@@ -108,6 +108,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 48. ~~Validate fixture missing from build-and-test-ladder~~ **Done 2026-05-24**
 49. ~~No canonical OdyPatch E2E manual runbook~~ **Done 2026-05-24**
 50. ~~Runbook missing from KB onboarding index~~ **Done 2026-05-24**
+51. ~~Dev setup omits OdyPatch validate fixture path~~ **Done 2026-05-24**
 
 ## KB Doc Drift (post-C5)
 
@@ -161,6 +162,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 | Build ladder validate | ~~OdyPatch validate only in run-tools-reference~~ | **Resolved 2026-05-24** — plan 057 |
 | OdyPatch E2E runbook | ~~Install path undocumented for manual verification~~ | **Resolved 2026-05-24** — plan 058 |
 | KB onboarding runbook | ~~Runbook omitted from 90-meta index and agent-workflow~~ | **Resolved 2026-05-24** — plan 059 |
+| Dev setup validate | ~~dev-environment-setup omitted validate fixture~~ | **Resolved 2026-05-24** — plan 060 |
 | `.github/workflows/ci.yml` | ~~No full solution build smoke test~~ | **Resolved 2026-05-23** — `solution-build` job |
 | `.github/workflows/ci.yml` | ~~Parallel solution build locks `Andastra.Core.deps.json`~~ | **Resolved 2026-05-23** — plan 031 `-m:1` |
 
