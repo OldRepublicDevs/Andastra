@@ -19,7 +19,7 @@ Andastra.sln
 │   └── src/Andastra/UI/
 ├── Formats & Resources
 │   ├── src/BioWare/BioWare.csproj            (net9.0;net48)
-│   └── src/BioWare/Utility/BioWare.Utility.csproj
+│   └── src/BioWare/Utility/Andastra.Utility.csproj   (assembly/namespace: BioWare.Utility)
 ├── Tools (src/Tools/)
 │   ├── OdyPatch (exe host) / OdyPatch.UI (Avalonia lib)
 │   ├── OdyTools (+ 25 standalone editor csprojs)
