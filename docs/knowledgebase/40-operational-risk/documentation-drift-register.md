@@ -15,7 +15,7 @@ Stale or broken documentation tracked for remediation.
 |----------|-------|----------------|
 | `docs/MONOGAME_RUNNING.md` | ~~`src/OdysseyRuntime/Odyssey.Game/`~~ | `src/Andastra/Game/Andastra.Game.csproj` | **Resolved 2026-05-23** |
 | `docs/NCSDecomp_*.md` (multiple) | ~~`src/CSharpKOTOR/`~~ | `src/BioWare/Resource/Formats/NCS/Decomp/` | **Resolved 2026-05-23** |
-| `docs/REVERSE_ENGINEERING_PROJECT_SUMMARY.md` | KotOR.js/TypeScript deliverables | This KB + current .NET `src/` |
+| `docs/REVERSE_ENGINEERING_PROJECT_SUMMARY.md` | ~~KotOR.js/TypeScript deliverables~~ | KB + Andastra .NET `src/` | **Resolved 2026-05-23** |
 | `tests/BioWare.Tests/Performance/Performance.csproj` | ~~References `CSharpKOTOR.Tests.csproj`~~ | Removed stale reference | **Resolved 2026-05-23** |
 
 `[REPO]`

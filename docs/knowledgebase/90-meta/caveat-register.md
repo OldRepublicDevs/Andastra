@@ -4,7 +4,7 @@ Living register of auth walls, runtime uncertainty, and stale-evidence risks. Up
 
 | ID | Category | Caveat | Label | Last verified |
 |----|----------|--------|-------|---------------|
-| C1 | Stale evidence | `docs/REVERSE_ENGINEERING_PROJECT_SUMMARY.md` describes KotOR.js/TypeScript deliverables not present in this repo | [REPO] | 2026-05-23 |
+| C1 | Stale evidence | `docs/REVERSE_ENGINEERING_PROJECT_SUMMARY.md` described KotOR.js/TypeScript as primary deliverable | [REPO] | **Resolved 2026-05-23** — reframed as historical Phase 1 report |
 | C2 | Stale evidence | `docs/MONOGAME_RUNNING.md` referenced obsolete `src/OdysseyRuntime/Odyssey.Game/` paths | [REPO] | **Resolved 2026-05-23** — updated to Andastra.Game |
 | C3 | Stale evidence | ~~README links to missing `docs/QUICKSTART.md` and `docs/engine_roadmap.md`~~ **Resolved 2026-05-23** | [REPO] | 2026-05-23 |
 | C4 | Source/runtime drift | ~~CI (`ci.yml`) references missing `src/CSharpKOTOR.Tests/`~~ **Resolved 2026-05-23** | [REPO] | 2026-05-23 |
