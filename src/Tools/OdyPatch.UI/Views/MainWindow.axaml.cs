@@ -11,6 +11,7 @@ using AvRichTextBox;
 using OdyPatch.UI.Rte;
 using OdyPatch.UI.ViewModels;
 using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 using OdyTools.Utils;
 using IconType = MsBox.Avalonia.Enums.Icon;
 
