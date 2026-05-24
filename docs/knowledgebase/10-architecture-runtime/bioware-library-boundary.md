@@ -37,7 +37,7 @@ Format folders observed under `Resource/Formats/`: BIF, BWM, DDS, ERF, GFF, KEY,
 
 - **Format byte layout changes** start in BioWare parsers, with wiki spec cross-check.
 - **Engine gameplay rules** (combat timing, dialogue flow) belong in `Game/Games/`, not BioWare.
-- **TSLPatcher semantics** live in BioWare; OdyPatch is the installer UI/wrapper. `[REPO]`
+- **TSLPatcher semantics** live in BioWare; **OdyPatch** is the runnable installer host (exe); **OdyPatch.UI** is the Avalonia UI library. `[REPO]`
 
 ## Repo Implications
 

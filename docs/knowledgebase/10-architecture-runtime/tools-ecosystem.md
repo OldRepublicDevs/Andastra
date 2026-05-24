@@ -11,8 +11,8 @@ Development tools under `src/Tools/` and their relationships.
 
 | Tool | Path | Role | Build status |
 |------|------|------|--------------|
-| **OdyPatch** | `src/Tools/OdyPatch/` | TSLPatcher-compatible mod installer core | Green (net9.0) `[REPO]` |
-| **OdyPatch.UI** | `src/Tools/OdyPatch.UI/` | Avalonia GUI for patching | Green (net9.0) `[REPO]` |
+| **OdyPatch** | `src/Tools/OdyPatch/` | Runnable GUI + CLI host (exe) | Green (net9.0) `[REPO]` |
+| **OdyPatch.UI** | `src/Tools/OdyPatch.UI/` | Avalonia UI library (not directly runnable) | Green (net9.0) `[REPO]` |
 | **OdyTools** | `src/Tools/OdyTools/` | Holocron-style AIO content editor | Green (net9.0) `[REPO]` |
 | **Standalone OdyTool editors** | `src/Tools/OdyTools/*/` (25+ csprojs) | Per-format editors (GFF, DLG, etc.) | Green (shared props) `[REPO]` |
 | **NSSComp** | `src/Tools/NSSComp/` | NWScript compiler CLI | Green `[REPO]` |
