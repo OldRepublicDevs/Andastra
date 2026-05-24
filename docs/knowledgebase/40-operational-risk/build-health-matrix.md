@@ -20,16 +20,15 @@ dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
 | Andastra.Tests | Green | NCS roundtrip |
 | NSSComp | Green | CLI `--help` works |
 | NCSDecomp.CLI | Green | CLI `--help` works |
-| Standalone OdyTool editors | Mostly green | Individual csprojs |
+| **OdyTools** (AIO) | Green | Delegate wiring fixed 2026-05-23 |
+| **OdyPatch** / **OdyPatch.UI** | Green | OdyTools reference restored 2026-05-23 |
+| Standalone OdyTool editors | Green | Shared props include DialogHelper 2026-05-23 |
 | OdyTools.Tests | Green when OdyTools builds | Depends on parent |
 
 ## Red / Broken
 
 | Project | Status | Error class |
 |---------|--------|-------------|
-| **OdyTools** (AIO) | Red | Method group → `System.Action` conversion `[REPO]` (`AGENTS.md`) |
-| **OdyPatch** | Red | Depends on OdyTools |
-| **OdyPatch.UI** | Red | Transitive |
 | **KotorCLI** | Red | System.CommandLine API bug — crashes on startup `[REPO]` |
 
 ## Full Solution
@@ -38,9 +37,7 @@ dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
 dotnet build Andastra.sln
 ```
 
-May fail on OdyTools/OdyPatch even when core runtime path is healthy. `[REPO]`
-
-Do **not** claim full-solution green without explicit verification after OdyTools fix.
+May still fail on missing solution projects (MonoGameFPS stub) or KotorCLI. OdyTools/OdyPatch chain is green as of 2026-05-23. `[REPO]`
 
 ## Missing / Orphan Artifacts
 
@@ -57,4 +54,4 @@ Do **not** claim full-solution green without explicit verification after OdyTool
 
 - Agents default to BioWare + tests ladder — see [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md).
 - Tooling PRs should state which tool csproj was built.
-- Fixing OdyTools unblocks mod installer UX validation.
+- OdyPatch mod-installer UX validation is unblocked at compile time; runtime UX still unverified.
