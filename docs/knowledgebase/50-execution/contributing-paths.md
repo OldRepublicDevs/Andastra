@@ -51,6 +51,5 @@ See [runtime-layering.md](../10-architecture-runtime/runtime-layering.md).
 
 ## Repo Implications
 
-- README contributing section uses some stale project names — follow KB paths.
 - Infinity/Aurora/Eclipse contributions need scoping against [engine-family-scope.md](../00-intent/engine-family-scope.md).
 - Definition of done: [definition-of-done.md](../00-intent/definition-of-done.md).
