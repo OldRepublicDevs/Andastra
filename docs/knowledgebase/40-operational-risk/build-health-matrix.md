@@ -25,20 +25,24 @@ dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
 | Standalone OdyTool editors | Green | Shared props include DialogHelper 2026-05-23 |
 | OdyTools.Tests | Green when OdyTools builds | Depends on parent |
 | **KotorCLI** | Green | System.CommandLine 2.0 Option API fixed 2026-05-23 |
+| **ConvertKotorGame** | Green | Builds on net9.0 |
+| **Andastra.sln** (full) | Green | Linux net9.0 + CI `solution-build` job (2026-05-23) |
 
-## Red / Broken
+## Known Build Caveats
 
-| Project | Status | Error class |
-|---------|--------|-------------|
-| *(none in tool chain)* | — | Stride assembly processor may fail on isolated Linux game builds `[REPO]` |
+| Item | Notes |
+|------|-------|
+| Isolated game/runtime projects | Stride assembly processor may fail on isolated Linux builds of single game csproj `[REPO]` |
+| OdyPatch runtime UX | Compile green; mod-install flow unverified without K1/TSL install `[REPO]` |
+| Game runtime in CI | No K1/TSL install exercised in standard CI `[REPO]` |
 
 ## Full Solution
 
 ```bash
-dotnet build Andastra.sln
+dotnet build Andastra.sln --framework net9.0
 ```
 
-May fail on Stride assembly processor on Linux when building game/runtime projects in isolation; full `Andastra.sln` net9.0 build succeeds after standalone obj isolation (2026-05-23). Tool chain (OdyTools, OdyPatch, KotorCLI) is green on net9.0. `[REPO]`
+Green on Linux net9.0 after standalone obj isolation (plan 020). Validated in CI via `solution-build` job (2026-05-23). `[REPO]`
 
 ## Missing / Orphan Artifacts
 
