@@ -10,7 +10,7 @@ Ongoing knowledgebase and onboarding maintenance after [PR #2](https://github.co
 | CI on merge commit | All checks **pass** (Solution Build, Test Builds, dotnet-desktop, Lint, Snyk) `[REPO]` |
 | Scope delivered | Evidence-first KB (33 docs), plans 001–048, CI/doc drift remediations 1–39, tool-chain build recovery |
 
-## LFG plans landed (001–051)
+## LFG plans landed (001–052)
 
 | Plan | Topic |
 |------|-------|
@@ -18,12 +18,13 @@ Ongoing knowledgebase and onboarding maintenance after [PR #2](https://github.co
 | 049 | Post-merge meta + utility csproj topology fix |
 | 050 | Investigation archive index + stale path fixes |
 | 051 | OdyPatch NuGet pack CI smoke job |
+| 052 | Evidence label pass on thin execution/domain docs |
 
 Full index: [docs/plans/README.md](../../plans/README.md)
 
 ## PR #3 (open)
 
-Follow-up doc maintenance on `docs/feat-knowledgebase-initial` — plans 049–051. `[REPO]`
+Follow-up doc maintenance on `docs/feat-knowledgebase-initial` — plans 049–052. `[REPO]`
 
 ## Local validation (green path)
 
@@ -42,6 +43,7 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 |-----|-------|
 | CI — Test / Lint | BioWare + Andastra.Tests ladder |
 | CI — Solution Build (net9.0) | `-m:1` serialization (plan 031) |
+| CI — NuGet Pack Smoke | `nuget-pack-smoke` job — OdyPatch pack (plan 051) |
 | Test Builds matrix | net48-win, net9.0 linux/osx/win |
 | dotnet-desktop | Windows BioWare + full tool stack |
 
@@ -57,7 +59,7 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 
 | Plan | Topic |
 |------|-------|
-| 052+ | OdyPatch UX validation (needs game install), evidence label pass on remaining thin docs |
+| 053+ | OdyPatch UX validation (needs game install), remaining KB label pass |
 
 ## Repo implications
 
