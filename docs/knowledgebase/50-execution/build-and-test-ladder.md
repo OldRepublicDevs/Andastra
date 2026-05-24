@@ -33,6 +33,8 @@ dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
 ```bash
 dotnet run --project src/Tools/NSSComp/NSSComp.csproj --framework net9.0 -- --help
 dotnet run --project src/Tools/NCSDecomp.CLI/NCSDecomp.CLI.csproj --framework net9.0 -- --help
+dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- --help
+dotnet build src/Tools/ConvertKotorGame/ConvertKotorGame.csproj --framework net9.0
 ```
 
 ### Step 6 — Runtime / Game (optional, needs game install)
@@ -72,6 +74,8 @@ dotnet build src/BioWare/BioWare.csproj --configuration Release -p:RunAnalyzersD
 ```bash
 dotnet build src/Tools/OdyTools/OdyTools.csproj --framework net9.0
 dotnet build src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
+dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- --help
+dotnet build src/Tools/ConvertKotorGame/ConvertKotorGame.csproj --framework net9.0
 ```
 
 ## Repo Implications
