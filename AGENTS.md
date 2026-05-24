@@ -12,7 +12,7 @@
 
 Standard commands per `README.md`. Key notes:
 
-- **Restore**: `dotnet restore Andastra.sln` succeeds on current branch. Full solution **build** succeeds on Linux net9.0 (2026-05-23, plan 020): `dotnet build Andastra.sln --framework net9.0`.
+- **Restore**: `dotnet restore Andastra.sln` succeeds on current branch. Full solution **build** succeeds on Linux net9.0 (2026-05-23): `dotnet build Andastra.sln --framework net9.0`. CI `solution-build` uses `-m:1` to avoid parallel deps locks (plan 031).
 - **Build core libraries**: `dotnet build src/BioWare/BioWare.csproj` builds cleanly for both `net9.0` and `net48`.
 - **Build tests**: `dotnet build tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0` and `dotnet build tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0`.
 - **Run tests**: `dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0` and `dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0`.
@@ -27,6 +27,9 @@ Standard commands per `README.md`. Key notes:
 - **KotorCLI**: `dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- --help`
 - **ConvertKotorGame**: `dotnet build src/Tools/ConvertKotorGame/ConvertKotorGame.csproj --framework net9.0`
 - **OdyPatch**: `dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0`
+- **OdyPatch.UI**: `dotnet run --project src/Tools/OdyPatch.UI/OdyPatch.UI.csproj --framework net9.0`
+- **OdyPatch NuGet pack**: `./helper_scripts/build-nuget.sh` (Linux net9.0) or `.\helper_scripts\build-nuget.ps1` — see `docs/NUGET.md`
+- **NSS/NCS scripts**: `helper_scripts/NcsTool.ps1` (agent-mandated for NSS/NCS operations per `.cursorrules`)
 
 ### AgentDecompile Integration
 
