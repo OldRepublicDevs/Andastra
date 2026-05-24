@@ -36,8 +36,8 @@ Documented in [game-vs-runtime-split.md](../10-architecture-runtime/game-vs-runt
 
 | Item | Issue |
 |------|-------|
-| `wiki/Home.md` | Titled "PyKotor Wiki"; HoloPatcher links |
-| `vendor/src/toolset/wiki/` | Duplicate PyKotor corpus (~450+ files) |
+| `wiki/Home.md` | ~~Titled "PyKotor Wiki"; HoloPatcher links~~ **Resolved 2026-05-23** — Andastra/OdyPatch branding and KB links |
+| `vendor/src/toolset/wiki/` | Duplicate PyKotor corpus (~450+ files) — reference only |
 
 KB uses OdyPatch naming; wiki cleanup deferred. `[REPO]`
 
@@ -61,7 +61,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 1. ~~Create `docs/QUICKSTART.md` pointing at KB execution ladder~~ **Done 2026-05-23**
 2. ~~Fix CI project paths before trusting CI green~~ **Done 2026-05-23** (OdyPatch build may still fail on OdyTools)
 3. ~~Add README errata or update README architecture section~~ **Done 2026-05-23**
-4. Refresh wiki Home for Andastra/OdyPatch branding `[SYNTH]`
+4. ~~Refresh wiki Home for Andastra/OdyPatch branding~~ **Done 2026-05-23** (vendor corpus cleanup deferred)
 
 ## Repo Implications
 
