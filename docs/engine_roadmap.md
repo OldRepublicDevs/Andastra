@@ -47,11 +47,14 @@ Format parsers and resource extraction in `src/BioWare/` support all engine fami
 | Tool | Status |
 |------|--------|
 | NSSComp, NCSDecomp.CLI, KotorDiff | Build and run |
-| OdyTools, OdyPatch, standalone OdyTool editors | Build on net9.0 (2026-05-23) |
+| OdyTools, OdyPatch, OdyPatch.UI, standalone OdyTool editors | Build on net9.0 (2026-05-23) |
 | KotorCLI, ConvertKotorGame | Build / `--help` on net9.0 (2026-05-23) |
-| **Andastra.sln** (full) | Green on Linux net9.0; CI `solution-build` job (2026-05-23) |
+| OdyPatch NuGet pack | Green via `helper_scripts/build-nuget.sh` (plan 035) |
+| **Andastra.sln** (full) | Green on Linux net9.0; CI `solution-build` uses `-m:1` (plan 031) |
 
-Details: [tools-ecosystem](knowledgebase/10-architecture-runtime/tools-ecosystem.md).
+Product UX stub layer: [30-product-ux](knowledgebase/30-product-ux/README.md) (plan 038). OdyPatch tool README refreshed (plan 039).
+
+Details: [tools-ecosystem](knowledgebase/10-architecture-runtime/tools-ecosystem.md), [run-tools-reference](knowledgebase/50-execution/run-tools-reference.md).
 
 ## Known Gaps
 
