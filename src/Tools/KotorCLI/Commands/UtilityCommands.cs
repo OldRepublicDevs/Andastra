@@ -4,6 +4,7 @@ using KotorCLI.Logging;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.TLK;
@@ -1245,8 +1246,8 @@ namespace KotorCLI.Commands
                 var file2 = parseResult.GetValue(file2Arg);
                 var output = parseResult.GetValue(outputOpt);
                 var logger = new StandardLogger();
-                logger.Info("TODO: STUB - diff not yet implemented");
-                Environment.Exit(0);
+                logger.Error("TODO: STUB - diff not yet implemented");
+                Environment.Exit(1);
             });
             rootCommand.Add(diffCmd);
 
@@ -1268,8 +1269,8 @@ namespace KotorCLI.Commands
                 var caseSensitive = parseResult.GetValue(caseSensitiveOption);
                 var lineNumbers = parseResult.GetValue(lineNumbersOption);
                 var logger = new StandardLogger();
-                logger.Info("TODO: STUB - grep not yet implemented");
-                Environment.Exit(0);
+                int exitCode = ExecuteGrep(file, pattern, caseSensitive, lineNumbers, logger);
+                Environment.Exit(exitCode);
             });
             rootCommand.Add(grepCmd);
 
@@ -1405,10 +1406,70 @@ namespace KotorCLI.Commands
                 var source = parseResult.GetValue(sourceArg);
                 var output = parseResult.GetValue(mergeOutputOpt);
                 var logger = new StandardLogger();
-                logger.Info("TODO: STUB - merge not yet implemented");
-                Environment.Exit(0);
+                logger.Error("TODO: STUB - merge not yet implemented");
+                Environment.Exit(1);
             });
             rootCommand.Add(mergeCmd);
+        }
+
+        public static int ExecuteGrep(
+            string file,
+            string pattern,
+            bool caseSensitive,
+            bool lineNumbers,
+            ILogger logger)
+        {
+            if (string.IsNullOrEmpty(file) || !File.Exists(file))
+            {
+                logger.Error("Error: File not found: " + (file ?? "(null)"));
+                return 1;
+            }
+
+            if (string.IsNullOrEmpty(pattern))
+            {
+                logger.Error("Error: Search pattern is required.");
+                return 1;
+            }
+
+            RegexOptions options = caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase;
+            Regex regex;
+            try
+            {
+                regex = new Regex(pattern, options);
+            }
+            catch (ArgumentException ex)
+            {
+                logger.Error("Error: Invalid search pattern: " + ex.Message);
+                return 1;
+            }
+
+            bool matched = false;
+            string[] lines = File.ReadAllLines(file);
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i];
+                if (!regex.IsMatch(line))
+                {
+                    continue;
+                }
+
+                matched = true;
+                if (lineNumbers)
+                {
+                    logger.Info((i + 1) + ":" + line);
+                }
+                else
+                {
+                    logger.Info(line);
+                }
+            }
+
+            if (!matched)
+            {
+                return 1;
+            }
+
+            return 0;
         }
 
         /// <summary>
