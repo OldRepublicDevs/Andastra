@@ -61,5 +61,42 @@ namespace OdyTools.Tests
                 }, CancellationToken.None);
             }
         }
+
+        [Test, Timeout(60000)]
+        public async Task FACEditor_RemoveFaction_ReindexesReputations()
+        {
+            using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+            {
+                await session.Dispatch(() =>
+                {
+                    byte[] data = MinimalFacBytes();
+                    var editor = new OdyToolFAC(null, null);
+                    editor.Load("repute.fac", "repute", ResourceType.FAC, data);
+                    Assert.That(editor.Fac.Factions.Count, Is.EqualTo(2));
+                    Assert.That(editor.Fac.Reputations.Count, Is.EqualTo(1));
+
+                    int removedIndex = 0;
+                    editor.Fac.Factions.RemoveAt(removedIndex);
+                    editor.Fac.Reputations.RemoveAll(r => r.FactionId1 == removedIndex || r.FactionId2 == removedIndex);
+                    foreach (FACReputation rep in editor.Fac.Reputations)
+                    {
+                        if (rep.FactionId1 > removedIndex)
+                        {
+                            rep.FactionId1--;
+                        }
+                        if (rep.FactionId2 > removedIndex)
+                        {
+                            rep.FactionId2--;
+                        }
+                    }
+
+                    Tuple<byte[], byte[]> result = editor.Build();
+                    FAC roundtrip = FACHelpers.ReadFac(result.Item1);
+                    Assert.That(roundtrip.Factions.Count, Is.EqualTo(1));
+                    Assert.That(roundtrip.Factions[0].Name, Is.EqualTo("Hostile"));
+                    Assert.That(roundtrip.Reputations, Is.Empty);
+                }, CancellationToken.None);
+            }
+        }
     }
 }
