@@ -18,7 +18,7 @@ Ongoing knowledgebase and onboarding maintenance. Initial KB landed via [PR #2](
 | CI on PR | All checks **pass** including new `NuGet Pack Smoke (OdyPatch)` (help + validate smoke) `[REPO]` |
 | Scope delivered | Plans 049–055: post-merge meta, investigation index, NuGet CI, evidence labels, OdyPatch CLI help fix, validate fixture |
 
-## LFG plans landed (001–056)
+## LFG plans landed (001–057)
 
 | Plan | Topic |
 |------|-------|
@@ -37,7 +37,7 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 
 ## PR #4 (open)
 
-Plan 056 post-PR #3 tracker refresh on branch `docs/post-pr3-tracker-sync`. `[REPO]`
+Plans 056–057 post-PR #3 tracker refresh and build-ladder validate sync on branch `docs/post-pr3-tracker-sync`. `[REPO]`
 
 ## Local validation (green path)
 
@@ -68,11 +68,11 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (056+)
+## Suggested next slices (057+)
 
 | Plan | Topic |
 |------|-------|
-| 057+ | OdyPatch E2E mod install against real K1/TSL (needs game install) |
+| 058+ | OdyPatch E2E mod install against real K1/TSL (needs game install) |
 
 ## Repo implications
 
