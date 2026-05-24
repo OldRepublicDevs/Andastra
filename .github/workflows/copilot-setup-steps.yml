@@ -1,65 +1,40 @@
-name: Copilot Setup Steps (.NET CI)
+name: Copilot Setup Steps
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ main ]
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
   pull_request:
-    branches: [ main ]
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
 
 jobs:
-  build:
+  # The job MUST be called `copilot-setup-steps` or Copilot will not pick it up.
+  copilot-setup-steps:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
-      # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Setup .NET (recommended by GitHub Docs)
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'   # adjust as needed
-        # GitHub Docs recommend setup-dotnet for consistent SDK behavior
-        # 
+          dotnet-version: '9.0.x'
 
-      # 3. Cache NuGet packages (speeds up builds 30–90s)
       - name: Cache NuGet packages
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.sln') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
-        # NuGet caching guidance from CI/CD examples
-        # 
 
-      # 4. Restore dependencies
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Restore solution dependencies
+        run: dotnet restore Andastra.sln
 
-      # 5. Build using EasyDesk/action-dotnet-build (your request)
-      - name: .NET Build
-        uses: EasyDesk/action-dotnet-build@v1.0.0
-        with:
-          build-args: ""                  # optional
-          build-configuration: Release    # default
-          path: .                         # default
-
-      # 6. Run tests
-      - name: Run tests
-        run: dotnet test --no-build --configuration Release
-
-      # 7. Publish test results (optional but common)
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: '**/*.trx'
-
-      # 8. Upload build artifacts (optional)
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output
-          path: '**/bin/Release/**'
+      - name: Build solution
+        run: dotnet build Andastra.sln --framework net9.0 -c Release --no-restore -m:1
