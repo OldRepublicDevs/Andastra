@@ -61,14 +61,17 @@ jobs:
         run: dotnet restore
 
       - name: Run tests
-        run: dotnet test --no-restore --verbosity normal
+        run: |
+          dotnet restore tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0
+          dotnet build tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0 -c Release
+          dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0 -c Release --no-build --verbosity normal
 
       - name: Build
         run: |
           if [ "${{ matrix.framework }}" == "net48" ]; then
-            msbuild src/OdyPatch/OdyPatch.csproj /p:Configuration=Release /p:TargetFramework=${{ matrix.framework }} /p:RuntimeIdentifier=${{ matrix.rid }} /p:SelfContained=${{ matrix.selfcontained }}
+            msbuild src/Tools/OdyPatch/OdyPatch.csproj /p:Configuration=Release /p:TargetFramework=${{ matrix.framework }} /p:RuntimeIdentifier=${{ matrix.rid }} /p:SelfContained=${{ matrix.selfcontained }}
           else
-            dotnet publish src/OdyPatch/OdyPatch.csproj `
+            dotnet publish src/Tools/OdyPatch/OdyPatch.csproj `
               -c Release `
               -f ${{ matrix.framework }} `
               -r ${{ matrix.rid }} `
