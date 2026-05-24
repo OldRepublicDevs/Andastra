@@ -30,9 +30,11 @@ See [authority-map.md](authority-map.md) for conflict resolution.
 
 Layer `30-product-ux/` is a **stub layer** (plan 038) with explicit `[OPEN]` runtime UX boundaries; tool chain, full solution net9.0 build, and OdyPatch NuGet pack are green as of 2026-05-23.
 
-## CI validation (branch `docs/feat-knowledgebase-initial`)
+## CI validation (post–PR #2 merge)
 
-See [pr-merge-readiness.md](pr-merge-readiness.md) for PR #2 merge checklist. **Re-check on latest HEAD** — do not assume green without `gh pr checks 2`. `[REPO]`
+PR #2 merged to `master` 2026-05-24 with all CI checks passing on the merge commit. `[REPO]`
+
+See [pr-merge-readiness.md](pr-merge-readiness.md) (KB maintenance tracker). Re-check `gh pr checks` on new PRs that touch build/CI. `[REPO]`
 
 | Job | Expected (local/CI contract) |
 |-----|------------------------------|
