@@ -9,6 +9,7 @@ Evidence-first documentation for the Andastra .NET game engine and tooling suite
 | `README.md` | Public project overview (architecture aligned with KB as of 2026-05-23) |
 | `AGENTS.md` | Cursor Cloud build/test environment |
 | `.cursorrules` | Highest-authority agent rules (engine fidelity, git, RE format) |
+| `docs/plans/` | LFG vertical-slice plans (001+) — see [README.md](../../plans/README.md) |
 | `docs/knowledgebase/` (here) | Layered, labeled, auditable project truth |
 | `wiki/` | File format byte-level specifications |
 | `docs/*.md` | Investigation archives (verify before trusting) |
@@ -31,16 +32,15 @@ Layer `30-product-ux/` is a **stub layer** (plan 038) with explicit `[OPEN]` run
 
 ## CI validation (branch `docs/feat-knowledgebase-initial`)
 
-See [pr-merge-readiness.md](pr-merge-readiness.md) for PR #2 merge checklist.
+See [pr-merge-readiness.md](pr-merge-readiness.md) for PR #2 merge checklist. **Re-check on latest HEAD** — do not assume green without `gh pr checks 2`. `[REPO]`
 
-| Job | Status |
-|-----|--------|
-| CI — Test | Green (BioWare + Andastra.Tests) |
-| CI — Lint | Green |
-| CI — Solution Build (net9.0) | Green path; CI uses `-m:1` (plan 031) |
-| Test Builds matrix | Green (net48-win, net9.0 linux/osx/win) |
+| Job | Expected (local/CI contract) |
+|-----|------------------------------|
+| CI — Test / Lint | BioWare + Andastra.Tests ladder |
+| CI — Solution Build (net9.0) | `-m:1` serialization (plan 031) |
+| Test Builds matrix | net48-win, net9.0 linux/osx/win |
 | dotnet-desktop (Windows) | BioWare + OdyTools + OdyPatch + OdyPatch.UI + KotorCLI + ConvertKotorGame |
-| OdyPatch NuGet pack | Green on Linux net9.0 via `helper_scripts/build-nuget.sh` (plan 035) |
+| OdyPatch NuGet pack | Linux net9.0 via `helper_scripts/build-nuget.sh` (plan 035) |
 
 Runtime game testing and OdyPatch mod-install UX remain manual. `[REPO]`
 
@@ -128,6 +128,8 @@ Runtime game testing and OdyPatch mod-install UX remain manual. `[REPO]`
 - [authority-map.md](authority-map.md)
 - [caveat-register.md](caveat-register.md)
 - [pr-merge-readiness.md](pr-merge-readiness.md)
+
+LFG plan index: [docs/plans/README.md](../../plans/README.md)
 
 ## Repo Implications
 

@@ -38,7 +38,8 @@ Prefer `wiki/` for on-disk format bytes; prefer KB for how Andastra implements p
 | Source | Scope | Caveat |
 |--------|-------|--------|
 | `docs/*.md` (61+ files) | RE reports, bug analyses, TSLPatcher studies | May reference obsolete paths (`CSharpKOTOR`, `OdysseyRuntime`) |
-| `.cursor/plans/` | Implementation plans | Point-in-time; verify against git |
+| `docs/plans/` | LFG vertical-slice plans (001+); see [README.md](../../plans/README.md) | Point-in-time; verify against git and CI |
+| `.cursor/plans/` | Cursor implementation plans | Point-in-time; verify against git |
 
 Always check file dates and cross-reference `src/` before treating as current truth.
 
