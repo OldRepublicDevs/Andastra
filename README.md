@@ -150,11 +150,11 @@ dotnet run --project src/Andastra/Game/Andastra.Game.csproj -- --game-path "C:\G
 # Run OdyPatch
 dotnet run --project src/Tools/OdyPatch.UI/OdyPatch.UI.csproj
 
-# Run NCSDecomp
-dotnet run --project src/Tools/NCSDecomp/NCSDecomp.csproj
+# Run NCSDecomp CLI
+dotnet run --project src/Tools/NCSDecomp.CLI/NCSDecomp.CLI.csproj --framework net9.0
 
 # Run script compiler
-dotnet run --project src/Tools/NSSComp/NSSComp.NET.csproj
+dotnet run --project src/Tools/NSSComp/NSSComp.csproj --framework net9.0
 ```
 
 ## Project Structure

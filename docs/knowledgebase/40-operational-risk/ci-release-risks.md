@@ -12,9 +12,9 @@ Key docs: `docs/WORKFLOWS.md`, `docs/GITHUB_ACTIONS_SETUP.md`, `docs/AUTOUPDATE.
 
 | Risk | Detail | Label |
 |------|--------|-------|
-| Stale test path | `ci.yml` references `src/CSharpKOTOR.Tests/` | [REPO] |
-| OdyPatch path mismatch | Some workflows use `src/OdyPatch/` not `src/Tools/OdyPatch/` | [REPO] |
-| Full solution build | May hit OdyTools errors while BioWare path is green | [REPO] |
+| Stale test path | ~~`ci.yml` references `src/CSharpKOTOR.Tests/`~~ Fixed — BioWare.Tests ladder | [REPO] |
+| OdyPatch path mismatch | ~~Some workflows use `src/OdyPatch/`~~ Fixed — `src/Tools/OdyPatch/` | [REPO] |
+| OdyPatch/OdyTools build | Workflow paths correct; OdyPatch publish may still fail on OdyTools errors | [REPO] |
 | No game runtime in CI | K1/TSL install not exercised in standard CI | [REPO] |
 
 **`[SYNTH]`** CI green on main does not imply agent "green path" (BioWare + tests) without log inspection.

@@ -27,8 +27,8 @@ Stale or broken documentation tracked for remediation.
 | `Runtime.Games.Odyssey` project | `Game/Games/Odyssey/` |
 | `Runtime.Scripting` project | `Game/Scripting/` |
 | `BioWare.NET` naming | `BioWare` csproj |
-| `NSSComp.NET.csproj` | `NSSComp.csproj` |
-| `NCSDecomp` project | `NCSDecomp.CLI` |
+| `NSSComp.NET.csproj` | `NSSComp.csproj` | **Resolved in README 2026-05-23** |
+| `NCSDecomp` project | `NCSDecomp.CLI` | **Resolved in README 2026-05-23** |
 
 Documented in [game-vs-runtime-split.md](../10-architecture-runtime/game-vs-runtime-split.md). `[REPO]`
 
@@ -45,8 +45,8 @@ KB uses OdyPatch naming; wiki cleanup deferred. `[REPO]`
 
 | Workflow | Issue |
 |----------|-------|
-| `.github/workflows/ci.yml` | References `src/CSharpKOTOR.Tests/` (missing) |
-| Build workflows | Some reference `src/OdyPatch/` vs actual `src/Tools/OdyPatch/` |
+| `.github/workflows/ci.yml` | ~~References `src/CSharpKOTOR.Tests/`~~ **Resolved 2026-05-23** — uses BioWare.Tests green path |
+| Build workflows | ~~Some reference `src/OdyPatch/`~~ **Resolved 2026-05-23** — updated to `src/Tools/OdyPatch/` |
 
 See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 
@@ -59,7 +59,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 ## Remediation Priority
 
 1. ~~Create `docs/QUICKSTART.md` pointing at KB execution ladder~~ **Done 2026-05-23**
-2. Fix CI project paths before trusting CI green `[SYNTH]`
+2. ~~Fix CI project paths before trusting CI green~~ **Done 2026-05-23** (OdyPatch build may still fail on OdyTools)
 3. Add README errata or update README architecture section `[SYNTH]`
 4. Refresh wiki Home for Andastra/OdyPatch branding `[SYNTH]`
 
