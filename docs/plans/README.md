@@ -1,6 +1,6 @@
 # LFG Plan Index (2026-05-23)
 
-Vertical slices: [PR #2](https://github.com/th3w1zard1/Andastra/pull/2) (plans 001–048) and [PR #3](https://github.com/th3w1zard1/Andastra/pull/3) (plans 049–055) merged to `master` 2026-05-24. Maintenance tracker: [pr-merge-readiness.md](../knowledgebase/90-meta/pr-merge-readiness.md).
+Vertical slices: [PR #2](https://github.com/th3w1zard1/Andastra/pull/2) (plans 001–048) and [PR #3](https://github.com/th3w1zard1/Andastra/pull/3) (plans 049–055) merged to `master` 2026-05-24. [PR #4](https://github.com/th3w1zard1/Andastra/pull/4) (plans 056+) open on `docs/post-pr3-tracker-sync`. Maintenance tracker: [pr-merge-readiness.md](../knowledgebase/90-meta/pr-merge-readiness.md).
 
 Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 
@@ -67,6 +67,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 059 | [059-onboarding-runbook-sync-plan.md](2026-05-23-059-onboarding-runbook-sync-plan.md) | Onboarding docs runbook sync |
 | 060 | [060-dev-setup-validate-sync-plan.md](2026-05-23-060-dev-setup-validate-sync-plan.md) | Dev setup validate sync |
 | 061 | [061-agents-build-health-validate-sync-plan.md](2026-05-23-061-agents-build-health-validate-sync-plan.md) | AGENTS.md build health validate sync |
+| 062 | [062-odypatch-readme-validate-verify-plan.md](2026-05-23-062-odypatch-readme-validate-verify-plan.md) | OdyPatch README validate sync |
 
 ## Repo implications
 
