@@ -32,7 +32,7 @@ Layer `30-product-ux/` is a **stub layer** (plan 038) with explicit `[OPEN]` run
 
 ## CI validation (post–PR #2 and PR #3 merge)
 
-PR #2 and PR #3 merged to `master` 2026-05-24. PR #3 CI included new `nuget-pack-smoke` (pack, `--help`, `--validate` fixture). `[REPO]`
+PR #2 and PR #3 merged to `master` 2026-05-24. [PR #4](https://github.com/th3w1zard1/Andastra/pull/4) (plans 056–063) adds post-merge tracker refresh and OdyPatch validate/runbook documentation sync. `[REPO]`
 
 See [pr-merge-readiness.md](pr-merge-readiness.md) (KB maintenance tracker). Re-check `gh pr checks` on new PRs that touch build/CI. `[REPO]`
 
