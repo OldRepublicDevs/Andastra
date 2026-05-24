@@ -29,7 +29,9 @@ Key docs: `docs/WORKFLOWS.md`, `docs/GITHUB_ACTIONS_SETUP.md`, `docs/AUTOUPDATE.
 
 ## NuGet
 
-Internal package publishing docs: `docs/NUGET.md`, `docs/NUGET_SETUP.md` `[REPO]`
+Internal package publishing docs: `docs/NUGET.md`, `docs/NUGET_SETUP.md`, `docs/MANUAL_PUSH_INSTRUCTIONS.md` `[REPO]`
+
+OdyPatch pack/push via `helper_scripts/build-nuget.{sh,ps1}` — green on Linux net9.0 after SPDX fix (plan 035). TSLPatcher engine is in-repo (`BioWare.TSLPatcher`), not a separate NuGet package. `[REPO]`
 
 ## Repo Implications
 
