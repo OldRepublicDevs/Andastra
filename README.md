@@ -146,17 +146,17 @@ dotnet build Andastra.sln --configuration Release --framework net9.0
 
 ```bash
 # Run the game (requires game installation)
-dotnet run --project src/Andastra/Game/Andastra.Game.csproj
+dotnet run --project src/Andastra/Game/Andastra.Game.csproj --framework net9.0
 
 # Or specify game path
-dotnet run --project src/Andastra/Game/Andastra.Game.csproj -- --game-path "C:\Games\KOTOR"
+dotnet run --project src/Andastra/Game/Andastra.Game.csproj --framework net9.0 -- --game-path "C:\Games\KOTOR"
 ```
 
 ### Development Tools
 
 ```bash
 # Run OdyPatch
-dotnet run --project src/Tools/OdyPatch.UI/OdyPatch.UI.csproj
+dotnet run --project src/Tools/OdyPatch.UI/OdyPatch.UI.csproj --framework net9.0
 
 # Run NCSDecomp CLI
 dotnet run --project src/Tools/NCSDecomp.CLI/NCSDecomp.CLI.csproj --framework net9.0
