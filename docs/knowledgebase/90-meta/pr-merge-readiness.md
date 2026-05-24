@@ -4,9 +4,9 @@ Merge-readiness tracker for branch `docs/feat-knowledgebase-initial` and [PR #2]
 
 ## Scope
 
-Evidence-first knowledgebase, onboarding docs, CI/doc drift remediation (plans 001–035), and full tool-chain + solution build recovery.
+Evidence-first knowledgebase, onboarding docs, CI/doc drift remediation (plans 001–036), and full tool-chain + solution build recovery.
 
-## Plans landed (001–035)
+## Plans landed (001–036)
 
 | Plan | Topic |
 |------|-------|
@@ -17,6 +17,7 @@ Evidence-first knowledgebase, onboarding docs, CI/doc drift remediation (plans 0
 | 033 | Reframe NUGET.md for BioWare.TSLPatcher + OdyPatch |
 | 034 | Fix NuGet publish scripts + MANUAL_PUSH_INSTRUCTIONS |
 | 035 | OdyPatch NuGet pack SPDX (`LGPL-3.0-only`) |
+| 036 | PR merge-readiness doc + PR #2 body refresh |
 
 Full plan files: `docs/plans/2026-05-23-NNN-*.md`
 
