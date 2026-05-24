@@ -50,6 +50,8 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- --
 dotnet build src/Tools/ConvertKotorGame/ConvertKotorGame.csproj --framework net9.0
 ```
 
+OdyPatch is the runnable host (launches OdyPatch.UI). Do not `dotnet run` the UI library csproj. `[REPO]`
+
 Optional — pack OdyPatch NuGet package (Linux):
 
 ```bash
