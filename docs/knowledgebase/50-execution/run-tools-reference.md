@@ -74,6 +74,16 @@ System.CommandLine 2.0 Option API fixed 2026-05-23. `[REPO]`
 
 Produces `OdyPatch.*.nupkg` under `src/Tools/OdyPatch/bin/Release/` (Linux uses net9.0). Requires valid SPDX `PackageLicenseExpression` in `OdyPatch.csproj` (`LGPL-3.0-only` as of plan 035). See [NUGET.md](../../NUGET.md). `[REPO]`
 
+Validate without game install (plan 055):
+
+```bash
+dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0 -c Release -- \
+  --validate --game-dir tests/fixtures/odypatch-fake-game \
+  --tslpatchdata tests/fixtures/odypatch-minimal-mod/tslpatchdata
+```
+
+`[REPO]`
+
 ## Broken / Known Failures
 
 | Tool | Issue |
