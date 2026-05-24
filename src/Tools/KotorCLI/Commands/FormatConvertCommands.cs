@@ -73,6 +73,122 @@ namespace KotorCLI.Commands
             }
         }
 
+        private static int ExecuteJson2Gff(string input, string output, ILogger logger)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(input) || !File.Exists(input))
+                {
+                    logger.Error("Input file not found.");
+                    return 1;
+                }
+                if (string.IsNullOrEmpty(output))
+                {
+                    output = Path.ChangeExtension(input, ".gff");
+                }
+                Conversions.ConvertJsonToGff(input, output);
+                if (!File.Exists(output))
+                {
+                    logger.Error("Conversion completed but output file was not created.");
+                    return 1;
+                }
+                logger.Info($"Converted {input} to {output}");
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Failed to convert JSON to GFF: {ex.Message}");
+                return 1;
+            }
+        }
+
+        private static int ExecuteTlk2Xml(string input, string output, ILogger logger)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(input) || !File.Exists(input))
+                {
+                    logger.Error("Input file not found.");
+                    return 1;
+                }
+                if (string.IsNullOrEmpty(output))
+                {
+                    output = Path.ChangeExtension(input, ".xml");
+                }
+                Conversions.ConvertTlkToXml(input, output);
+                if (!File.Exists(output))
+                {
+                    logger.Error("Conversion completed but output file was not created.");
+                    return 1;
+                }
+                logger.Info($"Converted {input} to {output}");
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Failed to convert TLK to XML: {ex.Message}");
+                return 1;
+            }
+        }
+
+        private static int ExecuteXml2Tlk(string input, string output, ILogger logger)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(input) || !File.Exists(input))
+                {
+                    logger.Error("Input file not found.");
+                    return 1;
+                }
+                if (string.IsNullOrEmpty(output))
+                {
+                    output = Path.ChangeExtension(input, ".tlk");
+                }
+                Conversions.ConvertXmlToTlk(input, output);
+                if (!File.Exists(output))
+                {
+                    logger.Error("Conversion completed but output file was not created.");
+                    return 1;
+                }
+                logger.Info($"Converted {input} to {output}");
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Failed to convert XML to TLK: {ex.Message}");
+                return 1;
+            }
+        }
+
+        private static int ExecuteSsf2Xml(string input, string output, ILogger logger)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(input) || !File.Exists(input))
+                {
+                    logger.Error("Input file not found.");
+                    return 1;
+                }
+                if (string.IsNullOrEmpty(output))
+                {
+                    output = Path.ChangeExtension(input, ".xml");
+                }
+                Conversions.ConvertSsfToXml(input, output);
+                if (!File.Exists(output))
+                {
+                    logger.Error("Conversion completed but output file was not created.");
+                    return 1;
+                }
+                logger.Info($"Converted {input} to {output}");
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Failed to convert SSF to XML: {ex.Message}");
+                return 1;
+            }
+        }
+
         private static void AddJson2Gff(RootCommand rootCommand)
         {
             var cmd = new Command("json2gff", "Convert JSON to GFF");
@@ -86,8 +202,8 @@ namespace KotorCLI.Commands
                 var input = parseResult.GetValue(inputArg);
                 var output = parseResult.GetValue(outputOpt);
                 var logger = new StandardLogger();
-                logger.Warning("TODO: STUB - JSON to GFF conversion not yet implemented in BioWare");
-                Environment.Exit(1);
+                var exitCode = ExecuteJson2Gff(input, output, logger);
+                Environment.Exit(exitCode);
             });
             rootCommand.Add(cmd);
         }
@@ -169,8 +285,8 @@ namespace KotorCLI.Commands
                 var input = parseResult.GetValue(inputArg);
                 var output = parseResult.GetValue(outputOpt);
                 var logger = new StandardLogger();
-                logger.Info("TODO: STUB - tlk2xml not yet implemented");
-                Environment.Exit(0);
+                var exitCode = ExecuteTlk2Xml(input, output, logger);
+                Environment.Exit(exitCode);
             });
             rootCommand.Add(cmd);
         }
@@ -188,8 +304,8 @@ namespace KotorCLI.Commands
                 var input = parseResult.GetValue(inputArg);
                 var output = parseResult.GetValue(outputOpt);
                 var logger = new StandardLogger();
-                logger.Info("TODO: STUB - xml2tlk not yet implemented");
-                Environment.Exit(0);
+                var exitCode = ExecuteXml2Tlk(input, output, logger);
+                Environment.Exit(exitCode);
             });
             rootCommand.Add(cmd);
         }
@@ -207,8 +323,8 @@ namespace KotorCLI.Commands
                 var input = parseResult.GetValue(inputArg);
                 var output = parseResult.GetValue(outputOpt);
                 var logger = new StandardLogger();
-                logger.Info("TODO: STUB - ssf2xml not yet implemented");
-                Environment.Exit(0);
+                var exitCode = ExecuteSsf2Xml(input, output, logger);
+                Environment.Exit(exitCode);
             });
             rootCommand.Add(cmd);
         }
