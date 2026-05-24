@@ -153,7 +153,7 @@ If REVA/agentdecompile tooling is unavailable or fails, stop and report immediat
 
 ## 10. Specialized Tooling Rules
 
-- For NSS/NCS operations, use only `scripts/NcsTool.ps1` for compile/decompile/compare/roundtrip/generate-defs.
+- For NSS/NCS operations, use only `helper_scripts/NcsTool.ps1` for compile/decompile/compare/roundtrip/generate-defs.
 - Use Roslyn/Navicode MCP capabilities whenever they can improve correctness or bulk-safe refactors.
 - If Roslyn/Navicode MCP setup fails, stop and report immediately.
 
