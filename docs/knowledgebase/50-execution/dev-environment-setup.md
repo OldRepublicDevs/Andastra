@@ -30,7 +30,7 @@ Local environment for building Andastra on Linux (Cursor Cloud aligned).
 dotnet restore Andastra.sln
 ```
 
-If restore fails on missing optional projects, restore individual csprojs (BioWare, Game, tests). `[REPO]`
+Full solution restore succeeds on current branch (2026-05-23). For narrow agent loops, restore individual csprojs (BioWare, Game, tests). `[REPO]`
 
 ## Repo Implications
 

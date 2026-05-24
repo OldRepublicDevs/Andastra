@@ -36,7 +36,7 @@ Layer `30-product-ux/` is deferred for content scope; tool chain and full soluti
 | CI — Lint | Green |
 | CI — Solution Build (net9.0) | Green |
 | Test Builds matrix | Green (net48-win, net9.0 linux/osx/win) |
-| dotnet-desktop (Windows) | BioWare + OdyTools + OdyPatch + KotorCLI |
+| dotnet-desktop (Windows) | BioWare + OdyTools + OdyPatch + KotorCLI + ConvertKotorGame |
 
 Runtime game testing and OdyPatch mod-install UX remain manual. `[REPO]`
 
