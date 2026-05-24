@@ -22,6 +22,7 @@ using BioWare.Resource.Formats.TPC;
 using BioWare.Resource.Formats.TwoDA;
 using BioWare.Resource.Formats.GFF.Generics;
 using BioWare.Resource;
+using BioWare.Tools;
 using UTCHelpers = BioWare.Resource.Formats.GFF.Generics.UTC.UTCHelpers;
 using UTCClass = BioWare.Resource.Formats.GFF.Generics.UTC.UTCClass;
 using OdyTools.Common;
@@ -570,10 +571,20 @@ namespace OdyTools.Editors
             openInEditorItem.Click += (sender, e) => OpenScriptInEditor(comboBox, scriptTypeName);
             contextMenu.Items.Add(openInEditorItem);
 
+            var findReferencesItem = new MenuItem
+            {
+                Header = "Find References",
+                IsEnabled = false
+            };
+            findReferencesItem.Click += (sender, e) => FindScriptReferences(comboBox);
+            contextMenu.Items.Add(findReferencesItem);
+
             void UpdateOpenEnabled(object s, EventArgs e)
             {
                 string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
-                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
+                bool hasScript = !string.IsNullOrWhiteSpace(text);
+                openInEditorItem.IsEnabled = hasScript;
+                findReferencesItem.IsEnabled = hasScript && _installation != null;
             }
 
             comboBox.SelectionChanged += UpdateOpenEnabled;
@@ -622,6 +633,42 @@ namespace OdyTools.Editors
             catch (Exception ex)
             {
                 System.Console.WriteLine($"OpenScriptInEditor failed: {ex.Message}");
+            }
+        }
+
+        private void FindScriptReferences(ComboBox comboBox)
+        {
+            if (comboBox == null || _installation?.Installation == null)
+            {
+                return;
+            }
+
+            string scriptName = comboBox.Text?.Trim();
+            if (string.IsNullOrEmpty(scriptName))
+            {
+                return;
+            }
+
+            try
+            {
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = true,
+                    SearchModules = true,
+                    SearchOverride = true
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindScriptReferences(
+                    _installation.Installation,
+                    scriptName,
+                    options);
+
+                var dialog = FileResultsDialog.FromReferenceSearch(this, results, _installation);
+                dialog.Show();
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine("Find script references failed: " + ex.Message);
             }
         }
 
