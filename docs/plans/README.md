@@ -62,6 +62,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 054 | [054-pr3-merge-conflict-resolution-plan.md](2026-05-23-054-pr3-merge-conflict-resolution-plan.md) | PR #3 merge conflict resolution |
 | 055 | [055-odypatch-validate-fixture-plan.md](2026-05-23-055-odypatch-validate-fixture-plan.md) | OdyPatch validate fixture + CI smoke |
 | 056 | [056-post-pr3-tracker-refresh-plan.md](2026-05-23-056-post-pr3-tracker-refresh-plan.md) | Post-PR #3 tracker refresh |
+| 057 | [057-build-ladder-validate-sync-plan.md](2026-05-23-057-build-ladder-validate-sync-plan.md) | Build ladder validate sync |
 
 ## Repo implications
 

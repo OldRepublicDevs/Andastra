@@ -105,6 +105,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 45. ~~PR #3 merge conflicts with master squash~~ **Done 2026-05-24**
 46. ~~OdyPatch validate CLI fixture + CI smoke~~ **Done 2026-05-24**
 47. ~~Post-PR #3 tracker still lists open PR~~ **Done 2026-05-24**
+48. ~~Validate fixture missing from build-and-test-ladder~~ **Done 2026-05-24**
 
 ## KB Doc Drift (post-C5)
 

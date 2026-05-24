@@ -31,8 +31,13 @@ Ongoing knowledgebase and onboarding maintenance. Initial KB landed via [PR #2](
 | 054 | PR #3 merge conflict resolution with master |
 | 055 | OdyPatch validate fixture + CI smoke |
 | 056 | Post-PR #3 maintenance tracker refresh |
+| 057 | Build ladder OdyPatch validate sync (PR #4) |
 
 Full index: [docs/plans/README.md](../../plans/README.md)
+
+## PR #4 (open)
+
+Plan 056 post-PR #3 tracker refresh on branch `docs/post-pr3-tracker-sync`. `[REPO]`
 
 ## Local validation (green path)
 
