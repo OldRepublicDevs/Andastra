@@ -44,9 +44,10 @@ Always check file dates and cross-reference `src/` before treating as current tr
 
 | Source | Why excluded |
 |--------|--------------|
-| `vendor/src/toolset/wiki/` | PyKotor/HoloPatcher mirror; duplicates root `wiki/` |
+| `vendor/src/toolset/wiki/` | PyKotor/HoloPatcher mirror; duplicates root `wiki/` — reference only |
 | `docs/REVERSE_ENGINEERING_PROJECT_SUMMARY.md` | Describes TypeScript/KotOR.js work not in this repo `[REPO]` |
-| `wiki/Home.md` | Still titled "PyKotor Wiki"; links HoloPatcher `[REPO]` |
+
+Root `wiki/Home.md` was rebranded to Andastra/OdyPatch (2026-05-23, plan 008). Format byte specs under `wiki/` remain tier 3; Home navigation links to KB and OdyPatch README. `[REPO]`
 
 ## Conflict Resolution
 
