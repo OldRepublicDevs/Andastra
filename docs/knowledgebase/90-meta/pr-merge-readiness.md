@@ -18,7 +18,7 @@ Ongoing knowledgebase and onboarding maintenance. Initial KB landed via [PR #2](
 | CI on PR | All checks **pass** including new `NuGet Pack Smoke (OdyPatch)` (help + validate smoke) `[REPO]` |
 | Scope delivered | Plans 049–055: post-merge meta, investigation index, NuGet CI, evidence labels, OdyPatch CLI help fix, validate fixture |
 
-## LFG plans landed (001–062)
+## LFG plans landed (001–063)
 
 | Plan | Topic |
 |------|-------|
@@ -37,12 +37,26 @@ Ongoing knowledgebase and onboarding maintenance. Initial KB landed via [PR #2](
 | 060 | Dev setup and tools ecosystem validate sync (PR #4) |
 | 061 | AGENTS.md and build health validate sync (PR #4) |
 | 062 | OdyPatch README validate sync + local verify (PR #4) |
+| 063 | PR #4 merge readiness gate (PR #4) |
 
 Full index: [docs/plans/README.md](../../plans/README.md)
 
 ## PR #4 (open)
 
-Plans 056–062 post-PR #3 KB maintenance on branch `docs/post-pr3-tracker-sync`. `[REPO]`
+Branch `docs/post-pr3-tracker-sync` — [PR #4](https://github.com/th3w1zard1/Andastra/pull/4). Docs-only maintenance batch (plans 056–063). `[REPO]`
+
+| Item | Status |
+|------|--------|
+| Scope | Post-PR #3 tracker refresh; OdyPatch validate fixture + E2E runbook documentation arc |
+| Plans | 056–063 (drift remediations #47–#54) |
+| Code risk | None — KB, README, AGENTS.md, tool READMEs only |
+| Local validate | `--validate` fixture exit 0 verified (plan 062) `[REPO]` |
+
+### Merge gate
+
+- [ ] Re-check `gh pr checks 4` on latest HEAD — all required jobs pass
+- [ ] Docs-only diff — no runtime/engine behavior changes
+- [ ] After merge: update this section to PR #4 outcome; suggested next slice moves to 064+
 
 ## Local validation (green path)
 
@@ -73,11 +87,11 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (063+)
+## Suggested next slices (064+)
 
 | Plan | Topic |
 |------|-------|
-| 063+ | Record OdyPatch E2E verification outcomes after manual runbook execution |
+| 064+ | Record OdyPatch E2E verification outcomes after manual runbook execution |
 
 ## Repo implications
 
