@@ -111,6 +111,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 51. ~~Dev setup omits OdyPatch validate fixture path~~ **Done 2026-05-24**
 52. ~~AGENTS.md and build-health omit validate fixture~~ **Done 2026-05-24**
 53. ~~OdyPatch tool README omits validate fixture~~ **Done 2026-05-24**
+54. ~~PR #4 missing merge gate documentation~~ **Done 2026-05-24**
 
 ## KB Doc Drift (post-C5)
 
@@ -167,6 +168,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 | Dev setup validate | ~~dev-environment-setup omitted validate fixture~~ | **Resolved 2026-05-24** — plan 060 |
 | AGENTS validate sync | ~~AGENTS.md and build-health-matrix omitted validate~~ | **Resolved 2026-05-24** — plan 061 |
 | OdyPatch README validate | ~~Tool README omitted validate fixture~~ | **Resolved 2026-05-24** — plan 062 |
+| PR #4 merge gate | ~~Open PR lacked merge checklist~~ | **Resolved 2026-05-24** — plan 063 |
 | `.github/workflows/ci.yml` | ~~No full solution build smoke test~~ | **Resolved 2026-05-23** — `solution-build` job |
 | `.github/workflows/ci.yml` | ~~Parallel solution build locks `Andastra.Core.deps.json`~~ | **Resolved 2026-05-23** — plan 031 `-m:1` |
 

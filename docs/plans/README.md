@@ -68,6 +68,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 060 | [060-dev-setup-validate-sync-plan.md](2026-05-23-060-dev-setup-validate-sync-plan.md) | Dev setup validate sync |
 | 061 | [061-agents-build-health-validate-sync-plan.md](2026-05-23-061-agents-build-health-validate-sync-plan.md) | AGENTS.md build health validate sync |
 | 062 | [062-odypatch-readme-validate-verify-plan.md](2026-05-23-062-odypatch-readme-validate-verify-plan.md) | OdyPatch README validate sync |
+| 063 | [063-pr4-merge-readiness-plan.md](2026-05-23-063-pr4-merge-readiness-plan.md) | PR #4 merge readiness gate |
 
 ## Repo implications
 
