@@ -88,6 +88,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 28. ~~Sync AGENTS/QUICKSTART/dev-setup with NuGet pack toolchain~~ **Done 2026-05-23**
 29. ~~Seed `30-product-ux/` KB stub layer~~ **Done 2026-05-23**
 30. ~~Fix OdyPatch README TSLPatcher.Core / path drift~~ **Done 2026-05-23**
+31. ~~Refresh PR #2 body + sync engine_roadmap through plan 039~~ **Done 2026-05-23**
 
 ## KB Doc Drift (post-C5)
 
@@ -119,6 +120,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 | `AGENTS.md`, `QUICKSTART.md`, `dev-environment-setup.md` | ~~Missing NuGet pack / helper_scripts onboarding~~ | **Resolved 2026-05-23** — plan 037 |
 | `30-product-ux/` KB layer | ~~Deferred entirely (plan 001)~~ | **Stub seeded 2026-05-23** — plan 038 |
 | `src/Tools/OdyPatch/README.md` | ~~Stale Andastra/TSLPatcher.Core template~~ | **Resolved 2026-05-23** — plan 039 |
+| PR #2 body / `engine_roadmap.md` | ~~Stale at plan 036; missing 037–039 outcomes~~ | **Resolved 2026-05-23** — plan 040 |
 | `.github/workflows/ci.yml` | ~~No full solution build smoke test~~ | **Resolved 2026-05-23** — `solution-build` job |
 | `.github/workflows/ci.yml` | ~~Parallel solution build locks `Andastra.Core.deps.json`~~ | **Resolved 2026-05-23** — plan 031 `-m:1` |
 
