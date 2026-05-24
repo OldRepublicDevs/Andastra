@@ -69,6 +69,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 9. ~~Fix KotorCLI System.CommandLine 2.0 Option API~~ **Done 2026-05-23**
 10. ~~Sync post-018 onboarding/AGENTS + KotorCLI desktop CI~~ **Done 2026-05-23**
 11. ~~Fix OdyTools standalone obj/bin collision for parallel solution builds~~ **Done 2026-05-23**
+12. ~~Add CI solution-build job + sync post-020 KB claims~~ **Done 2026-05-23**
 
 ## KB Doc Drift (post-C5)
 
@@ -82,6 +83,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 | Workflow | Issue | Status |
 |----------|-------|--------|
 | `.github/workflows/dotnet-desktop.yml` | ~~Microsoft template placeholders / broken MSIX steps~~ | **Resolved 2026-05-23** |
+| `.github/workflows/ci.yml` | ~~No full solution build smoke test~~ | **Resolved 2026-05-23** — `solution-build` job |
 
 ## Build Health (C5)
 

@@ -9,6 +9,7 @@ Living register of auth walls, runtime uncertainty, and stale-evidence risks. Up
 | C3 | Stale evidence | ~~README links to missing `docs/QUICKSTART.md` and `docs/engine_roadmap.md`~~ **Resolved 2026-05-23** | [REPO] | 2026-05-23 |
 | C4 | Source/runtime drift | ~~CI (`ci.yml`) references missing `src/CSharpKOTOR.Tests/`~~ **Resolved 2026-05-23** | [REPO] | 2026-05-23 |
 | C5 | Build uncertainty | ~~`OdyTools.csproj` and `OdyPatch` fail to build (method-group → `System.Action`)~~ | [REPO] | **Resolved 2026-05-23** — delegate overload + OdyPatch.UI reference |
+| C13 | Build uncertainty | ~~Full solution `Andastra.sln` fails on Linux (standalone obj collision)~~ | [REPO] | **Resolved 2026-05-23** — plan 020; CI `solution-build` job |
 | C6 | Runtime uncertainty | `Andastra.Game` requires local K1/TSL installation; no CI game-run | [REPO] | 2026-05-23 |
 | C7 | RE partial coverage | Some source comments use K1-only addresses without TSL pairs | [REPO] | 2026-05-23 |
 | C8 | Auth wall | AgentDecompile requires running Ghidra MCP server and local game binaries (`/K1_swkotor`, `/TSL_swkotor2`) | [REPO] | 2026-05-23 |

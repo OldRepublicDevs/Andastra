@@ -58,7 +58,7 @@ Detail: [build-health-matrix.md](../40-operational-risk/build-health-matrix.md)
 
 ## Restore Gotcha
 
-`MonoGameFPS` / `StrideGameFPS` are not in `Andastra.sln`; `dotnet restore Andastra.sln` succeeds. Full solution build may fail on Stride assembly processor on Linux. `[REPO]`
+`MonoGameFPS` / `StrideGameFPS` are not in `Andastra.sln`; `dotnet restore Andastra.sln` succeeds. Full solution net9.0 build succeeds on Linux (2026-05-23). `[REPO]`
 
 ## Repo Implications
 

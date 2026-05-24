@@ -16,6 +16,7 @@ Key docs: `docs/WORKFLOWS.md`, `docs/GITHUB_ACTIONS_SETUP.md`, `docs/AUTOUPDATE.
 | OdyPatch path mismatch | ~~Some workflows use `src/OdyPatch/`~~ Fixed — `src/Tools/OdyPatch/` | [REPO] |
 | OdyPatch/OdyTools build | ~~OdyPatch publish blocked~~ Desktop CI builds OdyTools + OdyPatch on Windows; publish still uses NSSComp smoke in test-builds | [REPO] |
 | No game runtime in CI | K1/TSL install not exercised in standard CI | [REPO] |
+| Full solution build | `ci.yml` `solution-build` job — `Andastra.sln` net9.0 on ubuntu (2026-05-23) | [REPO] |
 
 **`[SYNTH]`** CI green on main does not imply agent "green path" (BioWare + tests) without log inspection.
 

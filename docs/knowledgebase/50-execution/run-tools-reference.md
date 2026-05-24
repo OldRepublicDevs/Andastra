@@ -38,7 +38,11 @@ dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
 
 ### ConvertKotorGame
 
-Listed in solution — K1↔TSL portability wizard. `[REPO]` Build/run unverified on current branch.
+```bash
+dotnet build src/Tools/ConvertKotorGame/ConvertKotorGame.csproj --framework net9.0
+```
+
+K1↔TSL portability wizard — builds on net9.0 (2026-05-23). `[REPO]`
 
 ### Standalone OdyTool editors
 
@@ -64,7 +68,7 @@ System.CommandLine 2.0 Option API fixed 2026-05-23. `[REPO]`
 
 | Tool | Issue |
 |------|-------|
-| *(none in tool chain)* | Full solution build may fail on Stride assembly processor on Linux `[REPO]` |
+| *(none in tool chain)* | Isolated Stride assembly processor failures on Linux game-only builds `[REPO]` |
 
 ## Script Tooling
 
