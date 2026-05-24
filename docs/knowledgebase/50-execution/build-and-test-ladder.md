@@ -36,16 +36,24 @@ dotnet run --project src/Tools/NCSDecomp.CLI/NCSDecomp.CLI.csproj --framework ne
 dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- --help
 dotnet build src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
 dotnet build src/Tools/OdyPatch.UI/OdyPatch.UI.csproj --framework net9.0
+dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0 -c Release -- --help
+dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0 -c Release -- \
+  --validate --game-dir tests/fixtures/odypatch-fake-game \
+  --tslpatchdata tests/fixtures/odypatch-minimal-mod/tslpatchdata
 dotnet build src/Tools/ConvertKotorGame/ConvertKotorGame.csproj --framework net9.0
 ```
 
-OdyPatch installer: `dotnet run` the **OdyPatch** host only (see [run-tools-reference.md](run-tools-reference.md)). `[REPO]`
+OdyPatch `--help` and `--validate` (minimal fixture, no game install) mirror CI `nuget-pack-smoke` (plans 053/055). Build Release first or use `--no-build` after `build-nuget.sh`. `[REPO]`
+
+OdyPatch installer GUI: `dotnet run` the **OdyPatch** host only (see [run-tools-reference.md](run-tools-reference.md)). `[REPO]`
 
 ### Step 6 — Runtime / Game (optional, needs game install)
 
 ```bash
 dotnet build src/Andastra/Game/Andastra.Game.csproj --framework net9.0
 ```
+
+OdyPatch mod install against real K1/TSL: see [odypatch-e2e-runbook.md](odypatch-e2e-runbook.md) (manual E2E; not in CI). `[REPO]`
 
 ### Step 7 — Full solution
 

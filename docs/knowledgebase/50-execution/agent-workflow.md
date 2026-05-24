@@ -53,6 +53,8 @@ Optional when touching OdyPatch packaging: `./helper_scripts/build-nuget.sh` (Li
 
 - **Run GUI/CLI:** `dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0` — do **not** `dotnet run` `OdyPatch.UI` (library csproj). `[REPO]` (plans 044–045)
 - **CLI help:** `dotnet run ... -- --help` — must print usage without launching GUI (plan 053). `[REPO]`
+- **CLI validate (no game install):** `--validate` with `tests/fixtures/odypatch-fake-game` + `tests/fixtures/odypatch-minimal-mod/tslpatchdata` — see build ladder Step 5 (plans 055/057). `[REPO]`
+- **Manual E2E install:** [odypatch-e2e-runbook.md](odypatch-e2e-runbook.md) when a K1/TSL install is available (plan 058). `[REPO]`
 - **Patch semantics:** `BioWare.TSLPatcher` in `src/BioWare/TSLPatcher/`
 - **UX boundaries:** [odypatch-installer-ux.md](../30-product-ux/odypatch-installer-ux.md)
 - **READMEs:** `src/Tools/OdyPatch/README.md`, `src/Tools/OdyPatch.UI/README.md`

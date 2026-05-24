@@ -10,7 +10,7 @@ From repository root (Linux — always pass `--framework net9.0`):
 dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
 ```
 
-Default mode launches the Avalonia GUI. Use explicit CLI flags for headless install/validate/uninstall (see OdyPatch host README).
+Default mode launches the Avalonia GUI. Use explicit CLI flags for headless install/validate/uninstall — see [OdyPatch README](../OdyPatch/README.md) and [odypatch-e2e-runbook.md](../../../docs/knowledgebase/50-execution/odypatch-e2e-runbook.md).
 
 ## Build
 
@@ -47,6 +47,7 @@ Packable (`IsPackable=true`, `PackageId=OdyPatch.UI`, `BSL-1.1`). The published 
 | Topic | Location |
 |-------|----------|
 | Host run/CLI | [OdyPatch README](../OdyPatch/README.md) |
+| Validate + E2E | [odypatch-e2e-runbook.md](../../../docs/knowledgebase/50-execution/odypatch-e2e-runbook.md) |
 | Installer UX (stub) | [odypatch-installer-ux.md](../../../docs/knowledgebase/30-product-ux/odypatch-installer-ux.md) |
 | Tool chain | [run-tools-reference.md](../../../docs/knowledgebase/50-execution/run-tools-reference.md) |
 | Patch domain | [tslpatcher-domain.md](../../../docs/knowledgebase/20-domain-theory/tslpatcher-domain.md) |

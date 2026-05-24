@@ -21,6 +21,17 @@ Build:
 dotnet build src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
 ```
 
+Headless config validation (no game install) — mirrors CI `nuget-pack-smoke`:
+
+```bash
+dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0 -c Release -- --help
+dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0 -c Release -- \
+  --validate --game-dir tests/fixtures/odypatch-fake-game \
+  --tslpatchdata tests/fixtures/odypatch-minimal-mod/tslpatchdata
+```
+
+Manual mod install against a real K1/TSL install: [odypatch-e2e-runbook.md](../../../docs/knowledgebase/50-execution/odypatch-e2e-runbook.md).
+
 ## NuGet
 
 OdyPatch is packable (`IsPackable=true`). See [docs/NUGET.md](../../../docs/NUGET.md) and run `./helper_scripts/build-nuget.sh` from repo root.
@@ -32,6 +43,7 @@ OdyPatch is packable (`IsPackable=true`). See [docs/NUGET.md](../../../docs/NUGE
 | Installer UX (stub) | [odypatch-installer-ux.md](../../../docs/knowledgebase/30-product-ux/odypatch-installer-ux.md) |
 | Patch domain | [tslpatcher-domain.md](../../../docs/knowledgebase/20-domain-theory/tslpatcher-domain.md) |
 | Tool chain | [run-tools-reference.md](../../../docs/knowledgebase/50-execution/run-tools-reference.md) |
+| E2E runbook | [odypatch-e2e-runbook.md](../../../docs/knowledgebase/50-execution/odypatch-e2e-runbook.md) |
 | CI / release | [docs/WORKFLOWS.md](../../../docs/WORKFLOWS.md) |
 
 ## Supported mod changes

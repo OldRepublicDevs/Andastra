@@ -30,9 +30,9 @@ See [authority-map.md](authority-map.md) for conflict resolution.
 
 Layer `30-product-ux/` is a **stub layer** (plan 038) with explicit `[OPEN]` runtime UX boundaries; tool chain, full solution net9.0 build, and OdyPatch NuGet pack are green as of 2026-05-23.
 
-## CI validation (post–PR #2 merge)
+## CI validation (post–PR #2 and PR #3 merge)
 
-PR #2 merged to `master` 2026-05-24 with all CI checks passing on the merge commit. `[REPO]`
+PR #2 and PR #3 merged to `master` 2026-05-24. [PR #4](https://github.com/th3w1zard1/Andastra/pull/4) (plans 056–063) adds post-merge tracker refresh and OdyPatch validate/runbook documentation sync. `[REPO]`
 
 See [pr-merge-readiness.md](pr-merge-readiness.md) (KB maintenance tracker). Re-check `gh pr checks` on new PRs that touch build/CI. `[REPO]`
 
@@ -42,9 +42,9 @@ See [pr-merge-readiness.md](pr-merge-readiness.md) (KB maintenance tracker). Re-
 | CI — Solution Build (net9.0) | `-m:1` serialization (plan 031) |
 | Test Builds matrix | net48-win, net9.0 linux/osx/win |
 | dotnet-desktop (Windows) | BioWare + OdyTools + OdyPatch + OdyPatch.UI + KotorCLI + ConvertKotorGame |
-| OdyPatch NuGet pack | CI `nuget-pack-smoke` + local `helper_scripts/build-nuget.sh` (plans 035, 051); includes CLI `--help` smoke (plan 053) |
+| OdyPatch NuGet pack | CI `nuget-pack-smoke` — pack + `--help` + `--validate` (plans 051/053/055) + local `helper_scripts/build-nuget.sh` |
 
-Runtime game testing and OdyPatch mod-install UX remain manual. `[REPO]`
+Runtime game testing and OdyPatch mod-install UX remain manual — see [odypatch-e2e-runbook.md](../50-execution/odypatch-e2e-runbook.md). `[REPO]`
 
 ## Reading Order
 
@@ -73,8 +73,9 @@ Runtime game testing and OdyPatch mod-install UX remain manual. `[REPO]`
 
 1. [10-architecture-runtime/tools-ecosystem.md](../10-architecture-runtime/tools-ecosystem.md)
 2. [30-product-ux/odypatch-installer-ux.md](../30-product-ux/odypatch-installer-ux.md)
-3. [20-domain-theory/tslpatcher-domain.md](../20-domain-theory/tslpatcher-domain.md)
-4. [50-execution/run-tools-reference.md](../50-execution/run-tools-reference.md)
+3. [50-execution/odypatch-e2e-runbook.md](../50-execution/odypatch-e2e-runbook.md)
+4. [20-domain-theory/tslpatcher-domain.md](../20-domain-theory/tslpatcher-domain.md)
+5. [50-execution/run-tools-reference.md](../50-execution/run-tools-reference.md)
 
 ## Document Index
 
@@ -119,6 +120,7 @@ Runtime game testing and OdyPatch mod-install UX remain manual. `[REPO]`
 
 - [dev-environment-setup.md](../50-execution/dev-environment-setup.md)
 - [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md)
+- [odypatch-e2e-runbook.md](../50-execution/odypatch-e2e-runbook.md)
 - [run-game-runtime.md](../50-execution/run-game-runtime.md)
 - [run-tools-reference.md](../50-execution/run-tools-reference.md)
 - [agent-workflow.md](../50-execution/agent-workflow.md)

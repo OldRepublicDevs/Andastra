@@ -50,7 +50,15 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- --
 dotnet build src/Tools/ConvertKotorGame/ConvertKotorGame.csproj --framework net9.0
 ```
 
-OdyPatch is the runnable host (launches OdyPatch.UI). Do not `dotnet run` the UI library csproj. `[REPO]`
+OdyPatch is the runnable host (launches OdyPatch.UI). Do not `dotnet run` the UI library csproj. Headless config check (no game install):
+
+```bash
+dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0 -c Release -- \
+  --validate --game-dir tests/fixtures/odypatch-fake-game \
+  --tslpatchdata tests/fixtures/odypatch-minimal-mod/tslpatchdata
+```
+
+Manual mod install against a real K1/TSL install: [odypatch-e2e-runbook](knowledgebase/50-execution/odypatch-e2e-runbook.md). `[REPO]`
 
 Optional — pack OdyPatch NuGet package (Linux):
 
@@ -60,7 +68,7 @@ Optional — pack OdyPatch NuGet package (Linux):
 
 See [NUGET.md](NUGET.md) and [run-tools-reference](knowledgebase/50-execution/run-tools-reference.md).
 
-Runtime mod-install UX requires a local K1/TSL install. Details: [run-tools-reference](knowledgebase/50-execution/run-tools-reference.md).
+Runtime mod-install UX requires a local K1/TSL install. Details: [odypatch-e2e-runbook](knowledgebase/50-execution/odypatch-e2e-runbook.md) and [run-tools-reference](knowledgebase/50-execution/run-tools-reference.md).
 
 ## Agents and Contributors
 

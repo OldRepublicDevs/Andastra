@@ -21,9 +21,9 @@ dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
 | NSSComp | Green | CLI `--help` works |
 | NCSDecomp.CLI | Green | CLI `--help` works |
 | **OdyTools** (AIO) | Green | Delegate wiring fixed 2026-05-23 |
-| **OdyPatch** (host) | Green | Runnable exe — `dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj` (plan 044) |
+| **OdyPatch** (host) | Green | Runnable exe; `--help` + `--validate` fixture in CI `nuget-pack-smoke` (plans 053/055) `[REPO]` |
 | **OdyPatch.UI** (library) | Green | Build only — `OutputType=Library`; not directly runnable |
-| **OdyPatch NuGet pack** | Green | SPDX `LGPL-3.0-only`; `helper_scripts/build-nuget.sh` on net9.0 Linux (plan 035); CI `nuget-pack-smoke` job (plan 051) `[REPO]` |
+| **OdyPatch NuGet pack** | Green | SPDX `LGPL-3.0-only`; `helper_scripts/build-nuget.sh` on net9.0 Linux (plan 035); CI `nuget-pack-smoke` — pack + help + validate (plans 051/053/055) `[REPO]` |
 | Standalone OdyTool editors | Green | Shared props include DialogHelper 2026-05-23 |
 | OdyTools.Tests | Green when OdyTools builds | Depends on parent |
 | **KotorCLI** | Green | System.CommandLine 2.0 Option API fixed 2026-05-23 |
@@ -35,7 +35,7 @@ dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
 | Item | Notes |
 |------|-------|
 | Isolated game/runtime projects | Stride assembly processor may fail on isolated Linux builds of single game csproj `[REPO]` |
-| OdyPatch runtime UX | Compile green; mod-install flow unverified without K1/TSL install `[REPO]` |
+| OdyPatch runtime UX | Compile + `--validate` fixture green; mod-install flow unverified without K1/TSL — [odypatch-e2e-runbook.md](../50-execution/odypatch-e2e-runbook.md) `[REPO]` |
 | Game runtime in CI | No K1/TSL install exercised in standard CI `[REPO]` |
 
 ## Full Solution
@@ -61,4 +61,4 @@ Green on Linux net9.0 after standalone obj isolation (plan 020). CI validates vi
 
 - Agents default to BioWare + tests ladder — see [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md).
 - Tooling PRs should state which tool csproj was built.
-- OdyPatch mod-installer UX validation is unblocked at compile time; runtime UX still unverified. Run via OdyPatch host, not OdyPatch.UI csproj. `[REPO]`
+- OdyPatch mod-installer UX validation: `--validate` fixture without game install; manual E2E via [odypatch-e2e-runbook.md](../50-execution/odypatch-e2e-runbook.md). Run via OdyPatch host, not OdyPatch.UI csproj. `[REPO]`

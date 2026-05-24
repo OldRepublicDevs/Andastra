@@ -16,6 +16,7 @@ Bridge between architecture/tools docs (`10-architecture-runtime/`) and operatio
 ## Authority
 
 - Compile/run paths: [run-tools-reference.md](../50-execution/run-tools-reference.md) `[REPO]`
+- Headless validate + manual E2E: [odypatch-e2e-runbook.md](../50-execution/odypatch-e2e-runbook.md) `[REPO]`
 - Patch semantics: [tslpatcher-domain.md](../20-domain-theory/tslpatcher-domain.md) `[REPO]`
 - Tool matrix: [tools-ecosystem.md](../10-architecture-runtime/tools-ecosystem.md) `[REPO]`
 - OdyPatch host README: `src/Tools/OdyPatch/README.md` `[REPO]`

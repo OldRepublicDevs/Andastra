@@ -47,6 +47,7 @@ Any incomplete logic must use typed TODO markers: `[REPO]` (`.cursorrules`)
 - [ ] Public `.md` in `docs/` (except root README). `[REPO]`
 - [ ] KB updates when architecture or operational truth changes. `[SYNTH]`
 - [ ] Tool UX boundary docs in `30-product-ux/` when installer/editor surfaces change (stub layer). `[REPO]`
+- [ ] OdyPatch tooling changes: `--help` and `--validate` fixture per [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md) Step 5; manual install per [odypatch-e2e-runbook.md](../50-execution/odypatch-e2e-runbook.md) when applicable. `[REPO]`
 - [ ] OdyPatch packaging changes: verify `./helper_scripts/build-nuget.sh` when applicable. `[REPO]`
 - [ ] Progress roadmaps in `.cursor/roadmaps/` per rules (directory may not exist yet). `[REPO]`
 

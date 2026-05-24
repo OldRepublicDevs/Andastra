@@ -51,7 +51,18 @@ dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
 dotnet build src/Tools/OdyPatch.UI/OdyPatch.UI.csproj --framework net9.0
 ```
 
-See [run-tools-reference.md](run-tools-reference.md) and tool READMEs under `src/Tools/OdyPatch/`. `[REPO]`
+Headless config validation (no game install) — mirrors CI `nuget-pack-smoke`:
+
+```bash
+dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0 -c Release -- --help
+dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0 -c Release -- \
+  --validate --game-dir tests/fixtures/odypatch-fake-game \
+  --tslpatchdata tests/fixtures/odypatch-minimal-mod/tslpatchdata
+```
+
+Manual mod install against a real K1/TSL install: [odypatch-e2e-runbook.md](odypatch-e2e-runbook.md). `[REPO]`
+
+See [run-tools-reference.md](run-tools-reference.md), [build-and-test-ladder.md](build-and-test-ladder.md), and tool READMEs under `src/Tools/OdyPatch/`. `[REPO]`
 
 ## Repo Implications
 
