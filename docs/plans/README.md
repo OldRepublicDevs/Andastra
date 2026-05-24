@@ -58,6 +58,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 050 | [050-investigation-archive-index-plan.md](2026-05-23-050-investigation-archive-index-plan.md) | Investigation archive index |
 | 051 | [051-nuget-ci-smoke-plan.md](2026-05-23-051-nuget-ci-smoke-plan.md) | OdyPatch NuGet pack CI smoke |
 | 052 | [052-evidence-label-pass-plan.md](2026-05-23-052-evidence-label-pass-plan.md) | Evidence labels on thin KB docs |
+| 053 | [053-odypatch-cli-help-plan.md](2026-05-23-053-odypatch-cli-help-plan.md) | OdyPatch CLI --help + CI smoke |
 
 ## Repo implications
 
