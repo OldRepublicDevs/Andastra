@@ -576,7 +576,7 @@ namespace OdyTools.Editors
                 Header = "Find References",
                 IsEnabled = false
             };
-            findReferencesItem.Click += (sender, e) => FindScriptReferences(comboBox);
+            findReferencesItem.Click += (sender, e) => ScriptReferenceHelper.FindAndShowScriptReferences(this, comboBox, _installation);
             contextMenu.Items.Add(findReferencesItem);
 
             void UpdateOpenEnabled(object s, EventArgs e)
@@ -633,42 +633,6 @@ namespace OdyTools.Editors
             catch (Exception ex)
             {
                 System.Console.WriteLine($"OpenScriptInEditor failed: {ex.Message}");
-            }
-        }
-
-        private void FindScriptReferences(ComboBox comboBox)
-        {
-            if (comboBox == null || _installation?.Installation == null)
-            {
-                return;
-            }
-
-            string scriptName = comboBox.Text?.Trim();
-            if (string.IsNullOrEmpty(scriptName))
-            {
-                return;
-            }
-
-            try
-            {
-                var options = new ReferenceSearchOptions
-                {
-                    SearchChitin = true,
-                    SearchModules = true,
-                    SearchOverride = true
-                };
-
-                List<ReferenceSearchResult> results = ReferenceFinder.FindScriptReferences(
-                    _installation.Installation,
-                    scriptName,
-                    options);
-
-                var dialog = FileResultsDialog.FromReferenceSearch(this, results, _installation);
-                dialog.Show();
-            }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine("Find script references failed: " + ex.Message);
             }
         }
 
