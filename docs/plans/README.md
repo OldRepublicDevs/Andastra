@@ -1,6 +1,6 @@
 # LFG Plan Index (2026-05-23)
 
-Vertical slices executed on branch `docs/feat-knowledgebase-initial` for [PR #2](https://github.com/th3w1zard1/Andastra/pull/2). Merge tracker: [pr-merge-readiness.md](../knowledgebase/90-meta/pr-merge-readiness.md).
+Vertical slices on branch `docs/feat-knowledgebase-initial` → merged via [PR #2](https://github.com/th3w1zard1/Andastra/pull/2) to `master` (2026-05-24). Maintenance tracker: [pr-merge-readiness.md](../knowledgebase/90-meta/pr-merge-readiness.md).
 
 Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 
@@ -54,6 +54,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 046 | [046-plans-index-agent-onboarding-plan.md](2026-05-23-046-plans-index-agent-onboarding-plan.md) | Plans index + agent onboarding |
 | 047 | [047-sync-operational-risk-odypatch-plan.md](2026-05-23-047-sync-operational-risk-odypatch-plan.md) | Operational-risk + tslpatcher-domain sync |
 | 048 | [048-sync-topology-readme-odypatch-plan.md](2026-05-23-048-sync-topology-readme-odypatch-plan.md) | Solution-topology + README OdyPatch roles |
+| 049 | [049-post-merge-meta-topology-plan.md](2026-05-23-049-post-merge-meta-topology-plan.md) | Post-merge meta + utility csproj fix |
 
 ## Repo implications
 
