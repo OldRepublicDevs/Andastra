@@ -42,9 +42,19 @@ User rules: **only commit when user explicitly asks** — otherwise propose comm
 
 ## Validation Before Done
 
-1. Run narrowest build/test ladder
+1. Run narrowest build/test ladder — [build-and-test-ladder.md](build-and-test-ladder.md)
 2. Fix compiler/analyzer errors in touched projects
 3. Mark implementation status in response
+4. Tooling/doc slices: check [pr-merge-readiness.md](../90-meta/pr-merge-readiness.md) for PR #2 scope
+
+Optional when touching OdyPatch packaging: `./helper_scripts/build-nuget.sh` (Linux net9.0). `[REPO]`
+
+## KB Entry Points
+
+1. [90-meta/README.md](../90-meta/README.md) — taxonomy and reading order
+2. [evidence-contract.md](../90-meta/evidence-contract.md) — label rules
+3. [build-and-test-ladder.md](build-and-test-ladder.md) — validation ladder
+4. Mod/tools UX stubs: [30-product-ux/](../30-product-ux/README.md)
 
 ## Tooling Failures
 

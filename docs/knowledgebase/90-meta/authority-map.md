@@ -17,8 +17,10 @@ When sources disagree, use this hierarchy to decide which claim wins.
 | `docs/knowledgebase/00-intent/` | Mission, scope, definition of done |
 | `docs/knowledgebase/10-architecture-runtime/` | Corrected architecture vs README drift |
 | `docs/knowledgebase/20-domain-theory/` | Engine and format domain models |
+| `docs/knowledgebase/30-product-ux/` | Tool installer/editor UX stubs (`[OPEN]` runtime boundaries) |
 | `docs/knowledgebase/40-operational-risk/` | Build health, drift, RE gaps |
 | `docs/knowledgebase/50-execution/` | Setup, build ladder, run paths |
+| `docs/knowledgebase/90-meta/` | Evidence contract, authority, merge-readiness |
 
 KB **corrects** stale README/diagram claims when backed by `[REPO]` evidence from `src/`.
 
