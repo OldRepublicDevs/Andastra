@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Encoding = System.Text.Encoding;
 using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Controls;
@@ -13,6 +14,7 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using BioWare.Common;
 using BioWare.Resource;
+using BioWare.Tools;
 using OdyTools.Common.Widgets;
 using OdyTools.Data;
 using OdyTools.Dialogs;
@@ -43,6 +45,8 @@ namespace OdyTools.Editors
         private TextBlock _statusRight;
         private VsCodeWorkbenchShell _workbenchShell;
         private TabControl _bottomTabs;
+        private TabControl _sourceTabs;
+        private TextBox _disassemblyBox;
         private ListBox _problemsList;
         private TextBox _outputBox;
         private TreeView _outlineView;
@@ -135,6 +139,8 @@ namespace OdyTools.Editors
             Grid.SetRow(_breadcrumbs, 0);
             editorColumn.Children.Add(_breadcrumbs);
 
+            var sourceEditorGrid = new Grid { RowDefinitions = new RowDefinitions("*,Auto") };
+
             _monacoHost = new MonacoEditorHost { ShowMinimap = true };
             _codeEdit = _monacoHost.CodeEditor;
             _codeEdit.AcceptsReturn = true;
@@ -145,8 +151,8 @@ namespace OdyTools.Editors
             _codeEdit.Foreground = MonacoColors.EditorForegroundBrush;
             _codeEdit.TextChanged += (s, e) => { MarkDocumentDirty(); UpdateStatusBar(); UpdateBreadcrumbs(); };
             _codeEdit.KeyUp += (s, e) => UpdateStatusBar();
-            Grid.SetRow(_monacoHost, 1);
-            editorColumn.Children.Add(_monacoHost);
+            Grid.SetRow(_monacoHost, 0);
+            sourceEditorGrid.Children.Add(_monacoHost);
 
             _findReplaceWidget = new FindReplaceWidget();
             _findReplaceWidget.Background = MonacoColors.EditorBackgroundBrush;
@@ -156,8 +162,38 @@ namespace OdyTools.Editors
             _findReplaceWidget.CloseRequested += () => { _findReplaceWidget.IsVisible = false; };
             _findReplaceWidget.FindNextRequested += () => OnFindNext();
             _findReplaceWidget.FindPreviousRequested += () => OnFindPrevious();
-            Grid.SetRow(_findReplaceWidget, 2);
-            editorColumn.Children.Add(_findReplaceWidget);
+            Grid.SetRow(_findReplaceWidget, 1);
+            sourceEditorGrid.Children.Add(_findReplaceWidget);
+
+            _disassemblyBox = new TextBox
+            {
+                IsReadOnly = true,
+                AcceptsReturn = true,
+                TextWrapping = TextWrapping.NoWrap,
+                FontFamily = new FontFamily("Consolas, Cascadia Code, monospace"),
+                FontSize = 11,
+                Background = MonacoColors.EditorBackgroundBrush,
+                Foreground = MonacoColors.EditorForegroundBrush,
+            };
+
+            _sourceTabs = new TabControl();
+            _sourceTabs.ItemsSource = new List<object>
+            {
+                new TabItem { Header = "Source", Content = sourceEditorGrid },
+                new TabItem
+                {
+                    Header = "Disassembly",
+                    Content = new ScrollViewer
+                    {
+                        Content = _disassemblyBox,
+                        HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+                        VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                    }
+                },
+            };
+
+            Grid.SetRow(_sourceTabs, 1);
+            editorColumn.Children.Add(_sourceTabs);
 
             _workbenchShell.EditorContent = editorColumn;
 
@@ -543,6 +579,7 @@ namespace OdyTools.Editors
             if (result != null && result.Length > 0)
             {
                 LogToOutput("Compile succeeded.");
+                RefreshDisassembly(result);
                 DialogHelper.ShowWindow(this, "Compile", "Compilation succeeded.", IconType.Info);
             }
             else
@@ -599,6 +636,16 @@ namespace OdyTools.Editors
             _outputBox.Text = (_outputBox.Text ?? "") + message + Environment.NewLine;
         }
 
+        private void RefreshDisassembly(byte[] ncsBytes)
+        {
+            if (_disassemblyBox == null)
+            {
+                return;
+            }
+
+            _disassemblyBox.Text = Scripts.DisassembleNcsBytes(ncsBytes);
+        }
+
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
@@ -615,10 +662,13 @@ namespace OdyTools.Editors
                     text = "// Decompile failed: " + ex.Message;
                     LogToOutput("Decompilation failed: " + ex.Message);
                 }
+
+                RefreshDisassembly(data);
             }
             else
             {
                 text = data != null ? Encoding.UTF8.GetString(data) : "";
+                RefreshDisassembly(null);
             }
             if (_codeEdit != null) _codeEdit.Text = text;
             _isTsl = _installation?.Tsl ?? false;
@@ -633,6 +683,7 @@ namespace OdyTools.Editors
             if (_codeEdit != null) _codeEdit.Text = "";
             _problemDiagnostics.Clear();
             RefreshProblemsList();
+            RefreshDisassembly(null);
             UpdateStatusBar();
         }
 

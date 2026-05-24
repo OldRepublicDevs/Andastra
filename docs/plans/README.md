@@ -69,6 +69,13 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 061 | [061-agents-build-health-validate-sync-plan.md](2026-05-23-061-agents-build-health-validate-sync-plan.md) | AGENTS.md build health validate sync |
 | 062 | [062-odypatch-readme-validate-verify-plan.md](2026-05-23-062-odypatch-readme-validate-verify-plan.md) | OdyPatch README validate sync |
 | 063 | [063-pr4-merge-readiness-plan.md](2026-05-23-063-pr4-merge-readiness-plan.md) | PR #4 merge readiness gate |
+| 063 | [063-feat-pykotor-holocron-port-continuation-plan.md](2026-05-24-063-feat-pykotor-holocron-port-continuation-plan.md) | PyKotor/Holocron port U1–U7 (complete) |
+| 064 | [064-feat-holocron-u1-u2-kotorcli-fac-plan.md](2026-05-24-064-feat-holocron-u1-u2-kotorcli-fac-plan.md) | KotorCLI converts + OdyToolFAC |
+| 065 | [065-feat-indoor-builder-build-save-open-plan.md](2026-05-24-065-feat-indoor-builder-build-save-open-plan.md) | Indoor Builder Build/Save/Open |
+| 066 | [066-feat-reference-finder-gff-script-search-plan.md](2026-05-24-066-feat-reference-finder-gff-script-search-plan.md) | Reference finder GFF script ResRef |
+| 067 | [067-feat-odytool-nss-ncs-disassembly-plan.md](2026-05-24-067-feat-odytool-nss-ncs-disassembly-plan.md) | OdyToolNSS NCS disassembly tab |
+| 068 | [068-feat-reference-finder-installation-utc-plan.md](2026-05-24-068-feat-reference-finder-installation-utc-plan.md) | Reference finder installation + UTC |
+| 069 | [069-feat-holocron-u3-walkmesh-u6-utd-utp-utt-plan.md](2026-05-24-069-feat-holocron-u3-walkmesh-u6-utd-utp-utt-plan.md) | Walkmesh tests + UTD/UTP/UTT ref finder |
 
 ## Repo implications
 

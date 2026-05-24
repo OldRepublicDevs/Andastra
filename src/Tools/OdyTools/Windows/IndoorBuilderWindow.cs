@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using OdyTools.Data;
+using OdyTools.Dialogs;
 using DuplicateRoomsCommand = OdyTools.Windows.DuplicateRoomsCommand;
 
 namespace OdyTools.Windows
@@ -11,6 +13,8 @@ namespace OdyTools.Windows
     public class IndoorBuilderWindow : Window
     {
         private OdyInstallation _installation;
+        private string _filepath;
+        private List<Kit> _kits = new List<Kit>();
 
 
         public IndoorBuilderWindow(Window parent = null, OdyInstallation installation = null)
@@ -26,6 +30,8 @@ namespace OdyTools.Windows
             {
                 ModuleKitManager = null;
             }
+
+            LoadKitsFromDefaultPath();
 
             SetupUI();
 
@@ -155,6 +161,221 @@ namespace OdyTools.Windows
 
             // Wire up module component selection event
             // Module component selection (moduleComponentList UI)
+
+            Ui.ActionSettings = OpenSettings;
+            Ui.ActionSave = Save;
+            Ui.ActionSaveAs = SaveAs;
+            Ui.ActionOpen = Open;
+            Ui.ActionOpenMod = OpenMod;
+            Ui.ActionBuild = BuildMapFromUi;
+        }
+
+        private void LoadKitsFromDefaultPath()
+        {
+            try
+            {
+                string kitsPath = Path.Combine(Directory.GetCurrentDirectory(), "kits");
+                if (Directory.Exists(kitsPath))
+                {
+                    _kits = KitLoader.LoadKits(kitsPath);
+                }
+            }
+            catch
+            {
+                _kits = new List<Kit>();
+            }
+        }
+
+        /// <summary>Test hook to supply kits without filesystem layout.</summary>
+        public void SetKitsForTesting(List<Kit> kits)
+        {
+            _kits = kits ?? new List<Kit>();
+        }
+
+        public string FilePath => _filepath;
+
+        public bool BuildMap(string outputPath)
+        {
+            if (_installation == null)
+            {
+                Ui.LastErrorMessage = "No installation selected. Select an installation before building a module.";
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(outputPath))
+            {
+                Ui.LastErrorMessage = "Output path is required.";
+                return false;
+            }
+            if (Map == null || Map.Rooms.Count == 0)
+            {
+                Ui.LastErrorMessage = "Add at least one room before building.";
+                return false;
+            }
+
+            try
+            {
+                string directory = Path.GetDirectoryName(outputPath);
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                Map.Build(_installation, _kits, outputPath);
+                Ui.LastErrorMessage = null;
+                return File.Exists(outputPath);
+            }
+            catch (Exception ex)
+            {
+                Ui.LastErrorMessage = ex.Message;
+                return false;
+            }
+        }
+
+        private void BuildMapFromUi()
+        {
+            if (_installation == null)
+            {
+                Ui.LastErrorMessage = "No installation selected. Select an installation before building a module.";
+                return;
+            }
+
+            string outputPath = Path.Combine(_installation.ModulePath(), Map.ModuleId + ".mod");
+            BuildMap(outputPath);
+        }
+
+        public void Save()
+        {
+            if (string.IsNullOrEmpty(_filepath))
+            {
+                SaveAs();
+                return;
+            }
+
+            SaveMapToPath(_filepath);
+        }
+
+        public void SaveAs()
+        {
+            if (!string.IsNullOrEmpty(Ui.SaveAsPathOverride))
+            {
+                SaveMapToPath(Ui.SaveAsPathOverride);
+                _filepath = Ui.SaveAsPathOverride;
+                RefreshWindowTitle();
+                return;
+            }
+
+            Ui.LastErrorMessage = "Save path not configured. Use SaveMapToPath for programmatic saves.";
+        }
+
+        public void SaveMapToPath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                throw new ArgumentException("Path is required.", nameof(path));
+            }
+
+            byte[] data = Map.Write();
+            File.WriteAllBytes(path, data);
+            _filepath = path;
+            UndoStack.SetClean();
+            RefreshWindowTitle();
+        }
+
+        public bool OpenFromPath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            {
+                Ui.LastErrorMessage = "Indoor map file not found.";
+                return false;
+            }
+
+            try
+            {
+                byte[] raw = File.ReadAllBytes(path);
+                List<MissingRoomInfo> missing = Map.Load(raw, _kits);
+                Map.RebuildRoomConnections();
+                Ui.MapRenderer.SetMap(Map);
+                _filepath = path;
+                UndoStack.Clear();
+                UndoStack.SetClean();
+                RefreshWindowTitle();
+                Ui.LastMissingRooms = missing;
+                Ui.LastErrorMessage = null;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Ui.LastErrorMessage = ex.Message;
+                return false;
+            }
+        }
+
+        public void Open()
+        {
+            if (!string.IsNullOrEmpty(Ui.OpenPathOverride))
+            {
+                OpenFromPath(Ui.OpenPathOverride);
+            }
+        }
+
+        public bool OpenModFromPath(string modPath)
+        {
+            if (string.IsNullOrWhiteSpace(modPath) || !File.Exists(modPath))
+            {
+                Ui.LastErrorMessage = "Module file not found.";
+                return false;
+            }
+
+            byte[] embedded = BioWare.Tools.IndoorMapIo.TryExtractEmbeddedIndoorJsonFromModuleFiles(new[] { modPath });
+            if (embedded == null || embedded.Length == 0)
+            {
+                Ui.LastErrorMessage = "No embedded indoormap.txt found in module.";
+                return false;
+            }
+
+            try
+            {
+                List<MissingRoomInfo> missing = Map.Load(embedded, _kits);
+                Map.RebuildRoomConnections();
+                Ui.MapRenderer.SetMap(Map);
+                _filepath = modPath;
+                UndoStack.Clear();
+                UndoStack.SetClean();
+                RefreshWindowTitle();
+                Ui.LastMissingRooms = missing;
+                Ui.LastErrorMessage = null;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Ui.LastErrorMessage = ex.Message;
+                return false;
+            }
+        }
+
+        public void OpenMod()
+        {
+            if (!string.IsNullOrEmpty(Ui.OpenModPathOverride))
+            {
+                OpenModFromPath(Ui.OpenModPathOverride);
+            }
+        }
+
+        private void OpenSettings()
+        {
+            if (_installation == null)
+            {
+                return;
+            }
+
+            var dialog = new IndoorMapSettingsDialog(this, _installation, Map, _kits);
+            dialog.Show();
+        }
+
+        private void RefreshWindowTitle()
+        {
+            string name = string.IsNullOrEmpty(_filepath) ? "Untitled" : Path.GetFileName(_filepath);
+            Title = "Indoor Builder - " + name;
         }
 
         //     """Initialize Options UI to match renderer's initial state."""
@@ -654,6 +875,26 @@ namespace OdyTools.Windows
         public bool ActionRedoEnabled { get; set; }
 
         public bool ActionSettingsEnabled { get; set; }
+
+        public Action ActionSave { get; set; }
+
+        public Action ActionSaveAs { get; set; }
+
+        public Action ActionOpen { get; set; }
+
+        public Action ActionOpenMod { get; set; }
+
+        public Action ActionBuild { get; set; }
+
+        public string SaveAsPathOverride { get; set; }
+
+        public string OpenPathOverride { get; set; }
+
+        public string OpenModPathOverride { get; set; }
+
+        public string LastErrorMessage { get; set; }
+
+        public List<MissingRoomInfo> LastMissingRooms { get; set; }
 
         public IndoorMapRenderer MapRenderer { get; set; }
 

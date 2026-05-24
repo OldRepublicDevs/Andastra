@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using Avalonia.Controls;
 using OdyTools.Data;
-#if !ARE_STANDALONE && !AUDIO_STANDALONE && !BWM_STANDALONE && !DLG_STANDALONE && !ERF_STANDALONE && !GFF_STANDALONE && !GUI_STANDALONE && !GIT_STANDALONE && !IFO_STANDALONE && !JRL_STANDALONE && !LIP_STANDALONE && !LTR_STANDALONE && !LYT_STANDALONE && !MDL_STANDALONE && !NSS_STANDALONE && !PTH_STANDALONE && !SAV_STANDALONE && !SSF_STANDALONE && !TPC_STANDALONE && !TLK_STANDALONE && !TXT_STANDALONE && !TWODA_STANDALONE && !UTC_STANDALONE && !UTD_STANDALONE && !UTE_STANDALONE && !UTI_STANDALONE && !UTM_STANDALONE && !UTP_STANDALONE && !UTS_STANDALONE && !UTT_STANDALONE && !UTW_STANDALONE
+#if !ARE_STANDALONE && !AUDIO_STANDALONE && !BWM_STANDALONE && !DLG_STANDALONE && !ERF_STANDALONE && !FAC_STANDALONE && !GFF_STANDALONE && !GUI_STANDALONE && !GIT_STANDALONE && !IFO_STANDALONE && !JRL_STANDALONE && !LIP_STANDALONE && !LTR_STANDALONE && !LYT_STANDALONE && !MDL_STANDALONE && !NSS_STANDALONE && !PTH_STANDALONE && !SAV_STANDALONE && !SSF_STANDALONE && !TPC_STANDALONE && !TLK_STANDALONE && !TXT_STANDALONE && !TWODA_STANDALONE && !UTC_STANDALONE && !UTD_STANDALONE && !UTE_STANDALONE && !UTI_STANDALONE && !UTM_STANDALONE && !UTP_STANDALONE && !UTS_STANDALONE && !UTT_STANDALONE && !UTW_STANDALONE
 using OdyTools.Editors.DLG;
 using OdyTools.Editors.GUI;
 #endif
@@ -164,6 +164,9 @@ namespace OdyTools.Editors
 #elif JRL_STANDALONE
             if (targetType == ResourceType.JRL)
                 editor = new OdyToolJRL(parentWindow, installation);
+#elif FAC_STANDALONE
+            if (targetType == ResourceType.FAC)
+                editor = new OdyToolFAC(parentWindow, installation);
 #elif LIP_STANDALONE
             if (targetType == ResourceType.LIP)
                 editor = new OdyToolLIP(parentWindow, installation);
@@ -401,6 +404,10 @@ namespace OdyTools.Editors
                 {
                     editor = new OdyToolJRL(parentWindow, installation);
                 }
+            }
+            else if (targetType == ResourceType.FAC)
+            {
+                editor = new OdyToolFAC(parentWindow, installation);
             }
             else if (targetType == ResourceType.ARE)
             {

@@ -48,12 +48,24 @@ namespace KotorDiff.Gui
         private string _iniFilename = "changes.ini";
         private bool _compareHashes = true;
         private bool _taskRunning = false;
+        private readonly List<string> _installationPathOverrides;
 
-        // Matching Python: def __init__(self): ... super().__init__(title="KotorDiff - OdyTools", ...)
-        public KotorDiffApp()
+        public KotorDiffApp() : this(null, null)
         {
+        }
+
+        public KotorDiffApp(IEnumerable<string> installationPaths, string defaultInstallationPath = null)
+        {
+            _installationPathOverrides = installationPaths != null
+                ? new List<string>(installationPaths)
+                : null;
+            _path1 = defaultInstallationPath ?? string.Empty;
             InitializeComponent();
             SetupUI();
+            if (!string.IsNullOrEmpty(_path1) && Path1ComboBox != null)
+            {
+                Path1ComboBox.SelectedItem = _path1;
+            }
         }
 
         private void InitializeComponent()
@@ -132,6 +144,11 @@ namespace KotorDiff.Gui
         // Matching Python: def _get_installation_paths(self) -> list[str]: ... Get list of KOTOR installation paths
         private List<string> GetInstallationPaths()
         {
+            if (_installationPathOverrides != null && _installationPathOverrides.Count > 0)
+            {
+                return new List<string>(_installationPathOverrides);
+            }
+
             var paths = new List<string>();
             try
             {

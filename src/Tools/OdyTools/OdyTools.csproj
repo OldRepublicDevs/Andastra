@@ -69,6 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\BioWare\BioWare.csproj" />
+    <ProjectReference Include="..\KotorDiff\KotorDiff.csproj" />
   </ItemGroup>
   <!-- net48: binding redirects so Avalonia loads System.Memory and related assemblies -->
   <PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
@@ -98,6 +99,7 @@
   </ItemGroup>
   <ItemGroup>
     <AvaloniaXaml Remove="Editors\Standalone\**\*.axaml" />
+    <AvaloniaXaml Remove="Editors\Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml" />
   </ItemGroup>
   <!-- Exclude non-code directories from None and EmbeddedResource items -->
   <ItemGroup>

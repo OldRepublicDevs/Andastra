@@ -33,10 +33,48 @@ namespace BioWare.Tools
         public static string DisassembleNcs(string ncsPath, string outputPath = null, BioWareGame? game = null, bool pretty = true)
         {
             NCS ncs = NCSAuto.ReadNcs(ncsPath);
+            string result = FormatDisassembly(ncs, pretty);
 
-            var lines = new System.Collections.Generic.List<string>();
+            if (!string.IsNullOrEmpty(outputPath))
+            {
+                File.WriteAllText(outputPath, result, System.Text.Encoding.UTF8);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Disassemble in-memory NCS bytecode. Returns empty string for null/empty input;
+        /// returns an error comment line when bytes cannot be parsed.
+        /// </summary>
+        public static string DisassembleNcsBytes(byte[] data, bool pretty = true)
+        {
+            if (data == null || data.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            try
+            {
+                NCS ncs = NCSAuto.ReadNcs(data);
+                return FormatDisassembly(ncs, pretty);
+            }
+            catch (Exception ex)
+            {
+                return "; Disassembly failed: " + ex.Message;
+            }
+        }
+
+        private static string FormatDisassembly(NCS ncs, bool pretty)
+        {
+            if (ncs == null)
+            {
+                return string.Empty;
+            }
+
+            var lines = new List<string>();
             lines.Add("; NCS Disassembly");
-            lines.Add($"; Instructions: {ncs.Instructions.Count}");
+            lines.Add("; Instructions: " + ncs.Instructions.Count);
             lines.Add("");
 
             for (int i = 0; i < ncs.Instructions.Count; i++)
@@ -46,7 +84,6 @@ namespace BioWare.Tools
 
                 if (pretty)
                 {
-                    // Use instruction offset if available, otherwise use index
                     int byteOffset;
                     if (instruction.Offset >= 0)
                     {
@@ -54,10 +91,10 @@ namespace BioWare.Tools
                     }
                     else
                     {
-                        // Estimate offset (rough approximation)
-                        byteOffset = i * 4; // Average ~4 bytes per instruction
+                        byteOffset = i * 4;
                     }
-                    lines.Add($"{byteOffset:X8}: {instructionStr}");
+
+                    lines.Add(string.Format("{0:X8}: {1}", byteOffset, instructionStr));
                 }
                 else
                 {
@@ -65,14 +102,7 @@ namespace BioWare.Tools
                 }
             }
 
-            string result = string.Join("\n", lines);
-
-            if (!string.IsNullOrEmpty(outputPath))
-            {
-                File.WriteAllText(outputPath, result, System.Text.Encoding.UTF8);
-            }
-
-            return result;
+            return string.Join("\n", lines);
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/scripts.py:114-147

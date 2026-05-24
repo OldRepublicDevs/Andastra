@@ -22,6 +22,7 @@ using BioWare.Resource.Formats.TPC;
 using BioWare.Resource.Formats.TwoDA;
 using BioWare.Resource.Formats.GFF.Generics;
 using BioWare.Resource;
+using BioWare.Tools;
 using UTCHelpers = BioWare.Resource.Formats.GFF.Generics.UTC.UTCHelpers;
 using UTCClass = BioWare.Resource.Formats.GFF.Generics.UTC.UTCClass;
 using OdyTools.Common;
@@ -570,10 +571,20 @@ namespace OdyTools.Editors
             openInEditorItem.Click += (sender, e) => OpenScriptInEditor(comboBox, scriptTypeName);
             contextMenu.Items.Add(openInEditorItem);
 
+            var findReferencesItem = new MenuItem
+            {
+                Header = "Find References",
+                IsEnabled = false
+            };
+            findReferencesItem.Click += (sender, e) => ScriptReferenceHelper.FindAndShowScriptReferences(this, comboBox, _installation);
+            contextMenu.Items.Add(findReferencesItem);
+
             void UpdateOpenEnabled(object s, EventArgs e)
             {
                 string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
-                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
+                bool hasScript = !string.IsNullOrWhiteSpace(text);
+                openInEditorItem.IsEnabled = hasScript;
+                findReferencesItem.IsEnabled = hasScript && _installation != null;
             }
 
             comboBox.SelectionChanged += UpdateOpenEnabled;

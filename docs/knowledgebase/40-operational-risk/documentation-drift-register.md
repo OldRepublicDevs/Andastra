@@ -112,6 +112,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 52. ~~AGENTS.md and build-health omit validate fixture~~ **Done 2026-05-24**
 53. ~~OdyPatch tool README omits validate fixture~~ **Done 2026-05-24**
 54. ~~PR #4 missing merge gate documentation~~ **Done 2026-05-24**
+55. ~~Sync `odytools-editor-ux.md` + plans index for Holocron port slice (plan 063 U7)~~ **Done 2026-05-24**
 
 ## KB Doc Drift (post-C5)
 
@@ -119,6 +120,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 |----------|-------|--------|
 | `run-tools-reference.md`, `tools-ecosystem.md`, `solution-topology.md` | ~~OdyTools/OdyPatch listed as Red~~ | **Resolved 2026-05-23** |
 | `docs/QUICKSTART.md`, `docs/engine_roadmap.md` | ~~OdyTools blocks OdyPatch onboarding claims~~ | **Resolved 2026-05-23** |
+| `30-product-ux/odytools-editor-ux.md` | ~~FAC/KotorDiff/reference finder status missing post plan 063~~ | **Resolved 2026-05-24** |
 
 ## KB Meta Drift
 
