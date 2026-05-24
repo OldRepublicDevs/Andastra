@@ -12,7 +12,7 @@
 
 Standard commands per `README.md`. Key notes:
 
-- **Restore**: `dotnet restore Andastra.sln` succeeds on current branch. Full solution **build** may fail on Stride assembly processor on Linux; prefer narrow project restores for agents.
+- **Restore**: `dotnet restore Andastra.sln` succeeds on current branch. Full solution **build** succeeds on Linux net9.0 (2026-05-23, plan 020).
 - **Build core libraries**: `dotnet build src/BioWare/BioWare.csproj` builds cleanly for both `net9.0` and `net48`.
 - **Build tests**: `dotnet build tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0` and `dotnet build tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0`.
 - **Run tests**: `dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0` and `dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0`.
