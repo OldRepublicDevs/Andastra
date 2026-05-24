@@ -10,7 +10,7 @@ Ongoing knowledgebase and onboarding maintenance after [PR #2](https://github.co
 | CI on merge commit | All checks **pass** (Solution Build, Test Builds, dotnet-desktop, Lint, Snyk) `[REPO]` |
 | Scope delivered | Evidence-first KB (33 docs), plans 001–048, CI/doc drift remediations 1–39, tool-chain build recovery |
 
-## LFG plans landed (001–054)
+## LFG plans landed (001–055)
 
 | Plan | Topic |
 |------|-------|
@@ -21,12 +21,13 @@ Ongoing knowledgebase and onboarding maintenance after [PR #2](https://github.co
 | 052 | Evidence label pass on thin execution/domain docs |
 | 053 | OdyPatch CLI --help fix + CI smoke |
 | 054 | PR #3 merge conflict resolution with master |
+| 055 | OdyPatch validate fixture + CI smoke |
 
 Full index: [docs/plans/README.md](../../plans/README.md)
 
 ## PR #3 (open)
 
-Follow-up doc maintenance on `docs/feat-knowledgebase-initial` — plans 049–053. Merge conflicts with `master` squash (PR #2) **resolved** in plan 054. `[REPO]`
+Follow-up doc maintenance on `docs/feat-knowledgebase-initial` — plans 049–055. Merge conflicts with `master` squash (PR #2) **resolved** in plan 054. `[REPO]`
 
 ## Local validation (green path)
 
@@ -61,7 +62,7 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 
 | Plan | Topic |
 |------|-------|
-| 055+ | OdyPatch end-to-end mod install validation (needs game install); merge PR #3 when CI green |
+| 056+ | OdyPatch E2E mod install against real K1/TSL; merge PR #3 when CI green |
 
 ## Repo implications
 
