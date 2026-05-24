@@ -6,14 +6,9 @@
   </PropertyGroup>
   <Import Project="Standalone\OdyTools.Standalone.Editor.props" />
   <ItemGroup>
-    <PackageReference Include="NAudio" Version="2.2.1" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="Standalone\EditorStandaloneHost\EditorStandaloneProgram.cs" />
     <Compile Include="Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml.cs" />
     <Compile Include="OdyToolWAV.axaml.cs" />
-    <Compile Include="$(_OdyToolsRoot)\Widgets\IMediaPlayer.cs" />
-    <Compile Include="$(_OdyToolsRoot)\Widgets\NAudioMediaPlayer.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\MediaPlayerWidget.axaml.cs" />
     <Compile Include="Editor.cs" />
     <Compile Include="EditorHelpers.cs" />

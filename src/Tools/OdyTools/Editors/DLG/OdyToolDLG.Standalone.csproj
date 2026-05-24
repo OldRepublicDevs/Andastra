@@ -67,8 +67,6 @@
     <Compile Include="$(_OdyToolsRoot)\Editors\Actions\PasteItemAction.cs" />
     <Compile Include="$(_OdyToolsRoot)\Editors\Actions\DeleteNodeEverywhereAction.cs" />
     <Compile Include="$(_OdyToolsRoot)\Editors\Actions\RestoreOrphanAction.cs" />
-    <Compile Include="..\..\Widgets\IMediaPlayer.cs" />
-    <Compile Include="..\..\Widgets\NAudioMediaPlayer.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\PlainTextEdit.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\GFFFieldSpinBox.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\ColorEdit.axaml.cs" />
