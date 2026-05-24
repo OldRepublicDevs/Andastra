@@ -74,9 +74,12 @@ In swkotor2.exe, there is a bug where dialogue skips extremely fast in random ar
    - Properly track voiceover playback state
    - Reset voiceover state when dialogue ends or is aborted
 
-## Implementation Notes for OdysseyRuntime
+## Implementation Notes for Andastra (Odyssey dialogue)
 
-The current implementation in `DialogueManager.cs` has a potential bug at line 408:
+Current implementation: `src/Andastra/Game/Games/Odyssey/Dialogue/DialogueManager.cs`. `[REPO]`
+
+Potential bug (verify line numbers against current source):
+
 ```csharp
 CurrentState.TimeRemaining = _voicePlayer.CurrentTime + 0.5f;
 ```
