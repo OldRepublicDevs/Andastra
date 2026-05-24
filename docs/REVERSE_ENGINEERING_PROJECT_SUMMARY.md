@@ -1,17 +1,21 @@
 # K1-TSL Cross-Binary Reverse Engineering Project - Summary Report
 
-**Date**: 2026-03-31  
+> **Document status (2026-05-23):** Historical Phase 1 investigation report. Binary findings below remain useful RE evidence. **Current implementation authority:** Andastra .NET runtime under `src/Andastra/` and `src/BioWare/` — start at [knowledgebase index](knowledgebase/90-meta/README.md) and [reverse-engineering methodology](knowledgebase/20-domain-theory/reverse-engineering-methodology.md). Vendor `KotOR.js` TypeScript prototypes listed here are reference material only, not the active engine stack.
+
+**Date**: 2026-03-31 (investigation); reframed 2026-05-23  
 **Analyst**: GitHub Copilot (Claude Haiku 4.5)  
-**Project**: Andastra KotOR.js Engine Implementation  
-**Status**: Phase 1 Complete - Engine Architecture Foundations Laid ✅
+**Project**: Andastra — K1/TSL cross-binary analysis (Phase 1)  
+**Status**: Phase 1 investigation complete — findings inform Andastra .NET runtime work
 
 ---
 
 ## Executive Summary
 
-Successfully completed comprehensive reverse engineering of Knights of the Old Republic (K1) and The Sith Lords (TSL) game engine binaries using AgentDecompile/Ghidra tools. Extracted critical architectural information and began implementation of the Odyssey game engine in TypeScript/KotOR.js project.
+Successfully completed comprehensive reverse engineering of Knights of the Old Republic (K1) and The Sith Lords (TSL) game engine binaries using AgentDecompile/Ghidra tools. Extracted critical architectural information used to inform the Andastra .NET Odyssey runtime (`src/Andastra/Game/Games/Odyssey/`).
 
-**Key Achievement**: Established binary-accurate function correlation methodology and created reusable engine framework for future K1/TSL game implementations.
+A parallel **vendor KotOR.js** TypeScript prototype was created during this investigation phase; treat it as historical reference code under `vendor/KotOR.js/`, not the canonical Andastra deliverable.
+
+**Key Achievement**: Established binary-accurate function correlation methodology and documented engine initialization patterns reused in Andastra source comments and KB docs.
 
 ---
 
@@ -38,9 +42,9 @@ Successfully completed comprehensive reverse engineering of Knights of the Old R
 | Phase | Task | Status | Output |
 |-------|------|--------|--------|
 | **Breadth Discovery** | Memory layouts, import tables, function counts | ✅ Complete | 322-line analysis doc + code |
-| **Data Extraction** | String analysis, offset correlations, version diffs | ✅ Complete | BinaryAnalysis.ts (500 lines) |
-| **Architecture Design** | Engine framework, initialization sequence, game loop | ✅ Complete | OdysseyEngine.ts (419 lines) |
-| **Implementation Start** | Core classes, phase sequencing, delta-time management | ✅ In Progress | Ready for Phase 2 depth |
+| **Data Extraction** | String analysis, offset correlations, version diffs | ✅ Complete | BinaryAnalysis.ts in vendor KotOR.js (reference) |
+| **Architecture Design** | Engine framework, initialization sequence, game loop | ✅ Complete | Documented; implemented in Andastra .NET runtime |
+| **Implementation Start** | Core classes, phase sequencing, delta-time management | ⏳ Ongoing | Andastra `src/Andastra/` — see [engine roadmap](engine_roadmap.md) |
 | **Cross-Binary Mapping** | Function correlation map | ⏳ Phase 2 | Requires individual function analysis |
 
 ---
@@ -100,26 +104,29 @@ Created 5 primary function groups with confidence scores:
 - Phase 2 readiness checklist
 - Implementation recommendations
 
-### 2. Engine Implementation (KotOR.js)
+### 2. Vendor Reference Implementation (KotOR.js — historical)
 
-**File**: `vendor/KotOR.js/src/engine/BinaryAnalysis.ts`
-- 500 lines of TypeScript
-- Binary layout constants (K1 & TSL)
-- Import library documentation
-- Function group enumeration
-- Version-specific differences database
-- BinaryAnalyzer utility class for correlation lookups
-- **Purpose**: Serves as data layer for all K1/TSL binary-aware code
+**File**: `vendor/KotOR.js/src/engine/BinaryAnalysis.ts` (reference only)
+- Binary layout constants (K1 & TSL) extracted during Phase 1
+- **Purpose**: Reference data layer; Andastra RE comments and KB supersede for active work
 
-**File**: `vendor/KotOR.js/src/engine/OdysseyEngine.ts`
-- 419 lines of TypeScript
-- OdysseyEngine class (main entry point)
-- 7-phase initialization sequence (derived from binary import analysis)
-- Game loop skeleton with proper delta-time handling
-- Support for both K1 and TSL via configuration
-- **Purpose**: Core engine class for KotOR game implementation
+**File**: `vendor/KotOR.js/src/engine/OdysseyEngine.ts` (reference only)
+- TypeScript skeleton from Phase 1 investigation
+- **Purpose**: Illustrative game-loop framing — not maintained as Andastra's runtime
 
-### 3. Git Commits
+### 3. Andastra .NET Runtime (current stack)
+
+| Area | Path |
+|------|------|
+| Game executable / launcher | `src/Andastra/Game/` |
+| Odyssey engine rules | `src/Andastra/Game/Games/Odyssey/` |
+| NCS VM | `src/Andastra/Game/Scripting/` |
+| Domain runtime | `src/Andastra/Runtime/` |
+| Formats / extract | `src/BioWare/` |
+
+See [build-and-test-ladder.md](knowledgebase/50-execution/build-and-test-ladder.md) for the agent green path.
+
+### 4. Git Commits (investigation era)
 ```
 28e9d12a - docs(binary-analysis): comprehensive K1-TSL cross-binary reverse engineering report
 73816aef - feat(engine): implement binary analysis and odyssey engine core from K1-TSL reverse engineering
@@ -162,10 +169,10 @@ WHILE running:
 - [x] Import table extraction and comparison
 - [x] Function count and grouping
 - [x] Cross-binary difference catalogue
-- [x] Engine initialization framework (7-phase design)
-- [x] Game loop skeleton
-- [x] Version detection system
-- [x] Core TypeScript architecture
+- [x] Engine initialization framework (7-phase design) — documented
+- [x] Game loop skeleton — documented; partial Andastra .NET implementation
+- [x] Version detection patterns — documented
+- [x] Vendor KotOR.js reference prototype (historical)
 
 ### ⏳ In Progress (Phase 2 - Requires Deep Dives)
 - [ ] Individual function decompilation (top 15 anchor functions)
@@ -189,24 +196,16 @@ WHILE running:
 
 ## Code Quality & Architecture
 
-### Design Principles Applied
-1. **Separation of Concerns**: BinaryAnalysis (data) vs OdysseyEngine (logic)
-2. **Type Safety**: Full TypeScript with interfaces for all major structures
-3. **Version Awareness**: All code checks gameVersion for K1 vs TSL differences
-4. **Documentation**: Extensive comments linking code to binary analysis
-5. **Extensibility**: Framework ready for Phase 2 function implementations
+### Design Principles Applied (investigation phase)
+1. **Separation of Concerns**: Binary analysis data vs engine loop framing
+2. **Version Awareness**: K1 vs TSL differences documented for dual-binary RE
+3. **Documentation**: Comments linking findings to binary evidence
+4. **Andastra carry-forward**: Use unified K1+TSL address format in C# source per `.cursorrules`
 
-### Testing Readiness
-- OdysseyEngine class includes:
-  - Initialization phase tracking
-  - Error handling and recovery
-  - Frame counting and delta-time measurement
-  - Ready for unit test integration
-
-### Dependencies
-- TypeScript 4.x+ (type definitions included)
-- No external dependencies in Phase 1 (foundational layer only)
-- Ready for Babylon.js/Three.js graphics integration in Phase 2
+### Current Andastra implementation notes
+- Runtime code targets C# 7.3 / .NET 9 with BioWare format library boundary
+- Gameplay validation requires local K1/TSL installs — not CI-covered
+- Prefer KB + `src/` over this summary for implementation status
 
 ---
 
@@ -264,12 +263,11 @@ WHILE running:
 ## Community & Repository Integration
 
 ### Code Location
-- Primary implementation: `vendor/KotOR.js/src/engine/`
-- Documentation: `docs/CROSS_BINARY_ANALYSIS_PHASE1.md`
-- Related projects:
-  - PyKotOR (Python RE framework)
-  - HolocronToolset (game modding tools)
-  - NCSDecomp (NWScript decompiler)
+- **Active runtime:** `src/Andastra/`, `src/BioWare/`, `src/Tools/`
+- **This report + Phase 1 doc:** `docs/CROSS_BINARY_ANALYSIS_PHASE1.md`
+- **Knowledgebase:** `docs/knowledgebase/`
+- **Vendor reference:** `vendor/KotOR.js/src/engine/` (historical prototype)
+- Related tools in repo: OdyPatch, NSSComp, NCSDecomp.CLI, KotorDiff
 
 ### Version Control
 - All code commits follow conventional commit format
@@ -280,29 +278,23 @@ WHILE running:
 
 ## Conclusion
 
-**Phase 1 successfully established**:
+**Phase 1 successfully established** (investigation artifacts):
 1. ✅ Binary architecture understanding
 2. ✅ Cross-binary correlation methodology
-3. ✅ Engine framework foundation
-4. ✅ Version-aware code architecture
-5. ✅ Team-ready codebase with documentation
+3. ✅ Documented engine initialization and loop framing
+4. ✅ Version-aware analysis patterns
+5. ✅ KB and .NET runtime as current implementation path
 
-**Path forward is clear**:
-- With 25+ agentdecompile analyses completed, we have high-confidence input for detailed function matching
-- The 7-phase initialization sequence provides a roadmap for testing each subsystem
-- Import table stability means we can reliably identify function groups
-- TypeScript framework is ready for incremental Phase 2 implementations
+**Path forward for Andastra**:
+- Continue dual-binary RE (K1 + TSL) with AgentDecompile per `.cursorrules`
+- Land behavior in `src/Andastra/` with BioWare format boundaries
+- Track implementation status in [engine roadmap](engine_roadmap.md) and KB caveat register
 
-**Estimated effort for full implementation**:
-- Phase 2 (deep analysis): 40-60 hours
-- Phase 3 (core systems): 80-120 hours
-- Phase 4+ (gameplay): 200+ hours
-
-**Next session**: Begin Phase 2 with top-3 priority functions identification.
+**Next engineering focus**: Deep function correlation for remaining RE fidelity gaps (see [re-fidelity-gaps.md](knowledgebase/40-operational-risk/re-fidelity-gaps.md)).
 
 ---
 
 **Project Lead**: Andastra Team  
 **AI Analyst**: GitHub Copilot (Claude Haiku 4.5)  
-**Date**: 2026-03-31  
-**Status**: ✅ READY FOR PHASE 2
+**Date**: 2026-03-31 (original); reframed 2026-05-23  
+**Status**: Historical Phase 1 report — see knowledgebase for current runtime status
