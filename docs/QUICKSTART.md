@@ -26,7 +26,7 @@ dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0
 dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
 ```
 
-Full solution build may fail on `OdyTools` / `OdyPatch` until pre-existing compile errors are fixed. See [build-health-matrix](knowledgebase/40-operational-risk/build-health-matrix.md).
+Full solution build may still fail on KotorCLI or missing solution stubs. OdyTools and OdyPatch compile on net9.0. See [build-health-matrix](knowledgebase/40-operational-risk/build-health-matrix.md).
 
 ## Run the Game
 
@@ -39,20 +39,22 @@ dotnet run --project src/Andastra/Game/Andastra.Game.csproj --framework net9.0 -
 
 Use `--no-launcher` or `--game` to skip the Avalonia launcher. Details: [run-game-runtime](knowledgebase/50-execution/run-game-runtime.md).
 
-## Run Tools (working CLIs)
+## Run Tools
 
 ```bash
 dotnet run --project src/Tools/NSSComp/NSSComp.csproj --framework net9.0 -- --help
 dotnet run --project src/Tools/NCSDecomp.CLI/NCSDecomp.CLI.csproj --framework net9.0 -- --help
+dotnet build src/Tools/OdyTools/OdyTools.csproj --framework net9.0
+dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
 ```
 
-OdyPatch UI is currently blocked by OdyTools build failures. See [run-tools-reference](knowledgebase/50-execution/run-tools-reference.md).
+Runtime mod-install UX requires a local K1/TSL install. Details: [run-tools-reference](knowledgebase/50-execution/run-tools-reference.md).
 
 ## Agents and Contributors
 
 - **Agents:** Start at [agent-workflow](knowledgebase/50-execution/agent-workflow.md) and [evidence-contract](knowledgebase/90-meta/evidence-contract.md)
 - **Engine RE work:** [reverse-engineering-methodology](knowledgebase/20-domain-theory/reverse-engineering-methodology.md) (K1 + TSL dual-binary required)
-- **Architecture:** README diagrams may be stale — use [game-vs-runtime-split](knowledgebase/10-architecture-runtime/game-vs-runtime-split.md)
+- **Architecture:** Use [game-vs-runtime-split](knowledgebase/10-architecture-runtime/game-vs-runtime-split.md) for current layout
 
 ## Next Steps
 
