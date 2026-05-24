@@ -22,6 +22,7 @@ dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
 | NCSDecomp.CLI | Green | CLI `--help` works |
 | **OdyTools** (AIO) | Green | Delegate wiring fixed 2026-05-23 |
 | **OdyPatch** / **OdyPatch.UI** | Green | OdyTools reference restored 2026-05-23 |
+| **OdyPatch NuGet pack** | Green | SPDX `LGPL-3.0-only`; `helper_scripts/build-nuget.sh` on net9.0 Linux (plan 035) |
 | Standalone OdyTool editors | Green | Shared props include DialogHelper 2026-05-23 |
 | OdyTools.Tests | Green when OdyTools builds | Depends on parent |
 | **KotorCLI** | Green | System.CommandLine 2.0 Option API fixed 2026-05-23 |

@@ -64,6 +64,14 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- --
 
 System.CommandLine 2.0 Option API fixed 2026-05-23. `[REPO]`
 
+## NuGet pack (OdyPatch)
+
+```bash
+./helper_scripts/build-nuget.sh
+```
+
+Produces `OdyPatch.*.nupkg` under `src/Tools/OdyPatch/bin/Release/` (Linux uses net9.0). Requires valid SPDX `PackageLicenseExpression` in `OdyPatch.csproj` (`LGPL-3.0-only` as of plan 035). See [NUGET.md](../../NUGET.md). `[REPO]`
+
 ## Broken / Known Failures
 
 | Tool | Issue |
