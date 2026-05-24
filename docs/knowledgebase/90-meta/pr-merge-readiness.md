@@ -18,7 +18,7 @@ Ongoing knowledgebase and onboarding maintenance. Initial KB landed via [PR #2](
 | CI on PR | All checks **pass** including new `NuGet Pack Smoke (OdyPatch)` (help + validate smoke) `[REPO]` |
 | Scope delivered | Plans 049–055: post-merge meta, investigation index, NuGet CI, evidence labels, OdyPatch CLI help fix, validate fixture |
 
-## LFG plans landed (001–058)
+## LFG plans landed (001–059)
 
 | Plan | Topic |
 |------|-------|
@@ -33,12 +33,13 @@ Ongoing knowledgebase and onboarding maintenance. Initial KB landed via [PR #2](
 | 056 | Post-PR #3 maintenance tracker refresh |
 | 057 | Build ladder OdyPatch validate sync (PR #4) |
 | 058 | OdyPatch E2E manual runbook (PR #4) |
+| 059 | Onboarding docs runbook sync (PR #4) |
 
 Full index: [docs/plans/README.md](../../plans/README.md)
 
 ## PR #4 (open)
 
-Plans 056–058 post-PR #3 tracker refresh, build-ladder validate sync, and OdyPatch E2E runbook on branch `docs/post-pr3-tracker-sync`. `[REPO]`
+Plans 056–059 post-PR #3 tracker refresh, build-ladder validate sync, OdyPatch E2E runbook, and onboarding index sync on branch `docs/post-pr3-tracker-sync`. `[REPO]`
 
 ## Local validation (green path)
 
@@ -69,11 +70,11 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (059+)
+## Suggested next slices (060+)
 
 | Plan | Topic |
 |------|-------|
-| 059+ | Record OdyPatch E2E verification outcomes after manual runbook execution |
+| 060+ | Record OdyPatch E2E verification outcomes after manual runbook execution |
 
 ## Repo implications
 
