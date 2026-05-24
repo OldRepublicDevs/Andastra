@@ -14,15 +14,15 @@ namespace KotorCLI.Commands
         public static void AddToRootCommand(RootCommand rootCommand)
         {
             var keyPackCommand = new Command("key-pack", "Create KEY file from directory containing BIF files");
-            var directoryOption = new Option<string>("--directory", "Directory containing BIF files");
+            var directoryOption = Cli.Opt<string>("--directory", "Directory containing BIF files");
             directoryOption.Required = true;
             keyPackCommand.Options.Add(directoryOption);
-            var outputOption = new Option<string>("--output", "Output KEY file");
+            var outputOption = Cli.Opt<string>("--output", "Output KEY file");
             outputOption.Required = true;
             keyPackCommand.Options.Add(outputOption);
-            var bifDirOption = new Option<string>("--bif-dir", "Directory where BIF files are located (for relative paths in KEY)");
+            var bifDirOption = Cli.Opt<string>("--bif-dir", "Directory where BIF files are located (for relative paths in KEY)");
             keyPackCommand.Options.Add(bifDirOption);
-            var filterOption = new Option<string>("--filter", "Filter BIF files by pattern (supports wildcards)");
+            var filterOption = Cli.Opt<string>("--filter", "Filter BIF files by pattern (supports wildcards)");
             keyPackCommand.Options.Add(filterOption);
 
             keyPackCommand.SetAction(parseResult =>

@@ -22,9 +22,9 @@ namespace KotorCLI.Commands
                 var targetsArgument = new Argument<string[]>("targets");
                 targetsArgument.Description = "Target to launch";
                 launchCommand.Add(targetsArgument);
-                var gameBinOption = new Option<string>("--gameBin", "Path to the swkotor binary file");
+                var gameBinOption = Cli.Opt<string>("--gameBin", "Path to the swkotor binary file");
                 launchCommand.Options.Add(gameBinOption);
-                var installDirOption = new Option<string>("--installDir", "The location of the KOTOR user directory");
+                var installDirOption = Cli.Opt<string>("--installDir", "The location of the KOTOR user directory");
                 launchCommand.Options.Add(installDirOption);
 
                 launchCommand.SetAction(parseResult =>

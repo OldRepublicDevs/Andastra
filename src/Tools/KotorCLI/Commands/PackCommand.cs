@@ -25,11 +25,11 @@ namespace KotorCLI.Commands
             var targetsArgument = new Argument<string[]>("targets");
             targetsArgument.Description = "Targets to pack (use 'all' for all targets)";
             packCommand.Add(targetsArgument);
-            var cleanOption = new Option<bool>("--clean", "Clear the cache before packing");
+            var cleanOption = Cli.Opt<bool>("--clean", "Clear the cache before packing");
             packCommand.Options.Add(cleanOption);
-            var noConvertOption = new Option<bool>("--noConvert", "Do not convert updated json files");
+            var noConvertOption = Cli.Opt<bool>("--noConvert", "Do not convert updated json files");
             packCommand.Options.Add(noConvertOption);
-            var noCompileOption = new Option<bool>("--noCompile", "Do not recompile updated scripts");
+            var noCompileOption = Cli.Opt<bool>("--noCompile", "Do not recompile updated scripts");
             packCommand.Options.Add(noCompileOption);
 
             packCommand.SetAction(parseResult =>

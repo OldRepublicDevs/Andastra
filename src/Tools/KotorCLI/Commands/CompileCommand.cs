@@ -29,11 +29,11 @@ namespace KotorCLI.Commands
             var targetsArgument = new Argument<string[]>("targets");
             targetsArgument.Description = "Targets to compile (use 'all' for all targets)";
             compileCommand.Add(targetsArgument);
-            var cleanOption = new Option<bool>("--clean", "Clear the cache before compiling");
+            var cleanOption = Cli.Opt<bool>("--clean", "Clear the cache before compiling");
             compileCommand.Options.Add(cleanOption);
-            var fileOption = new Option<string[]>("--file", "Compile specific file(s)");
+            var fileOption = Cli.Opt<string[]>("--file", "Compile specific file(s)");
             compileCommand.Options.Add(fileOption);
-            var skipCompileOption = new Option<string[]>("--skipCompile", "Don't compile specific file(s)");
+            var skipCompileOption = Cli.Opt<string[]>("--skipCompile", "Don't compile specific file(s)");
             compileCommand.Options.Add(skipCompileOption);
 
             compileCommand.SetAction(parseResult =>

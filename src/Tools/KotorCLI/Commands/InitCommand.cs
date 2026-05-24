@@ -61,11 +61,11 @@ description = ""Default target""
             initCommand.Add(dirArgument);
             var fileArgument = new Argument<string>("file");
             initCommand.Add(fileArgument);
-            var defaultOption = new Option<bool>("--default", "Skip package generation dialog");
+            var defaultOption = Cli.Opt<bool>("--default", "Skip package generation dialog");
             initCommand.Options.Add(defaultOption);
-            var vcsOption = new Option<string>("--vcs", "Version control system to use");
+            var vcsOption = Cli.Opt<string>("--vcs", "Version control system to use");
             initCommand.Options.Add(vcsOption);
-            var initFileOption = new Option<string>("--file", "File to unpack into the package");
+            var initFileOption = Cli.Opt<string>("--file", "File to unpack into the package");
             initCommand.Options.Add(initFileOption);
             
             initCommand.SetAction(parseResult =>

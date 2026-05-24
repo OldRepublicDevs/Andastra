@@ -18,9 +18,9 @@ namespace KotorCLI.Commands
             var decompileInput = new Argument<string>("input");
             decompileInput.Description = "Input NCS file";
             decompileCmd.Add(decompileInput);
-            var decompileOutput = new Option<string>("--output", "Output NSS file");
+            var decompileOutput = Cli.Opt<string>("--output", "Output NSS file");
             decompileCmd.Options.Add(decompileOutput);
-            var gameOption = new Option<string>("--game", "Target game (k1 or k2). Defaults to k2.");
+            var gameOption = Cli.Opt<string>("--game", "Target game (k1 or k2). Defaults to k2.");
             decompileCmd.Options.Add(gameOption);
             decompileCmd.SetAction(parseResult =>
             {
@@ -104,7 +104,7 @@ namespace KotorCLI.Commands
             var disassembleInput = new Argument<string>("input");
             disassembleInput.Description = "Input NCS file";
             disassembleCmd.Add(disassembleInput);
-            var disassembleOutput = new Option<string>("--output", "Output text file");
+            var disassembleOutput = Cli.Opt<string>("--output", "Output text file");
             disassembleCmd.Options.Add(disassembleOutput);
             disassembleCmd.SetAction(parseResult =>
             {
@@ -120,11 +120,11 @@ namespace KotorCLI.Commands
             var assembleInput = new Argument<string>("input");
             assembleInput.Description = "Input NSS file";
             assembleCmd.Add(assembleInput);
-            var assembleOutput = new Option<string>("--output", "Output NCS file");
+            var assembleOutput = Cli.Opt<string>("--output", "Output NCS file");
             assembleCmd.Options.Add(assembleOutput);
-            var includeOption = new Option<string[]>("--include", "Include directory for #include files");
+            var includeOption = Cli.Opt<string[]>("--include", "Include directory for #include files");
             assembleCmd.Options.Add(includeOption);
-            var debugOption = new Option<bool>("--debug", "Enable debug output");
+            var debugOption = Cli.Opt<bool>("--debug", "Enable debug output");
             assembleCmd.Options.Add(debugOption);
             assembleCmd.SetAction(parseResult =>
             {

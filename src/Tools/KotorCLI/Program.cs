@@ -20,40 +20,40 @@ namespace KotorCLI
             };
 
             // Global options (add as regular options to root command)
-            var versionOption = new Option<bool>("--version", "Show version information");
+            var versionOption = Cli.Opt<bool>("--version", "Show version information");
             rootCommand.Options.Add(versionOption);
 
-            var verboseOption = new Option<bool>(
+            var verboseOption = Cli.Opt<bool>(
                 "--verbose",
                 "Increase feedback verbosity"
             );
             rootCommand.Options.Add(verboseOption);
 
-            var debugOption = new Option<bool>(
+            var debugOption = Cli.Opt<bool>(
                 "--debug",
                 "Enable debug logging (implies --verbose)"
             );
             rootCommand.Options.Add(debugOption);
 
-            var quietOption = new Option<bool>(
+            var quietOption = Cli.Opt<bool>(
                 "--quiet",
                 "Disable all logging except errors"
             );
             rootCommand.Options.Add(quietOption);
 
-            var noColorOption = new Option<bool>(
+            var noColorOption = Cli.Opt<bool>(
                 "--no-color",
                 "Disable color output"
             );
             rootCommand.Options.Add(noColorOption);
 
-            var yesOption = new Option<bool>(
+            var yesOption = Cli.Opt<bool>(
                 "--yes",
                 "Automatically answer yes to all prompts"
             );
             rootCommand.Options.Add(yesOption);
 
-            var noOption = new Option<bool>(
+            var noOption = Cli.Opt<bool>(
                 "--no",
                 "Automatically answer no to all prompts"
             );

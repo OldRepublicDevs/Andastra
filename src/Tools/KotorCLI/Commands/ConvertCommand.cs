@@ -23,7 +23,7 @@ namespace KotorCLI.Commands
             var convertCommand = new Command("convert", "Convert all JSON sources to their GFF counterparts");
             var targetsArgument = new Argument<string[]>("targets");
             convertCommand.Add(targetsArgument);
-            var cleanOption = new Option<bool>("--clean", "Clear the cache before converting");
+            var cleanOption = Cli.Opt<bool>("--clean", "Clear the cache before converting");
             convertCommand.Options.Add(cleanOption);
 
             convertCommand.SetAction(parseResult =>
