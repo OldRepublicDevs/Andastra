@@ -104,6 +104,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 44. ~~OdyPatch --help routed to CLI + CI smoke~~ **Done 2026-05-24**
 45. ~~PR #3 merge conflicts with master squash~~ **Done 2026-05-24**
 46. ~~OdyPatch validate CLI fixture + CI smoke~~ **Done 2026-05-24**
+47. ~~Post-PR #3 tracker still lists open PR~~ **Done 2026-05-24**
 
 ## KB Doc Drift (post-C5)
 
@@ -153,6 +154,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 | OdyPatch CLI --help | ~~--help launched GUI; hung headless~~ | **Resolved 2026-05-24** — plan 053 |
 | PR #3 merge | ~~CONFLICTING with master after PR #2 squash~~ | **Resolved 2026-05-24** — plan 054 |
 | OdyPatch validate CI | ~~No config validation without game install~~ | **Resolved 2026-05-24** — plan 055 minimal fixture |
+| KB tracker post-PR #3 | ~~PR #3 listed as open after merge~~ | **Resolved 2026-05-24** — plan 056 |
 | `.github/workflows/ci.yml` | ~~No full solution build smoke test~~ | **Resolved 2026-05-23** — `solution-build` job |
 | `.github/workflows/ci.yml` | ~~Parallel solution build locks `Andastra.Core.deps.json`~~ | **Resolved 2026-05-23** — plan 031 `-m:1` |
 
