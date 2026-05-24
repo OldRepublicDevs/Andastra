@@ -11,7 +11,7 @@ Development tools under `src/Tools/` and their relationships.
 
 | Tool | Path | Role | Build status |
 |------|------|------|--------------|
-| **OdyPatch** | `src/Tools/OdyPatch/` | Runnable GUI + CLI host (exe) | Green (net9.0) `[REPO]` |
+| **OdyPatch** | `src/Tools/OdyPatch/` | Runnable GUI + CLI host (exe) | Green (net9.0); `--validate` fixture in CI (plans 055/057) `[REPO]` |
 | **OdyPatch.UI** | `src/Tools/OdyPatch.UI/` | Avalonia UI library (not directly runnable) | Green (net9.0) `[REPO]` |
 | **OdyTools** | `src/Tools/OdyTools/` | Holocron-style AIO content editor | Green (net9.0) `[REPO]` |
 | **Standalone OdyTool editors** | `src/Tools/OdyTools/*/` (25+ csprojs) | Per-format editors (GFF, DLG, etc.) | Green (shared props) `[REPO]` |
@@ -36,7 +36,7 @@ Standalone editors → BioWare (typical)
 ## Test Coverage
 
 - `tests/OdyTools.Tests/` — editor tests (DLG, GFF, MDL, etc.). `[REPO]`
-- No dedicated OdyPatch test project in solution. `[REPO]`
+- No dedicated OdyPatch test project in solution; headless `--validate` uses `tests/fixtures/odypatch-minimal-mod/` (plan 055). Manual `--install` verification: [odypatch-e2e-runbook.md](../50-execution/odypatch-e2e-runbook.md). `[REPO]`
 
 ## AgentDecompile / RE Tooling
 
