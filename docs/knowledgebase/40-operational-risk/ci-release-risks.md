@@ -17,7 +17,7 @@ Key docs: `docs/WORKFLOWS.md`, `docs/GITHUB_ACTIONS_SETUP.md`, `docs/AUTOUPDATE.
 | OdyPatch/OdyTools build | Desktop CI builds OdyTools + OdyPatch + OdyPatch.UI + KotorCLI + ConvertKotorGame on Windows (2026-05-23) | [REPO] |
 | No game runtime in CI | K1/TSL install not exercised in standard CI | [REPO] |
 | Full solution build | `ci.yml` `solution-build` job — `Andastra.sln` net9.0 on ubuntu with `-m:1` to avoid parallel deps.json locks on shared `Andastra.Core` outputs (2026-05-23) | [REPO] |
-| OdyPatch NuGet pack | `ci.yml` `nuget-pack-smoke` job — `bash helper_scripts/build-nuget.sh` on ubuntu net9.0; no publish (plan 051) | [REPO] |
+| OdyPatch NuGet pack | `ci.yml` `nuget-pack-smoke` job — `bash helper_scripts/build-nuget.sh` on ubuntu net9.0; includes CLI `--help` smoke (plan 053); no publish | [REPO] |
 | Windows desktop CI | `dotnet-desktop.yml` — BioWare tests + tool builds (Debug/Release matrix); may queue on busy Windows runners | [REPO] |
 
 **`[SYNTH]`** CI green on main does not imply agent "green path" (BioWare + tests) without log inspection. Re-check `gh pr checks` on latest HEAD before merge — see [pr-merge-readiness.md](../90-meta/pr-merge-readiness.md) (plan 046). `[REPO]`

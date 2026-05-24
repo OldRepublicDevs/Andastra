@@ -101,6 +101,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 41. ~~Investigation archive index + dialogue doc path fix~~ **Done 2026-05-24**
 42. ~~OdyPatch NuGet pack CI smoke job~~ **Done 2026-05-24**
 43. ~~Evidence label pass on thin execution/domain KB docs~~ **Done 2026-05-24**
+44. ~~OdyPatch --help routed to CLI + CI smoke~~ **Done 2026-05-24**
 
 ## KB Doc Drift (post-C5)
 
@@ -147,6 +148,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 | Tier-4 `docs/*.md` | ~~No archive index; stale OdysseyRuntime in dialogue doc~~ | **Resolved 2026-05-24** — plan 050 |
 | NuGet pack CI | ~~Local-only validation~~ | **Resolved 2026-05-24** — plan 051 `nuget-pack-smoke` |
 | KB evidence labels | ~~Thin docs missing `[REPO]` on factual claims~~ | **Resolved 2026-05-24** — plan 052 (5 docs) |
+| OdyPatch CLI --help | ~~--help launched GUI; hung headless~~ | **Resolved 2026-05-24** — plan 053 |
 | `.github/workflows/ci.yml` | ~~No full solution build smoke test~~ | **Resolved 2026-05-23** — `solution-build` job |
 | `.github/workflows/ci.yml` | ~~Parallel solution build locks `Andastra.Core.deps.json`~~ | **Resolved 2026-05-23** — plan 031 `-m:1` |
 
