@@ -12,7 +12,7 @@ Living register of auth walls, runtime uncertainty, and stale-evidence risks. Up
 | C6 | Runtime uncertainty | `Andastra.Game` requires local K1/TSL installation; no CI game-run | [REPO] | 2026-05-23 |
 | C7 | RE partial coverage | Some source comments use K1-only addresses without TSL pairs | [REPO] | 2026-05-23 |
 | C8 | Auth wall | AgentDecompile requires running Ghidra MCP server and local game binaries (`/K1_swkotor`, `/TSL_swkotor2`) | [REPO] | 2026-05-23 |
-| C9 | Architecture drift | README lists `Runtime.Games.{Odyssey,Aurora,...}`; engine code lives under `src/Andastra/Game/Games/` | [REPO] | 2026-05-23 |
+| C9 | Architecture drift | README lists `Runtime.Games.{Odyssey,Aurora,...}`; engine code lives under `src/Andastra/Game/Games/` | [REPO] | **Resolved 2026-05-23** — README architecture updated |
 | C10 | Vendor noise | `vendor/src/toolset/wiki/` and HoloPatcher references are not authoritative for Andastra | [REPO] | 2026-05-23 |
 | C11 | Path drift | `.cursorrules` cites `scripts/NcsTool.ps1`; file is at `helper_scripts/NcsTool.ps1` | [REPO] | 2026-05-23 |
 | C12 | License | AGPLv3 obligations for combined distribution of engine + tools | [REPO]/[OPEN] | 2026-05-23 |

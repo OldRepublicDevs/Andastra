@@ -24,9 +24,9 @@ Stale or broken documentation tracked for remediation.
 
 | README claim | Actual |
 |--------------|--------|
-| `Runtime.Games.Odyssey` project | `Game/Games/Odyssey/` |
-| `Runtime.Scripting` project | `Game/Scripting/` |
-| `BioWare.NET` naming | `BioWare` csproj |
+| `Runtime.Games.Odyssey` project | `Game/Games/Odyssey/` | **Resolved in README 2026-05-23** |
+| `Runtime.Scripting` project | `Game/Scripting/` | **Resolved in README 2026-05-23** |
+| `BioWare.NET` naming | `BioWare` csproj | **Resolved in README 2026-05-23** |
 | `NSSComp.NET.csproj` | `NSSComp.csproj` | **Resolved in README 2026-05-23** |
 | `NCSDecomp` project | `NCSDecomp.CLI` | **Resolved in README 2026-05-23** |
 
@@ -60,7 +60,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 
 1. ~~Create `docs/QUICKSTART.md` pointing at KB execution ladder~~ **Done 2026-05-23**
 2. ~~Fix CI project paths before trusting CI green~~ **Done 2026-05-23** (OdyPatch build may still fail on OdyTools)
-3. Add README errata or update README architecture section `[SYNTH]`
+3. ~~Add README errata or update README architecture section~~ **Done 2026-05-23**
 4. Refresh wiki Home for Andastra/OdyPatch branding `[SYNTH]`
 
 ## Repo Implications

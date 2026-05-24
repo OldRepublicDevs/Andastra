@@ -6,7 +6,7 @@ Evidence-first documentation for the Andastra .NET game engine and tooling suite
 
 | Location | Role |
 |----------|------|
-| `README.md` | Public project overview (some architecture paths are stale — see KB corrections) |
+| `README.md` | Public project overview (architecture aligned with KB as of 2026-05-23) |
 | `AGENTS.md` | Cursor Cloud build/test environment |
 | `.cursorrules` | Highest-authority agent rules (engine fidelity, git, RE format) |
 | `docs/knowledgebase/` (here) | Layered, labeled, auditable project truth |
