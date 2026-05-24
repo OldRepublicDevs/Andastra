@@ -100,3 +100,7 @@ jobs:
       - name: OdyPatch CLI help smoke
         run: |
           dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0 -c Release --no-build -- --help | grep -q -- '--install'
+
+      - name: OdyPatch CLI validate smoke
+        run: |
+          dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0 -c Release --no-build -- --validate --game-dir tests/fixtures/odypatch-fake-game --tslpatchdata tests/fixtures/odypatch-minimal-mod/tslpatchdata
