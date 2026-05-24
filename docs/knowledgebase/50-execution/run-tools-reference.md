@@ -28,7 +28,13 @@ Build and run per project README/tool docs. Uses BioWare installation model. `[R
 dotnet run --project src/Tools/OdyPatch.UI/OdyPatch.UI.csproj --framework net9.0
 ```
 
-**Caveat:** Build fails until OdyTools chain is fixed. `[REPO]`
+**Caveat:** Compiles on net9.0 (2026-05-23); end-to-end mod-install UX is unverified without a game install. `[REPO]`
+
+### OdyPatch (host)
+
+```bash
+dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
+```
 
 ### ConvertKotorGame
 
@@ -36,14 +42,21 @@ Listed in solution — K1↔TSL portability wizard. `[REPO]` Build/run unverifie
 
 ### Standalone OdyTool editors
 
-25+ individual csprojs under `src/Tools/OdyTools/` — prefer building specific editor csproj over AIO OdyTools. `[REPO]`
+25+ individual csprojs under `src/Tools/OdyTools/` — prefer building specific editor csproj over AIO OdyTools. Shared standalone props include `DialogHelper.cs` (2026-05-23). `[REPO]`
+
+### OdyTools (AIO)
+
+```bash
+dotnet build src/Tools/OdyTools/OdyTools.csproj --framework net9.0
+```
+
+Green after delegate-wiring fix (2026-05-23). `[REPO]`
 
 ## Broken / Known Failures
 
 | Tool | Issue |
 |------|-------|
 | **KotorCLI** | Crashes on startup — System.CommandLine API bug `[REPO]` |
-| **OdyTools (AIO)** | Compile errors — blocks OdyPatch `[REPO]` |
 
 ## Script Tooling
 
@@ -54,6 +67,6 @@ Listed in solution — K1↔TSL portability wizard. `[REPO]` Build/run unverifie
 
 ## Repo Implications
 
-- Mod installer UX testing blocked on OdyTools fix — document status, don't claim OdyPatch works end-to-end.
+- OdyPatch compile path is green; runtime UX validation still needs a K1/TSL install.
 - Prefer NSSComp/NCSDecomp for script pipeline validation in CI/agent loops.
-- Product UX layer (`30-product-ux`) deferred until tools build green.
+- Product UX layer (`30-product-ux/`) remains deferred for content scope, not compile blockers.
