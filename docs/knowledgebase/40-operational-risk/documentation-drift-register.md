@@ -71,6 +71,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 11. ~~Fix OdyTools standalone obj/bin collision for parallel solution builds~~ **Done 2026-05-23**
 12. ~~Add CI solution-build job + sync post-020 KB claims~~ **Done 2026-05-23**
 13. ~~Remove duplicate NAudio/compile items in WAV/DLG/SSF standalones~~ **Done 2026-05-23**
+14. ~~Finalize build-health matrix + PR CI validation notes~~ **Done 2026-05-23**
 
 ## KB Doc Drift (post-C5)
 

@@ -26,7 +26,19 @@ See [authority-map.md](authority-map.md) for conflict resolution.
 | Execution | [50-execution/](../50-execution/) | Setup, build ladder, run paths, agent workflow |
 | Meta | [90-meta/](.) | Evidence contract, authority, caveats (this layer) |
 
-Layer `30-product-ux/` is deferred for content scope; OdyTools/OdyPatch compile path is green as of 2026-05-23.
+Layer `30-product-ux/` is deferred for content scope; tool chain and full solution net9.0 build are green as of 2026-05-23.
+
+## CI validation (branch `docs/feat-knowledgebase-initial`)
+
+| Job | Status |
+|-----|--------|
+| CI — Test | Green (BioWare + Andastra.Tests) |
+| CI — Lint | Green |
+| CI — Solution Build (net9.0) | Green |
+| Test Builds matrix | Green (net48-win, net9.0 linux/osx/win) |
+| dotnet-desktop (Windows) | BioWare + OdyTools + OdyPatch + KotorCLI |
+
+Runtime game testing and OdyPatch mod-install UX remain manual. `[REPO]`
 
 ## Reading Order
 
