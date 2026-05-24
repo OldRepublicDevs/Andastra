@@ -21,7 +21,7 @@ Andastra.sln
 │   ├── src/BioWare/BioWare.csproj            (net9.0;net48)
 │   └── src/BioWare/Utility/BioWare.Utility.csproj
 ├── Tools (src/Tools/)
-│   ├── OdyPatch / OdyPatch.UI
+│   ├── OdyPatch (exe host) / OdyPatch.UI (Avalonia lib)
 │   ├── OdyTools (+ 25 standalone editor csprojs)
 │   ├── NSSComp, NCSDecomp.CLI, KotorDiff, KotorCLI, ConvertKotorGame
 │   └── ...
@@ -37,13 +37,14 @@ Andastra.sln
 |---------------|-----|-------|
 | BioWare, many tools, tests | `net9.0;net48` | Always pass `--framework net9.0` on Linux. `[REPO]` |
 | Runtime / Game | `net9.0` | Primary runtime target. `[REPO]` |
-| OdyPatch | `net9.0` + `net48` | net9 path references Andastra. `[REPO]` |
+| OdyPatch | `net9.0` + `net48` | Runnable exe host; net9 references Andastra. `[REPO]` |
+| OdyPatch.UI | `net9.0` + `net48` | Library (`OutputType=Library`); build only. `[REPO]` |
 
 ## Build Health Summary
 
 | Status | Projects |
 |--------|----------|
-| **Green (baseline)** | BioWare, BioWare.Tests, Andastra.Tests, NSSComp, NCSDecomp.CLI, OdyTools, OdyPatch, standalone OdyTool editors, KotorCLI, ConvertKotorGame | `[REPO]` |
+| **Green (baseline)** | BioWare, BioWare.Tests, Andastra.Tests, NSSComp, NCSDecomp.CLI, OdyTools, OdyPatch (host), OdyPatch.UI (lib), standalone OdyTool editors, KotorCLI, ConvertKotorGame | `[REPO]` |
 | **Green (full solution)** | `Andastra.sln` net9.0 on Linux + CI `solution-build` job (2026-05-23) | `[REPO]` |
 | **Not in solution** | `src/StrideGameFPS/` on disk; `MonoGameFPS` gitignored/absent | `[REPO]` |
 
@@ -63,5 +64,5 @@ Detail: [build-health-matrix.md](../40-operational-risk/build-health-matrix.md)
 ## Repo Implications
 
 - Agents should default to building **BioWare + targeted tests** for narrow slices; full solution build is green on net9.0 Linux when validating broad changes.
-- Tool work may target OdyTools AIO, OdyPatch, or standalone editors — all compile on net9.0 as of 2026-05-23.
+- Tool work may target OdyTools AIO, OdyPatch host, OdyPatch.UI library, or standalone editors — all compile on net9.0 as of 2026-05-23. Run installer via `OdyPatch.csproj`, not `OdyPatch.UI.csproj`. `[REPO]`
 - Multi-target builds need explicit `--framework net9.0` on Linux.
