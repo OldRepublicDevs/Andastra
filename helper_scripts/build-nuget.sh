@@ -1,6 +1,10 @@
 #!/bin/bash
-# Build NuGet packages for CSharpKOTOR and OdyPatch
-# Usage: ./build-nuget.sh [--publish] [--source <feed-url>] [--api-key <key>]
+# Build and optionally publish the OdyPatch NuGet package.
+# Usage: ./helper_scripts/build-nuget.sh [--publish] [--source <feed-url>] [--api-key <key>]
+#
+# From repo root:
+#   ./helper_scripts/build-nuget.sh
+#   ./helper_scripts/build-nuget.sh --publish --api-key YOUR_KEY
 
 set -e
 
@@ -8,6 +12,8 @@ PUBLISH=false
 SOURCE="https://api.nuget.org/v3/index.json"
 API_KEY=""
 CONFIGURATION="Release"
+ODY_PATCH_PROJECT="src/Tools/OdyPatch/OdyPatch.csproj"
+PACK_OUTPUT_DIR="src/Tools/OdyPatch/bin/${CONFIGURATION}"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -25,6 +31,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         --configuration)
             CONFIGURATION="$2"
+            PACK_OUTPUT_DIR="src/Tools/OdyPatch/bin/${CONFIGURATION}"
             shift 2
             ;;
         *)
@@ -34,62 +41,37 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-echo "Building NuGet packages..."
+echo "Building OdyPatch NuGet package..."
 
-# Build CSharpKOTOR package
-echo ""
-echo "Building CSharpKOTOR..."
-dotnet pack src/CSharpKOTOR/CSharpKOTOR.csproj --configuration "$CONFIGURATION" --no-build
+dotnet build "$ODY_PATCH_PROJECT" --configuration "$CONFIGURATION" -f net9.0
+dotnet pack "$ODY_PATCH_PROJECT" --configuration "$CONFIGURATION" --no-build -p:TargetFrameworks=net9.0
 
-# Build OdyPatch package
-echo ""
-echo "Building OdyPatch..."
-dotnet pack src/OdyPatch/OdyPatch.csproj --configuration "$CONFIGURATION" --no-build
-
-# Find package files
-TSL_CORE_PACKAGE=$(find "src/CSharpKOTOR/bin/$CONFIGURATION" -name "*.nupkg" | head -n 1)
-ODY_PATCH_PACKAGE=$(find "src/OdyPatch/bin/$CONFIGURATION" -name "*.nupkg" | head -n 1)
-
-if [ -z "$TSL_CORE_PACKAGE" ]; then
-    echo "CSharpKOTOR package not found!"
-    exit 1
-fi
+ODY_PATCH_PACKAGE=$(find "$PACK_OUTPUT_DIR" -name "OdyPatch.*.nupkg" ! -name "*.symbols.nupkg" | head -n 1)
 
 if [ -z "$ODY_PATCH_PACKAGE" ]; then
-    echo "OdyPatch package not found!"
+    echo "OdyPatch package not found under $PACK_OUTPUT_DIR"
     exit 1
 fi
 
 echo ""
-echo "CSharpKOTOR package created: $TSL_CORE_PACKAGE"
 echo "OdyPatch package created: $ODY_PATCH_PACKAGE"
 
-# Publish if requested
 if [ "$PUBLISH" = true ]; then
     if [ -z "$API_KEY" ]; then
-        echo "Error: --api-key is required when using --publish"
-        exit 1
+        if [ -n "$NUGET_API_KEY" ]; then
+            API_KEY="$NUGET_API_KEY"
+        else
+            echo "Error: --api-key or NUGET_API_KEY is required when using --publish"
+            exit 1
+        fi
     fi
 
     echo ""
-    echo "Publishing packages to $SOURCE..."
+    echo "Publishing OdyPatch to $SOURCE..."
 
-    # Publish CSharpKOTOR
-    echo "Publishing CSharpKOTOR..."
-    dotnet nuget push "$TSL_CORE_PACKAGE" --api-key "$API_KEY" --source "$SOURCE" --skip-duplicate
-
-    # Publish OdyPatch
-    echo "Publishing OdyPatch..."
     dotnet nuget push "$ODY_PATCH_PACKAGE" --api-key "$API_KEY" --source "$SOURCE" --skip-duplicate
 
-    # Publish symbol packages if they exist
-    TSL_CORE_SYMBOLS=$(find "src/CSharpKOTOR/bin/$CONFIGURATION" -name "*.snupkg" | head -n 1)
-    ODY_PATCH_SYMBOLS=$(find "src/OdyPatch/bin/$CONFIGURATION" -name "*.snupkg" | head -n 1)
-
-    if [ -n "$TSL_CORE_SYMBOLS" ]; then
-        echo "Publishing CSharpKOTOR symbols..."
-        dotnet nuget push "$TSL_CORE_SYMBOLS" --api-key "$API_KEY" --source "$SOURCE" --skip-duplicate
-    fi
+    ODY_PATCH_SYMBOLS=$(find "$PACK_OUTPUT_DIR" -name "OdyPatch.*.snupkg" | head -n 1)
 
     if [ -n "$ODY_PATCH_SYMBOLS" ]; then
         echo "Publishing OdyPatch symbols..."
@@ -97,10 +79,8 @@ if [ "$PUBLISH" = true ]; then
     fi
 
     echo ""
-    echo "Packages published successfully!"
+    echo "Package published successfully!"
 else
     echo ""
-    echo "Packages built successfully!"
-    echo "To publish, run: ./build-nuget.sh --publish --api-key YOUR_API_KEY"
+    echo "To publish, run: ./helper_scripts/build-nuget.sh --publish --api-key YOUR_API_KEY"
 fi
-

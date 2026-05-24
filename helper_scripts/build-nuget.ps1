@@ -1,5 +1,5 @@
-# Build NuGet packages for CSharpKOTOR and OdyPatch
-# Usage: .\build-nuget.ps1 [--publish] [--source <feed-url>] [--api-key <key>]
+# Build and optionally publish the OdyPatch NuGet package.
+# Usage: .\helper_scripts\build-nuget.ps1 [--publish] [--source <feed-url>] [--api-key <key>]
 #
 # API Key can be provided via:
 # 1. --api-key parameter (highest priority)
@@ -15,6 +15,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+$OdyPatchProject = "src/Tools/OdyPatch/OdyPatch.csproj"
+$PackOutputDir = "src/Tools/OdyPatch/bin/$Configuration"
+
 # Load .env file if it exists
 if (Test-Path ".env") {
     Get-Content ".env" | ForEach-Object {
@@ -26,12 +29,10 @@ if (Test-Path ".env") {
     }
 }
 
-# Get API key from parameter, environment variable, or .env file (in that order)
 if ([string]::IsNullOrWhiteSpace($ApiKey)) {
     $ApiKey = $env:NUGET_API_KEY
 }
 
-# Get source from parameter, environment variable, or default
 if ([string]::IsNullOrWhiteSpace($Source)) {
     $Source = $env:NUGET_SOURCE
     if ([string]::IsNullOrWhiteSpace($Source)) {
@@ -39,45 +40,33 @@ if ([string]::IsNullOrWhiteSpace($Source)) {
     }
 }
 
-Write-Host "Building NuGet packages..." -ForegroundColor Green
+Write-Host "Building OdyPatch NuGet package..." -ForegroundColor Green
 
-# Build CSharpKOTOR package
-Write-Host "`nBuilding CSharpKOTOR..." -ForegroundColor Cyan
-dotnet pack src/CSharpKOTOR/CSharpKOTOR.csproj --configuration $Configuration --no-build
+dotnet build $OdyPatchProject --configuration $Configuration
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Failed to build CSharpKOTOR package" -ForegroundColor Red
+    Write-Host "Failed to build OdyPatch" -ForegroundColor Red
     exit 1
 }
 
-# Build OdyPatch package
-Write-Host "`nBuilding OdyPatch..." -ForegroundColor Cyan
-dotnet pack src/OdyPatch/OdyPatch.csproj --configuration $Configuration --no-build
+dotnet pack $OdyPatchProject --configuration $Configuration --no-build
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Failed to build OdyPatch package" -ForegroundColor Red
     exit 1
 }
 
-# Find package files
-$tslCorePackage = Get-ChildItem -Path "src/CSharpKOTOR/bin/$Configuration" -Filter "*.nupkg" | Select-Object -First 1
-$OdyPatchPackage = Get-ChildItem -Path "src/OdyPatch/bin/$Configuration" -Filter "*.nupkg" | Select-Object -First 1
+$OdyPatchPackage = Get-ChildItem -Path $PackOutputDir -Recurse -Filter "OdyPatch.*.nupkg" |
+    Where-Object { $_.Name -notlike "*.symbols.nupkg" } |
+    Select-Object -First 1
 
-if ($tslCorePackage) {
-    Write-Host "`nCSharpKOTOR package created: $($tslCorePackage.FullName)" -ForegroundColor Green
-} else {
-    Write-Host "`nCSharpKOTOR package not found!" -ForegroundColor Red
+if (-not $OdyPatchPackage) {
+    Write-Host "OdyPatch package not found under $PackOutputDir" -ForegroundColor Red
     exit 1
 }
 
-if ($OdyPatchPackage) {
-    Write-Host "OdyPatch package created: $($OdyPatchPackage.FullName)" -ForegroundColor Green
-} else {
-    Write-Host "OdyPatch package not found!" -ForegroundColor Red
-    exit 1
-}
+Write-Host "OdyPatch package created: $($OdyPatchPackage.FullName)" -ForegroundColor Green
 
-# Publish if requested
 if ($Publish) {
     if ([string]::IsNullOrWhiteSpace($ApiKey)) {
         Write-Host "`nError: API key is required when using --publish" -ForegroundColor Red
@@ -85,29 +74,13 @@ if ($Publish) {
         Write-Host "  1. --api-key parameter" -ForegroundColor Yellow
         Write-Host "  2. NUGET_API_KEY environment variable" -ForegroundColor Yellow
         Write-Host "  3. .env file (NUGET_API_KEY=...)" -ForegroundColor Yellow
-        Write-Host "`nExample: Create .env file with: NUGET_API_KEY=your_key_here" -ForegroundColor Cyan
         exit 1
     }
 
-    Write-Host "`nPublishing packages to $Source..." -ForegroundColor Yellow
+    Write-Host "`nPublishing OdyPatch to $Source..." -ForegroundColor Yellow
 
-    # Build push command arguments
-    $pushArgs = @("nuget", "push", "--source", $Source, "--skip-duplicate")
-    if (-not [string]::IsNullOrWhiteSpace($ApiKey)) {
-        $pushArgs += "--api-key", $ApiKey
-    }
+    $pushArgs = @("nuget", "push", "--source", $Source, "--skip-duplicate", "--api-key", $ApiKey)
 
-    # Publish CSharpKOTOR
-    Write-Host "Publishing CSharpKOTOR..." -ForegroundColor Cyan
-    & dotnet $pushArgs $tslCorePackage.FullName
-
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "Failed to publish CSharpKOTOR" -ForegroundColor Red
-        exit 1
-    }
-
-    # Publish OdyPatch
-    Write-Host "Publishing OdyPatch..." -ForegroundColor Cyan
     & dotnet $pushArgs $OdyPatchPackage.FullName
 
     if ($LASTEXITCODE -ne 0) {
@@ -115,27 +88,15 @@ if ($Publish) {
         exit 1
     }
 
-    # Publish symbol packages if they exist
-    $tslCoreSymbols = Get-ChildItem -Path "src/CSharpKOTOR/bin/$Configuration" -Filter "*.snupkg" | Select-Object -First 1
-    $OdyPatchSymbols = Get-ChildItem -Path "src/OdyPatch/bin/$Configuration" -Filter "*.snupkg" | Select-Object -First 1
-
-    if ($tslCoreSymbols) {
-        Write-Host "Publishing CSharpKOTOR symbols..." -ForegroundColor Cyan
-        & dotnet $pushArgs $tslCoreSymbols.FullName
-    }
+    $OdyPatchSymbols = Get-ChildItem -Path $PackOutputDir -Recurse -Filter "OdyPatch.*.snupkg" | Select-Object -First 1
 
     if ($OdyPatchSymbols) {
         Write-Host "Publishing OdyPatch symbols..." -ForegroundColor Cyan
         & dotnet $pushArgs $OdyPatchSymbols.FullName
     }
 
-    Write-Host "`nPackages published successfully!" -ForegroundColor Green
+    Write-Host "`nPackage published successfully!" -ForegroundColor Green
 } else {
-    Write-Host "`nPackages built successfully!" -ForegroundColor Green
-    Write-Host "To publish, you can:" -ForegroundColor Yellow
-    Write-Host "  1. Run: .\build-nuget.ps1 --publish" -ForegroundColor Cyan
-    Write-Host "     (if you've run .\setup-nuget-key.ps1 to configure credentials)" -ForegroundColor Gray
-    Write-Host "  2. Run: .\build-nuget.ps1 --publish --api-key YOUR_API_KEY" -ForegroundColor Cyan
-    Write-Host "  3. Set NUGET_API_KEY environment variable, then: .\build-nuget.ps1 --publish" -ForegroundColor Cyan
+    Write-Host "`nPackage built successfully!" -ForegroundColor Green
+    Write-Host "To publish: .\helper_scripts\build-nuget.ps1 --publish --api-key YOUR_API_KEY" -ForegroundColor Cyan
 }
-
