@@ -94,6 +94,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 34. ~~Sync definition-of-done + contributing-paths~~ **Done 2026-05-23**
 35. ~~Add OdyPatch.UI README + fix GUI entry-point drift~~ **Done 2026-05-23**
 36. ~~Sync OdyPatch host vs UI library architecture docs~~ **Done 2026-05-23**
+37. ~~Add plans index + agent onboarding OdyPatch sync~~ **Done 2026-05-23**
 
 ## KB Doc Drift (post-C5)
 
@@ -131,6 +132,8 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 | `definition-of-done.md`, `contributing-paths.md` | ~~Missing CI m1 / NuGet / 30-product-ux paths~~ | **Resolved 2026-05-23** — plan 043 |
 | `OdyPatch.UI` README + run docs | ~~Missing UI README; `dotnet run` on Library csproj~~ | **Resolved 2026-05-23** — plan 044 |
 | `NUGET.md`, `bioware-library-boundary.md`, `tools-ecosystem.md` | ~~OdyPatch described as host library / installer core~~ | **Resolved 2026-05-23** — plan 045 |
+| `90-meta/README.md` CI table | ~~Assumed CI green without HEAD re-check~~ | **Resolved 2026-05-23** — plan 046 |
+| `docs/plans/` | ~~No index for 45 LFG plan files~~ | **Resolved 2026-05-23** — plan 046 |
 | `.github/workflows/ci.yml` | ~~No full solution build smoke test~~ | **Resolved 2026-05-23** — `solution-build` job |
 | `.github/workflows/ci.yml` | ~~Parallel solution build locks `Andastra.Core.deps.json`~~ | **Resolved 2026-05-23** — plan 031 `-m:1` |
 
