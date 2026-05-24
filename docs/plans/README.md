@@ -55,6 +55,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 047 | [047-sync-operational-risk-odypatch-plan.md](2026-05-23-047-sync-operational-risk-odypatch-plan.md) | Operational-risk + tslpatcher-domain sync |
 | 048 | [048-sync-topology-readme-odypatch-plan.md](2026-05-23-048-sync-topology-readme-odypatch-plan.md) | Solution-topology + README OdyPatch roles |
 | 049 | [049-post-merge-meta-topology-plan.md](2026-05-23-049-post-merge-meta-topology-plan.md) | Post-merge meta + utility csproj fix |
+| 050 | [050-investigation-archive-index-plan.md](2026-05-23-050-investigation-archive-index-plan.md) | Investigation archive index |
 
 ## Repo implications
 
