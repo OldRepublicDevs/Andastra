@@ -76,4 +76,4 @@ jobs:
         run: dotnet restore Andastra.sln
 
       - name: Build solution
-        run: dotnet build Andastra.sln --framework net9.0 -c Release --no-restore
+        run: dotnet build Andastra.sln --framework net9.0 -c Release --no-restore -m:1
