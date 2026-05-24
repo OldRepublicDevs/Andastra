@@ -11,22 +11,22 @@ Script compilation, bytecode, and in-game execution.
 
 | Component | Path | Role |
 |-----------|------|------|
-| **NSSComp** | `src/Tools/NSSComp/` | Compile `.nss` → `.ncs` (K1/TSL via BioWare) |
-| **NCSDecomp.CLI** | `src/Tools/NCSDecomp.CLI/` | Decompile `.ncs` → `.nss` |
-| **NcsTool.ps1** | `helper_scripts/NcsTool.ps1` | Agent-mandated compile/decompile/compare/roundtrip/generate-defs |
+| **NSSComp** | `src/Tools/NSSComp/` | Compile `.nss` → `.ncs` (K1/TSL via BioWare) `[REPO]` |
+| **NCSDecomp.CLI** | `src/Tools/NCSDecomp.CLI/` | Decompile `.ncs` → `.nss` `[REPO]` |
+| **NcsTool.ps1** | `helper_scripts/NcsTool.ps1` | Agent-mandated compile/decompile/compare/roundtrip/generate-defs `[REPO]` |
 
 Use only this script for agent NSS/NCS operations per `.cursorrules`. `[REPO]`
 
 ## Deep References
 
-- `docs/NSS_GRAMMAR_REFERENCE.md` — grammar and language surface
-- `wiki/NCS-File-Format.md` — bytecode format
-- `wiki/NWScript-TSL-Exclusive-Commands.md` — TSL-only commands
+- `docs/NSS_GRAMMAR_REFERENCE.md` — grammar and language surface `[REPO]`
+- `wiki/NCS-File-Format.md` — bytecode format `[REPO]`
+- `wiki/NWScript-TSL-Exclusive-Commands.md` — TSL-only commands `[REPO]`
 
 ## Tests
 
 - `tests/Andastra.Tests/` — NCS compile roundtrip covering K1 and TSL. `[REPO]`
-- BioWare NCS parser tests under `tests/BioWare.Tests/` as applicable
+- BioWare NCS parser tests under `tests/BioWare.Tests/` as applicable `[REPO]`
 
 ## K1 vs TSL
 
