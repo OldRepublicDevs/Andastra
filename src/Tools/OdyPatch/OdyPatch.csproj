@@ -31,7 +31,7 @@
     <Company>OpenKotOR</Company>
     <Product>OdyPatch</Product>
     <Description>OdyPatch, providing a graphical interface for installing and managing KotOR 1 and 2 mods for the Odyssey Game Engine.</Description>
-    <PackageLicenseExpression>LGPL-3.0</PackageLicenseExpression>
+    <PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/OldRepublicDevs/Andastra</PackageProjectUrl>
     <PackageTags>kotor;tsl;patcher;mod;gui;avalonia;odypatch;ui;tslpatcher;odypatcher;swkotor;swkotor2;thesithlords;knights;of;the;old;republic;star;wars;modding;game;video;bik;bioware</PackageTags>
     <RepositoryType>git</RepositoryType>
