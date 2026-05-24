@@ -14,9 +14,10 @@ Key docs: `docs/WORKFLOWS.md`, `docs/GITHUB_ACTIONS_SETUP.md`, `docs/AUTOUPDATE.
 |------|--------|-------|
 | Stale test path | ~~`ci.yml` references `src/CSharpKOTOR.Tests/`~~ Fixed — BioWare.Tests ladder | [REPO] |
 | OdyPatch path mismatch | ~~Some workflows use `src/OdyPatch/`~~ Fixed — `src/Tools/OdyPatch/` | [REPO] |
-| OdyPatch/OdyTools build | ~~OdyPatch publish blocked~~ Desktop CI builds OdyTools + OdyPatch on Windows; publish still uses NSSComp smoke in test-builds | [REPO] |
+| OdyPatch/OdyTools build | ~~OdyPatch publish blocked~~ Desktop CI builds OdyTools + OdyPatch + KotorCLI + ConvertKotorGame on Windows (2026-05-23) | [REPO] |
 | No game runtime in CI | K1/TSL install not exercised in standard CI | [REPO] |
 | Full solution build | `ci.yml` `solution-build` job — `Andastra.sln` net9.0 on ubuntu (2026-05-23) | [REPO] |
+| Windows desktop CI | `dotnet-desktop.yml` — BioWare tests + tool builds (Debug/Release matrix); may queue on busy Windows runners | [REPO] |
 
 **`[SYNTH]`** CI green on main does not imply agent "green path" (BioWare + tests) without log inspection.
 
