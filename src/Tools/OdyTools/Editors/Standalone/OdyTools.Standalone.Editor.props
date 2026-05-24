@@ -53,7 +53,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\ComboBox2DA.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\ComboBox2DA.axaml" Link="Widgets/Edit/ComboBox2DA.axaml" />
   </ItemGroup>
 
   <!-- OutputType: WinExe for Windows, Exe for cross-platform RID -->

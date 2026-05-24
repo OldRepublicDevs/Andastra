@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <!-- Standalone editor csprocs share Editors/; isolate obj/bin per project for parallel solution builds. -->
+  <PropertyGroup Condition="$([System.String]::Copy('$(MSBuildProjectName)').Contains('Standalone'))">
+    <BaseIntermediateOutputPath>$(MSBuildProjectDirectory)\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(MSBuildProjectDirectory)\bin\$(MSBuildProjectName)\</BaseOutputPath>
+  </PropertyGroup>
+</Project>
