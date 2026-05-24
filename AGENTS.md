@@ -17,7 +17,7 @@ Standard commands per `README.md`. Key notes:
 - **Build tests**: `dotnet build tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0` and `dotnet build tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0`.
 - **Run tests**: `dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0` and `dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0`.
 - **Lint**: `dotnet build src/BioWare/BioWare.csproj --configuration Release -p:RunAnalyzersDuringBuild=true --framework net9.0`.
-- **OdyTools.csproj** has pre-existing compilation errors (method group to `System.Action` conversion) on this branch. **OdyPatch** depends on OdyTools and also fails to build. These are not environment issues.
+- **OdyTools** and **OdyPatch** build on net9.0 after delegate-wiring fixes (2026-05-23). Standalone editors use shared props including `DialogHelper.cs`.
 - The `powershell: not found` warnings during BioWare builds (`Remove-DuplicateUsings.ps1` pre-build target) are harmless on Linux.
 
 ### Running tools
