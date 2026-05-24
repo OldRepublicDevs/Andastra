@@ -25,7 +25,7 @@ Mod installation workflow for OdyPatch and OdyPatch.UI.
 | Projects compile on net9.0 | Green `[REPO]` (2026-05-23) |
 | CLI `--help` prints usage without GUI | Green `[REPO]` (plan 053); CI smoke in `nuget-pack-smoke` |
 | CLI `--validate` on minimal fixture | Green `[REPO]` (plan 055); CI smoke with `tests/fixtures/odypatch-minimal-mod/` |
-| End-to-end mod install against real K1/TSL install | **Unverified** `[OPEN]` |
+| End-to-end mod install against real K1/TSL install | **Unverified** `[OPEN]` — manual path: [odypatch-e2e-runbook.md](../50-execution/odypatch-e2e-runbook.md) |
 | CLI `--install` parity with legacy TSLPatcher | **Unverified** `[OPEN]` |
 | Autoupdate (NetSparkle) UX | Documented in `docs/AUTOUPDATE.md`; not exercised in CI `[OPEN]` |
 

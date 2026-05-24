@@ -104,6 +104,14 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 44. ~~OdyPatch --help routed to CLI + CI smoke~~ **Done 2026-05-24**
 45. ~~PR #3 merge conflicts with master squash~~ **Done 2026-05-24**
 46. ~~OdyPatch validate CLI fixture + CI smoke~~ **Done 2026-05-24**
+47. ~~Post-PR #3 tracker still lists open PR~~ **Done 2026-05-24**
+48. ~~Validate fixture missing from build-and-test-ladder~~ **Done 2026-05-24**
+49. ~~No canonical OdyPatch E2E manual runbook~~ **Done 2026-05-24**
+50. ~~Runbook missing from KB onboarding index~~ **Done 2026-05-24**
+51. ~~Dev setup omits OdyPatch validate fixture path~~ **Done 2026-05-24**
+52. ~~AGENTS.md and build-health omit validate fixture~~ **Done 2026-05-24**
+53. ~~OdyPatch tool README omits validate fixture~~ **Done 2026-05-24**
+54. ~~PR #4 missing merge gate documentation~~ **Done 2026-05-24**
 
 ## KB Doc Drift (post-C5)
 
@@ -153,6 +161,14 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 | OdyPatch CLI --help | ~~--help launched GUI; hung headless~~ | **Resolved 2026-05-24** — plan 053 |
 | PR #3 merge | ~~CONFLICTING with master after PR #2 squash~~ | **Resolved 2026-05-24** — plan 054 |
 | OdyPatch validate CI | ~~No config validation without game install~~ | **Resolved 2026-05-24** — plan 055 minimal fixture |
+| KB tracker post-PR #3 | ~~PR #3 listed as open after merge~~ | **Resolved 2026-05-24** — plan 056 |
+| Build ladder validate | ~~OdyPatch validate only in run-tools-reference~~ | **Resolved 2026-05-24** — plan 057 |
+| OdyPatch E2E runbook | ~~Install path undocumented for manual verification~~ | **Resolved 2026-05-24** — plan 058 |
+| KB onboarding runbook | ~~Runbook omitted from 90-meta index and agent-workflow~~ | **Resolved 2026-05-24** — plan 059 |
+| Dev setup validate | ~~dev-environment-setup omitted validate fixture~~ | **Resolved 2026-05-24** — plan 060 |
+| AGENTS validate sync | ~~AGENTS.md and build-health-matrix omitted validate~~ | **Resolved 2026-05-24** — plan 061 |
+| OdyPatch README validate | ~~Tool README omitted validate fixture~~ | **Resolved 2026-05-24** — plan 062 |
+| PR #4 merge gate | ~~Open PR lacked merge checklist~~ | **Resolved 2026-05-24** — plan 063 |
 | `.github/workflows/ci.yml` | ~~No full solution build smoke test~~ | **Resolved 2026-05-23** — `solution-build` job |
 | `.github/workflows/ci.yml` | ~~Parallel solution build locks `Andastra.Core.deps.json`~~ | **Resolved 2026-05-23** — plan 031 `-m:1` |
 

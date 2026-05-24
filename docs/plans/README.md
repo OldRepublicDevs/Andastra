@@ -1,6 +1,6 @@
 # LFG Plan Index (2026-05-23)
 
-Vertical slices on branch `docs/feat-knowledgebase-initial` → merged via [PR #2](https://github.com/th3w1zard1/Andastra/pull/2) to `master` (2026-05-24). Maintenance tracker: [pr-merge-readiness.md](../knowledgebase/90-meta/pr-merge-readiness.md).
+Vertical slices: [PR #2](https://github.com/th3w1zard1/Andastra/pull/2) (plans 001–048) and [PR #3](https://github.com/th3w1zard1/Andastra/pull/3) (plans 049–055) merged to `master` 2026-05-24. [PR #4](https://github.com/th3w1zard1/Andastra/pull/4) (plans 056+) open on `docs/post-pr3-tracker-sync`. Maintenance tracker: [pr-merge-readiness.md](../knowledgebase/90-meta/pr-merge-readiness.md).
 
 Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 
@@ -61,6 +61,14 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 053 | [053-odypatch-cli-help-plan.md](2026-05-23-053-odypatch-cli-help-plan.md) | OdyPatch CLI --help + CI smoke |
 | 054 | [054-pr3-merge-conflict-resolution-plan.md](2026-05-23-054-pr3-merge-conflict-resolution-plan.md) | PR #3 merge conflict resolution |
 | 055 | [055-odypatch-validate-fixture-plan.md](2026-05-23-055-odypatch-validate-fixture-plan.md) | OdyPatch validate fixture + CI smoke |
+| 056 | [056-post-pr3-tracker-refresh-plan.md](2026-05-23-056-post-pr3-tracker-refresh-plan.md) | Post-PR #3 tracker refresh |
+| 057 | [057-build-ladder-validate-sync-plan.md](2026-05-23-057-build-ladder-validate-sync-plan.md) | Build ladder validate sync |
+| 058 | [058-odypatch-e2e-runbook-plan.md](2026-05-23-058-odypatch-e2e-runbook-plan.md) | OdyPatch E2E manual runbook |
+| 059 | [059-onboarding-runbook-sync-plan.md](2026-05-23-059-onboarding-runbook-sync-plan.md) | Onboarding docs runbook sync |
+| 060 | [060-dev-setup-validate-sync-plan.md](2026-05-23-060-dev-setup-validate-sync-plan.md) | Dev setup validate sync |
+| 061 | [061-agents-build-health-validate-sync-plan.md](2026-05-23-061-agents-build-health-validate-sync-plan.md) | AGENTS.md build health validate sync |
+| 062 | [062-odypatch-readme-validate-verify-plan.md](2026-05-23-062-odypatch-readme-validate-verify-plan.md) | OdyPatch README validate sync |
+| 063 | [063-pr4-merge-readiness-plan.md](2026-05-23-063-pr4-merge-readiness-plan.md) | PR #4 merge readiness gate |
 
 ## Repo implications
 
