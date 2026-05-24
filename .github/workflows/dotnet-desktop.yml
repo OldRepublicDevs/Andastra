@@ -36,6 +36,7 @@ jobs:
           dotnet restore tests/BioWare.Tests/BioWare.Tests.csproj
           dotnet restore src/Tools/OdyTools/OdyTools.csproj
           dotnet restore src/Tools/OdyPatch/OdyPatch.csproj
+          dotnet restore src/Tools/OdyPatch.UI/OdyPatch.UI.csproj
           dotnet restore src/Tools/KotorCLI/KotorCLI.csproj
           dotnet restore src/Tools/ConvertKotorGame/ConvertKotorGame.csproj
 
@@ -51,10 +52,11 @@ jobs:
       - name: Test BioWare (net48)
         run: dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net48 -c ${{ matrix.configuration }} --no-build --verbosity normal
 
-      - name: Build OdyTools, OdyPatch, KotorCLI, and ConvertKotorGame
+      - name: Build OdyTools, OdyPatch, OdyPatch.UI, KotorCLI, and ConvertKotorGame
         run: |
           dotnet build src/Tools/OdyTools/OdyTools.csproj --framework net9.0 -c ${{ matrix.configuration }} --no-restore
           dotnet build src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0 -c ${{ matrix.configuration }} --no-restore
+          dotnet build src/Tools/OdyPatch.UI/OdyPatch.UI.csproj --framework net9.0 -c ${{ matrix.configuration }} --no-restore
           dotnet build src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -c ${{ matrix.configuration }} --no-restore
           dotnet build src/Tools/ConvertKotorGame/ConvertKotorGame.csproj --framework net9.0 -c ${{ matrix.configuration }} --no-restore
 
