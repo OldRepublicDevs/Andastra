@@ -59,12 +59,19 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 ## Remediation Priority
 
 1. ~~Create `docs/QUICKSTART.md` pointing at KB execution ladder~~ **Done 2026-05-23**
-2. ~~Fix CI project paths before trusting CI green~~ **Done 2026-05-23** (OdyPatch build may still fail on OdyTools)
+2. ~~Fix CI project paths before trusting CI green~~ **Done 2026-05-23**
 3. ~~Add README errata or update README architecture section~~ **Done 2026-05-23**
 4. ~~Refresh wiki Home for Andastra/OdyPatch branding~~ **Done 2026-05-23** (vendor corpus cleanup deferred)
+5. ~~Fix OdyTools compile (method-group → delegate wiring)~~ **Done 2026-05-23** — unblocks OdyPatch chain
+
+## Build Health (C5)
+
+| Item | Issue | Status |
+|------|-------|--------|
+| `OdyTools.csproj` | ~~Method-group → `System.Action` in `BindLostFocus` / `BindClick`~~ | **Resolved 2026-05-23** |
+| `OdyPatch` / `OdyPatch.UI` | ~~Depends on broken OdyTools; missing project reference~~ | **Resolved 2026-05-23** |
 
 ## Repo Implications
 
-- KB is authoritative for onboarding until README/CI are repaired.
-- Citing investigation docs requires checking this register first.
+- KB is authoritative for onboarding and architecture; check this register before citing investigation docs.
 - New drift entries go here and in [caveat-register.md](../90-meta/caveat-register.md).
