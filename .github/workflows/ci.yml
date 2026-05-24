@@ -96,3 +96,7 @@ jobs:
       - name: Verify package artifact
         run: |
           test -n "$(find src/Tools/OdyPatch/bin/Release -name 'OdyPatch.*.nupkg' ! -name '*.symbols.nupkg' | head -n 1)"
+
+      - name: OdyPatch CLI help smoke
+        run: |
+          dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0 -c Release --no-build -- --help | grep -q -- '--install'
