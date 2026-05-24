@@ -36,6 +36,7 @@ jobs:
           dotnet restore tests/BioWare.Tests/BioWare.Tests.csproj
           dotnet restore src/Tools/OdyTools/OdyTools.csproj
           dotnet restore src/Tools/OdyPatch/OdyPatch.csproj
+          dotnet restore src/Tools/KotorCLI/KotorCLI.csproj
 
       - name: Build BioWare and tests
         run: |
@@ -49,7 +50,11 @@ jobs:
       - name: Test BioWare (net48)
         run: dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net48 -c ${{ matrix.configuration }} --no-build --verbosity normal
 
-      - name: Build OdyTools and OdyPatch
+      - name: Build OdyTools, OdyPatch, and KotorCLI
         run: |
           dotnet build src/Tools/OdyTools/OdyTools.csproj --framework net9.0 -c ${{ matrix.configuration }} --no-restore
           dotnet build src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0 -c ${{ matrix.configuration }} --no-restore
+          dotnet build src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -c ${{ matrix.configuration }} --no-restore
+
+      - name: Smoke test KotorCLI
+        run: dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -c ${{ matrix.configuration }} --no-build -- --help
