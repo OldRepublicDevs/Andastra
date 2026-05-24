@@ -96,6 +96,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 36. ~~Sync OdyPatch host vs UI library architecture docs~~ **Done 2026-05-23**
 37. ~~Add plans index + agent onboarding OdyPatch sync~~ **Done 2026-05-23**
 38. ~~Sync operational-risk + tslpatcher-domain OdyPatch host~~ **Done 2026-05-23**
+39. ~~Sync solution-topology + README OdyPatch roles~~ **Done 2026-05-23**
 
 ## KB Doc Drift (post-C5)
 
@@ -136,6 +137,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 | `90-meta/README.md` CI table | ~~Assumed CI green without HEAD re-check~~ | **Resolved 2026-05-23** — plan 046 |
 | `docs/plans/` | ~~No index for 45 LFG plan files~~ | **Resolved 2026-05-23** — plan 046 |
 | `build-health-matrix.md`, `tslpatcher-domain.md` | ~~OdyPatch/UI roles merged~~ | **Resolved 2026-05-23** — plan 047 |
+| `README.md`, `solution-topology.md` | ~~OdyPatch.UI listed as mod tool~~ | **Resolved 2026-05-23** — plan 048 |
 | `.github/workflows/ci.yml` | ~~No full solution build smoke test~~ | **Resolved 2026-05-23** — `solution-build` job |
 | `.github/workflows/ci.yml` | ~~Parallel solution build locks `Andastra.Core.deps.json`~~ | **Resolved 2026-05-23** — plan 031 `-m:1` |
 
