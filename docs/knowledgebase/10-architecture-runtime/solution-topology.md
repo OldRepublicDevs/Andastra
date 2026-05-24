@@ -58,7 +58,7 @@ Detail: [build-health-matrix.md](../40-operational-risk/build-health-matrix.md)
 
 ## Restore Gotcha
 
-`AGENTS.md` notes solution may reference missing projects (`MonoGameFPS`, `StrideGameFPS`). `[REPO]` Current solution grep shows StrideGameFPS not included; restore typically succeeds. Verify on fresh clone.
+`MonoGameFPS` / `StrideGameFPS` are not in `Andastra.sln`; `dotnet restore Andastra.sln` succeeds. Full solution build may fail on Stride assembly processor on Linux. `[REPO]`
 
 ## Repo Implications
 
