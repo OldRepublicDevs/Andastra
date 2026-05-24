@@ -18,34 +18,27 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Validate workflow files
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const path = require('path');
-            const yaml = require('js-yaml');
-            
-            const workflowsDir = '.github/workflows';
-            const workflowFiles = fs.readdirSync(workflowsDir)
-              .filter(file => file.endsWith('.yml') || file.endsWith('.yaml'));
-            
-            let hasErrors = false;
-            
-            for (const file of workflowFiles) {
-              const filePath = path.join(workflowsDir, file);
-              try {
-                const content = fs.readFileSync(filePath, 'utf8');
-                yaml.load(content);
-                console.log(`✓ ${file} - Valid YAML`);
-              } catch (error) {
-                console.error(`✗ ${file} - Invalid YAML: ${error.message}`);
-                hasErrors = true;
-              }
-            }
-            
-            if (hasErrors) {
-              core.setFailed('One or more workflow files have syntax errors');
-            }
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq python3-yaml
+          python3 <<'PY'
+          import pathlib
+          import sys
+          import yaml
+
+          workflows_dir = pathlib.Path(".github/workflows")
+          has_errors = False
+          for file_path in sorted(workflows_dir.glob("*.yml")):
+              try:
+                  yaml.safe_load(file_path.read_text(encoding="utf-8"))
+                  print(f"✓ {file_path.name} - Valid YAML")
+              except Exception as error:
+                  print(f"✗ {file_path.name} - Invalid YAML: {error}")
+                  has_errors = True
+
+          if has_errors:
+              sys.exit(1)
+          PY
 
       - name: Check for required secrets
         uses: actions/github-script@v7

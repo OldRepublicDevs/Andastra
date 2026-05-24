@@ -25,9 +25,9 @@ jobs:
 
       - name: Restore dependencies
         run: |
-          dotnet restore src/BioWare/BioWare.csproj --framework net9.0
-          dotnet restore tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0
-          dotnet restore tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
+          dotnet restore src/BioWare/BioWare.csproj
+          dotnet restore tests/BioWare.Tests/BioWare.Tests.csproj
+          dotnet restore tests/Andastra.Tests/Andastra.Tests.csproj
 
       - name: Build BioWare
         run: dotnet build src/BioWare/BioWare.csproj --framework net9.0 -c Release --no-restore
@@ -55,7 +55,7 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore src/BioWare/BioWare.csproj --framework net9.0
+        run: dotnet restore src/BioWare/BioWare.csproj
 
       - name: Run analyzers
         run: dotnet build src/BioWare/BioWare.csproj --framework net9.0 -c Release --no-restore -p:RunAnalyzersDuringBuild=true
