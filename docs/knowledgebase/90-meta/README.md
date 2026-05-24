@@ -44,7 +44,7 @@ See [pr-merge-readiness.md](pr-merge-readiness.md) (KB maintenance tracker). Re-
 | dotnet-desktop (Windows) | BioWare + OdyTools + OdyPatch + OdyPatch.UI + KotorCLI + ConvertKotorGame |
 | OdyPatch NuGet pack | CI `nuget-pack-smoke` — pack + `--help` + `--validate` (plans 051/053/055) + local `helper_scripts/build-nuget.sh` |
 
-Runtime game testing and OdyPatch mod-install UX remain manual. `[REPO]`
+Runtime game testing and OdyPatch mod-install UX remain manual — see [odypatch-e2e-runbook.md](../50-execution/odypatch-e2e-runbook.md). `[REPO]`
 
 ## Reading Order
 
@@ -73,8 +73,9 @@ Runtime game testing and OdyPatch mod-install UX remain manual. `[REPO]`
 
 1. [10-architecture-runtime/tools-ecosystem.md](../10-architecture-runtime/tools-ecosystem.md)
 2. [30-product-ux/odypatch-installer-ux.md](../30-product-ux/odypatch-installer-ux.md)
-3. [20-domain-theory/tslpatcher-domain.md](../20-domain-theory/tslpatcher-domain.md)
-4. [50-execution/run-tools-reference.md](../50-execution/run-tools-reference.md)
+3. [50-execution/odypatch-e2e-runbook.md](../50-execution/odypatch-e2e-runbook.md)
+4. [20-domain-theory/tslpatcher-domain.md](../20-domain-theory/tslpatcher-domain.md)
+5. [50-execution/run-tools-reference.md](../50-execution/run-tools-reference.md)
 
 ## Document Index
 
@@ -119,6 +120,7 @@ Runtime game testing and OdyPatch mod-install UX remain manual. `[REPO]`
 
 - [dev-environment-setup.md](../50-execution/dev-environment-setup.md)
 - [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md)
+- [odypatch-e2e-runbook.md](../50-execution/odypatch-e2e-runbook.md)
 - [run-game-runtime.md](../50-execution/run-game-runtime.md)
 - [run-tools-reference.md](../50-execution/run-tools-reference.md)
 - [agent-workflow.md](../50-execution/agent-workflow.md)
