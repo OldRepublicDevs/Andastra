@@ -77,6 +77,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 17. ~~Fix authority-map wiki/Home drift + standalone editor contributing guidance~~ **Done 2026-05-23**
 18. ~~Add ConvertKotorGame to dotnet-desktop CI + sync NCS/dev-setup docs~~ **Done 2026-05-23**
 19. ~~Sync QUICKSTART and build ladder tool chain post-027~~ **Done 2026-05-23**
+20. ~~Add OdyPatch.UI to dotnet-desktop CI + fix README build commands~~ **Done 2026-05-23**
 
 ## KB Doc Drift (post-C5)
 
@@ -97,6 +98,8 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 |----------|-------|--------|
 | `.github/workflows/dotnet-desktop.yml` | ~~Microsoft template placeholders / broken MSIX steps~~ | **Resolved 2026-05-23** |
 | `.github/workflows/dotnet-desktop.yml` | ~~Missing ConvertKotorGame build smoke~~ | **Resolved 2026-05-23** — plan 027 |
+| `.github/workflows/dotnet-desktop.yml` | ~~Missing OdyPatch.UI build~~ | **Resolved 2026-05-23** — plan 029 |
+| `README.md` Building section | ~~`dotnet build src/Tools/` fails (no csproj)~~ | **Resolved 2026-05-23** — plan 029 |
 | `.github/workflows/ci.yml` | ~~No full solution build smoke test~~ | **Resolved 2026-05-23** — `solution-build` job |
 
 ## Build Health (C5)
