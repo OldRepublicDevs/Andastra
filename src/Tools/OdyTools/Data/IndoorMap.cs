@@ -1805,6 +1805,7 @@ namespace OdyTools.Data
             GFF ifoGff = IFOHelpers.DismantleIfo(_ifo, BioWareGame.K2);
             _mod.SetData("module", ResourceType.IFO, GFFAuto.BytesGff(ifoGff, IFO.BinaryType));
 
+            IndoorMapIo.EmbedIndoorJson(_mod, Write());
             ERFAuto.WriteErf(_mod, outputPath, ResourceType.MOD);
         }
 
