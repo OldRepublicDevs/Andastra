@@ -47,15 +47,13 @@ Format parsers and resource extraction in `src/BioWare/` support all engine fami
 | Tool | Status |
 |------|--------|
 | NSSComp, NCSDecomp.CLI, KotorDiff | Build and run |
-| Standalone OdyTool editors | Mostly buildable individually |
-| OdyTools (AIO), OdyPatch | Blocked — compile errors |
+| OdyTools, OdyPatch, standalone OdyTool editors | Build on net9.0 (2026-05-23) |
 | KotorCLI | Blocked — startup crash |
 
 Details: [tools-ecosystem](knowledgebase/10-architecture-runtime/tools-ecosystem.md).
 
 ## Known Gaps
 
-- README architecture diagram lists `Runtime.Games.*` — actual engine code is under `Game/Games/` ([game-vs-runtime-split](knowledgebase/10-architecture-runtime/game-vs-runtime-split.md))
 - Some RE reference comments lack TSL addresses ([re-fidelity-gaps](knowledgebase/40-operational-risk/re-fidelity-gaps.md))
 - Infinity engine not started in source tree
 
