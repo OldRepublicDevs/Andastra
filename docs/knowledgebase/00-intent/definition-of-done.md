@@ -4,7 +4,7 @@ Checklist for agents and contributors before considering work complete.
 
 ## Code Quality
 
-- [ ] Affected projects compile cleanly. Prefer `dotnet build src/BioWare/BioWare.csproj --framework net9.0` for narrow checks; full solution builds on Linux net9.0 (`dotnet build Andastra.sln --framework net9.0`). `[REPO]` (`AGENTS.md`)
+- [ ] Affected projects compile cleanly. Prefer [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md) for narrow checks; full solution on Linux net9.0: `dotnet build Andastra.sln --framework net9.0`. CI uses `-m:1` when parallel deps locks occur (plan 031). `[REPO]` (`AGENTS.md`)
 - [ ] C# language version respects per-project pins (C# 7.3 where configured). No C# 8+ syntax in 7.3-targeted projects. `[REPO]` (`.cursorrules`)
 - [ ] Public APIs have XML documentation where README contributing section applies. `[REPO]`
 - [ ] Avalonia views use paired `.axaml` + `.axaml.cs` files. `[REPO]` (`.cursorrules`)
@@ -46,10 +46,12 @@ Any incomplete logic must use typed TODO markers: `[REPO]` (`.cursorrules`)
 
 - [ ] Public `.md` in `docs/` (except root README). `[REPO]`
 - [ ] KB updates when architecture or operational truth changes. `[SYNTH]`
+- [ ] Tool UX boundary docs in `30-product-ux/` when installer/editor surfaces change (stub layer). `[REPO]`
+- [ ] OdyPatch packaging changes: verify `./helper_scripts/build-nuget.sh` when applicable. `[REPO]`
 - [ ] Progress roadmaps in `.cursor/roadmaps/` per rules (directory may not exist yet). `[REPO]`
 
 ## Repo Implications
 
-- Full solution net9.0 build is validated in CI (`solution-build` job) and locally on Linux after plan 020 — see [build-health-matrix.md](../40-operational-risk/build-health-matrix.md).
+- Full solution net9.0 build is validated in CI (`solution-build` job, `-m:1`) and locally on Linux — see [build-health-matrix.md](../40-operational-risk/build-health-matrix.md) and [pr-merge-readiness.md](../90-meta/pr-merge-readiness.md).
 - Engine PRs without dual-binary references are incomplete per project rules even if tests pass.
 - Commits are user-requested in Cursor user rules; agents propose chained commands after file changes.
