@@ -66,6 +66,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 058 | [058-odypatch-e2e-runbook-plan.md](2026-05-23-058-odypatch-e2e-runbook-plan.md) | OdyPatch E2E manual runbook |
 | 059 | [059-onboarding-runbook-sync-plan.md](2026-05-23-059-onboarding-runbook-sync-plan.md) | Onboarding docs runbook sync |
 | 060 | [060-dev-setup-validate-sync-plan.md](2026-05-23-060-dev-setup-validate-sync-plan.md) | Dev setup validate sync |
+| 061 | [061-agents-build-health-validate-sync-plan.md](2026-05-23-061-agents-build-health-validate-sync-plan.md) | AGENTS.md build health validate sync |
 
 ## Repo implications
 
