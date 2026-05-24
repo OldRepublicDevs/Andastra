@@ -26,7 +26,7 @@ dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0
 dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
 ```
 
-Full solution build (`dotnet build Andastra.sln --framework net9.0`) succeeds on Linux. Tool chain (OdyTools, OdyPatch, KotorCLI) compiles on net9.0. See [build-health-matrix](knowledgebase/40-operational-risk/build-health-matrix.md).
+Full solution build (`dotnet build Andastra.sln --framework net9.0`) succeeds on Linux. Tool chain (OdyTools, OdyPatch, KotorCLI, ConvertKotorGame) compiles on net9.0. See [build-health-matrix](knowledgebase/40-operational-risk/build-health-matrix.md).
 
 ## Run the Game
 
@@ -47,6 +47,7 @@ dotnet run --project src/Tools/NCSDecomp.CLI/NCSDecomp.CLI.csproj --framework ne
 dotnet build src/Tools/OdyTools/OdyTools.csproj --framework net9.0
 dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
 dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- --help
+dotnet build src/Tools/ConvertKotorGame/ConvertKotorGame.csproj --framework net9.0
 ```
 
 Runtime mod-install UX requires a local K1/TSL install. Details: [run-tools-reference](knowledgebase/50-execution/run-tools-reference.md).
