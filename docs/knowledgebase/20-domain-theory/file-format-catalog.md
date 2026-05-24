@@ -8,18 +8,18 @@ Primary implementation: `src/BioWare/Resource/Formats/` `[REPO]`
 
 | Format | Parser folder | Wiki spec (root) | Tests |
 |--------|---------------|------------------|-------|
-| GFF | `GFF/` | `wiki/GFF-*.md`, `wiki/Bioware-Aurora-*.md` | BioWare.Tests GFF roundtrips |
-| 2DA | `TwoDA/` | `wiki/Bioware-Aurora-2DA.md` | BioWare.Tests |
-| TLK | `TLK/` | `wiki/Bioware-Aurora-TalkTable.md` | BioWare.Tests |
-| BWM/WOK | `BWM/` | `wiki/BWM-File-Format.md` | BioWare.Tests |
-| LYT | `LYT/` | `wiki/LYT-File-Format.md` | BioWare.Tests |
-| MDL/MDX | `MDL/` | `wiki/MDL-*.md` | OdyTools.Tests MDL |
-| NCS | `NCS/` | `wiki/NCS-File-Format.md` | Andastra.Tests NCS roundtrip |
-| ERF/RIM/MOD | `ERF/`, `RIM/` | Aurora capsule docs in wiki | BioWare.Tests modules |
-| SSF | `SSF/` | — | BioWare.Tests |
-| SAV | `SAV/` | `wiki/GFF-Save-Load-*.md` | BioWare.Tests saves |
-| TPC/TEX | `TPC/`, `TEX/` | — | OdyTools.Tests TPC |
-| LIP/LTR/LYT | respective folders | wiki mirrors | partial |
+| GFF | `GFF/` | `wiki/GFF-*.md`, `wiki/Bioware-Aurora-*.md` | BioWare.Tests GFF roundtrips `[REPO]` |
+| 2DA | `TwoDA/` | `wiki/Bioware-Aurora-2DA.md` | BioWare.Tests `[REPO]` |
+| TLK | `TLK/` | `wiki/Bioware-Aurora-TalkTable.md` | BioWare.Tests `[REPO]` |
+| BWM/WOK | `BWM/` | `wiki/BWM-File-Format.md` | BioWare.Tests `[REPO]` |
+| LYT | `LYT/` | `wiki/LYT-File-Format.md` | BioWare.Tests `[REPO]` |
+| MDL/MDX | `MDL/` | `wiki/MDL-*.md` | OdyTools.Tests MDL `[REPO]` |
+| NCS | `NCS/` | `wiki/NCS-File-Format.md` | Andastra.Tests NCS roundtrip `[REPO]` |
+| ERF/RIM/MOD | `ERF/`, `RIM/` | Aurora capsule docs in wiki | BioWare.Tests modules `[REPO]` |
+| SSF | `SSF/` | — | BioWare.Tests `[REPO]` |
+| SAV | `SAV/` | `wiki/GFF-Save-Load-*.md` | BioWare.Tests saves `[REPO]` |
+| TPC/TEX | `TPC/`, `TEX/` | — | OdyTools.Tests TPC `[REPO]` |
+| LIP/LTR/LYT | respective folders | wiki mirrors | partial `[OPEN]` |
 
 Exact test file names under `tests/BioWare.Tests/Formats/`. `[REPO]`
 
