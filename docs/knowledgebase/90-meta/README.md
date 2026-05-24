@@ -130,6 +130,7 @@ Runtime game testing and OdyPatch mod-install UX remain manual. `[REPO]`
 - [authority-map.md](authority-map.md)
 - [caveat-register.md](caveat-register.md)
 - [pr-merge-readiness.md](pr-merge-readiness.md)
+- [investigation-archive-index.md](investigation-archive-index.md)
 
 LFG plan index: [docs/plans/README.md](../../plans/README.md)
 
