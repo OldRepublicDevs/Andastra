@@ -98,6 +98,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 38. ~~Sync operational-risk + tslpatcher-domain OdyPatch host~~ **Done 2026-05-23**
 39. ~~Sync solution-topology + README OdyPatch roles~~ **Done 2026-05-23**
 40. ~~Post-merge meta refresh + Andastra.Utility csproj path~~ **Done 2026-05-24**
+41. ~~Investigation archive index + dialogue doc path fix~~ **Done 2026-05-24**
 
 ## KB Doc Drift (post-C5)
 
@@ -141,6 +142,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 | `README.md`, `solution-topology.md` | ~~OdyPatch.UI listed as mod tool~~ | **Resolved 2026-05-23** — plan 048 |
 | `solution-topology.md` | ~~`BioWare.Utility.csproj` path~~ | **Resolved 2026-05-24** — plan 049 (`Andastra.Utility.csproj`) |
 | `90-meta/` merge tracker | ~~Pre-merge PR #2 framing~~ | **Resolved 2026-05-24** — plan 049 |
+| Tier-4 `docs/*.md` | ~~No archive index; stale OdysseyRuntime in dialogue doc~~ | **Resolved 2026-05-24** — plan 050 |
 | `.github/workflows/ci.yml` | ~~No full solution build smoke test~~ | **Resolved 2026-05-23** — `solution-build` job |
 | `.github/workflows/ci.yml` | ~~Parallel solution build locks `Andastra.Core.deps.json`~~ | **Resolved 2026-05-23** — plan 031 `-m:1` |
 
