@@ -41,7 +41,7 @@ dotnet run --project src/Tools/NCSDecomp.CLI/NCSDecomp.CLI.csproj --framework ne
 dotnet build src/Andastra/Game/Andastra.Game.csproj --framework net9.0
 ```
 
-### Step 7 — Full solution (may fail on missing stubs or KotorCLI)
+### Step 7 — Full solution (may fail on Stride assembly processor on Linux)
 
 ```bash
 dotnet build Andastra.sln --configuration Release
@@ -56,8 +56,8 @@ dotnet build src/BioWare/BioWare.csproj --configuration Release -p:RunAnalyzersD
 
 ## Skip Unless Fixing
 
-- `KotorCLI` — startup crash `[REPO]`
-- Missing solution stubs (`MonoGameFPS`, `StrideGameFPS`) — restore may fail until stubs exist `[REPO]`
+- Full solution Stride assembly processor on Linux `[REPO]`
+- Missing solution stubs (`MonoGameFPS`, `StrideGameFPS`) — not in solution; restore succeeds `[REPO]`
 
 ## Tool chain (when relevant)
 

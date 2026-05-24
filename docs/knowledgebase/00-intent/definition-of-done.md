@@ -4,7 +4,7 @@ Checklist for agents and contributors before considering work complete.
 
 ## Code Quality
 
-- [ ] Affected projects compile cleanly. Prefer `dotnet build src/BioWare/BioWare.csproj --framework net9.0` for narrow checks; full solution may fail on KotorCLI or missing stubs. `[REPO]` (`AGENTS.md`)
+- [ ] Affected projects compile cleanly. Prefer `dotnet build src/BioWare/BioWare.csproj --framework net9.0` for narrow checks; full solution may fail on Stride assembly processor on Linux. `[REPO]` (`AGENTS.md`)
 - [ ] C# language version respects per-project pins (C# 7.3 where configured). No C# 8+ syntax in 7.3-targeted projects. `[REPO]` (`.cursorrules`)
 - [ ] Public APIs have XML documentation where README contributing section applies. `[REPO]`
 - [ ] Avalonia views use paired `.axaml` + `.axaml.cs` files. `[REPO]` (`.cursorrules`)
@@ -50,6 +50,6 @@ Any incomplete logic must use typed TODO markers: `[REPO]` (`.cursorrules`)
 
 ## Repo Implications
 
-- Claiming "full solution builds" may be false while KotorCLI or missing solution stubs remain red — see [build-health-matrix.md](../40-operational-risk/build-health-matrix.md).
+- Claiming "full solution builds" may be false while Stride assembly processor fails on Linux — see [build-health-matrix.md](../40-operational-risk/build-health-matrix.md).
 - Engine PRs without dual-binary references are incomplete per project rules even if tests pass.
 - Commits are user-requested in Cursor user rules; agents propose chained commands after file changes.

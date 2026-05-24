@@ -18,7 +18,7 @@ Development tools under `src/Tools/` and their relationships.
 | **NSSComp** | `src/Tools/NSSComp/` | NWScript compiler CLI | Green `[REPO]` |
 | **NCSDecomp.CLI** | `src/Tools/NCSDecomp.CLI/` | NWScript decompiler CLI | Green `[REPO]` |
 | **KotorDiff** | `src/Tools/KotorDiff/` | Installation/file diff | Green `[REPO]` |
-| **KotorCLI** | `src/Tools/KotorCLI/` | Module/build CLI (PyKotorCLI port) | Crashes on startup `[REPO]` |
+| **KotorCLI** | `src/Tools/KotorCLI/` | Module/build CLI (PyKotorCLI port) | `--help` works on net9.0 |
 | **ConvertKotorGame** | `src/Tools/ConvertKotorGame/` | K1↔TSL format portability GUI | `[OPEN]` build unverified |
 
 ## Dependencies

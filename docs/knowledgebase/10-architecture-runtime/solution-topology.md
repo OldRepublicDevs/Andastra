@@ -44,7 +44,7 @@ Andastra.sln
 | Status | Projects |
 |--------|----------|
 | **Green (baseline)** | BioWare, BioWare.Tests, Andastra.Tests, NSSComp, NCSDecomp.CLI, OdyTools, OdyPatch, standalone OdyTool editors | `[REPO]` |
-| **Red** | KotorCLI (startup crash) | `[REPO]` |
+| **Green** | KotorCLI (`--help` on net9.0) | `[REPO]` |
 | **Not in solution** | `src/StrideGameFPS/` on disk; `MonoGameFPS` gitignored/absent | `[REPO]` |
 
 Detail: [build-health-matrix.md](../40-operational-risk/build-health-matrix.md)

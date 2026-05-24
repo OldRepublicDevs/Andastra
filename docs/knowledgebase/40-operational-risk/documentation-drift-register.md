@@ -66,6 +66,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 6. ~~Replace placeholder `dotnet-desktop.yml` workflow~~ **Done 2026-05-23** — Windows BioWare + OdyTools + OdyPatch build
 7. ~~Sync KB tool docs after C5 build recovery~~ **Done 2026-05-23**
 8. ~~Sync onboarding docs (QUICKSTART, engine_roadmap)~~ **Done 2026-05-23**
+9. ~~Fix KotorCLI System.CommandLine 2.0 Option API~~ **Done 2026-05-23**
 
 ## KB Doc Drift (post-C5)
 

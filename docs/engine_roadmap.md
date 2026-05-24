@@ -48,7 +48,7 @@ Format parsers and resource extraction in `src/BioWare/` support all engine fami
 |------|--------|
 | NSSComp, NCSDecomp.CLI, KotorDiff | Build and run |
 | OdyTools, OdyPatch, standalone OdyTool editors | Build on net9.0 (2026-05-23) |
-| KotorCLI | Blocked — startup crash |
+| KotorCLI | `--help` on net9.0 (2026-05-23) |
 
 Details: [tools-ecosystem](knowledgebase/10-architecture-runtime/tools-ecosystem.md).
 

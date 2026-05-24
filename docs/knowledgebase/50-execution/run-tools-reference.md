@@ -52,11 +52,19 @@ dotnet build src/Tools/OdyTools/OdyTools.csproj --framework net9.0
 
 Green after delegate-wiring fix (2026-05-23). `[REPO]`
 
+### KotorCLI
+
+```bash
+dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- --help
+```
+
+System.CommandLine 2.0 Option API fixed 2026-05-23. `[REPO]`
+
 ## Broken / Known Failures
 
 | Tool | Issue |
 |------|-------|
-| **KotorCLI** | Crashes on startup — System.CommandLine API bug `[REPO]` |
+| *(none in tool chain)* | Full solution build may fail on Stride assembly processor on Linux `[REPO]` |
 
 ## Script Tooling
 
