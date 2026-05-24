@@ -1,6 +1,6 @@
 # OdyPatch
 
-TSLPatcher-compatible mod installer for Knights of the Old Republic I and II. OdyPatch is the **host library**; the Avalonia GUI lives in **OdyPatch.UI** (`src/Tools/OdyPatch.UI/`).
+TSLPatcher-compatible mod installer for Knights of the Old Republic I and II. **OdyPatch** is the runnable host (GUI + CLI); the Avalonia UI library lives in **OdyPatch.UI** (`src/Tools/OdyPatch.UI/`).
 
 Patch semantics are implemented in **`BioWare.TSLPatcher`** (`src/BioWare/TSLPatcher/`) — not a separate `TSLPatcher.Core` project.
 
@@ -9,9 +9,11 @@ Patch semantics are implemented in **`BioWare.TSLPatcher`** (`src/BioWare/TSLPat
 From repository root (Linux — always pass `--framework net9.0`):
 
 ```bash
+# GUI (default) or CLI with --install / --validate / --uninstall
 dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
-dotnet run --project src/Tools/OdyPatch.UI/OdyPatch.UI.csproj --framework net9.0
 ```
+
+`OdyPatch.UI` is a library project — build it via `dotnet build`, do not `dotnet run` the UI csproj directly. See [OdyPatch.UI README](../OdyPatch.UI/README.md).
 
 Build:
 
