@@ -53,6 +53,8 @@ OdyPatch installer GUI: `dotnet run` the **OdyPatch** host only (see [run-tools-
 dotnet build src/Andastra/Game/Andastra.Game.csproj --framework net9.0
 ```
 
+OdyPatch mod install against real K1/TSL: see [odypatch-e2e-runbook.md](odypatch-e2e-runbook.md) (manual E2E; not in CI). `[REPO]`
+
 ### Step 7 — Full solution
 
 ```bash
