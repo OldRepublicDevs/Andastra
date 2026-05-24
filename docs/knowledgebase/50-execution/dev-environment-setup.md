@@ -42,6 +42,17 @@ OdyPatch is the packable NuGet project. On Linux:
 
 Docs: `docs/NUGET.md`, `docs/NUGET_SETUP.md`, `docs/MANUAL_PUSH_INSTRUCTIONS.md`. Requires valid SPDX in `OdyPatch.csproj` (`LGPL-3.0-only`, plan 035). `[REPO]`
 
+## OdyPatch (installer)
+
+GUI and CLI share the **OdyPatch** executable host; **OdyPatch.UI** is the Avalonia library:
+
+```bash
+dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
+dotnet build src/Tools/OdyPatch.UI/OdyPatch.UI.csproj --framework net9.0
+```
+
+See [run-tools-reference.md](run-tools-reference.md) and tool READMEs under `src/Tools/OdyPatch/`. `[REPO]`
+
 ## Repo Implications
 
 - Agents without game installs can still build/test BioWare and NCS roundtrips.

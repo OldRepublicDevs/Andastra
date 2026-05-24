@@ -49,6 +49,13 @@ User rules: **only commit when user explicitly asks** — otherwise propose comm
 
 Optional when touching OdyPatch packaging: `./helper_scripts/build-nuget.sh` (Linux net9.0). `[REPO]`
 
+## OdyPatch tooling
+
+- **Run GUI/CLI:** `dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0` — do **not** `dotnet run` `OdyPatch.UI` (library csproj). `[REPO]` (plans 044–045)
+- **Patch semantics:** `BioWare.TSLPatcher` in `src/BioWare/TSLPatcher/`
+- **UX boundaries:** [odypatch-installer-ux.md](../30-product-ux/odypatch-installer-ux.md)
+- **READMEs:** `src/Tools/OdyPatch/README.md`, `src/Tools/OdyPatch.UI/README.md`
+
 ## KB Entry Points
 
 1. [90-meta/README.md](../90-meta/README.md) — taxonomy and reading order
