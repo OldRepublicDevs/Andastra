@@ -99,6 +99,7 @@
   </ItemGroup>
   <ItemGroup>
     <AvaloniaXaml Remove="Editors\Standalone\**\*.axaml" />
+    <AvaloniaXaml Remove="Editors\Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml" />
   </ItemGroup>
   <!-- Exclude non-code directories from None and EmbeddedResource items -->
   <ItemGroup>
