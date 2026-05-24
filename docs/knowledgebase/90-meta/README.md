@@ -26,7 +26,7 @@ See [authority-map.md](authority-map.md) for conflict resolution.
 | Execution | [50-execution/](../50-execution/) | Setup, build ladder, run paths, agent workflow |
 | Meta | [90-meta/](.) | Evidence contract, authority, caveats (this layer) |
 
-Layer `30-product-ux/` is deferred until OdyTools/OdyPatch build recovery.
+Layer `30-product-ux/` is deferred for content scope; OdyTools/OdyPatch compile path is green as of 2026-05-23.
 
 ## Reading Order
 

@@ -11,10 +11,10 @@ Development tools under `src/Tools/` and their relationships.
 
 | Tool | Path | Role | Build status |
 |------|------|------|--------------|
-| **OdyPatch** | `src/Tools/OdyPatch/` | TSLPatcher-compatible mod installer core | Red (depends on OdyTools) `[REPO]` |
-| **OdyPatch.UI** | `src/Tools/OdyPatch.UI/` | Avalonia GUI for patching | Red (transitive) `[REPO]` |
-| **OdyTools** | `src/Tools/OdyTools/` | Holocron-style AIO content editor | Red `[REPO]` |
-| **Standalone OdyTool editors** | `src/Tools/OdyTools/*/` (25+ csprojs) | Per-format editors (GFF, DLG, etc.) | Mostly green `[REPO]` |
+| **OdyPatch** | `src/Tools/OdyPatch/` | TSLPatcher-compatible mod installer core | Green (net9.0) `[REPO]` |
+| **OdyPatch.UI** | `src/Tools/OdyPatch.UI/` | Avalonia GUI for patching | Green (net9.0) `[REPO]` |
+| **OdyTools** | `src/Tools/OdyTools/` | Holocron-style AIO content editor | Green (net9.0) `[REPO]` |
+| **Standalone OdyTool editors** | `src/Tools/OdyTools/*/` (25+ csprojs) | Per-format editors (GFF, DLG, etc.) | Green (shared props) `[REPO]` |
 | **NSSComp** | `src/Tools/NSSComp/` | NWScript compiler CLI | Green `[REPO]` |
 | **NCSDecomp.CLI** | `src/Tools/NCSDecomp.CLI/` | NWScript decompiler CLI | Green `[REPO]` |
 | **KotorDiff** | `src/Tools/KotorDiff/` | Installation/file diff | Green `[REPO]` |
@@ -24,7 +24,7 @@ Development tools under `src/Tools/` and their relationships.
 ## Dependencies
 
 ```
-OdyPatch.UI → OdyPatch → OdyTools (broken) + BioWare + Andastra (net9)
+OdyPatch.UI → OdyPatch → OdyTools + BioWare + Andastra (net9)
 NSSComp / NCSDecomp.CLI → BioWare
 KotorDiff → BioWare + installation model
 Standalone editors → BioWare (typical)
@@ -47,5 +47,5 @@ See [reverse-engineering-methodology.md](../20-domain-theory/reverse-engineering
 ## Repo Implications
 
 - Mod installer documentation should say **OdyPatch**, never HoloPatcher.
-- Tooling tasks should pick build-green CLIs (NSSComp, NCSDecomp) when OdyPatch is blocked.
-- Fixing OdyTools `System.Action` method-group errors unblocks OdyPatch chain.
+- Tooling tasks may use OdyPatch/OdyTools when the slice requires installer or editor UX; script-only work can stay on NSSComp/NCSDecomp.
+- Runtime mod-install validation requires a local K1/TSL install — compile green ≠ UX verified.

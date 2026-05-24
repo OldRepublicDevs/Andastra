@@ -43,8 +43,8 @@ Andastra.sln
 
 | Status | Projects |
 |--------|----------|
-| **Green (baseline)** | BioWare, BioWare.Tests, Andastra.Tests, NSSComp, NCSDecomp.CLI, many standalone OdyTool editors | `[REPO]` |
-| **Red** | OdyTools (AIO), OdyPatch (depends on OdyTools), KotorCLI (startup crash) | `[REPO]` |
+| **Green (baseline)** | BioWare, BioWare.Tests, Andastra.Tests, NSSComp, NCSDecomp.CLI, OdyTools, OdyPatch, standalone OdyTool editors | `[REPO]` |
+| **Red** | KotorCLI (startup crash) | `[REPO]` |
 | **Not in solution** | `src/StrideGameFPS/` on disk; `MonoGameFPS` gitignored/absent | `[REPO]` |
 
 Detail: [build-health-matrix.md](../40-operational-risk/build-health-matrix.md)
@@ -63,5 +63,5 @@ Detail: [build-health-matrix.md](../40-operational-risk/build-health-matrix.md)
 ## Repo Implications
 
 - Agents should default to building **BioWare + targeted tests**, not full solution.
-- Tool work scoped to standalone editors avoids OdyTools AIO compile errors.
+- Tool work may target OdyTools AIO, OdyPatch, or standalone editors — all compile on net9.0 as of 2026-05-23.
 - Multi-target builds need explicit `--framework net9.0` on Linux.

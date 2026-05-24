@@ -29,7 +29,7 @@ TSLPatcher install list syntax appears in vendor toolset wiki copies. Prefer ver
 
 ## Build Status
 
-OdyPatch currently fails to build due to OdyTools dependency chain. `[REPO]` TSLPatcher **library** code in BioWare may still build via BioWare project independently.
+OdyPatch compiles on net9.0 (2026-05-23). Runtime mod-install UX still requires a local K1/TSL install for validation. TSLPatcher **library** code in BioWare builds via BioWare project independently. `[REPO]`
 
 ## Repo Implications
 
