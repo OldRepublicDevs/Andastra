@@ -27,6 +27,8 @@ Standard commands per `README.md`. Key notes:
 - **KotorCLI**: `dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- --help`
 - **ConvertKotorGame**: `dotnet build src/Tools/ConvertKotorGame/ConvertKotorGame.csproj --framework net9.0`
 - **OdyPatch** (GUI + CLI host): `dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0`
+- **OdyPatch validate** (no game install): `dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0 -c Release -- --validate --game-dir tests/fixtures/odypatch-fake-game --tslpatchdata tests/fixtures/odypatch-minimal-mod/tslpatchdata` — see `docs/knowledgebase/50-execution/build-and-test-ladder.md`
+- **OdyPatch manual E2E** (real K1/TSL install): `docs/knowledgebase/50-execution/odypatch-e2e-runbook.md`
 - **OdyPatch.UI** (library — build only): `dotnet build src/Tools/OdyPatch.UI/OdyPatch.UI.csproj --framework net9.0`
 - **OdyPatch NuGet pack**: `./helper_scripts/build-nuget.sh` (Linux net9.0) or `.\helper_scripts\build-nuget.ps1` — see `docs/NUGET.md`
 - **NSS/NCS scripts**: `helper_scripts/NcsTool.ps1` (agent-mandated for NSS/NCS operations per `.cursorrules`)
