@@ -4,14 +4,14 @@ User-facing tool workflows — installer UX, editor UX, and mod-author surfaces.
 
 ## Purpose
 
-Bridge between architecture/tools docs (`10-architecture-runtime/`) and operational runbooks (`50-execution/`). Captures what users and mod authors experience when running OdyPatch and OdyTools, with explicit `[OPEN]` boundaries where runtime verification is missing.
+Bridge between architecture/tools docs (`10-architecture-runtime/`) and operational runbooks (`50-execution/`). Captures what users and mod authors experience when running OdyPatch and OdyTools, with explicit `[OPEN]` boundaries where runtime verification is missing. `[SYNTH]`
 
 ## Documents
 
 | Doc | Surface |
 |-----|---------|
-| [odypatch-installer-ux.md](odypatch-installer-ux.md) | Mod install / patch application |
-| [odytools-editor-ux.md](odytools-editor-ux.md) | Holocron-style content editors |
+| [odypatch-installer-ux.md](odypatch-installer-ux.md) | Mod install / patch application `[REPO]` |
+| [odytools-editor-ux.md](odytools-editor-ux.md) | Holocron-style content editors `[REPO]` |
 
 ## Authority
 

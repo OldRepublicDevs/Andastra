@@ -28,7 +28,7 @@ Build and run per project README/tool docs. Uses BioWare installation model. `[R
 dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
 ```
 
-Launches the Avalonia installer by default; pass `--install`, `--validate`, or `--uninstall` with `--game-dir` and `--tslpatchdata` for CLI mode. `[REPO]` (`Program.cs`)
+Launches the Avalonia installer by default; pass `--install`, `--validate`, or `--uninstall` with `--game-dir` and `--tslpatchdata` for CLI mode. `--help` prints usage without launching GUI (plan 053). `[REPO]` (`Program.cs`)
 
 ### OdyPatch.UI (library)
 
@@ -73,6 +73,16 @@ System.CommandLine 2.0 Option API fixed 2026-05-23. `[REPO]`
 ```
 
 Produces `OdyPatch.*.nupkg` under `src/Tools/OdyPatch/bin/Release/` (Linux uses net9.0). Requires valid SPDX `PackageLicenseExpression` in `OdyPatch.csproj` (`LGPL-3.0-only` as of plan 035). See [NUGET.md](../../NUGET.md). `[REPO]`
+
+Validate without game install (plan 055):
+
+```bash
+dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0 -c Release -- \
+  --validate --game-dir tests/fixtures/odypatch-fake-game \
+  --tslpatchdata tests/fixtures/odypatch-minimal-mod/tslpatchdata
+```
+
+`[REPO]`
 
 ## Broken / Known Failures
 

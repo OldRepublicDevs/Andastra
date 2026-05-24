@@ -4,11 +4,11 @@ Where to add features and how to align with project structure.
 
 ## Layering (from README, corrected)
 
-1. **Domain logic** → `src/Andastra/Runtime/Core/` (no graphics deps)
-2. **Shared game abstractions** → `Runtime/Games/Common/` and `Game/Games/Common/`
-3. **Engine-specific** → `src/Andastra/Game/Games/{Odyssey,Aurora,Eclipse}/`
-4. **File formats** → `src/BioWare/Resource/Formats/`
-5. **Tools** → `src/Tools/` (OdyPatch, editors, CLIs)
+1. **Domain logic** → `src/Andastra/Runtime/Core/` (no graphics deps) `[REPO]`
+2. **Shared game abstractions** → `Runtime/Games/Common/` and `Game/Games/Common/` `[REPO]`
+3. **Engine-specific** → `src/Andastra/Game/Games/{Odyssey,Aurora,Eclipse}/` `[REPO]`
+4. **File formats** → `src/BioWare/Resource/Formats/` `[REPO]`
+5. **Tools** → `src/Tools/` (OdyPatch host, OdyPatch.UI, editors, CLIs) `[REPO]`
 
 See [runtime-layering.md](../10-architecture-runtime/runtime-layering.md).
 

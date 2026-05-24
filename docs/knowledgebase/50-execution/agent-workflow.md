@@ -45,13 +45,14 @@ User rules: **only commit when user explicitly asks** — otherwise propose comm
 1. Run narrowest build/test ladder — [build-and-test-ladder.md](build-and-test-ladder.md)
 2. Fix compiler/analyzer errors in touched projects
 3. Mark implementation status in response
-4. Tooling/doc slices: check [pr-merge-readiness.md](../90-meta/pr-merge-readiness.md) for PR #2 scope
+4. Tooling/doc slices: check [pr-merge-readiness.md](../90-meta/pr-merge-readiness.md) (KB maintenance tracker)
 
 Optional when touching OdyPatch packaging: `./helper_scripts/build-nuget.sh` (Linux net9.0). `[REPO]`
 
 ## OdyPatch tooling
 
 - **Run GUI/CLI:** `dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0` — do **not** `dotnet run` `OdyPatch.UI` (library csproj). `[REPO]` (plans 044–045)
+- **CLI help:** `dotnet run ... -- --help` — must print usage without launching GUI (plan 053). `[REPO]`
 - **Patch semantics:** `BioWare.TSLPatcher` in `src/BioWare/TSLPatcher/`
 - **UX boundaries:** [odypatch-installer-ux.md](../30-product-ux/odypatch-installer-ux.md)
 - **READMEs:** `src/Tools/OdyPatch/README.md`, `src/Tools/OdyPatch.UI/README.md`

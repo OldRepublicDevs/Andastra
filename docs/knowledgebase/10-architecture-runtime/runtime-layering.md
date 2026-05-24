@@ -23,14 +23,14 @@ Higher layers depend on lower layers; domain core avoids graphics/game-engine bi
 
 | Layer | Path | Role |
 |-------|------|------|
-| **Executable** | `src/Andastra/Game/` | Entry point, launcher GUI, engine profiles, game loop |
-| **Runtime domain** | `src/Andastra/Runtime/Core/` | Pure domain logic |
-| **Content pipeline** | `src/Andastra/Runtime/Content/` | Asset conversion and caching |
-| **Graphics abstraction** | `src/Andastra/Runtime/Graphics/`, `src/Andastra/Graphics/`, `Game/Graphics/{MonoGame,Stride,Common}/` | Rendering backends |
-| **Shared game rules** | `Runtime/Games/Common/`, `Game/Games/Common/` | Cross-engine abstractions |
-| **Engine-specific** | `Game/Games/{Odyssey,Aurora,Eclipse}/` | K1/TSL rules, loaders, combat, dialogue |
+| **Executable** | `src/Andastra/Game/` | Entry point, launcher GUI, engine profiles, game loop `[REPO]` |
+| **Runtime domain** | `src/Andastra/Runtime/Core/` | Pure domain logic `[REPO]` |
+| **Content pipeline** | `src/Andastra/Runtime/Content/` | Asset conversion and caching `[REPO]` |
+| **Graphics abstraction** | `src/Andastra/Runtime/Graphics/`, `src/Andastra/Graphics/`, `Game/Graphics/{MonoGame,Stride,Common}/` | Rendering backends `[REPO]` |
+| **Shared game rules** | `Runtime/Games/Common/`, `Game/Games/Common/` | Cross-engine abstractions `[REPO]` |
+| **Engine-specific** | `Game/Games/{Odyssey,Aurora,Eclipse}/` | K1/TSL rules, loaders, combat, dialogue `[REPO]` |
 | **Scripting** | `src/Andastra/Game/Scripting/` | NCS VM — **not** a separate `Runtime.Scripting` csproj `[REPO]` |
-| **Formats** | `src/BioWare/` | GFF, 2DA, TLK, MDL, NCS parsers, chitin/capsule extract |
+| **Formats** | `src/BioWare/` | GFF, 2DA, TLK, MDL, NCS parsers, chitin/capsule extract `[REPO]` |
 
 ## README vs Actual
 

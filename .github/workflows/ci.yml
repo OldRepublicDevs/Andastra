@@ -77,3 +77,30 @@ jobs:
 
       - name: Build solution
         run: dotnet build Andastra.sln --framework net9.0 -c Release --no-restore -m:1
+
+  nuget-pack-smoke:
+    name: NuGet Pack Smoke (OdyPatch)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Pack OdyPatch NuGet package
+        run: bash helper_scripts/build-nuget.sh
+
+      - name: Verify package artifact
+        run: |
+          test -n "$(find src/Tools/OdyPatch/bin/Release -name 'OdyPatch.*.nupkg' ! -name '*.symbols.nupkg' | head -n 1)"
+
+      - name: OdyPatch CLI help smoke
+        run: |
+          dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0 -c Release --no-build -- --help | grep -q -- '--install'
+
+      - name: OdyPatch CLI validate smoke
+        run: |
+          dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0 -c Release --no-build -- --validate --game-dir tests/fixtures/odypatch-fake-game --tslpatchdata tests/fixtures/odypatch-minimal-mod/tslpatchdata

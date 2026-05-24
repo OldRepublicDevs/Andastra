@@ -97,6 +97,13 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 37. ~~Add plans index + agent onboarding OdyPatch sync~~ **Done 2026-05-23**
 38. ~~Sync operational-risk + tslpatcher-domain OdyPatch host~~ **Done 2026-05-23**
 39. ~~Sync solution-topology + README OdyPatch roles~~ **Done 2026-05-23**
+40. ~~Post-merge meta refresh + Andastra.Utility csproj path~~ **Done 2026-05-24**
+41. ~~Investigation archive index + dialogue doc path fix~~ **Done 2026-05-24**
+42. ~~OdyPatch NuGet pack CI smoke job~~ **Done 2026-05-24**
+43. ~~Evidence label pass on thin execution/domain KB docs~~ **Done 2026-05-24**
+44. ~~OdyPatch --help routed to CLI + CI smoke~~ **Done 2026-05-24**
+45. ~~PR #3 merge conflicts with master squash~~ **Done 2026-05-24**
+46. ~~OdyPatch validate CLI fixture + CI smoke~~ **Done 2026-05-24**
 
 ## KB Doc Drift (post-C5)
 
@@ -138,6 +145,14 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 | `docs/plans/` | ~~No index for 45 LFG plan files~~ | **Resolved 2026-05-23** — plan 046 |
 | `build-health-matrix.md`, `tslpatcher-domain.md` | ~~OdyPatch/UI roles merged~~ | **Resolved 2026-05-23** — plan 047 |
 | `README.md`, `solution-topology.md` | ~~OdyPatch.UI listed as mod tool~~ | **Resolved 2026-05-23** — plan 048 |
+| `solution-topology.md` | ~~`BioWare.Utility.csproj` path~~ | **Resolved 2026-05-24** — plan 049 (`Andastra.Utility.csproj`) |
+| `90-meta/` merge tracker | ~~Pre-merge PR #2 framing~~ | **Resolved 2026-05-24** — plan 049 |
+| Tier-4 `docs/*.md` | ~~No archive index; stale OdysseyRuntime in dialogue doc~~ | **Resolved 2026-05-24** — plan 050 |
+| NuGet pack CI | ~~Local-only validation~~ | **Resolved 2026-05-24** — plan 051 `nuget-pack-smoke` |
+| KB evidence labels | ~~Thin docs missing `[REPO]` on factual claims~~ | **Resolved 2026-05-24** — plan 052 (5 docs) |
+| OdyPatch CLI --help | ~~--help launched GUI; hung headless~~ | **Resolved 2026-05-24** — plan 053 |
+| PR #3 merge | ~~CONFLICTING with master after PR #2 squash~~ | **Resolved 2026-05-24** — plan 054 |
+| OdyPatch validate CI | ~~No config validation without game install~~ | **Resolved 2026-05-24** — plan 055 minimal fixture |
 | `.github/workflows/ci.yml` | ~~No full solution build smoke test~~ | **Resolved 2026-05-23** — `solution-build` job |
 | `.github/workflows/ci.yml` | ~~Parallel solution build locks `Andastra.Core.deps.json`~~ | **Resolved 2026-05-23** — plan 031 `-m:1` |
 

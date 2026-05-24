@@ -77,7 +77,7 @@ dotnet build src/BioWare/BioWare.csproj --configuration Release -p:RunAnalyzersD
 ## Skip Unless Fixing
 
 - Isolated Stride assembly processor failures on single game csproj Linux builds `[REPO]`
-- Orphan test files not wired into test csprojs — see [build-health-matrix](knowledgebase/40-operational-risk/build-health-matrix.md) `[REPO]`
+- Orphan test files not wired into test csprojs — see [build-health-matrix](../40-operational-risk/build-health-matrix.md) `[REPO]`
 
 ## Tool chain (when relevant)
 

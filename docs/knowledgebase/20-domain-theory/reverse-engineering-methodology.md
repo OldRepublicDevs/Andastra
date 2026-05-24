@@ -65,11 +65,11 @@ Engine-related agent responses must end with exactly one line: `[REPO]`
 
 | Doc | Use |
 |-----|-----|
-| `docs/CROSS_BINARY_ANALYSIS_PHASE1.md` | Cross-binary mapping phase 1 |
-| `docs/CROSS_BINARY_INTERNAL_STARTUP_MAPPING.md` | Startup sequence mapping |
-| `docs/ghidra_*` | Function-level analyses |
+| `docs/CROSS_BINARY_ANALYSIS_PHASE1.md` | Cross-binary mapping phase 1 `[REPO]` |
+| `docs/CROSS_BINARY_INTERNAL_STARTUP_MAPPING.md` | Startup sequence mapping `[REPO]` |
+| `docs/ghidra_*` | Function-level analyses `[REPO]` |
 
-Label as investigation-era; verify against current `src/` before citing as implementation truth.
+Label as investigation-era; verify against current `src/` before citing as implementation truth. `[SYNTH]`
 
 ## Repo Implications
 

@@ -23,7 +23,7 @@ dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
 | **OdyTools** (AIO) | Green | Delegate wiring fixed 2026-05-23 |
 | **OdyPatch** (host) | Green | Runnable exe — `dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj` (plan 044) |
 | **OdyPatch.UI** (library) | Green | Build only — `OutputType=Library`; not directly runnable |
-| **OdyPatch NuGet pack** | Green | SPDX `LGPL-3.0-only`; `helper_scripts/build-nuget.sh` on net9.0 Linux (plan 035) |
+| **OdyPatch NuGet pack** | Green | SPDX `LGPL-3.0-only`; `helper_scripts/build-nuget.sh` on net9.0 Linux (plan 035); CI `nuget-pack-smoke` job (plan 051) `[REPO]` |
 | Standalone OdyTool editors | Green | Shared props include DialogHelper 2026-05-23 |
 | OdyTools.Tests | Green when OdyTools builds | Depends on parent |
 | **KotorCLI** | Green | System.CommandLine 2.0 Option API fixed 2026-05-23 |
