@@ -12,7 +12,7 @@
 
 Standard commands per `README.md`. Key notes:
 
-- **Restore**: `dotnet restore Andastra.sln` — the solution references two missing projects (`src/MonoGameFPS/`, `src/StrideGameFPS/`). If restore fails on these, create minimal stub `.csproj` files or restore individual projects instead.
+- **Restore**: `dotnet restore Andastra.sln` succeeds on current branch. Full solution **build** may fail on Stride assembly processor on Linux; prefer narrow project restores for agents.
 - **Build core libraries**: `dotnet build src/BioWare/BioWare.csproj` builds cleanly for both `net9.0` and `net48`.
 - **Build tests**: `dotnet build tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0` and `dotnet build tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0`.
 - **Run tests**: `dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0` and `dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0`.
