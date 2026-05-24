@@ -64,6 +64,13 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 4. ~~Refresh wiki Home for Andastra/OdyPatch branding~~ **Done 2026-05-23** (vendor corpus cleanup deferred)
 5. ~~Fix OdyTools compile (method-group → delegate wiring)~~ **Done 2026-05-23** — unblocks OdyPatch chain
 6. ~~Replace placeholder `dotnet-desktop.yml` workflow~~ **Done 2026-05-23** — Windows BioWare + OdyTools + OdyPatch build
+7. ~~Sync KB tool docs after C5 build recovery~~ **Done 2026-05-23** — run-tools-reference, tools-ecosystem, topology
+
+## KB Doc Drift (post-C5)
+
+| Document | Issue | Status |
+|----------|-------|--------|
+| `run-tools-reference.md`, `tools-ecosystem.md`, `solution-topology.md` | ~~OdyTools/OdyPatch listed as Red~~ | **Resolved 2026-05-23** |
 
 ## CI Workflow Drift
 
