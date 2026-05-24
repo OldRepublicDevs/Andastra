@@ -34,7 +34,7 @@ Layer `30-product-ux/` is deferred for content scope; tool chain and full soluti
 |-----|--------|
 | CI — Test | Green (BioWare + Andastra.Tests) |
 | CI — Lint | Green |
-| CI — Solution Build (net9.0) | Green |
+| CI — Solution Build (net9.0) | Green path; CI uses `-m:1` (plan 031) |
 | Test Builds matrix | Green (net48-win, net9.0 linux/osx/win) |
 | dotnet-desktop (Windows) | BioWare + OdyTools + OdyPatch + OdyPatch.UI + KotorCLI + ConvertKotorGame |
 

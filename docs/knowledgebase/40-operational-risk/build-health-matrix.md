@@ -26,7 +26,7 @@ dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
 | OdyTools.Tests | Green when OdyTools builds | Depends on parent |
 | **KotorCLI** | Green | System.CommandLine 2.0 Option API fixed 2026-05-23 |
 | **ConvertKotorGame** | Green | Builds on net9.0 |
-| **Andastra.sln** (full) | Green | Linux net9.0 + CI `solution-build` job (2026-05-23) |
+| **Andastra.sln** (full) | Green | Linux net9.0; CI `solution-build` uses `-m:1` to avoid parallel deps locks (plan 031) |
 
 ## Known Build Caveats
 
@@ -42,7 +42,7 @@ dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
 dotnet build Andastra.sln --framework net9.0
 ```
 
-Green on Linux net9.0 after standalone obj isolation (plan 020). Validated in CI via `solution-build` job (2026-05-23). `[REPO]`
+Green on Linux net9.0 after standalone obj isolation (plan 020). CI validates via `solution-build` job with `-m:1` (plan 031). Local agents may omit `-m:1` unless hitting parallel output locks. `[REPO]`
 
 ## Missing / Orphan Artifacts
 
