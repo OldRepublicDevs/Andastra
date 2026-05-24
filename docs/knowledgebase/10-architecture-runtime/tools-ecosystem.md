@@ -20,11 +20,14 @@ Development tools under `src/Tools/` and their relationships.
 | **KotorDiff** | `src/Tools/KotorDiff/` | Installation/file diff | Green `[REPO]` |
 | **KotorCLI** | `src/Tools/KotorCLI/` | Module/build CLI (PyKotorCLI port) | `--help` works on net9.0 |
 | **ConvertKotorGame** | `src/Tools/ConvertKotorGame/` | K1↔TSL format portability GUI | Builds on net9.0 |
+| **OdyPatch NuGet pack** | `helper_scripts/build-nuget.sh` | Publishable `OdyPatch` package | Green net9.0 Linux (plan 035) `[REPO]` |
+
+Patch engine library: **`BioWare.TSLPatcher`** (`src/BioWare/TSLPatcher/`) — in-repo reference, not a separate NuGet package. `[REPO]`
 
 ## Dependencies
 
 ```
-OdyPatch.UI → OdyPatch → OdyTools + BioWare + Andastra (net9)
+OdyPatch.UI → OdyPatch → OdyTools + BioWare (TSLPatcher) + Andastra (net9)
 NSSComp / NCSDecomp.CLI → BioWare
 KotorDiff → BioWare + installation model
 Standalone editors → BioWare (typical)
@@ -49,3 +52,4 @@ See [reverse-engineering-methodology.md](../20-domain-theory/reverse-engineering
 - Mod installer documentation should say **OdyPatch**, never HoloPatcher.
 - Tooling tasks may use OdyPatch/OdyTools when the slice requires installer or editor UX; script-only work can stay on NSSComp/NCSDecomp.
 - Runtime mod-install validation requires a local K1/TSL install — compile green ≠ UX verified.
+- Product UX stub docs: [30-product-ux/](../30-product-ux/README.md); tool README: `src/Tools/OdyPatch/README.md`.
