@@ -91,6 +91,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 31. ~~Refresh PR #2 body + sync engine_roadmap through plan 039~~ **Done 2026-05-23**
 32. ~~Sync build-and-test-ladder + tools-ecosystem post-035~~ **Done 2026-05-23**
 33. ~~Sync agent-workflow + authority-map taxonomy~~ **Done 2026-05-23**
+34. ~~Sync definition-of-done + contributing-paths~~ **Done 2026-05-23**
 
 ## KB Doc Drift (post-C5)
 
@@ -125,6 +126,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 | PR #2 body / `engine_roadmap.md` | ~~Stale at plan 036; missing 037–039 outcomes~~ | **Resolved 2026-05-23** — plan 040 |
 | `build-and-test-ladder.md`, `tools-ecosystem.md` | ~~Missing NuGet pack + product UX links~~ | **Resolved 2026-05-23** — plan 041 |
 | `agent-workflow.md`, `authority-map.md` | ~~Missing 30-product-ux / 90-meta taxonomy~~ | **Resolved 2026-05-23** — plan 042 |
+| `definition-of-done.md`, `contributing-paths.md` | ~~Missing CI m1 / NuGet / 30-product-ux paths~~ | **Resolved 2026-05-23** — plan 043 |
 | `.github/workflows/ci.yml` | ~~No full solution build smoke test~~ | **Resolved 2026-05-23** — `solution-build` job |
 | `.github/workflows/ci.yml` | ~~Parallel solution build locks `Andastra.Core.deps.json`~~ | **Resolved 2026-05-23** — plan 031 `-m:1` |
 
