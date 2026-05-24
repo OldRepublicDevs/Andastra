@@ -21,6 +21,9 @@
     <Compile Include="$(_OdyToolsRoot)\Data\IEditorInstallationSettings.cs" />
     <Compile Include="$(_OdyToolsRoot)\Data\OdyToolUTCSettings.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\PathUtils.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Utils\ScriptReferenceHelper.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Utils\DialogHelper.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\FileResultsDialog.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\InlineEditorHelp.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\EditorInstallationSettingsDialogBase.cs" />
@@ -39,6 +42,7 @@
     <AvaloniaXaml Include="Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml" Link="EditorStandaloneHost/EditorStandaloneApp.axaml" />
     <AvaloniaXaml Include="OdyToolUTC.axaml" />
     <AvaloniaXaml Include="OdyToolUTC_ScriptsTab.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\FileResultsDialog.axaml" Link="Dialogs/FileResultsDialog.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" Link="Dialogs/EditorHelpDialog.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\UTCSettingsDialog.axaml" Link="Dialogs/UTCSettingsDialog.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\LocalizedStringDialog.axaml" Link="Dialogs/LocalizedStringDialog.axaml" />
