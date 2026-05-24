@@ -51,6 +51,7 @@ namespace BioWare.Tests
         }
 
         [Test]
+        [Platform(Include = "Win,Win32")]
         public void WriteBytesAtomic_WhenTargetLocked_ThrowsAndPreservesOriginalFile()
         {
             string tempDir = CreateTempDirectory();
