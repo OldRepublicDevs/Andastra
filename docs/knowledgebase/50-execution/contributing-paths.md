@@ -30,7 +30,8 @@ See [runtime-layering.md](../10-architecture-runtime/runtime-layering.md).
 
 ## Adding Tools
 
-- Mod installer: extend OdyPatch (not HoloPatcher)
+- Mod installer: extend OdyPatch / OdyPatch.UI (not HoloPatcher); patch engine in `BioWare.TSLPatcher`
+- NuGet packaging: `OdyPatch.csproj` + `helper_scripts/build-nuget.{sh,ps1}` — see [NUGET.md](../../NUGET.md)
 - Standalone editor: new csproj under `src/Tools/OdyTools/Editors/Standalone/` following existing `OdyTool*.Standalone.csproj` pattern
 - Standalone editors inherit `Editors/Directory.Build.props` (per-project `obj/`/`bin/`) and `OdyTools.Standalone.Editor.props` (shared sources, Avalonia `Link` metadata) — do not share a global `Editors/obj/` path
 - CLI: follow NSSComp/NCSDecomp.CLI structure
@@ -40,6 +41,7 @@ See [runtime-layering.md](../10-architecture-runtime/runtime-layering.md).
 | Change type | Update |
 |-------------|--------|
 | Architecture / ops | `docs/knowledgebase/` |
+| Tool installer/editor UX | `docs/knowledgebase/30-product-ux/` (stub layer) |
 | KotOR behavior discovery | `wiki/` |
 | Investigation / RE report | `docs/` (dated, may go stale) |
 | Agent rules | `.cursorrules` (high bar) |
