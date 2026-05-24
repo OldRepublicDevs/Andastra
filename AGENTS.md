@@ -26,8 +26,8 @@ Standard commands per `README.md`. Key notes:
 - **NCSDecomp.CLI**: `dotnet run --project src/Tools/NCSDecomp.CLI/NCSDecomp.CLI.csproj --framework net9.0 -- --help`
 - **KotorCLI**: `dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- --help`
 - **ConvertKotorGame**: `dotnet build src/Tools/ConvertKotorGame/ConvertKotorGame.csproj --framework net9.0`
-- **OdyPatch**: `dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0`
-- **OdyPatch.UI**: `dotnet run --project src/Tools/OdyPatch.UI/OdyPatch.UI.csproj --framework net9.0`
+- **OdyPatch** (GUI + CLI host): `dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0`
+- **OdyPatch.UI** (library — build only): `dotnet build src/Tools/OdyPatch.UI/OdyPatch.UI.csproj --framework net9.0`
 - **OdyPatch NuGet pack**: `./helper_scripts/build-nuget.sh` (Linux net9.0) or `.\helper_scripts\build-nuget.ps1` — see `docs/NUGET.md`
 - **NSS/NCS scripts**: `helper_scripts/NcsTool.ps1` (agent-mandated for NSS/NCS operations per `.cursorrules`)
 

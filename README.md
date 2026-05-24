@@ -155,8 +155,8 @@ dotnet run --project src/Andastra/Game/Andastra.Game.csproj --framework net9.0 -
 ### Development Tools
 
 ```bash
-# Run OdyPatch
-dotnet run --project src/Tools/OdyPatch.UI/OdyPatch.UI.csproj --framework net9.0
+# Run OdyPatch (GUI by default; CLI with --install / --validate / --uninstall)
+dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
 
 # Run NCSDecomp CLI
 dotnet run --project src/Tools/NCSDecomp.CLI/NCSDecomp.CLI.csproj --framework net9.0
