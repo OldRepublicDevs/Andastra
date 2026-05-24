@@ -63,6 +63,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 055 | [055-odypatch-validate-fixture-plan.md](2026-05-23-055-odypatch-validate-fixture-plan.md) | OdyPatch validate fixture + CI smoke |
 | 056 | [056-post-pr3-tracker-refresh-plan.md](2026-05-23-056-post-pr3-tracker-refresh-plan.md) | Post-PR #3 tracker refresh |
 | 057 | [057-build-ladder-validate-sync-plan.md](2026-05-23-057-build-ladder-validate-sync-plan.md) | Build ladder validate sync |
+| 058 | [058-odypatch-e2e-runbook-plan.md](2026-05-23-058-odypatch-e2e-runbook-plan.md) | OdyPatch E2E manual runbook |
 
 ## Repo implications
 
