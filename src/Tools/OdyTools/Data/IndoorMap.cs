@@ -900,33 +900,59 @@ namespace OdyTools.Data
         /// set to -1 (no transition).
         /// </para>
         /// </remarks>
-        /// <param name="room">The room whose walkmesh should be processed</param>
-        /// <returns>A processed walkmesh ready for use in the module</returns>
-        private BWM ProcessBwm(IndoorMapRoom room)
+        /// <summary>
+        /// Applies build-time walkmesh transforms and sets AreaModel (WOK) type.
+        /// Exposed for walkmesh regression tests (plan 063 U3 / plan 069).
+        /// </summary>
+        /// <param name="room">The room whose walkmesh should be processed.</param>
+        /// <param name="allRooms">All rooms on the map (for hook transition indices).</param>
+        /// <returns>A processed walkmesh ready for use in the module.</returns>
+        public static BWM BuildWalkmeshForRoom(IndoorMapRoom room, IReadOnlyList<IndoorMapRoom> allRooms)
         {
+            if (room == null)
+            {
+                throw new ArgumentNullException(nameof(room));
+            }
+            if (allRooms == null)
+            {
+                throw new ArgumentNullException(nameof(allRooms));
+            }
+
             var bwm = IndoorMapRoomHelper.DeepCopyBwm(room.BaseWalkmesh());
             bwm.Flip(room.FlipX, room.FlipY);
             bwm.Rotate(room.Rotation);
             bwm.Translate(room.Position.X, room.Position.Y, room.Position.Z);
 
             // CRITICAL: Set walkmesh type to AreaModel (WOK) for indoor map walkmeshes.
-            // This ensures the AABB tree is built when converting to NavigationMesh.
-            // Without this, BwmToNavigationMeshConverter and BwmToEclipseNavigationMeshConverter
-            // will skip AABB tree construction (they check bwm.WalkmeshType == BWMType.AreaModel),
-            // causing pathfinding and spatial queries to fail.
-            // Original implementation: PyKotor doesn't explicitly set this, but area walkmeshes
-            // are always WOK type. This fix ensures consistency.
             bwm.WalkmeshType = BWMType.AreaModel;
 
             for (int hookIndex = 0; hookIndex < room.Hooks.Count; hookIndex++)
             {
                 var connection = room.Hooks[hookIndex];
                 int dummyIndex = (int)room.Component.Hooks[hookIndex].Edge;
-                int? actualIndex = connection == null ? (int?)null : Rooms.IndexOf(connection);
-                RemapTransitions(bwm, dummyIndex, actualIndex);
+                int? actualIndex = null;
+                if (connection != null)
+                {
+                    for (int roomIndex = 0; roomIndex < allRooms.Count; roomIndex++)
+                    {
+                        if (ReferenceEquals(allRooms[roomIndex], connection))
+                        {
+                            actualIndex = roomIndex;
+                            break;
+                        }
+                    }
+                }
+
+                int? remapValue = actualIndex ?? -1;
+                bwm.RemapTransitions(dummyIndex, remapValue);
             }
 
             return bwm;
+        }
+
+        private BWM ProcessBwm(IndoorMapRoom room)
+        {
+            return BuildWalkmeshForRoom(room, Rooms);
         }
 
         private void RemapTransitions(BWM bwm, int dummyIndex, int? actualIndex)
