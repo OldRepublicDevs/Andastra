@@ -22,11 +22,12 @@ See [authority-map.md](authority-map.md) for conflict resolution.
 | Intent | [00-intent/](../00-intent/) | Mission, engine scope, definition of done |
 | Architecture | [10-architecture-runtime/](../10-architecture-runtime/) | Solution topology, runtime layers, BioWare boundary, tools |
 | Domain | [20-domain-theory/](../20-domain-theory/) | Odyssey engine, formats, NCS/VM, RE methodology, TSLPatcher |
+| Product UX | [30-product-ux/](../30-product-ux/) | OdyPatch installer and OdyTools editor workflows (stub layer) |
 | Operational risk | [40-operational-risk/](../40-operational-risk/) | Build health, doc drift, CI risks, RE gaps, license |
 | Execution | [50-execution/](../50-execution/) | Setup, build ladder, run paths, agent workflow |
 | Meta | [90-meta/](.) | Evidence contract, authority, caveats (this layer) |
 
-Layer `30-product-ux/` is deferred for content scope; tool chain, full solution net9.0 build, and OdyPatch NuGet pack are green as of 2026-05-23 (plans 033–035).
+Layer `30-product-ux/` is a **stub layer** (plan 038) with explicit `[OPEN]` runtime UX boundaries; tool chain, full solution net9.0 build, and OdyPatch NuGet pack are green as of 2026-05-23.
 
 ## CI validation (branch `docs/feat-knowledgebase-initial`)
 
@@ -69,8 +70,9 @@ Runtime game testing and OdyPatch mod-install UX remain manual. `[REPO]`
 ### Modding / tools contributor
 
 1. [10-architecture-runtime/tools-ecosystem.md](../10-architecture-runtime/tools-ecosystem.md)
-2. [20-domain-theory/tslpatcher-domain.md](../20-domain-theory/tslpatcher-domain.md)
-3. [50-execution/run-tools-reference.md](../50-execution/run-tools-reference.md)
+2. [30-product-ux/odypatch-installer-ux.md](../30-product-ux/odypatch-installer-ux.md)
+3. [20-domain-theory/tslpatcher-domain.md](../20-domain-theory/tslpatcher-domain.md)
+4. [50-execution/run-tools-reference.md](../50-execution/run-tools-reference.md)
 
 ## Document Index
 
@@ -96,6 +98,12 @@ Runtime game testing and OdyPatch mod-install UX remain manual. `[REPO]`
 - [ncs-nwscript-vm.md](../20-domain-theory/ncs-nwscript-vm.md)
 - [reverse-engineering-methodology.md](../20-domain-theory/reverse-engineering-methodology.md)
 - [tslpatcher-domain.md](../20-domain-theory/tslpatcher-domain.md)
+
+### 30-product-ux
+
+- [README.md](../30-product-ux/README.md)
+- [odypatch-installer-ux.md](../30-product-ux/odypatch-installer-ux.md)
+- [odytools-editor-ux.md](../30-product-ux/odytools-editor-ux.md)
 
 ### 40-operational-risk
 

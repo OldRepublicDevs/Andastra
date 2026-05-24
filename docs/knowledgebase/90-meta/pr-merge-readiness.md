@@ -4,9 +4,9 @@ Merge-readiness tracker for branch `docs/feat-knowledgebase-initial` and [PR #2]
 
 ## Scope
 
-Evidence-first knowledgebase, onboarding docs, CI/doc drift remediation (plans 001–036), and full tool-chain + solution build recovery.
+Evidence-first knowledgebase, onboarding docs, CI/doc drift remediation (plans 001–038), and full tool-chain + solution build recovery.
 
-## Plans landed (001–036)
+## Plans landed (001–038)
 
 | Plan | Topic |
 |------|-------|
@@ -18,6 +18,8 @@ Evidence-first knowledgebase, onboarding docs, CI/doc drift remediation (plans 0
 | 034 | Fix NuGet publish scripts + MANUAL_PUSH_INSTRUCTIONS |
 | 035 | OdyPatch NuGet pack SPDX (`LGPL-3.0-only`) |
 | 036 | PR merge-readiness doc + PR #2 body refresh |
+| 037 | Sync AGENTS/QUICKSTART/dev-setup with NuGet toolchain |
+| 038 | Seed `30-product-ux/` stub layer |
 
 Full plan files: `docs/plans/2026-05-23-NNN-*.md`
 
@@ -43,8 +45,8 @@ Re-check `gh pr checks 2` on latest HEAD before merge. `[REPO]`
 
 ## Known remaining gaps (non-blocking)
 
-- OdyPatch mod-install UX unverified without K1/TSL install `[OPEN]`
-- `30-product-ux/` KB layer deferred for content scope `[REPO]`
+- OdyPatch mod-install UX unverified without K1/TSL install — stub doc: [odypatch-installer-ux.md](../30-product-ux/odypatch-installer-ux.md) `[OPEN]`
+- `30-product-ux/` deep content deferred — stub layer only (plan 038) `[REPO]`
 - AGPLv3 vs OdyPatch LGPL packaging policy — see [license-and-compliance.md](../40-operational-risk/license-and-compliance.md) caveat C12 `[OPEN]`
 - Vendor PyKotor wiki corpus under `vendor/` — reference only `[REPO]`
 
