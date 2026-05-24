@@ -45,6 +45,7 @@
     <Compile Include="$(_OdyToolsRoot)\Utils\AutosaveService.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\AtomicFileWriter.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\BackupRotator.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Utils\DialogHelper.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\ComboBox2DA.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\IMediaPlayer.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\NAudioMediaPlayer.cs" />
@@ -52,7 +53,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\ComboBox2DA.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\ComboBox2DA.axaml" Link="Widgets/Edit/ComboBox2DA.axaml" />
   </ItemGroup>
 
   <!-- OutputType: WinExe for Windows, Exe for cross-platform RID -->

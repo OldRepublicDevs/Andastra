@@ -272,7 +272,7 @@ namespace OdyTools.Editors
             EditorHelpers.BindClick(_resrefGenerateBtn, GenerateResref);
             EditorHelpers.BindCheckedChanged(_infiniteRespawnCheckbox, SetInfiniteRespawn);
             EditorHelpers.BindSelectionChanged(_spawnSelect, SetContinuous);
-            EditorHelpers.BindClick(_addCreatureButton, AddCreature);
+            EditorHelpers.BindClick(_addCreatureButton, () => AddCreature());
             EditorHelpers.BindClick(_removeCreatureButton, RemoveSelectedCreature);
             EditorHelpers.BindClick(_nameEditBtn, ChangeName);
         }
@@ -466,7 +466,7 @@ namespace OdyTools.Editors
             _removeCreatureButton = new Button { Content = "Remove" };
             EditorHelpers.BindClick(_removeCreatureButton, RemoveSelectedCreature);
             _addCreatureButton = new Button { Content = "Add" };
-            EditorHelpers.BindClick(_addCreatureButton, AddCreature);
+            EditorHelpers.BindClick(_addCreatureButton, () => AddCreature());
 
             creatureButtonsPanel.Children.Add(_removeCreatureButton);
             creatureButtonsPanel.Children.Add(_addCreatureButton);

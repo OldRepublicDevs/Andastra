@@ -337,6 +337,20 @@ namespace OdyTools.Editors
         }
 
         /// <summary>
+        /// Wires a LostFocus event handler to a control. No-op if either argument is null.
+        /// Overload for handlers that use the standard <see cref="EventHandler"/> signature.
+        /// </summary>
+        public static void BindLostFocus(Control control, EventHandler handler)
+        {
+            if (control == null || handler == null)
+            {
+                return;
+            }
+
+            control.LostFocus += (s, e) => handler(s, e);
+        }
+
+        /// <summary>
         /// Clears a combo box and repopulates it with the given string items.
         /// No-op if <paramref name="combo"/> is null; skips null/empty item collections.
         /// </summary>

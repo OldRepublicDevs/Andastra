@@ -39,7 +39,7 @@ jobs:
             VERSION="${TAG#v}"  # Remove 'v' prefix
           else
             # Extract from csproj
-            VERSION=$(grep -oP '<Version>\K[^<]+' src/OdyPatch/OdyPatch.csproj | head -1)
+            VERSION=$(grep -oP '<Version>\K[^<]+' src/Tools/OdyPatch/OdyPatch.csproj | head -1)
             TAG="v$VERSION"
           fi
           

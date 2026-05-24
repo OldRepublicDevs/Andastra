@@ -26,37 +26,37 @@ namespace KotorCLI.Commands
             var valueArgument = new Argument<string>("value");
             configCommand.Add(valueArgument);
 
-            var globalOption = new Option<bool>(
+            var globalOption = Cli.Opt<bool>(
                 "--global",
                 "Apply to all packages (default)"
             );
             configCommand.Options.Add(globalOption);
 
-            var localOption = new Option<bool>(
+            var localOption = Cli.Opt<bool>(
                 "--local",
                 "Apply to current package only"
             );
             configCommand.Options.Add(localOption);
 
-            var getOption = new Option<bool>(
+            var getOption = Cli.Opt<bool>(
                 "--get",
                 "Get the value of key (default when value not passed)"
             );
             configCommand.Options.Add(getOption);
 
-            var setOption = new Option<bool>(
+            var setOption = Cli.Opt<bool>(
                 "--set",
                 "Set key to value (default when value is passed)"
             );
             configCommand.Options.Add(setOption);
 
-            var unsetOption = new Option<bool>(
+            var unsetOption = Cli.Opt<bool>(
                 "--unset",
                 "Delete the key/value pair for key"
             );
             configCommand.Options.Add(unsetOption);
 
-            var listOption = new Option<bool>(
+            var listOption = Cli.Opt<bool>(
                 "--list",
                 "List all key/value pairs in the config file"
             );

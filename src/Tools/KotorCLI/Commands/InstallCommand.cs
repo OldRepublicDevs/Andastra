@@ -22,11 +22,11 @@ namespace KotorCLI.Commands
             var targetsArgument = new Argument<string[]>("targets");
             targetsArgument.Description = "Targets to install (use 'all' for all targets)";
             installCommand.Add(targetsArgument);
-            var installDirOption = new Option<string>("--installDir", "The location of the KOTOR user directory");
+            var installDirOption = Cli.Opt<string>("--installDir", "The location of the KOTOR user directory");
             installCommand.Options.Add(installDirOption);
-            var noPackOption = new Option<bool>("--noPack", "Do not re-pack the file (implies --noConvert and --noCompile)");
+            var noPackOption = Cli.Opt<bool>("--noPack", "Do not re-pack the file (implies --noConvert and --noCompile)");
             installCommand.Options.Add(noPackOption);
-            var cleanOption = new Option<bool>("--clean", "Clear the cache before packing");
+            var cleanOption = Cli.Opt<bool>("--clean", "Clear the cache before packing");
             installCommand.Options.Add(cleanOption);
 
             installCommand.SetAction(parseResult =>

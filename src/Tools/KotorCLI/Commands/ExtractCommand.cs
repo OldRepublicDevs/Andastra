@@ -31,14 +31,14 @@ namespace KotorCLI.Commands
         public static void AddToRootCommand(RootCommand rootCommand)
         {
             var extractCommand = new Command("extract", "Extract resources from archive files (KEY/BIF, RIM, ERF, etc.)");
-            var fileOption = new Option<string>("--file", "Archive file to extract");
+            var fileOption = Cli.Opt<string>("--file", "Archive file to extract");
             fileOption.Required = true;
             extractCommand.Options.Add(fileOption);
-            var outputOption = new Option<string>("--output", "Output directory (default: archive_name)");
+            var outputOption = Cli.Opt<string>("--output", "Output directory (default: archive_name)");
             extractCommand.Options.Add(outputOption);
-            var filterOption = new Option<string>("--filter", "Filter resources by name pattern (supports wildcards)");
+            var filterOption = Cli.Opt<string>("--filter", "Filter resources by name pattern (supports wildcards)");
             extractCommand.Options.Add(filterOption);
-            var keyFileOption = new Option<string>("--key-file", "KEY file for BIF extraction (default: chitin.key)");
+            var keyFileOption = Cli.Opt<string>("--key-file", "KEY file for BIF extraction (default: chitin.key)");
             extractCommand.Options.Add(keyFileOption);
 
             extractCommand.SetAction(parseResult =>

@@ -22,7 +22,7 @@ Final systematic verification completed.
   - `utils/`: 12 files
 
 ### C# Source Files
-- **Total**: 280+ C# files in `src/CSharpKOTOR/Formats/NCS/NCSDecomp`
+- **Total**: 280+ C# files in `src/BioWare/Resource/Formats/NCS/Decomp`
 - **Additional files**: Includes helper classes, extensions, and compatibility layers
 
 ## Directory Structure Verification
@@ -246,7 +246,7 @@ These are instance-level concerns for the UI and are documented in `docs/NCSDeco
 
 **✅ PORTING IS 100% COMPLETE**
 
-All core logic from `vendor/DeNCS` has been successfully and comprehensively ported to the C# implementation in `src/CSharpKOTOR/Formats/NCS/NCSDecomp`. 
+All core logic from `vendor/DeNCS` has been successfully and comprehensively ported to the C# implementation in `src/BioWare/Resource/Formats/NCS/Decomp`. 
 
 The implementation is:
 - **Exhaustive**: All 270 Java files have been accounted for

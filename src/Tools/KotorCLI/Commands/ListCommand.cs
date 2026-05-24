@@ -20,9 +20,9 @@ namespace KotorCLI.Commands
             var listCommand = new Command("list", "List all targets defined in kotorcli.cfg");
             var targetsArgument = new Argument<string[]>("targets");
             listCommand.Add(targetsArgument);
-            var quietOption = new Option<bool>("--quiet", "List only target names");
+            var quietOption = Cli.Opt<bool>("--quiet", "List only target names");
             listCommand.Options.Add(quietOption);
-            var verboseOption = new Option<bool>("--verbose", "List source files as well");
+            var verboseOption = Cli.Opt<bool>("--verbose", "List source files as well");
             listCommand.Options.Add(verboseOption);
 
             listCommand.SetAction(parseResult =>

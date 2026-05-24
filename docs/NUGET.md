@@ -1,84 +1,62 @@
 # NuGet Package Distribution
 
-Both `TSLPatcher.Core` and `OdyPatch` are configured to be distributed as NuGet packages, allowing other C# projects to reference them directly instead of using the CLI.
+**OdyPatch** (`src/Tools/OdyPatch/`) is configured as a packable NuGet package (`IsPackable=true`). The TSLPatcher engine lives in **`src/BioWare/TSLPatcher/`** as the `BioWare.TSLPatcher` assembly — use a **project reference** to BioWare (or the TSLPatcher csproj) in-repo, not a separate `TSLPatcher.Core` package (that project does not exist). See [tslpatcher-domain](knowledgebase/20-domain-theory/tslpatcher-domain.md).
 
 ## Building NuGet Packages
 
-### Build Packages Locally
-
-To build NuGet packages for both projects:
+### OdyPatch (packable)
 
 ```bash
-# Build packages in Release configuration
-dotnet pack --configuration Release
-
-# Packages will be created in:
-# - src/TSLPatcher.Core/bin/Release/TSLPatcher.Core.2.0.0-alpha1.nupkg
-# - src/OdyPatch/bin/Release/OdyPatch.2.0.0-alpha1.nupkg
+dotnet pack src/Tools/OdyPatch/OdyPatch.csproj --configuration Release --framework net9.0
 ```
 
-### Build Individual Packages
+Output (version from csproj):
 
-```bash
-# Build only TSLPatcher.Core
-dotnet pack src/TSLPatcher.Core/TSLPatcher.Core.csproj --configuration Release
-
-# Build only OdyPatch
-dotnet pack src/OdyPatch/OdyPatch.csproj --configuration Release
+```text
+src/Tools/OdyPatch/bin/Release/OdyPatch.<version>.nupkg
 ```
 
-## Installing Packages
+### TSLPatcher engine (in-repo reference)
 
-### From Local Package Source
-
-1. Create a local NuGet feed directory:
+For programmatic patching inside this solution, reference BioWare projects directly:
 
 ```bash
-mkdir nuget-packages
+dotnet build src/BioWare/TSLPatcher/BioWare.NET.TSLPatcher.csproj --framework net9.0
 ```
 
-2. Copy the `.nupkg` files to this directory
+BioWare.NET.TSLPatcher is **not** currently published as its own NuGet package.
 
-3. Add the local feed to your project's `nuget.config` or use the `--source` parameter:
+## Installing OdyPatch
+
+### From a local package feed
 
 ```bash
-dotnet add package TSLPatcher.Core --source ./nuget-packages
-dotnet add package Andastra --source ./nuget-packages
+mkdir -p nuget-packages
+cp src/Tools/OdyPatch/bin/Release/OdyPatch.*.nupkg nuget-packages/
+dotnet add package OdyPatch --source ./nuget-packages
 ```
 
 ### From NuGet.org (after publishing)
 
-Once published to NuGet.org, install via:
-
 ```bash
-dotnet add package TSLPatcher.Core
-dotnet add package Andastra
+dotnet add package OdyPatch
 ```
 
-Or add to your `.csproj`:
+Or in `.csproj`:
 
 ```xml
-<ItemGroup>
-  <PackageReference Include="TSLPatcher.Core" Version="2.0.0-alpha1" />
-  <PackageReference Include="Andastra" Version="2.0.0-alpha1" />
-</ItemGroup>
+<PackageReference Include="OdyPatch" Version="1.0.0-alpha1" />
 ```
 
-## Using the Packages
+## Using the libraries
 
-### Using TSLPatcher.Core
-
-The core library provides the patching engine:
+### Programmatic mod install (BioWare.TSLPatcher)
 
 ```csharp
-using TSLPatcher.Core.Patcher;
-using TSLPatcher.Core.Config;
-using TSLPatcher.Core.Logger;
+using BioWare.TSLPatcher;
+using BioWare.TSLPatcher.Logger;
 
-// Create a logger
 var logger = new PatchLogger();
-
-// Create installer
 var installer = new ModInstaller(
     modPath: @"C:\Mods\MyMod",
     gamePath: @"C:\Games\KOTOR2",
@@ -86,66 +64,52 @@ var installer = new ModInstaller(
     logger: logger
 );
 
-// Install the mod
 installer.Install();
 ```
 
-### Using OdyPatch
+Requires project references to BioWare TSLPatcher modules (see `OdyPatch.csproj`).
 
-OdyPatch can be used as a library for programmatic access:
+### OdyPatch package
 
-```csharp
-using OdyPatch.UI;
-
-// Access core functionality through Andastra classes
-// (Implementation depends on what public APIs are exposed)
-```
+The OdyPatch NuGet packages the **runnable host** (GUI + CLI executable); Avalonia UI components live in **OdyPatch.UI** (library csproj, separate package metadata, not published by `build-nuget.sh` today). `[REPO]`
 
 ## Publishing to NuGet.org
 
-1. **Get a NuGet API Key**:
-   - Sign in to [nuget.org](https://www.nuget.org)
-   - Go to Account Settings → API Keys
-   - Create a new API key
-
-2. **Publish packages**:
+1. Create an API key at [nuget.org](https://www.nuget.org) → Account Settings → API Keys.
+2. Publish OdyPatch:
 
 ```bash
-# Publish TSLPatcher.Core
-dotnet nuget push src/TSLPatcher.Core/bin/Release/TSLPatcher.Core.*.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
-
-# Publish Andastra
-dotnet nuget push src/OdyPatch/bin/Release/OdyPatch.*.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
+dotnet nuget push src/Tools/OdyPatch/bin/Release/OdyPatch.*.nupkg \
+  --api-key YOUR_API_KEY \
+  --source https://api.nuget.org/v3/index.json
 ```
 
-3. **Publish symbol packages** (optional):
+Symbol packages (if generated):
 
 ```bash
-dotnet nuget push src/TSLPatcher.Core/bin/Release/TSLPatcher.Core.*.snupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
+dotnet nuget push src/Tools/OdyPatch/bin/Release/OdyPatch.*.snupkg \
+  --api-key YOUR_API_KEY \
+  --source https://api.nuget.org/v3/index.json
 ```
 
-## Package Dependencies
+See also [NUGET_SETUP.md](NUGET_SETUP.md) for API key configuration and [MANUAL_PUSH_INSTRUCTIONS.md](MANUAL_PUSH_INSTRUCTIONS.md) for step-by-step push verification.
 
-- **TSLPatcher.Core**: Standalone library with no dependencies on Andastra
-- **OdyPatch**: Depends on TSLPatcher.Core (automatically included when installing OdyPatch)
+## Package dependencies
 
-## Version Management
+- **BioWare.TSLPatcher**: In-repo library; depends on BioWare Core, Resource, Common, etc.
+- **OdyPatch**: NuGet-packable executable host; references OdyPatch.UI + OdyTools + BioWare stack (see `OdyPatch.csproj`).
 
-Update the version in the `.csproj` files:
+## Version management
+
+Update version in `src/Tools/OdyPatch/OdyPatch.csproj`:
 
 ```xml
-<Version>2.0.0-alpha1</Version>
+<Version>1.0.0-alpha1</Version>
 ```
 
-Follow [Semantic Versioning](https://semver.org/):
-
-- **Major**: Breaking changes
-- **Minor**: New features, backward compatible
-- **Patch**: Bug fixes, backward compatible
-- **Pre-release**: Use suffixes like `-alpha1`, `-beta1`, `-rc1`
+Follow [Semantic Versioning](https://semver.org/) for releases.
 
 ## Notes
 
-- Packages are automatically generated on Release builds when `GeneratePackageOnBuild` is `true`
-- Symbol packages (`.snupkg`) are included for debugging support
-- Both packages support multiple target frameworks (.NET 6.0, 7.0, 8.0, 9.0, 10.0, and .NET Framework 4.6.2, 4.8)
+- OdyPatch targets `net9.0` and `net48` (see csproj). On Linux, pass `--framework net9.0` for pack/build.
+- Historical docs referring to `TSLPatcher.Core` describe a pre-Andastra layout; use `BioWare.TSLPatcher` namespaces instead.

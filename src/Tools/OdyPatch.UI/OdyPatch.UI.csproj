@@ -100,6 +100,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Andastra\Andastra.csproj" Condition="'$(TargetFramework)' == 'net9.0'" />
     <ProjectReference Include="..\..\BioWare\BioWare.csproj" Condition="'$(TargetFramework)' == 'net48'" />
+    <ProjectReference Include="..\OdyTools\OdyTools.csproj" />
     <PackageReference Include="Simplecto.Avalonia.RichTextBox" Version="1.3.9" Condition="'$(TargetFramework)' != 'net48'" />
   </ItemGroup>
 

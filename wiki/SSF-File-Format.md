@@ -2,7 +2,7 @@
 
 This document provides a detailed description of the SSF (sound set files) file format used in Knights of the Old Republic (KotOR) games. SSF files contain mappings from sound event types to string references ([StrRefs](TLK-File-Format#string-references-strref)) in the [TLK file](TLK-File-Format).
 
-**For mod developers:** To modify SSF files in your mods, see the [TSLPatcher SSFList Syntax Guide](TSLPatcher-SSFList-Syntax). For general modding information, see [HoloPatcher README for Mod Developers](HoloPatcher-README-for-mod-developers.).
+**For mod developers:** To modify SSF files in your mods, see the [TSLPatcher SSFList Syntax Guide](TSLPatcher-SSFList-Syntax). For general modding information, see [OdyPatch README](../src/Tools/OdyPatch/README.md).
 
 **Related formats:** SSF files reference [TLK files](TLK-File-Format) for string references ([StrRefs](TLK-File-Format#string-references-strref)) that point to the actual sound text strings.
 

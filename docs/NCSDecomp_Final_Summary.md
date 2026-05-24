@@ -167,7 +167,7 @@ The following static fields from Java `Decompiler.java` are UI-specific and corr
 
 **✅ PORTING IS 100% COMPLETE**
 
-All core logic from `vendor/DeNCS` has been successfully and comprehensively ported to the C# implementation in `src/CSharpKOTOR/Formats/NCS/NCSDecomp`. 
+All core logic from `vendor/DeNCS` has been successfully and comprehensively ported to the C# implementation in `src/BioWare/Resource/Formats/NCS/Decomp`. 
 
 The implementation is:
 - **Exhaustive**: All 270 Java files have been accounted for

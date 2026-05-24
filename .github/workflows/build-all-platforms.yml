@@ -101,7 +101,7 @@ jobs:
       - name: Update version in csproj
         run: |
           $version = "${{ inputs.version }}"
-          $csprojPath = "src/OdyPatch/OdyPatch.csproj"
+          $csprojPath = "src/Tools/OdyPatch/OdyPatch.csproj"
           
           # Update Version tag
           (Get-Content $csprojPath) -replace '<Version>.*</Version>', "<Version>$version</Version>" | Set-Content $csprojPath
@@ -115,19 +115,19 @@ jobs:
         shell: pwsh
 
       - name: Restore dependencies
-        run: dotnet restore src/OdyPatch/OdyPatch.csproj
+        run: dotnet restore src/Tools/OdyPatch/OdyPatch.csproj
 
       - name: Build
         run: |
           if [ "${{ matrix.framework }}" == "net48" ]; then
-            msbuild src/OdyPatch/OdyPatch.csproj `
+            msbuild src/Tools/OdyPatch/OdyPatch.csproj `
               /p:Configuration=Release `
               /p:TargetFramework=${{ matrix.framework }} `
               /p:RuntimeIdentifier=${{ matrix.rid }} `
               /p:SelfContained=${{ matrix.selfcontained }} `
               /p:PublishDir=dist\build\${{ matrix.framework }}\${{ matrix.rid }}\
           else
-            dotnet publish src/OdyPatch/OdyPatch.csproj `
+            dotnet publish src/Tools/OdyPatch/OdyPatch.csproj `
               -c Release `
               -f ${{ matrix.framework }} `
               -r ${{ matrix.rid }} `

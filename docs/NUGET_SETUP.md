@@ -7,7 +7,7 @@ This guide explains how to configure your NuGet API key for automatic authentica
 Use the setup script to store your API key securely in your user NuGet.config:
 
 ```powershell
-.\setup-nuget-key.ps1
+.\helper_scripts\setup-nuget-key.ps1
 ```
 
 This will:
@@ -19,7 +19,7 @@ This will:
 After running this, you can simply use:
 
 ```powershell
-.\build-nuget.ps1 --publish
+.\helper_scripts\build-nuget.ps1 --publish
 ```
 
 ## Option 2: Environment Variable
@@ -48,7 +48,7 @@ export NUGET_API_KEY="your_api_key_here"
 Then run:
 
 ```powershell
-.\build-nuget.ps1 --publish
+.\helper_scripts\build-nuget.ps1 --publish
 ```
 
 ## Option 3: Command Line Parameter
@@ -56,7 +56,7 @@ Then run:
 Pass the API key directly:
 
 ```powershell
-.\build-nuget.ps1 --publish --api-key YOUR_API_KEY
+.\helper_scripts\build-nuget.ps1 --publish --api-key YOUR_API_KEY
 ```
 
 ## Option 4: .env File (Local Development)

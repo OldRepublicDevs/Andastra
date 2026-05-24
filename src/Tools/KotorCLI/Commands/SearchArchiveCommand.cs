@@ -12,15 +12,15 @@ namespace KotorCLI.Commands
         public static void AddToRootCommand(RootCommand rootCommand)
         {
             var searchArchiveCommand = new Command("search-archive", "Search for resources in archive files");
-            var fileOption = new Option<string>("--file", "Archive file to search");
+            var fileOption = Cli.Opt<string>("--file", "Archive file to search");
             fileOption.Required = true;
             searchArchiveCommand.Options.Add(fileOption);
             var patternArgument = new Argument<string>("pattern");
             patternArgument.Description = "Search pattern (supports wildcards)";
             searchArchiveCommand.Add(patternArgument);
-            var caseSensitiveOption = new Option<bool>("--case-sensitive", "Case-sensitive search");
+            var caseSensitiveOption = Cli.Opt<bool>("--case-sensitive", "Case-sensitive search");
             searchArchiveCommand.Options.Add(caseSensitiveOption);
-            var searchContentOption = new Option<bool>("--content", "Search in resource content (not just names)");
+            var searchContentOption = Cli.Opt<bool>("--content", "Search in resource content (not just names)");
             searchArchiveCommand.Options.Add(searchContentOption);
 
             searchArchiveCommand.SetAction(parseResult =>

@@ -26,15 +26,15 @@ namespace KotorCLI.Commands
         public static void AddToRootCommand(RootCommand rootCommand)
         {
             var createArchiveCommand = new Command("create-archive", "Create archive (ERF, RIM) from directory");
-            var directoryOption = new Option<string>("--directory", "Directory to pack");
+            var directoryOption = Cli.Opt<string>("--directory", "Directory to pack");
             directoryOption.Required = true;
             createArchiveCommand.Options.Add(directoryOption);
-            var outputOption = new Option<string>("--output", "Output archive file");
+            var outputOption = Cli.Opt<string>("--output", "Output archive file");
             outputOption.Required = true;
             createArchiveCommand.Options.Add(outputOption);
-            var typeOption = new Option<string>("--type", "Archive type (ERF, MOD, SAV, RIM)");
+            var typeOption = Cli.Opt<string>("--type", "Archive type (ERF, MOD, SAV, RIM)");
             createArchiveCommand.Options.Add(typeOption);
-            var filterOption = new Option<string>("--filter", "Filter files by pattern (supports wildcards)");
+            var filterOption = Cli.Opt<string>("--filter", "Filter files by pattern (supports wildcards)");
             createArchiveCommand.Options.Add(filterOption);
 
             createArchiveCommand.SetAction(parseResult =>

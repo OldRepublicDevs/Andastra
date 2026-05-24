@@ -32,10 +32,10 @@
     <AvaloniaXaml Remove="**\*.axaml" />
     <AvaloniaXaml Remove="*OdyTool*.axaml" />
     <AvaloniaXaml Include="Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml" Link="EditorStandaloneHost/EditorStandaloneApp.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\PropertyEditorDialog.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\LocalizedStringDialog.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\LocalizedStringEdit.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" Link="Dialogs/EditorHelpDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\PropertyEditorDialog.axaml" Link="Dialogs/PropertyEditorDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\LocalizedStringDialog.axaml" Link="Dialogs/LocalizedStringDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\LocalizedStringEdit.axaml" Link="Widgets/LocalizedStringEdit.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml" Link="Widgets/Settings/InstallationsWidget.axaml" />
   </ItemGroup>
 </Project>

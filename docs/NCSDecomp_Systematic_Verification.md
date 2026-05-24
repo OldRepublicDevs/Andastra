@@ -25,28 +25,16 @@ vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/
 
 ### C# Source Directories
 ```
-src/CSharpKOTOR/Formats/NCS/NCSDecomp/
-├── Analysis/         (9 files) ✅
-├── Ast/              (Additional organization)
-├── Commands/         (Additional organization)
-├── ControlFlow/      (Additional organization)
-├── Core/             (Additional organization)
-├── Expressions/      (Additional organization)
-├── Node/             (144+ files) ✅
-├── Nodes/            (Additional organization)
-├── Operators/        (Additional organization)
-├── Parsing/          (Additional organization)
-├── Productions/      (Additional organization)
-├── ScriptNode/       (28 files) ✅
-├── ScriptUtils/      (3 files) ✅
-├── Stack/            (11 files) ✅
-├── Statements/       (Additional organization)
-├── SyntaxHighlighting/ (2 files - UI utilities)
-├── Tokens/           (Additional organization)
-└── Utils/            (12+ files) ✅
+src/BioWare/Resource/Formats/NCS/Decomp/
+├── Analysis/           (4 files) ✅
+├── Node/               (146 files) ✅
+├── ScriptNode/         (30 files) ✅
+├── SyntaxHighlighting/ (2 files — UI utilities)
+├── Utils/              (4 files) ✅
+└── (core .cs files at Decomp root — 103 files) ✅
 ```
 
-**Status**: ✅ All Java directories have corresponding C# directories. The C# version has additional organizational subdirectories for better code organization.
+**Status**: ✅ Decompiler implementation lives under BioWare NCS Decomp. CLI entry: `src/Tools/NCSDecomp.CLI/`.
 
 ## File Count Verification
 
@@ -67,7 +55,7 @@ src/CSharpKOTOR/Formats/NCS/NCSDecomp/
 
 **Java Source**: `vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:104-188`
 
-**C# Implementation**: `src/CSharpKOTOR/Formats/NCS/NCSDecomp/Decompiler.cs`
+**C# Implementation**: `src/BioWare/Resource/Formats/NCS/Decomp/Decompiler.cs`
 
 #### Static Fields Verified:
 - [x] `settings` - Settings instance
@@ -104,7 +92,7 @@ src/CSharpKOTOR/Formats/NCS/NCSDecomp/
 
 **Java Source**: `vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java`
 
-**C# Implementation**: `src/CSharpKOTOR/Formats/NCS/NCSDecomp/FileDecompiler.cs` (165KB, 3632 lines)
+**C# Implementation**: `src/BioWare/Resource/Formats/NCS/Decomp/FileDecompiler.cs` (165KB, 3632 lines)
 
 #### Constants Verified:
 - [x] `FAILURE = 0`
@@ -373,7 +361,7 @@ The following static fields from Java `Decompiler.java` are UI-specific and shou
 
 **✅ PORTING IS 100% COMPLETE**
 
-All core logic from `vendor/DeNCS` has been successfully and comprehensively ported to the C# implementation in `src/CSharpKOTOR/Formats/NCS/NCSDecomp`. 
+All core logic from `vendor/DeNCS` has been successfully and comprehensively ported to the C# implementation in `src/BioWare/Resource/Formats/NCS/Decomp`. 
 
 The implementation is:
 - **Exhaustive**: All 270 Java files have been accounted for

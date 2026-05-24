@@ -48,46 +48,54 @@ The Andastra runtime is organized into a layered architecture with strict depend
 
 ```sh
 ┌─────────────────────────────────────────────────────────────┐
-│                    Andastra.Game (Executable)                │
+│         Andastra.Game (executable + launcher)                │
 ├─────────────────────────────────────────────────────────────┤
-│  Runtime.Graphics   │  Runtime.Games      │  Runtime.Content│
-│  (Rendering)         │  (Game Rules)       │  (Asset Pipeline)│
+│  Game/Games/{Odyssey,Aurora,Eclipse} │  Game/Graphics/*     │
+│  Game/Scripting (NCS VM)             │  Andastra.UI         │
 ├─────────────────────────────────────────────────────────────┤
-│                    Runtime.Scripting (NCS VM)               │
+│  Andastra.Runtime: Core │ Content │ Graphics │ Games/Common  │
 ├─────────────────────────────────────────────────────────────┤
-│                    Runtime.Core (Domain)                     │
+│  Andastra.Core │ Andastra.Graphics                          │
 ├─────────────────────────────────────────────────────────────┤
-│                    Parsing (File Formats)                    │
+│  BioWare (src/BioWare/) — file format parsers                │
 └─────────────────────────────────────────────────────────────┘
 ```
 
+Logical layers map to folders inside a small set of assemblies — not separate csproj files per layer. See the [knowledgebase runtime layering guide](docs/knowledgebase/10-architecture-runtime/runtime-layering.md) for the full mapping.
+
 ### Project Organization
 
-**Runtime Projects:**
+**Runtime and game assemblies** (`src/Andastra/`):
 
-- `Andastra.Runtime.Core` - Pure domain logic, no external dependencies
-- `Andastra.Runtime.Content` - Asset conversion and caching pipeline
-- `Andastra.Runtime.Scripting` - NCS virtual machine and NWScript execution
-- `Andastra.Runtime.Graphics` - Rendering backends (MonoGame, Stride)
-- `Andastra.Game.Games.Common` - Common abstractions and base classes for all engine families
-- `Andastra.Runtime.Games.Odyssey` - Odyssey engine implementation (KOTOR, TSL, Jade Empire)
-- `Andastra.Runtime.Games.Aurora` - Aurora engine implementation (NWN, NWN2)
-- `Andastra.Runtime.Games.Eclipse` - Eclipse engine implementation (Dragon Age, Mass Effect)
-- `Andastra.Runtime.Games.Infinity` - Infinity engine implementation (Baldur's Gate, Icewind Dale, etc.)
-- `Andastra.Game` - Main executable and game launcher
+- `Andastra.Runtime` — domain logic, content pipeline, graphics abstractions, and runtime-side common bases (`Runtime/Core/`, `Runtime/Content/`, `Runtime/Graphics/`, `Runtime/Games/Common/`)
+- `Andastra.Game` — executable, engine implementations, NCS VM, and graphics backends (`Game/Games/`, `Game/Scripting/`, `Game/Graphics/`)
+- `Andastra.Core` — shared core types
+- `Andastra.Graphics` — graphics helper assembly
+- `Andastra.UI` — Avalonia UI shell
+- `Andastra.Game.Scripting.Abstractions` — scripting contracts shared with Runtime
+- `Andastra` — aggregator/launcher shell (optional entry point)
 
-**Supporting Projects:**
+**Engine implementations** (folders inside `Andastra.Game`, not separate csprojs):
 
-- `BioWare.NET` - File format parsers and resource management
-- `Andastra.Tests` - Unit and integration tests
+- `Game/Games/Odyssey/` — Odyssey engine (KOTOR, TSL, Jade Empire)
+- `Game/Games/Aurora/` — Aurora engine (NWN, NWN2)
+- `Game/Games/Eclipse/` — Eclipse engine (Dragon Age, Mass Effect)
+- `Game/Games/Infinity/` — planned; not yet present in the repository
 
-**Development Tools:**
+**Supporting projects:**
 
-- `OdyPatch.UI` - Mod installation and patching tool
-- `NCSDecomp` - NWScript bytecode decompiler
-- `NSSComp` - NWScript compiler
-- `OdyTools.NET` - Content creation and editing tools
-- `KotorDiff.NET` - File comparison and diff tool
+- `BioWare` (`src/BioWare/`) — file format parsers and resource management
+- `Andastra.Tests` (`tests/Andastra.Tests/`) — unit and integration tests
+- `BioWare.Tests` (`tests/BioWare.Tests/`) — BioWare library tests
+
+**Development tools** (`src/Tools/`):
+
+- `OdyPatch` — runnable mod installer host (GUI + CLI; launches OdyPatch.UI)
+- `OdyPatch.UI` — Avalonia UI library for the installer (build only; not directly runnable)
+- `NCSDecomp.CLI` — NWScript bytecode decompiler
+- `NSSComp` — NWScript compiler
+- `OdyTools` — content creation and editing tools
+- `KotorDiff` — file comparison and diff tool
 
 ## Features
 
@@ -121,15 +129,16 @@ The Andastra runtime is organized into a layered architecture with strict depend
 ```bash
 # Clone the repository
 git clone <repository-url>
+cd Andastra
 
-# Build only the runtime
-dotnet build src/Andastra/Runtime/
+# Recommended green path (Linux: pass --framework net9.0)
+dotnet build src/BioWare/BioWare.csproj --framework net9.0
 
-# Build only the tools
-dotnet build src/Tools/
+# Full solution
+dotnet build Andastra.sln --framework net9.0
 
-# Build with release configuration
-dotnet build Andastra.sln --configuration Release
+# Release configuration
+dotnet build Andastra.sln --configuration Release --framework net9.0
 ```
 
 ## Running
@@ -138,48 +147,55 @@ dotnet build Andastra.sln --configuration Release
 
 ```bash
 # Run the game (requires game installation)
-dotnet run --project src/Andastra/Game/Andastra.Game.csproj
+dotnet run --project src/Andastra/Game/Andastra.Game.csproj --framework net9.0
 
 # Or specify game path
-dotnet run --project src/Andastra/Game/Andastra.Game.csproj -- --game-path "C:\Games\KOTOR"
+dotnet run --project src/Andastra/Game/Andastra.Game.csproj --framework net9.0 -- --game-path "C:\Games\KOTOR"
 ```
 
 ### Development Tools
 
 ```bash
-# Run OdyPatch
-dotnet run --project src/Tools/OdyPatch.UI/OdyPatch.UI.csproj
+# Run OdyPatch (GUI by default; CLI with --install / --validate / --uninstall)
+dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
 
-# Run NCSDecomp
-dotnet run --project src/Tools/NCSDecomp/NCSDecomp.csproj
+# Run NCSDecomp CLI
+dotnet run --project src/Tools/NCSDecomp.CLI/NCSDecomp.CLI.csproj --framework net9.0
 
 # Run script compiler
-dotnet run --project src/Tools/NSSComp/NSSComp.NET.csproj
+dotnet run --project src/Tools/NSSComp/NSSComp.csproj --framework net9.0
 ```
 
 ## Project Structure
 
 ```shell
-Andastra.NET/
+Andastra/
 ├── src/
 │   ├── Andastra/
-│   │   ├── Game/              # Main executable
-│   │   ├── Runtime/           # Engine runtime
-│   │   │   ├── Core/          # Domain logic
-│   │   │   ├── Content/       # Asset pipeline
+│   │   ├── Game/              # Andastra.Game — executable, engines, scripting
+│   │   │   ├── Games/         # Odyssey, Aurora, Eclipse engine code
 │   │   │   ├── Scripting/     # NCS VM
-│   │   │   ├── Graphics/      # Rendering backends
-│   │   │   └── Games/         # Game implementations
-│   │   ├── Tests/             # Unit tests
-│   │   └── Utility/           # Shared utilities
-│   ├── BioWare.NET/               # File format parsers
+│   │   │   └── Graphics/      # MonoGame / Stride backends
+│   │   ├── Runtime/           # Andastra.Runtime — domain, content, abstractions
+│   │   │   ├── Core/
+│   │   │   ├── Content/
+│   │   │   ├── Graphics/
+│   │   │   └── Games/Common/
+│   │   ├── Core/
+│   │   ├── Graphics/
+│   │   └── UI/
+│   ├── BioWare/               # Format parsers and extract
 │   └── Tools/                 # Development tools
+│       ├── OdyPatch/
 │       ├── OdyPatch.UI/
-│       ├── NCSDecomp/
-│       ├── OdyTools.NET/
-│       └── ...
-├── docs/                      # Documentation
-├── scripts/                   # Build and utility scripts
+│       ├── NCSDecomp.CLI/
+│       ├── NSSComp/
+│       └── OdyTools/
+├── tests/
+│   ├── Andastra.Tests/
+│   └── BioWare.Tests/
+├── docs/                      # Documentation and knowledgebase
+├── helper_scripts/            # Build and utility scripts
 └── vendor/                    # Third-party dependencies
 ```
 
@@ -205,11 +221,11 @@ Andastra.NET/
 
 When implementing new engine features:
 
-1. **Core Domain First**: Implement pure domain logic in `Runtime.Core`
-2. **Content Pipeline**: Add asset conversion in `Runtime.Content`
-3. **Engine Abstraction**: Add common interfaces in `Runtime.Games.Common` if needed
-4. **Engine Implementation**: Implement engine-specific behavior in the appropriate `Runtime.Games.{Engine}` project
-5. **Rendering**: Add MonoGame adapters in `Runtime.Graphics.MonoGame`
+1. **Core Domain First**: Implement pure domain logic in `Runtime/Core/`
+2. **Content Pipeline**: Add asset conversion in `Runtime/Content/`
+3. **Engine Abstraction**: Add shared runtime interfaces in `Runtime/Games/Common/` or game-loop glue in `Game/Games/Common/` as appropriate
+4. **Engine Implementation**: Implement engine-specific behavior in `Game/Games/{Engine}/` (for example `Game/Games/Odyssey/`)
+5. **Rendering**: Add backend adapters in `Game/Graphics/MonoGame/` or `Game/Graphics/Stride/`
 6. **Tests**: Write comprehensive tests for deterministic logic
 
 ## Testing
@@ -222,7 +238,7 @@ dotnet test
 dotnet test --verbosity detailed
 
 # Run specific test project
-dotnet test src/Andastra/Tests/Andastra.Tests.csproj
+dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
 
 # Run with code coverage
 dotnet test --collect:"XPlat Code Coverage"
@@ -230,6 +246,7 @@ dotnet test --collect:"XPlat Code Coverage"
 
 ## Documentation
 
+- **[Knowledgebase](docs/knowledgebase/90-meta/README.md)** - Evidence-first project docs for agents and contributors (start here)
 - **[Quick Start Guide](docs/QUICKSTART.md)** - Getting started with development
 - **[Engine Roadmap](docs/engine_roadmap.md)** - Implementation roadmap and status
 - **[Architecture Documentation](docs/)** - Detailed architecture and design documents
@@ -243,8 +260,8 @@ When contributing to Andastra:
 3. Write tests for new features
 4. Document public APIs with XML comments
 5. Match original engine behavior where applicable
-6. Keep engine-specific logic in the appropriate `Runtime.Games.{Engine}` project
-7. Use common abstractions in `Runtime.Games.Common` for shared functionality across engines
+6. Keep engine-specific logic in `Game/Games/{Engine}/` (for example `Game/Games/Odyssey/`)
+7. Use shared abstractions in `Runtime/Games/Common/` and `Game/Games/Common/` for cross-engine functionality
 
 ## License
 

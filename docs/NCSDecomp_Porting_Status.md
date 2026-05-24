@@ -1,6 +1,6 @@
 # NCSDecomp Porting Status
 
-This document provides a comprehensive overview of what has been ported from `vendor/DeNCS` to the C# implementation in `src/CSharpKOTOR/Formats/NCS/NCSDecomp`.
+This document provides a comprehensive overview of what has been ported from `vendor/DeNCS` to the C# implementation in `src/BioWare/Resource/Formats/NCS/Decomp`.
 
 ## Core Logic - Fully Ported ✅
 

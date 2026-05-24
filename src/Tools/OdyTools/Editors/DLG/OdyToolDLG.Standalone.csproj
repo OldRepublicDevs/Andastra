@@ -67,8 +67,6 @@
     <Compile Include="$(_OdyToolsRoot)\Editors\Actions\PasteItemAction.cs" />
     <Compile Include="$(_OdyToolsRoot)\Editors\Actions\DeleteNodeEverywhereAction.cs" />
     <Compile Include="$(_OdyToolsRoot)\Editors\Actions\RestoreOrphanAction.cs" />
-    <Compile Include="..\..\Widgets\IMediaPlayer.cs" />
-    <Compile Include="..\..\Widgets\NAudioMediaPlayer.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\PlainTextEdit.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\GFFFieldSpinBox.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\ColorEdit.axaml.cs" />
@@ -77,14 +75,14 @@
     <AvaloniaXaml Remove="**\*.axaml" />
     <AvaloniaXaml Include="..\Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml" Link="EditorStandaloneHost/EditorStandaloneApp.axaml" />
     <AvaloniaXaml Include="OdyToolDLG.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\ColorPickerDialog.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\LocalizedStringDialog.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\DLGSettingsDialog.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\Edit\DialogAnimationDialog.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\Edit\DialogModelDialog.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\GFFFieldSpinBox.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\ColorEdit.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" Link="Dialogs/EditorHelpDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\ColorPickerDialog.axaml" Link="Dialogs/ColorPickerDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\LocalizedStringDialog.axaml" Link="Dialogs/LocalizedStringDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\DLGSettingsDialog.axaml" Link="Dialogs/DLGSettingsDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml" Link="Widgets/Settings/InstallationsWidget.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\Edit\DialogAnimationDialog.axaml" Link="Dialogs/Edit/DialogAnimationDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\Edit\DialogModelDialog.axaml" Link="Dialogs/Edit/DialogModelDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\GFFFieldSpinBox.axaml" Link="Widgets/Edit/GFFFieldSpinBox.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\ColorEdit.axaml" Link="Widgets/Edit/ColorEdit.axaml" />
   </ItemGroup>
 </Project>

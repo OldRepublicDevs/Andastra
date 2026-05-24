@@ -24,16 +24,23 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: |
+          dotnet restore src/BioWare/BioWare.csproj
+          dotnet restore tests/BioWare.Tests/BioWare.Tests.csproj
+          dotnet restore tests/Andastra.Tests/Andastra.Tests.csproj
 
-      - name: Build
-        run: dotnet build --no-restore -c Release
+      - name: Build BioWare
+        run: dotnet build src/BioWare/BioWare.csproj --framework net9.0 -c Release --no-restore
 
       - name: Build tests
-        run: dotnet build src/CSharpKOTOR.Tests/CSharpKOTOR.Tests.csproj --no-restore -c Debug
+        run: |
+          dotnet build tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0 -c Release --no-restore
+          dotnet build tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0 -c Release --no-restore
 
       - name: Test
-        run: dotnet test --no-build -c Debug --verbosity normal
+        run: |
+          dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0 -c Release --no-build --verbosity normal
+          dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0 -c Release --no-build --verbosity normal
 
   lint:
     name: Lint
@@ -48,8 +55,25 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore src/BioWare/BioWare.csproj
 
       - name: Run analyzers
-        run: dotnet build --no-restore -c Release -p:RunAnalyzersDuringBuild=true
+        run: dotnet build src/BioWare/BioWare.csproj --framework net9.0 -c Release --no-restore -p:RunAnalyzersDuringBuild=true
 
+  solution-build:
+    name: Solution Build (net9.0)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore solution
+        run: dotnet restore Andastra.sln
+
+      - name: Build solution
+        run: dotnet build Andastra.sln --framework net9.0 -c Release --no-restore -m:1

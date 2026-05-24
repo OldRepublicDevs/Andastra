@@ -30,8 +30,8 @@
     <AvaloniaXaml Remove="**\*.axaml" />
     <AvaloniaXaml Include="Standalone\EditorStandaloneHost\EditorStandaloneApp.axaml" Link="EditorStandaloneHost/EditorStandaloneApp.axaml" />
     <AvaloniaXaml Include="OdyToolIFO.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\LocalizedStringDialog.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" Link="Dialogs/EditorHelpDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\LocalizedStringDialog.axaml" Link="Dialogs/LocalizedStringDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml" Link="Widgets/Settings/InstallationsWidget.axaml" />
   </ItemGroup>
 </Project>

@@ -27,9 +27,9 @@ namespace KotorCLI.Commands
             unpackCommand.Add(targetArgument);
             var fileArgument = new Argument<string>("file");
             unpackCommand.Add(fileArgument);
-            var fileOption = new Option<string>("--file", "File or directory to unpack into the target's source tree");
+            var fileOption = Cli.Opt<string>("--file", "File or directory to unpack into the target's source tree");
             unpackCommand.Options.Add(fileOption);
-            var removeDeletedOption = new Option<bool>("--removeDeleted", "Remove source files not present in the file being unpacked");
+            var removeDeletedOption = Cli.Opt<bool>("--removeDeleted", "Remove source files not present in the file being unpacked");
             unpackCommand.Options.Add(removeDeletedOption);
 
             unpackCommand.SetAction(parseResult =>

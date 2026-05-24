@@ -36,7 +36,7 @@
     <AvaloniaXaml Include="OdyToolGFF.axaml" />
     <AvaloniaXaml Include="OdyTool2DA.axaml" />
     <AvaloniaXaml Include="OdyToolTXT.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" />
-    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" Link="Dialogs/EditorHelpDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml" Link="Widgets/Settings/InstallationsWidget.axaml" />
   </ItemGroup>
 </Project>

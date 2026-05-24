@@ -12,19 +12,24 @@
 
 Standard commands per `README.md`. Key notes:
 
-- **Restore**: `dotnet restore Andastra.sln` — the solution references two missing projects (`src/MonoGameFPS/`, `src/StrideGameFPS/`). If restore fails on these, create minimal stub `.csproj` files or restore individual projects instead.
+- **Restore**: `dotnet restore Andastra.sln` succeeds on current branch. Full solution **build** succeeds on Linux net9.0 (2026-05-23): `dotnet build Andastra.sln --framework net9.0`. CI `solution-build` uses `-m:1` to avoid parallel deps locks (plan 031).
 - **Build core libraries**: `dotnet build src/BioWare/BioWare.csproj` builds cleanly for both `net9.0` and `net48`.
 - **Build tests**: `dotnet build tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0` and `dotnet build tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0`.
 - **Run tests**: `dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0` and `dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0`.
 - **Lint**: `dotnet build src/BioWare/BioWare.csproj --configuration Release -p:RunAnalyzersDuringBuild=true --framework net9.0`.
-- **OdyTools.csproj** has pre-existing compilation errors (method group to `System.Action` conversion) on this branch. **OdyPatch** depends on OdyTools and also fails to build. These are not environment issues.
+- **OdyTools** and **OdyPatch** build on net9.0 after delegate-wiring fixes (2026-05-23). Standalone editors use shared props including `DialogHelper.cs`.
 - The `powershell: not found` warnings during BioWare builds (`Remove-DuplicateUsings.ps1` pre-build target) are harmless on Linux.
 
 ### Running tools
 
 - **NSSComp** (NWScript compiler/decompiler): `dotnet run --project src/Tools/NSSComp/NSSComp.csproj --framework net9.0 -- --help`
 - **NCSDecomp.CLI**: `dotnet run --project src/Tools/NCSDecomp.CLI/NCSDecomp.CLI.csproj --framework net9.0 -- --help`
-- **KotorCLI**: Has a pre-existing System.CommandLine API bug; crashes on startup.
+- **KotorCLI**: `dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- --help`
+- **ConvertKotorGame**: `dotnet build src/Tools/ConvertKotorGame/ConvertKotorGame.csproj --framework net9.0`
+- **OdyPatch** (GUI + CLI host): `dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0`
+- **OdyPatch.UI** (library — build only): `dotnet build src/Tools/OdyPatch.UI/OdyPatch.UI.csproj --framework net9.0`
+- **OdyPatch NuGet pack**: `./helper_scripts/build-nuget.sh` (Linux net9.0) or `.\helper_scripts\build-nuget.ps1` — see `docs/NUGET.md`
+- **NSS/NCS scripts**: `helper_scripts/NcsTool.ps1` (agent-mandated for NSS/NCS operations per `.cursorrules`)
 
 ### AgentDecompile Integration
 

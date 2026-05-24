@@ -57,18 +57,27 @@ jobs:
         if: matrix.framework == 'net48'
         uses: microsoft/setup-msbuild@v2
 
-      - name: Restore dependencies
-        run: dotnet restore
-
       - name: Run tests
-        run: dotnet test --no-restore --verbosity normal
-
-      - name: Build
         run: |
-          if [ "${{ matrix.framework }}" == "net48" ]; then
-            msbuild src/OdyPatch/OdyPatch.csproj /p:Configuration=Release /p:TargetFramework=${{ matrix.framework }} /p:RuntimeIdentifier=${{ matrix.rid }} /p:SelfContained=${{ matrix.selfcontained }}
-          else
-            dotnet publish src/OdyPatch/OdyPatch.csproj `
+          dotnet restore tests/BioWare.Tests/BioWare.Tests.csproj
+          dotnet build tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0 -c Release
+          dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0 -c Release --no-build --verbosity normal
+
+      - name: Build NSSComp smoke publish
+        shell: pwsh
+        run: |
+          $project = "src/Tools/NSSComp/NSSComp.csproj"
+          $outputDir = "dist/test-build/${{ matrix.framework }}/${{ matrix.rid }}"
+
+          if ("${{ matrix.framework }}" -eq "net48") {
+            dotnet publish $project `
+              -c Release `
+              -f net48 `
+              -r ${{ matrix.rid }} `
+              --self-contained ${{ matrix.selfcontained }} `
+              -o $outputDir
+          } else {
+            dotnet publish $project `
               -c Release `
               -f ${{ matrix.framework }} `
               -r ${{ matrix.rid }} `
@@ -76,44 +85,36 @@ jobs:
               -p:PublishSingleFile=true `
               -p:IncludeNativeLibrariesForSelfExtract=true `
               -p:PublishReadyToRun=true `
-              -o dist/test-build/${{ matrix.framework }}/${{ matrix.rid }}
-        shell: pwsh
+              -o $outputDir
+          }
 
       - name: Verify build output
+        shell: pwsh
         run: |
           $outputDir = "dist/test-build/${{ matrix.framework }}/${{ matrix.rid }}"
-          
+
           if (-not (Test-Path $outputDir)) {
             Write-Error "Build output directory not found: $outputDir"
             exit 1
           }
-          
-          $exeName = if (${{ matrix.platform }} -eq "win7" -or ${{ matrix.platform }} -eq "win") {
-            "OdyPatch.exe"
-          } elseif (${{ matrix.platform }} -eq "linux") {
-            "OdyPatch"
-          } else {
-            "OdyPatch"
-          }
-          
+
+          $exeName = if ("${{ matrix.platform }}" -eq "win") { "nsscomp.exe" } else { "nsscomp" }
           $exePath = Join-Path $outputDir $exeName
-          
+
           if (-not (Test-Path $exePath)) {
             Write-Error "Executable not found: $exePath"
             exit 1
           }
-          
+
           Write-Host "✓ Build successful: $exePath"
-          
-          # Check file size (should be > 0)
+
           $fileInfo = Get-Item $exePath
           if ($fileInfo.Length -eq 0) {
             Write-Error "Executable is empty: $exePath"
             exit 1
           }
-          
+
           Write-Host "✓ Executable size: $($fileInfo.Length) bytes"
-        shell: pwsh
 
       - name: Upload test artifacts
         if: failure()
@@ -124,4 +125,3 @@ jobs:
             dist/test-build/**/*
             **/*.log
           retention-days: 7
-

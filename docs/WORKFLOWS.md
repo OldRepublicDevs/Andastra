@@ -104,7 +104,7 @@ Go to Repository Settings → Secrets and variables → Actions, and add:
 
 ### 3. Update UpdateManager
 
-In `src/OdyPatch.UI/UpdateManager.cs`, set:
+In `src/Tools/OdyPatch.UI/UpdateManager.cs`, set:
 
 ```csharp
 Ed25519PublicKey = "your_base64_public_key_here"
@@ -149,7 +149,7 @@ The `release-please-config.json` is already configured. It will:
 
 ### Manual Release
 
-1. **Update version** in `src/OdyPatch/OdyPatch.csproj`:
+1. **Update version** in `src/Tools/OdyPatch/OdyPatch.csproj`:
 
    ```xml
    <Version>2.0.0</Version>

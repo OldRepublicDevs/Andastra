@@ -1237,7 +1237,7 @@ namespace KotorCLI.Commands
             var file2Arg = new Argument<string>("file2");
             file2Arg.Description = "Second file";
             diffCmd.Add(file2Arg);
-            var outputOpt = new Option<string>("--output", "Output diff file");
+            var outputOpt = Cli.Opt<string>("--output", "Output diff file");
             diffCmd.Options.Add(outputOpt);
             diffCmd.SetAction(parseResult =>
             {
@@ -1257,9 +1257,9 @@ namespace KotorCLI.Commands
             var patternArg = new Argument<string>("pattern");
             patternArg.Description = "Search pattern";
             grepCmd.Add(patternArg);
-            var caseSensitiveOption = new Option<bool>("--case-sensitive", "Case-sensitive search");
+            var caseSensitiveOption = Cli.Opt<bool>("--case-sensitive", "Case-sensitive search");
             grepCmd.Options.Add(caseSensitiveOption);
-            var lineNumbersOption = new Option<bool>("--line-numbers", "Show line numbers");
+            var lineNumbersOption = Cli.Opt<bool>("--line-numbers", "Show line numbers");
             grepCmd.Options.Add(lineNumbersOption);
             grepCmd.SetAction(parseResult =>
             {
@@ -1305,7 +1305,7 @@ namespace KotorCLI.Commands
             var validateFileArg = new Argument<string>("file");
             validateFileArg.Description = "File to validate";
             validateCmd.Add(validateFileArg);
-            var verboseOpt = new Option<bool>("--verbose", "Show detailed validation information");
+            var verboseOpt = Cli.Opt<bool>("--verbose", "Show detailed validation information");
             validateCmd.Options.Add(verboseOpt);
             validateCmd.SetAction(parseResult =>
             {
@@ -1397,7 +1397,7 @@ namespace KotorCLI.Commands
             var sourceArg = new Argument<string>("source");
             sourceArg.Description = "Source GFF file (fields to merge)";
             mergeCmd.Add(sourceArg);
-            var mergeOutputOpt = new Option<string>("--output", "Output GFF file (default: overwrite target)");
+            var mergeOutputOpt = Cli.Opt<string>("--output", "Output GFF file (default: overwrite target)");
             mergeCmd.Options.Add(mergeOutputOpt);
             mergeCmd.SetAction(parseResult =>
             {
