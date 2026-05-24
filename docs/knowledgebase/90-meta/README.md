@@ -30,9 +30,9 @@ See [authority-map.md](authority-map.md) for conflict resolution.
 
 Layer `30-product-ux/` is a **stub layer** (plan 038) with explicit `[OPEN]` runtime UX boundaries; tool chain, full solution net9.0 build, and OdyPatch NuGet pack are green as of 2026-05-23.
 
-## CI validation (post–PR #2 merge)
+## CI validation (post–PR #2 and PR #3 merge)
 
-PR #2 merged to `master` 2026-05-24 with all CI checks passing on the merge commit. `[REPO]`
+PR #2 and PR #3 merged to `master` 2026-05-24. PR #3 CI included new `nuget-pack-smoke` (pack, `--help`, `--validate` fixture). `[REPO]`
 
 See [pr-merge-readiness.md](pr-merge-readiness.md) (KB maintenance tracker). Re-check `gh pr checks` on new PRs that touch build/CI. `[REPO]`
 
@@ -42,7 +42,7 @@ See [pr-merge-readiness.md](pr-merge-readiness.md) (KB maintenance tracker). Re-
 | CI — Solution Build (net9.0) | `-m:1` serialization (plan 031) |
 | Test Builds matrix | net48-win, net9.0 linux/osx/win |
 | dotnet-desktop (Windows) | BioWare + OdyTools + OdyPatch + OdyPatch.UI + KotorCLI + ConvertKotorGame |
-| OdyPatch NuGet pack | CI `nuget-pack-smoke` + local `helper_scripts/build-nuget.sh` (plans 035, 051); includes CLI `--help` smoke (plan 053) |
+| OdyPatch NuGet pack | CI `nuget-pack-smoke` — pack + `--help` + `--validate` (plans 051/053/055) + local `helper_scripts/build-nuget.sh` |
 
 Runtime game testing and OdyPatch mod-install UX remain manual. `[REPO]`
 
