@@ -73,6 +73,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 13. ~~Remove duplicate NAudio/compile items in WAV/DLG/SSF standalones~~ **Done 2026-05-23**
 14. ~~Finalize build-health matrix + PR CI validation notes~~ **Done 2026-05-23**
 15. ~~Sync engine_roadmap and build ladder post-023~~ **Done 2026-05-23**
+16. ~~Fix wiki format-page HoloPatcher links + AGENTS tool coverage~~ **Done 2026-05-23**
 
 ## KB Doc Drift (post-C5)
 
