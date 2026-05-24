@@ -28,7 +28,7 @@ Build and run per project README/tool docs. Uses BioWare installation model. `[R
 dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
 ```
 
-Launches the Avalonia installer by default; pass `--install`, `--validate`, or `--uninstall` with `--game-dir` and `--tslpatchdata` for CLI mode. `[REPO]` (`Program.cs`)
+Launches the Avalonia installer by default; pass `--install`, `--validate`, or `--uninstall` with `--game-dir` and `--tslpatchdata` for CLI mode. `--help` prints usage without launching GUI (plan 053). `[REPO]` (`Program.cs`)
 
 ### OdyPatch.UI (library)
 
