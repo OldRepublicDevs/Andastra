@@ -25,6 +25,12 @@ namespace OdyPatch
             // Parse command line arguments
             CommandLineArgs cmdlineArgs = ParseArgs(args);
 
+            if (cmdlineArgs.Help)
+            {
+                PrintHelp();
+                return;
+            }
+
             // Determine if we should run in CLI mode
             bool forceCli = cmdlineArgs.Install || cmdlineArgs.Uninstall || cmdlineArgs.Validate;
 
@@ -261,6 +267,28 @@ namespace OdyPatch
             public bool Install { get; set; }
             public bool Validate { get; set; }
             public bool Help { get; set; }
+        }
+
+        private static void PrintHelp()
+        {
+            Console.WriteLine("OdyPatch — TSLPatcher-compatible mod installer for KOTOR I and II");
+            Console.WriteLine();
+            Console.WriteLine("Usage:");
+            Console.WriteLine("  odypatch                              Launch GUI (default)");
+            Console.WriteLine("  odypatch --help                       Show this help");
+            Console.WriteLine("  odypatch --install --game-dir <path> --tslpatchdata <mod>");
+            Console.WriteLine("  odypatch --validate --game-dir <path> --tslpatchdata <mod>");
+            Console.WriteLine("  odypatch --uninstall --game-dir <path> --tslpatchdata <mod>");
+            Console.WriteLine();
+            Console.WriteLine("Options:");
+            Console.WriteLine("  --install              Apply mod patches to game directory");
+            Console.WriteLine("  --validate             Validate mod configuration without installing");
+            Console.WriteLine("  --uninstall            Remove mod from game directory");
+            Console.WriteLine("  --game-dir <path>      KOTOR I or II installation directory");
+            Console.WriteLine("  --tslpatchdata <path>  Mod folder (TSLPatcher layout / changes.ini)");
+            Console.WriteLine("  --namespace-option-index <n>  Select namespace when mod defines multiple");
+            Console.WriteLine("  --console              Console logging mode");
+            Console.WriteLine("  --help                 Show CLI help and exit");
         }
 
         // Avalonia configuration, don't remove; also used by visual designer.
