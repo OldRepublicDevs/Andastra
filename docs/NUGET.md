@@ -92,7 +92,7 @@ dotnet nuget push src/Tools/OdyPatch/bin/Release/OdyPatch.*.snupkg \
   --source https://api.nuget.org/v3/index.json
 ```
 
-See also [NUGET_SETUP.md](NUGET_SETUP.md) for API key configuration.
+See also [NUGET_SETUP.md](NUGET_SETUP.md) for API key configuration and [MANUAL_PUSH_INSTRUCTIONS.md](MANUAL_PUSH_INSTRUCTIONS.md) for step-by-step push verification.
 
 ## Package dependencies
 
