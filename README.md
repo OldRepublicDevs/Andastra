@@ -90,7 +90,8 @@ Logical layers map to folders inside a small set of assemblies — not separate 
 
 **Development tools** (`src/Tools/`):
 
-- `OdyPatch.UI` — mod installation and patching tool
+- `OdyPatch` — runnable mod installer host (GUI + CLI; launches OdyPatch.UI)
+- `OdyPatch.UI` — Avalonia UI library for the installer (build only; not directly runnable)
 - `NCSDecomp.CLI` — NWScript bytecode decompiler
 - `NSSComp` — NWScript compiler
 - `OdyTools` — content creation and editing tools
