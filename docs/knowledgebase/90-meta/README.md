@@ -26,9 +26,11 @@ See [authority-map.md](authority-map.md) for conflict resolution.
 | Execution | [50-execution/](../50-execution/) | Setup, build ladder, run paths, agent workflow |
 | Meta | [90-meta/](.) | Evidence contract, authority, caveats (this layer) |
 
-Layer `30-product-ux/` is deferred for content scope; tool chain and full solution net9.0 build are green as of 2026-05-23.
+Layer `30-product-ux/` is deferred for content scope; tool chain, full solution net9.0 build, and OdyPatch NuGet pack are green as of 2026-05-23 (plans 033–035).
 
 ## CI validation (branch `docs/feat-knowledgebase-initial`)
+
+See [pr-merge-readiness.md](pr-merge-readiness.md) for PR #2 merge checklist.
 
 | Job | Status |
 |-----|--------|
@@ -37,6 +39,7 @@ Layer `30-product-ux/` is deferred for content scope; tool chain and full soluti
 | CI — Solution Build (net9.0) | Green path; CI uses `-m:1` (plan 031) |
 | Test Builds matrix | Green (net48-win, net9.0 linux/osx/win) |
 | dotnet-desktop (Windows) | BioWare + OdyTools + OdyPatch + OdyPatch.UI + KotorCLI + ConvertKotorGame |
+| OdyPatch NuGet pack | Green on Linux net9.0 via `helper_scripts/build-nuget.sh` (plan 035) |
 
 Runtime game testing and OdyPatch mod-install UX remain manual. `[REPO]`
 
@@ -116,6 +119,7 @@ Runtime game testing and OdyPatch mod-install UX remain manual. `[REPO]`
 - [evidence-contract.md](evidence-contract.md)
 - [authority-map.md](authority-map.md)
 - [caveat-register.md](caveat-register.md)
+- [pr-merge-readiness.md](pr-merge-readiness.md)
 
 ## Repo Implications
 
