@@ -1,12 +1,26 @@
 ---
 title: "feat: continue PyKotor and HolocronToolset port into Andastra"
 type: feat
-status: active
+status: complete
 date: 2026-05-24
 origin: user request + OpenKotOR/PyKotor and OpenKotOR/HolocronToolset upstream repos
+completed: 2026-05-24
+branch: feat/holocron-fac-kotorcli
 ---
 
 # feat: continue PyKotor and HolocronToolset port into Andastra
+
+## Progress (2026-05-24)
+
+| Unit | Status | Notes |
+|------|--------|-------|
+| U1 KotorCLI converts | **Landed** | plan 064 |
+| U2 OdyToolFAC | **Landed** | plan 064 |
+| U3 Indoor Builder | **Landed** | plan 065 (headless; in-game walkmesh open) |
+| U4 KotorDiff integrate | **Landed** | shared KotorDiffApp host |
+| U5 NCS disassembly tab | **Landed** | plan 067 |
+| U6 Reference finder Phase 1 | **Landed** | plan 068 — installation search, UTC menu, field paths |
+| U7 Doc sync | **Landed** | odytools-editor-ux.md updated |
 
 ## Summary
 
