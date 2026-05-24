@@ -80,6 +80,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 20. ~~Add OdyPatch.UI to dotnet-desktop CI + fix README build commands~~ **Done 2026-05-23**
 21. ~~Fix release doc OdyPatch paths + README run commands~~ **Done 2026-05-23**
 22. ~~Serialize solution-build CI to fix Andastra.Core deps lock~~ **Done 2026-05-23**
+23. ~~Fix NUGET.md OdyPatch paths + sync CI build notes~~ **Done 2026-05-23**
 
 ## KB Doc Drift (post-C5)
 
@@ -103,6 +104,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 | `.github/workflows/dotnet-desktop.yml` | ~~Missing OdyPatch.UI build~~ | **Resolved 2026-05-23** — plan 029 |
 | `README.md` Building section | ~~`dotnet build src/Tools/` fails (no csproj)~~ | **Resolved 2026-05-23** — plan 029 |
 | `docs/WORKFLOWS.md`, `docs/GITHUB_ACTIONS_SETUP.md` | ~~`src/OdyPatch/` paths~~ | **Resolved 2026-05-23** — plan 030 |
+| `docs/NUGET.md` | ~~`src/OdyPatch/` pack/push paths~~ | **Resolved 2026-05-23** — plan 032 |
 | `.github/workflows/ci.yml` | ~~No full solution build smoke test~~ | **Resolved 2026-05-23** — `solution-build` job |
 | `.github/workflows/ci.yml` | ~~Parallel solution build locks `Andastra.Core.deps.json`~~ | **Resolved 2026-05-23** — plan 031 `-m:1` |
 
