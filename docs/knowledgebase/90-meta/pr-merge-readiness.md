@@ -10,19 +10,20 @@ Ongoing knowledgebase and onboarding maintenance after [PR #2](https://github.co
 | CI on merge commit | All checks **pass** (Solution Build, Test Builds, dotnet-desktop, Lint, Snyk) `[REPO]` |
 | Scope delivered | Evidence-first KB (33 docs), plans 001–048, CI/doc drift remediations 1–39, tool-chain build recovery |
 
-## LFG plans landed (001–050)
+## LFG plans landed (001–051)
 
 | Plan | Topic |
 |------|-------|
 | 001–048 | See [docs/plans/README.md](../../plans/README.md) |
 | 049 | Post-merge meta + utility csproj topology fix |
 | 050 | Investigation archive index + stale path fixes |
+| 051 | OdyPatch NuGet pack CI smoke job |
 
 Full index: [docs/plans/README.md](../../plans/README.md)
 
 ## PR #3 (open)
 
-Follow-up doc maintenance on `docs/feat-knowledgebase-initial` — plans 049–050. `[REPO]`
+Follow-up doc maintenance on `docs/feat-knowledgebase-initial` — plans 049–051. `[REPO]`
 
 ## Local validation (green path)
 
@@ -31,7 +32,7 @@ Follow-up doc maintenance on `docs/feat-knowledgebase-initial` — plans 049–0
 | BioWare + tests | `dotnet build/test` per [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md) | Green `[REPO]` |
 | Full solution | `dotnet build Andastra.sln --framework net9.0 -c Release -m:1` | Green Linux net9.0 `[REPO]` |
 | Tool chain | OdyTools, OdyPatch, OdyPatch.UI, KotorCLI, ConvertKotorGame | Green net9.0 `[REPO]` |
-| OdyPatch NuGet pack | `./helper_scripts/build-nuget.sh` | Green net9.0 Linux (plan 035); **not in CI** `[REPO]` |
+| OdyPatch NuGet pack | `./helper_scripts/build-nuget.sh` | Green net9.0 Linux (plan 035); **CI `nuget-pack-smoke`** (plan 051) `[REPO]` |
 
 ## CI expectations (post-merge)
 
@@ -49,14 +50,14 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - OdyPatch mod-install UX unverified without K1/TSL install — [odypatch-installer-ux.md](../30-product-ux/odypatch-installer-ux.md) `[OPEN]`
 - `30-product-ux/` deep content deferred — stub layer only (plan 038) `[REPO]`
 - AGPLv3 vs OdyPatch LGPL packaging policy — [license-and-compliance.md](../40-operational-risk/license-and-compliance.md) caveat C12 `[OPEN]`
-- NuGet pack not validated in CI `[REPO]`
+- NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
 ## Suggested next slices (051+)
 
 | Plan | Topic |
 |------|-------|
-| 051+ | OdyPatch UX validation, NuGet CI smoke (optional), evidence label pass on remaining thin docs |
+| 052+ | OdyPatch UX validation (needs game install), evidence label pass on remaining thin docs |
 
 ## Repo implications
 
