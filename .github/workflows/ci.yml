@@ -59,3 +59,21 @@ jobs:
 
       - name: Run analyzers
         run: dotnet build src/BioWare/BioWare.csproj --framework net9.0 -c Release --no-restore -p:RunAnalyzersDuringBuild=true
+
+  solution-build:
+    name: Solution Build (net9.0)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore solution
+        run: dotnet restore Andastra.sln
+
+      - name: Build solution
+        run: dotnet build Andastra.sln --framework net9.0 -c Release --no-restore
