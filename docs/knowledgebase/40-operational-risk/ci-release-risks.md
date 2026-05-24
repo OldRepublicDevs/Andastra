@@ -17,6 +17,7 @@ Key docs: `docs/WORKFLOWS.md`, `docs/GITHUB_ACTIONS_SETUP.md`, `docs/AUTOUPDATE.
 | OdyPatch/OdyTools build | Desktop CI builds OdyTools + OdyPatch + OdyPatch.UI + KotorCLI + ConvertKotorGame on Windows (2026-05-23) | [REPO] |
 | No game runtime in CI | K1/TSL install not exercised in standard CI | [REPO] |
 | Full solution build | `ci.yml` `solution-build` job — `Andastra.sln` net9.0 on ubuntu with `-m:1` to avoid parallel deps.json locks on shared `Andastra.Core` outputs (2026-05-23) | [REPO] |
+| OdyPatch NuGet pack | `ci.yml` `nuget-pack-smoke` job — `bash helper_scripts/build-nuget.sh` on ubuntu net9.0; no publish (plan 051) | [REPO] |
 | Windows desktop CI | `dotnet-desktop.yml` — BioWare tests + tool builds (Debug/Release matrix); may queue on busy Windows runners | [REPO] |
 
 **`[SYNTH]`** CI green on main does not imply agent "green path" (BioWare + tests) without log inspection. Re-check `gh pr checks` on latest HEAD before merge — see [pr-merge-readiness.md](../90-meta/pr-merge-readiness.md) (plan 046). `[REPO]`
@@ -31,7 +32,7 @@ Key docs: `docs/WORKFLOWS.md`, `docs/GITHUB_ACTIONS_SETUP.md`, `docs/AUTOUPDATE.
 
 Internal package publishing docs: `docs/NUGET.md`, `docs/NUGET_SETUP.md`, `docs/MANUAL_PUSH_INSTRUCTIONS.md` `[REPO]`
 
-OdyPatch pack/push via `helper_scripts/build-nuget.{sh,ps1}` — green on Linux net9.0 after SPDX fix (plan 035). TSLPatcher engine is in-repo (`BioWare.TSLPatcher`), not a separate NuGet package. `[REPO]`
+OdyPatch pack/push via `helper_scripts/build-nuget.{sh,ps1}` — green on Linux net9.0 after SPDX fix (plan 035). CI validates pack via `nuget-pack-smoke` job (plan 051); publish remains manual. TSLPatcher engine is in-repo (`BioWare.TSLPatcher`), not a separate NuGet package. `[REPO]`
 
 ## Repo Implications
 
