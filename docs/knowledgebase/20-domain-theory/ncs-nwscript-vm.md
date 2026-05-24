@@ -37,5 +37,5 @@ Use unified documentation with inline difference notes per `.cursorrules`.
 ## Repo Implications
 
 - Bytecode or opcode changes require roundtrip tests in Andastra.Tests.
-- Decompiler port status docs (`docs/NCSDecomp_*.md`) reference legacy `CSharpKOTOR` paths — verify against `src/BioWare/Resource/Formats/NCS/`.
+- Decompiler investigation docs (`docs/NCSDecomp_*.md`) were updated to BioWare paths in plan 011 (2026-05-23). Prefer `src/BioWare/Resource/Formats/NCS/Decomp/` as source of truth.
 - Script defs generation flows through NcsTool.ps1 per agent policy, not ad-hoc scripts.
