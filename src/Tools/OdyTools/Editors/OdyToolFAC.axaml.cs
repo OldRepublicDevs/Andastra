@@ -464,6 +464,17 @@ namespace OdyTools.Editors
             int index = _factionList.SelectedIndex;
             _fac.Factions.RemoveAt(index);
             _fac.Reputations.RemoveAll(r => r.FactionId1 == index || r.FactionId2 == index);
+            foreach (FACReputation rep in _fac.Reputations)
+            {
+                if (rep.FactionId1 > index)
+                {
+                    rep.FactionId1--;
+                }
+                if (rep.FactionId2 > index)
+                {
+                    rep.FactionId2--;
+                }
+            }
             RefreshLists();
             ClearSelectionDetails();
             UpdateStatus();
