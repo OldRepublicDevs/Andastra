@@ -6,7 +6,7 @@ Mod patch semantics as implemented in BioWare and exposed via OdyPatch.
 
 TSLPatcher logic modules live under **`src/BioWare/`** (TSLPatcher namespace/folders). `[REPO]`
 
-OdyPatch (`src/Tools/OdyPatch/`) provides installer UX compatible with TSLPatcher mod packages. `[REPO]`
+OdyPatch (`src/Tools/OdyPatch/`) is the **runnable host** (GUI + CLI via `Program.cs`). Avalonia UI lives in **OdyPatch.UI** (`src/Tools/OdyPatch.UI/`, library csproj). Patch semantics remain in BioWare. `[REPO]` (plans 044–045)
 
 ## Capabilities (README / tool docs)
 
@@ -33,6 +33,6 @@ OdyPatch compiles on net9.0 (2026-05-23). Runtime mod-install UX still requires 
 
 ## Repo Implications
 
-- Patch semantic bugs are BioWare-layer fixes; UI issues are OdyPatch.UI.
+- Patch semantic bugs are BioWare-layer fixes; UI flow bugs are OdyPatch.UI; host/CLI wiring is OdyPatch (`Program.cs`).
 - Do not reference HoloPatcher in new docs — OdyPatch is the supported installer name.
 - Adding patch features requires RE against original TSLPatcher behavior where fidelity matters.
