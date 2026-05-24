@@ -76,6 +76,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 16. ~~Fix wiki format-page HoloPatcher links + AGENTS tool coverage~~ **Done 2026-05-23**
 17. ~~Fix authority-map wiki/Home drift + standalone editor contributing guidance~~ **Done 2026-05-23**
 18. ~~Add ConvertKotorGame to dotnet-desktop CI + sync NCS/dev-setup docs~~ **Done 2026-05-23**
+19. ~~Sync QUICKSTART and build ladder tool chain post-027~~ **Done 2026-05-23**
 
 ## KB Doc Drift (post-C5)
 
