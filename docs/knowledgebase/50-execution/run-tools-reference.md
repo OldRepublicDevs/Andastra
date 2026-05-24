@@ -89,4 +89,4 @@ Produces `OdyPatch.*.nupkg` under `src/Tools/OdyPatch/bin/Release/` (Linux uses 
 
 - OdyPatch compile path is green; runtime UX validation still needs a K1/TSL install.
 - Prefer NSSComp/NCSDecomp for script pipeline validation in CI/agent loops.
-- Product UX layer (`30-product-ux/`) remains deferred for content scope, not compile blockers.
+- Product UX layer (`30-product-ux/`) stub seeded (plan 038); runtime validation still `[OPEN]`.

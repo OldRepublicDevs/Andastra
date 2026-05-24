@@ -86,6 +86,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 26. ~~Fix OdyPatch NuGet pack SPDX license expression~~ **Done 2026-05-23**
 27. ~~Sync PR merge-readiness doc + PR #2 body for plans 033–035~~ **Done 2026-05-23**
 28. ~~Sync AGENTS/QUICKSTART/dev-setup with NuGet pack toolchain~~ **Done 2026-05-23**
+29. ~~Seed `30-product-ux/` KB stub layer~~ **Done 2026-05-23**
 
 ## KB Doc Drift (post-C5)
 
@@ -115,6 +116,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 | `OdyPatch.csproj` | ~~Deprecated SPDX `LGPL-3.0` blocks `dotnet pack` (NU5032)~~ | **Resolved 2026-05-23** — plan 035 |
 | PR #2 body | ~~Stale plans table (001–032) and NUGET/TSLPatcher.Core gap claims~~ | **Resolved 2026-05-23** — plan 036 |
 | `AGENTS.md`, `QUICKSTART.md`, `dev-environment-setup.md` | ~~Missing NuGet pack / helper_scripts onboarding~~ | **Resolved 2026-05-23** — plan 037 |
+| `30-product-ux/` KB layer | ~~Deferred entirely (plan 001)~~ | **Stub seeded 2026-05-23** — plan 038 |
 | `.github/workflows/ci.yml` | ~~No full solution build smoke test~~ | **Resolved 2026-05-23** — `solution-build` job |
 | `.github/workflows/ci.yml` | ~~Parallel solution build locks `Andastra.Core.deps.json`~~ | **Resolved 2026-05-23** — plan 031 `-m:1` |
 
