@@ -32,7 +32,7 @@ Key docs: `docs/WORKFLOWS.md`, `docs/GITHUB_ACTIONS_SETUP.md`, `docs/AUTOUPDATE.
 
 Internal package publishing docs: `docs/NUGET.md`, `docs/NUGET_SETUP.md`, `docs/MANUAL_PUSH_INSTRUCTIONS.md` `[REPO]`
 
-OdyPatch pack/push via `helper_scripts/build-nuget.{sh,ps1}` — green on Linux net9.0 after SPDX fix (plan 035). CI validates pack via `nuget-pack-smoke` job (plan 051); publish remains manual. TSLPatcher engine is in-repo (`BioWare.TSLPatcher`), not a separate NuGet package. `[REPO]`
+OdyPatch pack/push via `helper_scripts/build-nuget.{sh,ps1}` — green on Linux net9.0. CI `nuget-pack-smoke` validates pack, `--help`, and `--validate` fixture (plans 051/053/055); publish remains manual. `[REPO]`
 
 ## Repo Implications
 
