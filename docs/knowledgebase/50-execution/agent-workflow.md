@@ -45,7 +45,7 @@ User rules: **only commit when user explicitly asks** — otherwise propose comm
 1. Run narrowest build/test ladder — [build-and-test-ladder.md](build-and-test-ladder.md)
 2. Fix compiler/analyzer errors in touched projects
 3. Mark implementation status in response
-4. Tooling/doc slices: check [pr-merge-readiness.md](../90-meta/pr-merge-readiness.md) for PR #2 scope
+4. Tooling/doc slices: check [pr-merge-readiness.md](../90-meta/pr-merge-readiness.md) (KB maintenance tracker)
 
 Optional when touching OdyPatch packaging: `./helper_scripts/build-nuget.sh` (Linux net9.0). `[REPO]`
 
