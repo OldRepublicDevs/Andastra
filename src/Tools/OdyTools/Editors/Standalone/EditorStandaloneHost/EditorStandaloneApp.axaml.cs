@@ -222,6 +222,7 @@ namespace OdyTools.Editors.Standalone.EditorStandaloneHost
                 case "bwm": return new OdyTools.Editors.OdyToolBWM(parent, installation);
                 case "dlg": return new OdyTools.Editors.DLG.OdyToolDLG(parent, installation);
                 case "erf": return new OdyTools.Editors.OdyToolERF(parent, installation);
+                case "fac": return new OdyTools.Editors.OdyToolFAC(parent, installation);
                 case "gff": return new OdyTools.Editors.OdyToolGFF(parent, installation);
                 case "git": return new OdyTools.Editors.OdyToolGIT(parent, installation);
                 case "gui": return new OdyTools.Editors.GUI.OdyToolGUI(parent, installation);

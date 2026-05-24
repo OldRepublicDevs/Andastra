@@ -352,11 +352,21 @@ namespace KotorCLI.Commands
         {
             try
             {
+                if (string.IsNullOrEmpty(input) || !File.Exists(input))
+                {
+                    logger.Error("Input file not found.");
+                    return 1;
+                }
                 if (string.IsNullOrEmpty(output))
                 {
                     output = Path.ChangeExtension(input, ".ssf");
                 }
                 Conversions.ConvertXmlToSsf(input, output);
+                if (!File.Exists(output))
+                {
+                    logger.Error("Conversion completed but output file was not created.");
+                    return 1;
+                }
                 logger.Info($"Converted {input} to {output}");
                 return 0;
             }
