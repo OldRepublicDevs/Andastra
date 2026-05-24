@@ -63,6 +63,13 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 3. ~~Add README errata or update README architecture section~~ **Done 2026-05-23**
 4. ~~Refresh wiki Home for Andastra/OdyPatch branding~~ **Done 2026-05-23** (vendor corpus cleanup deferred)
 5. ~~Fix OdyTools compile (method-group → delegate wiring)~~ **Done 2026-05-23** — unblocks OdyPatch chain
+6. ~~Replace placeholder `dotnet-desktop.yml` workflow~~ **Done 2026-05-23** — Windows BioWare + OdyTools + OdyPatch build
+
+## CI Workflow Drift
+
+| Workflow | Issue | Status |
+|----------|-------|--------|
+| `.github/workflows/dotnet-desktop.yml` | ~~Microsoft template placeholders / broken MSIX steps~~ | **Resolved 2026-05-23** |
 
 ## Build Health (C5)
 

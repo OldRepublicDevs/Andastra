@@ -41,7 +41,7 @@ dotnet run --project src/Tools/NCSDecomp.CLI/NCSDecomp.CLI.csproj --framework ne
 dotnet build src/Andastra/Game/Andastra.Game.csproj --framework net9.0
 ```
 
-### Step 7 — Full solution (expect OdyTools failure until fixed)
+### Step 7 — Full solution (may fail on missing stubs or KotorCLI)
 
 ```bash
 dotnet build Andastra.sln --configuration Release
@@ -56,11 +56,18 @@ dotnet build src/BioWare/BioWare.csproj --configuration Release -p:RunAnalyzersD
 
 ## Skip Unless Fixing
 
-- `OdyTools.csproj` / `OdyPatch` — known compile errors `[REPO]`
 - `KotorCLI` — startup crash `[REPO]`
+- Missing solution stubs (`MonoGameFPS`, `StrideGameFPS`) — restore may fail until stubs exist `[REPO]`
+
+## Tool chain (when relevant)
+
+```bash
+dotnet build src/Tools/OdyTools/OdyTools.csproj --framework net9.0
+dotnet build src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
+```
 
 ## Repo Implications
 
 - Vertical-slice validation should pass Steps 1–4 for format/script changes minimum.
-- Full solution failure is expected on current branch — do not misreport as environment issue.
+- Full solution may still fail on orphan projects — do not misreport as environment issue.
 - C# changes in net48-only code paths need explicit net48 build on Windows CI or local Windows.
