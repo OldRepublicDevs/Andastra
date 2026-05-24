@@ -69,6 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\BioWare\BioWare.csproj" />
+    <ProjectReference Include="..\KotorDiff\KotorDiff.csproj" />
   </ItemGroup>
   <!-- net48: binding redirects so Avalonia loads System.Memory and related assemblies -->
   <PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
