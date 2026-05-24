@@ -128,15 +128,16 @@ Logical layers map to folders inside a small set of assemblies — not separate 
 ```bash
 # Clone the repository
 git clone <repository-url>
+cd Andastra
 
-# Build only the runtime
-dotnet build src/Andastra/Runtime/
+# Recommended green path (Linux: pass --framework net9.0)
+dotnet build src/BioWare/BioWare.csproj --framework net9.0
 
-# Build only the tools
-dotnet build src/Tools/
+# Full solution
+dotnet build Andastra.sln --framework net9.0
 
-# Build with release configuration
-dotnet build Andastra.sln --configuration Release
+# Release configuration
+dotnet build Andastra.sln --configuration Release --framework net9.0
 ```
 
 ## Running
