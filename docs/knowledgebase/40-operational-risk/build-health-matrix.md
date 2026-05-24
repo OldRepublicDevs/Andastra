@@ -24,12 +24,13 @@ dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
 | **OdyPatch** / **OdyPatch.UI** | Green | OdyTools reference restored 2026-05-23 |
 | Standalone OdyTool editors | Green | Shared props include DialogHelper 2026-05-23 |
 | OdyTools.Tests | Green when OdyTools builds | Depends on parent |
+| **KotorCLI** | Green | System.CommandLine 2.0 Option API fixed 2026-05-23 |
 
 ## Red / Broken
 
 | Project | Status | Error class |
 |---------|--------|-------------|
-| **KotorCLI** | Red | System.CommandLine API bug — crashes on startup `[REPO]` |
+| *(none in tool chain)* | — | Full solution may fail on Stride assembly processor on Linux `[REPO]` |
 
 ## Full Solution
 
@@ -37,7 +38,7 @@ dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
 dotnet build Andastra.sln
 ```
 
-May still fail on missing solution projects (MonoGameFPS stub) or KotorCLI. OdyTools/OdyPatch chain is green as of 2026-05-23. `[REPO]`
+May still fail on Stride assembly processor on Linux when building game/runtime projects. Tool chain (OdyTools, OdyPatch, KotorCLI) is green on net9.0 as of 2026-05-23. `[REPO]`
 
 ## Missing / Orphan Artifacts
 
