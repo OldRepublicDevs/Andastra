@@ -1,0 +1,56 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="OdyTools.Editors.OdyToolFAC"
+        Title="Faction Editor"
+        MinWidth="720" MinHeight="520"
+        Width="900" Height="600"
+        WindowStartupLocation="CenterScreen"
+        RequestedThemeVariant="Light">
+  <DockPanel LastChildFill="True">
+    <Menu DockPanel.Dock="Top" Name="menuBar">
+      <MenuItem Header="_File">
+        <MenuItem Header="_New" Name="actionNew" HotKey="Ctrl+N"/>
+        <MenuItem Header="_Open" Name="actionOpen" HotKey="Ctrl+O"/>
+        <MenuItem Header="_Save" Name="actionSave" HotKey="Ctrl+S"/>
+        <MenuItem Header="Save _As" Name="actionSaveAs"/>
+        <Separator/>
+        <MenuItem Header="_Revert" Name="actionRevert"/>
+        <Separator/>
+        <MenuItem Header="E_xit" Name="actionExit"/>
+      </MenuItem>
+      <MenuItem Header="_Edit">
+        <MenuItem Header="_Undo" Name="actionUndo"/>
+        <MenuItem Header="_Redo" Name="actionRedo"/>
+      </MenuItem>
+    </Menu>
+    <TextBlock DockPanel.Dock="Bottom" Name="statusText" Text="Faction" Margin="4,2"/>
+    <Grid ColumnDefinitions="*,*" Margin="8">
+      <StackPanel Grid.Column="0" Margin="0,0,4,0">
+        <TextBlock Text="Factions" FontWeight="Bold" Margin="0,0,0,4"/>
+        <ListBox Name="factionList" Height="220"/>
+        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+          <Button Name="addFactionButton" Content="Add Faction" Margin="0,0,4,0"/>
+          <Button Name="removeFactionButton" Content="Remove"/>
+        </StackPanel>
+        <TextBlock Text="Faction Details" FontWeight="Bold" Margin="0,8,0,4"/>
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto">
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" VerticalAlignment="Center" Margin="0,2"/>
+          <TextBox Grid.Row="0" Grid.Column="1" Name="factionNameEdit" Margin="4,2"/>
+          <TextBlock Grid.Row="1" Grid.Column="0" Text="Parent ID:" VerticalAlignment="Center" Margin="0,2"/>
+          <NumericUpDown Grid.Row="1" Grid.Column="1" Name="parentIdSpin" Minimum="0" Maximum="1000" Margin="4,2"/>
+          <CheckBox Grid.Row="2" Grid.Column="1" Name="globalEffectCheck" Content="Global Effect" Margin="4,2"/>
+        </Grid>
+      </StackPanel>
+      <StackPanel Grid.Column="1" Margin="4,0,0,0">
+        <TextBlock Text="Reputations" FontWeight="Bold" Margin="0,0,0,4"/>
+        <ListBox Name="reputationList" Height="220"/>
+        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+          <Button Name="addReputationButton" Content="Add Reputation" Margin="0,0,4,0"/>
+          <Button Name="removeReputationButton" Content="Remove"/>
+        </StackPanel>
+        <TextBlock Text="Reputation Value (0-100)" FontWeight="Bold" Margin="0,8,0,4"/>
+        <NumericUpDown Name="reputationValueSpin" Minimum="0" Maximum="100" Width="120" HorizontalAlignment="Left"/>
+      </StackPanel>
+    </Grid>
+  </DockPanel>
+</Window>
