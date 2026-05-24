@@ -32,11 +32,7 @@ Additional settings parsed via `GameSettingsExtensions.ParseCliArgs`. `[REPO]`
 - Valid KOTOR I and/or II installation on disk for gameplay `[REPO]`
 - Graphics backend dependencies (MonoGame/Stride) per platform
 
-## Obsolete Documentation Warning
-
-**Do not follow** `docs/MONOGAME_RUNNING.md` verbatim — references obsolete `OdysseyRuntime` paths. `[REPO]`
-
-Use this KB doc + current `Program.cs` instead.
+See also [MONOGAME_RUNNING.md](../../MONOGAME_RUNNING.md) for MonoGame-oriented quick start (aligned with this doc as of 2026-05-23).
 
 ## Launcher Flow
 

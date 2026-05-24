@@ -1,76 +1,77 @@
-# Running Odyssey Game (MonoGame)
+# Running Andastra Game (MonoGame)
+
+> **Authority:** For the current CLI surface and launcher flow, see [run-game-runtime.md](knowledgebase/50-execution/run-game-runtime.md) in the knowledgebase.
 
 ## Quick Start
 
-The correct command to run the Odyssey game is:
+```bash
+dotnet run --project src/Andastra/Game/Andastra.Game.csproj --framework net9.0 -- --k1 --path "/path/to/KOTOR" --no-launcher
+```
+
+On Windows PowerShell, use backslashes in paths if preferred:
 
 ```powershell
-dotnet run --project src\OdysseyRuntime\Odyssey.Game\Odyssey.Game.csproj -- --k1 --path "C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic" --module end_m01aa
+dotnet run --project src\Andastra\Game\Andastra.Game.csproj --framework net9.0 -- --k1 --path "C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic"
 ```
 
 ## Important Notes
 
 ### Correct Project File
 
-- ✅ **Use**: `src\OdysseyRuntime\Odyssey.Game\Odyssey.Game.csproj` (the executable)
-- ❌ **Don't use**: `src\OdysseyRuntime\Odyssey.MonoGame\Odyssey.MonoGame.csproj` (it's a library)
+- **Use:** `src/Andastra/Game/Andastra.Game.csproj` — main game executable and launcher
+- **Do not use:** obsolete `src/OdysseyRuntime/Odyssey.Game/` paths from pre-Andastra layouts
 
-`Odyssey.Game` is the entry point application that contains `Program.cs` and command-line argument parsing. `Odyssey.MonoGame` is a library project that provides MonoGame rendering adapters.
+MonoGame and Stride rendering backends live under `src/Andastra/Game/Graphics/` inside the `Andastra.Game` project.
 
 ### Command-Line Arguments
 
-The game supports the following command-line arguments:
+See `GameSettingsExtensions` / `Program.cs` for the full set. Common flags:
 
 #### Game Selection
-- `--k1`, `-k1` - Run KOTOR 1 (default)
-- `--k2`, `-k2`, `--tsl` - Run KOTOR 2 (TSL)
 
-#### Paths
-- `--path <path>`, `-p <path>` - Path to KOTOR installation directory
-- `--module <name>`, `-m <name>` - Start at specific module (e.g., `end_m01aa`)
-- `--load <save>`, `-l <save>` - Load save game file
+- `--k1`, `-k1` — Run KOTOR 1 (Odyssey default)
+- `--k2`, `-k2`, `--tsl` — Run KOTOR 2 (TSL)
 
-#### Display
-- `--width <n>`, `-w <n>` - Window width (default: 1280)
-- `--height <n>`, `-h <n>` - Window height (default: 720)
-- `--fullscreen`, `-f` - Run in fullscreen mode
+#### Paths and Launcher
 
-#### Other Options
-- `--debug`, `-d` - Enable debug rendering
-- `--no-intro` - Skip intro videos (default: enabled)
-- `--help`, `-?` - Show help message
+- `--path <path>`, `-p <path>` — Path to KOTOR installation directory
+- `--game` — Select game (skips launcher when specified)
+- `--no-launcher`, `-n` — Skip Avalonia launcher dialog
+
+#### Display and Debug
+
+- `--width`, `--height`, `--fullscreen`, `--debug` — when supported by current `GameSettings` parsing
+
+#### Help
+
+- `--help`, `-?` — Show help message
 
 ### Examples
 
-```powershell
-# Run KOTOR 1 with default settings (auto-detects installation)
-dotnet run --project src\OdysseyRuntime\Odyssey.Game\Odyssey.Game.csproj -- --k1
+```bash
+# Run with launcher GUI (default)
+dotnet run --project src/Andastra/Game/Andastra.Game.csproj --framework net9.0
 
-# Run KOTOR 2 with custom path and module
-dotnet run --project src\OdysseyRuntime\Odyssey.Game\Odyssey.Game.csproj -- --k2 --path "C:\Games\KOTOR2" --module endar_spire
-
-# Run in fullscreen with debug rendering
-dotnet run --project src\OdysseyRuntime\Odyssey.Game\Odyssey.Game.csproj -- --k1 --fullscreen --debug
+# Run KOTOR 1 with explicit path, no launcher
+dotnet run --project src/Andastra/Game/Andastra.Game.csproj --framework net9.0 -- --k1 --path "/games/KOTOR" --no-launcher
 
 # Show help
-dotnet run --project src\OdysseyRuntime\Odyssey.Game\Odyssey.Game.csproj -- --help
+dotnet run --project src/Andastra/Game/Andastra.Game.csproj --framework net9.0 -- --help
 ```
 
 ### Path Detection
 
-If you don't specify `--path`, the game will attempt to auto-detect the KOTOR installation path by checking common Steam and retail installation locations.
+If you do not specify `--path`, the launcher or game settings logic may attempt to auto-detect installation paths. A valid local K1/TSL installation is required for gameplay.
 
 ### Building First
 
-Make sure to build the project before running:
-
-```powershell
-dotnet build src\OdysseyRuntime\Odyssey.Game\Odyssey.Game.csproj
+```bash
+dotnet build src/Andastra/Game/Andastra.Game.csproj --framework net9.0
 ```
 
-Or use the packaging scripts which handle building:
+Or build the recommended green path:
 
-```powershell
-.\scripts\Build-MonoGame.ps1
+```bash
+dotnet build src/BioWare/BioWare.csproj --framework net9.0
+dotnet build src/Andastra/Game/Andastra.Game.csproj --framework net9.0
 ```
-

@@ -13,10 +13,10 @@ Stale or broken documentation tracked for remediation.
 
 | Document | Issue | Prefer instead |
 |----------|-------|----------------|
-| `docs/MONOGAME_RUNNING.md` | `src/OdysseyRuntime/Odyssey.Game/` | `src/Andastra/Game/Andastra.Game.csproj` |
+| `docs/MONOGAME_RUNNING.md` | ~~`src/OdysseyRuntime/Odyssey.Game/`~~ | `src/Andastra/Game/Andastra.Game.csproj` | **Resolved 2026-05-23** |
 | `docs/NCSDecomp_*.md` (multiple) | `src/CSharpKOTOR/` | `src/BioWare/` |
 | `docs/REVERSE_ENGINEERING_PROJECT_SUMMARY.md` | KotOR.js/TypeScript deliverables | This KB + current .NET `src/` |
-| `tests/BioWare.Tests/Performance/Performance.csproj` | References `CSharpKOTOR.Tests.csproj` | Update or remove |
+| `tests/BioWare.Tests/Performance/Performance.csproj` | ~~References `CSharpKOTOR.Tests.csproj`~~ | Removed stale reference | **Resolved 2026-05-23** |
 
 `[REPO]`
 
