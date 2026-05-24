@@ -4,9 +4,9 @@ Merge-readiness tracker for branch `docs/feat-knowledgebase-initial` and [PR #2]
 
 ## Scope
 
-Evidence-first knowledgebase, onboarding docs, CI/doc drift remediation (plans 001–038), and full tool-chain + solution build recovery.
+Evidence-first knowledgebase, onboarding docs, CI/doc drift remediation (plans 001–039), and full tool-chain + solution build recovery.
 
-## Plans landed (001–038)
+## Plans landed (001–039)
 
 | Plan | Topic |
 |------|-------|
@@ -20,6 +20,7 @@ Evidence-first knowledgebase, onboarding docs, CI/doc drift remediation (plans 0
 | 036 | PR merge-readiness doc + PR #2 body refresh |
 | 037 | Sync AGENTS/QUICKSTART/dev-setup with NuGet toolchain |
 | 038 | Seed `30-product-ux/` stub layer |
+| 039 | Fix OdyPatch README naming and layout drift |
 
 Full plan files: `docs/plans/2026-05-23-NNN-*.md`
 

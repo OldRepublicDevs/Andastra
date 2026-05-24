@@ -6,6 +6,7 @@ Mod installation workflow for OdyPatch and OdyPatch.UI.
 
 | Surface | Entry | Notes |
 |---------|-------|-------|
+| **Tool README** | [src/Tools/OdyPatch/README.md](../../../src/Tools/OdyPatch/README.md) | Build/run entry points `[REPO]` |
 | **OdyPatch.UI** | `dotnet run --project src/Tools/OdyPatch.UI/OdyPatch.UI.csproj --framework net9.0` | Avalonia GUI — primary end-user path `[REPO]` |
 | **OdyPatch host** | `dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0` | Host library / CLI-capable entry `[REPO]` |
 | **NuGet consumer** | `OdyPatch` package — see [NUGET.md](../../NUGET.md) | Packable library; UI in separate csproj `[REPO]` |
@@ -24,10 +25,6 @@ Mod installation workflow for OdyPatch and OdyPatch.UI.
 | End-to-end mod install against real K1/TSL install | **Unverified** `[OPEN]` |
 | CLI `--install` parity with legacy TSLPatcher | **Unverified** `[OPEN]` |
 | Autoupdate (NetSparkle) UX | Documented in `docs/AUTOUPDATE.md`; not exercised in CI `[OPEN]` |
-
-## Known doc drift
-
-- `src/Tools/OdyPatch/README.md` still references `TSLPatcher.Core` naming from Python port era — implementation is `BioWare.TSLPatcher`. `[REPO]`/`[OPEN]`
 
 ## Repo implications
 
