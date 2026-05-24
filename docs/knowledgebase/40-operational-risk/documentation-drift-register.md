@@ -68,6 +68,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 8. ~~Sync onboarding docs (QUICKSTART, engine_roadmap)~~ **Done 2026-05-23**
 9. ~~Fix KotorCLI System.CommandLine 2.0 Option API~~ **Done 2026-05-23**
 10. ~~Sync post-018 onboarding/AGENTS + KotorCLI desktop CI~~ **Done 2026-05-23**
+11. ~~Fix OdyTools standalone obj/bin collision for parallel solution builds~~ **Done 2026-05-23**
 
 ## KB Doc Drift (post-C5)
 

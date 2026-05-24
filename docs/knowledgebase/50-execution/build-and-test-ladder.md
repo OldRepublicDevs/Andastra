@@ -41,11 +41,19 @@ dotnet run --project src/Tools/NCSDecomp.CLI/NCSDecomp.CLI.csproj --framework ne
 dotnet build src/Andastra/Game/Andastra.Game.csproj --framework net9.0
 ```
 
-### Step 7 — Full solution (may fail on Stride assembly processor on Linux)
+### Step 7 — Full solution
 
 ```bash
-dotnet build Andastra.sln --configuration Release
-dotnet test Andastra.sln --verbosity normal
+dotnet build Andastra.sln --framework net9.0
+```
+
+Succeeds on Linux net9.0 after standalone obj/bin isolation (2026-05-23). `[REPO]`
+
+Release + full test pass optional:
+
+```bash
+dotnet build Andastra.sln --configuration Release --framework net9.0
+dotnet test Andastra.sln --framework net9.0 --verbosity normal
 ```
 
 ## Analyzers
@@ -56,7 +64,7 @@ dotnet build src/BioWare/BioWare.csproj --configuration Release -p:RunAnalyzersD
 
 ## Skip Unless Fixing
 
-- Full solution Stride assembly processor on Linux `[REPO]`
+- Isolated Stride assembly processor failures on Linux game projects `[REPO]`
 - Missing solution stubs (`MonoGameFPS`, `StrideGameFPS`) — not in solution; restore succeeds `[REPO]`
 
 ## Tool chain (when relevant)
@@ -69,5 +77,5 @@ dotnet build src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
 ## Repo Implications
 
 - Vertical-slice validation should pass Steps 1–4 for format/script changes minimum.
-- Full solution may still fail on orphan projects — do not misreport as environment issue.
+- Full solution net9.0 build succeeds on Linux after plan 020 standalone obj isolation.
 - C# changes in net48-only code paths need explicit net48 build on Windows CI or local Windows.

@@ -30,7 +30,7 @@ dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
 
 | Project | Status | Error class |
 |---------|--------|-------------|
-| *(none in tool chain)* | — | Full solution may fail on Stride assembly processor on Linux `[REPO]` |
+| *(none in tool chain)* | — | Stride assembly processor may fail on isolated Linux game builds `[REPO]` |
 
 ## Full Solution
 
@@ -38,7 +38,7 @@ dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
 dotnet build Andastra.sln
 ```
 
-May still fail on Stride assembly processor on Linux when building game/runtime projects. Tool chain (OdyTools, OdyPatch, KotorCLI) is green on net9.0 as of 2026-05-23. `[REPO]`
+May fail on Stride assembly processor on Linux when building game/runtime projects in isolation; full `Andastra.sln` net9.0 build succeeds after standalone obj isolation (2026-05-23). Tool chain (OdyTools, OdyPatch, KotorCLI) is green on net9.0. `[REPO]`
 
 ## Missing / Orphan Artifacts
 

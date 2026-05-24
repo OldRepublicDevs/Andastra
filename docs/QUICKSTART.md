@@ -26,7 +26,7 @@ dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0
 dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
 ```
 
-Full solution build may fail on Stride assembly processor on Linux. Tool chain (OdyTools, OdyPatch, KotorCLI) compiles on net9.0. See [build-health-matrix](knowledgebase/40-operational-risk/build-health-matrix.md).
+Full solution build (`dotnet build Andastra.sln --framework net9.0`) succeeds on Linux. Tool chain (OdyTools, OdyPatch, KotorCLI) compiles on net9.0. See [build-health-matrix](knowledgebase/40-operational-risk/build-health-matrix.md).
 
 ## Run the Game
 
