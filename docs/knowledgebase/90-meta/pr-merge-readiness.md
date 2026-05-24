@@ -10,16 +10,19 @@ Ongoing knowledgebase and onboarding maintenance after [PR #2](https://github.co
 | CI on merge commit | All checks **pass** (Solution Build, Test Builds, dotnet-desktop, Lint, Snyk) `[REPO]` |
 | Scope delivered | Evidence-first KB (33 docs), plans 001–048, CI/doc drift remediations 1–39, tool-chain build recovery |
 
-## LFG plans landed (001–048)
+## LFG plans landed (001–050)
 
 | Plan | Topic |
 |------|-------|
-| 001–029 | KB initial, CI recovery, compile fixes, onboarding |
-| 030–035 | Release docs, solution-build `-m:1`, NuGet toolchain |
-| 036–043 | PR merge-readiness, product UX stub, agent workflow, definition-of-done |
-| 044–048 | OdyPatch host model, plans index, operational-risk sync, topology/README |
+| 001–048 | See [docs/plans/README.md](../../plans/README.md) |
+| 049 | Post-merge meta + utility csproj topology fix |
+| 050 | Investigation archive index + stale path fixes |
 
 Full index: [docs/plans/README.md](../../plans/README.md)
+
+## PR #3 (open)
+
+Follow-up doc maintenance on `docs/feat-knowledgebase-initial` — plans 049–050. `[REPO]`
 
 ## Local validation (green path)
 
@@ -49,12 +52,11 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack not validated in CI `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (049+)
+## Suggested next slices (051+)
 
 | Plan | Topic |
 |------|-------|
-| 049 | Post-merge meta + utility csproj topology fix |
-| 050+ | OdyPatch UX validation, tier-4 docs audit, NuGet CI smoke (optional) |
+| 051+ | OdyPatch UX validation, NuGet CI smoke (optional), evidence label pass on remaining thin docs |
 
 ## Repo implications
 
