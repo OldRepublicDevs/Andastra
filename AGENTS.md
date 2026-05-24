@@ -24,7 +24,7 @@ Standard commands per `README.md`. Key notes:
 
 - **NSSComp** (NWScript compiler/decompiler): `dotnet run --project src/Tools/NSSComp/NSSComp.csproj --framework net9.0 -- --help`
 - **NCSDecomp.CLI**: `dotnet run --project src/Tools/NCSDecomp.CLI/NCSDecomp.CLI.csproj --framework net9.0 -- --help`
-- **KotorCLI**: Has a pre-existing System.CommandLine API bug; crashes on startup.
+- **KotorCLI**: `dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- --help`
 
 ### AgentDecompile Integration
 
