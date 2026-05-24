@@ -21,7 +21,8 @@ dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
 | NSSComp | Green | CLI `--help` works |
 | NCSDecomp.CLI | Green | CLI `--help` works |
 | **OdyTools** (AIO) | Green | Delegate wiring fixed 2026-05-23 |
-| **OdyPatch** / **OdyPatch.UI** | Green | OdyTools reference restored 2026-05-23 |
+| **OdyPatch** (host) | Green | Runnable exe — `dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj` (plan 044) |
+| **OdyPatch.UI** (library) | Green | Build only — `OutputType=Library`; not directly runnable |
 | **OdyPatch NuGet pack** | Green | SPDX `LGPL-3.0-only`; `helper_scripts/build-nuget.sh` on net9.0 Linux (plan 035) |
 | Standalone OdyTool editors | Green | Shared props include DialogHelper 2026-05-23 |
 | OdyTools.Tests | Green when OdyTools builds | Depends on parent |
@@ -60,4 +61,4 @@ Green on Linux net9.0 after standalone obj isolation (plan 020). CI validates vi
 
 - Agents default to BioWare + tests ladder — see [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md).
 - Tooling PRs should state which tool csproj was built.
-- OdyPatch mod-installer UX validation is unblocked at compile time; runtime UX still unverified.
+- OdyPatch mod-installer UX validation is unblocked at compile time; runtime UX still unverified. Run via OdyPatch host, not OdyPatch.UI csproj. `[REPO]`

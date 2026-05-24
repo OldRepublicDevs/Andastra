@@ -19,7 +19,7 @@ Key docs: `docs/WORKFLOWS.md`, `docs/GITHUB_ACTIONS_SETUP.md`, `docs/AUTOUPDATE.
 | Full solution build | `ci.yml` `solution-build` job — `Andastra.sln` net9.0 on ubuntu with `-m:1` to avoid parallel deps.json locks on shared `Andastra.Core` outputs (2026-05-23) | [REPO] |
 | Windows desktop CI | `dotnet-desktop.yml` — BioWare tests + tool builds (Debug/Release matrix); may queue on busy Windows runners | [REPO] |
 
-**`[SYNTH]`** CI green on main does not imply agent "green path" (BioWare + tests) without log inspection.
+**`[SYNTH]`** CI green on main does not imply agent "green path" (BioWare + tests) without log inspection. Re-check `gh pr checks` on latest HEAD before merge — see [pr-merge-readiness.md](../90-meta/pr-merge-readiness.md) (plan 046). `[REPO]`
 
 ## Release / Autoupdate
 
