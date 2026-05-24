@@ -8,7 +8,7 @@ using Avalonia.Styling;
 using OdyTools.Common;
 using OdyTools.Data;
 using OdyTools.Editors;
-#if !ARE_STANDALONE && !AUDIO_STANDALONE && !BWM_STANDALONE && !DLG_STANDALONE && !ERF_STANDALONE && !GFF_STANDALONE && !GUI_STANDALONE && !GIT_STANDALONE && !IFO_STANDALONE && !JRL_STANDALONE && !LIP_STANDALONE && !LTR_STANDALONE && !LYT_STANDALONE && !MDL_STANDALONE && !NSS_STANDALONE && !PTH_STANDALONE && !SAV_STANDALONE && !SSF_STANDALONE && !TPC_STANDALONE && !TLK_STANDALONE && !TXT_STANDALONE && !TWODA_STANDALONE && !UTC_STANDALONE && !UTD_STANDALONE && !UTE_STANDALONE && !UTI_STANDALONE && !UTM_STANDALONE && !UTP_STANDALONE && !UTS_STANDALONE && !UTT_STANDALONE && !UTW_STANDALONE
+#if !ARE_STANDALONE && !AUDIO_STANDALONE && !BWM_STANDALONE && !DLG_STANDALONE && !ERF_STANDALONE && !FAC_STANDALONE && !GFF_STANDALONE && !GUI_STANDALONE && !GIT_STANDALONE && !IFO_STANDALONE && !JRL_STANDALONE && !LIP_STANDALONE && !LTR_STANDALONE && !LYT_STANDALONE && !MDL_STANDALONE && !NSS_STANDALONE && !PTH_STANDALONE && !SAV_STANDALONE && !SSF_STANDALONE && !TPC_STANDALONE && !TLK_STANDALONE && !TXT_STANDALONE && !TWODA_STANDALONE && !UTC_STANDALONE && !UTD_STANDALONE && !UTE_STANDALONE && !UTI_STANDALONE && !UTM_STANDALONE && !UTP_STANDALONE && !UTS_STANDALONE && !UTT_STANDALONE && !UTW_STANDALONE
 using OdyTools.Editors.GUI;
 #endif
 
@@ -117,6 +117,8 @@ namespace OdyTools.Editors.Standalone.EditorStandaloneHost
             return new OdyTools.Editors.OdyToolSAV(parent, installation);
 #elif SSF_STANDALONE
             return new OdyTools.Editors.OdyToolSSF(parent, installation);
+#elif FAC_STANDALONE
+            return new OdyTools.Editors.OdyToolFAC(parent, installation);
 #elif TPC_STANDALONE
             return new OdyTools.Editors.OdyToolTPC(parent, installation);
 #elif TXT_STANDALONE
@@ -188,6 +190,8 @@ namespace OdyTools.Editors.Standalone.EditorStandaloneHost
             return new OdyTools.Editors.OdyToolSAV(parent, installation);
 #elif SSF_STANDALONE
             return new OdyTools.Editors.OdyToolSSF(parent, installation);
+#elif FAC_STANDALONE
+            return new OdyTools.Editors.OdyToolFAC(parent, installation);
 #elif TPC_STANDALONE
             return new OdyTools.Editors.OdyToolTPC(parent, installation);
 #elif TXT_STANDALONE
