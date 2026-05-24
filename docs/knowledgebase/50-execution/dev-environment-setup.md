@@ -32,6 +32,16 @@ dotnet restore Andastra.sln
 
 Full solution restore succeeds on current branch (2026-05-23). For narrow agent loops, restore individual csprojs (BioWare, Game, tests). `[REPO]`
 
+## NuGet pack (optional)
+
+OdyPatch is the packable NuGet project. On Linux:
+
+```bash
+./helper_scripts/build-nuget.sh
+```
+
+Docs: `docs/NUGET.md`, `docs/NUGET_SETUP.md`, `docs/MANUAL_PUSH_INSTRUCTIONS.md`. Requires valid SPDX in `OdyPatch.csproj` (`LGPL-3.0-only`, plan 035). `[REPO]`
+
 ## Repo Implications
 
 - Agents without game installs can still build/test BioWare and NCS roundtrips.

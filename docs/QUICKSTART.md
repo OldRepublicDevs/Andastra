@@ -50,6 +50,14 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- --
 dotnet build src/Tools/ConvertKotorGame/ConvertKotorGame.csproj --framework net9.0
 ```
 
+Optional — pack OdyPatch NuGet package (Linux):
+
+```bash
+./helper_scripts/build-nuget.sh
+```
+
+See [NUGET.md](NUGET.md) and [run-tools-reference](knowledgebase/50-execution/run-tools-reference.md).
+
 Runtime mod-install UX requires a local K1/TSL install. Details: [run-tools-reference](knowledgebase/50-execution/run-tools-reference.md).
 
 ## Agents and Contributors
@@ -64,6 +72,7 @@ Runtime mod-install UX requires a local K1/TSL install. Details: [run-tools-refe
 |------|----------|
 | Engine family status | [engine_roadmap.md](engine_roadmap.md) |
 | Full build ladder | [build-and-test-ladder](knowledgebase/50-execution/build-and-test-ladder.md) |
+| NuGet pack (OdyPatch) | [NUGET.md](NUGET.md) |
 | File formats | [file-format-catalog](knowledgebase/20-domain-theory/file-format-catalog.md) + `wiki/` |
 | Cursor Cloud setup | [AGENTS.md](../AGENTS.md) |
 
