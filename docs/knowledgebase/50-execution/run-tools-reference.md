@@ -22,19 +22,21 @@ Build and run per project README/tool docs. Uses BioWare installation model. `[R
 
 ## GUI Tools
 
-### OdyPatch.UI
-
-```bash
-dotnet run --project src/Tools/OdyPatch.UI/OdyPatch.UI.csproj --framework net9.0
-```
-
-**Caveat:** Compiles on net9.0 (2026-05-23); end-to-end mod-install UX is unverified without a game install. `[REPO]`
-
-### OdyPatch (host)
+### OdyPatch (GUI + CLI host)
 
 ```bash
 dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
 ```
+
+Launches the Avalonia installer by default; pass `--install`, `--validate`, or `--uninstall` with `--game-dir` and `--tslpatchdata` for CLI mode. `[REPO]` (`Program.cs`)
+
+### OdyPatch.UI (library)
+
+```bash
+dotnet build src/Tools/OdyPatch.UI/OdyPatch.UI.csproj --framework net9.0
+```
+
+**Caveat:** `OutputType=Library` — not runnable via `dotnet run`. Compiles on net9.0 (2026-05-23); end-to-end mod-install UX is unverified without a game install. See [OdyPatch.UI README](../../../src/Tools/OdyPatch.UI/README.md). `[REPO]`
 
 ### ConvertKotorGame
 

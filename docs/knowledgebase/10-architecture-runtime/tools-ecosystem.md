@@ -27,7 +27,7 @@ Patch engine library: **`BioWare.TSLPatcher`** (`src/BioWare/TSLPatcher/`) — i
 ## Dependencies
 
 ```
-OdyPatch.UI → OdyPatch → OdyTools + BioWare (TSLPatcher) + Andastra (net9)
+OdyPatch (exe host) → OdyPatch.UI (lib) → OdyTools + BioWare (TSLPatcher) + Andastra (net9)
 NSSComp / NCSDecomp.CLI → BioWare
 KotorDiff → BioWare + installation model
 Standalone editors → BioWare (typical)
@@ -52,4 +52,4 @@ See [reverse-engineering-methodology.md](../20-domain-theory/reverse-engineering
 - Mod installer documentation should say **OdyPatch**, never HoloPatcher.
 - Tooling tasks may use OdyPatch/OdyTools when the slice requires installer or editor UX; script-only work can stay on NSSComp/NCSDecomp.
 - Runtime mod-install validation requires a local K1/TSL install — compile green ≠ UX verified.
-- Product UX stub docs: [30-product-ux/](../30-product-ux/README.md); tool README: `src/Tools/OdyPatch/README.md`.
+- Product UX stub docs: [30-product-ux/](../30-product-ux/README.md); tool READMEs: `src/Tools/OdyPatch/README.md`, `src/Tools/OdyPatch.UI/README.md`.

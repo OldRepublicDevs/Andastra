@@ -6,9 +6,10 @@ Mod installation workflow for OdyPatch and OdyPatch.UI.
 
 | Surface | Entry | Notes |
 |---------|-------|-------|
-| **Tool README** | [src/Tools/OdyPatch/README.md](../../../src/Tools/OdyPatch/README.md) | Build/run entry points `[REPO]` |
-| **OdyPatch.UI** | `dotnet run --project src/Tools/OdyPatch.UI/OdyPatch.UI.csproj --framework net9.0` | Avalonia GUI — primary end-user path `[REPO]` |
-| **OdyPatch host** | `dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0` | Host library / CLI-capable entry `[REPO]` |
+| **Tool README** | [src/Tools/OdyPatch/README.md](../../../src/Tools/OdyPatch/README.md) | Host build/run/CLI `[REPO]` |
+| **UI README** | [src/Tools/OdyPatch.UI/README.md](../../../src/Tools/OdyPatch.UI/README.md) | Avalonia library (not directly runnable) `[REPO]` |
+| **GUI / CLI host** | `dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0` | Primary end-user path — launches OdyPatch.UI `[REPO]` |
+| **OdyPatch.UI library** | `dotnet build src/Tools/OdyPatch.UI/OdyPatch.UI.csproj --framework net9.0` | UI components only; host is OdyPatch `[REPO]` |
 | **NuGet consumer** | `OdyPatch` package — see [NUGET.md](../../NUGET.md) | Packable library; UI in separate csproj `[REPO]` |
 
 ## Expected workflow (TSLPatcher-compatible mods)
