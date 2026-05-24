@@ -104,6 +104,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 44. ~~OdyPatch --help routed to CLI + CI smoke~~ **Done 2026-05-24**
 45. ~~PR #3 merge conflicts with master squash~~ **Done 2026-05-24**
 46. ~~OdyPatch validate CLI fixture + CI smoke~~ **Done 2026-05-24**
+47. ~~Sync `odytools-editor-ux.md` + plans index for Holocron port slice (plan 063 U7)~~ **Done 2026-05-24**
 
 ## KB Doc Drift (post-C5)
 
@@ -111,6 +112,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 |----------|-------|--------|
 | `run-tools-reference.md`, `tools-ecosystem.md`, `solution-topology.md` | ~~OdyTools/OdyPatch listed as Red~~ | **Resolved 2026-05-23** |
 | `docs/QUICKSTART.md`, `docs/engine_roadmap.md` | ~~OdyTools blocks OdyPatch onboarding claims~~ | **Resolved 2026-05-23** |
+| `30-product-ux/odytools-editor-ux.md` | ~~FAC/KotorDiff/reference finder status missing post plan 063~~ | **Resolved 2026-05-24** |
 
 ## KB Meta Drift
 

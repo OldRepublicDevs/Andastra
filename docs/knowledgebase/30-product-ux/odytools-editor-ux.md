@@ -23,9 +23,9 @@ Content authoring and inspection workflows for OdyTools and standalone editors.
 | OdyTools + standalones compile on net9.0 | Green `[REPO]` (2026-05-24) |
 | OdyToolFAC faction/reputation editor | Green — headless roundtrip tests `[REPO]` (2026-05-24) |
 | OdyToolNSS NCS disassembly tab | Green — `DisassembleNcsBytes` + tab UI tests `[REPO]` (2026-05-24) |
-| Reference finder (script ResRef, UTC context menu) | Green — override fixture tests `[REPO]` (2026-05-24) |
+| Reference finder (script ResRef, UTC/UTD/UTP/UTT context menus) | Green — override fixture tests `[REPO]` (2026-05-24) |
 | KotorDiff in-app (Tools menu) | Green — shared `KotorDiffApp` host `[REPO]` (2026-05-24) |
-| Indoor Map Builder Build/Save/Open | Partial — headless build tests; in-game walkmesh **Unverified** `[OPEN]` |
+| Indoor Map Builder Build/Save/Open | Partial — headless build + WOK AreaModel tests; in-game walkmesh **Unverified** `[OPEN]` |
 | Editor roundtrip fidelity vs original Holocron/PyKotor | **Unverified** `[OPEN]` |
 | Full AIO launch UX on Linux | **Partial** — compile green; GUI runtime not CI-tested `[OPEN]` |
 
