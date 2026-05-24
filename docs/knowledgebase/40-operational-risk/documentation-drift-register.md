@@ -82,6 +82,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 22. ~~Serialize solution-build CI to fix Andastra.Core deps lock~~ **Done 2026-05-23**
 23. ~~Fix NUGET.md OdyPatch paths + sync CI build notes~~ **Done 2026-05-23**
 24. ~~Reframe NUGET.md for BioWare.TSLPatcher + OdyPatch~~ **Done 2026-05-23**
+25. ~~Fix NuGet publish scripts + MANUAL_PUSH_INSTRUCTIONS drift~~ **Done 2026-05-23**
 
 ## KB Doc Drift (post-C5)
 
@@ -107,6 +108,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 | `docs/WORKFLOWS.md`, `docs/GITHUB_ACTIONS_SETUP.md` | ~~`src/OdyPatch/` paths~~ | **Resolved 2026-05-23** — plan 030 |
 | `docs/NUGET.md` | ~~`src/OdyPatch/` pack/push paths~~ | **Resolved 2026-05-23** — plan 032 |
 | `docs/NUGET.md` | ~~`TSLPatcher.Core` NuGet project references~~ | **Resolved 2026-05-23** — plan 033 |
+| `docs/MANUAL_PUSH_INSTRUCTIONS.md`, `helper_scripts/build-nuget.*` | ~~`CSharpKOTOR` / `src/OdyPatch/` publish paths~~ | **Resolved 2026-05-23** — plan 034 |
 | `.github/workflows/ci.yml` | ~~No full solution build smoke test~~ | **Resolved 2026-05-23** — `solution-build` job |
 | `.github/workflows/ci.yml` | ~~Parallel solution build locks `Andastra.Core.deps.json`~~ | **Resolved 2026-05-23** — plan 031 `-m:1` |
 
