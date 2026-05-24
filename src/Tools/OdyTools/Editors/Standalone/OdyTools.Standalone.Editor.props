@@ -45,6 +45,7 @@
     <Compile Include="$(_OdyToolsRoot)\Utils\AutosaveService.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\AtomicFileWriter.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\BackupRotator.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Utils\DialogHelper.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\ComboBox2DA.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\IMediaPlayer.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\NAudioMediaPlayer.cs" />
