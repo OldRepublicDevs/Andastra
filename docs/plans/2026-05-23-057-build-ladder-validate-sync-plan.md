@@ -1,7 +1,7 @@
 ---
 title: "docs: sync build ladder with odypatch validate fixture"
 type: docs
-status: active
+status: completed
 date: 2026-05-24
 origin: validate fixture documented in run-tools-reference but missing from build-and-test-ladder step 5
 ---
