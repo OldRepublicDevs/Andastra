@@ -48,8 +48,8 @@ Green on Linux net9.0 after standalone obj isolation (plan 020). Validated in CI
 
 | Item | Issue |
 |------|-------|
-| `src/MonoGameFPS/` | Referenced in docs; gitignored / absent |
-| `src/StrideGameFPS/` | On disk; not in Andastra.sln |
+| `src/MonoGameFPS/` | Referenced in older docs; not in solution; restore unaffected `[REPO]` |
+| `src/StrideGameFPS/` | On disk; not in `Andastra.sln`; non-blocking `[REPO]` |
 | `tests/Runtime/Parsing/MDL/MDLAsciiTests.cs` | Orphan — not in test csproj |
 | `tests/Runtime/Graphics/.../VulkanDeviceScratchBufferTests.cs` | Orphan |
 
