@@ -1,6 +1,6 @@
 # LFG Plan Index (2026-05-23)
 
-Vertical slices on branch `docs/feat-knowledgebase-initial` → merged via [PR #2](https://github.com/th3w1zard1/Andastra/pull/2) to `master` (2026-05-24). Maintenance tracker: [pr-merge-readiness.md](../knowledgebase/90-meta/pr-merge-readiness.md).
+Vertical slices: [PR #2](https://github.com/th3w1zard1/Andastra/pull/2) (plans 001–048) and [PR #3](https://github.com/th3w1zard1/Andastra/pull/3) (plans 049–055) merged to `master` 2026-05-24. Maintenance tracker: [pr-merge-readiness.md](../knowledgebase/90-meta/pr-merge-readiness.md).
 
 Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 
@@ -61,6 +61,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 053 | [053-odypatch-cli-help-plan.md](2026-05-23-053-odypatch-cli-help-plan.md) | OdyPatch CLI --help + CI smoke |
 | 054 | [054-pr3-merge-conflict-resolution-plan.md](2026-05-23-054-pr3-merge-conflict-resolution-plan.md) | PR #3 merge conflict resolution |
 | 055 | [055-odypatch-validate-fixture-plan.md](2026-05-23-055-odypatch-validate-fixture-plan.md) | OdyPatch validate fixture + CI smoke |
+| 056 | [056-post-pr3-tracker-refresh-plan.md](2026-05-23-056-post-pr3-tracker-refresh-plan.md) | Post-PR #3 tracker refresh |
 
 ## Repo implications
 
