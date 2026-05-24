@@ -31,7 +31,8 @@ See [runtime-layering.md](../10-architecture-runtime/runtime-layering.md).
 ## Adding Tools
 
 - Mod installer: extend OdyPatch (not HoloPatcher)
-- Standalone editor: new csproj under `src/Tools/OdyTools/` following existing editor pattern
+- Standalone editor: new csproj under `src/Tools/OdyTools/Editors/Standalone/` following existing `OdyTool*.Standalone.csproj` pattern
+- Standalone editors inherit `Editors/Directory.Build.props` (per-project `obj/`/`bin/`) and `OdyTools.Standalone.Editor.props` (shared sources, Avalonia `Link` metadata) — do not share a global `Editors/obj/` path
 - CLI: follow NSSComp/NCSDecomp.CLI structure
 
 ## Documentation Updates
