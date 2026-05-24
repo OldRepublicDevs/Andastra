@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using BioWare.Common;
 using BioWare.Resource;
+using BioWare.Tools;
 using OdyTools.Data;
 using OdyTools.Utils;
 using OdyTools.Editors;
@@ -33,6 +34,16 @@ namespace OdyTools.Dialogs
             _installation = installation;
             SetupUI();
             PopulateResults(results ?? new List<FileResource>());
+        }
+
+        public static FileResultsDialog FromReferenceSearch(
+            Window parent,
+            IEnumerable<ReferenceSearchResult> results,
+            OdyInstallation installation)
+        {
+            var dialog = new FileResultsDialog(parent, new List<FileResource>(), installation);
+            dialog.PopulateReferenceResults(results ?? new List<ReferenceSearchResult>());
+            return dialog;
         }
 
         private void InitializeComponent()
@@ -155,6 +166,49 @@ namespace OdyTools.Dialogs
             }
         }
 
+        private void PopulateReferenceResults(IEnumerable<ReferenceSearchResult> results)
+        {
+            if (Ui?.ResultList == null)
+            {
+                return;
+            }
+
+            Ui.ResultList.Items.Clear();
+            var resultList = new List<FileResourceResultItem>();
+
+            foreach (ReferenceSearchResult result in results)
+            {
+                if (result?.Resource == null)
+                {
+                    continue;
+                }
+
+                FileResource resource = result.Resource;
+                string filepath = resource.FilePath ?? string.Empty;
+                string parentName = Path.GetFileName(Path.GetDirectoryName(filepath)) ?? "";
+                string filename = resource.Identifier.ToString();
+                string baseDisplay = string.IsNullOrEmpty(parentName) ? filename : parentName + "/" + filename;
+                string displayText = string.IsNullOrEmpty(result.FieldPath)
+                    ? baseDisplay
+                    : baseDisplay + " :: " + result.FieldPath;
+
+                resultList.Add(new FileResourceResultItem
+                {
+                    DisplayText = displayText,
+                    Resource = resource,
+                    FieldPath = result.FieldPath,
+                    Tooltip = filepath
+                });
+            }
+
+            resultList.Sort((a, b) => string.Compare(a.DisplayText, b.DisplayText, StringComparison.OrdinalIgnoreCase));
+
+            foreach (var item in resultList)
+            {
+                Ui.ResultList.Items.Add(item);
+            }
+        }
+
         public void Accept()
         {
             if (Ui?.ResultList?.SelectedItem is FileResourceResultItem item)
@@ -197,6 +251,7 @@ namespace OdyTools.Dialogs
     {
         public string DisplayText { get; set; }
         public FileResource Resource { get; set; }
+        public string FieldPath { get; set; }
         public string Tooltip { get; set; }
 
         public override string ToString()
