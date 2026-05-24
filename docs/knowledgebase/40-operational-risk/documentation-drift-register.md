@@ -54,7 +54,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 
 | Rule says | Actual |
 |-----------|--------|
-| `scripts/NcsTool.ps1` | `helper_scripts/NcsTool.ps1` |
+| ~~`scripts/NcsTool.ps1`~~ | `helper_scripts/NcsTool.ps1` | **Resolved 2026-05-23** |
 
 ## Remediation Priority
 

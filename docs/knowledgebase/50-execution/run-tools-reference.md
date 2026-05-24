@@ -52,8 +52,6 @@ Listed in solution — K1↔TSL portability wizard. `[REPO]` Build/run unverifie
 ./helper_scripts/NcsTool.ps1 --help
 ```
 
-Path note: `.cursorrules` says `scripts/NcsTool.ps1` — actual path is `helper_scripts/`. `[REPO]`
-
 ## Repo Implications
 
 - Mod installer UX testing blocked on OdyTools fix — document status, don't claim OdyPatch works end-to-end.

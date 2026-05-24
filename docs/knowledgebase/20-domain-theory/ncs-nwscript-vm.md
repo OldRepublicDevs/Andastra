@@ -15,7 +15,7 @@ Script compilation, bytecode, and in-game execution.
 | **NCSDecomp.CLI** | `src/Tools/NCSDecomp.CLI/` | Decompile `.ncs` → `.nss` |
 | **NcsTool.ps1** | `helper_scripts/NcsTool.ps1` | Agent-mandated compile/decompile/compare/roundtrip/generate-defs |
 
-Agent rules reference `scripts/NcsTool.ps1` but file is under `helper_scripts/` — path drift C11 in caveat register. `[REPO]`
+Use only this script for agent NSS/NCS operations per `.cursorrules`. `[REPO]`
 
 ## Deep References
 

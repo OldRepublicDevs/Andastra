@@ -14,7 +14,7 @@ Living register of auth walls, runtime uncertainty, and stale-evidence risks. Up
 | C8 | Auth wall | AgentDecompile requires running Ghidra MCP server and local game binaries (`/K1_swkotor`, `/TSL_swkotor2`) | [REPO] | 2026-05-23 |
 | C9 | Architecture drift | README lists `Runtime.Games.{Odyssey,Aurora,...}`; engine code lives under `src/Andastra/Game/Games/` | [REPO] | **Resolved 2026-05-23** — README architecture updated |
 | C10 | Vendor noise | `vendor/src/toolset/wiki/` duplicate PyKotor corpus; HoloPatcher pages not authoritative for Andastra | [REPO] | **Partially resolved 2026-05-23** — `wiki/Home.md` rebranded; vendor tree remains reference-only |
-| C11 | Path drift | `.cursorrules` cites `scripts/NcsTool.ps1`; file is at `helper_scripts/NcsTool.ps1` | [REPO] | 2026-05-23 |
+| C11 | Path drift | `.cursorrules` cited `scripts/NcsTool.ps1`; file is at `helper_scripts/NcsTool.ps1` | [REPO] | **Resolved 2026-05-23** — agent rules updated |
 | C12 | License | AGPLv3 obligations for combined distribution of engine + tools | [REPO]/[OPEN] | 2026-05-23 |
 
 ## Template for New Entries

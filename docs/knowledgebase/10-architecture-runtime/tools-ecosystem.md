@@ -5,7 +5,7 @@ Development tools under `src/Tools/` and their relationships.
 ## Policy
 
 - **OdyPatch + OdyPatch.UI only** — HoloPatcher must not be added to solution or `src/Tools/`. `[REPO]` (`.cursor/rules/odypatch-only.mdc`)
-- NSS/NCS script operations: use `helper_scripts/NcsTool.ps1` per agent rules (note path drift from `scripts/`). `[REPO]`
+- NSS/NCS script operations: use `helper_scripts/NcsTool.ps1` per agent rules. `[REPO]`
 
 ## Tool Matrix
 
