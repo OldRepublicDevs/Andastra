@@ -156,6 +156,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 | PR #3 merge | ~~CONFLICTING with master after PR #2 squash~~ | **Resolved 2026-05-24** — plan 054 |
 | OdyPatch validate CI | ~~No config validation without game install~~ | **Resolved 2026-05-24** — plan 055 minimal fixture |
 | KB tracker post-PR #3 | ~~PR #3 listed as open after merge~~ | **Resolved 2026-05-24** — plan 056 |
+| Build ladder validate | ~~OdyPatch validate only in run-tools-reference~~ | **Resolved 2026-05-24** — plan 057 |
 | `.github/workflows/ci.yml` | ~~No full solution build smoke test~~ | **Resolved 2026-05-23** — `solution-build` job |
 | `.github/workflows/ci.yml` | ~~Parallel solution build locks `Andastra.Core.deps.json`~~ | **Resolved 2026-05-23** — plan 031 `-m:1` |
 
