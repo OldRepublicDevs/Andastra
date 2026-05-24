@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-**Status**: ✅ **COMPLETE** - All core logic from `vendor/DeNCS` has been successfully ported to `src/CSharpKOTOR/Formats/NCS/NCSDecomp`.
+**Status**: ✅ **COMPLETE** - All core logic from `vendor/DeNCS` has been successfully ported to `src/BioWare/Resource/Formats/NCS/Decomp`.
 
 **Date**: Final verification completed
 **Total Java Files**: 270

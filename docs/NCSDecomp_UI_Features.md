@@ -133,7 +133,7 @@ The settings dialog should include tabs for:
 ## Implementation Notes
 
 ### Core Library Integration
-The UI should use the following classes from `CSharpKOTOR.Formats.NCS.NCSDecomp`:
+The UI should use the following classes from `BioWare.Resource.Formats.NCS.Decomp`:
 - `FileDecompiler`: Main decompilation logic
 - `Settings`: Configuration management
 - `TreeModelFactory`: Create tree data structures
