@@ -34,8 +34,12 @@ dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0
 dotnet run --project src/Tools/NSSComp/NSSComp.csproj --framework net9.0 -- --help
 dotnet run --project src/Tools/NCSDecomp.CLI/NCSDecomp.CLI.csproj --framework net9.0 -- --help
 dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- --help
+dotnet build src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
+dotnet build src/Tools/OdyPatch.UI/OdyPatch.UI.csproj --framework net9.0
 dotnet build src/Tools/ConvertKotorGame/ConvertKotorGame.csproj --framework net9.0
 ```
+
+OdyPatch installer: `dotnet run` the **OdyPatch** host only (see [run-tools-reference.md](run-tools-reference.md)). `[REPO]`
 
 ### Step 6 — Runtime / Game (optional, needs game install)
 

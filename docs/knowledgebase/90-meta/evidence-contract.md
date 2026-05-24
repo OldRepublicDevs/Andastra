@@ -20,7 +20,7 @@ Lower-priority evidence must not overrule higher-priority evidence without expli
 |-------|---------|---------|
 | `[REPO]` | Observed fact in this repository | `Andastra.sln` contains 57 projects |
 | `[UI]{public}` | Observed product/UI behavior without auth | CLI `--help` output from NSSComp |
-| `[UI]{auth}` | Observed behavior requiring login or local build | OdyPatch UI after successful build |
+| `[UI]{auth}` | Observed behavior requiring login or local build | OdyPatch GUI via `dotnet run` on OdyPatch host csproj |
 | `[OFFICIAL]` | Vendor or official documentation claim | MonoGame 3.8 content pipeline docs |
 | `[SYNTH]` | Synthesis or implication from multiple sources | "Odyssey is the default agent work target" |
 | `[OPEN]` | Unresolved question, caveat, or unknown | Infinity engine implementation status |

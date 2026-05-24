@@ -30,7 +30,7 @@ See [runtime-layering.md](../10-architecture-runtime/runtime-layering.md).
 
 ## Adding Tools
 
-- Mod installer: extend OdyPatch / OdyPatch.UI (not HoloPatcher); patch engine in `BioWare.TSLPatcher`
+- Mod installer: extend **OdyPatch** host and **OdyPatch.UI** library (not HoloPatcher); patch engine in `BioWare.TSLPatcher`. Run/test via `OdyPatch.csproj`. `[REPO]`
 - NuGet packaging: `OdyPatch.csproj` + `helper_scripts/build-nuget.{sh,ps1}` — see [NUGET.md](../../NUGET.md)
 - Standalone editor: new csproj under `src/Tools/OdyTools/Editors/Standalone/` following existing `OdyTool*.Standalone.csproj` pattern
 - Standalone editors inherit `Editors/Directory.Build.props` (per-project `obj/`/`bin/`) and `OdyTools.Standalone.Editor.props` (shared sources, Avalonia `Link` metadata) — do not share a global `Editors/obj/` path

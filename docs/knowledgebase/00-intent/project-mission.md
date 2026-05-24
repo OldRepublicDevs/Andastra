@@ -23,7 +23,7 @@ See [engine-family-scope.md](engine-family-scope.md) for detail.
 
 1. **Unified engine runtime** — layered architecture from domain core through graphics and per-engine game rules. `[REPO]`
 2. **BioWare library** — file format parsers, resource extraction, TSLPatcher logic. `[REPO]`
-3. **Development tools** — OdyPatch / OdyPatch.UI (mod installer), OdyTools editors, NSSComp, NCSDecomp, KotorDiff, KotorCLI, ConvertKotorGame. `[REPO]`
+3. **Development tools** — **OdyPatch** (runnable installer host), **OdyPatch.UI** (UI library), OdyTools editors, NSSComp, NCSDecomp, KotorDiff, KotorCLI, ConvertKotorGame. `[REPO]`
 
 ## Name and Heritage
 
