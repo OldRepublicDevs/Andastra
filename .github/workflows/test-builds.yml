@@ -69,15 +69,24 @@ jobs:
           $project = "src/Tools/NSSComp/NSSComp.csproj"
           $outputDir = "dist/test-build/${{ matrix.framework }}/${{ matrix.rid }}"
 
-          dotnet publish $project `
-            -c Release `
-            -f ${{ matrix.framework }} `
-            -r ${{ matrix.rid }} `
-            --self-contained ${{ matrix.selfcontained }} `
-            -p:PublishSingleFile=true `
-            -p:IncludeNativeLibrariesForSelfExtract=true `
-            -p:PublishReadyToRun=true `
-            -o $outputDir
+          if ("${{ matrix.framework }}" -eq "net48") {
+            dotnet publish $project `
+              -c Release `
+              -f net48 `
+              -r ${{ matrix.rid }} `
+              --self-contained ${{ matrix.selfcontained }} `
+              -o $outputDir
+          } else {
+            dotnet publish $project `
+              -c Release `
+              -f ${{ matrix.framework }} `
+              -r ${{ matrix.rid }} `
+              --self-contained ${{ matrix.selfcontained }} `
+              -p:PublishSingleFile=true `
+              -p:IncludeNativeLibrariesForSelfExtract=true `
+              -p:PublishReadyToRun=true `
+              -o $outputDir
+          }
 
       - name: Verify build output
         shell: pwsh
