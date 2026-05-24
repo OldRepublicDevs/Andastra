@@ -14,7 +14,7 @@ Key docs: `docs/WORKFLOWS.md`, `docs/GITHUB_ACTIONS_SETUP.md`, `docs/AUTOUPDATE.
 |------|--------|-------|
 | Stale test path | ~~`ci.yml` references `src/CSharpKOTOR.Tests/`~~ Fixed — BioWare.Tests ladder | [REPO] |
 | OdyPatch path mismatch | ~~Some workflows use `src/OdyPatch/`~~ Fixed — `src/Tools/OdyPatch/` | [REPO] |
-| OdyPatch/OdyTools build | Workflow paths correct; OdyPatch publish may still fail on OdyTools errors | [REPO] |
+| OdyPatch/OdyTools build | OdyPatch publish blocked; PR test-builds uses NSSComp smoke publish instead | [REPO] |
 | No game runtime in CI | K1/TSL install not exercised in standard CI | [REPO] |
 
 **`[SYNTH]`** CI green on main does not imply agent "green path" (BioWare + tests) without log inspection.
