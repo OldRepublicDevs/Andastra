@@ -84,6 +84,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\BioWare\BioWare.csproj" />
+    <ProjectReference Include="..\KotorDiff\KotorDiff.csproj" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <Reference Include="Microsoft.CSharp" />
