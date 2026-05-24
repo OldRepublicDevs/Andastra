@@ -1,24 +1,27 @@
-# Welcome to the PyKotor Wiki
+# Andastra Wiki
+
+Format and engine reference pages in this folder were inherited from the [PyKotor wiki](https://github.com/OldRepublicDevs/PyKotor/wiki) lineage. For **Andastra** onboarding, build paths, and agent workflow, prefer the [project knowledgebase](../docs/knowledgebase/90-meta/README.md).
 
 ## Documentation
 
 ### For End Users
 
-- [Installing Mods with HoloPatcher](Installing-Mods-with-HoloPatcher)
+- [Run tools reference (OdyPatch, NSSComp, NCSDecomp)](../docs/knowledgebase/50-execution/run-tools-reference.md)
+- [OdyPatch README](../src/Tools/OdyPatch/README.md)
 
 ### For Mod Developers
 
-- [HoloPatcher README for Mod Developers](HoloPatcher-README-for-mod-developers.)
-- [TSLPatcher's Official Readme](TSLPatcher's-Official-Readme)
-- [TSLPatcher Thread Complete Archive](TSLPatcher_Thread_Complete)
-- [HoloPatcher Feature Coverage Overview](Explanations-on-HoloPatcher-Internal-Logic)
-- **[TSLPatcher InstallList Syntax Guide](TSLPatcher-InstallList-Syntax)** ← Complete reference for file installation
-- **[TSLPatcher TLKList Syntax Guide](TSLPatcher-TLKList-Syntax)** ← Complete reference for TLK ([TalkTable](TLK-File-Format)) modifications
-- **[TSLPatcher 2DAList Syntax Guide](TSLPatcher-2DAList-Syntax)** ← Complete reference for [2DA (Two-Dimensional array)](2DA-File-Format) patches
-- **[TSLPatcher GFFList Syntax Guide](TSLPatcher-GFFList-Syntax)** ← Complete reference for [GFF](GFF-File-Format) modifications
-- **[TSLPatcher SSFList Syntax Guide](TSLPatcher-SSFList-Syntax)** ← Complete reference for SSF ([sound set files](SSF-File-Format)) modifications
-- [Mod Creation Best Practices](Mod-Creation-Best-Practices)
-- [KotorDiff Integration in PyKotorCLI](KotorDiff-Integration)
+- [TSLPatcher domain (Andastra KB)](../docs/knowledgebase/20-domain-theory/tslpatcher-domain.md)
+- [OdyPatch README](../src/Tools/OdyPatch/README.md)
+- [TSLPatcher's Official Readme](../vendor/src/toolset/wiki/TSLPatcher's-Official-Readme.md) (vendor copy)
+- [TSLPatcher Thread Complete Archive](../vendor/src/toolset/wiki/TSLPatcher_Thread_Complete.md) (vendor copy)
+- **[TSLPatcher InstallList Syntax Guide](../vendor/src/toolset/wiki/TSLPatcher-InstallList-Syntax.md)** ← Complete reference for file installation
+- **[TSLPatcher TLKList Syntax Guide](../vendor/src/toolset/wiki/TSLPatcher-TLKList-Syntax.md)** ← Complete reference for TLK ([TalkTable](TLK-File-Format)) modifications
+- **[TSLPatcher 2DAList Syntax Guide](../vendor/src/toolset/wiki/TSLPatcher-2DAList-Syntax.md)** ← Complete reference for [2DA (Two-Dimensional array)](2DA-File-Format) patches
+- **[TSLPatcher GFFList Syntax Guide](../vendor/src/toolset/wiki/TSLPatcher-GFFList-Syntax.md)** ← Complete reference for [GFF](GFF-File-Format) modifications
+- **[TSLPatcher SSFList Syntax Guide](../vendor/src/toolset/wiki/TSLPatcher-SSFList-Syntax.md)** ← Complete reference for SSF ([sound set files](SSF-File-Format)) modifications
+- [Mod Creation Best Practices](../vendor/src/toolset/wiki/Mod-Creation-Best-Practices.md) (vendor copy)
+- [KotorDiff tool](../src/Tools/KotorDiff/) — see also [run tools reference](../docs/knowledgebase/50-execution/run-tools-reference.md)
 
 ### Official Bioware Aurora Documentation
 
@@ -299,12 +302,15 @@ This language ID usually is represented as an enum. It is equivalent within all 
 
 ### Internal Documentation
 
-- [HoloPatcher](HoloPatcher-README-for-mod-developers.)
-- [Explanations on HoloPatcher Internal Logic](Explanations-on-HoloPatcher-Internal-Logic)
+- [Andastra knowledgebase](../docs/knowledgebase/90-meta/README.md)
+- [OdyPatch README](../src/Tools/OdyPatch/README.md)
+- [TSLPatcher domain](../docs/knowledgebase/20-domain-theory/tslpatcher-domain.md)
 
 ## Vendor Implementations
 
-PyKotor includes many vendor submodules that provide alternative implementations of KotOR tools and engines. These serve as reference implementations and enable comparison of different approaches to the same problems.
+This repository vendors alternative KotOR implementations for comparison and reference. **Andastra** (`src/Andastra/`, `src/BioWare/`, `src/Tools/`) is the primary .NET runtime and tooling stack maintained in this repo.
+
+PyKotor vendor trees also include a duplicate wiki corpus under `vendor/src/toolset/wiki/` — use those copies for HoloPatcher-era pages not yet mirrored here.
 
 ### Engine Reimplementations
 
@@ -346,8 +352,8 @@ Tools for writing and editing NWScript:
 
 Tools for creating and installing mods:
 
-- **PyKotorCLI (PyKotor)** - CLI-first toolset for packing, conversion, Holocron kit generation, and GUI layout scaling. `uv --directory Libraries/PyKotor/src run pykotor kit-generate --installation <path> --module <module> --output <dir>` runs headless; launching with no arguments opens the Tkinter kit generator GUI for interactive use. `uv run pykotor gui-convert --input <gui_or_folder> --output <dir> --resolution ALL` runs headless for [GUI](GFF-File-Format#gui-graphical-user-interface) resizing; omitting args opens the converter GUI. (Implementations: `kit_generator.py` wraps `Libraries/PyKotor/src/pykotor/tools/kit.py`; `Libraries/PyKotor/src/pykotor/cli/gui_converter.py` delegates to `pykotor.resource.formats.gff`.)
-- **[HoloPatcher.NET](https://github.com/th3w1zard1/HoloPatcher.NET)** - .NET reimplementation of TSLPatcher
+- **[OdyPatch](../src/Tools/OdyPatch/)** — .NET TSLPatcher-compatible mod installer for this repo (see [README](../src/Tools/OdyPatch/README.md))
+- **PyKotorCLI (PyKotor)** — CLI-first toolset in vendor PyKotor tree for packing, conversion, and GUI layout scaling (reference only)
 - **[Kotor-Patch-Manager](https://github.com/LaneDibello/Kotor-Patch-Manager)** - Alternative mod manager ([Mirror: th3w1zard1/Kotor-Patch-Manager](https://github.com/th3w1zard1/Kotor-Patch-Manager))
 - **[KotOR ModSync](https://github.com/th3w1zard1/KotORModSync)** - Mod synchronization and installation
 - **[StarForge](https://github.com/th3w1zard1/StarForge)** - Module editor and modding toolkit
