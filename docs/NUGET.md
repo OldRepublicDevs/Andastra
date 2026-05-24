@@ -71,7 +71,7 @@ Requires project references to BioWare TSLPatcher modules (see `OdyPatch.csproj`
 
 ### OdyPatch package
 
-The OdyPatch NuGet packages the patcher host library; UI lives in **OdyPatch.UI** (separate csproj, not necessarily published).
+The OdyPatch NuGet packages the **runnable host** (GUI + CLI executable); Avalonia UI components live in **OdyPatch.UI** (library csproj, separate package metadata, not published by `build-nuget.sh` today). `[REPO]`
 
 ## Publishing to NuGet.org
 
@@ -97,7 +97,7 @@ See also [NUGET_SETUP.md](NUGET_SETUP.md) for API key configuration and [MANUAL_
 ## Package dependencies
 
 - **BioWare.TSLPatcher**: In-repo library; depends on BioWare Core, Resource, Common, etc.
-- **OdyPatch**: NuGet-packable host; depends on OdyTools + BioWare stack (see `OdyPatch.csproj`).
+- **OdyPatch**: NuGet-packable executable host; references OdyPatch.UI + OdyTools + BioWare stack (see `OdyPatch.csproj`).
 
 ## Version management
 
