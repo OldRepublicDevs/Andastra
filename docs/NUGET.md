@@ -14,7 +14,7 @@ dotnet pack --configuration Release
 
 # Packages will be created in:
 # - src/TSLPatcher.Core/bin/Release/TSLPatcher.Core.2.0.0-alpha1.nupkg
-# - src/OdyPatch/bin/Release/OdyPatch.2.0.0-alpha1.nupkg
+# - src/Tools/OdyPatch/bin/Release/OdyPatch.2.0.0-alpha1.nupkg
 ```
 
 ### Build Individual Packages
@@ -24,7 +24,7 @@ dotnet pack --configuration Release
 dotnet pack src/TSLPatcher.Core/TSLPatcher.Core.csproj --configuration Release
 
 # Build only OdyPatch
-dotnet pack src/OdyPatch/OdyPatch.csproj --configuration Release
+dotnet pack src/Tools/OdyPatch/OdyPatch.csproj --configuration Release --framework net9.0
 ```
 
 ## Installing Packages
@@ -115,7 +115,7 @@ using OdyPatch.UI;
 dotnet nuget push src/TSLPatcher.Core/bin/Release/TSLPatcher.Core.*.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
 
 # Publish Andastra
-dotnet nuget push src/OdyPatch/bin/Release/OdyPatch.*.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
+dotnet nuget push src/Tools/OdyPatch/bin/Release/OdyPatch.*.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
 ```
 
 3. **Publish symbol packages** (optional):
