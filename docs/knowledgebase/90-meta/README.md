@@ -42,7 +42,7 @@ See [pr-merge-readiness.md](pr-merge-readiness.md) (KB maintenance tracker). Re-
 | CI — Solution Build (net9.0) | `-m:1` serialization (plan 031) |
 | Test Builds matrix | net48-win, net9.0 linux/osx/win |
 | dotnet-desktop (Windows) | BioWare + OdyTools + OdyPatch + OdyPatch.UI + KotorCLI + ConvertKotorGame |
-| OdyPatch NuGet pack | CI `nuget-pack-smoke` + local `helper_scripts/build-nuget.sh` (plans 035, 051) |
+| OdyPatch NuGet pack | CI `nuget-pack-smoke` + local `helper_scripts/build-nuget.sh` (plans 035, 051); includes CLI `--help` smoke (plan 053) |
 
 Runtime game testing and OdyPatch mod-install UX remain manual. `[REPO]`
 

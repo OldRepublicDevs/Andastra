@@ -10,7 +10,7 @@ Ongoing knowledgebase and onboarding maintenance after [PR #2](https://github.co
 | CI on merge commit | All checks **pass** (Solution Build, Test Builds, dotnet-desktop, Lint, Snyk) `[REPO]` |
 | Scope delivered | Evidence-first KB (33 docs), plans 001–048, CI/doc drift remediations 1–39, tool-chain build recovery |
 
-## LFG plans landed (001–052)
+## LFG plans landed (001–053)
 
 | Plan | Topic |
 |------|-------|
@@ -19,12 +19,13 @@ Ongoing knowledgebase and onboarding maintenance after [PR #2](https://github.co
 | 050 | Investigation archive index + stale path fixes |
 | 051 | OdyPatch NuGet pack CI smoke job |
 | 052 | Evidence label pass on thin execution/domain docs |
+| 053 | OdyPatch CLI --help fix + CI smoke |
 
 Full index: [docs/plans/README.md](../../plans/README.md)
 
 ## PR #3 (open)
 
-Follow-up doc maintenance on `docs/feat-knowledgebase-initial` — plans 049–052. `[REPO]`
+Follow-up doc maintenance on `docs/feat-knowledgebase-initial` — plans 049–053. `[REPO]`
 
 ## Local validation (green path)
 
@@ -59,7 +60,7 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 
 | Plan | Topic |
 |------|-------|
-| 053+ | OdyPatch UX validation (needs game install), remaining KB label pass |
+| 054+ | OdyPatch end-to-end mod install validation (needs game install) |
 
 ## Repo implications
 
