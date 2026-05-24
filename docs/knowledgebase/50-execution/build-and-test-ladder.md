@@ -81,6 +81,8 @@ dotnet build src/BioWare/BioWare.csproj --configuration Release -p:RunAnalyzersD
 dotnet build src/Tools/OdyTools/OdyTools.csproj --framework net9.0
 dotnet build src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
 dotnet build src/Tools/OdyPatch.UI/OdyPatch.UI.csproj --framework net9.0
+# GUI/CLI host (launches OdyPatch.UI) — do not dotnet run the UI library csproj
+dotnet run --project src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0
 dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- --help
 dotnet build src/Tools/ConvertKotorGame/ConvertKotorGame.csproj --framework net9.0
 ```

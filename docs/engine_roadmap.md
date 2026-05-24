@@ -52,7 +52,7 @@ Format parsers and resource extraction in `src/BioWare/` support all engine fami
 | OdyPatch NuGet pack | Green via `helper_scripts/build-nuget.sh` (plan 035) |
 | **Andastra.sln** (full) | Green on Linux net9.0; CI `solution-build` uses `-m:1` (plan 031) |
 
-Product UX stub layer: [30-product-ux](knowledgebase/30-product-ux/README.md) (plan 038). OdyPatch tool README refreshed (plan 039).
+Product UX stub layer: [30-product-ux](knowledgebase/30-product-ux/README.md) (plan 038). OdyPatch + OdyPatch.UI READMEs refreshed; GUI runs via **OdyPatch** host, not UI library csproj (plans 039, 044).
 
 Details: [tools-ecosystem](knowledgebase/10-architecture-runtime/tools-ecosystem.md), [run-tools-reference](knowledgebase/50-execution/run-tools-reference.md).
 
