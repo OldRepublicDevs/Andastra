@@ -230,6 +230,7 @@ dotnet test --collect:"XPlat Code Coverage"
 
 ## Documentation
 
+- **[Knowledgebase](docs/knowledgebase/90-meta/README.md)** - Evidence-first project docs for agents and contributors (start here)
 - **[Quick Start Guide](docs/QUICKSTART.md)** - Getting started with development
 - **[Engine Roadmap](docs/engine_roadmap.md)** - Implementation roadmap and status
 - **[Architecture Documentation](docs/)** - Detailed architecture and design documents

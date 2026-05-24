@@ -6,7 +6,7 @@ Living register of auth walls, runtime uncertainty, and stale-evidence risks. Up
 |----|----------|--------|-------|---------------|
 | C1 | Stale evidence | `docs/REVERSE_ENGINEERING_PROJECT_SUMMARY.md` describes KotOR.js/TypeScript deliverables not present in this repo | [REPO] | 2026-05-23 |
 | C2 | Stale evidence | `docs/MONOGAME_RUNNING.md` references obsolete `src/OdysseyRuntime/Odyssey.Game/` paths | [REPO] | 2026-05-23 |
-| C3 | Stale evidence | `README.md` links to missing `docs/QUICKSTART.md` and `docs/engine_roadmap.md` | [REPO] | 2026-05-23 |
+| C3 | Stale evidence | ~~README links to missing `docs/QUICKSTART.md` and `docs/engine_roadmap.md`~~ **Resolved 2026-05-23** | [REPO] | 2026-05-23 |
 | C4 | Source/runtime drift | `.github/workflows/ci.yml` references missing `src/CSharpKOTOR.Tests/` | [REPO] | 2026-05-23 |
 | C5 | Build uncertainty | `OdyTools.csproj` and `OdyPatch` fail to build (method-group → `System.Action`); tool UX unverified | [REPO] | 2026-05-23 |
 | C6 | Runtime uncertainty | `Andastra.Game` requires local K1/TSL installation; no CI game-run | [REPO] | 2026-05-23 |

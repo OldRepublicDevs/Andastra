@@ -6,8 +6,8 @@ Stale or broken documentation tracked for remediation.
 
 | Link in README | Status |
 |----------------|--------|
-| `docs/QUICKSTART.md` | **Missing** `[REPO]` |
-| `docs/engine_roadmap.md` | **Missing** `[REPO]` |
+| `docs/QUICKSTART.md` | **Resolved** — added 2026-05-23 |
+| `docs/engine_roadmap.md` | **Resolved** — added 2026-05-23 |
 
 ## Obsolete Paths in Docs
 
@@ -58,7 +58,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 
 ## Remediation Priority
 
-1. Create `docs/QUICKSTART.md` pointing at KB execution ladder `[SYNTH]`
+1. ~~Create `docs/QUICKSTART.md` pointing at KB execution ladder~~ **Done 2026-05-23**
 2. Fix CI project paths before trusting CI green `[SYNTH]`
 3. Add README errata or update README architecture section `[SYNTH]`
 4. Refresh wiki Home for Andastra/OdyPatch branding `[SYNTH]`
