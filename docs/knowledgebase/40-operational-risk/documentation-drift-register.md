@@ -84,6 +84,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 24. ~~Reframe NUGET.md for BioWare.TSLPatcher + OdyPatch~~ **Done 2026-05-23**
 25. ~~Fix NuGet publish scripts + MANUAL_PUSH_INSTRUCTIONS drift~~ **Done 2026-05-23**
 26. ~~Fix OdyPatch NuGet pack SPDX license expression~~ **Done 2026-05-23**
+27. ~~Sync PR merge-readiness doc + PR #2 body for plans 033–035~~ **Done 2026-05-23**
 
 ## KB Doc Drift (post-C5)
 
@@ -111,6 +112,7 @@ See [ci-release-risks.md](ci-release-risks.md). `[REPO]`
 | `docs/NUGET.md` | ~~`TSLPatcher.Core` NuGet project references~~ | **Resolved 2026-05-23** — plan 033 |
 | `docs/MANUAL_PUSH_INSTRUCTIONS.md`, `helper_scripts/build-nuget.*` | ~~`CSharpKOTOR` / `src/OdyPatch/` publish paths~~ | **Resolved 2026-05-23** — plan 034 |
 | `OdyPatch.csproj` | ~~Deprecated SPDX `LGPL-3.0` blocks `dotnet pack` (NU5032)~~ | **Resolved 2026-05-23** — plan 035 |
+| PR #2 body | ~~Stale plans table (001–032) and NUGET/TSLPatcher.Core gap claims~~ | **Resolved 2026-05-23** — plan 036 |
 | `.github/workflows/ci.yml` | ~~No full solution build smoke test~~ | **Resolved 2026-05-23** — `solution-build` job |
 | `.github/workflows/ci.yml` | ~~Parallel solution build locks `Andastra.Core.deps.json`~~ | **Resolved 2026-05-23** — plan 031 `-m:1` |
 
