@@ -126,5 +126,22 @@ namespace KotorCLI.Tests
                 }
             }
         }
+
+        [Test]
+        public void KeyBytesKey_RoundTripsEntries()
+        {
+            var key = new KEY();
+            key.AddBif("data.bif", 1024);
+            key.AddKeyEntry("test_creature", ResourceType.UTC, 0, 0);
+
+            byte[] bytes = KEYAuto.BytesKey(key);
+            KEY roundTrip = KEYAuto.ReadKey(bytes);
+
+            Assert.That(roundTrip.BifEntries.Count, Is.EqualTo(1));
+            Assert.That(roundTrip.BifEntries[0].Filename, Is.EqualTo("data.bif"));
+            Assert.That(roundTrip.KeyEntries.Count, Is.EqualTo(1));
+            Assert.That(roundTrip.KeyEntries[0].ResRef.ToString(), Is.EqualTo("test_creature"));
+            Assert.That(roundTrip.KeyEntries[0].ResType, Is.EqualTo(ResourceType.UTC));
+        }
     }
 }
