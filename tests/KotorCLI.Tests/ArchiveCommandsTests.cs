@@ -98,6 +98,41 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void ExecuteListArchive_VerboseMode_ListsRimResources()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-verbose-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string rimPath = CreateSampleRim(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = ListArchiveCommand.Execute(rimPath, true, null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteListArchive_MissingFile_ExitsNonZero()
+        {
+            string missingPath = Path.Combine(Path.GetTempPath(), "kotorcli-list-missing-" + Guid.NewGuid().ToString("N") + ".rim");
+            var logger = new StandardLogger();
+            int exitCode = ListArchiveCommand.Execute(missingPath, false, null, logger);
+            Assert.That(exitCode, Is.Not.EqualTo(0));
+        }
+
+        [Test]
         public void ExecuteListArchive_FilterNoMatch_ExitsNonZero()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-" + Guid.NewGuid().ToString("N"));
