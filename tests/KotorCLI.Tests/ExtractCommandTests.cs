@@ -6,6 +6,7 @@ using BioWare.Resource;
 using BioWare.Resource.Formats.BIF;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.KEY;
+using BioWare.Resource.Formats.RIM;
 using BioWare.Tools;
 using KotorCLI.Commands;
 using KotorCLI.Logging;
@@ -166,6 +167,87 @@ namespace KotorCLI.Tests
                 var logger = new StandardLogger();
                 int exitCode = ExtractCommand.Execute(txtPath, null, null, null, logger);
                 Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        private static string CreateSampleRimWithTwoResources(string tempDir)
+        {
+            string rimPath = Path.Combine(tempDir, "sample.rim");
+            byte[] utcBytes = GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.UTC);
+            var rim = new RIM();
+            rim.SetData("creature_a", ResourceType.UTC, utcBytes);
+            rim.SetData("creature_b", ResourceType.UTC, utcBytes);
+            RIMAuto.WriteRim(rim, rimPath, ResourceType.RIM);
+            return rimPath;
+        }
+
+        private static string CreateSampleRimWithOneResource(string tempDir)
+        {
+            string rimPath = Path.Combine(tempDir, "sample.rim");
+            byte[] utcBytes = GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.UTC);
+            var rim = new RIM();
+            rim.SetData("creature_a", ResourceType.UTC, utcBytes);
+            RIMAuto.WriteRim(rim, rimPath, ResourceType.RIM);
+            return rimPath;
+        }
+
+        [Test]
+        public void ExecuteExtract_WithFilter_ExtractsMatchingResourceOnly()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-extract-filter-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string rimPath = CreateSampleRimWithTwoResources(tempDir);
+                string outputDir = Path.Combine(tempDir, "out");
+
+                var logger = new StandardLogger();
+                int exitCode = ExtractCommand.Execute(rimPath, outputDir, "creature_a*", null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(File.Exists(Path.Combine(outputDir, "creature_a.utc")), Is.True);
+                Assert.That(File.Exists(Path.Combine(outputDir, "creature_b.utc")), Is.False);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteExtract_WithFilterNoMatch_WritesNoFiles()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-extract-filter-empty-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string rimPath = CreateSampleRimWithOneResource(tempDir);
+                string outputDir = Path.Combine(tempDir, "out");
+
+                var logger = new StandardLogger();
+                int exitCode = ExtractCommand.Execute(rimPath, outputDir, "missing_*", null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(Directory.Exists(outputDir), Is.True);
+                Assert.That(Directory.GetFiles(outputDir).Length, Is.EqualTo(0));
             }
             finally
             {
