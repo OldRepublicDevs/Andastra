@@ -88,7 +88,7 @@ description = ""Default target""
             rootCommand.Add(initCommand);
         }
 
-        private static int Execute(string dir, string initFile, bool defaultMode, string vcs, ILogger logger)
+        public static int Execute(string dir, string initFile, bool defaultMode, string vcs, ILogger logger)
         {
             var targetDir = Path.GetFullPath(string.IsNullOrEmpty(dir) ? "." : dir);
             Directory.CreateDirectory(targetDir);
