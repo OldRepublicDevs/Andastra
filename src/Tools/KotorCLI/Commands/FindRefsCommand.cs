@@ -23,11 +23,17 @@ namespace KotorCLI.Commands
             var installDirOption = Cli.Opt<string>("--install-dir", "KOTOR installation directory (or set KOTOR_PATH / K1_PATH)");
             findRefsCommand.Options.Add(installDirOption);
 
+            var installationOption = Cli.Opt<string>("--installation", "Alias for --install-dir");
+            findRefsCommand.Options.Add(installationOption);
+
             var typeOption = Cli.Opt<string>("--type", "Reference kind: script, tag, template, or conversation (default: script)");
             findRefsCommand.Options.Add(typeOption);
 
             var overrideOnlyOption = Cli.Opt<bool>("--override-only", "Search override folder only");
             findRefsCommand.Options.Add(overrideOnlyOption);
+
+            var noOverrideOption = Cli.Opt<bool>("--no-override", "Skip override folder");
+            findRefsCommand.Options.Add(noOverrideOption);
 
             var noChitinOption = Cli.Opt<bool>("--no-chitin", "Skip chitin/BIF archives");
             findRefsCommand.Options.Add(noChitinOption);
@@ -35,17 +41,36 @@ namespace KotorCLI.Commands
             var noModulesOption = Cli.Opt<bool>("--no-modules", "Skip module capsules");
             findRefsCommand.Options.Add(noModulesOption);
 
+            var caseSensitiveOption = Cli.Opt<bool>("--case-sensitive", "Case-sensitive match");
+            findRefsCommand.Options.Add(caseSensitiveOption);
+
+            var partialOption = Cli.Opt<bool>("--partial", "Allow partial substring match");
+            findRefsCommand.Options.Add(partialOption);
+
             findRefsCommand.SetAction(parseResult =>
             {
                 var needle = parseResult.GetValue(needleArgument);
-                var installDir = parseResult.GetValue(installDirOption);
+                var installDir = parseResult.GetValue(installDirOption) ?? parseResult.GetValue(installationOption);
                 var type = parseResult.GetValue(typeOption);
                 var overrideOnly = parseResult.GetValue(overrideOnlyOption);
+                var noOverride = parseResult.GetValue(noOverrideOption);
                 var noChitin = parseResult.GetValue(noChitinOption);
                 var noModules = parseResult.GetValue(noModulesOption);
+                var caseSensitive = parseResult.GetValue(caseSensitiveOption);
+                var partial = parseResult.GetValue(partialOption);
 
                 var logger = new StandardLogger();
-                var exitCode = Execute(needle, installDir, type, overrideOnly, noChitin, noModules, logger);
+                var exitCode = Execute(
+                    needle,
+                    installDir,
+                    type,
+                    overrideOnly,
+                    noOverride,
+                    noChitin,
+                    noModules,
+                    caseSensitive,
+                    partial,
+                    logger);
                 Environment.Exit(exitCode);
             });
 
@@ -59,6 +84,33 @@ namespace KotorCLI.Commands
             bool overrideOnly,
             bool noChitin,
             bool noModules,
+            bool caseSensitive,
+            bool partialMatch,
+            ILogger logger)
+        {
+            return Execute(
+                needle,
+                installDir,
+                referenceType,
+                overrideOnly,
+                noOverride: false,
+                noChitin,
+                noModules,
+                caseSensitive,
+                partialMatch,
+                logger);
+        }
+
+        public static int Execute(
+            string needle,
+            string installDir,
+            string referenceType,
+            bool overrideOnly,
+            bool noOverride,
+            bool noChitin,
+            bool noModules,
+            bool caseSensitive,
+            bool partialMatch,
             ILogger logger)
         {
             if (string.IsNullOrWhiteSpace(needle))
@@ -87,20 +139,7 @@ namespace KotorCLI.Commands
                 return 1;
             }
 
-            var options = new ReferenceSearchOptions
-            {
-                SearchOverride = true,
-                SearchModules = !noModules && !overrideOnly,
-                SearchChitin = !noChitin && !overrideOnly,
-                CaseSensitive = false,
-                PartialMatch = false
-            };
-
-            if (overrideOnly)
-            {
-                options.SearchModules = false;
-                options.SearchChitin = false;
-            }
+            var options = BuildSearchOptions(overrideOnly, noOverride, noChitin, noModules, caseSensitive, partialMatch);
 
             Installation installation;
             try
@@ -127,6 +166,33 @@ namespace KotorCLI.Commands
 
             logger.Info("Found " + results.Count + " reference(s).");
             return 0;
+        }
+
+        internal static ReferenceSearchOptions BuildSearchOptions(
+            bool overrideOnly,
+            bool noOverride,
+            bool noChitin,
+            bool noModules,
+            bool caseSensitive,
+            bool partialMatch)
+        {
+            var options = new ReferenceSearchOptions
+            {
+                SearchOverride = !noOverride,
+                SearchModules = !noModules,
+                SearchChitin = !noChitin,
+                CaseSensitive = caseSensitive,
+                PartialMatch = partialMatch
+            };
+
+            if (overrideOnly)
+            {
+                options.SearchModules = false;
+                options.SearchChitin = false;
+                options.SearchOverride = true;
+            }
+
+            return options;
         }
 
         internal static List<ReferenceSearchResult> FindReferences(
