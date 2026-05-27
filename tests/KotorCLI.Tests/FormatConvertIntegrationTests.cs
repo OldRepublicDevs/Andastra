@@ -183,7 +183,7 @@ namespace KotorCLI.Tests
             string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-gff2xml-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
             string gffPath = Path.Combine(tempDir, "sample.gff");
-            string xmlPath = Path.Combine(tempDir, "sample.xml");
+            string xmlPath = Path.Combine(tempDir, "sample.gff.xml");
 
             try
             {
@@ -204,11 +204,11 @@ namespace KotorCLI.Tests
         [Test]
         public void Xml2Gff_AfterGff2Xml_PreservesLabelField()
         {
-            const string label = "integration-label";
+            const string label = "integration-gff-label";
             string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-xml2gff-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
             string gffPath = Path.Combine(tempDir, "sample.gff");
-            string xmlPath = Path.Combine(tempDir, "sample.xml");
+            string xmlPath = Path.Combine(tempDir, "sample.gff.xml");
             string roundTripPath = Path.Combine(tempDir, "roundtrip.gff");
 
             try
@@ -401,7 +401,7 @@ namespace KotorCLI.Tests
             }
         }
 
-        private static void WriteSampleGff(string path, string label = "integration-label")
+        private static void WriteSampleGff(string path, string label = "integration-gff-label")
         {
             var gff = new GFF(GFFContent.GFF);
             gff.Root.SetString("Label", label);
