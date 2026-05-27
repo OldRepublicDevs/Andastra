@@ -1091,6 +1091,14 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void ExecuteSearchArchive_EmptyFilePath_ExitsNonZero()
+        {
+            var logger = new StandardLogger();
+            int exitCode = SearchArchiveCommand.Execute(string.Empty, "sample_*", false, false, logger);
+            Assert.That(exitCode, Is.EqualTo(1));
+        }
+
+        [Test]
         public void ExecuteSearchArchive_MissingFile_ExitsNonZero()
         {
             string missingPath = Path.Combine(Path.GetTempPath(), "kotorcli-missing-" + Guid.NewGuid().ToString("N") + ".rim");
