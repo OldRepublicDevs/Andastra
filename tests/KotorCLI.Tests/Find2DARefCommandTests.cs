@@ -185,6 +185,65 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void Execute_CacheFile_SecondRunUsesSavedCacheWithoutRescan()
+        {
+            const int targetRow = 9;
+            string installRoot = CreateInstallWithAppearanceRow(targetRow);
+            string cacheFile = Path.Combine(Path.GetTempPath(), "kotorcli-2da-cache-" + Guid.NewGuid().ToString("N") + ".json");
+
+            try
+            {
+                var logger = new StandardLogger();
+                int firstExit = Find2DARefCommand.Execute(
+                    "appearance",
+                    targetRow,
+                    installRoot,
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    jsonOutput: false,
+                    countOnly: false,
+                    moduleGlobFilters: null,
+                    cacheFilePath: cacheFile,
+                    rebuildCache: false,
+                    logger);
+
+                Assert.That(firstExit, Is.EqualTo(0));
+                Assert.That(File.Exists(cacheFile), Is.True);
+                DateTime firstWrite = File.GetLastWriteTimeUtc(cacheFile);
+
+                System.Threading.Thread.Sleep(1100);
+
+                int secondExit = Find2DARefCommand.Execute(
+                    "appearance",
+                    targetRow,
+                    installRoot,
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    jsonOutput: false,
+                    countOnly: false,
+                    moduleGlobFilters: null,
+                    cacheFilePath: cacheFile,
+                    rebuildCache: false,
+                    logger);
+
+                Assert.That(secondExit, Is.EqualTo(0));
+                Assert.That(File.GetLastWriteTimeUtc(cacheFile), Is.EqualTo(firstWrite));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+                if (File.Exists(cacheFile))
+                {
+                    File.Delete(cacheFile);
+                }
+            }
+        }
+
+        [Test]
         public void Execute_CountOnly_2DAMiss_PrintsZero()
         {
             string installRoot = CreateInstallWithAppearanceRow(9);
