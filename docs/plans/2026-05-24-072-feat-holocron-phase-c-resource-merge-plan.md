@@ -1,7 +1,8 @@
 ---
 title: "feat: Holocron port phase C — KotorCLI resource convert + GFF merge"
 type: feat
-status: active
+status: complete
+completed: 2026-05-24
 date: 2026-05-24
 origin: docs/plans/2026-05-24-071-feat-holocron-phase-b-kotorcli-ref-finder-plan.md
 branch: feat/holocron-port-phase-b
