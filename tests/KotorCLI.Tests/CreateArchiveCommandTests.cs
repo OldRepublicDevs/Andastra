@@ -241,6 +241,54 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void Execute_CreateModFromEmptyDirectory_ProducesEmptyArchive()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-create-mod-empty-dir-" + Guid.NewGuid().ToString("N"));
+            string inputDir = Path.Combine(tempDir, "in");
+            string modPath = Path.Combine(tempDir, "packed.mod");
+            Directory.CreateDirectory(inputDir);
+
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = CreateArchiveCommand.Execute(inputDir, modPath, "mod", null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(File.Exists(modPath), Is.True);
+
+                var capsule = new LazyCapsule(modPath);
+                Assert.That(capsule.GetResources().Count, Is.EqualTo(0));
+            }
+            finally
+            {
+                DeleteDirectorySafe(tempDir);
+            }
+        }
+
+        [Test]
+        public void Execute_CreateErfFromEmptyDirectory_ProducesEmptyArchive()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-create-erf-empty-dir-" + Guid.NewGuid().ToString("N"));
+            string inputDir = Path.Combine(tempDir, "in");
+            string erfPath = Path.Combine(tempDir, "packed.erf");
+            Directory.CreateDirectory(inputDir);
+
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = CreateArchiveCommand.Execute(inputDir, erfPath, "erf", null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(File.Exists(erfPath), Is.True);
+
+                var capsule = new LazyCapsule(erfPath);
+                Assert.That(capsule.GetResources().Count, Is.EqualTo(0));
+            }
+            finally
+            {
+                DeleteDirectorySafe(tempDir);
+            }
+        }
+
+        [Test]
         public void Execute_CreateRimWithFilterNoMatch_ProducesEmptyArchive()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-create-filter-empty-" + Guid.NewGuid().ToString("N"));
