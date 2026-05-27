@@ -416,6 +416,84 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void ExecuteSearchArchive_ModCaseSensitiveName_MatchesExactCase()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-mod-case-name-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string modPath = CreateSampleMod(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(modPath, "sample_*", true, false, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_ModCaseSensitiveContent_RejectsCaseMismatch()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-mod-case-content-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string modPath = CreateSampleMod(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(modPath, "Archive-Test", true, true, logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_ModCaseSensitiveContent_MatchesExactCase()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-mod-case-content-match-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string modPath = CreateSampleMod(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(modPath, "archive-test", true, true, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void ExecuteSearchArchive_MatchesWildcard()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-" + Guid.NewGuid().ToString("N"));
