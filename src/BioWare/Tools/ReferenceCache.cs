@@ -146,9 +146,10 @@ namespace BioWare.Tools
                 {
                     ScanSSF(identifier, data);
                 }
-                // NCS files - NCS scanning temporarily disabled pending bytecode analysis implementation
-                // NCS files contain compiled NWScript bytecode which requires specialized parsing
-                // GFF files
+                else if (restype == ResourceType.NCS)
+                {
+                    ScanNCS(identifier, data);
+                }
                 else if (restype.IsGff())
                 {
                     try
@@ -220,6 +221,22 @@ namespace BioWare.Tools
                     LogDebug($"Found StrRef {strref.Value} in SSF file '{filename}' at sound slot '{sound}'");
                     AddReference(strref.Value, identifier, location);
                 }
+            }
+        }
+
+        private void ScanNCS(ResourceIdentifier identifier, byte[] data)
+        {
+            foreach (NcsConstiScanner.ConstiInstruction instruction in NcsConstiScanner.ExtractConstiInstructions(data))
+            {
+                if (instruction.Value < 0)
+                {
+                    continue;
+                }
+
+                string location = "offset_" + instruction.ValueByteOffset;
+                string filename = identifier.ResName + "." + identifier.ResType.Extension;
+                LogDebug("Found StrRef " + instruction.Value + " in NCS file '" + filename + "' at byte offset " + instruction.ValueByteOffset);
+                AddReference(instruction.Value, identifier, location);
             }
         }
 
@@ -1040,9 +1057,46 @@ namespace BioWare.Tools
                         scanResults.Add(result);
                     }
                 }
+                else if (restype == ResourceType.NCS)
+                {
+                    var result = ScanNCSForStrRef(resource, installation, strref, logger);
+                    if (result != null)
+                    {
+                        scanResults.Add(result);
+                    }
+                }
             }
 
             return scanResults;
+        }
+
+        private static StrRefSearchResult ScanNCSForStrRef(
+            FileResource resource,
+            Installation installation,
+            int strref,
+            Action<string> logger)
+        {
+            try
+            {
+                List<int> offsets = NcsConstiScanner.ExtractConstiOffsetsForValue(resource.GetData(), strref);
+                if (offsets == null || offsets.Count == 0)
+                {
+                    return null;
+                }
+
+                var locations = new List<object>();
+                foreach (int offset in offsets)
+                {
+                    locations.Add(new NCSRefLocation(offset));
+                    logger?.Invoke("    Found at: NCS offset " + offset + " at " + resource.FilePath);
+                }
+
+                return new StrRefSearchResult(resource, locations);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         // Helper method to get all resources from an Installation
