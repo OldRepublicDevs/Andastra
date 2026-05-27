@@ -185,6 +185,57 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void Execute_FullRow_WithLabelMatch_IncludesMultipleHits()
+        {
+            const int targetRow = 9;
+            const string rowLabel = "row9label";
+            string installRoot = CreateInstallWithAppearanceRowAndLabel(targetRow, rowLabel);
+            var output = new System.IO.StringWriter();
+            var originalOut = Console.Out;
+            try
+            {
+                Console.SetOut(output);
+                var logger = new StandardLogger(noColor: true);
+                int exitCode = Find2DARefCommand.Execute(
+                    "appearance",
+                    targetRow,
+                    installRoot,
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    jsonOutput: true,
+                    countOnly: false,
+                    moduleGlobFilters: null,
+                    cacheFilePath: null,
+                    rebuildCache: false,
+                    fullRow: true,
+                    logger);
+
+                Assert.That(exitCode, Is.EqualTo(0));
+                string text = output.ToString();
+                Assert.That(text, Does.Contain("\"count\":"));
+                int countIndex = text.IndexOf("\"count\":", StringComparison.Ordinal);
+                string countFragment = text.Substring(countIndex);
+                int countValueStart = countFragment.IndexOf(':') + 1;
+                int countValueEnd = countFragment.IndexOf(',', countValueStart);
+                if (countValueEnd < 0)
+                {
+                    countValueEnd = countFragment.IndexOf('}', countValueStart);
+                }
+
+                string countText = countFragment.Substring(countValueStart, countValueEnd - countValueStart).Trim();
+                int count = int.Parse(countText);
+                Assert.That(count, Is.GreaterThanOrEqualTo(2));
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
         public void Execute_CacheFile_SecondRunUsesSavedCacheWithoutRescan()
         {
             const int targetRow = 9;
@@ -277,14 +328,38 @@ namespace KotorCLI.Tests
 
         private static string CreateInstallWithAppearanceRow(int rowIndex)
         {
+            return CreateInstallWithAppearanceRowAndLabel(rowIndex, string.Empty);
+        }
+
+        private static string CreateInstallWithAppearanceRowAndLabel(int rowIndex, string rowLabel)
+        {
             string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-2da-" + Guid.NewGuid().ToString("N"));
             string overrideDir = Path.Combine(installRoot, "Override");
             Directory.CreateDirectory(overrideDir);
             File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
             File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
 
+            if (!string.IsNullOrEmpty(rowLabel))
+            {
+                var twoDA = new BioWare.Resource.Formats.TwoDA.TwoDA(new System.Collections.Generic.List<string> { "label" });
+                for (int i = 0; i <= rowIndex; i++)
+                {
+                    twoDA.AddRow();
+                }
+
+                twoDA.SetLabel(rowIndex, rowLabel);
+                File.WriteAllBytes(
+                    Path.Combine(overrideDir, "appearance.2da"),
+                    BioWare.Resource.Formats.TwoDA.TwoDAAuto.BytesTwoDA(twoDA));
+            }
+
             var utc = new UTC();
             utc.AppearanceId = rowIndex;
+            if (!string.IsNullOrEmpty(rowLabel))
+            {
+                utc.Tag = rowLabel;
+            }
+
             GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
             byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
             File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
