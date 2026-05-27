@@ -143,5 +143,41 @@ namespace KotorCLI.Tests
             Assert.That(roundTrip.KeyEntries[0].ResRef.ToString(), Is.EqualTo("test_creature"));
             Assert.That(roundTrip.KeyEntries[0].ResType, Is.EqualTo(ResourceType.UTC));
         }
+
+        [Test]
+        public void ExecuteExtract_MissingInputFile_ExitsNonZero()
+        {
+            string missingPath = Path.Combine(Path.GetTempPath(), "kotorcli-missing-" + Guid.NewGuid().ToString("N") + ".rim");
+            var logger = new StandardLogger();
+            int exitCode = ExtractCommand.Execute(missingPath, null, null, null, logger);
+            Assert.That(exitCode, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ExecuteExtract_UnsupportedExtension_ExitsNonZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-extract-unsupported-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string txtPath = Path.Combine(tempDir, "not_an_archive.txt");
+                File.WriteAllText(txtPath, "not an archive");
+                var logger = new StandardLogger();
+                int exitCode = ExtractCommand.Execute(txtPath, null, null, null, logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
     }
 }
