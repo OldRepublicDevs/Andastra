@@ -1283,23 +1283,8 @@ namespace KotorCLI.Commands
             {
                 var file = parseResult.GetValue(statsFileArg);
                 var logger = new StandardLogger();
-
-                if (string.IsNullOrEmpty(file))
-                {
-                    logger.Error("Error: No file specified");
-                    Environment.Exit(1);
-                }
-
-                try
-                {
-                    var stats = FileStatsAnalyzer.AnalyzeFile(file);
-                    stats.PrintToLogger(logger);
-                }
-                catch (Exception ex)
-                {
-                    logger.Error($"Error analyzing file '{file}': {ex.Message}");
-                    Environment.Exit(1);
-                }
+                int exitCode = ExecuteStats(file, logger);
+                Environment.Exit(exitCode);
             });
             rootCommand.Add(statsCmd);
 
@@ -1314,81 +1299,8 @@ namespace KotorCLI.Commands
                 var file = parseResult.GetValue(validateFileArg);
                 var verbose = parseResult.GetValue(verboseOpt);
                 var logger = new StandardLogger();
-
-                if (string.IsNullOrEmpty(file))
-                {
-                    logger.Error("Error: No file specified");
-                    Environment.Exit(1);
-                }
-
-                try
-                {
-                    var stats = FileStatsAnalyzer.AnalyzeFile(file);
-
-                    if (stats.IsValid)
-                    {
-                        logger.Info($"✓ File '{stats.FileName}' is valid");
-                        logger.Info($"  Format: {stats.Format}");
-                        logger.Info($"  Size: {stats.FileSize:N0} bytes ({FileStats.GetReadableFileSize(stats.FileSize)})");
-
-                        if (verbose)
-                        {
-                            logger.Info("");
-                            logger.Info("Validation Details:");
-
-                            // Format-specific validation details
-                            switch (stats)
-                            {
-                                case GFFFileStats gffStats:
-                                    ValidateGFFStructure(gffStats, logger);
-                                    break;
-                                case ERFFileStats erfStats:
-                                    ValidateERFStructure(erfStats, logger);
-                                    break;
-                                case TLKFileStats tlkStats:
-                                    ValidateTLKStructure(tlkStats, logger);
-                                    break;
-                                case NCSFileStats ncsStats:
-                                    ValidateNCSStructure(ncsStats, logger);
-                                    break;
-                                case TwoDAFileStats twodaStats:
-                                    ValidateTwoDAStructure(twodaStats, logger);
-                                    break;
-                                case BIFFileStats bifStats:
-                                    ValidateBIFStructure(bifStats, logger);
-                                    break;
-                            }
-
-                            // Additional integrity checks
-                            PerformIntegrityChecks(stats, logger);
-                        }
-
-                        logger.Info("");
-                        logger.Info("✓ Validation completed successfully - no errors found");
-                    }
-                    else
-                    {
-                        logger.Error($"✗ File '{stats.FileName}' is invalid");
-                        logger.Info($"  Format: {stats.Format}");
-
-                        if (stats.Errors.Any())
-                        {
-                            logger.Info("");
-                            logger.Info("Validation Errors:");
-                            foreach (var error in stats.Errors)
-                            {
-                                logger.Error($"  - {error}");
-                            }
-                        }
-
-                        Environment.Exit(1);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    logger.Error($"Error validating file '{file}': {ex.Message}");
-                    Environment.Exit(1);
-                }
+                int exitCode = ExecuteValidate(file, verbose, logger);
+                Environment.Exit(exitCode);
             });
             rootCommand.Add(validateCmd);
 
@@ -1499,6 +1411,126 @@ namespace KotorCLI.Commands
             catch (Exception ex)
             {
                 logger.Error("Diff failed: " + ex.Message);
+                return 1;
+            }
+        }
+
+        public static int ExecuteStats(string file, ILogger logger)
+        {
+            if (string.IsNullOrEmpty(file))
+            {
+                logger.Error("Error: No file specified");
+                return 1;
+            }
+
+            try
+            {
+                FileStats stats = FileStatsAnalyzer.AnalyzeFile(file);
+                stats.PrintToLogger(logger);
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Error analyzing file '" + file + "': " + ex.Message);
+                return 1;
+            }
+        }
+
+        public static int ExecuteValidate(string file, bool verbose, ILogger logger)
+        {
+            if (string.IsNullOrEmpty(file))
+            {
+                logger.Error("Error: No file specified");
+                return 1;
+            }
+
+            try
+            {
+                FileStats stats = FileStatsAnalyzer.AnalyzeFile(file);
+
+                if (stats.IsValid)
+                {
+                    logger.Info("✓ File '" + stats.FileName + "' is valid");
+                    logger.Info("  Format: " + stats.Format);
+                    logger.Info("  Size: " + stats.FileSize.ToString("N0") + " bytes (" + FileStats.GetReadableFileSize(stats.FileSize) + ")");
+
+                    if (verbose)
+                    {
+                        logger.Info("");
+                        logger.Info("Validation Details:");
+
+                        GFFFileStats gffStats = stats as GFFFileStats;
+                        if (gffStats != null)
+                        {
+                            ValidateGFFStructure(gffStats, logger);
+                        }
+                        else
+                        {
+                            ERFFileStats erfStats = stats as ERFFileStats;
+                            if (erfStats != null)
+                            {
+                                ValidateERFStructure(erfStats, logger);
+                            }
+                            else
+                            {
+                                TLKFileStats tlkStats = stats as TLKFileStats;
+                                if (tlkStats != null)
+                                {
+                                    ValidateTLKStructure(tlkStats, logger);
+                                }
+                                else
+                                {
+                                    NCSFileStats ncsStats = stats as NCSFileStats;
+                                    if (ncsStats != null)
+                                    {
+                                        ValidateNCSStructure(ncsStats, logger);
+                                    }
+                                    else
+                                    {
+                                        TwoDAFileStats twodaStats = stats as TwoDAFileStats;
+                                        if (twodaStats != null)
+                                        {
+                                            ValidateTwoDAStructure(twodaStats, logger);
+                                        }
+                                        else
+                                        {
+                                            BIFFileStats bifStats = stats as BIFFileStats;
+                                            if (bifStats != null)
+                                            {
+                                                ValidateBIFStructure(bifStats, logger);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        PerformIntegrityChecks(stats, logger);
+                    }
+
+                    logger.Info("");
+                    logger.Info("✓ Validation completed successfully - no errors found");
+                    return 0;
+                }
+
+                logger.Error("✗ File '" + stats.FileName + "' is invalid");
+                logger.Info("  Format: " + stats.Format);
+
+                if (stats.Errors.Any())
+                {
+                    logger.Info("");
+                    logger.Info("Validation Errors:");
+                    foreach (string error in stats.Errors)
+                    {
+                        logger.Error("  - " + error);
+                    }
+                }
+
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Error validating file '" + file + "': " + ex.Message);
                 return 1;
             }
         }
