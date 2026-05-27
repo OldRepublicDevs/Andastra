@@ -133,6 +133,11 @@ namespace BioWare.Tools
             get { return _game; }
         }
 
+        public int NcsStrRefCandidateMinimum
+        {
+            get { return _ncsStrRefCandidateMinimum; }
+        }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:161-201
         // Original: def scan_resource(self, resource: FileResource, data: bytes) -> None:
         public void ScanResource(FileResource resource, byte[] data)
@@ -389,9 +394,12 @@ namespace BioWare.Tools
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:436-479
         // Original: @classmethod def from_dict(cls, game: Game, data: dict[str, list[dict[str, str | list[str]]]]) -> StrRefReferenceCache:
-        public static StrRefReferenceCache FromDict(BioWareGame game, Dictionary<string, List<Dictionary<string, object>>> data)
+        public static StrRefReferenceCache FromDict(
+            BioWareGame game,
+            Dictionary<string, List<Dictionary<string, object>>> data,
+            int? ncsStrRefCandidateMinimum = null)
         {
-            var cache = new StrRefReferenceCache(game);
+            var cache = new StrRefReferenceCache(game, ncsStrRefCandidateMinimum);
 
             foreach (var kvp in data)
             {
@@ -404,8 +412,13 @@ namespace BioWare.Tools
                 {
                     string resname = refData["resname"].ToString();
                     string restypeExt = refData["restype"].ToString();
-                    var locationsList = refData["locations"] as List<object>;
-                    var locations = locationsList?.Cast<string>().ToList() ?? new List<string>();
+                    object locationsValue;
+                    if (!refData.TryGetValue("locations", out locationsValue))
+                    {
+                        locationsValue = null;
+                    }
+
+                    List<string> locations = ConvertLocationsFromRefData(locationsValue);
 
                     // Recreate ResourceIdentifier
                     ResourceType restype = ResourceType.FromExtension(restypeExt);
@@ -429,6 +442,47 @@ namespace BioWare.Tools
             LogVerbose($"Restored StrRef cache from saved data: {cache._cache.Count} StrRefs, {cache._totalReferencesFound} references");
 
             return cache;
+        }
+
+        private static List<string> ConvertLocationsFromRefData(object locationsValue)
+        {
+            var locations = new List<string>();
+            if (locationsValue == null)
+            {
+                return locations;
+            }
+
+            if (locationsValue is List<string> stringList)
+            {
+                locations.AddRange(stringList);
+                return locations;
+            }
+
+            if (locationsValue is IEnumerable<object> objectList)
+            {
+                foreach (object item in objectList)
+                {
+                    if (item != null)
+                    {
+                        locations.Add(item.ToString());
+                    }
+                }
+
+                return locations;
+            }
+
+            if (locationsValue is System.Collections.IEnumerable enumerable && !(locationsValue is string))
+            {
+                foreach (object item in enumerable)
+                {
+                    if (item != null)
+                    {
+                        locations.Add(item.ToString());
+                    }
+                }
+            }
+
+            return locations;
         }
 
         private static void LogDebug(string msg)
@@ -795,54 +849,7 @@ namespace BioWare.Tools
             if (cache == null)
             {
                 logger?.Invoke($"Building StrRef cache for {strrefs.Count} StrRefs for Installation {installation.Path}...");
-                cache = new StrRefReferenceCache(installation.Game, options?.NcsStrRefCandidateMinimum);
-
-                // Scan all resources to build the cache
-                int resourceCount = 0;
-                int skippedCount = 0;
-                int lastLoggedCount = 0;
-                int logInterval = 500; // Log progress every 500 resources
-
-                var allResources = GetAllResources(installation);
-                foreach (var resource in allResources)
-                {
-                    try
-                    {
-                        // Skip RIM files - they're not used at runtime
-                        string filePath = resource.FilePath;
-                        if (filePath.IndexOf("rims", StringComparison.OrdinalIgnoreCase) >= 0)
-                        {
-                            skippedCount++;
-                            continue;
-                        }
-
-                        // Filter by resource type: Only scan types that can contain StrRefs
-                        ResourceType restype = resource.ResType;
-                        bool canContainStrref = restype.IsGff() || restype == ResourceType.TwoDA || restype == ResourceType.SSF || restype == ResourceType.NCS;
-                        if (!canContainStrref)
-                        {
-                            skippedCount++;
-                            continue;
-                        }
-
-                        byte[] data = resource.GetData();
-                        cache.ScanResource(resource, data);
-                        resourceCount++;
-
-                        // Log progress periodically
-                        if (logger != null && resourceCount - lastLoggedCount >= logInterval)
-                        {
-                            logger($"  Scanning for StrRefs... {resourceCount} resources processed for Installation {installation.Path}");
-                            lastLoggedCount = resourceCount;
-                        }
-                    }
-                    catch
-                    {
-                        skippedCount++;
-                    }
-                }
-
-                logger?.Invoke($"Cache built: scanned {resourceCount} resources (skipped {skippedCount} files) for Installation {installation.Path}");
+                cache = BuildStrRefReferenceCache(installation, logger, options);
             }
 
             // Convert cache entries to StrRefSearchResult format
@@ -938,6 +945,59 @@ namespace BioWare.Tools
             }
 
             return (results, cache);
+        }
+
+        /// <summary>
+        /// Scan an installation once and return a populated StrRef reference cache.
+        /// </summary>
+        public static StrRefReferenceCache BuildStrRefReferenceCache(
+            Installation installation,
+            Action<string> logger = null,
+            ReferenceSearchOptions options = null)
+        {
+            var cache = new StrRefReferenceCache(installation.Game, options != null ? options.NcsStrRefCandidateMinimum : null);
+            int resourceCount = 0;
+            int skippedCount = 0;
+            int lastLoggedCount = 0;
+            int logInterval = 500;
+
+            foreach (FileResource resource in GetAllResources(installation, options))
+            {
+                try
+                {
+                    string filePath = resource.FilePath;
+                    if (filePath.IndexOf("rims", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        skippedCount++;
+                        continue;
+                    }
+
+                    ResourceType restype = resource.ResType;
+                    bool canContainStrref = restype.IsGff() || restype == ResourceType.TwoDA || restype == ResourceType.SSF || restype == ResourceType.NCS;
+                    if (!canContainStrref)
+                    {
+                        skippedCount++;
+                        continue;
+                    }
+
+                    byte[] data = resource.GetData();
+                    cache.ScanResource(resource, data);
+                    resourceCount++;
+
+                    if (logger != null && resourceCount - lastLoggedCount >= logInterval)
+                    {
+                        logger("  Scanning for StrRefs... " + resourceCount + " resources processed for Installation " + installation.Path);
+                        lastLoggedCount = resourceCount;
+                    }
+                }
+                catch
+                {
+                    skippedCount++;
+                }
+            }
+
+            logger?.Invoke("Cache built: scanned " + resourceCount + " resources (skipped " + skippedCount + " files) for Installation " + installation.Path);
+            return cache;
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:906-1254
