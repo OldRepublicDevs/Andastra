@@ -272,7 +272,8 @@ namespace BioWare.Tools
                         results.Add(new ReferenceSearchResult
                         {
                             Resource = resource,
-                            FieldPath = fieldPath
+                            FieldPath = fieldPath,
+                            MatchedValue = trimmedNeedle
                         });
                     }
                 }
