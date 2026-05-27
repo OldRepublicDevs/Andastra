@@ -135,6 +135,21 @@ namespace OdyTools.Utils
                 "Find References Failed");
         }
 
+        public static void FindAndShowConversationReferences(
+            Window parent,
+            string conversationResRef,
+            OdyInstallation installation,
+            bool showOptionsDialog = false)
+        {
+            RunSearch(
+                parent,
+                conversationResRef,
+                installation,
+                showOptionsDialog,
+                ReferenceFinder.FindConversationResRefReferences,
+                "Find Conversation References Failed");
+        }
+
         private static void RunSearch(
             Window parent,
             string needle,
