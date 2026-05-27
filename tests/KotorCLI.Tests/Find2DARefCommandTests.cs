@@ -149,6 +149,73 @@ namespace KotorCLI.Tests
             }
         }
 
+        [Test]
+        public void Execute_JsonOutput_2DAHit_IncludesMetadata()
+        {
+            string installRoot = CreateInstallWithAppearanceRow(9);
+            var output = new System.IO.StringWriter();
+            var originalOut = Console.Out;
+            try
+            {
+                Console.SetOut(output);
+                var logger = new StandardLogger(noColor: true);
+                int exitCode = Find2DARefCommand.Execute(
+                    "appearance",
+                    9,
+                    installRoot,
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    jsonOutput: true,
+                    countOnly: false,
+                    logger);
+
+                Assert.That(exitCode, Is.EqualTo(0));
+                string text = output.ToString();
+                Assert.That(text, Does.Contain("\"needle\":\"appearance:9\""));
+                Assert.That(text, Does.Contain("\"type\":\"2da-ref\""));
+                Assert.That(text, Does.Contain("\"count\":1"));
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Execute_CountOnly_2DAMiss_PrintsZero()
+        {
+            string installRoot = CreateInstallWithAppearanceRow(9);
+            var output = new System.IO.StringWriter();
+            var originalOut = Console.Out;
+            try
+            {
+                Console.SetOut(output);
+                var logger = new StandardLogger(noColor: true);
+                int exitCode = Find2DARefCommand.Execute(
+                    "appearance",
+                    999,
+                    installRoot,
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    jsonOutput: false,
+                    countOnly: true,
+                    logger);
+
+                Assert.That(exitCode, Is.EqualTo(1));
+                Assert.That(output.ToString().Trim(), Is.EqualTo("0"));
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
         private static string CreateInstallWithAppearanceRow(int rowIndex)
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-2da-" + Guid.NewGuid().ToString("N"));
