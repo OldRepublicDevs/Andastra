@@ -30,6 +30,8 @@ namespace KotorCLI.Tests
                     overrideOnly: true,
                     noChitin: true,
                     noModules: true,
+                    caseSensitive: false,
+                    partialMatch: false,
                     logger);
 
                 Assert.That(exitCode, Is.EqualTo(0));
@@ -54,6 +56,8 @@ namespace KotorCLI.Tests
                     overrideOnly: true,
                     noChitin: true,
                     noModules: true,
+                    caseSensitive: false,
+                    partialMatch: false,
                     logger);
 
                 Assert.That(exitCode, Is.EqualTo(0));
@@ -78,6 +82,8 @@ namespace KotorCLI.Tests
                     overrideOnly: true,
                     noChitin: true,
                     noModules: true,
+                    caseSensitive: false,
+                    partialMatch: false,
                     logger);
 
                 Assert.That(exitCode, Is.EqualTo(1));
@@ -99,6 +105,8 @@ namespace KotorCLI.Tests
                 overrideOnly: true,
                 noChitin: true,
                 noModules: true,
+                caseSensitive: false,
+                partialMatch: false,
                 logger);
 
             Assert.That(exitCode, Is.EqualTo(1));
@@ -118,6 +126,89 @@ namespace KotorCLI.Tests
                     overrideOnly: true,
                     noChitin: true,
                     noModules: true,
+                    caseSensitive: false,
+                    partialMatch: false,
+                    logger);
+
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Execute_TagReference_InOverride_ExitsZero()
+        {
+            string installRoot = CreateInstallWithTagReference("unique_cli_tag");
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = FindRefsCommand.Execute(
+                    "unique_cli_tag",
+                    installRoot,
+                    "tag",
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    caseSensitive: false,
+                    partialMatch: false,
+                    logger);
+
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Execute_PartialTagMatch_InOverride_ExitsZero()
+        {
+            string installRoot = CreateInstallWithTagReference("unique_cli_tag");
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = FindRefsCommand.Execute(
+                    "cli_tag",
+                    installRoot,
+                    "tag",
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    caseSensitive: false,
+                    partialMatch: true,
+                    logger);
+
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Execute_NoOverride_SkipsOverrideHit()
+        {
+            string installRoot = CreateInstallWithTagReference("only_in_override");
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = FindRefsCommand.Execute(
+                    "only_in_override",
+                    installRoot,
+                    "tag",
+                    overrideOnly: false,
+                    noOverride: true,
+                    noChitin: true,
+                    noModules: true,
+                    caseSensitive: false,
+                    partialMatch: false,
                     logger);
 
                 Assert.That(exitCode, Is.EqualTo(1));
@@ -153,6 +244,22 @@ namespace KotorCLI.Tests
 
             var utc = new UTC();
             utc.Conversation = new ResRef(conversationResRef);
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
+
+            return installRoot;
+        }
+
+        private static string CreateInstallWithTagReference(string tag)
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-findrefs-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.Tag = tag;
             GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
             byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
             File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
