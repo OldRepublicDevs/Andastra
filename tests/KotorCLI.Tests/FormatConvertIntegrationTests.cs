@@ -5,6 +5,7 @@ using System.IO;
 using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.SSF;
 using BioWare.Resource.Formats.TwoDA;
 using NUnit.Framework;
 
@@ -232,11 +233,74 @@ namespace KotorCLI.Tests
             }
         }
 
+        [Test]
+        public void Ssf2Xml_MinimalSsf_WritesXmlFile()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-ssf2xml-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+            string ssfPath = Path.Combine(tempDir, "sample.ssf");
+            string xmlPath = Path.Combine(tempDir, "sample.ssf.xml");
+
+            try
+            {
+                WriteSampleSsf(ssfPath, 424242);
+
+                int exitCode = RunKotorCli("ssf2xml \"" + ssfPath + "\" --output \"" + xmlPath + "\"", out _, out string stderr);
+
+                Assert.That(exitCode, Is.EqualTo(0), stderr);
+                Assert.That(File.Exists(xmlPath), Is.True);
+                Assert.That(new FileInfo(xmlPath).Length, Is.GreaterThan(0));
+            }
+            finally
+            {
+                DeleteDirectorySafe(tempDir);
+            }
+        }
+
+        [Test]
+        public void Xml2Ssf_AfterSsf2Xml_PreservesBattleCryStrRef()
+        {
+            const int targetStrRef = 424242;
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-xml2ssf-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+            string ssfPath = Path.Combine(tempDir, "sample.ssf");
+            string xmlPath = Path.Combine(tempDir, "sample.ssf.xml");
+            string roundTripPath = Path.Combine(tempDir, "roundtrip.ssf");
+
+            try
+            {
+                WriteSampleSsf(ssfPath, targetStrRef);
+
+                int xmlExit = RunKotorCli("ssf2xml \"" + ssfPath + "\" --output \"" + xmlPath + "\"", out _, out string xmlErr);
+                Assert.That(xmlExit, Is.EqualTo(0), xmlErr);
+                Assert.That(File.Exists(xmlPath), Is.True);
+
+                int ssfExit = RunKotorCli("xml2ssf \"" + xmlPath + "\" --output \"" + roundTripPath + "\"", out _, out string ssfErr);
+                Assert.That(ssfExit, Is.EqualTo(0), ssfErr);
+                Assert.That(File.Exists(roundTripPath), Is.True);
+
+                byte[] roundTripBytes = File.ReadAllBytes(roundTripPath);
+                SSF roundTrip = SSFAuto.ReadSsf(roundTripBytes, 0, roundTripBytes.Length, ResourceType.SSF);
+                Assert.That(roundTrip.Get(SSFSound.BATTLE_CRY_1), Is.EqualTo(targetStrRef));
+            }
+            finally
+            {
+                DeleteDirectorySafe(tempDir);
+            }
+        }
+
         private static void WriteSampleTwoDA(string path, string rowLabel = "integration-row")
         {
             var twoDA = new TwoDA(new List<string> { "label" });
             twoDA.AddRow(rowLabel, new Dictionary<string, object> { { "label", "value" } });
             TwoDAAuto.Write2DA(twoDA, path, ResourceType.TwoDA);
+        }
+
+        private static void WriteSampleSsf(string path, int battleCryStrRef)
+        {
+            var ssf = new SSF();
+            ssf.SetData(SSFSound.BATTLE_CRY_1, battleCryStrRef);
+            File.WriteAllBytes(path, SSFAuto.BytesSsf(ssf));
         }
 
         private static void DeleteDirectorySafe(string path)
