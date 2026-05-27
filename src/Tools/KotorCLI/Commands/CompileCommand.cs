@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.RegularExpressions;
 using BioWare;
 using BioWare.Common;
 using BioWare.Resource.Formats.NCS;
@@ -184,7 +183,7 @@ namespace KotorCLI.Commands
                                     foreach (var excludePattern in excludePatterns)
                                     {
                                         var excludePath = Path.Combine(rootDir, excludePattern);
-                                        if (MatchPattern(match, excludePath))
+                                        if (GlobPatternMatcher.MatchPattern(match, excludePath))
                                         {
                                             excluded = true;
                                             break;
@@ -196,7 +195,7 @@ namespace KotorCLI.Commands
                                     {
                                         foreach (var skipPattern in skipCompilePatterns)
                                         {
-                                            if (MatchPattern(matchPath.Name, skipPattern))
+                                            if (GlobPatternMatcher.MatchPattern(matchPath.Name, skipPattern))
                                             {
                                                 excluded = true;
                                                 logger.Debug($"Skipping compilation: {matchPath.Name}");
@@ -416,17 +415,6 @@ namespace KotorCLI.Commands
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Match a path against a glob pattern.
-        /// Matching PyKotor: fnmatch.fnmatch() behavior
-        /// </summary>
-        private static bool MatchPattern(string path, string pattern)
-        {
-            // Simple pattern matching - convert glob pattern to regex
-            var regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
-            return Regex.IsMatch(path, regexPattern, RegexOptions.IgnoreCase);
         }
 
         /// <summary>

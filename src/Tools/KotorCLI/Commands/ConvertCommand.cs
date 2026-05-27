@@ -3,7 +3,6 @@ using System.CommandLine;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Common;
 using BioWare.Resource;
@@ -107,7 +106,7 @@ namespace KotorCLI.Commands
                                 var excluded = excludePatterns.Any(excludePattern =>
                                 {
                                     var excludePath = Path.Combine(rootDir, excludePattern);
-                                    return MatchPattern(match, excludePath);
+                                    return GlobPatternMatcher.MatchPattern(match, excludePath);
                                 });
 
                                 if (!excluded)
@@ -179,13 +178,6 @@ namespace KotorCLI.Commands
                 }
                 return 1;
             }
-        }
-
-        private static bool MatchPattern(string path, string pattern)
-        {
-            // Simple pattern matching - convert glob pattern to regex
-            var regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
-            return Regex.IsMatch(path, regexPattern, RegexOptions.IgnoreCase);
         }
 
         private static T GetTomlValue<T>(Tomlyn.Model.TomlTable table, string key)

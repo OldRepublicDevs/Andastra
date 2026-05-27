@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace KotorCLI
 {
@@ -87,6 +88,16 @@ namespace KotorCLI
             }
 
             return results;
+        }
+
+        /// <summary>
+        /// Match a path against a glob pattern.
+        /// Matching PyKotor: fnmatch.fnmatch() behavior
+        /// </summary>
+        internal static bool MatchPattern(string path, string pattern)
+        {
+            var regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
+            return Regex.IsMatch(path, regexPattern, RegexOptions.IgnoreCase);
         }
     }
 }

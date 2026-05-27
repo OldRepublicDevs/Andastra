@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using KotorCLI.Configuration;
 using KotorCLI.Logging;
 using Tomlyn.Model;
@@ -136,45 +135,32 @@ namespace KotorCLI.Commands
             // Find all files matching include patterns
             foreach (var pattern in includePatterns)
             {
-                var expandedPattern = config.ResolveTargetValue(target, "sources", pattern);
-                if (expandedPattern is string patternStr)
+                var matches = GlobPatternMatcher.FindFilesMatchingPattern(rootDir, pattern);
+                foreach (var match in matches)
                 {
-                    var matches = GlobPatternMatcher.FindFilesMatchingPattern(rootDir, patternStr);
-                    foreach (var match in matches)
+                    bool excluded = false;
+                    foreach (var excludePattern in excludePatterns)
                     {
-                        // Check if file should be excluded
-                        bool excluded = false;
-                        foreach (var excludePattern in excludePatterns)
+                        var excludePath = Path.Combine(rootDir, excludePattern);
+                        if (GlobPatternMatcher.MatchPattern(match, excludePath))
                         {
-                            var expandedExclude = config.ResolveTargetValue(target, "sources", excludePattern);
-                            if (expandedExclude is string excludeStr && MatchPattern(match, Path.Combine(rootDir, excludeStr)))
-                            {
-                                excluded = true;
-                                break;
-                            }
+                            excluded = true;
+                            break;
                         }
+                    }
 
-                        if (!excluded)
+                    if (!excluded)
+                    {
+                        var relativePath = GetRelativePath(rootDir, match);
+                        if (!sourceFiles.Contains(relativePath))
                         {
-                            // Convert to relative path from root directory
-                            var relativePath = GetRelativePath(rootDir, match);
-                            if (!sourceFiles.Contains(relativePath))
-                            {
-                                sourceFiles.Add(relativePath);
-                            }
+                            sourceFiles.Add(relativePath);
                         }
                     }
                 }
             }
 
             return sourceFiles;
-        }
-
-        private static bool MatchPattern(string path, string pattern)
-        {
-            // Simple pattern matching - convert glob pattern to regex
-            var regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
-            return Regex.IsMatch(path, regexPattern, RegexOptions.IgnoreCase);
         }
 
         private static string GetRelativePath(string rootDir, string fullPath)

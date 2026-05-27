@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using BioWare;
 using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.RIM;
@@ -195,7 +194,7 @@ namespace KotorCLI.Commands
 
                         foreach (var pattern in filterPatterns)
                         {
-                            if (MatchPattern(fileName, pattern))
+                            if (GlobPatternMatcher.MatchPattern(fileName, pattern))
                             {
                                 shouldFilter = true;
                                 logger.Debug($"Filtering out: {fileName}");
@@ -426,17 +425,6 @@ namespace KotorCLI.Commands
                 }
                 return 1;
             }
-        }
-
-        /// <summary>
-        /// Match a path against a glob pattern.
-        /// Matching PyKotor: fnmatch.fnmatch() behavior
-        /// </summary>
-        private static bool MatchPattern(string path, string pattern)
-        {
-            // Simple pattern matching - convert glob pattern to regex
-            var regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
-            return Regex.IsMatch(path, regexPattern, RegexOptions.IgnoreCase);
         }
 
         /// <summary>
