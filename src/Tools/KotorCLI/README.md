@@ -73,7 +73,7 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
   find-refs k_test_hb --install-dir /path/to/kotor --type script --override-only
 ```
 
-Flags: `--type script|tag|template|conversation`, `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--case-sensitive`, `--partial`.
+Flags: `--type script|tag|template|conversation`, `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--case-sensitive`, `--partial`, `--json`, `--count-only`.
 
 **find-strref** — TLK string reference search (2DA columns, SSF sound slots, GFF localized strings, NCS CONSTI literals):
 
