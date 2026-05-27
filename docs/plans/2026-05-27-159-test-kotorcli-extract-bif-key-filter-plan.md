@@ -1,7 +1,7 @@
 ---
 title: "test: kotorcli extract bif key filter"
 type: test
-status: active
+status: completed
 date: 2026-05-27
 origin: docs/plans/2026-05-24-158-test-kotorcli-extract-filter-plan.md
 branch: feat/holocron-port-phase-b
