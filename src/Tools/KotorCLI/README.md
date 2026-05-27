@@ -34,7 +34,7 @@ This is an **in-progress implementation**. The project structure and command stu
 - `key-pack` - Create KEY files (stub)
 
 ### Format Conversion Commands
-- `gff2json`, `json2gff` - GFF ↔ JSON (stub)
+- `gff2json`, `json2gff` - GFF ↔ JSON (wired)
 - `gff2xml`, `xml2gff` - GFF ↔ XML (stub)
 - `tlk2xml`, `xml2tlk` - TLK ↔ XML (stub)
 - `ssf2xml`, `xml2ssf` - SSF ↔ XML (stub)
@@ -115,7 +115,7 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
 ```
 
 ### Utilities
-- `diff`, `grep`, `stats`, `validate`, `merge`, `cat` - Utility commands (`cat`/`diff`/`grep`/`merge` wired)
+- `diff`, `grep`, `stats`, `validate`, `merge`, `cat` - Utility commands (`cat`/`diff`/`grep`/`merge` wired; `stats`/`validate` partial)
 
 ### Validation
 - `check-txi`, `check-2da` - Validation commands (`check-txi`/`check-2da` wired)
