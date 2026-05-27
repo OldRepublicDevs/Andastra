@@ -1,5 +1,7 @@
 using System;
 using System.CommandLine;
+using System.Collections.Generic;
+using System.IO;
 using KotorCLI.Logging;
 
 namespace KotorCLI.Commands
@@ -31,27 +33,79 @@ namespace KotorCLI.Commands
                 var searchContent = parseResult.GetValue(searchContentOption);
 
                 var logger = new StandardLogger();
-                var exitCode = Execute(file, pattern, caseSensitive, searchContent, logger);
+                int exitCode = Execute(file, pattern, caseSensitive, searchContent, logger);
                 Environment.Exit(exitCode);
             });
 
             rootCommand.Add(searchArchiveCommand);
         }
 
-        private static int Execute(string file, string pattern, bool caseSensitive, bool searchContent, ILogger logger)
+        public static int Execute(
+            string file,
+            string pattern,
+            bool caseSensitive,
+            bool searchContent,
+            ILogger logger)
         {
-            logger.Info("Search-archive command not yet fully implemented");
-            logger.Info($"Would search: {file}");
-            logger.Info($"Pattern: {pattern}");
+            if (string.IsNullOrWhiteSpace(file))
+            {
+                logger.Error("Archive file path is required");
+                return 1;
+            }
 
-            // TODO: Implement search-archive logic
-            // This requires:
-            // - Detecting archive type (ERF, RIM, KEY/BIF)
-            // - Reading archive
-            // - Searching resource names (and optionally content) for pattern
-            // - Returning matching resources
+            if (string.IsNullOrWhiteSpace(pattern))
+            {
+                logger.Error("Search pattern is required");
+                return 1;
+            }
 
-            return 0;
+            if (!File.Exists(file))
+            {
+                logger.Error("Archive file does not exist: " + file);
+                return 1;
+            }
+
+            try
+            {
+                List<ArchiveCommandHelpers.ArchiveResourceEntry> resources =
+                    ArchiveCommandHelpers.ReadArchiveResources(file, logger);
+
+                int matches = 0;
+                foreach (ArchiveCommandHelpers.ArchiveResourceEntry entry in resources)
+                {
+                    string resName = entry.ResRef ?? string.Empty;
+                    string ext = entry.ResType != null && !entry.ResType.IsInvalid
+                        ? entry.ResType.Extension
+                        : "bin";
+                    string fullName = string.IsNullOrEmpty(ext) ? resName : resName + "." + ext;
+
+                    bool nameMatch = ArchiveCommandHelpers.MatchesFilter(resName, pattern, caseSensitive) ||
+                                     ArchiveCommandHelpers.MatchesFilter(fullName, pattern, caseSensitive);
+                    bool contentMatch = searchContent &&
+                                          ArchiveCommandHelpers.ContentMatches(entry.Data, pattern, caseSensitive);
+
+                    if (!nameMatch && !contentMatch)
+                    {
+                        continue;
+                    }
+
+                    logger.Info(fullName);
+                    matches++;
+                }
+
+                if (matches == 0)
+                {
+                    logger.Error("No resources matched pattern in archive: " + file);
+                    return 1;
+                }
+
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("search-archive failed: " + ex.Message);
+                return 1;
+            }
         }
     }
 }

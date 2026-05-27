@@ -1,5 +1,7 @@
 using System;
 using System.CommandLine;
+using System.Collections.Generic;
+using System.IO;
 using KotorCLI.Logging;
 
 namespace KotorCLI.Commands
@@ -27,26 +29,78 @@ namespace KotorCLI.Commands
                 var filter = parseResult.GetValue(filterOption);
 
                 var logger = new StandardLogger();
-                var exitCode = Execute(file, verbose, filter, logger);
+                int exitCode = Execute(file, verbose, filter, logger);
                 Environment.Exit(exitCode);
             });
 
             rootCommand.Add(listArchiveCommand);
         }
 
-        private static int Execute(string file, bool verbose, string filter, ILogger logger)
+        public static int Execute(string file, bool verbose, string filter, ILogger logger)
         {
-            logger.Info("List-archive command not yet fully implemented");
-            logger.Info($"Would list: {file}");
+            if (string.IsNullOrWhiteSpace(file))
+            {
+                logger.Error("Archive file path is required");
+                return 1;
+            }
 
-            // TODO: Implement list-archive logic
-            // This requires:
-            // - Detecting archive type (ERF, RIM, KEY/BIF)
-            // - Reading archive
-            // - Listing resources (with details if verbose)
-            // - Applying filter if specified
+            if (!File.Exists(file))
+            {
+                logger.Error("Archive file does not exist: " + file);
+                return 1;
+            }
 
-            return 0;
+            try
+            {
+                List<ArchiveCommandHelpers.ArchiveResourceEntry> resources =
+                    ArchiveCommandHelpers.ReadArchiveResources(file, logger);
+
+                if (resources.Count == 0)
+                {
+                    logger.Error("No resources found in archive: " + file);
+                    return 1;
+                }
+
+                int listed = 0;
+                foreach (ArchiveCommandHelpers.ArchiveResourceEntry entry in resources)
+                {
+                    string resName = entry.ResRef ?? string.Empty;
+                    string ext = entry.ResType != null && !entry.ResType.IsInvalid
+                        ? entry.ResType.Extension
+                        : "bin";
+                    string fullName = string.IsNullOrEmpty(ext) ? resName : resName + "." + ext;
+
+                    if (!ArchiveCommandHelpers.MatchesFilter(resName, filter) &&
+                        !ArchiveCommandHelpers.MatchesFilter(fullName, filter))
+                    {
+                        continue;
+                    }
+
+                    if (verbose)
+                    {
+                        logger.Info(fullName + " (" + entry.Size + " bytes)");
+                    }
+                    else
+                    {
+                        logger.Info(fullName);
+                    }
+
+                    listed++;
+                }
+
+                if (listed == 0)
+                {
+                    logger.Error("No resources matched filter in archive: " + file);
+                    return 1;
+                }
+
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("list-archive failed: " + ex.Message);
+                return 1;
+            }
         }
     }
 }
