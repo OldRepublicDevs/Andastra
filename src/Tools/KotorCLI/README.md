@@ -21,7 +21,7 @@ Legend: **wired** = functional CLI backed by BioWare or `Conversions`; **partial
 - `config` - Read/write `kotorcli.cfg` (**wired**)
 - `init` - Scaffold a new kotorcli package (**wired**)
 - `list` - List targets and optional source files (**wired**)
-- `unpack` - Unpack module/ERF/RIM into project sources (**wired**; `--removeDeleted` not fully implemented)
+- `unpack` - Unpack module/ERF/RIM into project sources (**wired**; `--removeDeleted` removes stale files under rule roots)
 - `convert` - Convert JSON sources to GFF for configured targets (**wired**)
 - `compile` - Compile NSS for configured targets (**wired**)
 - `pack` - Pack sources into module archives (**wired**)
@@ -129,16 +129,14 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
 ## Known Issues
 
 1. **`launch` is a stub** — documents the full pipeline but exits unless `--dry-run` is used.
-2. **`unpack --removeDeleted`** — option is registered; deleting stale sources after unpack is not implemented (`TODO: PLACEHOLDER` in source).
-3. **Test coverage gaps** — reference search and format convert have integration tests; many archive/build commands rely on manual verification.
-4. **System.CommandLine** — prefer `.Options.Add()` / current `Cli.Opt` helpers when touching command definitions.
+2. **Test coverage gaps** — reference search and format convert have integration tests; many archive/build commands rely on manual verification.
+3. **System.CommandLine** — prefer `.Options.Add()` / current `Cli.Opt` helpers when touching command definitions.
 
 ## Next Steps
 
 1. Implement `launch` (or document a supported external launcher workflow).
-2. Finish `unpack --removeDeleted` tracking across unpack runs.
-3. Expand automated tests for archive and build-pipeline commands.
-4. Keep this README inventory in sync when adding or stubbing commands.
+2. Expand automated tests for archive and build-pipeline commands.
+3. Keep this README inventory in sync when adding or stubbing commands.
 
 ## References
 
