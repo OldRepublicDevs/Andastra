@@ -94,6 +94,18 @@ namespace BioWare.Tools
                 (data, needle, searchOptions) => FindTemplateResRefInGffBytes(data, needle, searchOptions));
         }
 
+        public static List<ReferenceSearchResult> FindConversationResRefReferences(
+            Installation installation,
+            string conversationResRef,
+            ReferenceSearchOptions options = null)
+        {
+            return SearchInstallation(
+                installation,
+                conversationResRef,
+                options,
+                (data, needle, searchOptions) => FindConversationResRefInGffBytes(data, needle, searchOptions));
+        }
+
         /// <summary>
         /// Find GFF field paths whose ResRef value matches <paramref name="resRefNeedle"/>.
         /// </summary>
@@ -146,6 +158,23 @@ namespace BioWare.Tools
                 templateNeedle,
                 options,
                 RecurseGffForTemplateResRef);
+        }
+
+        public static List<string> FindConversationResRefInGffBytes(byte[] data, string conversationNeedle)
+        {
+            return FindConversationResRefInGffBytes(data, conversationNeedle, null);
+        }
+
+        public static List<string> FindConversationResRefInGffBytes(
+            byte[] data,
+            string conversationNeedle,
+            ReferenceSearchOptions options)
+        {
+            return FindInGffBytes(
+                data,
+                conversationNeedle,
+                options,
+                RecurseGffForConversationResRef);
         }
 
         private delegate void GffRecurseAction(
@@ -476,6 +505,47 @@ namespace BioWare.Tools
                     }
 
                     RecurseNestedGff(value, fieldType, fieldPath, needle, options, paths, RecurseGffForTemplateResRef);
+                }
+                catch
+                {
+                    // Continue scanning sibling fields.
+                }
+            }
+        }
+
+        private static void RecurseGffForConversationResRef(
+            GFFStruct gffStruct,
+            string pathPrefix,
+            string needle,
+            ReferenceSearchOptions options,
+            List<string> paths)
+        {
+            if (gffStruct == null)
+            {
+                return;
+            }
+
+            foreach (var tuple in gffStruct)
+            {
+                string label = tuple.label;
+                GFFFieldType fieldType = tuple.fieldType;
+                object value = tuple.value;
+                string fieldPath = string.IsNullOrEmpty(pathPrefix) ? label : pathPrefix + "." + label;
+
+                try
+                {
+                    if (fieldType == GFFFieldType.ResRef &&
+                        string.Equals(label, "Conversation", StringComparison.OrdinalIgnoreCase) &&
+                        value is ResRef resRef)
+                    {
+                        string resRefText = resRef.ToString();
+                        if (ValueMatches(resRefText, needle, options))
+                        {
+                            paths.Add(fieldPath);
+                        }
+                    }
+
+                    RecurseNestedGff(value, fieldType, fieldPath, needle, options, paths, RecurseGffForConversationResRef);
                 }
                 catch
                 {
