@@ -101,6 +101,64 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void ExecuteListArchive_BifWithSiblingKey_ListsAllResourcesWithoutFilter()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-bif-nofilter-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "sample.bif");
+                string keyPath = Path.Combine(tempDir, "sample.key");
+                WriteSampleBifKeyPair(bifPath, keyPath, "from_key", 0);
+
+                var logger = new StandardLogger();
+                int exitCode = ListArchiveCommand.Execute(bifPath, false, null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteListArchive_BifWithSiblingKey_FilterNoMatch_ExitsNonZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-bif-filter-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "sample.bif");
+                string keyPath = Path.Combine(tempDir, "sample.key");
+                WriteSampleBifKeyPair(bifPath, keyPath, "from_key", 0);
+
+                var logger = new StandardLogger();
+                int exitCode = ListArchiveCommand.Execute(bifPath, false, "missing_*", logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void ExecuteListArchive_KeyFile_ListsNamedEntry()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-key-" + Guid.NewGuid().ToString("N"));
@@ -1143,6 +1201,35 @@ namespace KotorCLI.Tests
                 var logger = new StandardLogger();
                 int exitCode = SearchArchiveCommand.Execute(bifPath, "from_key*", false, false, logger);
                 Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_BifWithSiblingKey_NoMatch_ExitsNonZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-bif-nomatch-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "sample.bif");
+                string keyPath = Path.Combine(tempDir, "sample.key");
+                WriteSampleBifKeyPair(bifPath, keyPath, "from_key", 0);
+
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(bifPath, "missing_*", false, false, logger);
+                Assert.That(exitCode, Is.EqualTo(1));
             }
             finally
             {
