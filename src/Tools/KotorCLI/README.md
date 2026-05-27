@@ -52,10 +52,10 @@ This is an **in-progress implementation**. The project structure and command stu
 - `model-convert` - Convert models (stub)
 
 ### Utilities
-- `diff`, `grep`, `stats`, `validate`, `merge`, `cat` - Utility commands (`diff`/`grep` wired; `merge` stub)
+- `diff`, `grep`, `stats`, `validate`, `merge`, `cat` - Utility commands (`cat`/`diff`/`grep`/`merge` wired)
 
 ### Validation
-- `check-txi`, `check-2da` - Validation commands (stub)
+- `check-txi`, `check-2da` - Validation commands (`check-txi`/`check-2da` wired)
 
 ## Known Issues
 

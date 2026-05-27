@@ -1,8 +1,9 @@
 using System;
 using System.CommandLine;
-using BioWare.Extract;
+using System.Collections.Generic;
 using BioWare.Common;
-using BioWare.Resource;
+using BioWare.Extract;
+using BioWare.Tools;
 using KotorCLI.Logging;
 
 namespace KotorCLI.Commands
@@ -26,8 +27,8 @@ namespace KotorCLI.Commands
                 var install = parseResult.GetValue(checkTxiInstall);
                 var textures = parseResult.GetValue(texturesOption);
                 var logger = new StandardLogger();
-                logger.Info("check-txi not yet implemented");
-                Environment.Exit(0);
+                int exitCode = ExecuteCheckTxi(install, textures, logger);
+                Environment.Exit(exitCode);
             });
             rootCommand.Add(checkTxiCmd);
 
@@ -47,6 +48,52 @@ namespace KotorCLI.Commands
                 Environment.Exit(exitCode);
             });
             rootCommand.Add(check2DaCmd);
+        }
+
+        public static int ExecuteCheckTxi(string installPath, string[] textures, ILogger logger)
+        {
+            if (string.IsNullOrWhiteSpace(installPath))
+            {
+                logger.Error("Installation path cannot be empty");
+                return 1;
+            }
+
+            if (textures == null || textures.Length == 0)
+            {
+                logger.Error("At least one texture name is required");
+                return 1;
+            }
+
+            try
+            {
+                var installation = new Installation(installPath);
+                var textureNames = new List<string>(textures);
+                Dictionary<string, List<string>> results = Validation.CheckTxiFiles(installation, textureNames);
+
+                int missingCount = 0;
+                foreach (string textureName in textureNames)
+                {
+                    if (!results.TryGetValue(textureName, out List<string> paths) || paths == null || paths.Count == 0)
+                    {
+                        logger.Error("Missing TXI for texture: " + textureName);
+                        missingCount++;
+                        continue;
+                    }
+
+                    logger.Info("Found TXI for " + textureName + ":");
+                    foreach (string path in paths)
+                    {
+                        logger.Info("  " + path);
+                    }
+                }
+
+                return missingCount > 0 ? 1 : 0;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("check-txi failed: " + ex.Message);
+                return 1;
+            }
         }
 
         private static int CheckTwoDAFile(string name, string installPath, ILogger logger)
@@ -104,12 +151,10 @@ namespace KotorCLI.Commands
 
                     return 0;
                 }
-                else
-                {
-                    logger.Error($"✗ 2DA file '{name}' not found in installation");
-                    logger.Info("  Searched locations: Override, Modules, Chitin");
-                    return 1;
-                }
+
+                logger.Error($"✗ 2DA file '{name}' not found in installation");
+                logger.Info("  Searched locations: Override, Modules, Chitin");
+                return 1;
             }
             catch (Exception ex)
             {

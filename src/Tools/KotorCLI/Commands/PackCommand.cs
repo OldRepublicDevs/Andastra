@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using BioWare;
 using BioWare.Resource.Formats.ERF;
+using BioWare.Resource.Formats.RIM;
 using BioWare.Common;
 using BioWare.Resource;
 using KotorCLI.Configuration;
@@ -330,8 +331,82 @@ namespace KotorCLI.Commands
                     }
                     else if (extension == "rim")
                     {
-                        logger.Error("RIM packing not yet implemented");
-                        return 1;
+                        try
+                        {
+                            var rim = new RIM();
+
+                            foreach (var cacheFile in filteredFiles)
+                            {
+                                try
+                                {
+                                    var fileName = Path.GetFileName(cacheFile);
+                                    var stem = Path.GetFileNameWithoutExtension(cacheFile);
+                                    var ext = Path.GetExtension(cacheFile).TrimStart('.');
+
+                                    string resref;
+                                    string actualExt = ext;
+
+                                    if (stem.Contains("."))
+                                    {
+                                        var parts = stem.Split('.');
+                                        if (parts.Length >= 2)
+                                        {
+                                            actualExt = parts[parts.Length - 1];
+                                            resref = string.Join(".", parts.Take(parts.Length - 1));
+                                        }
+                                        else
+                                        {
+                                            resref = stem;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        resref = stem;
+                                    }
+
+                                    ResourceType restype;
+                                    try
+                                    {
+                                        restype = ResourceType.FromExtension(actualExt);
+                                        if (restype.IsInvalid)
+                                        {
+                                            logger.Warning($"Unknown resource type for {fileName}, skipping");
+                                            continue;
+                                        }
+                                    }
+                                    catch (Exception)
+                                    {
+                                        logger.Warning($"Failed to determine resource type for {fileName}, skipping");
+                                        continue;
+                                    }
+
+                                    byte[] fileData = File.ReadAllBytes(cacheFile);
+                                    rim.SetData(resref, restype, fileData);
+                                }
+                                catch (Exception ex)
+                                {
+                                    logger.Warning($"Failed to add {Path.GetFileName(cacheFile)} to RIM: {ex.Message}");
+                                }
+                            }
+
+                            var outputDir = Path.GetDirectoryName(outputFile);
+                            if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
+                            {
+                                Directory.CreateDirectory(outputDir);
+                            }
+
+                            RIMAuto.WriteRim(rim, outputFile, ResourceType.RIM);
+                            logger.Info($"Successfully packed {outputFile}");
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.Error($"Failed to pack RIM: {ex.Message}");
+                            if (logger.IsDebug)
+                            {
+                                logger.Debug($"Stack trace: {ex.StackTrace}");
+                            }
+                            return 1;
+                        }
                     }
                     else
                     {
