@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using BioWare.Tools;
@@ -16,6 +17,7 @@ namespace OdyTools.Dialogs
         private CheckBox _chitinCheckbox;
         private CheckBox _caseSensitiveCheckbox;
         private CheckBox _partialMatchCheckbox;
+        private TextBox _moduleGlobTextBox;
         private CheckBox _ncsScanCheckbox;
         private TextBox _ncsMinTextBox;
         private bool _accepted;
@@ -33,13 +35,19 @@ namespace OdyTools.Dialogs
             _showStrRefNcsOptions = showStrRefNcsOptions;
             Title = "Reference Search Options";
             Width = 360;
-            Height = showStrRefNcsOptions ? 360 : 280;
+            Height = showStrRefNcsOptions ? 420 : 340;
             WindowStartupLocation = parent != null
                 ? WindowStartupLocation.CenterOwner
                 : WindowStartupLocation.CenterScreen;
 
             _overrideCheckbox = new CheckBox { Content = "Search Override", IsChecked = true };
             _modulesCheckbox = new CheckBox { Content = "Search Modules", IsChecked = true };
+            _moduleGlobTextBox = new TextBox
+            {
+                AcceptsReturn = true,
+                MinHeight = 48,
+                Watermark = "e.g. tar_m02*, danm13* (comma or newline separated)"
+            };
             _chitinCheckbox = new CheckBox { Content = "Search Chitin / core", IsChecked = true };
             _caseSensitiveCheckbox = new CheckBox { Content = "Case sensitive", IsChecked = false };
             _partialMatchCheckbox = new CheckBox { Content = "Partial match", IsChecked = false };
@@ -63,7 +71,10 @@ namespace OdyTools.Dialogs
             panel.Children.Add(new TextBlock { Text = "Search locations", FontWeight = Avalonia.Media.FontWeight.SemiBold });
             panel.Children.Add(_overrideCheckbox);
             panel.Children.Add(_modulesCheckbox);
+            panel.Children.Add(new TextBlock { Text = "Module filename globs (optional)" });
+            panel.Children.Add(_moduleGlobTextBox);
             panel.Children.Add(_chitinCheckbox);
+            _modulesCheckbox.IsCheckedChanged += (s, e) => UpdateModuleGlobFieldEnabled();
             panel.Children.Add(new TextBlock { Text = "Matching", FontWeight = Avalonia.Media.FontWeight.SemiBold, Margin = new Avalonia.Thickness(0, 8, 0, 0) });
             panel.Children.Add(_caseSensitiveCheckbox);
             panel.Children.Add(_partialMatchCheckbox);
@@ -80,6 +91,7 @@ namespace OdyTools.Dialogs
 
             panel.Children.Add(buttonRow);
             Content = panel;
+            UpdateModuleGlobFieldEnabled();
         }
 
         public void SetDefaults(ReferenceSearchOptions defaults)
@@ -94,6 +106,7 @@ namespace OdyTools.Dialogs
             _chitinCheckbox.IsChecked = defaults.SearchChitin;
             _caseSensitiveCheckbox.IsChecked = defaults.CaseSensitive;
             _partialMatchCheckbox.IsChecked = defaults.PartialMatch;
+            _moduleGlobTextBox.Text = FormatModuleGlobFilters(defaults.ModuleGlobFilters);
 
             if (_showStrRefNcsOptions && _ncsScanCheckbox != null)
             {
@@ -102,6 +115,8 @@ namespace OdyTools.Dialogs
                     ? defaults.NcsStrRefCandidateMinimum.Value.ToString()
                     : string.Empty;
             }
+
+            UpdateModuleGlobFieldEnabled();
         }
 
         public bool ShowDialogAndAccepted(Window parent)
@@ -126,7 +141,8 @@ namespace OdyTools.Dialogs
                 SearchModules = _modulesCheckbox.IsChecked ?? true,
                 SearchChitin = _chitinCheckbox.IsChecked ?? true,
                 CaseSensitive = _caseSensitiveCheckbox.IsChecked ?? false,
-                PartialMatch = _partialMatchCheckbox.IsChecked ?? false
+                PartialMatch = _partialMatchCheckbox.IsChecked ?? false,
+                ModuleGlobFilters = ParseModuleGlobFilters(_moduleGlobTextBox.Text)
             };
 
             if (_showStrRefNcsOptions && _ncsScanCheckbox != null)
@@ -144,6 +160,52 @@ namespace OdyTools.Dialogs
             }
 
             return options;
+        }
+
+        private void UpdateModuleGlobFieldEnabled()
+        {
+            bool modulesEnabled = _modulesCheckbox.IsChecked ?? false;
+            _moduleGlobTextBox.IsEnabled = modulesEnabled;
+        }
+
+        public static List<string> ParseModuleGlobFilters(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return null;
+            }
+
+            var patterns = new List<string>();
+            foreach (string part in text.Split(new[] { ',', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                string trimmed = part.Trim();
+                if (trimmed.Length > 0)
+                {
+                    patterns.Add(trimmed);
+                }
+            }
+
+            return patterns.Count > 0 ? patterns : null;
+        }
+
+        internal static string FormatModuleGlobFilters(IList<string> filters)
+        {
+            if (filters == null || filters.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            var parts = new List<string>();
+            for (int i = 0; i < filters.Count; i++)
+            {
+                string trimmed = filters[i] == null ? string.Empty : filters[i].Trim();
+                if (trimmed.Length > 0)
+                {
+                    parts.Add(trimmed);
+                }
+            }
+
+            return parts.Count > 0 ? string.Join(", ", parts) : string.Empty;
         }
     }
 }
