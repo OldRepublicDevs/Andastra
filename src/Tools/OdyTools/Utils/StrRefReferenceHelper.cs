@@ -16,7 +16,8 @@ namespace OdyTools.Utils
         public static void FindAndShowStrRefReferences(
             Window parent,
             int strref,
-            OdyInstallation installation)
+            OdyInstallation installation,
+            bool showOptionsDialog = false)
         {
             if (installation?.Installation == null || strref < 0)
             {
@@ -25,15 +26,28 @@ namespace OdyTools.Utils
 
             try
             {
-                List<StrRefSearchResult> strrefResults = ReferenceCacheHelpers.FindStrRefReferences(
-                    installation.Installation,
-                    strref,
-                    null,
-                    null);
+                ReferenceSearchOptions options = new ReferenceSearchOptions
+                {
+                    SearchChitin = true,
+                    SearchModules = true,
+                    SearchOverride = true
+                };
 
-                List<ReferenceSearchResult> results = ReferenceCacheHelpers.ConvertToReferenceSearchResults(
-                    strrefResults,
-                    strref);
+                if (showOptionsDialog)
+                {
+                    ReferenceSearchOptions chosen = ReferenceSearchHelper.PromptSearchOptions(parent, options);
+                    if (chosen == null)
+                    {
+                        return;
+                    }
+
+                    options = chosen;
+                }
+
+                List<ReferenceSearchResult> results = CollectStrRefReferences(
+                    strref,
+                    installation,
+                    options);
 
                 if (results.Count == 0)
                 {
@@ -56,6 +70,33 @@ namespace OdyTools.Utils
                     ButtonEnum.Ok,
                     IconType.Error);
             }
+        }
+
+        public static List<ReferenceSearchResult> CollectStrRefReferences(
+            int strref,
+            OdyInstallation installation,
+            ReferenceSearchOptions options = null)
+        {
+            if (installation?.Installation == null || strref < 0)
+            {
+                return new List<ReferenceSearchResult>();
+            }
+
+            options = options ?? new ReferenceSearchOptions
+            {
+                SearchChitin = true,
+                SearchModules = true,
+                SearchOverride = true
+            };
+
+            List<StrRefSearchResult> strrefResults = ReferenceCacheHelpers.FindStrRefReferences(
+                installation.Installation,
+                strref,
+                null,
+                null,
+                options);
+
+            return ReferenceCacheHelpers.ConvertToReferenceSearchResults(strrefResults, strref);
         }
     }
 }
