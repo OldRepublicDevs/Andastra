@@ -1,7 +1,7 @@
 ---
 title: "feat: kotorcli gff xml convert closure"
 type: feat
-status: active
+status: completed
 date: 2026-05-24
 origin: docs/plans/2026-05-24-112-feat-kotorcli-tlk-xml-convert-closure-plan.md
 branch: feat/holocron-port-phase-b
