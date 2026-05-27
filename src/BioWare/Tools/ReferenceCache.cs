@@ -128,6 +128,11 @@ namespace BioWare.Tools
             }
         }
 
+        public BioWareGame Game
+        {
+            get { return _game; }
+        }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:161-201
         // Original: def scan_resource(self, resource: FileResource, data: bytes) -> None:
         public void ScanResource(FileResource resource, byte[] data)
