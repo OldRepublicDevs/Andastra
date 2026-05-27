@@ -1697,5 +1697,111 @@ namespace BioWare.Tools
         {
             return Extract.TwoDARegistry.GffFieldMapping();
         }
+
+        [CanBeNull]
+        public static TwoDA TryLoadTwoDAFromInstallation(Installation installation, string twodaFilename)
+        {
+            if (installation == null || string.IsNullOrWhiteSpace(twodaFilename))
+            {
+                return null;
+            }
+
+            string resname = NormalizeTwoDAFilename(twodaFilename);
+            if (string.IsNullOrEmpty(resname))
+            {
+                return null;
+            }
+
+            if (resname.EndsWith(".2da", StringComparison.OrdinalIgnoreCase))
+            {
+                resname = resname.Substring(0, resname.Length - 4);
+            }
+
+            ResourceResult result = installation.Resource(resname, ResourceType.TwoDA);
+            if (result == null || result.Data == null || result.Data.Length == 0)
+            {
+                return null;
+            }
+
+            try
+            {
+                return TwoDAAuto.Read2DA(result.Data, 0, result.Data.Length, ResourceType.TwoDA);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public static List<ReferenceSearchResult> CollectTwoDARowReferences(
+            Installation installation,
+            string twodaFilename,
+            int rowIndex,
+            TwoDA twoDA = null,
+            TwoDAMemoryReferenceCache twodaMemoryCache = null,
+            Action<string> logger = null,
+            ReferenceSearchOptions options = null)
+        {
+            var results = new List<ReferenceSearchResult>();
+            if (installation == null || rowIndex < 0 || string.IsNullOrWhiteSpace(twodaFilename))
+            {
+                return results;
+            }
+
+            results.AddRange(Find2DAMemoryReferences(
+                installation,
+                twodaFilename,
+                rowIndex,
+                twodaMemoryCache,
+                logger,
+                options));
+
+            TwoDA table = twoDA ?? TryLoadTwoDAFromInstallation(installation, twodaFilename);
+            if (table == null || rowIndex < 0 || rowIndex >= table.GetHeight())
+            {
+                return results;
+            }
+
+            string rowLabel = table.GetLabel(rowIndex);
+            if (!string.IsNullOrWhiteSpace(rowLabel))
+            {
+                results.AddRange(ReferenceFinder.FindFieldValueReferences(
+                    installation,
+                    rowLabel.Trim(),
+                    null,
+                    options));
+            }
+
+            foreach (string header in table.GetHeaders())
+            {
+                if (string.IsNullOrEmpty(header) || header == ">>##HEADER##<<")
+                {
+                    continue;
+                }
+
+                string cellValue = table.GetCellString(rowIndex, header);
+                if (string.IsNullOrWhiteSpace(cellValue))
+                {
+                    continue;
+                }
+
+                string trimmed = cellValue.Trim();
+                int strref;
+                if (!int.TryParse(trimmed, out strref) || strref <= 0)
+                {
+                    continue;
+                }
+
+                List<StrRefSearchResult> strrefResults = FindStrRefReferences(
+                    installation,
+                    strref,
+                    null,
+                    null,
+                    options);
+                results.AddRange(ConvertToReferenceSearchResults(strrefResults, strref));
+            }
+
+            return results;
+        }
     }
 }
