@@ -4,7 +4,9 @@ A comprehensive build tool for KOTOR projects with cli-compatible syntax, ported
 
 ## Status
 
-This is a **partial implementation**. Core build/archive flows remain stubs, but reference search, several format conversions, script disassembly/assembly, validation checks, and utility commands are wired through BioWare.
+**Partial implementation, many commands wired.** The Holocron port phase on this branch delivers installation reference search, archive extract/list/create/search, standalone format converters, script decompile/disassemble/assemble, resource converters, utilities, and validation checks through BioWare. The **kotorcli.cfg build pipeline** (`config`, `init`, `list`, `unpack`, `convert`, `compile`, `pack`, `install`) is implemented for typical mod workflows; **`launch`** remains a fail-fast stub. See command tables below for **wired** / **partial** / **stub** labels.
+
+Legend: **wired** = functional CLI backed by BioWare or `Conversions`; **partial** = works with known gaps; **stub** = not implemented or fail-fast only.
 
 ## Project Structure
 
@@ -38,7 +40,7 @@ This is a **partial implementation**. Core build/archive flows remain stubs, but
 - `gff2xml`, `xml2gff` - GFF ↔ XML (stub)
 - `tlk2xml`, `xml2tlk` - TLK ↔ XML (stub)
 - `ssf2xml`, `xml2ssf` - SSF ↔ XML (stub)
-- `2da2csv`, `csv22da` - 2DA ↔ CSV (stub)
+- `2da2csv`, `csv22da` - 2DA ↔ CSV (wired)
 
 ### Script Tools
 - `decompile` - Decompile NCS to NSS (stub)
@@ -131,7 +133,7 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
 ## Next Steps
 
 1. Implement core build commands (init, unpack, convert pipeline, compile, pack, install)
-2. Wire remaining format conversion stubs (`gff2xml`, TLK/SSF/2DA XML/CSV pairs)
+2. Wire remaining format conversion stubs (`gff2xml`, TLK/SSF XML pairs)
 3. Expand automated test coverage for newly wired commands
 4. Integrate with Andastra.Parsing library where BioWare coverage is incomplete
 
