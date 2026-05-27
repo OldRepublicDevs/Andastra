@@ -60,7 +60,8 @@ namespace OdyTools.Widgets.Edit
                     _resname,
                     rowIndex,
                     _this2DA,
-                    _installation);
+                    _installation,
+                    showOptionsDialog: true);
             };
             contextMenu.Items.Add(findReferencesItem);
 
