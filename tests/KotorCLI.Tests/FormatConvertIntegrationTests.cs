@@ -170,11 +170,21 @@ namespace KotorCLI.Tests
             }
         }
 
-        [Test]
-        public void Json2Gff_MissingInput_ExitsNonZero()
+        [TestCase("gff2json", ".gff")]
+        [TestCase("json2gff", ".json")]
+        [TestCase("gff2xml", ".gff")]
+        [TestCase("xml2gff", ".xml")]
+        [TestCase("tlk2xml", ".tlk")]
+        [TestCase("xml2tlk", ".xml")]
+        [TestCase("ssf2xml", ".ssf")]
+        [TestCase("xml2ssf", ".xml")]
+        [TestCase("2da2csv", ".2da")]
+        [TestCase("csv22da", ".csv")]
+        public void FormatConvert_MissingInput_ExitsNonZero(string command, string extension)
         {
-            int exitCode = RunKotorCli("json2gff \"" + Path.Combine(Path.GetTempPath(), "missing-" + Guid.NewGuid().ToString("N") + ".json") + "\"", out _, out _);
-            Assert.That(exitCode, Is.Not.EqualTo(0));
+            string missingPath = Path.Combine(Path.GetTempPath(), "missing-" + Guid.NewGuid().ToString("N") + extension);
+            int exitCode = RunKotorCli(command + " \"" + missingPath + "\"", out _, out string stderr);
+            Assert.That(exitCode, Is.Not.EqualTo(0), stderr);
         }
 
         [Test]
