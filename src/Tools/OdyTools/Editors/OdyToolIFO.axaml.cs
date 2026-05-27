@@ -13,6 +13,7 @@ using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.GFF.Generics;
 using OdyTools.Data;
 using OdyTools.Dialogs;
+using OdyTools.Utils;
 
 namespace OdyTools.Editors
 {
@@ -132,6 +133,8 @@ namespace OdyTools.Editors
             _tagEdit.TextChanged += (s, e) => OnValueChanged();
             basicPanel.Children.Add(tagLabel);
             basicPanel.Children.Add(_tagEdit);
+
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
 
             // VO ID
             var voIdLabel = new TextBlock { Text = "VO ID:" };

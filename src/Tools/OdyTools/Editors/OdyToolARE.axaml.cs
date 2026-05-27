@@ -147,6 +147,8 @@ namespace OdyTools.Editors
             panel.Children.Add(tagLabel);
             panel.Children.Add(tagPanel);
 
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+
             // Camera Style field - matching Python: self.ui.cameraStyleSelect
             // Matching Python: for label in cameras.get_column("name"): self.ui.cameraStyleSelect.addItem(label.title())
             var cameraStyleLabel = new TextBlock { Text = "Camera Style:" };
