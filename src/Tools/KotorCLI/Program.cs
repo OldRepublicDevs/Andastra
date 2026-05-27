@@ -69,6 +69,7 @@ namespace KotorCLI
             PackCommand.AddToRootCommand(rootCommand);
             InstallCommand.AddToRootCommand(rootCommand);
             LaunchCommand.AddToRootCommand(rootCommand);
+            FindRefsCommand.AddToRootCommand(rootCommand);
             ExtractCommand.AddToRootCommand(rootCommand);
             ListArchiveCommand.AddToRootCommand(rootCommand);
             CreateArchiveCommand.AddToRootCommand(rootCommand);
