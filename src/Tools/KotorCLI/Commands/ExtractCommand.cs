@@ -11,6 +11,7 @@ using BioWare.Resource.Formats.KEY;
 using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.BIF;
+using BioWare.Tools;
 using KotorCLI.Logging;
 
 namespace KotorCLI.Commands
@@ -238,90 +239,23 @@ namespace KotorCLI.Commands
         {
             try
             {
-                // Determine KEY file path
-                string keyPath;
-                if (!string.IsNullOrEmpty(keyFile))
-                {
-                    keyPath = Path.GetFullPath(keyFile);
-                }
-                else
-                {
-                    keyPath = Path.Combine(Path.GetDirectoryName(bifPath), "chitin.key");
-                }
-
-                KEY key = null;
-                if (File.Exists(keyPath))
-                {
-                    try
-                    {
-                        key = KEYAuto.ReadKey(keyPath);
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.Warning($"KEY file not found or invalid: {keyPath}. Resources will have numeric names. Error: {ex.Message}");
-                    }
-                }
-                else
-                {
-                    logger.Warning($"KEY file not found: {keyPath}. Resources will have numeric names.");
-                }
-
-                // Load BIF file
-                BIF bif = new BIFBinaryReader(bifPath).Load();
-                if (bif == null)
-                {
-                    logger.Error("Failed to load BIF file");
-                    return 1;
-                }
-
-                // Build resource name lookup from KEY if available
-                Dictionary<int, KeyEntry> resourceLookup = null;
-                if (key != null)
-                {
-                    int? bifIndex = ResolveBifIndex(key, bifPath);
-                    if (bifIndex.HasValue)
-                    {
-                        resourceLookup = BuildBifResourceLookup(key, bifIndex.Value);
-                    }
-                    else
-                    {
-                        logger.Warning("Could not resolve BIF index in KEY for: " + Path.GetFileName(bifPath));
-                    }
-                }
+                string keyPath = ResolveKeyPath(bifPath, keyFile, logger);
 
                 int extractedCount = 0;
-                int resourceIndex = 0;
-                foreach (BIFResource resource in bif.Resources)
+                foreach ((ArchiveResource resource, string outputFile) in ArchiveHelpers.ExtractBif(
+                             bifPath,
+                             outputDir,
+                             keyPath,
+                             filter))
                 {
-                    string resref;
-                    ResourceType restype = resource.ResType ?? ResourceType.INVALID;
-
-                    // Try to get name from KEY lookup
-                    if (resourceLookup != null && resourceLookup.TryGetValue(resourceIndex, out KeyEntry keyEntry))
+                    string outputDirectory = Path.GetDirectoryName(outputFile);
+                    if (!string.IsNullOrEmpty(outputDirectory))
                     {
-                        resref = keyEntry.ResRef?.ToString() ?? $"resource_{resourceIndex:05d}";
-                        restype = keyEntry.ResType ?? restype;
-                    }
-                    else
-                    {
-                        // Use resource's own ResRef if available, otherwise numeric name
-                        resref = resource.ResRef?.ToString() ?? $"resource_{resourceIndex:05d}";
+                        Directory.CreateDirectory(outputDirectory);
                     }
 
-                    // Apply filter
-                    if (!MatchesFilter(resref, filter))
-                    {
-                        resourceIndex++;
-                        continue;
-                    }
-
-                    string ext = restype?.Extension ?? "bin";
-                    string outputFile = Path.Combine(outputDir, $"{resref}.{ext}");
-
-                    Directory.CreateDirectory(Path.GetDirectoryName(outputFile));
                     File.WriteAllBytes(outputFile, resource.Data);
                     extractedCount++;
-                    resourceIndex++;
                 }
 
                 logger.Info($"Extracted {extractedCount} resources");
@@ -341,111 +275,30 @@ namespace KotorCLI.Commands
         {
             try
             {
-                // Load KEY file
-                KEY key = KEYAuto.ReadKey(keyPath);
-                if (key == null)
-                {
-                    logger.Error("Failed to load KEY file");
-                    return 1;
-                }
-
-                // Find BIF files
                 string searchDir = Path.GetDirectoryName(keyPath);
-                Dictionary<int, string> bifFiles = new Dictionary<int, string>();
-
-                for (int i = 0; i < key.BifEntries.Count; i++)
-                {
-                    BifEntry bifEntry = key.BifEntries[i];
-                    string bifName = bifEntry.Filename;
-                    string bifPath = Path.Combine(searchDir, bifName);
-
-                    if (!File.Exists(bifPath))
-                    {
-                        // Try case-insensitive search
-                        bool found = false;
-                        if (Directory.Exists(searchDir))
-                        {
-                            foreach (string candidate in Directory.GetFiles(searchDir))
-                            {
-                                if (string.Equals(Path.GetFileName(candidate), bifName, StringComparison.OrdinalIgnoreCase))
-                                {
-                                    bifPath = candidate;
-                                    found = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (!found)
-                        {
-                            logger.Warning($"BIF file not found: {bifName}");
-                            continue;
-                        }
-                    }
-
-                    bifFiles[i] = bifPath;
-                }
-
-                // Extract from each BIF
                 int extractedCount = 0;
-                HashSet<string> seenBifs = new HashSet<string>();
+                var seenBifs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                foreach (KeyValuePair<int, string> kvp in bifFiles)
+                foreach ((ArchiveResource resource, string outputFile, string bifPath) in ArchiveHelpers.ExtractKeyBif(
+                             keyPath,
+                             outputDir,
+                             searchDir,
+                             filter))
                 {
-                    int bifIndex = kvp.Key;
-                    string bifPath = kvp.Value;
-
                     if (!seenBifs.Contains(bifPath))
                     {
                         logger.Info($"Extracting from BIF: {Path.GetFileName(bifPath)}");
                         seenBifs.Add(bifPath);
                     }
 
-                    // Load BIF
-                    BIF bif = new BIFBinaryReader(bifPath).Load();
-                    if (bif == null)
+                    string outputDirectory = Path.GetDirectoryName(outputFile);
+                    if (!string.IsNullOrEmpty(outputDirectory))
                     {
-                        logger.Warning($"Failed to load BIF: {bifPath}");
-                        continue;
+                        Directory.CreateDirectory(outputDirectory);
                     }
 
-                    // Build resource lookup for this BIF
-                    Dictionary<int, KeyEntry> resourceLookup = BuildBifResourceLookup(key, bifIndex);
-
-                    // Extract resources
-                    int resourceIndex = 0;
-                    foreach (BIFResource resource in bif.Resources)
-                    {
-                        string resref;
-                        ResourceType restype = resource.ResType ?? ResourceType.INVALID;
-
-                        // Get name from KEY lookup
-                        if (resourceLookup.TryGetValue(resourceIndex, out KeyEntry keyEntry))
-                        {
-                            resref = keyEntry.ResRef?.ToString() ?? $"resource_{resourceIndex:05d}";
-                            restype = keyEntry.ResType ?? restype;
-                        }
-                        else
-                        {
-                            resref = resource.ResRef?.ToString() ?? $"resource_{resourceIndex:05d}";
-                        }
-
-                        // Apply filter
-                        if (!MatchesFilter(resref, filter))
-                        {
-                            resourceIndex++;
-                            continue;
-                        }
-
-                        string ext = restype?.Extension ?? "bin";
-                        string bifStem = Path.GetFileNameWithoutExtension(bifPath);
-                        string outputFile = Path.Combine(outputDir, bifStem, $"{resref}.{ext}");
-
-                        Directory.CreateDirectory(Path.GetDirectoryName(outputFile));
-                        File.WriteAllBytes(outputFile, resource.Data);
-                        extractedCount++;
-                        resourceIndex++;
-                    }
+                    File.WriteAllBytes(outputFile, resource.Data);
+                    extractedCount++;
                 }
 
                 logger.Info($"Extracted {extractedCount} resources");
@@ -458,48 +311,29 @@ namespace KotorCLI.Commands
             }
         }
 
-        public static int? ResolveBifIndex(KEY key, string bifPath)
+        private static string ResolveKeyPath(string bifPath, string keyFile, ILogger logger)
         {
-            if (key == null || string.IsNullOrEmpty(bifPath))
+            string keyPath;
+            if (!string.IsNullOrEmpty(keyFile))
             {
-                return null;
-            }
-
-            string bifFileName = Path.GetFileName(bifPath);
-            string fullBifPath = Path.GetFullPath(bifPath);
-            for (int i = 0; i < key.BifEntries.Count; i++)
-            {
-                BifEntry bifEntry = key.BifEntries[i];
-                string entryName = bifEntry.Filename ?? string.Empty;
-                string entryFileName = Path.GetFileName(entryName);
-                if (string.Equals(entryName, bifFileName, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(entryFileName, bifFileName, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(entryName.Replace('\\', '/'), fullBifPath.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase))
+                keyPath = Path.GetFullPath(keyFile);
+                if (!File.Exists(keyPath))
                 {
-                    return i;
+                    logger.Warning($"KEY file not found: {keyPath}. Resources will have numeric names.");
+                    return null;
                 }
+
+                return keyPath;
             }
 
+            keyPath = Path.Combine(Path.GetDirectoryName(bifPath) ?? string.Empty, "chitin.key");
+            if (File.Exists(keyPath))
+            {
+                return keyPath;
+            }
+
+            logger.Warning($"KEY file not found: {keyPath}. Resources will have numeric names.");
             return null;
-        }
-
-        public static Dictionary<int, KeyEntry> BuildBifResourceLookup(KEY key, int bifIndex)
-        {
-            var resourceLookup = new Dictionary<int, KeyEntry>();
-            if (key == null)
-            {
-                return resourceLookup;
-            }
-
-            foreach (KeyEntry keyEntry in key.KeyEntries)
-            {
-                if (keyEntry.BifIndex == bifIndex)
-                {
-                    resourceLookup[keyEntry.ResIndex] = keyEntry;
-                }
-            }
-
-            return resourceLookup;
         }
     }
 }
