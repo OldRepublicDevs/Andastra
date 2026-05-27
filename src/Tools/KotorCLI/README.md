@@ -64,6 +64,7 @@ Installation-wide reference finders ported from Holocron/PyKotor (BioWare `Refer
 Shared flags (where supported):
 
 - `--install-dir` / `--installation` — KOTOR install path (or `KOTOR_PATH` / `K1_PATH`)
+- `--override-only`, `--no-override`, `--no-chitin`, `--no-modules` — limit which installation areas are scanned (`find-refs`, `find-strref`, `find-2da-ref`)
 
 **find-refs** — script/tag/template/conversation search:
 
@@ -78,8 +79,10 @@ Flags: `--type script|tag|template|conversation`, `--override-only`, `--no-overr
 
 ```bash
 dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
-  find-strref 12345 --install-dir /path/to/kotor
+  find-strref 12345 --install-dir /path/to/kotor --override-only
 ```
+
+Flags: `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`.
 
 NCS hits report bytecode offsets (`(NCS bytecode) offset_<n>` in field-path display).
 
@@ -87,8 +90,10 @@ NCS hits report bytecode offsets (`(NCS bytecode) offset_<n>` in field-path disp
 
 ```bash
 dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
-  find-2da-ref appearance 17 --install-dir /path/to/kotor
+  find-2da-ref appearance 17 --install-dir /path/to/kotor --override-only
 ```
+
+Flags: `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`.
 
 The `twoda` argument accepts a resname or filename (`appearance` or `appearance.2da`).
 
