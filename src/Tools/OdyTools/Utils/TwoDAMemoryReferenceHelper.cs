@@ -95,10 +95,9 @@ namespace OdyTools.Utils
             OdyInstallation installation,
             ReferenceSearchOptions options = null)
         {
-            var results = new List<ReferenceSearchResult>();
             if (installation?.Installation == null || rowIndex < 0 || string.IsNullOrWhiteSpace(twodaFilename))
             {
-                return results;
+                return new List<ReferenceSearchResult>();
             }
 
             options = options ?? new ReferenceSearchOptions
@@ -108,57 +107,14 @@ namespace OdyTools.Utils
                 SearchOverride = true
             };
 
-            results.AddRange(ReferenceCacheHelpers.Find2DAMemoryReferences(
+            return ReferenceCacheHelpers.CollectTwoDARowReferences(
                 installation.Installation,
                 twodaFilename,
                 rowIndex,
+                twoDA,
                 null,
                 null,
-                options));
-
-            if (twoDA != null && rowIndex >= 0 && rowIndex < twoDA.GetHeight())
-            {
-                string rowLabel = twoDA.GetLabel(rowIndex);
-                if (!string.IsNullOrWhiteSpace(rowLabel))
-                {
-                    results.AddRange(ReferenceFinder.FindFieldValueReferences(
-                        installation.Installation,
-                        rowLabel.Trim(),
-                        null,
-                        options));
-                }
-
-                foreach (string header in twoDA.GetHeaders())
-                {
-                    if (string.IsNullOrEmpty(header) || header == ">>##HEADER##<<")
-                    {
-                        continue;
-                    }
-
-                    string cellValue = twoDA.GetCellString(rowIndex, header);
-                    if (string.IsNullOrWhiteSpace(cellValue))
-                    {
-                        continue;
-                    }
-
-                    string trimmed = cellValue.Trim();
-                    int strref;
-                    if (!int.TryParse(trimmed, out strref) || strref <= 0)
-                    {
-                        continue;
-                    }
-
-                    List<StrRefSearchResult> strrefResults = ReferenceCacheHelpers.FindStrRefReferences(
-                        installation.Installation,
-                        strref,
-                        null,
-                        null,
-                        options);
-                    results.AddRange(ReferenceCacheHelpers.ConvertToReferenceSearchResults(strrefResults, strref));
-                }
-            }
-
-            return results;
+                options);
         }
     }
 }
