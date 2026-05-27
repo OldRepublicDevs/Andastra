@@ -53,6 +53,56 @@ namespace KotorCLI.Tests
             Assert.That(exitCode, Is.EqualTo(1));
         }
 
+        [Test]
+        public void Execute_OverrideOnly_FindsOverrideTag()
+        {
+            string installRoot = CreateInstallWithTag("cli_find_tag");
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = FindFieldValueCommand.Execute(
+                    "cli_find_tag",
+                    installRoot,
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    partial: false,
+                    caseSensitive: false,
+                    logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Execute_NoOverride_SkipsOverrideTag()
+        {
+            string installRoot = CreateInstallWithTag("cli_find_tag");
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = FindFieldValueCommand.Execute(
+                    "cli_find_tag",
+                    installRoot,
+                    overrideOnly: false,
+                    noOverride: true,
+                    noChitin: true,
+                    noModules: true,
+                    partial: false,
+                    caseSensitive: false,
+                    logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
         private static string CreateInstallWithTag(string tag)
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-field-" + Guid.NewGuid().ToString("N"));
