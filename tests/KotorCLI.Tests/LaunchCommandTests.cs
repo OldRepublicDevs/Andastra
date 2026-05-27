@@ -76,6 +76,27 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void Execute_DryRun_WithInstallDir_ResolvesTslExe()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-launch-tsl-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string fakeExe = Path.Combine(tempDir, "swkotor2.exe");
+                File.WriteAllBytes(fakeExe, new byte[] { 0x4D, 0x5A });
+
+                var logger = new StandardLogger();
+                int exitCode = LaunchCommand.Execute(new[] { "test_mod" }, null, tempDir, true, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                DeleteDirectorySafe(tempDir);
+            }
+        }
+
+        [Test]
         public void Execute_DryRun_NoResolvableBinary_ExitsNonZero()
         {
             string priorKotorPath = Environment.GetEnvironmentVariable("KOTOR_PATH");
