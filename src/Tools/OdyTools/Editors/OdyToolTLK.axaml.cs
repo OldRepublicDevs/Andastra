@@ -674,7 +674,8 @@ namespace OdyTools.Editors
             StrRefReferenceHelper.FindAndShowStrRefReferences(
                 this as Window,
                 _selectedEntry.StringRef,
-                _installation);
+                _installation,
+                showOptionsDialog: true);
         }
 
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
