@@ -78,6 +78,44 @@ file = ""test.mod""
             }
         }
 
+        [Test]
+        public void Pack_WithInlineConvert_ProducesModFromJsonSource()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-pack-orchestrate-" + Guid.NewGuid().ToString("N"));
+            string originalDirectory = Directory.GetCurrentDirectory();
+            const string resref = "pk_creature";
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), PipelineConfig);
+
+                string srcDir = Path.Combine(projectDir, "src", "blueprints", "creatures");
+                Directory.CreateDirectory(srcDir);
+                string jsonPath = Path.Combine(srcDir, resref + ".utc.json");
+                var gff = new GFF(GFFContent.GFF);
+                gff.Root.SetString("Label", "pack-orchestrate");
+                GFFAuto.WriteGff(gff, jsonPath, ResourceType.GFF_JSON);
+
+                Directory.SetCurrentDirectory(projectDir);
+                var logger = new StandardLogger();
+
+                int packExit = PackCommand.Execute(new[] { "default" }, false, false, false, logger);
+                Assert.That(packExit, Is.EqualTo(0));
+
+                string modPath = Path.Combine(projectDir, "test.mod");
+                Assert.That(File.Exists(modPath), Is.True);
+
+                ERF mod = ERFAuto.ReadErf(modPath, ResourceType.MOD);
+                Assert.That(mod.Get(resref, ResourceType.UTC), Is.Not.Null);
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(originalDirectory);
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
         private static void DeleteDirectorySafe(string path)
         {
             try
