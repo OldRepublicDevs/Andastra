@@ -1,7 +1,8 @@
 ---
 title: "feat: Holocron port phase D — check-txi, cat, RIM pack, NCS script refs"
 type: feat
-status: active
+status: complete
+completed: 2026-05-24
 date: 2026-05-24
 origin: docs/plans/2026-05-24-072-feat-holocron-phase-c-resource-merge-plan.md
 branch: feat/holocron-port-phase-b
