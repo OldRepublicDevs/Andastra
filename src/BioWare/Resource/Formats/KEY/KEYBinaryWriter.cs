@@ -23,6 +23,7 @@ namespace BioWare.Resource.Formats.KEY
         {
             _key = key ?? throw new ArgumentNullException(nameof(key));
             _writer = BioWare.Common.RawBinaryWriter.ToStream(target);
+            _writer.AutoClose = false;
         }
 
         public KEYBinaryWriter(KEY key)
@@ -105,6 +106,11 @@ namespace BioWare.Resource.Formats.KEY
         public void Dispose()
         {
             _writer?.Dispose();
+        }
+
+        public byte[] GetData()
+        {
+            return _writer?.Data() ?? new byte[0];
         }
     }
 }
