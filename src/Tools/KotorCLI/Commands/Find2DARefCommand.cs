@@ -57,6 +57,9 @@ namespace KotorCLI.Commands
             var rebuildCacheOption = Cli.Opt<bool>("--rebuild-cache", "Rescan installation and overwrite --cache-file");
             find2DaRefCommand.Options.Add(rebuildCacheOption);
 
+            var fullRowOption = Cli.Opt<bool>("--full-row", "Include row label field-value refs and row StrRef column refs (loads 2DA from installation when available)");
+            find2DaRefCommand.Options.Add(fullRowOption);
+
             find2DaRefCommand.SetAction(parseResult =>
             {
                 var twoda = parseResult.GetValue(twodaArgument);
@@ -71,6 +74,7 @@ namespace KotorCLI.Commands
                 var moduleGlob = parseResult.GetValue(moduleGlobOption);
                 var cacheFile = parseResult.GetValue(cacheFileOption);
                 var rebuildCache = parseResult.GetValue(rebuildCacheOption);
+                var fullRow = parseResult.GetValue(fullRowOption);
 
                 var logger = new StandardLogger();
                 var exitCode = Execute(
@@ -86,6 +90,7 @@ namespace KotorCLI.Commands
                     moduleGlob,
                     cacheFile,
                     rebuildCache,
+                    fullRow,
                     logger);
                 Environment.Exit(exitCode);
             });
@@ -103,7 +108,7 @@ namespace KotorCLI.Commands
             bool noChitin = false,
             bool noModules = false)
         {
-            return Execute(twodaFilename, rowIndex, installDir, overrideOnly, noOverride, noChitin, noModules, false, false, null, null, false, logger);
+            return Execute(twodaFilename, rowIndex, installDir, overrideOnly, noOverride, noChitin, noModules, false, false, null, null, false, false, logger);
         }
 
         public static int Execute(
@@ -116,7 +121,7 @@ namespace KotorCLI.Commands
             bool noModules,
             ILogger logger)
         {
-            return Execute(twodaFilename, rowIndex, installDir, overrideOnly, noOverride, noChitin, noModules, false, false, null, null, false, logger);
+            return Execute(twodaFilename, rowIndex, installDir, overrideOnly, noOverride, noChitin, noModules, false, false, null, null, false, false, logger);
         }
 
         public static int Execute(
@@ -131,7 +136,7 @@ namespace KotorCLI.Commands
             bool countOnly,
             ILogger logger)
         {
-            return Execute(twodaFilename, rowIndex, installDir, overrideOnly, noOverride, noChitin, noModules, jsonOutput, countOnly, null, null, false, logger);
+            return Execute(twodaFilename, rowIndex, installDir, overrideOnly, noOverride, noChitin, noModules, jsonOutput, countOnly, null, null, false, false, logger);
         }
 
         public static int Execute(
@@ -147,7 +152,7 @@ namespace KotorCLI.Commands
             string[] moduleGlobFilters,
             ILogger logger)
         {
-            return Execute(twodaFilename, rowIndex, installDir, overrideOnly, noOverride, noChitin, noModules, jsonOutput, countOnly, moduleGlobFilters, null, false, logger);
+            return Execute(twodaFilename, rowIndex, installDir, overrideOnly, noOverride, noChitin, noModules, jsonOutput, countOnly, moduleGlobFilters, null, false, false, logger);
         }
 
         public static int Execute(
@@ -163,6 +168,25 @@ namespace KotorCLI.Commands
             string[] moduleGlobFilters,
             string cacheFilePath,
             bool rebuildCache,
+            ILogger logger)
+        {
+            return Execute(twodaFilename, rowIndex, installDir, overrideOnly, noOverride, noChitin, noModules, jsonOutput, countOnly, moduleGlobFilters, cacheFilePath, rebuildCache, false, logger);
+        }
+
+        public static int Execute(
+            string twodaFilename,
+            int rowIndex,
+            string installDir,
+            bool overrideOnly,
+            bool noOverride,
+            bool noChitin,
+            bool noModules,
+            bool jsonOutput,
+            bool countOnly,
+            string[] moduleGlobFilters,
+            string cacheFilePath,
+            bool rebuildCache,
+            bool fullRow,
             ILogger logger)
         {
             if (string.IsNullOrWhiteSpace(twodaFilename))
@@ -243,13 +267,28 @@ namespace KotorCLI.Commands
                 }
             }
 
-            List<ReferenceSearchResult> results = ReferenceCacheHelpers.Find2DAMemoryReferences(
-                installation,
-                twodaFilename,
-                rowIndex,
-                twodaCache,
-                null,
-                options);
+            List<ReferenceSearchResult> results;
+            if (fullRow)
+            {
+                results = ReferenceCacheHelpers.CollectTwoDARowReferences(
+                    installation,
+                    twodaFilename,
+                    rowIndex,
+                    null,
+                    twodaCache,
+                    null,
+                    options);
+            }
+            else
+            {
+                results = ReferenceCacheHelpers.Find2DAMemoryReferences(
+                    installation,
+                    twodaFilename,
+                    rowIndex,
+                    twodaCache,
+                    null,
+                    options);
+            }
 
             string needle = twodaFilename.Trim() + ":" + rowIndex;
             return ReferenceSearchOutputFormatter.EmitReferenceResults(
