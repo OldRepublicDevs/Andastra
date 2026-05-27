@@ -45,6 +45,12 @@ namespace KotorCLI.Commands
             ncsStrRefMinOption.Description = "Minimum CONSTI value indexed as plausible StrRef in cache scans (default 100); explicit queries still match any value";
             findStrRefCommand.Options.Add(ncsStrRefMinOption);
 
+            var jsonOption = Cli.Opt<bool>("--json", "Emit results as a single JSON object");
+            findStrRefCommand.Options.Add(jsonOption);
+
+            var countOnlyOption = Cli.Opt<bool>("--count-only", "Print only the number of matches");
+            findStrRefCommand.Options.Add(countOnlyOption);
+
             findStrRefCommand.SetAction(parseResult =>
             {
                 var strref = parseResult.GetValue(strrefArgument);
@@ -55,6 +61,8 @@ namespace KotorCLI.Commands
                 var noModules = parseResult.GetValue(noModulesOption);
                 var noNcs = parseResult.GetValue(noNcsOption);
                 var ncsStrRefMin = parseResult.GetValue(ncsStrRefMinOption);
+                var json = parseResult.GetValue(jsonOption);
+                var countOnly = parseResult.GetValue(countOnlyOption);
 
                 var logger = new StandardLogger();
                 var exitCode = Execute(
@@ -66,6 +74,8 @@ namespace KotorCLI.Commands
                     noModules,
                     noNcs,
                     ncsStrRefMin,
+                    json,
+                    countOnly,
                     logger);
                 Environment.Exit(exitCode);
             });
@@ -75,7 +85,7 @@ namespace KotorCLI.Commands
 
         public static int Execute(int strref, string installDir, ILogger logger)
         {
-            return Execute(strref, installDir, false, false, false, false, false, null, logger);
+            return Execute(strref, installDir, false, false, false, false, false, null, false, false, logger);
         }
 
         public static int Execute(
@@ -87,7 +97,7 @@ namespace KotorCLI.Commands
             bool noModules,
             ILogger logger)
         {
-            return Execute(strref, installDir, overrideOnly, noOverride, noChitin, noModules, false, null, logger);
+            return Execute(strref, installDir, overrideOnly, noOverride, noChitin, noModules, false, null, false, false, logger);
         }
 
         public static int Execute(
@@ -100,7 +110,7 @@ namespace KotorCLI.Commands
             bool noNcs,
             ILogger logger)
         {
-            return Execute(strref, installDir, overrideOnly, noOverride, noChitin, noModules, noNcs, null, logger);
+            return Execute(strref, installDir, overrideOnly, noOverride, noChitin, noModules, noNcs, null, false, false, logger);
         }
 
         public static int Execute(
@@ -112,6 +122,22 @@ namespace KotorCLI.Commands
             bool noModules,
             bool noNcs,
             int? ncsStrRefMin,
+            ILogger logger)
+        {
+            return Execute(strref, installDir, overrideOnly, noOverride, noChitin, noModules, noNcs, ncsStrRefMin, false, false, logger);
+        }
+
+        public static int Execute(
+            int strref,
+            string installDir,
+            bool overrideOnly,
+            bool noOverride,
+            bool noChitin,
+            bool noModules,
+            bool noNcs,
+            int? ncsStrRefMin,
+            bool jsonOutput,
+            bool countOnly,
             ILogger logger)
         {
             if (strref < 0)
@@ -173,8 +199,32 @@ namespace KotorCLI.Commands
 
             if (results == null || results.Count == 0)
             {
-                logger.Info("No references found.");
+                if (jsonOutput)
+                {
+                    logger.Info(ReferenceSearchOutputFormatter.FormatJson(strref.ToString(), "strref", results));
+                }
+                else if (countOnly)
+                {
+                    logger.Info(ReferenceSearchOutputFormatter.FormatCount(0));
+                }
+                else
+                {
+                    logger.Info("No references found.");
+                }
+
                 return 1;
+            }
+
+            if (jsonOutput)
+            {
+                logger.Info(ReferenceSearchOutputFormatter.FormatJson(strref.ToString(), "strref", results));
+                return 0;
+            }
+
+            if (countOnly)
+            {
+                logger.Info(ReferenceSearchOutputFormatter.FormatCount(results.Count));
+                return 0;
             }
 
             foreach (ReferenceSearchResult result in results)
