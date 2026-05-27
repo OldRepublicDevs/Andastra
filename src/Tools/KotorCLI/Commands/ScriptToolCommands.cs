@@ -4,6 +4,7 @@ using System.IO;
 using KotorCLI.Logging;
 using BioWare.Common;
 using BioWare.Resource.Formats.NCS;
+using BioWare.Tools;
 
 namespace KotorCLI.Commands
 {
@@ -111,8 +112,8 @@ namespace KotorCLI.Commands
                 var input = parseResult.GetValue(disassembleInput);
                 var output = parseResult.GetValue(disassembleOutput);
                 var logger = new StandardLogger();
-                logger.Info("TODO: STUB - disassemble not yet implemented");
-                Environment.Exit(0);
+                int exitCode = ExecuteDisassemble(input, output, logger);
+                Environment.Exit(exitCode);
             });
             rootCommand.Add(disassembleCmd);
 
@@ -126,17 +127,141 @@ namespace KotorCLI.Commands
             assembleCmd.Options.Add(includeOption);
             var debugOption = Cli.Opt<bool>("--debug", "Enable debug output");
             assembleCmd.Options.Add(debugOption);
+            var assembleGameOption = Cli.Opt<string>("--game", "Target game (k1 or k2). Defaults to k2.");
+            assembleCmd.Options.Add(assembleGameOption);
             assembleCmd.SetAction(parseResult =>
             {
                 var input = parseResult.GetValue(assembleInput);
                 var output = parseResult.GetValue(assembleOutput);
                 var includes = parseResult.GetValue(includeOption);
                 var debug = parseResult.GetValue(debugOption);
+                var game = parseResult.GetValue(assembleGameOption);
                 var logger = new StandardLogger();
-                logger.Info("TODO: STUB - assemble not yet implemented (use NSSComp tool or compile command)");
-                Environment.Exit(0);
+                int exitCode = ExecuteAssemble(input, output, includes, debug, game, logger);
+                Environment.Exit(exitCode);
             });
             rootCommand.Add(assembleCmd);
+        }
+
+        public static int ExecuteDisassemble(string input, string output, ILogger logger)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                logger.Error("Error: No input file specified");
+                return 1;
+            }
+
+            if (!File.Exists(input))
+            {
+                logger.Error("Input file does not exist: " + input);
+                return 1;
+            }
+
+            try
+            {
+                string outputFile = output;
+                if (string.IsNullOrEmpty(outputFile))
+                {
+                    string inputDir = Path.GetDirectoryName(input);
+                    string inputName = Path.GetFileNameWithoutExtension(input);
+                    outputFile = Path.Combine(inputDir ?? string.Empty, inputName + ".ncsdis");
+                }
+
+                string outputDir = Path.GetDirectoryName(outputFile);
+                if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
+                {
+                    Directory.CreateDirectory(outputDir);
+                }
+
+                logger.Info("Disassembling: " + input);
+                logger.Info("Output: " + outputFile);
+
+                string disassembly = Scripts.DisassembleNcs(input, outputFile);
+                logger.Info("Successfully disassembled " + disassembly.Length + " characters");
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Disassembly failed: " + ex.Message);
+                return 1;
+            }
+        }
+
+        public static int ExecuteAssemble(
+            string input,
+            string output,
+            string[] includes,
+            bool debug,
+            string game,
+            ILogger logger)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                logger.Error("Error: No input file specified");
+                return 1;
+            }
+
+            if (!File.Exists(input))
+            {
+                logger.Error("Input file does not exist: " + input);
+                return 1;
+            }
+
+            BioWareGame gameType = BioWareGame.TSL;
+            if (string.Equals(game, "k1", StringComparison.OrdinalIgnoreCase))
+            {
+                gameType = BioWareGame.K1;
+            }
+            else if (!string.IsNullOrEmpty(game) &&
+                     !string.Equals(game, "k2", StringComparison.OrdinalIgnoreCase) &&
+                     !string.Equals(game, "tsl", StringComparison.OrdinalIgnoreCase))
+            {
+                logger.Error("Invalid game type: " + game + ". Must be 'k1' or 'k2'.");
+                return 1;
+            }
+
+            try
+            {
+                string outputFile = output;
+                if (string.IsNullOrEmpty(outputFile))
+                {
+                    string inputDir = Path.GetDirectoryName(input);
+                    string inputName = Path.GetFileNameWithoutExtension(input);
+                    outputFile = Path.Combine(inputDir ?? string.Empty, inputName + ".ncs");
+                }
+
+                string outputDir = Path.GetDirectoryName(outputFile);
+                if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
+                {
+                    Directory.CreateDirectory(outputDir);
+                }
+
+                logger.Info("Assembling: " + input);
+                logger.Info("Game: " + gameType);
+                logger.Info("Output: " + outputFile);
+
+                string nssSource = File.ReadAllText(input);
+                object libraryLookup = includes != null && includes.Length > 0 ? includes : null;
+                NCS ncs = NCSAuto.CompileNss(nssSource, gameType, null, libraryLookup, debug);
+                if (ncs == null)
+                {
+                    logger.Error("Assembly failed: compiler returned null");
+                    return 1;
+                }
+
+                NCSAuto.WriteNcs(ncs, outputFile);
+                logger.Info("Successfully assembled NCS to " + outputFile);
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Assembly failed: " + ex.Message);
+                if (ex.InnerException != null)
+                {
+                    logger.Error("Inner exception: " + ex.InnerException.Message);
+                }
+                return 1;
+            }
         }
     }
 }

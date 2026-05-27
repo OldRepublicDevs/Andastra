@@ -13,6 +13,7 @@ using BioWare.Resource.Formats.BIF;
 using BioWare.Resource.Formats.TwoDA;
 using BioWare.Common;
 using BioWare.Resource;
+using BioWare.Tools;
 using BioWare.Common;
 using JetBrains.Annotations;
 
@@ -1246,8 +1247,8 @@ namespace KotorCLI.Commands
                 var file2 = parseResult.GetValue(file2Arg);
                 var output = parseResult.GetValue(outputOpt);
                 var logger = new StandardLogger();
-                logger.Error("TODO: STUB - diff not yet implemented");
-                Environment.Exit(1);
+                int exitCode = ExecuteDiff(file1, file2, output, logger);
+                Environment.Exit(exitCode);
             });
             rootCommand.Add(diffCmd);
 
@@ -1406,10 +1407,100 @@ namespace KotorCLI.Commands
                 var source = parseResult.GetValue(sourceArg);
                 var output = parseResult.GetValue(mergeOutputOpt);
                 var logger = new StandardLogger();
-                logger.Error("TODO: STUB - merge not yet implemented");
-                Environment.Exit(1);
+                int exitCode = ExecuteMerge(target, source, output, logger);
+                Environment.Exit(exitCode);
             });
             rootCommand.Add(mergeCmd);
+        }
+
+        public static int ExecuteMerge(string target, string source, string output, ILogger logger)
+        {
+            if (string.IsNullOrWhiteSpace(target) || string.IsNullOrWhiteSpace(source))
+            {
+                logger.Error("Error: Target and source GFF files are required");
+                return 1;
+            }
+
+            if (!File.Exists(target))
+            {
+                logger.Error("Target file does not exist: " + target);
+                return 1;
+            }
+
+            if (!File.Exists(source))
+            {
+                logger.Error("Source file does not exist: " + source);
+                return 1;
+            }
+
+            try
+            {
+                Utilities.MergeGffFiles(target, source, output);
+                string resolvedOutput = string.IsNullOrWhiteSpace(output) ? target : output;
+                logger.Info("Merged GFF written to " + resolvedOutput);
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Merge failed: " + ex.Message);
+                return 1;
+            }
+        }
+
+        public static int ExecuteDiff(string file1, string file2, string output, ILogger logger)
+        {
+            if (string.IsNullOrWhiteSpace(file1) || string.IsNullOrWhiteSpace(file2))
+            {
+                logger.Error("Error: Two files are required for diff");
+                return 1;
+            }
+
+            if (!File.Exists(file1))
+            {
+                logger.Error("File does not exist: " + file1);
+                return 1;
+            }
+
+            if (!File.Exists(file2))
+            {
+                logger.Error("File does not exist: " + file2);
+                return 1;
+            }
+
+            try
+            {
+                string diffText = Utilities.DiffFiles(file1, file2, output);
+                if (string.IsNullOrEmpty(diffText) ||
+                    diffText.StartsWith("Files are identical:", StringComparison.Ordinal))
+                {
+                    if (!string.IsNullOrEmpty(diffText))
+                    {
+                        logger.Info(diffText.TrimEnd());
+                    }
+                    else
+                    {
+                        logger.Info("Files are identical");
+                    }
+
+                    return 0;
+                }
+
+                if (string.IsNullOrEmpty(output))
+                {
+                    logger.Info(diffText.TrimEnd());
+                }
+                else
+                {
+                    logger.Info("Diff written to " + output);
+                }
+
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Diff failed: " + ex.Message);
+                return 1;
+            }
         }
 
         public static int ExecuteGrep(

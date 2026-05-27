@@ -42,7 +42,8 @@ This is an **in-progress implementation**. The project structure and command stu
 
 ### Script Tools
 - `decompile` - Decompile NCS to NSS (stub)
-- `disassemble` - Disassemble NCS (stub)
+- `disassemble` - Disassemble NCS bytecode to text (via BioWare Scripts.DisassembleNcs)
+- `assemble` - Compile NSS to NCS (via BioWare NCSAuto.CompileNss)
 - `assemble` - Compile NSS to NCS (stub)
 
 ### Resource Tools
@@ -51,7 +52,7 @@ This is an **in-progress implementation**. The project structure and command stu
 - `model-convert` - Convert models (stub)
 
 ### Utilities
-- `diff`, `grep`, `stats`, `validate`, `merge`, `cat` - Utility commands (stub)
+- `diff`, `grep`, `stats`, `validate`, `merge`, `cat` - Utility commands (`diff`/`grep` wired; `merge` stub)
 
 ### Validation
 - `check-txi`, `check-2da` - Validation commands (stub)

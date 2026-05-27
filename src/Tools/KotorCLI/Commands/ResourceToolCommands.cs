@@ -1,8 +1,11 @@
 using System;
 using System.CommandLine;
 using System.IO;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Resource.Formats.TPC;
+using BioWare.Tools;
 using KotorCLI.Logging;
-using BioWare.Resource.Formats.WAV;
 
 namespace KotorCLI.Commands
 {
@@ -27,8 +30,8 @@ namespace KotorCLI.Commands
                 var output = parseResult.GetValue(textureOutput);
                 var txi = parseResult.GetValue(txiOption);
                 var logger = new StandardLogger();
-                logger.Info("TODO: STUB - texture-convert not yet implemented");
-                Environment.Exit(0);
+                int exitCode = ExecuteTextureConvert(input, output, txi, logger);
+                Environment.Exit(exitCode);
             });
             rootCommand.Add(textureCmd);
 
@@ -80,82 +83,9 @@ namespace KotorCLI.Commands
                         Environment.Exit(1);
                     }
 
-                    // Create output directory if it doesn't exist
-                    string outputDir = Path.GetDirectoryName(outputPath);
-                    if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
-                    {
-                        Directory.CreateDirectory(outputDir);
-                    }
-
-                    logger.Info($"Converting sound file: {input} -> {outputPath}");
-
-                    // Read input WAV file
-                    byte[] inputData = File.ReadAllBytes(input);
-                    logger.Info($"Read {inputData.Length} bytes from input file");
-
-                    // Detect audio format and deobfuscate
-                    var deobfuscationResult = WAVObfuscation.GetDeobfuscationResult(inputData);
-                    byte[] deobfuscatedData = deobfuscationResult.Item1;
-                    DeobfuscationResult formatType = deobfuscationResult.Item2;
-
-                    logger.Info($"Detected format: {formatType}");
-
-                    // Parse WAV file
-                    WAV wavFile;
-                    try
-                    {
-                        wavFile = WAVAuto.ReadWav(deobfuscatedData);
-                        logger.Info($"Parsed WAV: {wavFile.Channels} channels, {wavFile.SampleRate}Hz, {wavFile.BitsPerSample} bits, {wavFile.Data.Length} bytes of audio data");
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.Error($"Failed to parse WAV file: {ex.Message}");
-                        Environment.Exit(1);
-                        return;
-                    }
-
-                    // Get clean/playable bytes (standard RIFF/WAVE format)
-                    byte[] cleanWavData;
-                    try
-                    {
-                        cleanWavData = WAVAuto.GetPlayableBytes(wavFile);
-                        logger.Info($"Generated clean WAV data: {cleanWavData.Length} bytes");
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.Error($"Failed to generate clean WAV data: {ex.Message}");
-                        Environment.Exit(1);
-                        return;
-                    }
-
-                    // Validate the clean WAV data has proper RIFF header
-                    if (cleanWavData.Length < 12 ||
-                        cleanWavData[0] != 0x52 || cleanWavData[1] != 0x49 ||
-                        cleanWavData[2] != 0x46 || cleanWavData[3] != 0x46) // "RIFF"
-                    {
-                        logger.Error("Generated clean WAV data does not have valid RIFF header");
-                        Environment.Exit(1);
-                        return;
-                    }
-
-                    // Write output file
-                    File.WriteAllBytes(outputPath, cleanWavData);
-                    logger.Info($"Successfully converted sound file to: {outputPath}");
-
-                    // Log format details
-                    string formatDescription = formatType switch
-                    {
-                        DeobfuscationResult.Standard => "Standard RIFF/WAVE format (no header removed)",
-                        DeobfuscationResult.SFX_Header => "KOTOR SFX format (470-byte header removed)",
-                        DeobfuscationResult.MP3_In_WAV => "MP3-in-WAV format (58-byte header removed)",
-                        _ => "Unknown format"
-                    };
-                    logger.Info($"Input format: {formatDescription}");
-
-                    // Log audio details
-                    string audioType = wavFile.AudioFormat == AudioFormat.MP3 ? "MP3" : "PCM";
-                    logger.Info($"Audio type: {audioType}, Channels: {wavFile.Channels}, Sample Rate: {wavFile.SampleRate}Hz, Bits: {wavFile.BitsPerSample}");
-
+                    logger.Info($"Converting sound: {input} -> {outputPath}");
+                    ResourceConversions.ConvertWavToClean(input, outputPath);
+                    logger.Info("Sound conversion completed successfully");
                 }
                 catch (Exception ex)
                 {
@@ -174,16 +104,165 @@ namespace KotorCLI.Commands
             modelCmd.Options.Add(modelOutput);
             var toAsciiOption = Cli.Opt<bool>("--to-ascii", "Convert to ASCII format");
             modelCmd.Options.Add(toAsciiOption);
+            var mdxOption = Cli.Opt<string>("--mdx", "MDX file path (for binary MDL conversion)");
+            modelCmd.Options.Add(mdxOption);
             modelCmd.SetAction(parseResult =>
             {
                 var input = parseResult.GetValue(modelInput);
                 var output = parseResult.GetValue(modelOutput);
                 var toAscii = parseResult.GetValue(toAsciiOption);
+                var mdx = parseResult.GetValue(mdxOption);
                 var logger = new StandardLogger();
-                logger.Info("TODO: STUB - model-convert not yet implemented");
-                Environment.Exit(0);
+                int exitCode = ExecuteModelConvert(input, output, toAscii, mdx, logger);
+                Environment.Exit(exitCode);
             });
             rootCommand.Add(modelCmd);
+        }
+
+        public static int ExecuteTextureConvert(string input, string output, string txi, ILogger logger)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                logger.Error("Input file path is required");
+                return 1;
+            }
+
+            if (!File.Exists(input))
+            {
+                logger.Error("Input file does not exist: " + input);
+                return 1;
+            }
+
+            try
+            {
+                string extension = Path.GetExtension(input).ToLowerInvariant();
+                string outputPath = output;
+
+                if (string.IsNullOrEmpty(outputPath))
+                {
+                    string inputDir = Path.GetDirectoryName(input) ?? string.Empty;
+                    string inputName = Path.GetFileNameWithoutExtension(input);
+                    if (extension == ".tpc")
+                    {
+                        outputPath = Path.Combine(inputDir, inputName + ".tga");
+                    }
+                    else if (extension == ".tga")
+                    {
+                        outputPath = Path.Combine(inputDir, inputName + ".tpc");
+                    }
+                    else
+                    {
+                        logger.Error("Unsupported texture input extension: " + extension);
+                        return 1;
+                    }
+                }
+
+                string outputDir = Path.GetDirectoryName(outputPath);
+                if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
+                {
+                    Directory.CreateDirectory(outputDir);
+                }
+
+                logger.Info("Converting texture: " + input + " -> " + outputPath);
+
+                if (extension == ".tpc" || ResourceIdentifier.FromPath(input).ResType == ResourceType.TPC)
+                {
+                    string txiOutput = txi;
+                    if (string.IsNullOrEmpty(txiOutput) && string.Equals(Path.GetExtension(outputPath), ".tga", StringComparison.OrdinalIgnoreCase))
+                    {
+                        txiOutput = Path.ChangeExtension(outputPath, ".txi");
+                    }
+
+                    ResourceConversions.ConvertTpcToTga(input, outputPath, txiOutput);
+                }
+                else if (extension == ".tga" || ResourceIdentifier.FromPath(input).ResType == ResourceType.TGA)
+                {
+                    ResourceConversions.ConvertTgaToTpc(input, outputPath, txi);
+                }
+                else
+                {
+                    logger.Error("Unsupported texture input extension: " + extension);
+                    return 1;
+                }
+
+                logger.Info("Texture conversion completed successfully");
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Texture conversion failed: " + ex.Message);
+                return 1;
+            }
+        }
+
+        public static int ExecuteModelConvert(
+            string input,
+            string output,
+            bool toAscii,
+            string mdxPath,
+            ILogger logger)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                logger.Error("Input file path is required");
+                return 1;
+            }
+
+            if (!File.Exists(input))
+            {
+                logger.Error("Input file does not exist: " + input);
+                return 1;
+            }
+
+            try
+            {
+                string outputPath = output;
+
+                if (string.IsNullOrEmpty(outputPath))
+                {
+                    string inputDir = Path.GetDirectoryName(input) ?? string.Empty;
+                    string inputName = Path.GetFileNameWithoutExtension(input);
+                    if (toAscii)
+                    {
+                        outputPath = Path.Combine(inputDir, inputName + ".mdl.ascii");
+                    }
+                    else
+                    {
+                        outputPath = Path.Combine(inputDir, inputName + ".mdl");
+                    }
+                }
+
+                string outputDir = Path.GetDirectoryName(outputPath);
+                if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
+                {
+                    Directory.CreateDirectory(outputDir);
+                }
+
+                logger.Info("Converting model: " + input + " -> " + outputPath);
+
+                if (toAscii)
+                {
+                    ResourceConversions.ConvertMdlToAscii(input, outputPath, mdxPath);
+                }
+                else
+                {
+                    string mdxOutput = mdxPath;
+                    if (string.IsNullOrEmpty(mdxOutput))
+                    {
+                        mdxOutput = Path.ChangeExtension(outputPath, ".mdx");
+                    }
+
+                    ResourceConversions.ConvertAsciiToMdl(input, outputPath, mdxOutput);
+                }
+
+                logger.Info("Model conversion completed successfully");
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Model conversion failed: " + ex.Message);
+                return 1;
+            }
         }
     }
 }
