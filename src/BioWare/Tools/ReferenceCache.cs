@@ -933,7 +933,8 @@ namespace BioWare.Tools
             Installation installation,
             int strref,
             StrRefReferenceCache cache = null,
-            Action<string> logger = null)
+            Action<string> logger = null,
+            ReferenceSearchOptions options = null)
         {
             // If cache is provided, use it for faster lookup
             if (cache != null)
@@ -946,8 +947,7 @@ namespace BioWare.Tools
 
                 // Build a map of ResourceIdentifier -> FileResource
                 var identifierToResource = new Dictionary<ResourceIdentifier, FileResource>();
-                var allResourcesForMap = GetAllResources(installation);
-                foreach (var res in allResourcesForMap)
+                foreach (FileResource res in GetAllResources(installation, options))
                 {
                     try
                     {
@@ -1018,9 +1018,7 @@ namespace BioWare.Tools
 
             // No cache available - scan all resources (slower path)
             var scanResults = new List<StrRefSearchResult>();
-            var allResources = GetAllResources(installation);
-
-            foreach (var resource in allResources)
+            foreach (var resource in GetAllResources(installation, options))
             {
                 ResourceType restype = resource.ResType;
 
@@ -1100,78 +1098,88 @@ namespace BioWare.Tools
         }
 
         // Helper method to get all resources from an Installation
-        private static List<FileResource> GetAllResources(Installation installation)
+        private static List<FileResource> GetAllResources(Installation installation, ReferenceSearchOptions options = null)
         {
             var allResources = new List<FileResource>();
+            bool searchChitin = options == null || options.SearchChitin;
+            bool searchOverride = options == null || options.SearchOverride;
+            bool searchModules = options == null || options.SearchModules;
 
-            try
+            if (searchChitin)
             {
-                allResources.AddRange(installation.ChitinResources());
-            }
-            catch
-            {
-                // Minimal/test installs may lack readable chitin.key.
-            }
-
-            try
-            {
-                foreach (FileResource resource in installation.CoreResources())
+                try
                 {
-                    if (!ContainsResource(allResources, resource))
-                    {
-                        allResources.Add(resource);
-                    }
+                    allResources.AddRange(installation.ChitinResources());
                 }
-            }
-            catch
-            {
-                // Patch/core enumeration is optional for reference scans.
-            }
-
-            // Get override resources
-            string overridePath = installation.OverridePath();
-            if (Directory.Exists(overridePath))
-            {
-                var overrideFiles = Directory.GetFiles(overridePath, "*.*", SearchOption.AllDirectories);
-                foreach (string file in overrideFiles)
+                catch
                 {
-                    try
+                    // Minimal/test installs may lack readable chitin.key.
+                }
+
+                try
+                {
+                    foreach (FileResource resource in installation.CoreResources())
                     {
-                        var identifier = ResourceIdentifier.FromPath(file);
-                        if (identifier.ResType != ResourceType.INVALID && !identifier.ResType.IsInvalid)
+                        if (!ContainsResource(allResources, resource))
                         {
-                            var fileInfo = new FileInfo(file);
-                            allResources.Add(new FileResource(identifier.ResName, identifier.ResType, (int)fileInfo.Length, 0, file));
+                            allResources.Add(resource);
                         }
                     }
-                    catch
+                }
+                catch
+                {
+                    // Patch/core enumeration is optional for reference scans.
+                }
+            }
+
+            if (searchOverride)
+            {
+                string overridePath = installation.OverridePath();
+                if (Directory.Exists(overridePath))
+                {
+                    var overrideFiles = Directory.GetFiles(overridePath, "*.*", SearchOption.AllDirectories);
+                    foreach (string file in overrideFiles)
                     {
-                        // Skip invalid files
+                        try
+                        {
+                            var identifier = ResourceIdentifier.FromPath(file);
+                            if (identifier.ResType != ResourceType.INVALID && !identifier.ResType.IsInvalid)
+                            {
+                                var fileInfo = new FileInfo(file);
+                                allResources.Add(new FileResource(identifier.ResName, identifier.ResType, (int)fileInfo.Length, 0, file));
+                            }
+                        }
+                        catch
+                        {
+                            // Skip invalid files
+                        }
                     }
                 }
             }
 
-            // Get module resources
-            // TODO: HACK - Using fully qualified name to avoid circular dependency
-            // Installation.GetModulesPath is a static method, so we can call it without a project reference
-            string modulesPath = Installation.GetModulesPath(installation.Path);
-            if (Directory.Exists(modulesPath))
+            if (searchModules)
             {
-                var moduleFiles = Directory.GetFiles(modulesPath, "*.rim")
-                    .Concat(Directory.GetFiles(modulesPath, "*.mod"))
-                    .Concat(Directory.GetFiles(modulesPath, "*.erf"))
-                    .ToList();
-
-                foreach (string moduleFile in moduleFiles)
+                // TODO: HACK - Using fully qualified name to avoid circular dependency
+                // Installation.GetModulesPath is a static method, so we can call it without a project reference
+                string modulesPath = Installation.GetModulesPath(installation.Path);
+                if (Directory.Exists(modulesPath))
                 {
-                    try
+                    var moduleFiles = Directory.GetFiles(modulesPath, "*.rim")
+                        .Concat(Directory.GetFiles(modulesPath, "*.mod"))
+                        .Concat(Directory.GetFiles(modulesPath, "*.erf"))
+                        .ToList();
+
+                    foreach (string moduleFile in moduleFiles)
                     {
-                        var capsule = new LazyCapsule(moduleFile);
-                        allResources.AddRange(capsule.GetResources());
-                    }
-                    catch
-                    {
-                        // Skip invalid modules
+                        try
+                        {
+                            var capsule = new LazyCapsule(moduleFile);
+                            allResources.AddRange(capsule.GetResources());
+                        }
+                        catch
+                        {
+                            // Skip invalid modules
+                        }
                     }
                 }
             }
@@ -1413,7 +1421,8 @@ namespace BioWare.Tools
             string twodaFilename,
             int rowIndex,
             TwoDAMemoryReferenceCache cache = null,
-            Action<string> logger = null)
+            Action<string> logger = null,
+            ReferenceSearchOptions options = null)
         {
             if (installation == null || rowIndex < 0)
             {
@@ -1431,7 +1440,7 @@ namespace BioWare.Tools
                 logger?.Invoke("Building 2DA memory reference cache for " + normalizedFilename + " row " + rowIndex + "...");
                 cache = new TwoDAMemoryReferenceCache(installation.Game);
 
-                foreach (FileResource resource in GetAllResources(installation))
+                foreach (FileResource resource in GetAllResources(installation, options))
                 {
                     try
                     {
@@ -1461,14 +1470,16 @@ namespace BioWare.Tools
                 installation,
                 cacheEntries,
                 normalizedFilename,
-                rowIndex);
+                rowIndex,
+                options);
         }
 
         private static List<ReferenceSearchResult> ConvertTwoDAMemoryCacheEntries(
             Installation installation,
             List<(ResourceIdentifier identifier, List<string> locations)> cacheEntries,
             string twodaFilename,
-            int rowIndex)
+            int rowIndex,
+            ReferenceSearchOptions options = null)
         {
             var converted = new List<ReferenceSearchResult>();
             if (cacheEntries == null || cacheEntries.Count == 0)
@@ -1477,7 +1488,7 @@ namespace BioWare.Tools
             }
 
             var identifierToResource = new Dictionary<ResourceIdentifier, FileResource>();
-            foreach (FileResource res in GetAllResources(installation))
+            foreach (FileResource res in GetAllResources(installation, options))
             {
                 try
                 {
