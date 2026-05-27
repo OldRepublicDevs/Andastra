@@ -23,6 +23,7 @@ namespace BioWare.Tools
         public bool CaseSensitive { get; set; }
         public bool PartialMatch { get; set; }
         public HashSet<ResourceType> FileTypes { get; set; }
+        public bool IncludeNcsStrRefScan { get; set; } = true;
     }
 
     public class ReferenceSearchResult
