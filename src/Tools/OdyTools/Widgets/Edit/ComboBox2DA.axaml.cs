@@ -8,6 +8,7 @@ using BioWare.Resource.Formats.TwoDA;
 using BioWare.Common;
 using BioWare.Resource;
 using OdyTools.Data;
+using OdyTools.Utils;
 
 namespace OdyTools.Widgets.Edit
 {
@@ -35,6 +36,45 @@ namespace OdyTools.Widgets.Edit
         public ComboBox2DA()
         {
             InitializeComponent();
+            AttachContextMenu();
+        }
+
+        private void AttachContextMenu()
+        {
+            var contextMenu = new ContextMenu();
+            var findReferencesItem = new MenuItem
+            {
+                Header = "Find References...",
+                IsEnabled = false
+            };
+            findReferencesItem.Click += (sender, e) =>
+            {
+                if (_installation?.Installation == null || string.IsNullOrEmpty(_resname))
+                {
+                    return;
+                }
+
+                int rowIndex = SelectedIndex;
+                TwoDAMemoryReferenceHelper.FindAndShowTwoDAMemoryReferences(
+                    TopLevel.GetTopLevel(this) as Window,
+                    _resname,
+                    rowIndex,
+                    _installation);
+            };
+            contextMenu.Items.Add(findReferencesItem);
+
+            void UpdateEnabled(object s, EventArgs e)
+            {
+                findReferencesItem.IsEnabled =
+                    _installation?.Installation != null
+                    && !string.IsNullOrEmpty(_resname)
+                    && _this2DA != null
+                    && SelectedIndex >= 0;
+            }
+
+            SelectionChanged += UpdateEnabled;
+            contextMenu.Opened += UpdateEnabled;
+            ContextMenu = contextMenu;
         }
 
         private void InitializeComponent()
