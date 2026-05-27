@@ -107,6 +107,129 @@ namespace BioWare.Tools
         }
 
         /// <summary>
+        /// Find GFF string/ResRef field values matching <paramref name="value"/>.
+        /// When <paramref name="fieldNames"/> is null or empty, all string and ResRef fields are searched.
+        /// </summary>
+        public static List<ReferenceSearchResult> FindFieldValueReferences(
+            Installation installation,
+            string value,
+            HashSet<string> fieldNames = null,
+            ReferenceSearchOptions options = null)
+        {
+            if (installation == null)
+            {
+                throw new ArgumentNullException(nameof(installation));
+            }
+
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return new List<ReferenceSearchResult>();
+            }
+
+            HashSet<string> normalizedFieldNames = NormalizeFieldNameFilter(fieldNames);
+            return SearchInstallation(
+                installation,
+                value,
+                options,
+                (data, needle, searchOptions) => FindFieldValueInGffBytes(
+                    data,
+                    needle,
+                    searchOptions,
+                    normalizedFieldNames));
+        }
+
+        public static List<string> FindFieldValueInGffBytes(
+            byte[] data,
+            string value,
+            ReferenceSearchOptions options = null,
+            HashSet<string> fieldNames = null)
+        {
+            return FindInGffBytes(
+                data,
+                value,
+                options,
+                (gffStruct, pathPrefix, needle, searchOptions, paths) =>
+                    RecurseGffForFieldValue(gffStruct, pathPrefix, needle, searchOptions, fieldNames, paths));
+        }
+
+        private static HashSet<string> NormalizeFieldNameFilter(HashSet<string> fieldNames)
+        {
+            if (fieldNames == null || fieldNames.Count == 0)
+            {
+                return null;
+            }
+
+            var normalized = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string name in fieldNames)
+            {
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    normalized.Add(name.Trim());
+                }
+            }
+
+            return normalized.Count == 0 ? null : normalized;
+        }
+
+        private static void RecurseGffForFieldValue(
+            GFFStruct gffStruct,
+            string pathPrefix,
+            string needle,
+            ReferenceSearchOptions options,
+            HashSet<string> fieldNames,
+            List<string> paths)
+        {
+            if (gffStruct == null)
+            {
+                return;
+            }
+
+            foreach (var tuple in gffStruct)
+            {
+                string label = tuple.label;
+                GFFFieldType fieldType = tuple.fieldType;
+                object fieldValue = tuple.value;
+                string fieldPath = string.IsNullOrEmpty(pathPrefix) ? label : pathPrefix + "." + label;
+
+                try
+                {
+                    bool fieldAllowed = fieldNames == null || fieldNames.Contains(label);
+
+                    if (fieldAllowed)
+                    {
+                        if (fieldType == GFFFieldType.String && fieldValue is string stringValue &&
+                            ValueMatches(stringValue, needle, options))
+                        {
+                            paths.Add(fieldPath);
+                        }
+                        else if (fieldType == GFFFieldType.ResRef && fieldValue is ResRef resRef)
+                        {
+                            string resRefText = resRef.ToString();
+                            if (ValueMatches(resRefText, needle, options))
+                            {
+                                paths.Add(fieldPath);
+                            }
+                        }
+                    }
+
+                    RecurseNestedGff(
+                        fieldValue,
+                        fieldType,
+                        fieldPath,
+                        needle,
+                        options,
+                        paths,
+                        (nestedStruct, nestedPath, nestedNeedle, nestedOptions, nestedPaths) =>
+                            RecurseGffForFieldValue(nestedStruct, nestedPath, nestedNeedle, nestedOptions, fieldNames, nestedPaths));
+                }
+                catch
+                {
+                    // Continue scanning sibling fields.
+                }
+            }
+        }
+
+        /// <summary>
         /// Find GFF field paths whose ResRef value matches <paramref name="resRefNeedle"/>.
         /// </summary>
         public static List<string> FindScriptResRefInGffBytes(byte[] data, string resRefNeedle)
