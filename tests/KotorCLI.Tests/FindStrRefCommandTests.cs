@@ -374,6 +374,67 @@ namespace KotorCLI.Tests
             }
         }
 
+        [Test]
+        public void Execute_CacheFile_SecondRunUsesSavedCacheWithoutRescan()
+        {
+            const int targetStrRef = 77777;
+            string installRoot = CreateInstallWithStrRef(targetStrRef);
+            string cacheFile = Path.Combine(Path.GetTempPath(), "kotorcli-strref-cache-" + Guid.NewGuid().ToString("N") + ".json");
+
+            try
+            {
+                var logger = new StandardLogger();
+                int firstExit = FindStrRefCommand.Execute(
+                    targetStrRef,
+                    installRoot,
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    noNcs: true,
+                    ncsStrRefMin: null,
+                    jsonOutput: false,
+                    countOnly: false,
+                    moduleGlobFilters: null,
+                    cacheFilePath: cacheFile,
+                    rebuildCache: false,
+                    logger);
+
+                Assert.That(firstExit, Is.EqualTo(0));
+                Assert.That(File.Exists(cacheFile), Is.True);
+                DateTime firstWrite = File.GetLastWriteTimeUtc(cacheFile);
+
+                System.Threading.Thread.Sleep(1100);
+
+                int secondExit = FindStrRefCommand.Execute(
+                    targetStrRef,
+                    installRoot,
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    noNcs: true,
+                    ncsStrRefMin: null,
+                    jsonOutput: false,
+                    countOnly: false,
+                    moduleGlobFilters: null,
+                    cacheFilePath: cacheFile,
+                    rebuildCache: false,
+                    logger);
+
+                Assert.That(secondExit, Is.EqualTo(0));
+                Assert.That(File.GetLastWriteTimeUtc(cacheFile), Is.EqualTo(firstWrite));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+                if (File.Exists(cacheFile))
+                {
+                    File.Delete(cacheFile);
+                }
+            }
+        }
+
         private static string CreateInstallWithStrRef(int strref)
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-strref-" + Guid.NewGuid().ToString("N"));
