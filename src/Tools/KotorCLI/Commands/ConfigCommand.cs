@@ -81,7 +81,7 @@ namespace KotorCLI.Commands
             rootCommand.Add(configCommand);
         }
 
-        private static int Execute(string key, string value, bool global, bool local, bool get, bool set, bool unset, bool list, ILogger logger)
+        public static int Execute(string key, string value, bool global, bool local, bool get, bool set, bool unset, bool list, ILogger logger)
         {
             // Determine which config file to use
             string configPath;
