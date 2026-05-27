@@ -41,6 +41,10 @@ namespace KotorCLI.Commands
             var noNcsOption = Cli.Opt<bool>("--no-ncs", "Skip NCS bytecode (CONSTI) scanning");
             findStrRefCommand.Options.Add(noNcsOption);
 
+            var ncsStrRefMinOption = new Option<int?>("--ncs-strref-min");
+            ncsStrRefMinOption.Description = "Minimum CONSTI value indexed as plausible StrRef in cache scans (default 100); explicit queries still match any value";
+            findStrRefCommand.Options.Add(ncsStrRefMinOption);
+
             findStrRefCommand.SetAction(parseResult =>
             {
                 var strref = parseResult.GetValue(strrefArgument);
@@ -50,6 +54,7 @@ namespace KotorCLI.Commands
                 var noChitin = parseResult.GetValue(noChitinOption);
                 var noModules = parseResult.GetValue(noModulesOption);
                 var noNcs = parseResult.GetValue(noNcsOption);
+                var ncsStrRefMin = parseResult.GetValue(ncsStrRefMinOption);
 
                 var logger = new StandardLogger();
                 var exitCode = Execute(
@@ -60,6 +65,7 @@ namespace KotorCLI.Commands
                     noChitin,
                     noModules,
                     noNcs,
+                    ncsStrRefMin,
                     logger);
                 Environment.Exit(exitCode);
             });
@@ -69,7 +75,7 @@ namespace KotorCLI.Commands
 
         public static int Execute(int strref, string installDir, ILogger logger)
         {
-            return Execute(strref, installDir, false, false, false, false, false, logger);
+            return Execute(strref, installDir, false, false, false, false, false, null, logger);
         }
 
         public static int Execute(
@@ -81,7 +87,7 @@ namespace KotorCLI.Commands
             bool noModules,
             ILogger logger)
         {
-            return Execute(strref, installDir, overrideOnly, noOverride, noChitin, noModules, false, logger);
+            return Execute(strref, installDir, overrideOnly, noOverride, noChitin, noModules, false, null, logger);
         }
 
         public static int Execute(
@@ -94,9 +100,29 @@ namespace KotorCLI.Commands
             bool noNcs,
             ILogger logger)
         {
+            return Execute(strref, installDir, overrideOnly, noOverride, noChitin, noModules, noNcs, null, logger);
+        }
+
+        public static int Execute(
+            int strref,
+            string installDir,
+            bool overrideOnly,
+            bool noOverride,
+            bool noChitin,
+            bool noModules,
+            bool noNcs,
+            int? ncsStrRefMin,
+            ILogger logger)
+        {
             if (strref < 0)
             {
                 logger.Error("StrRef must be zero or greater.");
+                return 1;
+            }
+
+            if (ncsStrRefMin.HasValue && ncsStrRefMin.Value < 0)
+            {
+                logger.Error("--ncs-strref-min must be zero or greater.");
                 return 1;
             }
 
@@ -132,6 +158,7 @@ namespace KotorCLI.Commands
                 caseSensitive: false,
                 partialMatch: false);
             options.IncludeNcsStrRefScan = !noNcs;
+            options.NcsStrRefCandidateMinimum = ncsStrRefMin;
 
             List<StrRefSearchResult> strrefResults = ReferenceCacheHelpers.FindStrRefReferences(
                 installation,
