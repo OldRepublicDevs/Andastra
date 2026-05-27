@@ -62,6 +62,47 @@ file = ""test.mod""
         }
 
         [Test]
+        public void Execute_RemoveDeleted_PreservesKotorcliCache()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-unpack-cache-" + Guid.NewGuid().ToString("N"));
+            string originalDirectory = Directory.GetCurrentDirectory();
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), MinimalConfig);
+
+                string modPath = Path.Combine(projectDir, "test.mod");
+                WriteModWithUtc(modPath, "creature_cache");
+
+                string cacheDir = Path.Combine(projectDir, ".kotorcli", "cache", "default");
+                Directory.CreateDirectory(cacheDir);
+                string cacheStale = Path.Combine(cacheDir, "orphan.utc");
+                File.WriteAllBytes(cacheStale, new byte[] { 0x01 });
+
+                string creaturesDir = Path.Combine(projectDir, "src", "blueprints", "creatures");
+                Directory.CreateDirectory(creaturesDir);
+                string srcStale = Path.Combine(creaturesDir, "stale.utc.json");
+                File.WriteAllText(srcStale, "{}");
+
+                Directory.SetCurrentDirectory(projectDir);
+
+                var logger = new StandardLogger();
+                int exitCode = UnpackCommand.Execute("default", modPath, true, logger);
+
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(File.Exists(cacheStale), Is.True);
+                Assert.That(File.Exists(srcStale), Is.False);
+                Assert.That(File.Exists(Path.Combine(creaturesDir, "creature_cache.utc.json")), Is.True);
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(originalDirectory);
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
+        [Test]
         public void Execute_WithoutRemoveDeleted_KeepsStaleSources()
         {
             string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-unpack-keep-" + Guid.NewGuid().ToString("N"));
