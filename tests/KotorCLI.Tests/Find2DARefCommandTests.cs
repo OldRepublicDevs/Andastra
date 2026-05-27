@@ -53,6 +53,102 @@ namespace KotorCLI.Tests
             Assert.That(exitCode, Is.EqualTo(1));
         }
 
+        [Test]
+        public void Execute_NoOverride_SkipsOverrideUtc_ExitsNonZero()
+        {
+            string installRoot = CreateInstallWithAppearanceRow(9);
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = Find2DARefCommand.Execute(
+                    "appearance",
+                    9,
+                    installRoot,
+                    overrideOnly: false,
+                    noOverride: true,
+                    noChitin: true,
+                    noModules: true,
+                    logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Execute_OverrideOnly_FindsOverrideUtc_ExitsZero()
+        {
+            string installRoot = CreateInstallWithAppearanceRow(9);
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = Find2DARefCommand.Execute(
+                    "appearance",
+                    9,
+                    installRoot,
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Execute_OverrideOnly_FindsOverrideUtc()
+        {
+            string installRoot = CreateInstallWithAppearanceRow(9);
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = Find2DARefCommand.Execute(
+                    "appearance",
+                    9,
+                    installRoot,
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Execute_NoOverride_SkipsOverrideUtc()
+        {
+            string installRoot = CreateInstallWithAppearanceRow(9);
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = Find2DARefCommand.Execute(
+                    "appearance",
+                    9,
+                    installRoot,
+                    overrideOnly: false,
+                    noOverride: true,
+                    noChitin: true,
+                    noModules: true,
+                    logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
         private static string CreateInstallWithAppearanceRow(int rowIndex)
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-2da-" + Guid.NewGuid().ToString("N"));

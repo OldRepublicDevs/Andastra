@@ -51,6 +51,98 @@ namespace KotorCLI.Tests
             Assert.That(exitCode, Is.EqualTo(1));
         }
 
+        [Test]
+        public void Execute_NoOverride_SkipsOverrideSsf_ExitsNonZero()
+        {
+            string installRoot = CreateInstallWithStrRef(77777);
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = FindStrRefCommand.Execute(
+                    77777,
+                    installRoot,
+                    overrideOnly: false,
+                    noOverride: true,
+                    noChitin: true,
+                    noModules: true,
+                    logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Execute_OverrideOnly_FindsOverrideSsf_ExitsZero()
+        {
+            string installRoot = CreateInstallWithStrRef(77777);
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = FindStrRefCommand.Execute(
+                    77777,
+                    installRoot,
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Execute_OverrideOnly_FindsOverrideSsf()
+        {
+            string installRoot = CreateInstallWithStrRef(77777);
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = FindStrRefCommand.Execute(
+                    77777,
+                    installRoot,
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Execute_NoOverride_SkipsOverrideSsf()
+        {
+            string installRoot = CreateInstallWithStrRef(77777);
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = FindStrRefCommand.Execute(
+                    77777,
+                    installRoot,
+                    overrideOnly: false,
+                    noOverride: true,
+                    noChitin: true,
+                    noModules: true,
+                    logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
         private static string CreateInstallWithStrRef(int strref)
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-strref-" + Guid.NewGuid().ToString("N"));
