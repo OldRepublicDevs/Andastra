@@ -40,6 +40,75 @@ file = ""test.mod""
 }
 ";
 
+        private const string MixedPipelineConfig = @"[package]
+name = ""testpack""
+
+  [package.sources]
+  include = [""src/**/*.json"", ""src/**/*.nss""]
+
+[target]
+name = ""default""
+file = ""test.mod""
+";
+
+        [Test]
+        public void Mixed_Pack_Install_Pipeline_ProducesModWithUtcAndNcs()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-mixed-pipeline-" + Guid.NewGuid().ToString("N"));
+            string fakeInstallDir = Path.Combine(Path.GetTempPath(), "kotorcli-mixed-game-" + Guid.NewGuid().ToString("N"));
+            string originalDirectory = Directory.GetCurrentDirectory();
+            const string creatureResref = "mx_creature";
+            const string scriptResref = "mx_main";
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                Directory.CreateDirectory(fakeInstallDir);
+                File.WriteAllText(Path.Combine(fakeInstallDir, "chitin.key"), "fake-key");
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), MixedPipelineConfig);
+
+                string creatureDir = Path.Combine(projectDir, "src", "blueprints", "creatures");
+                Directory.CreateDirectory(creatureDir);
+                string jsonPath = Path.Combine(creatureDir, creatureResref + ".utc.json");
+                var gff = new GFF(GFFContent.GFF);
+                gff.Root.SetString("Label", "mixed-pipeline");
+                GFFAuto.WriteGff(gff, jsonPath, ResourceType.GFF_JSON);
+
+                string scriptDir = Path.Combine(projectDir, "src", "scripts");
+                Directory.CreateDirectory(scriptDir);
+                File.WriteAllText(Path.Combine(scriptDir, scriptResref + ".nss"), MinimalNssSource);
+
+                Directory.SetCurrentDirectory(projectDir);
+                var logger = new StandardLogger();
+
+                int packExit = PackCommand.Execute(new[] { "default" }, false, false, false, logger);
+                Assert.That(packExit, Is.EqualTo(0));
+
+                string modPath = Path.Combine(projectDir, "test.mod");
+                Assert.That(File.Exists(modPath), Is.True);
+
+                ERF packedMod = ERFAuto.ReadErf(modPath, ResourceType.MOD);
+                Assert.That(packedMod.Get(creatureResref, ResourceType.UTC), Is.Not.Null);
+                Assert.That(packedMod.Get(scriptResref, ResourceType.NCS), Is.Not.Null);
+
+                int installExit = InstallCommand.Execute(new[] { "default" }, fakeInstallDir, false, false, logger);
+                Assert.That(installExit, Is.EqualTo(0));
+
+                string installedModPath = Path.Combine(fakeInstallDir, "modules", "test.mod");
+                Assert.That(File.Exists(installedModPath), Is.True);
+
+                ERF installedMod = ERFAuto.ReadErf(installedModPath, ResourceType.MOD);
+                Assert.That(installedMod.Get(creatureResref, ResourceType.UTC), Is.Not.Null);
+                Assert.That(installedMod.Get(scriptResref, ResourceType.NCS), Is.Not.Null);
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(originalDirectory);
+                DeleteDirectorySafe(projectDir);
+                DeleteDirectorySafe(fakeInstallDir);
+            }
+        }
+
         [Test]
         public void Compile_Pack_ProducesModWithCompiledScript()
         {
