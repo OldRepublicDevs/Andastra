@@ -39,7 +39,7 @@ namespace KotorCLI.Commands
             rootCommand.Add(listCommand);
         }
 
-        private static int Execute(string[] targets, bool quiet, bool verbose, ILogger logger)
+        public static int Execute(string[] targets, bool quiet, bool verbose, ILogger logger)
         {
             var configPath = ConfigFileFinder.FindConfigFile();
             if (configPath == null)
