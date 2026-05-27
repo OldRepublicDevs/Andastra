@@ -48,7 +48,7 @@ namespace KotorCLI.Commands
             rootCommand.Add(packCommand);
         }
 
-        private static int Execute(string[] targetNames, bool clean, bool noConvert, bool noCompile, ILogger logger)
+        public static int Execute(string[] targetNames, bool clean, bool noConvert, bool noCompile, ILogger logger)
         {
             // Pack command orchestrates: convert -> compile -> pack
             // Matching PyKotor implementation at Tools/KotorCLI/src/kotorcli/commands/pack.py
