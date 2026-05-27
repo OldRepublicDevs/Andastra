@@ -159,6 +159,64 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void ExecuteListArchive_KeyFile_FilterNoMatch_ExitsNonZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-key-filter-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "sample.bif");
+                string keyPath = Path.Combine(tempDir, "sample.key");
+                WriteSampleBifKeyPair(bifPath, keyPath, "from_key", 0);
+
+                var logger = new StandardLogger();
+                int exitCode = ListArchiveCommand.Execute(keyPath, false, "missing_*", logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_KeyFile_NoMatch_ExitsNonZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-key-nomatch-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "sample.bif");
+                string keyPath = Path.Combine(tempDir, "sample.key");
+                WriteSampleBifKeyPair(bifPath, keyPath, "from_key", 0);
+
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(keyPath, "missing_*", false, false, logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void ExecuteListArchive_ListsRimResources()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-" + Guid.NewGuid().ToString("N"));
