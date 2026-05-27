@@ -38,6 +38,7 @@
     <AvaloniaXaml Include="OdyToolUTS.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml" Link="Dialogs/EditorHelpDialog.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\FileResultsDialog.axaml" Link="Dialogs/FileResultsDialog.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\ReferenceSearchOptionsDialog.axaml" Link="Dialogs/ReferenceSearchOptionsDialog.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\LocalizedStringDialog.axaml" Link="Dialogs/LocalizedStringDialog.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\LocalizedStringEdit.axaml" Link="Widgets/LocalizedStringEdit.axaml" />
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml" Link="Widgets/Settings/InstallationsWidget.axaml" />

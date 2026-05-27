@@ -20,6 +20,7 @@
     <Compile Include="$(_OdyToolsRoot)\Data\GlobalSettings.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\PathUtils.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\ReferenceSearchHelper.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Utils\ScriptReferenceHelper.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\DialogHelper.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\FileResultsDialog.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\ReferenceSearchOptionsDialog.axaml.cs" />
