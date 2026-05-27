@@ -44,6 +44,12 @@ namespace KotorCLI.Commands
             var caseSensitiveOption = Cli.Opt<bool>("--case-sensitive", "Case-sensitive match");
             findFieldValueCommand.Options.Add(caseSensitiveOption);
 
+            var jsonOption = Cli.Opt<bool>("--json", "Emit results as a single JSON object");
+            findFieldValueCommand.Options.Add(jsonOption);
+
+            var countOnlyOption = Cli.Opt<bool>("--count-only", "Print only the number of matches");
+            findFieldValueCommand.Options.Add(countOnlyOption);
+
             findFieldValueCommand.SetAction(parseResult =>
             {
                 var value = parseResult.GetValue(valueArgument);
@@ -54,6 +60,8 @@ namespace KotorCLI.Commands
                 var noModules = parseResult.GetValue(noModulesOption);
                 var partial = parseResult.GetValue(partialOption);
                 var caseSensitive = parseResult.GetValue(caseSensitiveOption);
+                var json = parseResult.GetValue(jsonOption);
+                var countOnly = parseResult.GetValue(countOnlyOption);
 
                 var logger = new StandardLogger();
                 var exitCode = Execute(
@@ -65,6 +73,8 @@ namespace KotorCLI.Commands
                     noModules,
                     partial,
                     caseSensitive,
+                    json,
+                    countOnly,
                     logger);
                 Environment.Exit(exitCode);
             });
@@ -88,6 +98,8 @@ namespace KotorCLI.Commands
                 false,
                 partial,
                 caseSensitive,
+                false,
+                false,
                 logger);
         }
 
@@ -100,6 +112,33 @@ namespace KotorCLI.Commands
             bool noModules,
             bool partial,
             bool caseSensitive,
+            ILogger logger)
+        {
+            return Execute(
+                value,
+                installDir,
+                overrideOnly,
+                noOverride,
+                noChitin,
+                noModules,
+                partial,
+                caseSensitive,
+                false,
+                false,
+                logger);
+        }
+
+        public static int Execute(
+            string value,
+            string installDir,
+            bool overrideOnly,
+            bool noOverride,
+            bool noChitin,
+            bool noModules,
+            bool partial,
+            bool caseSensitive,
+            bool jsonOutput,
+            bool countOnly,
             ILogger logger)
         {
             if (string.IsNullOrWhiteSpace(value))
@@ -146,19 +185,13 @@ namespace KotorCLI.Commands
                 null,
                 options);
 
-            if (results == null || results.Count == 0)
-            {
-                logger.Info("No references found.");
-                return 1;
-            }
-
-            foreach (ReferenceSearchResult result in results)
-            {
-                logger.Info(result.DisplayLabel);
-            }
-
-            logger.Info("Found " + results.Count + " reference(s).");
-            return 0;
+            return ReferenceSearchOutputFormatter.EmitReferenceResults(
+                logger,
+                value.Trim(),
+                "field-value",
+                results,
+                jsonOutput,
+                countOnly);
         }
     }
 }
