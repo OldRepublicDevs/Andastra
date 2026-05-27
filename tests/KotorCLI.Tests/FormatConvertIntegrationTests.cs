@@ -91,6 +91,82 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void Json2Gff_AfterGff2Json_WritesGffFile()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-json2gff-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+            string gffPath = Path.Combine(tempDir, "sample.gff");
+            string jsonPath = Path.Combine(tempDir, "sample.json");
+            string roundTripPath = Path.Combine(tempDir, "roundtrip.gff");
+
+            try
+            {
+                var gff = new GFF(GFFContent.GFF);
+                gff.Root.SetString("Label", "test");
+                File.WriteAllBytes(gffPath, GFFAuto.BytesGff(gff, ResourceType.GFF));
+
+                int jsonExit = RunKotorCli("gff2json \"" + gffPath + "\" --output \"" + jsonPath + "\"", out _, out string jsonErr);
+                Assert.That(jsonExit, Is.EqualTo(0), jsonErr);
+                Assert.That(File.Exists(jsonPath), Is.True);
+
+                int gffExit = RunKotorCli("json2gff \"" + jsonPath + "\" --output \"" + roundTripPath + "\"", out _, out string gffErr);
+                Assert.That(gffExit, Is.EqualTo(0), gffErr);
+                Assert.That(File.Exists(roundTripPath), Is.True);
+                Assert.That(new FileInfo(roundTripPath).Length, Is.GreaterThan(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void Json2Gff_AfterGff2Json_PreservesLabelField()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-json2gff-label-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+            string gffPath = Path.Combine(tempDir, "sample.gff");
+            string jsonPath = Path.Combine(tempDir, "sample.json");
+            string roundTripPath = Path.Combine(tempDir, "roundtrip.gff");
+
+            try
+            {
+                const string label = "integration-label";
+                var gff = new GFF(GFFContent.GFF);
+                gff.Root.SetString("Label", label);
+                File.WriteAllBytes(gffPath, GFFAuto.BytesGff(gff, ResourceType.GFF));
+
+                int jsonExit = RunKotorCli("gff2json \"" + gffPath + "\" --output \"" + jsonPath + "\"", out _, out string jsonErr);
+                Assert.That(jsonExit, Is.EqualTo(0), jsonErr);
+
+                int gffExit = RunKotorCli("json2gff \"" + jsonPath + "\" --output \"" + roundTripPath + "\"", out _, out string gffErr);
+                Assert.That(gffExit, Is.EqualTo(0), gffErr);
+
+                byte[] roundTripBytes = File.ReadAllBytes(roundTripPath);
+                GFF roundTrip = GFFAuto.ReadGff(roundTripBytes, 0, roundTripBytes.Length, ResourceType.GFF);
+                Assert.That(roundTrip.Root.GetString("Label"), Is.EqualTo(label));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void Json2Gff_MissingInput_ExitsNonZero()
         {
             int exitCode = RunKotorCli("json2gff \"" + Path.Combine(Path.GetTempPath(), "missing-" + Guid.NewGuid().ToString("N") + ".json") + "\"", out _, out _);
