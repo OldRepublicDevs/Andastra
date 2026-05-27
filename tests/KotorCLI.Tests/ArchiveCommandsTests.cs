@@ -379,6 +379,58 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void ExecuteSearchArchive_CaseSensitiveName_MatchesExactCase()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-case-name-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string rimPath = CreateSampleRim(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(rimPath, "sample_*", true, false, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_CaseSensitiveContent_MatchesExactCase()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-case-content-ok-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string rimPath = CreateSampleRim(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(rimPath, "archive-test", true, true, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void ExecuteLaunch_Stub_ExitsNonZero()
         {
             var logger = new StandardLogger();
