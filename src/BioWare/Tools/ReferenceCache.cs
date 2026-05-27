@@ -787,8 +787,7 @@ namespace BioWare.Tools
                 {
                     string resname = refData["resname"].ToString();
                     string restypeExt = refData["restype"].ToString();
-                    var locationsList = refData["locations"] as List<object>;
-                    var locations = locationsList?.Cast<string>().ToList() ?? new List<string>();
+                    var locations = ConvertLocationsFromRefData(refData["locations"]);
 
                     // Recreate ResourceIdentifier
                     ResourceType restype = ResourceType.FromExtension(restypeExt);
@@ -810,6 +809,47 @@ namespace BioWare.Tools
             }
 
             return cache;
+        }
+
+        private static List<string> ConvertLocationsFromRefData(object locationsValue)
+        {
+            var locations = new List<string>();
+            if (locationsValue == null)
+            {
+                return locations;
+            }
+
+            if (locationsValue is List<string> stringList)
+            {
+                locations.AddRange(stringList);
+                return locations;
+            }
+
+            if (locationsValue is IEnumerable<object> objectList)
+            {
+                foreach (object item in objectList)
+                {
+                    if (item != null)
+                    {
+                        locations.Add(item.ToString());
+                    }
+                }
+
+                return locations;
+            }
+
+            if (locationsValue is System.Collections.IEnumerable enumerable && !(locationsValue is string))
+            {
+                foreach (object item in enumerable)
+                {
+                    if (item != null)
+                    {
+                        locations.Add(item.ToString());
+                    }
+                }
+            }
+
+            return locations;
         }
 
         private static void LogVerbose(string msg)
@@ -1521,6 +1561,47 @@ namespace BioWare.Tools
             return trimmed;
         }
 
+        /// <summary>
+        /// Scan an installation once and return a populated 2DA memory reference cache.
+        /// </summary>
+        public static TwoDAMemoryReferenceCache BuildTwoDAMemoryReferenceCache(
+            Installation installation,
+            Action<string> logger = null,
+            ReferenceSearchOptions options = null)
+        {
+            var cache = new TwoDAMemoryReferenceCache(installation.Game);
+            int resourceCount = 0;
+            int skippedCount = 0;
+
+            foreach (FileResource resource in GetAllResources(installation, options))
+            {
+                try
+                {
+                    if (resource.FilePath.IndexOf("rims", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        skippedCount++;
+                        continue;
+                    }
+
+                    if (!resource.ResType.IsGff())
+                    {
+                        skippedCount++;
+                        continue;
+                    }
+
+                    cache.ScanResource(resource, resource.GetData());
+                    resourceCount++;
+                }
+                catch
+                {
+                    skippedCount++;
+                }
+            }
+
+            logger?.Invoke("Cache built: scanned " + resourceCount + " GFF resources (skipped " + skippedCount + " files) for Installation " + installation.Path);
+            return cache;
+        }
+
         public static List<ReferenceSearchResult> Find2DAMemoryReferences(
             Installation installation,
             string twodaFilename,
@@ -1543,29 +1624,7 @@ namespace BioWare.Tools
             if (cache == null)
             {
                 logger?.Invoke("Building 2DA memory reference cache for " + normalizedFilename + " row " + rowIndex + "...");
-                cache = new TwoDAMemoryReferenceCache(installation.Game);
-
-                foreach (FileResource resource in GetAllResources(installation, options))
-                {
-                    try
-                    {
-                        if (resource.FilePath.IndexOf("rims", StringComparison.OrdinalIgnoreCase) >= 0)
-                        {
-                            continue;
-                        }
-
-                        if (!resource.ResType.IsGff())
-                        {
-                            continue;
-                        }
-
-                        cache.ScanResource(resource, resource.GetData());
-                    }
-                    catch
-                    {
-                        // Skip unreadable resources.
-                    }
-                }
+                cache = BuildTwoDAMemoryReferenceCache(installation, logger, options);
             }
 
             List<(ResourceIdentifier identifier, List<string> locations)> cacheEntries =
