@@ -1,5 +1,10 @@
 using System;
 using System.IO;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Resource.Formats.ERF;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.GFF.Generics.UTC;
 using KotorCLI.Commands;
 using KotorCLI.Logging;
 using NUnit.Framework;
@@ -53,6 +58,55 @@ namespace KotorCLI.Tests
             finally
             {
                 DeleteDirectorySafe(projectDir);
+            }
+        }
+
+        [Test]
+        public void Execute_DefaultModeWithInitFile_UnpacksUtcIntoSourceTree()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-init-unpack-" + Guid.NewGuid().ToString("N"));
+            string modPath = Path.Combine(Path.GetTempPath(), "kotorcli-init-mod-" + Guid.NewGuid().ToString("N") + ".mod");
+            const string resref = "init_creature";
+
+            try
+            {
+                WriteModWithUtc(modPath, resref);
+
+                var logger = new StandardLogger();
+                int exitCode = InitCommand.Execute(projectDir, modPath, true, "none", logger);
+
+                string unpackedJson = Path.Combine(projectDir, "src", "blueprints", "creatures", resref + ".utc.json");
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(File.Exists(unpackedJson), Is.True);
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+                DeleteFileSafe(modPath);
+            }
+        }
+
+        private static void WriteModWithUtc(string modPath, string resref)
+        {
+            GFF gff = UTCHelpers.DismantleUtc(new UTC(), BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            var mod = new ERF(ERFType.MOD);
+            mod.SetData(resref, ResourceType.UTC, bytes);
+            ERFAuto.WriteErf(mod, modPath, ResourceType.MOD);
+        }
+
+        private static void DeleteFileSafe(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+            }
+            catch
+            {
+                // Best-effort cleanup.
             }
         }
 
