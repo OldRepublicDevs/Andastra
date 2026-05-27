@@ -101,10 +101,10 @@ The `twoda` argument accepts a resname or filename (`appearance` or `appearance.
 
 ```bash
 dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
-  find-field-value player --install-dir /path/to/kotor --partial
+  find-field-value player --install-dir /path/to/kotor --partial --override-only
 ```
 
-Flags: `--partial`, `--case-sensitive`.
+Flags: `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--partial`, `--case-sensitive`.
 
 ### Utilities
 - `diff`, `grep`, `stats`, `validate`, `merge`, `cat` - Utility commands (`cat`/`diff`/`grep`/`merge` wired)
