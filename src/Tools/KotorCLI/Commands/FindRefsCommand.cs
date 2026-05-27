@@ -47,6 +47,12 @@ namespace KotorCLI.Commands
             var partialOption = Cli.Opt<bool>("--partial", "Allow partial substring match");
             findRefsCommand.Options.Add(partialOption);
 
+            var jsonOption = Cli.Opt<bool>("--json", "Emit results as a single JSON object");
+            findRefsCommand.Options.Add(jsonOption);
+
+            var countOnlyOption = Cli.Opt<bool>("--count-only", "Print only the number of matches");
+            findRefsCommand.Options.Add(countOnlyOption);
+
             findRefsCommand.SetAction(parseResult =>
             {
                 var needle = parseResult.GetValue(needleArgument);
@@ -58,6 +64,8 @@ namespace KotorCLI.Commands
                 var noModules = parseResult.GetValue(noModulesOption);
                 var caseSensitive = parseResult.GetValue(caseSensitiveOption);
                 var partial = parseResult.GetValue(partialOption);
+                var json = parseResult.GetValue(jsonOption);
+                var countOnly = parseResult.GetValue(countOnlyOption);
 
                 var logger = new StandardLogger();
                 var exitCode = Execute(
@@ -70,6 +78,8 @@ namespace KotorCLI.Commands
                     noModules,
                     caseSensitive,
                     partial,
+                    json,
+                    countOnly,
                     logger);
                 Environment.Exit(exitCode);
             });
@@ -98,6 +108,8 @@ namespace KotorCLI.Commands
                 noModules,
                 caseSensitive,
                 partialMatch,
+                jsonOutput: false,
+                countOnly: false,
                 logger);
         }
 
@@ -111,6 +123,35 @@ namespace KotorCLI.Commands
             bool noModules,
             bool caseSensitive,
             bool partialMatch,
+            ILogger logger)
+        {
+            return Execute(
+                needle,
+                installDir,
+                referenceType,
+                overrideOnly,
+                noOverride,
+                noChitin,
+                noModules,
+                caseSensitive,
+                partialMatch,
+                jsonOutput: false,
+                countOnly: false,
+                logger);
+        }
+
+        public static int Execute(
+            string needle,
+            string installDir,
+            string referenceType,
+            bool overrideOnly,
+            bool noOverride,
+            bool noChitin,
+            bool noModules,
+            bool caseSensitive,
+            bool partialMatch,
+            bool jsonOutput,
+            bool countOnly,
             ILogger logger)
         {
             if (string.IsNullOrWhiteSpace(needle))
@@ -155,8 +196,32 @@ namespace KotorCLI.Commands
             List<ReferenceSearchResult> results = FindReferences(installation, normalizedType, needle.Trim(), options);
             if (results == null || results.Count == 0)
             {
-                logger.Info("No references found.");
+                if (jsonOutput)
+                {
+                    logger.Info(ReferenceSearchOutputFormatter.FormatJson(needle.Trim(), normalizedType, results));
+                }
+                else if (countOnly)
+                {
+                    logger.Info(ReferenceSearchOutputFormatter.FormatCount(0));
+                }
+                else
+                {
+                    logger.Info("No references found.");
+                }
+
                 return 1;
+            }
+
+            if (jsonOutput)
+            {
+                logger.Info(ReferenceSearchOutputFormatter.FormatJson(needle.Trim(), normalizedType, results));
+                return 0;
+            }
+
+            if (countOnly)
+            {
+                logger.Info(ReferenceSearchOutputFormatter.FormatCount(results.Count));
+                return 0;
             }
 
             foreach (ReferenceSearchResult result in results)
