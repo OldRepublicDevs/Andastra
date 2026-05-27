@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using KotorCLI.Commands;
 using NUnit.Framework;
 
@@ -72,6 +73,49 @@ namespace KotorCLI.Tests
             {
                 DeleteDirectorySafe(tempDir);
             }
+        }
+
+        [Test]
+        public void MatchesFilter_EmptyPattern_ReturnsTrue()
+        {
+            Assert.That(ArchiveCommandHelpers.MatchesFilter("anything.utc", null), Is.True);
+            Assert.That(ArchiveCommandHelpers.MatchesFilter("anything.utc", string.Empty), Is.True);
+        }
+
+        [Test]
+        public void MatchesFilter_Wildcard_IsCaseInsensitiveByDefault()
+        {
+            Assert.That(ArchiveCommandHelpers.MatchesFilter("Creature.UTC", "creature.*"), Is.True);
+            Assert.That(ArchiveCommandHelpers.MatchesFilter("other.utc", "creature.*"), Is.False);
+        }
+
+        [Test]
+        public void MatchesFilter_CaseSensitive_SubstringRequiresExactCase()
+        {
+            Assert.That(ArchiveCommandHelpers.MatchesFilter("Needle", "needle", true), Is.False);
+            Assert.That(ArchiveCommandHelpers.MatchesFilter("Needle", "Need", true), Is.True);
+        }
+
+        [Test]
+        public void ContentMatches_FindsUtf8Substring()
+        {
+            byte[] data = Encoding.UTF8.GetBytes("prefix archive-test suffix");
+            Assert.That(ArchiveCommandHelpers.ContentMatches(data, "archive-test", false), Is.True);
+        }
+
+        [Test]
+        public void ContentMatches_NullOrEmptyData_ReturnsFalse()
+        {
+            Assert.That(ArchiveCommandHelpers.ContentMatches(null, "needle", false), Is.False);
+            Assert.That(ArchiveCommandHelpers.ContentMatches(new byte[0], "needle", false), Is.False);
+        }
+
+        [Test]
+        public void ContentMatches_IsCaseInsensitiveByDefault()
+        {
+            byte[] data = Encoding.UTF8.GetBytes("Archive-Test");
+            Assert.That(ArchiveCommandHelpers.ContentMatches(data, "archive-test", false), Is.True);
+            Assert.That(ArchiveCommandHelpers.ContentMatches(data, "archive-test", true), Is.False);
         }
 
         private static void DeleteDirectorySafe(string path)
