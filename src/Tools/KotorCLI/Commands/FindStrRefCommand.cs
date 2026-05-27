@@ -9,7 +9,7 @@ using KotorCLI.Logging;
 namespace KotorCLI.Commands
 {
     /// <summary>
-    /// Installation-wide StrRef reference search (2DA, SSF, GFF).
+    /// Installation-wide StrRef reference search (2DA, SSF, GFF, NCS).
     /// </summary>
     public static class FindStrRefCommand
     {
