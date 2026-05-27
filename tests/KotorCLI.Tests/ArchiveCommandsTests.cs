@@ -44,6 +44,20 @@ namespace KotorCLI.Tests
             return modPath;
         }
 
+        private static string CreateSampleErf(string tempDir)
+        {
+            string erfPath = Path.Combine(tempDir, "test.erf");
+            var gff = new GFF(GFFContent.GFF);
+            gff.Root.SetString("Label", "archive-test");
+            byte[] utcBytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            var erf = new ERF(ERFType.ERF);
+            erf.SetData("sample_npc", ResourceType.UTC, utcBytes);
+            erf.SetData("other_res", ResourceType.GFF, GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.GFF));
+            ERFAuto.WriteErf(erf, erfPath, ResourceType.ERF);
+            return erfPath;
+        }
+
         private static void WriteSampleBifKeyPair(string bifPath, string keyPath, string resref, int resIndex)
         {
             byte[] utcBytes = GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.UTC);
@@ -296,6 +310,110 @@ namespace KotorCLI.Tests
                 string modPath = CreateSampleMod(tempDir);
                 var logger = new StandardLogger();
                 int exitCode = SearchArchiveCommand.Execute(modPath, "archive-test", false, true, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteListArchive_ListsErfResources()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-erf-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string erfPath = CreateSampleErf(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = ListArchiveCommand.Execute(erfPath, false, null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteListArchive_ErfFilterMatchesResource_ExitsZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-erf-filter-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string erfPath = CreateSampleErf(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = ListArchiveCommand.Execute(erfPath, false, "sample_*", logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_ErfMatchesWildcard()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-erf-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string erfPath = CreateSampleErf(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(erfPath, "sample_*", false, false, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_ErfContentMode_MatchesStringInResourceData()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-erf-content-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string erfPath = CreateSampleErf(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(erfPath, "archive-test", false, true, logger);
                 Assert.That(exitCode, Is.EqualTo(0));
             }
             finally
