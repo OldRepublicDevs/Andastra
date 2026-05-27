@@ -135,7 +135,7 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
 ## Next Steps
 
 1. Implement `launch` (or document a supported external launcher workflow).
-2. Expand archive listing tests (`list-archive` BIF+KEY name resolution) and any remaining wired commands without coverage.
+2. Expand archive tests beyond BIF+KEY list-archive coverage (`search-archive` edge cases, chitin.key resolution).
 3. Keep this README inventory in sync when adding or stubbing commands.
 
 ## References
