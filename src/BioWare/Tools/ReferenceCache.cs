@@ -1196,6 +1196,11 @@ namespace BioWare.Tools
 
                     foreach (string moduleFile in moduleFiles)
                     {
+                        if (!ModuleGlobMatcher.MatchesAnyModuleGlob(moduleFile, options?.ModuleGlobFilters))
+                        {
+                            continue;
+                        }
+
                         try
                         {
                             var capsule = new LazyCapsule(moduleFile);
