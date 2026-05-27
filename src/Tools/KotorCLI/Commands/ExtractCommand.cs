@@ -56,7 +56,7 @@ namespace KotorCLI.Commands
             rootCommand.Add(extractCommand);
         }
 
-        private static int Execute(string file, string output, string filter, string keyFile, ILogger logger)
+        public static int Execute(string file, string output, string filter, string keyFile, ILogger logger)
         {
             if (string.IsNullOrEmpty(file))
             {
@@ -278,17 +278,14 @@ namespace KotorCLI.Commands
                 Dictionary<int, KeyEntry> resourceLookup = null;
                 if (key != null)
                 {
-                    resourceLookup = new Dictionary<int, KeyEntry>();
-                    foreach (KeyEntry keyEntry in key.KeyEntries)
+                    int? bifIndex = ResolveBifIndex(key, bifPath);
+                    if (bifIndex.HasValue)
                     {
-                        // Extract BIF index and resource index from resource ID
-                        int bifIndex = (int)(keyEntry.ResourceId >> 20) & 0xFFF;
-                        int resIndex = (int)(keyEntry.ResourceId & 0xFFFFF);
-
-                        // Only include entries for this BIF (we need to know which BIF this is)
-                        // TODO: STUB - For now, we'll match by checking if the resource ID could belong to this BIF
-                        // TODO:  This is a simplified approach - full implementation would need to track BIF index
-                        resourceLookup[resIndex] = keyEntry;
+                        resourceLookup = BuildBifResourceLookup(key, bifIndex.Value);
+                    }
+                    else
+                    {
+                        logger.Warning("Could not resolve BIF index in KEY for: " + Path.GetFileName(bifPath));
                     }
                 }
 
@@ -413,18 +410,7 @@ namespace KotorCLI.Commands
                     }
 
                     // Build resource lookup for this BIF
-                    Dictionary<int, KeyEntry> resourceLookup = new Dictionary<int, KeyEntry>();
-                    foreach (KeyEntry keyEntry in key.KeyEntries)
-                    {
-                        // Extract BIF index and resource index from resource ID
-                        int entryBifIndex = (int)(keyEntry.ResourceId >> 20) & 0xFFF;
-                        int resIndex = (int)(keyEntry.ResourceId & 0xFFFFF);
-
-                        if (entryBifIndex == bifIndex)
-                        {
-                            resourceLookup[resIndex] = keyEntry;
-                        }
-                    }
+                    Dictionary<int, KeyEntry> resourceLookup = BuildBifResourceLookup(key, bifIndex);
 
                     // Extract resources
                     int resourceIndex = 0;
@@ -470,6 +456,50 @@ namespace KotorCLI.Commands
                 logger.Error($"Failed to extract KEY/BIF: {ex.Message}");
                 return 1;
             }
+        }
+
+        public static int? ResolveBifIndex(KEY key, string bifPath)
+        {
+            if (key == null || string.IsNullOrEmpty(bifPath))
+            {
+                return null;
+            }
+
+            string bifFileName = Path.GetFileName(bifPath);
+            string fullBifPath = Path.GetFullPath(bifPath);
+            for (int i = 0; i < key.BifEntries.Count; i++)
+            {
+                BifEntry bifEntry = key.BifEntries[i];
+                string entryName = bifEntry.Filename ?? string.Empty;
+                string entryFileName = Path.GetFileName(entryName);
+                if (string.Equals(entryName, bifFileName, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(entryFileName, bifFileName, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(entryName.Replace('\\', '/'), fullBifPath.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase))
+                {
+                    return i;
+                }
+            }
+
+            return null;
+        }
+
+        public static Dictionary<int, KeyEntry> BuildBifResourceLookup(KEY key, int bifIndex)
+        {
+            var resourceLookup = new Dictionary<int, KeyEntry>();
+            if (key == null)
+            {
+                return resourceLookup;
+            }
+
+            foreach (KeyEntry keyEntry in key.KeyEntries)
+            {
+                if (keyEntry.BifIndex == bifIndex)
+                {
+                    resourceLookup[keyEntry.ResIndex] = keyEntry;
+                }
+            }
+
+            return resourceLookup;
         }
     }
 }
