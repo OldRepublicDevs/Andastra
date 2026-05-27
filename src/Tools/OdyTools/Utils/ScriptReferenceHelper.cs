@@ -1,11 +1,6 @@
 using System;
-using System.Collections.Generic;
 using Avalonia.Controls;
-using BioWare.Tools;
-using MsBox.Avalonia.Enums;
 using OdyTools.Data;
-using OdyTools.Dialogs;
-using IconType = MsBox.Avalonia.Enums.Icon;
 
 namespace OdyTools.Utils
 {
@@ -19,7 +14,7 @@ namespace OdyTools.Utils
             ComboBox comboBox,
             OdyInstallation installation)
         {
-            if (comboBox == null || installation?.Installation == null)
+            if (comboBox == null)
             {
                 return;
             }
@@ -27,34 +22,14 @@ namespace OdyTools.Utils
             string scriptName = comboBox.Text?.Trim();
             if (string.IsNullOrEmpty(scriptName))
             {
-                return;
+                scriptName = comboBox.SelectedItem?.ToString()?.Trim();
             }
 
-            try
-            {
-                var options = new ReferenceSearchOptions
-                {
-                    SearchChitin = true,
-                    SearchModules = true,
-                    SearchOverride = true
-                };
-
-                List<ReferenceSearchResult> results = ReferenceFinder.FindScriptReferences(
-                    installation.Installation,
-                    scriptName,
-                    options);
-
-                FileResultsDialog dialog = FileResultsDialog.FromReferenceSearch(parent, results, installation);
-                dialog.Show();
-            }
-            catch (Exception ex)
-            {
-                _ = DialogHelper.ShowAsync(
-                    "Find References Failed",
-                    ex.Message,
-                    ButtonEnum.Ok,
-                    IconType.Error);
-            }
+            ReferenceSearchHelper.FindAndShowScriptReferences(
+                parent,
+                scriptName,
+                installation,
+                showOptionsDialog: true);
         }
     }
 }
