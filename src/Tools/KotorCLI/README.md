@@ -82,7 +82,7 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
   find-strref 12345 --install-dir /path/to/kotor --override-only
 ```
 
-Flags: `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--no-ncs`, `--ncs-strref-min <n>`.
+Flags: `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--no-ncs`, `--ncs-strref-min <n>`, `--json`, `--count-only`.
 
 NCS hits report bytecode offsets (`(NCS bytecode) offset_<n>` in field-path display).
 
