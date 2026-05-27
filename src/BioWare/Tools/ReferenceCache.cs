@@ -1026,11 +1026,29 @@ namespace BioWare.Tools
         {
             var allResources = new List<FileResource>();
 
-            // Get chitin resources
-            allResources.AddRange(installation.ChitinResources());
+            try
+            {
+                allResources.AddRange(installation.ChitinResources());
+            }
+            catch
+            {
+                // Minimal/test installs may lack readable chitin.key.
+            }
 
-            // Get core resources (includes patch.erf for K1)
-            allResources.AddRange(installation.CoreResources());
+            try
+            {
+                foreach (FileResource resource in installation.CoreResources())
+                {
+                    if (!ContainsResource(allResources, resource))
+                    {
+                        allResources.Add(resource);
+                    }
+                }
+            }
+            catch
+            {
+                // Patch/core enumeration is optional for reference scans.
+            }
 
             // Get override resources
             string overridePath = installation.OverridePath();
@@ -1081,6 +1099,24 @@ namespace BioWare.Tools
             }
 
             return allResources;
+        }
+
+        private static bool ContainsResource(List<FileResource> resources, FileResource candidate)
+        {
+            if (candidate == null)
+            {
+                return false;
+            }
+
+            foreach (FileResource existing in resources)
+            {
+                if (existing != null && existing.Identifier.Equals(candidate.Identifier))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         // Helper to scan 2DA file for StrRef
@@ -1216,6 +1252,68 @@ namespace BioWare.Tools
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:57-61
         // Original: def _get_gff_field_to_2da_mapping(): ...
+        public static string FormatStrRefLocation(object location)
+        {
+            if (location == null)
+            {
+                return "(unknown)";
+            }
+
+            if (location is GFFRefLocation gffLocation)
+            {
+                return gffLocation.FieldPath ?? "(GFF)";
+            }
+
+            if (location is TwoDARefLocation twoDaLocation)
+            {
+                return "Row " + twoDaLocation.RowIndex + ", Column '" + twoDaLocation.ColumnName + "'";
+            }
+
+            if (location is SSFRefLocation ssfLocation)
+            {
+                return "Sound " + ssfLocation.Sound;
+            }
+
+            if (location is NCSRefLocation ncsLocation)
+            {
+                return "(NCS bytecode) offset_" + ncsLocation.ByteOffset;
+            }
+
+            return location.ToString();
+        }
+
+        public static List<ReferenceSearchResult> ConvertToReferenceSearchResults(
+            IEnumerable<StrRefSearchResult> results,
+            int strref)
+        {
+            var converted = new List<ReferenceSearchResult>();
+            if (results == null)
+            {
+                return converted;
+            }
+
+            string matchedValue = strref.ToString();
+            foreach (StrRefSearchResult result in results)
+            {
+                if (result?.Resource == null || result.Locations == null)
+                {
+                    continue;
+                }
+
+                foreach (object location in result.Locations)
+                {
+                    converted.Add(new ReferenceSearchResult
+                    {
+                        Resource = result.Resource,
+                        FieldPath = FormatStrRefLocation(location),
+                        MatchedValue = matchedValue
+                    });
+                }
+            }
+
+            return converted;
+        }
+
         public static Dictionary<string, ResourceIdentifier> GffFieldTo2daMapping()
         {
             return Extract.TwoDARegistry.GffFieldMapping();
