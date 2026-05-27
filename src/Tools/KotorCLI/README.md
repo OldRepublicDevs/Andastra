@@ -37,7 +37,7 @@ Legend: **wired** = functional CLI backed by BioWare or `Conversions`; **partial
 
 ### Archive test coverage (plans 140–186)
 
-Archive CLI commands have **substantial integration test coverage** in `tests/KotorCLI.Tests/` (**252** tests total on net9.0):
+Archive CLI commands have **substantial integration test coverage** in `tests/KotorCLI.Tests/` (**255** tests total on net9.0):
 
 | Area | Coverage |
 |------|----------|
@@ -47,8 +47,9 @@ Archive CLI commands have **substantial integration test coverage** in `tests/Ko
 | BIF without KEY | Blank ResRef / extension-only names (`.utc`), filter and search paths |
 | `extract` | Baseline (no filter) and `--filter` on RIM, MOD, ERF, BIF+KEY, KEY; default output dir; BIF-stem subdirs for KEY |
 | `create-archive` | RIM/MOD/ERF baselines, `--filter`, empty input directories |
+| `key-pack` | BIF directory to KEY (happy path, filter, missing directory) |
 
-Intentionally out of scope for archive closure: full `launch` pipeline, `key-pack` end-to-end, and game-runtime behavior.
+Intentionally out of scope for archive closure: full `launch` pipeline and game-runtime behavior.
 
 ### Format Conversion Commands
 - `gff2json`, `json2gff` - GFF ↔ JSON (**wired**)
@@ -144,7 +145,7 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
 ## Known Issues
 
 1. **`launch` is a stub** — documents the full pipeline but exits unless `--dry-run` is used.
-2. **Remaining test gaps (non-archive)** — build-pipeline commands (`init`, `config`, `convert`, `compile`, `pack`, `install`, `unpack`, `list`), format convert integration, reference finders, and `launch` path resolution (`ResolveGameBinary`) have coverage; archive create/list/search/extract is **substantially closed** (see Archive test coverage above). Remaining gaps: `launch` workflow beyond dry-run, partial `stats`/`validate`, and any newly wired commands without tests. **252** tests in `KotorCLI.Tests` on net9.0.
+2. **Remaining test gaps (non-archive)** — build-pipeline commands (`init`, `config`, `convert`, `compile`, `pack`, `install`, `unpack`, `list`), format convert integration, reference finders, and `launch` path resolution (`ResolveGameBinary`) have coverage; archive create/list/search/extract/key-pack is **substantially closed** (see Archive test coverage above). Remaining gaps: `launch` workflow beyond dry-run, partial `stats`/`validate`, and any newly wired commands without tests. **255** tests in `KotorCLI.Tests` on net9.0.
 3. **System.CommandLine** — prefer `.Options.Add()` / current `Cli.Opt` helpers when touching command definitions.
 
 ## Next Steps
