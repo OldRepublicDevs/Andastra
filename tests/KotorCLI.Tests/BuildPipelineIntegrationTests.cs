@@ -109,6 +109,54 @@ file = ""test.mod""
         }
 
         [Test]
+        public void Pack_Unpack_Roundtrip_WritesJsonUnderRulesPath()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-pack-unpack-rt-" + Guid.NewGuid().ToString("N"));
+            string originalDirectory = Directory.GetCurrentDirectory();
+            const string resref = "rt_creature";
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), UnpackRemoveDeletedConfig);
+
+                string creaturesDir = Path.Combine(projectDir, "src", "blueprints", "creatures");
+                Directory.CreateDirectory(creaturesDir);
+                string jsonPath = Path.Combine(creaturesDir, resref + ".utc.json");
+                GFF gff = UTCHelpers.DismantleUtc(new UTC(), BioWareGame.K1);
+                gff.Root.SetString("Label", "roundtrip-test");
+                GFFAuto.WriteGff(gff, jsonPath, ResourceType.GFF_JSON);
+
+                Directory.SetCurrentDirectory(projectDir);
+                var logger = new StandardLogger();
+
+                int packExit = PackCommand.Execute(new[] { "default" }, false, false, false, logger);
+                Assert.That(packExit, Is.EqualTo(0));
+
+                string modPath = Path.Combine(projectDir, "test.mod");
+                Assert.That(File.Exists(modPath), Is.True);
+
+                ERF packedMod = ERFAuto.ReadErf(modPath, ResourceType.MOD);
+                Assert.That(packedMod.Get(resref, ResourceType.UTC), Is.Not.Null);
+
+                File.Delete(jsonPath);
+                Assert.That(File.Exists(jsonPath), Is.False);
+
+                int unpackExit = UnpackCommand.Execute("default", modPath, false, logger);
+                Assert.That(unpackExit, Is.EqualTo(0));
+                Assert.That(File.Exists(jsonPath), Is.True);
+
+                GFF restored = GFFAuto.ReadGff(jsonPath, fileFormat: ResourceType.GFF_JSON);
+                Assert.That(restored.Root.GetString("Label"), Is.EqualTo("roundtrip-test"));
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(originalDirectory);
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
+        [Test]
         public void Mixed_Pack_Install_Pipeline_ProducesModWithUtcAndNcs()
         {
             string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-mixed-pipeline-" + Guid.NewGuid().ToString("N"));
