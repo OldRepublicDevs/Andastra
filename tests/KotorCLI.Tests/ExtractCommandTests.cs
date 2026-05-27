@@ -428,6 +428,37 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void ExecuteExtractKey_WritesNamedOutputFile()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-extract-key-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "sample.bif");
+                string keyPath = Path.Combine(tempDir, "sample.key");
+                string outputDir = Path.Combine(tempDir, "out");
+                WriteSampleBifKeyPair(bifPath, keyPath, "from_key", 0);
+
+                var logger = new StandardLogger();
+                int exitCode = ExtractCommand.Execute(keyPath, outputDir, null, null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(File.Exists(Path.Combine(outputDir, "sample", "from_key.utc")), Is.True);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void ExecuteExtractKey_WithFilter_ExtractsMatchingResourceOnly()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-extract-key-filter-" + Guid.NewGuid().ToString("N"));

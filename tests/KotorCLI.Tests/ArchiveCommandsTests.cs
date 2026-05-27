@@ -494,6 +494,32 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void ExecuteSearchArchive_ModContentModeDisabled_SkipsPayloadWhenNameDoesNotMatch()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-mod-nocontent-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string modPath = CreateSampleMod(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(modPath, "archive-test", false, false, logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void ExecuteSearchArchive_MatchesWildcard()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-" + Guid.NewGuid().ToString("N"));
