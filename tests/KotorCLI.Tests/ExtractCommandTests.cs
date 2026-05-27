@@ -30,6 +30,25 @@ namespace KotorCLI.Tests
             File.WriteAllBytes(keyPath, KEYAuto.BytesKey(key));
         }
 
+        private static void WriteSampleBifKeyPairWithTwoResources(
+            string bifPath,
+            string keyPath,
+            string firstResref,
+            string secondResref)
+        {
+            byte[] utcBytes = GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.UTC);
+            var bif = new BIF();
+            bif.SetData(ResRef.FromBlank(), ResourceType.UTC, utcBytes, 0);
+            bif.SetData(ResRef.FromBlank(), ResourceType.UTC, utcBytes, 1);
+            File.WriteAllBytes(bifPath, new BIFBinaryWriter(bif).Write());
+
+            var key = new KEY();
+            key.AddBif("sample.bif", (int)new FileInfo(bifPath).Length);
+            key.AddKeyEntry(firstResref, ResourceType.UTC, 0, 0);
+            key.AddKeyEntry(secondResref, ResourceType.UTC, 0, 1);
+            File.WriteAllBytes(keyPath, KEYAuto.BytesKey(key));
+        }
+
         [Test]
         public void ExecuteExtractBif_WritesExtractedResourceFiles()
         {
@@ -181,6 +200,21 @@ namespace KotorCLI.Tests
             }
         }
 
+        private static void WriteSampleBifKeyPairWithTwoResources(string bifPath, string keyPath)
+        {
+            byte[] utcBytes = GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.UTC);
+            var bif = new BIF();
+            bif.SetData(ResRef.FromBlank(), ResourceType.UTC, utcBytes, 0);
+            bif.SetData(ResRef.FromBlank(), ResourceType.UTC, utcBytes, 1);
+            File.WriteAllBytes(bifPath, new BIFBinaryWriter(bif).Write());
+
+            var key = new KEY();
+            key.AddBif("sample.bif", (int)new FileInfo(bifPath).Length);
+            key.AddKeyEntry("creature_a", ResourceType.UTC, 0, 0);
+            key.AddKeyEntry("creature_b", ResourceType.UTC, 0, 1);
+            File.WriteAllBytes(keyPath, KEYAuto.BytesKey(key));
+        }
+
         private static string CreateSampleRimWithTwoResources(string tempDir)
         {
             string rimPath = Path.Combine(tempDir, "sample.rim");
@@ -245,6 +279,70 @@ namespace KotorCLI.Tests
 
                 var logger = new StandardLogger();
                 int exitCode = ExtractCommand.Execute(rimPath, outputDir, "missing_*", null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(Directory.Exists(outputDir), Is.True);
+                Assert.That(Directory.GetFiles(outputDir).Length, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteExtractBif_WithKeyAndFilter_ExtractsMatchingResourceOnly()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-extract-bif-filter-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "sample.bif");
+                string keyPath = Path.Combine(tempDir, "sample.key");
+                string outputDir = Path.Combine(tempDir, "out");
+                WriteSampleBifKeyPairWithTwoResources(bifPath, keyPath, "creature_a", "creature_b");
+
+                var logger = new StandardLogger();
+                int exitCode = ExtractCommand.Execute(bifPath, outputDir, "creature_a*", keyPath, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(File.Exists(Path.Combine(outputDir, "creature_a.utc")), Is.True);
+                Assert.That(File.Exists(Path.Combine(outputDir, "creature_b.utc")), Is.False);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteExtractBif_WithKeyAndFilterNoMatch_WritesNoFiles()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-extract-bif-filter-empty-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "sample.bif");
+                string keyPath = Path.Combine(tempDir, "sample.key");
+                string outputDir = Path.Combine(tempDir, "out");
+                WriteSampleBifKeyPair(bifPath, keyPath, "creature_a", 0);
+
+                var logger = new StandardLogger();
+                int exitCode = ExtractCommand.Execute(bifPath, outputDir, "missing_*", keyPath, logger);
                 Assert.That(exitCode, Is.EqualTo(0));
                 Assert.That(Directory.Exists(outputDir), Is.True);
                 Assert.That(Directory.GetFiles(outputDir).Length, Is.EqualTo(0));
