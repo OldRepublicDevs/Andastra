@@ -99,7 +99,12 @@ namespace BioWare.Tools
 
         public static bool IsPlausibleStrRefCandidate(int value)
         {
-            return value >= StrRefCandidateMinimum;
+            return IsPlausibleStrRefCandidate(value, StrRefCandidateMinimum);
+        }
+
+        public static bool IsPlausibleStrRefCandidate(int value, int minimum)
+        {
+            return value >= minimum;
         }
 
         private static void SkipInstructionPayload(RawBinaryReader reader, byte opcode, byte qualifier)
