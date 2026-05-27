@@ -44,23 +44,63 @@ This is an **in-progress implementation**. The project structure and command stu
 - `decompile` - Decompile NCS to NSS (stub)
 - `disassemble` - Disassemble NCS bytecode to text (via BioWare Scripts.DisassembleNcs)
 - `assemble` - Compile NSS to NCS (via BioWare NCSAuto.CompileNss)
-- `assemble` - Compile NSS to NCS (stub)
 
 ### Resource Tools
 - `texture-convert` - Convert textures (stub)
 - `sound-convert` - Convert sounds (stub)
 - `model-convert` - Convert models (stub)
 
-### Utilities
-- `diff`, `grep`, `stats`, `validate`, `merge`, `cat` - Utility commands (`cat`/`diff`/`grep`/`merge` wired)
-- `find-refs` - Search a KOTOR installation for script, tag, template, or conversation references (BioWare `ReferenceFinder`)
+### Reference search
+
+Installation-wide reference finders ported from Holocron/PyKotor (BioWare `ReferenceFinder` and `ReferenceCacheHelpers`). All commands exit `0` when matches are found and `1` when none match or arguments are invalid.
+
+| Command | Purpose | BioWare API |
+|---------|---------|-------------|
+| `find-refs` | Script, tag, template, or conversation ResRef | `ReferenceFinder` |
+| `find-strref` | TLK StrRef in 2DA, SSF, and GFF | `ReferenceCacheHelpers.FindStrRefReferences` |
+| `find-2da-ref` | GFF fields indexing a 2DA row | `ReferenceCacheHelpers.Find2DAMemoryReferences` |
+| `find-field-value` | GFF string/ResRef field values | `ReferenceFinder.FindFieldValueReferences` |
+
+Shared flags (where supported):
+
+- `--install-dir` / `--installation` — KOTOR install path (or `KOTOR_PATH` / `K1_PATH`)
+
+**find-refs** — script/tag/template/conversation search:
 
 ```bash
 dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
   find-refs k_test_hb --install-dir /path/to/kotor --type script --override-only
 ```
 
-Flags: `--installation` (alias for `--install-dir`), `--type script|tag|template|conversation`, `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--case-sensitive`, `--partial`.
+Flags: `--type script|tag|template|conversation`, `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--case-sensitive`, `--partial`.
+
+**find-strref** — TLK string reference search:
+
+```bash
+dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
+  find-strref 12345 --install-dir /path/to/kotor
+```
+
+**find-2da-ref** — 2DA row index referenced from GFF (e.g. `Appearance_Type` → `appearance.2da`):
+
+```bash
+dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
+  find-2da-ref appearance 17 --install-dir /path/to/kotor
+```
+
+The `twoda` argument accepts a resname or filename (`appearance` or `appearance.2da`).
+
+**find-field-value** — GFF field value search:
+
+```bash
+dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
+  find-field-value player --install-dir /path/to/kotor --partial
+```
+
+Flags: `--partial`, `--case-sensitive`.
+
+### Utilities
+- `diff`, `grep`, `stats`, `validate`, `merge`, `cat` - Utility commands (`cat`/`diff`/`grep`/`merge` wired)
 
 ### Validation
 - `check-txi`, `check-2da` - Validation commands (`check-txi`/`check-2da` wired)
