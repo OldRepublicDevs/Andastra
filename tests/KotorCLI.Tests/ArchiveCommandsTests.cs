@@ -292,6 +292,41 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void ExecuteSearchArchive_MissingFile_ExitsNonZero()
+        {
+            string missingPath = Path.Combine(Path.GetTempPath(), "kotorcli-missing-" + Guid.NewGuid().ToString("N") + ".rim");
+            var logger = new StandardLogger();
+            int exitCode = SearchArchiveCommand.Execute(missingPath, "*", false, false, logger);
+            Assert.That(exitCode, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_EmptyPattern_ExitsNonZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string rimPath = CreateSampleRim(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(rimPath, string.Empty, false, false, logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void ExecuteLaunch_Stub_ExitsNonZero()
         {
             var logger = new StandardLogger();
