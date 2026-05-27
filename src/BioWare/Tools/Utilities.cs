@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using BioWare.Common;
+using BioWare.Resource;
 using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.RIM;
@@ -71,6 +73,113 @@ namespace BioWare.Tools
 
             // Fallback to binary/text comparison
             return DiffBinaryFiles(file1Path, file2Path, outputPath, contextLines);
+        }
+
+        /// <summary>
+        /// Overlay fields from <paramref name="sourcePath"/> onto a copy of <paramref name="targetPath"/> and write the result.
+        /// Matching PyKotor/Holocron GFF merge CLI behavior (source fields win on conflict).
+        /// </summary>
+        public static void MergeGffFiles(string targetPath, string sourcePath, string outputPath)
+        {
+            if (string.IsNullOrWhiteSpace(targetPath))
+            {
+                throw new ArgumentException("Target path is required.", nameof(targetPath));
+            }
+
+            if (string.IsNullOrWhiteSpace(sourcePath))
+            {
+                throw new ArgumentException("Source path is required.", nameof(sourcePath));
+            }
+
+            GFF target = ReadGff(targetPath);
+            GFF source = ReadGff(sourcePath);
+            OverlayGffStruct(target.Root, source.Root);
+
+            string resolvedOutput = string.IsNullOrWhiteSpace(outputPath) ? targetPath : outputPath;
+            ResourceIdentifier identifier = ResourceIdentifier.FromPath(resolvedOutput);
+            ResourceType fileFormat = identifier.ResType != ResourceType.INVALID && !identifier.ResType.IsInvalid
+                ? identifier.ResType
+                : ResourceType.GFF;
+            GFFAuto.WriteGff(target, resolvedOutput, fileFormat);
+        }
+
+        private static void OverlayGffStruct(GFFStruct target, GFFStruct source)
+        {
+            if (target == null || source == null)
+            {
+                return;
+            }
+
+            foreach (var tuple in source)
+            {
+                string label = tuple.label;
+                GFFFieldType fieldType = tuple.fieldType;
+                object value = tuple.value;
+
+                if (fieldType == GFFFieldType.Struct && value is GFFStruct sourceStruct)
+                {
+                    if (target.TryGetStruct(label, out GFFStruct targetStruct) && targetStruct != null)
+                    {
+                        OverlayGffStruct(targetStruct, sourceStruct);
+                    }
+                    else
+                    {
+                        target.SetStruct(label, CloneStruct(sourceStruct));
+                    }
+                }
+                else
+                {
+                    target.SetField(label, fieldType, CloneFieldValue(fieldType, value));
+                }
+            }
+        }
+
+        private static GFFStruct CloneStruct(GFFStruct source)
+        {
+            var copy = new GFFStruct(source.StructId);
+            foreach (var tuple in source)
+            {
+                copy.SetField(tuple.label, tuple.fieldType, CloneFieldValue(tuple.fieldType, tuple.value));
+            }
+
+            return copy;
+        }
+
+        private static GFFList CloneList(GFFList source)
+        {
+            var copy = new GFFList();
+            for (int idx = 0; idx < source.Count; idx++)
+            {
+                if (source[idx] is GFFStruct listStruct)
+                {
+                    copy.Add(CloneStruct(listStruct));
+                }
+            }
+
+            return copy;
+        }
+
+        private static object CloneFieldValue(GFFFieldType fieldType, object value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+
+            switch (fieldType)
+            {
+                case GFFFieldType.Struct:
+                    return value is GFFStruct gffStruct ? CloneStruct(gffStruct) : value;
+                case GFFFieldType.List:
+                    return value is GFFList gffList ? CloneList(gffList) : value;
+                case GFFFieldType.Binary:
+                    return value is byte[] bytes ? (byte[])bytes.Clone() : value;
+                case GFFFieldType.LocalizedString:
+                case GFFFieldType.ResRef:
+                    return value;
+                default:
+                    return value;
+            }
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/utilities.py:66-100
