@@ -129,13 +129,13 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
 ## Known Issues
 
 1. **`launch` is a stub** — documents the full pipeline but exits unless `--dry-run` is used.
-2. **Remaining test gaps** — build-pipeline commands (`init`, `config`, `convert`, `compile`, `pack`, `install`, `unpack`, `list`) and format convert have automated coverage (**146** tests in `KotorCLI.Tests` on net9.0). Archive helpers and `launch` still need expansion; `launch` remains stub-only.
+2. **Remaining test gaps** — build-pipeline commands (`init`, `config`, `convert`, `compile`, `pack`, `install`, `unpack`, `list`) and format convert have automated coverage; `list-archive` / `search-archive` resolve BIF names via sibling KEY (`chitin.key` or `{stem}.key`). **151** tests in `KotorCLI.Tests` on net9.0. `launch` remains stub-only.
 3. **System.CommandLine** — prefer `.Options.Add()` / current `Cli.Opt` helpers when touching command definitions.
 
 ## Next Steps
 
 1. Implement `launch` (or document a supported external launcher workflow).
-2. Expand archive tests beyond BIF+KEY list-archive coverage (`search-archive` edge cases, chitin.key resolution).
+2. Expand `search-archive` content-search edge cases and any remaining wired commands without coverage.
 3. Keep this README inventory in sync when adding or stubbing commands.
 
 ## References
