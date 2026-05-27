@@ -24,6 +24,11 @@ namespace BioWare.Tools
         public bool PartialMatch { get; set; }
         public HashSet<ResourceType> FileTypes { get; set; }
         public bool IncludeNcsStrRefScan { get; set; } = true;
+        /// <summary>
+        /// Minimum CONSTI value indexed as a plausible StrRef during cache scans. Null uses <see cref="NcsConstiScanner.StrRefCandidateMinimum"/>.
+        /// Explicit slow-path StrRef queries still match any CONSTI value regardless of this threshold.
+        /// </summary>
+        public int? NcsStrRefCandidateMinimum { get; set; }
     }
 
     public class ReferenceSearchResult
