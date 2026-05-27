@@ -205,6 +205,72 @@ namespace KotorCLI.Tests
             }
         }
 
+        [Test]
+        public void Execute_CreateModWithFilter_IncludesMatchingFilesOnly()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-create-mod-filter-" + Guid.NewGuid().ToString("N"));
+            string inputDir = Path.Combine(tempDir, "in");
+            string modPath = Path.Combine(tempDir, "packed.mod");
+            Directory.CreateDirectory(inputDir);
+
+            try
+            {
+                byte[] utcBytes = GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.UTC);
+                File.WriteAllBytes(Path.Combine(inputDir, "merchant.utc"), utcBytes);
+                File.WriteAllBytes(Path.Combine(inputDir, "vendor.utc"), utcBytes);
+
+                var logger = new StandardLogger();
+                int exitCode = CreateArchiveCommand.Execute(inputDir, modPath, "mod", "merchant*", logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(File.Exists(modPath), Is.True);
+
+                var capsule = new LazyCapsule(modPath);
+                int matchCount = 0;
+                foreach (BioWare.Extract.FileResource resource in capsule.GetResources())
+                {
+                    if (string.Equals(resource.ResName, "merchant", StringComparison.OrdinalIgnoreCase))
+                    {
+                        matchCount++;
+                    }
+
+                    Assert.That(resource.ResName, Is.Not.EqualTo("vendor"));
+                }
+
+                Assert.That(matchCount, Is.EqualTo(1));
+            }
+            finally
+            {
+                DeleteDirectorySafe(tempDir);
+            }
+        }
+
+        [Test]
+        public void Execute_CreateModWithFilterNoMatch_ProducesEmptyArchive()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-create-mod-filter-empty-" + Guid.NewGuid().ToString("N"));
+            string inputDir = Path.Combine(tempDir, "in");
+            string modPath = Path.Combine(tempDir, "packed.mod");
+            Directory.CreateDirectory(inputDir);
+
+            try
+            {
+                byte[] utcBytes = GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.UTC);
+                File.WriteAllBytes(Path.Combine(inputDir, "merchant.utc"), utcBytes);
+
+                var logger = new StandardLogger();
+                int exitCode = CreateArchiveCommand.Execute(inputDir, modPath, "mod", "missing_*", logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(File.Exists(modPath), Is.True);
+
+                var capsule = new LazyCapsule(modPath);
+                Assert.That(capsule.GetResources().Count, Is.EqualTo(0));
+            }
+            finally
+            {
+                DeleteDirectorySafe(tempDir);
+            }
+        }
+
         private static void DeleteDirectorySafe(string path)
         {
             try
