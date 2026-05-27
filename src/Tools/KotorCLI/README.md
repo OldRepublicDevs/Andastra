@@ -53,6 +53,14 @@ This is an **in-progress implementation**. The project structure and command stu
 
 ### Utilities
 - `diff`, `grep`, `stats`, `validate`, `merge`, `cat` - Utility commands (`cat`/`diff`/`grep`/`merge` wired)
+- `find-refs` - Search a KOTOR installation for script, tag, template, or conversation references (BioWare `ReferenceFinder`)
+
+```bash
+dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
+  find-refs k_test_hb --install-dir /path/to/kotor --type script --override-only
+```
+
+Flags: `--installation` (alias for `--install-dir`), `--type script|tag|template|conversation`, `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--case-sensitive`, `--partial`.
 
 ### Validation
 - `check-txi`, `check-2da` - Validation commands (`check-txi`/`check-2da` wired)
