@@ -57,7 +57,7 @@ Installation-wide reference finders ported from Holocron/PyKotor (BioWare `Refer
 | Command | Purpose | BioWare API |
 |---------|---------|-------------|
 | `find-refs` | Script, tag, template, or conversation ResRef | `ReferenceFinder` |
-| `find-strref` | TLK StrRef in 2DA, SSF, and GFF | `ReferenceCacheHelpers.FindStrRefReferences` |
+| `find-strref` | TLK StrRef in 2DA, SSF, GFF, and NCS (CONSTI) | `ReferenceCacheHelpers.FindStrRefReferences` |
 | `find-2da-ref` | GFF fields indexing a 2DA row | `ReferenceCacheHelpers.Find2DAMemoryReferences` |
 | `find-field-value` | GFF string/ResRef field values | `ReferenceFinder.FindFieldValueReferences` |
 
@@ -74,12 +74,14 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
 
 Flags: `--type script|tag|template|conversation`, `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--case-sensitive`, `--partial`.
 
-**find-strref** — TLK string reference search:
+**find-strref** — TLK string reference search (2DA columns, SSF sound slots, GFF localized strings, NCS CONSTI literals):
 
 ```bash
 dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
   find-strref 12345 --install-dir /path/to/kotor
 ```
+
+NCS hits report bytecode offsets (`(NCS bytecode) offset_<n>` in field-path display).
 
 **find-2da-ref** — 2DA row index referenced from GFF (e.g. `Appearance_Type` → `appearance.2da`):
 
