@@ -53,6 +53,9 @@ namespace KotorCLI.Commands
             var countOnlyOption = Cli.Opt<bool>("--count-only", "Print only the number of matches");
             findRefsCommand.Options.Add(countOnlyOption);
 
+            var moduleGlobOption = Cli.Opt<string[]>("--module-glob", "Module filename glob (repeatable; e.g. tar_m02*)");
+            findRefsCommand.Options.Add(moduleGlobOption);
+
             findRefsCommand.SetAction(parseResult =>
             {
                 var needle = parseResult.GetValue(needleArgument);
@@ -66,6 +69,7 @@ namespace KotorCLI.Commands
                 var partial = parseResult.GetValue(partialOption);
                 var json = parseResult.GetValue(jsonOption);
                 var countOnly = parseResult.GetValue(countOnlyOption);
+                var moduleGlob = parseResult.GetValue(moduleGlobOption);
 
                 var logger = new StandardLogger();
                 var exitCode = Execute(
@@ -80,6 +84,7 @@ namespace KotorCLI.Commands
                     partial,
                     json,
                     countOnly,
+                    moduleGlob,
                     logger);
                 Environment.Exit(exitCode);
             });
@@ -110,6 +115,7 @@ namespace KotorCLI.Commands
                 partialMatch,
                 jsonOutput: false,
                 countOnly: false,
+                moduleGlobFilters: null,
                 logger);
         }
 
@@ -137,6 +143,7 @@ namespace KotorCLI.Commands
                 partialMatch,
                 jsonOutput: false,
                 countOnly: false,
+                moduleGlobFilters: null,
                 logger);
         }
 
@@ -152,6 +159,37 @@ namespace KotorCLI.Commands
             bool partialMatch,
             bool jsonOutput,
             bool countOnly,
+            ILogger logger)
+        {
+            return Execute(
+                needle,
+                installDir,
+                referenceType,
+                overrideOnly,
+                noOverride,
+                noChitin,
+                noModules,
+                caseSensitive,
+                partialMatch,
+                jsonOutput,
+                countOnly,
+                moduleGlobFilters: null,
+                logger);
+        }
+
+        public static int Execute(
+            string needle,
+            string installDir,
+            string referenceType,
+            bool overrideOnly,
+            bool noOverride,
+            bool noChitin,
+            bool noModules,
+            bool caseSensitive,
+            bool partialMatch,
+            bool jsonOutput,
+            bool countOnly,
+            string[] moduleGlobFilters,
             ILogger logger)
         {
             if (string.IsNullOrWhiteSpace(needle))
@@ -180,7 +218,14 @@ namespace KotorCLI.Commands
                 return 1;
             }
 
-            var options = BuildSearchOptions(overrideOnly, noOverride, noChitin, noModules, caseSensitive, partialMatch);
+            var options = BuildSearchOptions(
+                overrideOnly,
+                noOverride,
+                noChitin,
+                noModules,
+                caseSensitive,
+                partialMatch,
+                moduleGlobFilters);
 
             Installation installation;
             try
@@ -194,43 +239,13 @@ namespace KotorCLI.Commands
             }
 
             List<ReferenceSearchResult> results = FindReferences(installation, normalizedType, needle.Trim(), options);
-            if (results == null || results.Count == 0)
-            {
-                if (jsonOutput)
-                {
-                    logger.Info(ReferenceSearchOutputFormatter.FormatJson(needle.Trim(), normalizedType, results));
-                }
-                else if (countOnly)
-                {
-                    logger.Info(ReferenceSearchOutputFormatter.FormatCount(0));
-                }
-                else
-                {
-                    logger.Info("No references found.");
-                }
-
-                return 1;
-            }
-
-            if (jsonOutput)
-            {
-                logger.Info(ReferenceSearchOutputFormatter.FormatJson(needle.Trim(), normalizedType, results));
-                return 0;
-            }
-
-            if (countOnly)
-            {
-                logger.Info(ReferenceSearchOutputFormatter.FormatCount(results.Count));
-                return 0;
-            }
-
-            foreach (ReferenceSearchResult result in results)
-            {
-                logger.Info(result.DisplayLabel);
-            }
-
-            logger.Info("Found " + results.Count + " reference(s).");
-            return 0;
+            return ReferenceSearchOutputFormatter.EmitReferenceResults(
+                logger,
+                needle.Trim(),
+                normalizedType,
+                results,
+                jsonOutput,
+                countOnly);
         }
 
         internal static ReferenceSearchOptions BuildSearchOptions(
@@ -239,7 +254,8 @@ namespace KotorCLI.Commands
             bool noChitin,
             bool noModules,
             bool caseSensitive,
-            bool partialMatch)
+            bool partialMatch,
+            string[] moduleGlobFilters = null)
         {
             var options = new ReferenceSearchOptions
             {
@@ -255,6 +271,11 @@ namespace KotorCLI.Commands
                 options.SearchModules = false;
                 options.SearchChitin = false;
                 options.SearchOverride = true;
+            }
+
+            if (moduleGlobFilters != null && moduleGlobFilters.Length > 0)
+            {
+                options.ModuleGlobFilters = new List<string>(moduleGlobFilters);
             }
 
             return options;
