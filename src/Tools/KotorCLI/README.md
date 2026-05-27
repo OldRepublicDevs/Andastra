@@ -4,7 +4,7 @@ A comprehensive build tool for KOTOR projects with cli-compatible syntax, ported
 
 ## Status
 
-This is an **in-progress implementation**. The project structure and command stubs are in place, but many commands still need full implementation.
+This is a **partial implementation**. Core build/archive flows remain stubs, but reference search, several format conversions, script disassembly/assembly, validation checks, and utility commands are wired through BioWare.
 
 ## Project Structure
 
@@ -124,17 +124,16 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
 
 ## Known Issues
 
-1. **System.CommandLine API Usage**: Many commands need their API usage corrected (use `.Options.Add()` instead of `.AddOption()`, etc.)
-2. **Project Reference**: Path to Andastra.Parsing needs verification
-3. **Implementation**: All commands are currently stubs and need full implementation
+1. **System.CommandLine API Usage**: Some commands may still need API cleanup (use `.Options.Add()` instead of deprecated patterns).
+2. **Project Reference**: Path to Andastra.Parsing needs verification for remaining stub commands.
+3. **Implementation**: Core build/archive pipeline commands (`init`, `unpack`, `pack`, `install`, etc.) remain stubs.
 
 ## Next Steps
 
-1. Fix System.CommandLine API usage across all command files
-2. Implement core commands (init, unpack, convert, compile, pack, install)
-3. Integrate with Andastra.Parsing library for file operations
-4. Implement format conversion commands
-5. Add comprehensive testing
+1. Implement core build commands (init, unpack, convert pipeline, compile, pack, install)
+2. Wire remaining format conversion stubs (`gff2xml`, TLK/SSF/2DA XML/CSV pairs)
+3. Expand automated test coverage for newly wired commands
+4. Integrate with Andastra.Parsing library where BioWare coverage is incomplete
 
 ## References
 
