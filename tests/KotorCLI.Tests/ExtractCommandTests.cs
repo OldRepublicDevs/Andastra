@@ -222,6 +222,27 @@ namespace KotorCLI.Tests
             return modPath;
         }
 
+        private static string CreateSampleErfWithTwoResources(string tempDir)
+        {
+            string erfPath = Path.Combine(tempDir, "sample.erf");
+            byte[] utcBytes = GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.UTC);
+            var erf = new ERF(ERFType.ERF);
+            erf.SetData("creature_a", ResourceType.UTC, utcBytes);
+            erf.SetData("creature_b", ResourceType.UTC, utcBytes);
+            ERFAuto.WriteErf(erf, erfPath, ResourceType.ERF);
+            return erfPath;
+        }
+
+        private static string CreateSampleErfWithOneResource(string tempDir)
+        {
+            string erfPath = Path.Combine(tempDir, "sample.erf");
+            byte[] utcBytes = GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.UTC);
+            var erf = new ERF(ERFType.ERF);
+            erf.SetData("creature_a", ResourceType.UTC, utcBytes);
+            ERFAuto.WriteErf(erf, erfPath, ResourceType.ERF);
+            return erfPath;
+        }
+
         private static string CreateSampleRimWithTwoResources(string tempDir)
         {
             string rimPath = Path.Combine(tempDir, "sample.rim");
@@ -410,6 +431,66 @@ namespace KotorCLI.Tests
 
                 var logger = new StandardLogger();
                 int exitCode = ExtractCommand.Execute(modPath, outputDir, "missing_*", null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(Directory.Exists(outputDir), Is.True);
+                Assert.That(Directory.GetFiles(outputDir).Length, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteExtractErf_WithFilter_ExtractsMatchingResourceOnly()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-extract-erf-filter-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string erfPath = CreateSampleErfWithTwoResources(tempDir);
+                string outputDir = Path.Combine(tempDir, "out");
+
+                var logger = new StandardLogger();
+                int exitCode = ExtractCommand.Execute(erfPath, outputDir, "creature_a*", null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(File.Exists(Path.Combine(outputDir, "creature_a.utc")), Is.True);
+                Assert.That(File.Exists(Path.Combine(outputDir, "creature_b.utc")), Is.False);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteExtractErf_WithFilterNoMatch_WritesNoFiles()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-extract-erf-filter-empty-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string erfPath = CreateSampleErfWithOneResource(tempDir);
+                string outputDir = Path.Combine(tempDir, "out");
+
+                var logger = new StandardLogger();
+                int exitCode = ExtractCommand.Execute(erfPath, outputDir, "missing_*", null, logger);
                 Assert.That(exitCode, Is.EqualTo(0));
                 Assert.That(Directory.Exists(outputDir), Is.True);
                 Assert.That(Directory.GetFiles(outputDir).Length, Is.EqualTo(0));
