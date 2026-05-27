@@ -139,6 +139,58 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void Execute_TemplateReference_InOverride_ExitsZero()
+        {
+            string installRoot = CreateInstallWithTemplateReference("p_test_tpl");
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = FindRefsCommand.Execute(
+                    "p_test_tpl",
+                    installRoot,
+                    "template",
+                    overrideOnly: true,
+                    noChitin: true,
+                    noModules: true,
+                    caseSensitive: false,
+                    partialMatch: false,
+                    logger);
+
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Execute_NcsScriptReference_InOverride_ExitsZero()
+        {
+            string installRoot = CreateInstallWithNcsScriptReference("k_ncs_cli");
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = FindRefsCommand.Execute(
+                    "k_ncs_cli",
+                    installRoot,
+                    "script",
+                    overrideOnly: true,
+                    noChitin: true,
+                    noModules: true,
+                    caseSensitive: false,
+                    partialMatch: false,
+                    logger);
+
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
         public void Execute_TagReference_InOverride_ExitsZero()
         {
             string installRoot = CreateInstallWithTagReference("unique_cli_tag");
@@ -217,6 +269,35 @@ namespace KotorCLI.Tests
             {
                 DeleteDirectorySafe(installRoot);
             }
+        }
+
+        private static string CreateInstallWithTemplateReference(string templateResRef)
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-findrefs-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.ResRef = new ResRef(templateResRef);
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
+
+            return installRoot;
+        }
+
+        private static string CreateInstallWithNcsScriptReference(string scriptResRef)
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-findrefs-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            byte[] ncsBytes = System.Text.Encoding.ASCII.GetBytes("abc " + scriptResRef + " xyz");
+            File.WriteAllBytes(Path.Combine(overrideDir, "embedded.ncs"), ncsBytes);
+
+            return installRoot;
         }
 
         private static string CreateInstallWithScriptReference(string scriptResRef)
