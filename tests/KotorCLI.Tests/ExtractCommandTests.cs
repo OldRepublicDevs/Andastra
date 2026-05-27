@@ -259,6 +259,14 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void ExecuteExtract_EmptyInputFile_ExitsNonZero()
+        {
+            var logger = new StandardLogger();
+            int exitCode = ExtractCommand.Execute(string.Empty, null, null, null, logger);
+            Assert.That(exitCode, Is.EqualTo(1));
+        }
+
+        [Test]
         public void ExecuteExtract_MissingInputFile_ExitsNonZero()
         {
             string missingPath = Path.Combine(Path.GetTempPath(), "kotorcli-missing-" + Guid.NewGuid().ToString("N") + ".rim");
