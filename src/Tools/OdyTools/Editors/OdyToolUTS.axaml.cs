@@ -125,6 +125,33 @@ namespace OdyTools.Editors
             {
                 SetupProgrammaticUI();
             }
+            else
+            {
+                _tagEdit = EditorHelpers.FindControlSafe<TextBox>(this, "tagEdit");
+                _resrefEdit = EditorHelpers.FindControlSafe<TextBox>(this, "resrefEdit");
+                _nameEdit = EditorHelpers.FindControlSafe<TextBox>(this, "nameEdit");
+                _tagGenerateBtn = EditorHelpers.FindControlSafe<Button>(this, "tagGenerateBtn");
+                _resrefGenerateBtn = EditorHelpers.FindControlSafe<Button>(this, "resrefGenerateBtn");
+                _nameEditBtn = EditorHelpers.FindControlSafe<Button>(this, "nameEditBtn");
+                _volumeSlider = EditorHelpers.FindControlSafe<Slider>(this, "volumeSlider");
+                _activeCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "activeCheckbox");
+                _commentsEdit = EditorHelpers.FindControlSafe<TextBox>(this, "commentsEdit");
+
+                if (_tagEdit == null || _resrefEdit == null)
+                {
+                    SetupProgrammaticUI();
+                }
+                else
+                {
+                    AttachReferenceSearchMenus();
+                }
+            }
+        }
+
+        private void AttachReferenceSearchMenus()
+        {
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
         }
 
         private void SetupProgrammaticUI()
@@ -154,8 +181,6 @@ namespace OdyTools.Editors
             basicPanel.Children.Add(_tagEdit);
             basicPanel.Children.Add(_tagGenerateBtn);
 
-            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
-
             // ResRef
             var resrefLabel = new TextBlock { Text = "ResRef:" };
             _resrefEdit = new TextBox();
@@ -165,7 +190,7 @@ namespace OdyTools.Editors
             basicPanel.Children.Add(_resrefEdit);
             basicPanel.Children.Add(_resrefGenerateBtn);
 
-            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
+            AttachReferenceSearchMenus();
 
             // Volume
             var volumeLabel = new TextBlock { Text = "Volume:" };
