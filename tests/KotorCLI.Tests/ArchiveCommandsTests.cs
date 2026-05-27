@@ -312,6 +312,110 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void ExecuteListArchive_ModVerboseMode_ListsResources()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-mod-verbose-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string modPath = CreateSampleMod(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = ListArchiveCommand.Execute(modPath, true, null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteListArchive_ModFilterNoMatch_ExitsNonZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-mod-filter-empty-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string modPath = CreateSampleMod(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = ListArchiveCommand.Execute(modPath, false, "does_not_exist_*", logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_ModNoMatch_ExitsNonZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-mod-empty-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string modPath = CreateSampleMod(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(modPath, "missing_*", false, false, logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_ModCaseSensitiveName_RejectsCaseMismatch()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-mod-case-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string modPath = CreateSampleMod(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(modPath, "Sample_*", true, false, logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void ExecuteSearchArchive_MatchesWildcard()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-" + Guid.NewGuid().ToString("N"));
