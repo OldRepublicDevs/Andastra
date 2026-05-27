@@ -64,7 +64,8 @@ Installation-wide reference finders ported from Holocron/PyKotor (BioWare `Refer
 Shared flags (where supported):
 
 - `--install-dir` / `--installation` — KOTOR install path (or `KOTOR_PATH` / `K1_PATH`)
-- `--override-only`, `--no-override`, `--no-chitin`, `--no-modules` — limit which installation areas are scanned (`find-refs`, `find-strref`, `find-2da-ref`)
+- `--override-only`, `--no-override`, `--no-chitin`, `--no-modules` — limit which installation areas are scanned (`find-refs`, `find-strref`, `find-2da-ref`, `find-field-value`)
+- `--module-glob <pattern>` — repeatable module filename glob (`*` / `?`, case-insensitive); when set, only matching `.mod`/`.rim`/`.erf` capsules under `modules/` are scanned
 
 **find-refs** — script/tag/template/conversation search:
 
@@ -73,7 +74,7 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
   find-refs k_test_hb --install-dir /path/to/kotor --type script --override-only
 ```
 
-Flags: `--type script|tag|template|conversation`, `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--case-sensitive`, `--partial`, `--json`, `--count-only`.
+Flags: `--type script|tag|template|conversation`, `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--module-glob`, `--case-sensitive`, `--partial`, `--json`, `--count-only`.
 
 **find-strref** — TLK string reference search (2DA columns, SSF sound slots, GFF localized strings, NCS CONSTI literals):
 
@@ -82,7 +83,7 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
   find-strref 12345 --install-dir /path/to/kotor --override-only
 ```
 
-Flags: `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--no-ncs`, `--ncs-strref-min <n>`, `--json`, `--count-only`.
+Flags: `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--module-glob`, `--no-ncs`, `--ncs-strref-min <n>`, `--json`, `--count-only`.
 
 NCS hits report bytecode offsets (`(NCS bytecode) offset_<n>` in field-path display).
 
@@ -93,7 +94,7 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
   find-2da-ref appearance 17 --install-dir /path/to/kotor --override-only
 ```
 
-Flags: `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--json`, `--count-only`.
+Flags: `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--module-glob`, `--json`, `--count-only`.
 
 The `twoda` argument accepts a resname or filename (`appearance` or `appearance.2da`).
 
@@ -104,7 +105,14 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
   find-field-value player --install-dir /path/to/kotor --partial --override-only
 ```
 
-Flags: `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--partial`, `--case-sensitive`, `--json`, `--count-only`.
+Flags: `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--module-glob`, `--partial`, `--case-sensitive`, `--json`, `--count-only`.
+
+Example limiting module scan to one area prefix:
+
+```bash
+dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
+  find-refs k_def_buff --install-dir /path/to/kotor --type script --no-override --no-chitin --module-glob tar_m01*
+```
 
 ### Utilities
 - `diff`, `grep`, `stats`, `validate`, `merge`, `cat` - Utility commands (`cat`/`diff`/`grep`/`merge` wired)
