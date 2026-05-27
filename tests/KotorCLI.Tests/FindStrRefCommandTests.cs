@@ -217,6 +217,57 @@ namespace KotorCLI.Tests
             }
         }
 
+        [Test]
+        public void Execute_SlowPathSmallConsti_FoundWithHighMinThreshold()
+        {
+            const int smallStrRef = 50;
+            string installRoot = CreateInstallWithNcsStrRef(smallStrRef);
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = FindStrRefCommand.Execute(
+                    smallStrRef,
+                    installRoot,
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    noNcs: false,
+                    ncsStrRefMin: 100,
+                    logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Execute_NcsStrRefMin_Negative_ReturnsError()
+        {
+            string installRoot = CreateInstallWithNcsStrRef(424242);
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = FindStrRefCommand.Execute(
+                    424242,
+                    installRoot,
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    noNcs: false,
+                    ncsStrRefMin: -1,
+                    logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
         private static string CreateInstallWithStrRef(int strref)
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-strref-" + Guid.NewGuid().ToString("N"));
