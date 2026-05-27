@@ -178,6 +178,62 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void Gff2Xml_MinimalGff_WritesXmlFile()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-gff2xml-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+            string gffPath = Path.Combine(tempDir, "sample.gff");
+            string xmlPath = Path.Combine(tempDir, "sample.xml");
+
+            try
+            {
+                WriteSampleGff(gffPath);
+
+                int exitCode = RunKotorCli("gff2xml \"" + gffPath + "\" --output \"" + xmlPath + "\"", out _, out string stderr);
+
+                Assert.That(exitCode, Is.EqualTo(0), stderr);
+                Assert.That(File.Exists(xmlPath), Is.True);
+                Assert.That(new FileInfo(xmlPath).Length, Is.GreaterThan(0));
+            }
+            finally
+            {
+                DeleteDirectorySafe(tempDir);
+            }
+        }
+
+        [Test]
+        public void Xml2Gff_AfterGff2Xml_PreservesLabelField()
+        {
+            const string label = "integration-label";
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-xml2gff-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+            string gffPath = Path.Combine(tempDir, "sample.gff");
+            string xmlPath = Path.Combine(tempDir, "sample.xml");
+            string roundTripPath = Path.Combine(tempDir, "roundtrip.gff");
+
+            try
+            {
+                WriteSampleGff(gffPath, label);
+
+                int xmlExit = RunKotorCli("gff2xml \"" + gffPath + "\" --output \"" + xmlPath + "\"", out _, out string xmlErr);
+                Assert.That(xmlExit, Is.EqualTo(0), xmlErr);
+                Assert.That(File.Exists(xmlPath), Is.True);
+
+                int gffExit = RunKotorCli("xml2gff \"" + xmlPath + "\" --output \"" + roundTripPath + "\"", out _, out string gffErr);
+                Assert.That(gffExit, Is.EqualTo(0), gffErr);
+                Assert.That(File.Exists(roundTripPath), Is.True);
+
+                byte[] roundTripBytes = File.ReadAllBytes(roundTripPath);
+                GFF roundTrip = GFFAuto.ReadGff(roundTripBytes, 0, roundTripBytes.Length, ResourceType.GFF);
+                Assert.That(roundTrip.Root.GetString("Label"), Is.EqualTo(label));
+            }
+            finally
+            {
+                DeleteDirectorySafe(tempDir);
+            }
+        }
+
+        [Test]
         public void TwoDa2Csv_MinimalTwoDA_WritesCsvFile()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-2da2csv-" + Guid.NewGuid().ToString("N"));
@@ -343,6 +399,13 @@ namespace KotorCLI.Tests
             {
                 DeleteDirectorySafe(tempDir);
             }
+        }
+
+        private static void WriteSampleGff(string path, string label = "integration-label")
+        {
+            var gff = new GFF(GFFContent.GFF);
+            gff.Root.SetString("Label", label);
+            File.WriteAllBytes(path, GFFAuto.BytesGff(gff, ResourceType.GFF));
         }
 
         private static void WriteSampleTwoDA(string path, string rowLabel = "integration-row")
