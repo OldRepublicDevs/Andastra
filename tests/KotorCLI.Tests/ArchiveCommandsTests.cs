@@ -71,6 +71,14 @@ namespace KotorCLI.Tests
             File.WriteAllBytes(keyPath, KEYAuto.BytesKey(key));
         }
 
+        private static void WriteStandaloneBifWithEmbeddedName(string bifPath, string resref)
+        {
+            byte[] utcBytes = GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.UTC);
+            var bif = new BIF();
+            bif.SetData(new ResRef(resref), ResourceType.UTC, utcBytes);
+            File.WriteAllBytes(bifPath, new BIFBinaryWriter(bif).Write());
+        }
+
         [Test]
         public void ExecuteListArchive_BifWithSiblingKey_ListsNamedResource()
         {
@@ -173,6 +181,92 @@ namespace KotorCLI.Tests
                 var logger = new StandardLogger();
                 int exitCode = ListArchiveCommand.Execute(bifPath, true, "from_key*", logger);
                 Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteListArchive_BifWithoutSiblingKey_ListsEmbeddedResourceNames()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-bif-nokey-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "standalone.bif");
+                WriteStandaloneBifWithEmbeddedName(bifPath, "creature_a");
+                Assert.That(File.Exists(Path.Combine(tempDir, "standalone.key")), Is.False);
+                Assert.That(File.Exists(Path.Combine(tempDir, "chitin.key")), Is.False);
+
+                var logger = new StandardLogger();
+                int exitCode = ListArchiveCommand.Execute(bifPath, false, null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteListArchive_BifWithoutSiblingKey_FilterMatchesExtensionPattern()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-bif-nokey-filter-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "standalone.bif");
+                WriteStandaloneBifWithEmbeddedName(bifPath, "creature_a");
+
+                var logger = new StandardLogger();
+                int exitCode = ListArchiveCommand.Execute(bifPath, false, "*.utc", logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteListArchive_BifWithoutSiblingKey_FilterNoMatch_ExitsNonZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-bif-nokey-nomatch-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "standalone.bif");
+                WriteStandaloneBifWithEmbeddedName(bifPath, "creature_a");
+
+                var logger = new StandardLogger();
+                int exitCode = ListArchiveCommand.Execute(bifPath, false, "missing_*", logger);
+                Assert.That(exitCode, Is.EqualTo(1));
             }
             finally
             {
