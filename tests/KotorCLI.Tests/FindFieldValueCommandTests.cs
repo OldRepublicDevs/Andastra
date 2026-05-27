@@ -103,6 +103,75 @@ namespace KotorCLI.Tests
             }
         }
 
+        [Test]
+        public void Execute_JsonOutput_FieldValueHit_IncludesMetadata()
+        {
+            string installRoot = CreateInstallWithTag("cli_find_tag");
+            var output = new System.IO.StringWriter();
+            var originalOut = Console.Out;
+            try
+            {
+                Console.SetOut(output);
+                var logger = new StandardLogger(noColor: true);
+                int exitCode = FindFieldValueCommand.Execute(
+                    "cli_find_tag",
+                    installRoot,
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    partial: false,
+                    caseSensitive: false,
+                    jsonOutput: true,
+                    countOnly: false,
+                    logger);
+
+                Assert.That(exitCode, Is.EqualTo(0));
+                string text = output.ToString();
+                Assert.That(text, Does.Contain("\"needle\":\"cli_find_tag\""));
+                Assert.That(text, Does.Contain("\"type\":\"field-value\""));
+                Assert.That(text, Does.Contain("\"count\":1"));
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Execute_CountOnly_FieldValueHit_PrintsOne()
+        {
+            string installRoot = CreateInstallWithTag("cli_find_tag");
+            var output = new System.IO.StringWriter();
+            var originalOut = Console.Out;
+            try
+            {
+                Console.SetOut(output);
+                var logger = new StandardLogger(noColor: true);
+                int exitCode = FindFieldValueCommand.Execute(
+                    "cli_find_tag",
+                    installRoot,
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    partial: false,
+                    caseSensitive: false,
+                    jsonOutput: false,
+                    countOnly: true,
+                    logger);
+
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(output.ToString().Trim(), Is.EqualTo("1"));
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
         private static string CreateInstallWithTag(string tag)
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-field-" + Guid.NewGuid().ToString("N"));
