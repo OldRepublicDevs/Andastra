@@ -12,15 +12,35 @@ namespace KotorCLI.Tests
     public class FormatConvertIntegrationTests
     {
         private static string RepoRoot =>
-            Path.GetFullPath(Path.Combine(TestContext.CurrentContext.TestDirectory, "..", "..", "..", ".."));
+            Path.GetFullPath(Path.Combine(TestContext.CurrentContext.TestDirectory, "..", "..", "..", "..", ".."));
 
         private static int RunKotorCli(string arguments, out string stdout, out string stderr)
         {
+            string cliDll = Path.Combine(RepoRoot, "src", "Tools", "KotorCLI", "bin", "Debug", "net9.0", "KotorCLI.dll");
+            if (!File.Exists(cliDll))
+            {
+                var buildPsi = new ProcessStartInfo
+                {
+                    FileName = "dotnet",
+                    Arguments = "build \"" + Path.Combine(RepoRoot, "src", "Tools", "KotorCLI", "KotorCLI.csproj") + "\" --framework net9.0",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = RepoRoot
+                };
+
+                using (var buildProcess = Process.Start(buildPsi))
+                {
+                    buildProcess.WaitForExit(120000);
+                    Assert.That(buildProcess.ExitCode, Is.EqualTo(0), "KotorCLI build failed before integration test.");
+                }
+            }
+
             var psi = new ProcessStartInfo
             {
                 FileName = "dotnet",
-                Arguments = "run --project \"" + Path.Combine(RepoRoot, "src", "Tools", "KotorCLI", "KotorCLI.csproj") +
-                            "\" --framework net9.0 --no-build -- " + arguments,
+                Arguments = "exec \"" + cliDll + "\" " + arguments,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -34,27 +54,6 @@ namespace KotorCLI.Tests
                 stderr = process.StandardError.ReadToEnd();
                 process.WaitForExit(120000);
                 return process.ExitCode;
-            }
-        }
-
-        [OneTimeSetUp]
-        public void BuildKotorCli()
-        {
-            var psi = new ProcessStartInfo
-            {
-                FileName = "dotnet",
-                Arguments = "build \"" + Path.Combine(RepoRoot, "src", "Tools", "KotorCLI", "KotorCLI.csproj") + "\" --framework net9.0",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = RepoRoot
-            };
-
-            using (var process = Process.Start(psi))
-            {
-                process.WaitForExit(120000);
-                Assert.That(process.ExitCode, Is.EqualTo(0), "KotorCLI build failed before integration tests.");
             }
         }
 

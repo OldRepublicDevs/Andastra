@@ -63,5 +63,61 @@ namespace KotorCLI.Tests
                 logger);
             Assert.That(exitCode, Is.EqualTo(1));
         }
+
+        [Test]
+        public void ExecuteDiff_IdenticalFiles_ExitsZero()
+        {
+            string tempFile1 = Path.Combine(Path.GetTempPath(), "kotorcli-diff-a-" + Guid.NewGuid().ToString("N") + ".txt");
+            string tempFile2 = Path.Combine(Path.GetTempPath(), "kotorcli-diff-b-" + Guid.NewGuid().ToString("N") + ".txt");
+            File.WriteAllText(tempFile1, "same content\n");
+            File.WriteAllText(tempFile2, "same content\n");
+
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = UtilityCommands.ExecuteDiff(tempFile1, tempFile2, null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                if (File.Exists(tempFile1))
+                {
+                    File.Delete(tempFile1);
+                }
+
+                if (File.Exists(tempFile2))
+                {
+                    File.Delete(tempFile2);
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteDiff_DifferentFiles_ExitsNonZero()
+        {
+            string tempFile1 = Path.Combine(Path.GetTempPath(), "kotorcli-diff-a-" + Guid.NewGuid().ToString("N") + ".txt");
+            string tempFile2 = Path.Combine(Path.GetTempPath(), "kotorcli-diff-b-" + Guid.NewGuid().ToString("N") + ".txt");
+            File.WriteAllText(tempFile1, "alpha\n");
+            File.WriteAllText(tempFile2, "beta\n");
+
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = UtilityCommands.ExecuteDiff(tempFile1, tempFile2, null, logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                if (File.Exists(tempFile1))
+                {
+                    File.Delete(tempFile1);
+                }
+
+                if (File.Exists(tempFile2))
+                {
+                    File.Delete(tempFile2);
+                }
+            }
+        }
     }
 }
