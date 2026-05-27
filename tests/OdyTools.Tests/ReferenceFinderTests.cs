@@ -169,6 +169,21 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindConversationResRefInGffBytes_FindsUtcConversationResRef()
+        {
+            var utc = new UTC();
+            utc.Conversation = new ResRef("test_dlg");
+
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            List<string> paths = ReferenceFinder.FindConversationResRefInGffBytes(bytes, "test_dlg");
+
+            Assert.That(paths, Is.Not.Empty);
+            Assert.That(paths, Has.Some.EqualTo("Conversation"));
+        }
+
+        [Test]
         public void FindTagReferences_OverrideUtc_ReturnsFieldPath()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "ref-tag-" + Guid.NewGuid().ToString("N"));
