@@ -2,7 +2,9 @@ using System;
 using System.IO;
 using BioWare.Common;
 using BioWare.Resource;
+using BioWare.Resource.Formats.BIF;
 using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.KEY;
 using BioWare.Resource.Formats.RIM;
 using KotorCLI.Commands;
 using KotorCLI.Logging;
@@ -25,6 +27,48 @@ namespace KotorCLI.Tests
             rim.SetData("other_res", ResourceType.GFF, GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.GFF));
             RIMAuto.WriteRim(rim, rimPath, ResourceType.RIM);
             return rimPath;
+        }
+
+        private static void WriteSampleBifKeyPair(string bifPath, string keyPath, string resref, int resIndex)
+        {
+            byte[] utcBytes = GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.UTC);
+            var bif = new BIF();
+            bif.SetData(ResRef.FromBlank(), ResourceType.UTC, utcBytes, resIndex);
+            File.WriteAllBytes(bifPath, new BIFBinaryWriter(bif).Write());
+
+            var key = new KEY();
+            key.AddBif("sample.bif", (int)new FileInfo(bifPath).Length);
+            key.AddKeyEntry(resref, ResourceType.UTC, 0, resIndex);
+            File.WriteAllBytes(keyPath, KEYAuto.BytesKey(key));
+        }
+
+        [Test]
+        public void ExecuteListArchive_BifWithSiblingKey_ListsNamedResource()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-bif-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "sample.bif");
+                string keyPath = Path.Combine(tempDir, "sample.key");
+                WriteSampleBifKeyPair(bifPath, keyPath, "from_key", 0);
+
+                var logger = new StandardLogger();
+                int exitCode = ListArchiveCommand.Execute(bifPath, false, "from_key*", logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
         }
 
         [Test]
