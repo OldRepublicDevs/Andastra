@@ -188,6 +188,60 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void ExecuteListArchive_UnsupportedExtension_ExitsNonZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-unsupported-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string txtPath = Path.Combine(tempDir, "not_an_archive.txt");
+                File.WriteAllText(txtPath, "not an archive");
+                var logger = new StandardLogger();
+                int exitCode = ListArchiveCommand.Execute(txtPath, false, null, logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_UnsupportedExtension_ExitsNonZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-unsupported-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string txtPath = Path.Combine(tempDir, "not_an_archive.txt");
+                File.WriteAllText(txtPath, "not an archive");
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(txtPath, "sample_*", false, false, logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void ExecuteListArchive_EmptyFilePath_ExitsNonZero()
         {
             var logger = new StandardLogger();
