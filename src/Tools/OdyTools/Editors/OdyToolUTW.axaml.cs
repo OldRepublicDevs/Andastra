@@ -133,8 +133,15 @@ namespace OdyTools.Editors
                 else
                 {
                     AttachCommitHandlers();
+                    AttachReferenceSearchMenus();
                 }
             }
+        }
+
+        private void AttachReferenceSearchMenus()
+        {
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
         }
 
         private void SetupSignals()
@@ -198,9 +205,6 @@ namespace OdyTools.Editors
             basicPanel.Children.Add(tagLabel);
             basicPanel.Children.Add(tagPanel);
 
-            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
-            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
-
             // ResRef
             var resrefLabel = new TextBlock { Text = "ResRef:" };
             var resrefPanel = new StackPanel { Orientation = Orientation.Horizontal };
@@ -211,6 +215,8 @@ namespace OdyTools.Editors
             resrefPanel.Children.Add(_resrefGenerateButton);
             basicPanel.Children.Add(resrefLabel);
             basicPanel.Children.Add(resrefPanel);
+
+            AttachReferenceSearchMenus();
 
             basicTab.Content = basicPanel;
             tabControl.Items.Add(basicTab);

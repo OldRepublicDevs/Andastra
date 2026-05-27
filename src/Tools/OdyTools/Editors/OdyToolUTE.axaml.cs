@@ -258,12 +258,19 @@ namespace OdyTools.Editors
             if (!xamlLoaded)
             {
                 SetupProgrammaticUI();
+                AttachReferenceSearchMenus();
             }
             else
             {
-                // XAML loaded, set up signals
                 SetupSignals();
+                AttachReferenceSearchMenus();
             }
+        }
+
+        private void AttachReferenceSearchMenus()
+        {
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
         }
 
         private void SetupSignals()
@@ -369,8 +376,6 @@ namespace OdyTools.Editors
             basicPanel.Children.Add(tagLabel);
             basicPanel.Children.Add(tagPanel);
 
-            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
-
             // ResRef
             var resrefLabel = new TextBlock { Text = "ResRef:" };
             _resrefEdit = new TextBox { MaxLength = 16 };
@@ -381,8 +386,6 @@ namespace OdyTools.Editors
             resrefPanel.Children.Add(_resrefGenerateBtn);
             basicPanel.Children.Add(resrefLabel);
             basicPanel.Children.Add(resrefPanel);
-
-            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
 
             // Difficulty
             var difficultyLabel = new TextBlock { Text = "Difficulty:" };
@@ -976,6 +979,14 @@ namespace OdyTools.Editors
             openInEditorItem.Click += (sender, e) => OpenScriptInEditor(comboBox, scriptTypeName);
             menuItems.Add(openInEditorItem);
 
+            var findReferencesItem = new MenuItem
+            {
+                Header = "Find References",
+                IsEnabled = false
+            };
+            findReferencesItem.Click += (sender, e) => ScriptReferenceHelper.FindAndShowScriptReferences(this, comboBox, _installation);
+            menuItems.Add(findReferencesItem);
+
             // Enable/disable based on whether script name is set
             // Note: ComboBox in Avalonia doesn't have TextChanged, use SelectionChanged or TextBox instead
             // For ComboBox, we'll use SelectionChanged and also check Text property if available
@@ -983,6 +994,7 @@ namespace OdyTools.Editors
             {
                 string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
                 openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
+                findReferencesItem.IsEnabled = !string.IsNullOrWhiteSpace(text) && _installation != null;
             };
 
             // "Create New Script" menu item - creates a new NSS file

@@ -124,14 +124,21 @@ namespace OdyTools.Editors
             if (!xamlLoaded)
             {
                 SetupProgrammaticUI();
-                // Setup signals after programmatic UI is created
                 SetupSignals();
+                AttachReferenceSearchMenus();
             }
             else
             {
                 // XAML loaded, set up signals
                 SetupSignals();
+                AttachReferenceSearchMenus();
             }
+        }
+
+        private void AttachReferenceSearchMenus()
+        {
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
         }
 
         private void SetupSignals()
@@ -184,10 +191,17 @@ namespace OdyTools.Editors
             var openInEditorItem = new MenuItem { Header = "Open in OdyToolNSS", IsEnabled = false };
             openInEditorItem.Click += (sender, e) => OpenScriptInEditor(comboBox, scriptTypeName);
             contextMenu.Items.Add(openInEditorItem);
+
+            var findReferencesItem = new MenuItem { Header = "Find References", IsEnabled = false };
+            findReferencesItem.Click += (sender, e) => ScriptReferenceHelper.FindAndShowScriptReferences(this, comboBox, _installation);
+            contextMenu.Items.Add(findReferencesItem);
+
             void UpdateOpenEnabled(object s, EventArgs e)
             {
                 string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
-                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
+                bool hasScript = !string.IsNullOrWhiteSpace(text);
+                openInEditorItem.IsEnabled = hasScript;
+                findReferencesItem.IsEnabled = hasScript && _installation != null;
             }
             comboBox.SelectionChanged += UpdateOpenEnabled;
             contextMenu.Opened += (s, e) => UpdateOpenEnabled(s, e);
@@ -272,9 +286,6 @@ namespace OdyTools.Editors
             resrefPanel.Children.Add(_resrefGenerateBtn);
             basicPanel.Children.Add(resrefLabel);
             basicPanel.Children.Add(resrefPanel);
-
-            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
-            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
 
             // ID
             var idLabel = new TextBlock { Text = "ID:" };
