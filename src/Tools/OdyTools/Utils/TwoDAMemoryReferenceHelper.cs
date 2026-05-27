@@ -18,9 +18,10 @@ namespace OdyTools.Utils
             Window parent,
             string twodaFilename,
             int rowIndex,
-            OdyInstallation installation)
+            OdyInstallation installation,
+            bool showOptionsDialog = false)
         {
-            FindAndShowTwoDARowReferences(parent, twodaFilename, rowIndex, null, installation);
+            FindAndShowTwoDARowReferences(parent, twodaFilename, rowIndex, null, installation, showOptionsDialog);
         }
 
         public static void FindAndShowTwoDARowReferences(
@@ -28,7 +29,8 @@ namespace OdyTools.Utils
             string twodaFilename,
             int rowIndex,
             TwoDA twoDA,
-            OdyInstallation installation)
+            OdyInstallation installation,
+            bool showOptionsDialog = false)
         {
             if (installation?.Installation == null || rowIndex < 0 || string.IsNullOrWhiteSpace(twodaFilename))
             {
@@ -37,11 +39,30 @@ namespace OdyTools.Utils
 
             try
             {
+                ReferenceSearchOptions options = new ReferenceSearchOptions
+                {
+                    SearchChitin = true,
+                    SearchModules = true,
+                    SearchOverride = true
+                };
+
+                if (showOptionsDialog)
+                {
+                    ReferenceSearchOptions chosen = ReferenceSearchHelper.PromptSearchOptions(parent, options);
+                    if (chosen == null)
+                    {
+                        return;
+                    }
+
+                    options = chosen;
+                }
+
                 List<ReferenceSearchResult> results = CollectTwoDARowReferences(
                     twodaFilename,
                     rowIndex,
                     twoDA,
-                    installation);
+                    installation,
+                    options);
 
                 if (results.Count == 0)
                 {
@@ -67,14 +88,20 @@ namespace OdyTools.Utils
             }
         }
 
-        internal static List<ReferenceSearchResult> CollectTwoDARowReferences(
+        public static List<ReferenceSearchResult> CollectTwoDARowReferences(
             string twodaFilename,
             int rowIndex,
             TwoDA twoDA,
-            OdyInstallation installation)
+            OdyInstallation installation,
+            ReferenceSearchOptions options = null)
         {
             var results = new List<ReferenceSearchResult>();
-            var options = new ReferenceSearchOptions
+            if (installation?.Installation == null || rowIndex < 0 || string.IsNullOrWhiteSpace(twodaFilename))
+            {
+                return results;
+            }
+
+            options = options ?? new ReferenceSearchOptions
             {
                 SearchChitin = true,
                 SearchModules = true,
@@ -86,7 +113,8 @@ namespace OdyTools.Utils
                 twodaFilename,
                 rowIndex,
                 null,
-                null));
+                null,
+                options));
 
             if (twoDA != null && rowIndex >= 0 && rowIndex < twoDA.GetHeight())
             {
@@ -124,7 +152,8 @@ namespace OdyTools.Utils
                         installation.Installation,
                         strref,
                         null,
-                        null);
+                        null,
+                        options);
                     results.AddRange(ReferenceCacheHelpers.ConvertToReferenceSearchResults(strrefResults, strref));
                 }
             }
