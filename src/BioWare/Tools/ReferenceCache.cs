@@ -936,6 +936,8 @@ namespace BioWare.Tools
             Action<string> logger = null,
             ReferenceSearchOptions options = null)
         {
+            options = options ?? new ReferenceSearchOptions();
+
             // If cache is provided, use it for faster lookup
             if (cache != null)
             {
@@ -970,6 +972,11 @@ namespace BioWare.Tools
                             continue;
                         }
 
+                        if (!ShouldScanNcsStrRefs(options) && foundResource.ResType == ResourceType.NCS)
+                        {
+                            continue;
+                        }
+
                         var locations = new List<object>();
                         foreach (string locStr in locationStrings)
                         {
@@ -991,6 +998,11 @@ namespace BioWare.Tools
                             }
                             else if (locStr.StartsWith("offset_"))
                             {
+                                if (!ShouldScanNcsStrRefs(options))
+                                {
+                                    continue;
+                                }
+
                                 if (int.TryParse(locStr.Replace("offset_", ""), out int byteOffset))
                                 {
                                     locations.Add(new NCSRefLocation(byteOffset));
@@ -1057,6 +1069,11 @@ namespace BioWare.Tools
                 }
                 else if (restype == ResourceType.NCS)
                 {
+                    if (!ShouldScanNcsStrRefs(options))
+                    {
+                        continue;
+                    }
+
                     var result = ScanNCSForStrRef(resource, installation, strref, logger);
                     if (result != null)
                     {
@@ -1185,6 +1202,11 @@ namespace BioWare.Tools
             }
 
             return allResources;
+        }
+
+        private static bool ShouldScanNcsStrRefs(ReferenceSearchOptions options)
+        {
+            return options == null || options.IncludeNcsStrRefScan;
         }
 
         private static bool ContainsResource(List<FileResource> resources, FileResource candidate)
