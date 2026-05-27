@@ -1310,6 +1310,91 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void ExecuteSearchArchive_BifWithoutSiblingKey_MatchesExtensionPattern()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-bif-nokey-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "standalone.bif");
+                WriteStandaloneBifWithEmbeddedName(bifPath, "creature_a");
+                Assert.That(File.Exists(Path.Combine(tempDir, "standalone.key")), Is.False);
+
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(bifPath, "*.utc", false, false, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_BifWithoutSiblingKey_ResrefPatternNoMatch_ExitsNonZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-bif-nokey-resref-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "standalone.bif");
+                WriteStandaloneBifWithEmbeddedName(bifPath, "creature_a");
+
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(bifPath, "from_key*", false, false, logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_BifWithoutSiblingKey_NoMatch_ExitsNonZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-bif-nokey-nomatch-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "standalone.bif");
+                WriteStandaloneBifWithEmbeddedName(bifPath, "creature_a");
+
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(bifPath, "missing_*", false, false, logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void ExecuteSearchArchive_BifWithSiblingKey_MatchesNamedResource()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-bif-" + Guid.NewGuid().ToString("N"));
