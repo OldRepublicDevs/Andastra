@@ -93,7 +93,7 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
   find-2da-ref appearance 17 --install-dir /path/to/kotor --override-only
 ```
 
-Flags: `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`.
+Flags: `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--json`, `--count-only`.
 
 The `twoda` argument accepts a resname or filename (`appearance` or `appearance.2da`).
 
@@ -104,7 +104,7 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
   find-field-value player --install-dir /path/to/kotor --partial --override-only
 ```
 
-Flags: `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--partial`, `--case-sensitive`.
+Flags: `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--partial`, `--case-sensitive`, `--json`, `--count-only`.
 
 ### Utilities
 - `diff`, `grep`, `stats`, `validate`, `merge`, `cat` - Utility commands (`cat`/`diff`/`grep`/`merge` wired)
