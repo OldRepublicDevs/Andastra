@@ -54,6 +54,12 @@ namespace KotorCLI.Commands
             var moduleGlobOption = Cli.Opt<string[]>("--module-glob", "Module filename glob (repeatable; e.g. tar_m02*)");
             findStrRefCommand.Options.Add(moduleGlobOption);
 
+            var cacheFileOption = Cli.Opt<string>("--cache-file", "Load or save StrRef reference cache JSON at this path");
+            findStrRefCommand.Options.Add(cacheFileOption);
+
+            var rebuildCacheOption = Cli.Opt<bool>("--rebuild-cache", "Rescan installation and overwrite --cache-file");
+            findStrRefCommand.Options.Add(rebuildCacheOption);
+
             findStrRefCommand.SetAction(parseResult =>
             {
                 var strref = parseResult.GetValue(strrefArgument);
@@ -67,6 +73,8 @@ namespace KotorCLI.Commands
                 var json = parseResult.GetValue(jsonOption);
                 var countOnly = parseResult.GetValue(countOnlyOption);
                 var moduleGlob = parseResult.GetValue(moduleGlobOption);
+                var cacheFile = parseResult.GetValue(cacheFileOption);
+                var rebuildCache = parseResult.GetValue(rebuildCacheOption);
 
                 var logger = new StandardLogger();
                 var exitCode = Execute(
@@ -81,6 +89,8 @@ namespace KotorCLI.Commands
                     json,
                     countOnly,
                     moduleGlob,
+                    cacheFile,
+                    rebuildCache,
                     logger);
                 Environment.Exit(exitCode);
             });
@@ -90,7 +100,7 @@ namespace KotorCLI.Commands
 
         public static int Execute(int strref, string installDir, ILogger logger)
         {
-            return Execute(strref, installDir, false, false, false, false, false, null, false, false, null, logger);
+            return Execute(strref, installDir, false, false, false, false, false, null, false, false, null, null, false, logger);
         }
 
         public static int Execute(
@@ -102,7 +112,7 @@ namespace KotorCLI.Commands
             bool noModules,
             ILogger logger)
         {
-            return Execute(strref, installDir, overrideOnly, noOverride, noChitin, noModules, false, null, false, false, null, logger);
+            return Execute(strref, installDir, overrideOnly, noOverride, noChitin, noModules, false, null, false, false, null, null, false, logger);
         }
 
         public static int Execute(
@@ -115,7 +125,7 @@ namespace KotorCLI.Commands
             bool noNcs,
             ILogger logger)
         {
-            return Execute(strref, installDir, overrideOnly, noOverride, noChitin, noModules, noNcs, null, false, false, null, logger);
+            return Execute(strref, installDir, overrideOnly, noOverride, noChitin, noModules, noNcs, null, false, false, null, null, false, logger);
         }
 
         public static int Execute(
@@ -129,7 +139,7 @@ namespace KotorCLI.Commands
             int? ncsStrRefMin,
             ILogger logger)
         {
-            return Execute(strref, installDir, overrideOnly, noOverride, noChitin, noModules, noNcs, ncsStrRefMin, false, false, null, logger);
+            return Execute(strref, installDir, overrideOnly, noOverride, noChitin, noModules, noNcs, ncsStrRefMin, false, false, null, null, false, logger);
         }
 
         public static int Execute(
@@ -145,7 +155,7 @@ namespace KotorCLI.Commands
             bool countOnly,
             ILogger logger)
         {
-            return Execute(strref, installDir, overrideOnly, noOverride, noChitin, noModules, noNcs, ncsStrRefMin, jsonOutput, countOnly, null, logger);
+            return Execute(strref, installDir, overrideOnly, noOverride, noChitin, noModules, noNcs, ncsStrRefMin, jsonOutput, countOnly, null, null, false, logger);
         }
 
         public static int Execute(
@@ -160,6 +170,25 @@ namespace KotorCLI.Commands
             bool jsonOutput,
             bool countOnly,
             string[] moduleGlobFilters,
+            ILogger logger)
+        {
+            return Execute(strref, installDir, overrideOnly, noOverride, noChitin, noModules, noNcs, ncsStrRefMin, jsonOutput, countOnly, moduleGlobFilters, null, false, logger);
+        }
+
+        public static int Execute(
+            int strref,
+            string installDir,
+            bool overrideOnly,
+            bool noOverride,
+            bool noChitin,
+            bool noModules,
+            bool noNcs,
+            int? ncsStrRefMin,
+            bool jsonOutput,
+            bool countOnly,
+            string[] moduleGlobFilters,
+            string cacheFilePath,
+            bool rebuildCache,
             ILogger logger)
         {
             if (strref < 0)
@@ -209,10 +238,43 @@ namespace KotorCLI.Commands
             options.IncludeNcsStrRefScan = !noNcs;
             options.NcsStrRefCandidateMinimum = ncsStrRefMin;
 
+            StrRefReferenceCache strrefCache = null;
+            if (!string.IsNullOrWhiteSpace(cacheFilePath))
+            {
+                if (File.Exists(cacheFilePath) && !rebuildCache)
+                {
+                    try
+                    {
+                        strrefCache = StrRefReferenceCacheIO.Load(cacheFilePath, installation.Game, validateGame: true);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error("Failed to load StrRef cache: " + ex.Message);
+                        return 1;
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        strrefCache = ReferenceCacheHelpers.BuildStrRefReferenceCache(
+                            installation,
+                            logger.Info,
+                            options);
+                        StrRefReferenceCacheIO.Save(cacheFilePath, strrefCache);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error("Failed to save StrRef cache: " + ex.Message);
+                        return 1;
+                    }
+                }
+            }
+
             List<StrRefSearchResult> strrefResults = ReferenceCacheHelpers.FindStrRefReferences(
                 installation,
                 strref,
-                null,
+                strrefCache,
                 null,
                 options);
 
