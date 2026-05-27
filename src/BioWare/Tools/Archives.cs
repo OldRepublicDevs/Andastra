@@ -762,32 +762,16 @@ namespace BioWare.Tools
                 var reader = new BIFBinaryReader(bifPath);
                 BIF bifData = reader.Load();
 
-                // Create BIF entry
-                var bifEntry = new BifEntry
-                {
-                    Filename = bifFilename,
-                    Filesize = bifSize
-                };
                 int bifIndex = key.BifEntries.Count;
-                key.BifEntries.Add(bifEntry);
+                key.AddBif(bifFilename, bifSize);
 
                 // Add resource entries
                 int i = 0;
                 foreach (var resource in bifData)
                 {
-                    string resref = resource.ResRef?.ToString() ?? $"resource_{i:D5}";
+                    string resref = resource.ResRef?.ToString() ?? string.Format("resource_{0:D5}", i);
                     ResourceType restype = resource.ResType ?? ResourceType.INVALID;
-
-                    // Resource ID: top 12 bits = BIF index, bottom 20 bits = resource index
-                    uint resourceId = (uint)((bifIndex << 20) | i);
-
-                    var keyEntry = new KeyEntry
-                    {
-                        ResRef = new ResRef(resref),
-                        ResType = restype,
-                        ResourceId = resourceId
-                    };
-                    key.KeyEntries.Add(keyEntry);
+                    key.AddKeyEntry(resref, restype, bifIndex, i);
                     i++;
                 }
             }
@@ -795,7 +779,7 @@ namespace BioWare.Tools
             // Build lookup tables and write KEY
             key.BuildLookupTables();
             EnsureOutputDirectoryForFile(outputPath);
-            KEYAuto.WriteKey(key, outputPath);
+            File.WriteAllBytes(outputPath, KEYAuto.BytesKey(key));
         }
 
         /// <summary>
