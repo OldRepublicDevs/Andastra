@@ -147,6 +147,37 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void ExecuteExtractRim_WritesExtractedResourceFiles()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-extract-rim-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string rimPath = CreateSampleRimWithTwoResources(tempDir);
+                string outputDir = Path.Combine(tempDir, "out");
+
+                var logger = new StandardLogger();
+                int exitCode = ExtractCommand.Execute(rimPath, outputDir, null, null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(Directory.GetFiles(outputDir).Length, Is.EqualTo(2));
+                Assert.That(File.Exists(Path.Combine(outputDir, "creature_a.utc")), Is.True);
+                Assert.That(File.Exists(Path.Combine(outputDir, "creature_b.utc")), Is.True);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void ListBif_WithKey_AppliesKeyResourceNames()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-listbif-" + Guid.NewGuid().ToString("N"));
