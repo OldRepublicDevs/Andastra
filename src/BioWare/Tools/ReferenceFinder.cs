@@ -12,8 +12,8 @@ using FileResource = BioWare.Extract.FileResource;
 namespace BioWare.Tools
 {
     /// <summary>
-    /// Holocron/PyKotor reference finder surface (GFF script ResRef, Tag, TemplateResRef paths).
-    /// NCS bytecode scanning remains deferred.
+    /// Holocron/PyKotor reference finder surface (GFF script ResRef, Tag, TemplateResRef, NCS byte scan).
+    /// Full NCS CONST instruction parsing remains deferred.
     /// </summary>
     public class ReferenceSearchOptions
     {
@@ -205,7 +205,7 @@ namespace BioWare.Tools
 
             foreach (FileResource resource in EnumerateResources(installation, options))
             {
-                if (resource == null || !resource.ResType.IsGff())
+                if (resource == null)
                 {
                     continue;
                 }
@@ -224,7 +224,20 @@ namespace BioWare.Tools
                         continue;
                     }
 
-                    List<string> fieldPaths = findInBytes(data, trimmedNeedle, options);
+                    List<string> fieldPaths;
+                    if (resource.ResType == ResourceType.NCS)
+                    {
+                        fieldPaths = FindScriptResRefInNcsBytes(data, trimmedNeedle, options);
+                    }
+                    else if (resource.ResType.IsGff())
+                    {
+                        fieldPaths = findInBytes(data, trimmedNeedle, options);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+
                     foreach (string fieldPath in fieldPaths)
                     {
                         results.Add(new ReferenceSearchResult
@@ -241,6 +254,91 @@ namespace BioWare.Tools
             }
 
             return results;
+        }
+
+        /// <summary>
+        /// Scan NCS bytecode for embedded script ResRef string constants (byte-offset hits).
+        /// </summary>
+        public static List<string> FindScriptResRefInNcsBytes(byte[] data, string resRefNeedle)
+        {
+            return FindScriptResRefInNcsBytes(data, resRefNeedle, null);
+        }
+
+        public static List<string> FindScriptResRefInNcsBytes(
+            byte[] data,
+            string resRefNeedle,
+            ReferenceSearchOptions options)
+        {
+            var paths = new List<string>();
+            if (data == null || data.Length == 0 || string.IsNullOrWhiteSpace(resRefNeedle))
+            {
+                return paths;
+            }
+
+            options = options ?? new ReferenceSearchOptions();
+            string needle = resRefNeedle.Trim();
+            StringComparison comparison = options.CaseSensitive
+                ? StringComparison.Ordinal
+                : StringComparison.OrdinalIgnoreCase;
+
+            for (int offset = 0; offset < data.Length; offset++)
+            {
+                if (!ByteSequenceMatches(data, offset, needle, comparison))
+                {
+                    continue;
+                }
+
+                if (IsEmbeddedResRefMatch(data, offset, needle.Length))
+                {
+                    paths.Add("offset_" + offset);
+                }
+            }
+
+            return paths;
+        }
+
+        private static bool ByteSequenceMatches(byte[] data, int offset, string needle, StringComparison comparison)
+        {
+            if (offset + needle.Length > data.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < needle.Length; i++)
+            {
+                char dataChar = (char)data[offset + i];
+                char needleChar = needle[i];
+                if (string.Compare(dataChar.ToString(), needleChar.ToString(), comparison) != 0)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static bool IsEmbeddedResRefMatch(byte[] data, int offset, int length)
+        {
+            if (offset > 0)
+            {
+                byte prev = data[offset - 1];
+                if (prev != 0 && (prev < 32 || prev > 126))
+                {
+                    return false;
+                }
+            }
+
+            int nextIndex = offset + length;
+            if (nextIndex < data.Length)
+            {
+                byte next = data[nextIndex];
+                if (next != 0 && (next < 32 || next > 126))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private static bool ValueMatches(string haystack, string needle, ReferenceSearchOptions options)
