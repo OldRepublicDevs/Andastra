@@ -213,5 +213,21 @@ namespace OdyTools.Tests
                 }
             }
         }
+        [Test]
+        public void FindScriptResRefInNcsBytes_FindsEmbeddedResRef()
+        {
+            byte[] data = System.Text.Encoding.ASCII.GetBytes("abc k_test_hb xyz");
+            List<string> paths = ReferenceFinder.FindScriptResRefInNcsBytes(data, "k_test_hb");
+
+            Assert.That(paths, Is.Not.Empty);
+            Assert.That(paths, Has.Some.StartsWith("offset_"));
+        }
+
+        [Test]
+        public void FindScriptResRefInNcsBytes_NoMatchReturnsEmpty()
+        {
+            byte[] data = System.Text.Encoding.ASCII.GetBytes("abc def");
+            Assert.That(ReferenceFinder.FindScriptResRefInNcsBytes(data, "missing"), Is.Empty);
+        }
     }
 }
