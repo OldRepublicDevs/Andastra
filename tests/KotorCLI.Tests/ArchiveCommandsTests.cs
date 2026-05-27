@@ -159,6 +159,40 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void ExecuteListArchive_EmptyFilePath_ExitsNonZero()
+        {
+            var logger = new StandardLogger();
+            int exitCode = ListArchiveCommand.Execute(string.Empty, false, null, logger);
+            Assert.That(exitCode, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ExecuteListArchive_FilterMatchesResource_ExitsZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-filter-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string rimPath = CreateSampleRim(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = ListArchiveCommand.Execute(rimPath, false, "sample_*", logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void ExecuteSearchArchive_MatchesWildcard()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-" + Guid.NewGuid().ToString("N"));
