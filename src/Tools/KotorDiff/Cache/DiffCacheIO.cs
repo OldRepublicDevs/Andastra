@@ -28,6 +28,7 @@ namespace KotorDiff.Cache
             string mine,
             string older,
             [CanBeNull] StrRefReferenceCache strrefCache = null,
+            [CanBeNull] TwoDAMemoryReferenceCache twodaCache = null,
             [CanBeNull] Action<string> logFunc = null)
         {
             if (logFunc == null)
@@ -39,6 +40,12 @@ namespace KotorDiff.Cache
             {
                 cache.StrrefCacheGame = FormatGame(strrefCache.Game);
                 cache.StrrefCacheData = ConvertToObjectDict(strrefCache.ToDict());
+            }
+
+            if (twodaCache != null)
+            {
+                cache.TwodaCacheGame = FormatGame(twodaCache.Game);
+                cache.TwodaCacheData = ConvertToObjectDict(twodaCache.ToDict());
             }
 
             // Create companion data directory
@@ -145,6 +152,29 @@ namespace KotorDiff.Cache
             }
 
             return StrRefReferenceCache.FromDict(resolvedGame, typedData);
+        }
+
+        /// <summary>
+        /// Restore 2DA memory reference cache from DiffCache.
+        /// </summary>
+        [CanBeNull]
+        public static TwoDAMemoryReferenceCache RestoreTwodaCacheFromCache(
+            DiffCache cache,
+            Game? game = null)
+        {
+            if (cache == null || cache.TwodaCacheData == null || cache.TwodaCacheData.Count == 0)
+            {
+                return null;
+            }
+
+            Game resolvedGame = game ?? ParseGame(cache.TwodaCacheGame);
+            Dictionary<string, List<Dictionary<string, object>>> typedData = ConvertFromObjectDict(cache.TwodaCacheData);
+            if (typedData == null || typedData.Count == 0)
+            {
+                return null;
+            }
+
+            return TwoDAMemoryReferenceCache.FromDict(resolvedGame, typedData);
         }
 
         public static string FormatGame(Game game)
