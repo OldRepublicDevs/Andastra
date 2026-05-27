@@ -4,7 +4,9 @@ using System.IO;
 using BioWare.Common;
 using BioWare.Extract;
 using BioWare.Resource;
+using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.RIM;
 using BioWare.Resource.Formats.GFF.Generics.UTC;
 using BioWare.Tools;
 using KotorCLI.Commands;
@@ -380,6 +382,121 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void Execute_ModuleGlob_OnlyScansMatchingModuleCapsule()
+        {
+            string installRoot = CreateInstallWithModuleScriptReferences(
+                matchingModuleName: "tar_m02aa.mod",
+                matchingScript: "k_in_tar_mod",
+                otherModuleName: "oth_m03aa.mod",
+                otherScript: "k_in_oth_mod");
+            try
+            {
+                var logger = new StandardLogger();
+                int matchInTar = FindRefsCommand.Execute(
+                    "k_in_tar_mod",
+                    installRoot,
+                    "script",
+                    overrideOnly: false,
+                    noOverride: true,
+                    noChitin: true,
+                    noModules: false,
+                    caseSensitive: false,
+                    partialMatch: false,
+                    jsonOutput: false,
+                    countOnly: false,
+                    moduleGlobFilters: new[] { "tar_m02*" },
+                    logger);
+                Assert.That(matchInTar, Is.EqualTo(0));
+
+                int missInOth = FindRefsCommand.Execute(
+                    "k_in_oth_mod",
+                    installRoot,
+                    "script",
+                    overrideOnly: false,
+                    noOverride: true,
+                    noChitin: true,
+                    noModules: false,
+                    caseSensitive: false,
+                    partialMatch: false,
+                    jsonOutput: false,
+                    countOnly: false,
+                    moduleGlobFilters: new[] { "tar_m02*" },
+                    logger);
+                Assert.That(missInOth, Is.EqualTo(1));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Execute_ModuleGlob_OnlyScansMatchingModule()
+        {
+            string installRoot = CreateInstallWithModuleScriptReferences(
+                matchingModuleName: "tar_m01.mod",
+                matchingScript: "k_tar_only",
+                otherModuleName: "danm13.rim",
+                otherScript: "k_dan_only");
+            try
+            {
+                var logger = new StandardLogger();
+
+                int tarHit = FindRefsCommand.Execute(
+                    "k_tar_only",
+                    installRoot,
+                    "script",
+                    overrideOnly: false,
+                    noOverride: true,
+                    noChitin: true,
+                    noModules: false,
+                    caseSensitive: false,
+                    partialMatch: false,
+                    jsonOutput: false,
+                    countOnly: false,
+                    moduleGlobFilters: new[] { "tar_m01*" },
+                    logger);
+                Assert.That(tarHit, Is.EqualTo(0), "Script in glob-matched module should be found.");
+
+                int danMissWithTarGlob = FindRefsCommand.Execute(
+                    "k_dan_only",
+                    installRoot,
+                    "script",
+                    overrideOnly: false,
+                    noOverride: true,
+                    noChitin: true,
+                    noModules: false,
+                    caseSensitive: false,
+                    partialMatch: false,
+                    jsonOutput: false,
+                    countOnly: false,
+                    moduleGlobFilters: new[] { "tar_m01*" },
+                    logger);
+                Assert.That(danMissWithTarGlob, Is.EqualTo(1), "Script in non-matching module should not be found when glob excludes it.");
+
+                int danHit = FindRefsCommand.Execute(
+                    "k_dan_only",
+                    installRoot,
+                    "script",
+                    overrideOnly: false,
+                    noOverride: true,
+                    noChitin: true,
+                    noModules: false,
+                    caseSensitive: false,
+                    partialMatch: false,
+                    jsonOutput: false,
+                    countOnly: false,
+                    moduleGlobFilters: new[] { "danm13*" },
+                    logger);
+                Assert.That(danHit, Is.EqualTo(0), "Script in danm13 module should be found with matching glob.");
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
         public void Execute_CountOnly_NoMatch_PrintsZero()
         {
             string installRoot = CreateInstallWithScriptReference("k_count_ref");
@@ -440,6 +557,45 @@ namespace KotorCLI.Tests
             File.WriteAllBytes(Path.Combine(overrideDir, "embedded.ncs"), ncsBytes);
 
             return installRoot;
+        }
+
+        private static string CreateInstallWithModuleScriptReferences(
+            string matchingModuleName,
+            string matchingScript,
+            string otherModuleName,
+            string otherScript)
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-findrefs-modglob-" + Guid.NewGuid().ToString("N"));
+            string modulesDir = Path.Combine(installRoot, "modules");
+            Directory.CreateDirectory(modulesDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            WriteModuleWithScriptReference(Path.Combine(modulesDir, matchingModuleName), matchingScript);
+            WriteModuleWithScriptReference(Path.Combine(modulesDir, otherModuleName), otherScript);
+
+            return installRoot;
+        }
+
+        private static void WriteModuleWithScriptReference(string modulePath, string scriptResRef)
+        {
+            var utc = new UTC();
+            utc.OnHeartbeat = new ResRef(scriptResRef);
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            string ext = Path.GetExtension(modulePath);
+            if (ext.Equals(".rim", StringComparison.OrdinalIgnoreCase))
+            {
+                var rim = new RIM();
+                rim.SetData("test_npc", ResourceType.UTC, bytes);
+                RIMAuto.WriteRim(rim, modulePath, ResourceType.RIM);
+            }
+            else
+            {
+                var mod = new ERF(ERFType.MOD);
+                mod.SetData("test_npc", ResourceType.UTC, bytes);
+                ERFAuto.WriteErf(mod, modulePath, ResourceType.MOD);
+            }
         }
 
         private static string CreateInstallWithScriptReference(string scriptResRef)
