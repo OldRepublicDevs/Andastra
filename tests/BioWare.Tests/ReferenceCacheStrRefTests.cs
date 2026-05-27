@@ -98,6 +98,51 @@ namespace BioWare.Tests
             }
         }
 
+        [Test]
+        public void FindStrRefReferences_NoOverride_SkipsOverrideSsf()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "strref-scope-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+
+            const int targetStrRef = 424242;
+            byte[] bytes = CreateSsfBytesWithStrRef(targetStrRef);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_set.ssf"), bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchOverride = false,
+                    SearchChitin = false,
+                    SearchModules = false
+                };
+
+                List<StrRefSearchResult> results = ReferenceCacheHelpers.FindStrRefReferences(
+                    installation,
+                    targetStrRef,
+                    null,
+                    null,
+                    options);
+
+                Assert.That(results, Is.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
         private static byte[] CreateSsfBytesWithStrRef(int strref)
         {
             var ssf = new SSF();
