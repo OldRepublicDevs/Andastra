@@ -9,6 +9,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using BioWare.Resource.Formats.GFF.Generics;
 using OdyTools.Data;
+using OdyTools.Utils;
 using OdyTools.Widgets;
 
 namespace OdyTools.Editors
@@ -196,6 +197,9 @@ namespace OdyTools.Editors
             tagPanel.Children.Add(_tagGenerateButton);
             basicPanel.Children.Add(tagLabel);
             basicPanel.Children.Add(tagPanel);
+
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
 
             // ResRef
             var resrefLabel = new TextBlock { Text = "ResRef:" };

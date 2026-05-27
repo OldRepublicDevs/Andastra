@@ -369,6 +369,8 @@ namespace OdyTools.Editors
             basicPanel.Children.Add(tagLabel);
             basicPanel.Children.Add(tagPanel);
 
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+
             // ResRef
             var resrefLabel = new TextBlock { Text = "ResRef:" };
             _resrefEdit = new TextBox { MaxLength = 16 };
@@ -379,6 +381,8 @@ namespace OdyTools.Editors
             resrefPanel.Children.Add(_resrefGenerateBtn);
             basicPanel.Children.Add(resrefLabel);
             basicPanel.Children.Add(resrefPanel);
+
+            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
 
             // Difficulty
             var difficultyLabel = new TextBlock { Text = "Difficulty:" };

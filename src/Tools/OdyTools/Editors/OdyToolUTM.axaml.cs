@@ -15,6 +15,7 @@ using BioWare.Resource.Formats.GFF.Generics;
 using BioWare.Resource;
 using OdyTools.Data;
 using OdyTools.Dialogs;
+using OdyTools.Utils;
 using OdyTools.Widgets;
 using InventoryItem = BioWare.Common.InventoryItem;
 using Game = BioWare.Common.BioWareGame;
@@ -271,6 +272,9 @@ namespace OdyTools.Editors
             resrefPanel.Children.Add(_resrefGenerateBtn);
             basicPanel.Children.Add(resrefLabel);
             basicPanel.Children.Add(resrefPanel);
+
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
 
             // ID
             var idLabel = new TextBlock { Text = "ID:" };

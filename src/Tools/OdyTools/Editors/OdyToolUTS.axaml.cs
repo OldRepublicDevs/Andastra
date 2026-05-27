@@ -154,6 +154,8 @@ namespace OdyTools.Editors
             basicPanel.Children.Add(_tagEdit);
             basicPanel.Children.Add(_tagGenerateBtn);
 
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+
             // ResRef
             var resrefLabel = new TextBlock { Text = "ResRef:" };
             _resrefEdit = new TextBox();
@@ -162,6 +164,8 @@ namespace OdyTools.Editors
             basicPanel.Children.Add(resrefLabel);
             basicPanel.Children.Add(_resrefEdit);
             basicPanel.Children.Add(_resrefGenerateBtn);
+
+            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
 
             // Volume
             var volumeLabel = new TextBlock { Text = "Volume:" };
