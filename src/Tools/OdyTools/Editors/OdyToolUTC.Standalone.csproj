@@ -22,6 +22,7 @@
     <Compile Include="$(_OdyToolsRoot)\Data\OdyToolUTCSettings.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\PathUtils.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\ScriptReferenceHelper.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Utils\ConversationReferenceHelper.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\ReferenceSearchHelper.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\DialogHelper.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\FileResultsDialog.axaml.cs" />
