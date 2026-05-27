@@ -6,6 +6,7 @@ using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.SSF;
+using BioWare.Resource.Formats.TLK;
 using BioWare.Resource.Formats.TwoDA;
 using NUnit.Framework;
 
@@ -289,6 +290,61 @@ namespace KotorCLI.Tests
             }
         }
 
+        [Test]
+        public void Tlk2Xml_MinimalTlk_WritesXmlFile()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-tlk2xml-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+            string tlkPath = Path.Combine(tempDir, "sample.tlk");
+            string xmlPath = Path.Combine(tempDir, "sample.tlk.xml");
+
+            try
+            {
+                WriteSampleTlk(tlkPath);
+
+                int exitCode = RunKotorCli("tlk2xml \"" + tlkPath + "\" --output \"" + xmlPath + "\"", out _, out string stderr);
+
+                Assert.That(exitCode, Is.EqualTo(0), stderr);
+                Assert.That(File.Exists(xmlPath), Is.True);
+                Assert.That(new FileInfo(xmlPath).Length, Is.GreaterThan(0));
+            }
+            finally
+            {
+                DeleteDirectorySafe(tempDir);
+            }
+        }
+
+        [Test]
+        public void Xml2Tlk_AfterTlk2Xml_PreservesEntryText()
+        {
+            const string entryText = "integration-tlk-string";
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-xml2tlk-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+            string tlkPath = Path.Combine(tempDir, "sample.tlk");
+            string xmlPath = Path.Combine(tempDir, "sample.tlk.xml");
+            string roundTripPath = Path.Combine(tempDir, "roundtrip.tlk");
+
+            try
+            {
+                WriteSampleTlk(tlkPath, entryText);
+
+                int xmlExit = RunKotorCli("tlk2xml \"" + tlkPath + "\" --output \"" + xmlPath + "\"", out _, out string xmlErr);
+                Assert.That(xmlExit, Is.EqualTo(0), xmlErr);
+                Assert.That(File.Exists(xmlPath), Is.True);
+
+                int tlkExit = RunKotorCli("xml2tlk \"" + xmlPath + "\" --output \"" + roundTripPath + "\"", out _, out string tlkErr);
+                Assert.That(tlkExit, Is.EqualTo(0), tlkErr);
+                Assert.That(File.Exists(roundTripPath), Is.True);
+
+                TLK roundTrip = TLKAuto.ReadTlk(roundTripPath);
+                Assert.That(roundTrip.Get(0).Text, Is.EqualTo(entryText));
+            }
+            finally
+            {
+                DeleteDirectorySafe(tempDir);
+            }
+        }
+
         private static void WriteSampleTwoDA(string path, string rowLabel = "integration-row")
         {
             var twoDA = new TwoDA(new List<string> { "label" });
@@ -301,6 +357,13 @@ namespace KotorCLI.Tests
             var ssf = new SSF();
             ssf.SetData(SSFSound.BATTLE_CRY_1, battleCryStrRef);
             File.WriteAllBytes(path, SSFAuto.BytesSsf(ssf));
+        }
+
+        private static void WriteSampleTlk(string path, string entryText = "integration-tlk-string")
+        {
+            var tlk = new TLK(Language.English);
+            tlk.Add(entryText, string.Empty);
+            File.WriteAllBytes(path, TLKAuto.BytesTlk(tlk, ResourceType.TLK));
         }
 
         private static void DeleteDirectorySafe(string path)
