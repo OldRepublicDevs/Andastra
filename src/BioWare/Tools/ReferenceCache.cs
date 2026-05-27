@@ -505,6 +505,18 @@ namespace BioWare.Tools
                         {
                             rowIndex = intVal;
                         }
+                        else if (field.value is short shortVal)
+                        {
+                            rowIndex = shortVal;
+                        }
+                        else if (field.value is sbyte sbyteVal)
+                        {
+                            rowIndex = sbyteVal;
+                        }
+                        else if (field.value is long longVal)
+                        {
+                            rowIndex = (int)longVal;
+                        }
                     }
                     else if (field.fieldType == GFFFieldType.UInt8 || field.fieldType == GFFFieldType.UInt16 || field.fieldType == GFFFieldType.UInt32 || field.fieldType == GFFFieldType.UInt64)
                     {
@@ -515,6 +527,18 @@ namespace BioWare.Tools
                         else if (field.value is int intVal)
                         {
                             rowIndex = intVal;
+                        }
+                        else if (field.value is ushort ushortVal)
+                        {
+                            rowIndex = ushortVal;
+                        }
+                        else if (field.value is byte byteVal)
+                        {
+                            rowIndex = byteVal;
+                        }
+                        else if (field.value is ulong ulongVal)
+                        {
+                            rowIndex = (int)ulongVal;
                         }
                     }
 
@@ -1306,6 +1330,132 @@ namespace BioWare.Tools
                     {
                         Resource = result.Resource,
                         FieldPath = FormatStrRefLocation(location),
+                        MatchedValue = matchedValue
+                    });
+                }
+            }
+
+            return converted;
+        }
+
+        public static string NormalizeTwoDAFilename(string twodaFilename)
+        {
+            if (string.IsNullOrWhiteSpace(twodaFilename))
+            {
+                return twodaFilename;
+            }
+
+            string trimmed = twodaFilename.Trim();
+            if (!trimmed.EndsWith(".2da", StringComparison.OrdinalIgnoreCase))
+            {
+                return trimmed + ".2da";
+            }
+
+            return trimmed;
+        }
+
+        public static List<ReferenceSearchResult> Find2DAMemoryReferences(
+            Installation installation,
+            string twodaFilename,
+            int rowIndex,
+            TwoDAMemoryReferenceCache cache = null,
+            Action<string> logger = null)
+        {
+            if (installation == null || rowIndex < 0)
+            {
+                return new List<ReferenceSearchResult>();
+            }
+
+            string normalizedFilename = NormalizeTwoDAFilename(twodaFilename);
+            if (string.IsNullOrEmpty(normalizedFilename))
+            {
+                return new List<ReferenceSearchResult>();
+            }
+
+            if (cache == null)
+            {
+                logger?.Invoke("Building 2DA memory reference cache for " + normalizedFilename + " row " + rowIndex + "...");
+                cache = new TwoDAMemoryReferenceCache(installation.Game);
+
+                foreach (FileResource resource in GetAllResources(installation))
+                {
+                    try
+                    {
+                        if (resource.FilePath.IndexOf("rims", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            continue;
+                        }
+
+                        if (!resource.ResType.IsGff())
+                        {
+                            continue;
+                        }
+
+                        cache.ScanResource(resource, resource.GetData());
+                    }
+                    catch
+                    {
+                        // Skip unreadable resources.
+                    }
+                }
+            }
+
+            List<(ResourceIdentifier identifier, List<string> locations)> cacheEntries =
+                cache.GetReferences(normalizedFilename, rowIndex);
+
+            return ConvertTwoDAMemoryCacheEntries(
+                installation,
+                cacheEntries,
+                normalizedFilename,
+                rowIndex);
+        }
+
+        private static List<ReferenceSearchResult> ConvertTwoDAMemoryCacheEntries(
+            Installation installation,
+            List<(ResourceIdentifier identifier, List<string> locations)> cacheEntries,
+            string twodaFilename,
+            int rowIndex)
+        {
+            var converted = new List<ReferenceSearchResult>();
+            if (cacheEntries == null || cacheEntries.Count == 0)
+            {
+                return converted;
+            }
+
+            var identifierToResource = new Dictionary<ResourceIdentifier, FileResource>();
+            foreach (FileResource res in GetAllResources(installation))
+            {
+                try
+                {
+                    identifierToResource[res.Identifier] = res;
+                }
+                catch
+                {
+                    // Skip invalid resources.
+                }
+            }
+
+            string matchedValue = twodaFilename + ":" + rowIndex;
+            foreach (var entry in cacheEntries)
+            {
+                ResourceIdentifier identifier = entry.identifier;
+                List<string> locations = entry.locations;
+                if (!identifierToResource.TryGetValue(identifier, out FileResource foundResource) || foundResource == null)
+                {
+                    continue;
+                }
+
+                if (locations == null)
+                {
+                    continue;
+                }
+
+                foreach (string fieldPath in locations)
+                {
+                    converted.Add(new ReferenceSearchResult
+                    {
+                        Resource = foundResource,
+                        FieldPath = fieldPath,
                         MatchedValue = matchedValue
                     });
                 }
