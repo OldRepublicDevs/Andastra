@@ -265,7 +265,7 @@ namespace KotorCLI.Commands
                     }
                     catch (Exception ex)
                     {
-                        logger.Error("Failed to save StrRef cache: " + ex.Message);
+                        logger.Error("Failed to build or save StrRef cache: " + ex.Message);
                         return 1;
                     }
                 }
