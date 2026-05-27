@@ -1,11 +1,60 @@
 using System.Collections.Generic;
 using System.Text;
 using BioWare.Tools;
+using KotorCLI.Logging;
 
 namespace KotorCLI.Commands
 {
     internal static class ReferenceSearchOutputFormatter
     {
+        public static int EmitReferenceResults(
+            ILogger logger,
+            string needle,
+            string referenceType,
+            List<ReferenceSearchResult> results,
+            bool jsonOutput,
+            bool countOnly)
+        {
+            int count = results == null ? 0 : results.Count;
+            if (count == 0)
+            {
+                if (jsonOutput)
+                {
+                    logger.Info(FormatJson(needle, referenceType, results));
+                }
+                else if (countOnly)
+                {
+                    logger.Info(FormatCount(0));
+                }
+                else
+                {
+                    logger.Info("No references found.");
+                }
+
+                return 1;
+            }
+
+            if (jsonOutput)
+            {
+                logger.Info(FormatJson(needle, referenceType, results));
+                return 0;
+            }
+
+            if (countOnly)
+            {
+                logger.Info(FormatCount(count));
+                return 0;
+            }
+
+            foreach (ReferenceSearchResult result in results)
+            {
+                logger.Info(result.DisplayLabel);
+            }
+
+            logger.Info("Found " + count + " reference(s).");
+            return 0;
+        }
+
         public static string FormatCount(int count)
         {
             return count.ToString();
