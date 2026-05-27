@@ -6,7 +6,6 @@ using System.Text.RegularExpressions;
 using BioWare.Common;
 using BioWare.Extract.Capsule;
 using BioWare.Resource;
-using BioWare.Resource.Formats.BIF;
 using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.KEY;
 using BioWare.Resource.Formats.RIM;
@@ -122,18 +121,16 @@ namespace KotorCLI.Commands
 
             if (extension == ".bif")
             {
-                BIF bif = new BIFBinaryReader(archivePath).Load();
-                int resourceIndex = 0;
-                foreach (BIFResource resource in bif.Resources)
+                string keyPath = ResolveSiblingKeyPath(archivePath);
+                foreach (ArchiveResource resource in BioWare.Tools.ArchiveHelpers.ListBif(archivePath, keyPath))
                 {
                     entries.Add(new ArchiveResourceEntry
                     {
-                        ResRef = "resource_" + resourceIndex.ToString("D5"),
+                        ResRef = resource.ResRef != null ? resource.ResRef.ToString() : string.Empty,
                         ResType = resource.ResType ?? ResourceType.INVALID,
-                        Size = resource.Data?.Length ?? 0,
+                        Size = resource.Data != null ? resource.Data.Length : 0,
                         Data = resource.Data
                     });
-                    resourceIndex++;
                 }
 
                 return entries;
@@ -186,6 +183,24 @@ namespace KotorCLI.Commands
             }
 
             return entries;
+        }
+
+        internal static string ResolveSiblingKeyPath(string bifPath)
+        {
+            string directory = Path.GetDirectoryName(bifPath) ?? string.Empty;
+            string chitinKeyPath = Path.Combine(directory, "chitin.key");
+            if (File.Exists(chitinKeyPath))
+            {
+                return chitinKeyPath;
+            }
+
+            string stemKeyPath = Path.Combine(directory, Path.GetFileNameWithoutExtension(bifPath) + ".key");
+            if (File.Exists(stemKeyPath))
+            {
+                return stemKeyPath;
+            }
+
+            return null;
         }
     }
 }
