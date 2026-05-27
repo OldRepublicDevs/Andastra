@@ -21,6 +21,7 @@ using BioWare.TSLPatcher.Mods.NCS;
 using BioWare.TSLPatcher.Mods.SSF;
 using BioWare.TSLPatcher.Mods.TwoDA;
 using BioWare.TSLPatcher.Memory;
+using BioWare.Tools;
 using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Tools;
@@ -93,117 +94,7 @@ namespace KotorDiff.Diff
         // Original: def _extract_ncs_consti_offsets(...): ...
         public static List<int> ExtractNcsConstiOffsets(byte[] ncsData, int targetValue)
         {
-            var offsets = new List<int>();
-            try
-            {
-                using (var reader = BioWare.Common.BinaryReader.FromBytes(ncsData))
-                {
-                    // Skip NCS header (13 bytes)
-                    string signature = reader.ReadString(4);
-                    bool isValidSignature = signature == "NCS ";
-                    if (!isValidSignature)
-                    {
-                        return offsets;
-                    }
-                    string version = reader.ReadString(4);
-                    bool isValidVersion = version == "V1.0";
-                    if (!isValidVersion)
-                    {
-                        return offsets;
-                    }
-                    byte magicByte = reader.ReadUInt8();
-                    bool isValidMagic = magicByte == 0x42;
-                    if (!isValidMagic)
-                    {
-                        return offsets;
-                    }
-                    uint totalSize = reader.ReadUInt32(bigEndian: true);
-
-                    // Read instructions and track offsets
-                    while (reader.Position < totalSize && reader.Remaining > 0)
-                    {
-                        byte opcode = reader.ReadUInt8();
-                        byte qualifier = reader.ReadUInt8();
-
-                        // Check if this is CONSTI (opcode=0x04, qualifier=0x03)
-                        bool isConsti = opcode == 0x04 && qualifier == 0x03;
-                        if (isConsti)
-                        {
-                            int valueOffset = reader.Position;
-                            int constValue = reader.ReadInt32(bigEndian: true);
-                            bool matchesTarget = constValue == targetValue;
-                            if (matchesTarget)
-                            {
-                                offsets.Add(valueOffset);
-                            }
-                        }
-                        // Skip to next instruction based on opcode/qualifier
-                        else if (opcode == 0x04) // CONSTx
-                        {
-                            bool isConstf = qualifier == 0x04;
-                            if (isConstf)
-                            {
-                                reader.Skip(4);
-                            }
-                            else
-                            {
-                                bool isConsts = qualifier == 0x05;
-                                if (isConsts)
-                                {
-                                    ushort strLen = reader.ReadUInt16(bigEndian: true);
-                                    reader.Skip(strLen);
-                                }
-                                else
-                                {
-                                    bool isConsto = qualifier == 0x06;
-                                    if (isConsto)
-                                    {
-                                        reader.Skip(4);
-                                    }
-                                }
-                            }
-                        }
-                        else if (opcode == 0x01 || opcode == 0x03 || opcode == 0x26 || opcode == 0x27) // CPDOWNSP, CPTOPSP, CPDOWNBP, CPTOPBP
-                        {
-                            reader.Skip(6);
-                        }
-                        else if (opcode == 0x2C) // STORE_STATE
-                        {
-                            reader.Skip(8);
-                        }
-                        else if (opcode == 0x1B || opcode == 0x1D || opcode == 0x1E || opcode == 0x1F || opcode == 0x23 || opcode == 0x24 || opcode == 0x25 || opcode == 0x28 || opcode == 0x29) // MOVSP, jumps, inc/dec
-                        {
-                            reader.Skip(4);
-                        }
-                        else if (opcode == 0x05) // ACTION
-                        {
-                            reader.Skip(3);
-                        }
-                        else if (opcode == 0x21) // DESTRUCT
-                        {
-                            reader.Skip(6);
-                        }
-                        else if (opcode == 0x0B && qualifier == 0x24) // EQUALTT
-                        {
-                            reader.Skip(2);
-                        }
-                        else if (opcode == 0x0C && qualifier == 0x24) // NEQUALTT
-                        {
-                            reader.Skip(2);
-                        }
-                        // Other instructions have no additional data
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                // If anything fails, return what we found so far
-                string exceptionType = e.GetType().Name;
-                int offsetsSoFar = offsets.Count;
-                Console.WriteLine($"NCS processing failed: target_value={targetValue}, exception_type={exceptionType}, error={e.Message}, offsets_so_far={offsetsSoFar}");
-            }
-
-            return offsets;
+            return NcsConstiScanner.ExtractConstiOffsetsForValue(ncsData, targetValue);
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:1002-1331
