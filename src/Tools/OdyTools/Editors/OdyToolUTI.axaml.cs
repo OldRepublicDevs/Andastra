@@ -251,6 +251,7 @@ namespace OdyTools.Editors
                 // XAML loaded, set up signals and commit handlers
                 SetupSignals();
                 AttachCommitHandlers();
+                AttachReferenceSearchMenus();
             }
 
             // Setup installation after UI is initialized
@@ -267,6 +268,12 @@ namespace OdyTools.Editors
                     _descEdit.SetInstallation(_installation);
                 }
             }
+        }
+
+        private void AttachReferenceSearchMenus()
+        {
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
         }
 
         private void SetupProgrammaticUI()
@@ -316,8 +323,7 @@ namespace OdyTools.Editors
             basicPanel.Children.Add(_resrefEdit);
             basicPanel.Children.Add(_resrefGenerateBtn);
 
-            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
-            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
+            AttachReferenceSearchMenus();
 
             // Base Item
             var baseLabel = new TextBlock { Text = "Base Item:" };
