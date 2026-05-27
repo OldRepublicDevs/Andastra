@@ -50,6 +50,9 @@ namespace KotorCLI.Commands
             var countOnlyOption = Cli.Opt<bool>("--count-only", "Print only the number of matches");
             findFieldValueCommand.Options.Add(countOnlyOption);
 
+            var moduleGlobOption = Cli.Opt<string[]>("--module-glob", "Module filename glob (repeatable; e.g. tar_m02*)");
+            findFieldValueCommand.Options.Add(moduleGlobOption);
+
             findFieldValueCommand.SetAction(parseResult =>
             {
                 var value = parseResult.GetValue(valueArgument);
@@ -62,6 +65,7 @@ namespace KotorCLI.Commands
                 var caseSensitive = parseResult.GetValue(caseSensitiveOption);
                 var json = parseResult.GetValue(jsonOption);
                 var countOnly = parseResult.GetValue(countOnlyOption);
+                var moduleGlob = parseResult.GetValue(moduleGlobOption);
 
                 var logger = new StandardLogger();
                 var exitCode = Execute(
@@ -75,6 +79,7 @@ namespace KotorCLI.Commands
                     caseSensitive,
                     json,
                     countOnly,
+                    moduleGlob,
                     logger);
                 Environment.Exit(exitCode);
             });
@@ -100,6 +105,7 @@ namespace KotorCLI.Commands
                 caseSensitive,
                 false,
                 false,
+                null,
                 logger);
         }
 
@@ -125,6 +131,7 @@ namespace KotorCLI.Commands
                 caseSensitive,
                 false,
                 false,
+                null,
                 logger);
         }
 
@@ -139,6 +146,35 @@ namespace KotorCLI.Commands
             bool caseSensitive,
             bool jsonOutput,
             bool countOnly,
+            ILogger logger)
+        {
+            return Execute(
+                value,
+                installDir,
+                overrideOnly,
+                noOverride,
+                noChitin,
+                noModules,
+                partial,
+                caseSensitive,
+                jsonOutput,
+                countOnly,
+                null,
+                logger);
+        }
+
+        public static int Execute(
+            string value,
+            string installDir,
+            bool overrideOnly,
+            bool noOverride,
+            bool noChitin,
+            bool noModules,
+            bool partial,
+            bool caseSensitive,
+            bool jsonOutput,
+            bool countOnly,
+            string[] moduleGlobFilters,
             ILogger logger)
         {
             if (string.IsNullOrWhiteSpace(value))
@@ -177,7 +213,8 @@ namespace KotorCLI.Commands
                 noChitin,
                 noModules,
                 caseSensitive,
-                partial);
+                partial,
+                moduleGlobFilters);
 
             List<ReferenceSearchResult> results = ReferenceFinder.FindFieldValueReferences(
                 installation,
