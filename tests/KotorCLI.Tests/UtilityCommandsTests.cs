@@ -1,5 +1,8 @@
 using System;
 using System.IO;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Resource.Formats.GFF;
 using KotorCLI.Commands;
 using KotorCLI.Logging;
 using NUnit.Framework;
@@ -118,6 +121,75 @@ namespace KotorCLI.Tests
                     File.Delete(tempFile2);
                 }
             }
+        }
+
+        [Test]
+        public void ExecuteStats_ValidUtc_ExitsZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-stats-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string utcPath = WriteSampleUtc(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = UtilityCommands.ExecuteStats(utcPath, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteValidate_ValidUtc_ExitsZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-validate-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string utcPath = WriteSampleUtc(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = UtilityCommands.ExecuteValidate(utcPath, false, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteValidate_MissingFile_ExitsNonZero()
+        {
+            string missingPath = Path.Combine(Path.GetTempPath(), "missing-" + Guid.NewGuid().ToString("N") + ".utc");
+            var logger = new StandardLogger();
+            int exitCode = UtilityCommands.ExecuteValidate(missingPath, false, logger);
+            Assert.That(exitCode, Is.EqualTo(1));
+        }
+
+        private static string WriteSampleUtc(string tempDir)
+        {
+            string utcPath = Path.Combine(tempDir, "sample.utc");
+            byte[] utcBytes = GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.UTC);
+            File.WriteAllBytes(utcPath, utcBytes);
+            return utcPath;
         }
     }
 }
