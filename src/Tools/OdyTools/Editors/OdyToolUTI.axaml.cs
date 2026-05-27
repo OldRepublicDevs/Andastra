@@ -17,6 +17,7 @@ using BioWare.Resource;
 using OdyTools.Common;
 using OdyTools.Data;
 using OdyTools.Dialogs;
+using OdyTools.Utils;
 using OdyTools.Widgets;
 using JetBrains.Annotations;
 using Game = BioWare.Common.BioWareGame;
@@ -314,6 +315,9 @@ namespace OdyTools.Editors
             basicPanel.Children.Add(resrefLabel);
             basicPanel.Children.Add(_resrefEdit);
             basicPanel.Children.Add(_resrefGenerateBtn);
+
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
 
             // Base Item
             var baseLabel = new TextBlock { Text = "Base Item:" };

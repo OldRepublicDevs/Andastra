@@ -282,6 +282,9 @@ namespace OdyTools.Editors
             basicPanel.Children.Add(_resrefEdit);
             basicPanel.Children.Add(_resrefGenerateBtn);
 
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
+
             // Appearance
             var appearanceLabel = new TextBlock { Text = "Appearance:" };
             _appearanceSelect = new ComboBox();

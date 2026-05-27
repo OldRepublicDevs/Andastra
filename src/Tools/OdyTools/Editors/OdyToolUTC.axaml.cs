@@ -317,6 +317,8 @@ namespace OdyTools.Editors
             AddFormRow(profilePanel, "Last Name:", _lastNameEdit = new LocalizedStringEdit(), _lastNameRandomBtn = new Button { Content = "?" }, () => RandomizeLastName());
             AddFormRow(profilePanel, "Tag:", _tagEdit = new TextBox(), _tagGenerateBtn = new Button { Content = "-" }, () => GenerateTag());
             AddFormRow(profilePanel, "ResRef:", _resrefEdit = new TextBox { MaxLength = 16 });
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
             AddFormRow(profilePanel, "Appearance:", _appearanceSelect = new ComboBox());
             AddFormRow(profilePanel, "Soundset:", _soundsetSelect = new ComboBox());
             AddFormRow(profilePanel, "Conversation:", _conversationEdit = new ComboBox { IsEditable = true }, _conversationModifyBtn = new Button { Content = "Edit" }, () => EditConversation());

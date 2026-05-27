@@ -344,6 +344,9 @@ namespace OdyTools.Editors
             basicPanel.Children.Add(resrefLabel);
             basicPanel.Children.Add(resrefPanel);
 
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
+
             // Type
             var typeLabel = new TextBlock { Text = "Type:" };
             _typeSelect = new ComboBox();
