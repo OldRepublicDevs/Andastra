@@ -58,7 +58,7 @@ Installation-wide reference finders ported from Holocron/PyKotor (BioWare `Refer
 |---------|---------|-------------|
 | `find-refs` | Script, tag, template, or conversation ResRef | `ReferenceFinder` |
 | `find-strref` | TLK StrRef in 2DA, SSF, GFF, and NCS (CONSTI) | `ReferenceCacheHelpers.FindStrRefReferences` |
-| `find-2da-ref` | GFF fields indexing a 2DA row | `ReferenceCacheHelpers.Find2DAMemoryReferences` |
+| `find-2da-ref` | GFF fields indexing a 2DA row (optional full row sweep) | `ReferenceCacheHelpers.Find2DAMemoryReferences` / `CollectTwoDARowReferences` with `--full-row` |
 | `find-field-value` | GFF string/ResRef field values | `ReferenceFinder.FindFieldValueReferences` |
 
 Shared flags (where supported):
@@ -94,7 +94,9 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
   find-2da-ref appearance 17 --install-dir /path/to/kotor --override-only
 ```
 
-Flags: `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--module-glob`, `--cache-file <path>`, `--rebuild-cache`, `--json`, `--count-only`.
+Flags: `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--module-glob`, `--cache-file <path>`, `--rebuild-cache`, `--full-row`, `--json`, `--count-only`.
+
+With `--full-row`, also searches for the row label as a GFF field value and positive StrRef values in row columns (loads the 2DA from the installation when available).
 
 The `twoda` argument accepts a resname or filename (`appearance` or `appearance.2da`).
 
