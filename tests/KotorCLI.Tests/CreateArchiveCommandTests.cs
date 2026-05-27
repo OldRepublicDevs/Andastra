@@ -271,6 +271,72 @@ namespace KotorCLI.Tests
             }
         }
 
+        [Test]
+        public void Execute_CreateErfWithFilter_IncludesMatchingFilesOnly()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-create-erf-filter-" + Guid.NewGuid().ToString("N"));
+            string inputDir = Path.Combine(tempDir, "in");
+            string erfPath = Path.Combine(tempDir, "packed.erf");
+            Directory.CreateDirectory(inputDir);
+
+            try
+            {
+                byte[] utcBytes = GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.UTC);
+                File.WriteAllBytes(Path.Combine(inputDir, "merchant.utc"), utcBytes);
+                File.WriteAllBytes(Path.Combine(inputDir, "vendor.utc"), utcBytes);
+
+                var logger = new StandardLogger();
+                int exitCode = CreateArchiveCommand.Execute(inputDir, erfPath, "erf", "merchant*", logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(File.Exists(erfPath), Is.True);
+
+                var capsule = new LazyCapsule(erfPath);
+                int matchCount = 0;
+                foreach (BioWare.Extract.FileResource resource in capsule.GetResources())
+                {
+                    if (string.Equals(resource.ResName, "merchant", StringComparison.OrdinalIgnoreCase))
+                    {
+                        matchCount++;
+                    }
+
+                    Assert.That(resource.ResName, Is.Not.EqualTo("vendor"));
+                }
+
+                Assert.That(matchCount, Is.EqualTo(1));
+            }
+            finally
+            {
+                DeleteDirectorySafe(tempDir);
+            }
+        }
+
+        [Test]
+        public void Execute_CreateErfWithFilterNoMatch_ProducesEmptyArchive()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-create-erf-filter-empty-" + Guid.NewGuid().ToString("N"));
+            string inputDir = Path.Combine(tempDir, "in");
+            string erfPath = Path.Combine(tempDir, "packed.erf");
+            Directory.CreateDirectory(inputDir);
+
+            try
+            {
+                byte[] utcBytes = GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.UTC);
+                File.WriteAllBytes(Path.Combine(inputDir, "merchant.utc"), utcBytes);
+
+                var logger = new StandardLogger();
+                int exitCode = CreateArchiveCommand.Execute(inputDir, erfPath, "erf", "missing_*", logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(File.Exists(erfPath), Is.True);
+
+                var capsule = new LazyCapsule(erfPath);
+                Assert.That(capsule.GetResources().Count, Is.EqualTo(0));
+            }
+            finally
+            {
+                DeleteDirectorySafe(tempDir);
+            }
+        }
+
         private static void DeleteDirectorySafe(string path)
         {
             try
