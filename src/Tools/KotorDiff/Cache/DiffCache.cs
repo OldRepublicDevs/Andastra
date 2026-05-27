@@ -102,9 +102,58 @@ namespace KotorDiff.Cache
                 Yours = data.ContainsKey("yours") ? data["yours"]?.ToString() : null,
                 Timestamp = data.ContainsKey("timestamp") ? data["timestamp"]?.ToString() : "",
                 Files = files,
-                StrrefCacheGame = data.ContainsKey("strref_cache_game") ? data["strref_cache_game"]?.ToString() : null,
-                StrrefCacheData = data.ContainsKey("strref_cache_data") ? data["strref_cache_data"] as Dictionary<string, object> : null
+                StrrefCacheGame = ReadString(data, "strref_cache_game", "strrefCacheGame"),
+                StrrefCacheData = ReadStrrefCacheData(data)
             };
+        }
+
+        private static string ReadString(Dictionary<string, object> data, params string[] keys)
+        {
+            foreach (string key in keys)
+            {
+                if (data.ContainsKey(key) && data[key] != null)
+                {
+                    return data[key].ToString();
+                }
+            }
+
+            return null;
+        }
+
+        private static Dictionary<string, object> ReadStrrefCacheData(Dictionary<string, object> data)
+        {
+            object raw = null;
+            if (data.ContainsKey("strref_cache_data"))
+            {
+                raw = data["strref_cache_data"];
+            }
+            else if (data.ContainsKey("strrefCacheData"))
+            {
+                raw = data["strrefCacheData"];
+            }
+
+            if (raw == null)
+            {
+                return null;
+            }
+
+            if (raw is Dictionary<string, object> typed)
+            {
+                return typed;
+            }
+
+            if (raw is Dictionary<object, object> loose)
+            {
+                var converted = new Dictionary<string, object>();
+                foreach (KeyValuePair<object, object> kvp in loose)
+                {
+                    converted[kvp.Key.ToString()] = kvp.Value;
+                }
+
+                return converted;
+            }
+
+            return null;
         }
     }
 }
