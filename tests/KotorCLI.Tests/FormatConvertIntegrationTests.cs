@@ -1,9 +1,11 @@
 using System;
 using System.Diagnostics;
+using System.Collections.Generic;
 using System.IO;
 using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.TwoDA;
 using NUnit.Framework;
 
 namespace KotorCLI.Tests
@@ -171,6 +173,82 @@ namespace KotorCLI.Tests
         {
             int exitCode = RunKotorCli("json2gff \"" + Path.Combine(Path.GetTempPath(), "missing-" + Guid.NewGuid().ToString("N") + ".json") + "\"", out _, out _);
             Assert.That(exitCode, Is.Not.EqualTo(0));
+        }
+
+        [Test]
+        public void TwoDa2Csv_MinimalTwoDA_WritesCsvFile()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-2da2csv-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+            string twoDaPath = Path.Combine(tempDir, "sample.2da");
+            string csvPath = Path.Combine(tempDir, "sample.csv");
+
+            try
+            {
+                WriteSampleTwoDA(twoDaPath);
+
+                int exitCode = RunKotorCli("2da2csv \"" + twoDaPath + "\" --output \"" + csvPath + "\"", out _, out string stderr);
+
+                Assert.That(exitCode, Is.EqualTo(0), stderr);
+                Assert.That(File.Exists(csvPath), Is.True);
+                Assert.That(new FileInfo(csvPath).Length, Is.GreaterThan(0));
+            }
+            finally
+            {
+                DeleteDirectorySafe(tempDir);
+            }
+        }
+
+        [Test]
+        public void Csv22Da_AfterTwoDa2Csv_PreservesRowLabel()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-csv22da-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+            string twoDaPath = Path.Combine(tempDir, "sample.2da");
+            string csvPath = Path.Combine(tempDir, "sample.csv");
+            string roundTripPath = Path.Combine(tempDir, "roundtrip.2da");
+            const string rowLabel = "integration-row";
+
+            try
+            {
+                WriteSampleTwoDA(twoDaPath, rowLabel);
+
+                int csvExit = RunKotorCli("2da2csv \"" + twoDaPath + "\" --output \"" + csvPath + "\"", out _, out string csvErr);
+                Assert.That(csvExit, Is.EqualTo(0), csvErr);
+                Assert.That(File.Exists(csvPath), Is.True);
+
+                int twoDaExit = RunKotorCli("csv22da \"" + csvPath + "\" --output \"" + roundTripPath + "\"", out _, out string twoDaErr);
+                Assert.That(twoDaExit, Is.EqualTo(0), twoDaErr);
+                Assert.That(File.Exists(roundTripPath), Is.True);
+
+                byte[] roundTripBytes = File.ReadAllBytes(roundTripPath);
+                TwoDA roundTrip = TwoDAAuto.Read2DA(roundTripBytes, 0, roundTripBytes.Length, ResourceType.TwoDA);
+                Assert.That(roundTrip.GetLabel(0), Is.EqualTo(rowLabel));
+                Assert.That(roundTrip.GetCellString(0, "label"), Is.EqualTo("value"));
+            }
+            finally
+            {
+                DeleteDirectorySafe(tempDir);
+            }
+        }
+
+        private static void WriteSampleTwoDA(string path, string rowLabel = "integration-row")
+        {
+            var twoDA = new TwoDA(new List<string> { "label" });
+            twoDA.AddRow(rowLabel, new Dictionary<string, object> { { "label", "value" } });
+            TwoDAAuto.Write2DA(twoDA, path, ResourceType.TwoDA);
+        }
+
+        private static void DeleteDirectorySafe(string path)
+        {
+            try
+            {
+                Directory.Delete(path, true);
+            }
+            catch
+            {
+                // Best-effort cleanup.
+            }
         }
     }
 }
