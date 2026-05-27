@@ -29,6 +29,10 @@ namespace BioWare.Tools
         /// Explicit slow-path StrRef queries still match any CONSTI value regardless of this threshold.
         /// </summary>
         public int? NcsStrRefCandidateMinimum { get; set; }
+        /// <summary>
+        /// When non-empty, only module capsule files whose filename matches at least one glob are scanned.
+        /// </summary>
+        public List<string> ModuleGlobFilters { get; set; }
     }
 
     public class ReferenceSearchResult
@@ -775,6 +779,11 @@ namespace BioWare.Tools
                         .Concat(Directory.GetFiles(modulesPath, "*.rim"))
                         .Concat(Directory.GetFiles(modulesPath, "*.erf")))
                     {
+                        if (!ModuleGlobMatcher.MatchesAnyModuleGlob(moduleFile, options?.ModuleGlobFilters))
+                        {
+                            continue;
+                        }
+
                         IEnumerable<FileResource> moduleResources;
                         try
                         {
