@@ -143,6 +143,36 @@ namespace BioWare.Tests
             }
         }
 
+        [Test]
+        public void StrRefReferenceCache_ToDictFromDict_RoundTripsSsfReference()
+        {
+            const int targetStrRef = 777777;
+            byte[] bytes = CreateSsfBytesWithStrRef(targetStrRef);
+            string filepath = Path.Combine(Path.GetTempPath(), "strref-dict-" + Guid.NewGuid().ToString("N") + ".ssf");
+
+            try
+            {
+                File.WriteAllBytes(filepath, bytes);
+                var resource = new FileResource("test_set", ResourceType.SSF, bytes.Length, 0, filepath);
+                var original = new StrRefReferenceCache(BioWareGame.K1);
+                original.ScanResource(resource, bytes);
+
+                StrRefReferenceCache restored = StrRefReferenceCache.FromDict(
+                    BioWareGame.K1,
+                    original.ToDict());
+
+                Assert.That(restored.GetReferences(targetStrRef), Is.Not.Empty);
+                Assert.That(restored.Game, Is.EqualTo(BioWareGame.K1));
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
         private static byte[] CreateSsfBytesWithStrRef(int strref)
         {
             var ssf = new SSF();
