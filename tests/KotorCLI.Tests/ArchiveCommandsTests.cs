@@ -4,6 +4,7 @@ using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.BIF;
 using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.KEY;
 using BioWare.Resource.Formats.RIM;
 using KotorCLI.Commands;
@@ -27,6 +28,20 @@ namespace KotorCLI.Tests
             rim.SetData("other_res", ResourceType.GFF, GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.GFF));
             RIMAuto.WriteRim(rim, rimPath, ResourceType.RIM);
             return rimPath;
+        }
+
+        private static string CreateSampleMod(string tempDir)
+        {
+            string modPath = Path.Combine(tempDir, "test.mod");
+            var gff = new GFF(GFFContent.GFF);
+            gff.Root.SetString("Label", "archive-test");
+            byte[] utcBytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            var mod = new ERF(ERFType.MOD);
+            mod.SetData("sample_npc", ResourceType.UTC, utcBytes);
+            mod.SetData("other_res", ResourceType.GFF, GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.GFF));
+            ERFAuto.WriteErf(mod, modPath, ResourceType.MOD);
+            return modPath;
         }
 
         private static void WriteSampleBifKeyPair(string bifPath, string keyPath, string resref, int resIndex)
@@ -177,6 +192,110 @@ namespace KotorCLI.Tests
                 string rimPath = CreateSampleRim(tempDir);
                 var logger = new StandardLogger();
                 int exitCode = ListArchiveCommand.Execute(rimPath, false, "sample_*", logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteListArchive_ListsModResources()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-mod-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string modPath = CreateSampleMod(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = ListArchiveCommand.Execute(modPath, false, null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteListArchive_ModFilterMatchesResource_ExitsZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-mod-filter-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string modPath = CreateSampleMod(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = ListArchiveCommand.Execute(modPath, false, "sample_*", logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_ModMatchesWildcard()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-mod-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string modPath = CreateSampleMod(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(modPath, "sample_*", false, false, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_ModContentMode_MatchesStringInResourceData()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-mod-content-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string modPath = CreateSampleMod(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(modPath, "archive-test", false, true, logger);
                 Assert.That(exitCode, Is.EqualTo(0));
             }
             finally
