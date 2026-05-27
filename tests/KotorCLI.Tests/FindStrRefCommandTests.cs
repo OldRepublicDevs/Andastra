@@ -268,6 +268,112 @@ namespace KotorCLI.Tests
             }
         }
 
+        [Test]
+        public void Execute_JsonOutput_SsfHit_IncludesStrRefMetadata()
+        {
+            const int targetStrRef = 77777;
+            string installRoot = CreateInstallWithStrRef(targetStrRef);
+            var output = new System.IO.StringWriter();
+            var originalOut = Console.Out;
+            try
+            {
+                Console.SetOut(output);
+                var logger = new StandardLogger(noColor: true);
+                int exitCode = FindStrRefCommand.Execute(
+                    targetStrRef,
+                    installRoot,
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    noNcs: false,
+                    ncsStrRefMin: null,
+                    jsonOutput: true,
+                    countOnly: false,
+                    logger);
+
+                Assert.That(exitCode, Is.EqualTo(0));
+                string text = output.ToString();
+                Assert.That(text, Does.Contain("\"needle\":\"77777\""));
+                Assert.That(text, Does.Contain("\"type\":\"strref\""));
+                Assert.That(text, Does.Contain("\"count\":1"));
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Execute_JsonOutput_NoMatch_EmitsEmptyArray()
+        {
+            string installRoot = CreateInstallWithStrRef(77777);
+            var output = new System.IO.StringWriter();
+            var originalOut = Console.Out;
+            try
+            {
+                Console.SetOut(output);
+                var logger = new StandardLogger(noColor: true);
+                int exitCode = FindStrRefCommand.Execute(
+                    99999,
+                    installRoot,
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    noNcs: false,
+                    ncsStrRefMin: null,
+                    jsonOutput: true,
+                    countOnly: false,
+                    logger);
+
+                Assert.That(exitCode, Is.EqualTo(1));
+                string text = output.ToString();
+                Assert.That(text, Does.Contain("\"count\":0"));
+                Assert.That(text, Does.Contain("\"references\":[]"));
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Execute_CountOnly_SsfHit_PrintsOne()
+        {
+            const int targetStrRef = 77777;
+            string installRoot = CreateInstallWithStrRef(targetStrRef);
+            var output = new System.IO.StringWriter();
+            var originalOut = Console.Out;
+            try
+            {
+                Console.SetOut(output);
+                var logger = new StandardLogger(noColor: true);
+                int exitCode = FindStrRefCommand.Execute(
+                    targetStrRef,
+                    installRoot,
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    noNcs: false,
+                    ncsStrRefMin: null,
+                    jsonOutput: false,
+                    countOnly: true,
+                    logger);
+
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(output.ToString().Trim(), Is.EqualTo("1"));
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
         private static string CreateInstallWithStrRef(int strref)
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-strref-" + Guid.NewGuid().ToString("N"));
