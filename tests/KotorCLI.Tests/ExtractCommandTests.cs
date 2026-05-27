@@ -426,5 +426,69 @@ namespace KotorCLI.Tests
                 }
             }
         }
+
+        [Test]
+        public void ExecuteExtractKey_WithFilter_ExtractsMatchingResourceOnly()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-extract-key-filter-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "sample.bif");
+                string keyPath = Path.Combine(tempDir, "sample.key");
+                string outputDir = Path.Combine(tempDir, "out");
+                WriteSampleBifKeyPairWithTwoResources(bifPath, keyPath, "creature_a", "creature_b");
+
+                var logger = new StandardLogger();
+                int exitCode = ExtractCommand.Execute(keyPath, outputDir, "creature_a*", null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(File.Exists(Path.Combine(outputDir, "sample", "creature_a.utc")), Is.True);
+                Assert.That(File.Exists(Path.Combine(outputDir, "sample", "creature_b.utc")), Is.False);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteExtractKey_WithFilterNoMatch_WritesNoFiles()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-extract-key-filter-empty-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "sample.bif");
+                string keyPath = Path.Combine(tempDir, "sample.key");
+                string outputDir = Path.Combine(tempDir, "out");
+                WriteSampleBifKeyPair(bifPath, keyPath, "creature_a", 0);
+
+                var logger = new StandardLogger();
+                int exitCode = ExtractCommand.Execute(keyPath, outputDir, "missing_*", null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(Directory.Exists(outputDir), Is.True);
+                Assert.That(Directory.GetFiles(outputDir).Length, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
     }
 }
