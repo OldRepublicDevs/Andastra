@@ -26,6 +26,18 @@ namespace KotorCLI.Commands
             var installationOption = Cli.Opt<string>("--installation", "Alias for --install-dir");
             findFieldValueCommand.Options.Add(installationOption);
 
+            var overrideOnlyOption = Cli.Opt<bool>("--override-only", "Search override folder only");
+            findFieldValueCommand.Options.Add(overrideOnlyOption);
+
+            var noOverrideOption = Cli.Opt<bool>("--no-override", "Skip override folder");
+            findFieldValueCommand.Options.Add(noOverrideOption);
+
+            var noChitinOption = Cli.Opt<bool>("--no-chitin", "Skip chitin/BIF archives");
+            findFieldValueCommand.Options.Add(noChitinOption);
+
+            var noModulesOption = Cli.Opt<bool>("--no-modules", "Skip module capsules");
+            findFieldValueCommand.Options.Add(noModulesOption);
+
             var partialOption = Cli.Opt<bool>("--partial", "Allow partial substring match");
             findFieldValueCommand.Options.Add(partialOption);
 
@@ -36,11 +48,24 @@ namespace KotorCLI.Commands
             {
                 var value = parseResult.GetValue(valueArgument);
                 var installDir = parseResult.GetValue(installDirOption) ?? parseResult.GetValue(installationOption);
+                var overrideOnly = parseResult.GetValue(overrideOnlyOption);
+                var noOverride = parseResult.GetValue(noOverrideOption);
+                var noChitin = parseResult.GetValue(noChitinOption);
+                var noModules = parseResult.GetValue(noModulesOption);
                 var partial = parseResult.GetValue(partialOption);
                 var caseSensitive = parseResult.GetValue(caseSensitiveOption);
 
                 var logger = new StandardLogger();
-                var exitCode = Execute(value, installDir, partial, caseSensitive, logger);
+                var exitCode = Execute(
+                    value,
+                    installDir,
+                    overrideOnly,
+                    noOverride,
+                    noChitin,
+                    noModules,
+                    partial,
+                    caseSensitive,
+                    logger);
                 Environment.Exit(exitCode);
             });
 
@@ -50,6 +75,29 @@ namespace KotorCLI.Commands
         public static int Execute(
             string value,
             string installDir,
+            bool partial,
+            bool caseSensitive,
+            ILogger logger)
+        {
+            return Execute(
+                value,
+                installDir,
+                false,
+                false,
+                false,
+                false,
+                partial,
+                caseSensitive,
+                logger);
+        }
+
+        public static int Execute(
+            string value,
+            string installDir,
+            bool overrideOnly,
+            bool noOverride,
+            bool noChitin,
+            bool noModules,
             bool partial,
             bool caseSensitive,
             ILogger logger)
@@ -84,14 +132,13 @@ namespace KotorCLI.Commands
                 return 1;
             }
 
-            var options = new ReferenceSearchOptions
-            {
-                PartialMatch = partial,
-                CaseSensitive = caseSensitive,
-                SearchChitin = true,
-                SearchModules = true,
-                SearchOverride = true
-            };
+            ReferenceSearchOptions options = FindRefsCommand.BuildSearchOptions(
+                overrideOnly,
+                noOverride,
+                noChitin,
+                noModules,
+                caseSensitive,
+                partial);
 
             List<ReferenceSearchResult> results = ReferenceFinder.FindFieldValueReferences(
                 installation,
