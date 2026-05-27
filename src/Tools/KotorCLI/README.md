@@ -129,13 +129,13 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
 ## Known Issues
 
 1. **`launch` is a stub** — documents the full pipeline but exits unless `--dry-run` is used.
-2. **Remaining test gaps** — build-pipeline commands (`init`, `config`, `convert`, `compile`, `pack`, `install`, `unpack`, `list`) and format convert have automated coverage; archive list/search helpers and `list-archive`/`search-archive` error and case-sensitive paths are tested; `launch` path resolution (`ResolveGameBinary`) has direct unit tests. **174** tests in `KotorCLI.Tests` on net9.0. `launch` remains stub-only.
+2. **Remaining test gaps** — build-pipeline commands (`init`, `config`, `convert`, `compile`, `pack`, `install`, `unpack`, `list`) and format convert have automated coverage; archive list/search/extract helpers and error paths are tested; `launch` path resolution (`ResolveGameBinary`) has direct unit tests. **176** tests in `KotorCLI.Tests` on net9.0. `launch` remains stub-only.
 3. **System.CommandLine** — prefer `.Options.Add()` / current `Cli.Opt` helpers when touching command definitions.
 
 ## Next Steps
 
 1. Implement `launch` (or document a supported external launcher workflow).
-2. Expand any remaining wired commands without coverage; optional `search-archive` case-sensitive content edge cases.
+2. Expand any remaining wired commands without coverage.
 3. Keep this README inventory in sync when adding or stubbing commands.
 
 ## References
