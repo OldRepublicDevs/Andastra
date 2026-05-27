@@ -52,7 +52,7 @@ name = ""default""
 file = ""test.mod""
 ";
 
-        private const string UnpackRemoveDeletedConfig = @"[package]
+        private const string PackUnpackPipelineConfig = @"[package]
 name = ""testpack""
 
   [package.sources]
@@ -76,7 +76,7 @@ file = ""test.mod""
             try
             {
                 Directory.CreateDirectory(projectDir);
-                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), UnpackRemoveDeletedConfig);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), PackUnpackPipelineConfig);
 
                 string creaturesDir = Path.Combine(projectDir, "src", "blueprints", "creatures");
                 Directory.CreateDirectory(creaturesDir);
@@ -118,7 +118,7 @@ file = ""test.mod""
             try
             {
                 Directory.CreateDirectory(projectDir);
-                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), UnpackRemoveDeletedConfig);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), PackUnpackPipelineConfig);
 
                 string creaturesDir = Path.Combine(projectDir, "src", "blueprints", "creatures");
                 Directory.CreateDirectory(creaturesDir);
