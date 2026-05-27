@@ -271,6 +271,148 @@ namespace KotorCLI.Tests
             }
         }
 
+        [Test]
+        public void Execute_JsonOutput_ExitsZeroAndIncludesMetadata()
+        {
+            string installRoot = CreateInstallWithScriptReference("k_json_ref");
+            var output = new System.IO.StringWriter();
+            var originalOut = Console.Out;
+            try
+            {
+                Console.SetOut(output);
+                var logger = new StandardLogger(noColor: true);
+                int exitCode = FindRefsCommand.Execute(
+                    "k_json_ref",
+                    installRoot,
+                    "script",
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    caseSensitive: false,
+                    partialMatch: false,
+                    jsonOutput: true,
+                    countOnly: false,
+                    logger);
+
+                Assert.That(exitCode, Is.EqualTo(0));
+                string text = output.ToString();
+                Assert.That(text, Does.Contain("\"needle\":\"k_json_ref\""));
+                Assert.That(text, Does.Contain("\"type\":\"script\""));
+                Assert.That(text, Does.Contain("\"count\":1"));
+                Assert.That(text, Does.Contain("\"references\":["));
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Execute_JsonOutput_NoMatch_EmitsEmptyArray()
+        {
+            string installRoot = CreateInstallWithScriptReference("k_json_ref");
+            var output = new System.IO.StringWriter();
+            var originalOut = Console.Out;
+            try
+            {
+                Console.SetOut(output);
+                var logger = new StandardLogger(noColor: true);
+                int exitCode = FindRefsCommand.Execute(
+                    "missing_ref",
+                    installRoot,
+                    "script",
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    caseSensitive: false,
+                    partialMatch: false,
+                    jsonOutput: true,
+                    countOnly: false,
+                    logger);
+
+                Assert.That(exitCode, Is.EqualTo(1));
+                string text = output.ToString();
+                Assert.That(text, Does.Contain("\"count\":0"));
+                Assert.That(text, Does.Contain("\"references\":[]"));
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Execute_CountOnly_PrintsIntegerWithoutSummary()
+        {
+            string installRoot = CreateInstallWithScriptReference("k_count_ref");
+            var output = new System.IO.StringWriter();
+            var originalOut = Console.Out;
+            try
+            {
+                Console.SetOut(output);
+                var logger = new StandardLogger(noColor: true);
+                int exitCode = FindRefsCommand.Execute(
+                    "k_count_ref",
+                    installRoot,
+                    "script",
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    caseSensitive: false,
+                    partialMatch: false,
+                    jsonOutput: false,
+                    countOnly: true,
+                    logger);
+
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(output.ToString().Trim(), Is.EqualTo("1"));
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Execute_CountOnly_NoMatch_PrintsZero()
+        {
+            string installRoot = CreateInstallWithScriptReference("k_count_ref");
+            var output = new System.IO.StringWriter();
+            var originalOut = Console.Out;
+            try
+            {
+                Console.SetOut(output);
+                var logger = new StandardLogger(noColor: true);
+                int exitCode = FindRefsCommand.Execute(
+                    "missing_ref",
+                    installRoot,
+                    "script",
+                    overrideOnly: true,
+                    noOverride: false,
+                    noChitin: true,
+                    noModules: true,
+                    caseSensitive: false,
+                    partialMatch: false,
+                    jsonOutput: false,
+                    countOnly: true,
+                    logger);
+
+                Assert.That(exitCode, Is.EqualTo(1));
+                Assert.That(output.ToString().Trim(), Is.EqualTo("0"));
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
         private static string CreateInstallWithTemplateReference(string templateResRef)
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-findrefs-" + Guid.NewGuid().ToString("N"));
