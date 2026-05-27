@@ -154,7 +154,7 @@ namespace KotorCLI.Commands
                                 foreach (var pattern in includePatterns)
                                 {
                                     var patternPath = Path.Combine(rootDir, pattern);
-                                    var matches = FindFilesMatchingPattern(rootDir, pattern);
+                                    var matches = GlobPatternMatcher.FindFilesMatchingPattern(rootDir, pattern);
                                     foreach (var match in matches)
                                     {
                                         var matchPath = new FileInfo(match);
@@ -176,7 +176,7 @@ namespace KotorCLI.Commands
                             var expandedPattern = config.ResolveTargetValue(target, "sources", pattern);
                             if (expandedPattern is string patternStr)
                             {
-                                var matches = FindFilesMatchingPattern(rootDir, patternStr);
+                                var matches = GlobPatternMatcher.FindFilesMatchingPattern(rootDir, patternStr);
                                 foreach (var match in matches)
                                 {
                                     var matchPath = new FileInfo(match);
@@ -420,82 +420,6 @@ namespace KotorCLI.Commands
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Find files matching a glob pattern.
-        /// Matching PyKotor: glob.glob() behavior
-        /// </summary>
-        private static List<string> FindFilesMatchingPattern(string rootDir, string pattern)
-        {
-            var results = new List<string>();
-
-            try
-            {
-                // Handle different pattern types
-                if (pattern.Contains("**"))
-                {
-                    // Recursive pattern - search all subdirectories
-                    var searchPattern = pattern.Replace("**/", "").Replace("/**", "").Replace("**", "*");
-                    if (Directory.Exists(rootDir))
-                    {
-                        // Expand ** to recursive search
-                        var basePattern = pattern;
-                        if (basePattern.StartsWith("**/"))
-                        {
-                            basePattern = basePattern.Substring(3);
-                        }
-                        var filePattern = Path.GetFileName(basePattern);
-                        var dirPattern = Path.GetDirectoryName(basePattern);
-
-                        if (string.IsNullOrEmpty(dirPattern) || dirPattern == ".")
-                        {
-                            // Search all directories
-                            results.AddRange(Directory.GetFiles(rootDir, filePattern, SearchOption.AllDirectories));
-                        }
-                        else
-                        {
-                            // Search in specific subdirectory pattern
-                            var searchDirs = Directory.GetDirectories(rootDir, dirPattern, SearchOption.AllDirectories);
-                            foreach (var dir in searchDirs)
-                            {
-                                results.AddRange(Directory.GetFiles(dir, filePattern, SearchOption.TopDirectoryOnly));
-                            }
-                        }
-                    }
-                }
-                else if (pattern.Contains("*") || pattern.Contains("?"))
-                {
-                    // Simple wildcard pattern
-                    var directory = Path.GetDirectoryName(Path.Combine(rootDir, pattern));
-                    var filePattern = Path.GetFileName(pattern);
-
-                    if (string.IsNullOrEmpty(directory) || directory == ".")
-                    {
-                        directory = rootDir;
-                    }
-
-                    if (Directory.Exists(directory))
-                    {
-                        results.AddRange(Directory.GetFiles(directory, filePattern, SearchOption.TopDirectoryOnly));
-                    }
-                }
-                else
-                {
-                    // Exact file path
-                    var fullPath = Path.Combine(rootDir, pattern);
-                    if (File.Exists(fullPath))
-                    {
-                        results.Add(fullPath);
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // Ignore errors and continue
-            }
-
-            return results;
         }
 
         /// <summary>

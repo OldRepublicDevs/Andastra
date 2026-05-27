@@ -139,7 +139,7 @@ namespace KotorCLI.Commands
                 var expandedPattern = config.ResolveTargetValue(target, "sources", pattern);
                 if (expandedPattern is string patternStr)
                 {
-                    var matches = FindFilesMatchingPattern(rootDir, patternStr);
+                    var matches = GlobPatternMatcher.FindFilesMatchingPattern(rootDir, patternStr);
                     foreach (var match in matches)
                     {
                         // Check if file should be excluded
@@ -168,51 +168,6 @@ namespace KotorCLI.Commands
             }
 
             return sourceFiles;
-        }
-
-        private static List<string> FindFilesMatchingPattern(string rootDir, string pattern)
-        {
-            var results = new List<string>();
-
-            try
-            {
-                // Handle different pattern types
-                if (pattern.Contains("**"))
-                {
-                    // Recursive pattern - search all subdirectories
-                    var searchPattern = pattern.Replace("**/", "").Replace("/**", "").Replace("**", "*");
-                    if (Directory.Exists(rootDir))
-                    {
-                        results.AddRange(Directory.GetFiles(rootDir, searchPattern, SearchOption.AllDirectories));
-                    }
-                }
-                else if (pattern.Contains("*") || pattern.Contains("?"))
-                {
-                    // Simple wildcard pattern
-                    var directory = Path.GetDirectoryName(Path.Combine(rootDir, pattern));
-                    var filePattern = Path.GetFileName(pattern);
-
-                    if (Directory.Exists(directory))
-                    {
-                        results.AddRange(Directory.GetFiles(directory, filePattern, SearchOption.TopDirectoryOnly));
-                    }
-                }
-                else
-                {
-                    // Exact file path
-                    var fullPath = Path.Combine(rootDir, pattern);
-                    if (File.Exists(fullPath))
-                    {
-                        results.Add(fullPath);
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // Ignore errors and continue
-            }
-
-            return results;
         }
 
         private static bool MatchPattern(string path, string pattern)
