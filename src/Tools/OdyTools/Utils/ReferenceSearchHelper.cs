@@ -76,11 +76,17 @@ namespace OdyTools.Utils
 
         public static ReferenceSearchOptions PromptSearchOptions(Window parent, ReferenceSearchOptions defaults)
         {
+            return PromptSearchOptions(parent, defaults, showStrRefNcsOptions: false);
+        }
+
+        public static ReferenceSearchOptions PromptSearchOptions(
+            Window parent,
+            ReferenceSearchOptions defaults,
+            bool showStrRefNcsOptions)
+        {
             defaults = defaults ?? new ReferenceSearchOptions();
-            var dialog = new ReferenceSearchOptionsDialog(parent)
-            {
-                // Seed dialog from defaults via reflection on private fields is brittle; defaults are standard.
-            };
+            var dialog = new ReferenceSearchOptionsDialog(parent, showStrRefNcsOptions);
+            dialog.SetDefaults(defaults);
 
             if (!dialog.ShowDialogAndAccepted(parent))
             {

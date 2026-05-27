@@ -35,7 +35,10 @@ namespace OdyTools.Utils
 
                 if (showOptionsDialog)
                 {
-                    ReferenceSearchOptions chosen = ReferenceSearchHelper.PromptSearchOptions(parent, options);
+                    ReferenceSearchOptions chosen = ReferenceSearchHelper.PromptSearchOptions(
+                        parent,
+                        options,
+                        showStrRefNcsOptions: true);
                     if (chosen == null)
                     {
                         return;
