@@ -55,10 +55,11 @@ namespace OdyTools.Widgets.Edit
                 }
 
                 int rowIndex = SelectedIndex;
-                TwoDAMemoryReferenceHelper.FindAndShowTwoDAMemoryReferences(
+                TwoDAMemoryReferenceHelper.FindAndShowTwoDARowReferences(
                     TopLevel.GetTopLevel(this) as Window,
                     _resname,
                     rowIndex,
+                    _this2DA,
                     _installation);
             };
             contextMenu.Items.Add(findReferencesItem);
