@@ -135,7 +135,7 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
 ## Next Steps
 
 1. Implement `launch` (or document a supported external launcher workflow).
-2. Expand `search-archive` content-search edge cases and any remaining wired commands without coverage.
+2. Expand any remaining wired commands without coverage; optional `search-archive` case-sensitive content edge cases.
 3. Keep this README inventory in sync when adding or stubbing commands.
 
 ## References
