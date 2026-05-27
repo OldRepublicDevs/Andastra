@@ -18,39 +18,39 @@ Legend: **wired** = functional CLI backed by BioWare or `Conversions`; **partial
 ## Commands
 
 ### Core Build Commands
-- `config` - Configuration management (stub)
-- `init` - Project initialization (stub)
-- `list` - List targets (stub)
-- `unpack` - Unpack archives (stub)
-- `convert` - Convert JSON to GFF (stub)
-- `compile` - Compile NSS scripts (stub)
-- `pack` - Pack sources into modules (stub)
-- `install` - Install to KOTOR directory (stub)
-- `launch` - Launch game (stub)
+- `config` - Read/write `kotorcli.cfg` (**wired**)
+- `init` - Scaffold a new kotorcli package (**wired**)
+- `list` - List targets and optional source files (**wired**)
+- `unpack` - Unpack module/ERF/RIM into project sources (**wired**; `--removeDeleted` not fully implemented)
+- `convert` - Convert JSON sources to GFF for configured targets (**wired**)
+- `compile` - Compile NSS for configured targets (**wired**)
+- `pack` - Pack sources into module archives (**wired**)
+- `install` - Convert, compile, pack, and copy to game install (**wired**)
+- `launch` - Full pipeline plus game launch (**stub** — fail-fast; use `--dry-run` to resolve paths only)
 
 ### Archive Commands
-- `extract` - Extract from archives (stub)
-- `list-archive` - List archive contents (stub)
-- `create-archive` - Create archives (stub)
-- `search-archive` - Search archives (stub)
-- `key-pack` - Create KEY files (stub)
+- `extract` - Extract KEY/BIF, RIM, ERF/MOD/SAV/HAK (**wired**)
+- `list-archive` - List archive contents (**wired**)
+- `create-archive` - Create ERF/MOD/SAV/HAK or RIM from a directory (**wired**)
+- `search-archive` - Search resource names (and optional content) in archives (**wired**)
+- `key-pack` - Build KEY from a BIF directory (**wired**)
 
 ### Format Conversion Commands
-- `gff2json`, `json2gff` - GFF ↔ JSON (wired)
-- `gff2xml`, `xml2gff` - GFF ↔ XML (stub)
-- `tlk2xml`, `xml2tlk` - TLK ↔ XML (stub)
-- `ssf2xml`, `xml2ssf` - SSF ↔ XML (stub)
-- `2da2csv`, `csv22da` - 2DA ↔ CSV (wired)
+- `gff2json`, `json2gff` - GFF ↔ JSON (**wired**)
+- `gff2xml`, `xml2gff` - GFF ↔ XML (**wired**)
+- `tlk2xml`, `xml2tlk` - TLK ↔ XML (**wired**)
+- `ssf2xml`, `xml2ssf` - SSF ↔ XML (**wired**)
+- `2da2csv`, `csv22da` - 2DA ↔ CSV (**wired**)
 
 ### Script Tools
-- `decompile` - Decompile NCS to NSS (stub)
-- `disassemble` - Disassemble NCS bytecode to text (via BioWare Scripts.DisassembleNcs)
-- `assemble` - Compile NSS to NCS (via BioWare NCSAuto.CompileNss)
+- `decompile` - Decompile NCS to NSS (**wired** via BioWare)
+- `disassemble` - Disassemble NCS bytecode to text (**wired** via `Scripts.DisassembleNcs`)
+- `assemble` - Compile NSS to NCS (**wired** via `NCSAuto.CompileNss`)
 
 ### Resource Tools
-- `texture-convert` - Convert textures (stub)
-- `sound-convert` - Convert sounds (stub)
-- `model-convert` - Convert models (stub)
+- `texture-convert` - TPC ↔ TGA (**wired**)
+- `sound-convert` - WAV normalization (**wired**)
+- `model-convert` - MDL/MDX conversion (**wired**)
 
 ### Reference search
 
@@ -119,23 +119,26 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
 ```
 
 ### Utilities
-- `diff`, `grep`, `stats`, `validate`, `merge`, `cat` - Utility commands (`cat`/`diff`/`grep`/`merge` wired; `stats`/`validate` partial)
+- `cat`, `diff`, `grep`, `merge` - File/archive utilities (**wired**)
+- `stats` - Per-format file statistics (**partial** — not all resource types analyzed)
+- `validate` - Structural validation (**partial**)
 
 ### Validation
-- `check-txi`, `check-2da` - Validation commands (`check-txi`/`check-2da` wired)
+- `check-txi`, `check-2da` - TXI and 2DA validators (**wired**)
 
 ## Known Issues
 
-1. **System.CommandLine API Usage**: Some commands may still need API cleanup (use `.Options.Add()` instead of deprecated patterns).
-2. **Project Reference**: Path to Andastra.Parsing needs verification for remaining stub commands.
-3. **Implementation**: Core build/archive pipeline commands (`init`, `unpack`, `pack`, `install`, etc.) remain stubs.
+1. **`launch` is a stub** — documents the full pipeline but exits unless `--dry-run` is used.
+2. **`unpack --removeDeleted`** — option is registered; deleting stale sources after unpack is not implemented (`TODO: PLACEHOLDER` in source).
+3. **Test coverage gaps** — reference search and format convert have integration tests; many archive/build commands rely on manual verification.
+4. **System.CommandLine** — prefer `.Options.Add()` / current `Cli.Opt` helpers when touching command definitions.
 
 ## Next Steps
 
-1. Implement core build commands (init, unpack, convert pipeline, compile, pack, install)
-2. Wire remaining format conversion stubs (`gff2xml`, TLK/SSF XML pairs)
-3. Expand automated test coverage for newly wired commands
-4. Integrate with Andastra.Parsing library where BioWare coverage is incomplete
+1. Implement `launch` (or document a supported external launcher workflow).
+2. Finish `unpack --removeDeleted` tracking across unpack runs.
+3. Expand automated tests for archive and build-pipeline commands.
+4. Keep this README inventory in sync when adding or stubbing commands.
 
 ## References
 
