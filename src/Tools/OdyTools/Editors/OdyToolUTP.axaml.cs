@@ -234,7 +234,14 @@ namespace OdyTools.Editors
             HookAppearancePreviewEvent();
             AttachCommitHandlers();
             if (_installation != null) SetupFileContextMenus();
+            AttachReferenceSearchMenus();
             _xamlControlsLoaded = true;
+        }
+
+        private void AttachReferenceSearchMenus()
+        {
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
         }
 
         private void SetupSignals()
@@ -282,8 +289,7 @@ namespace OdyTools.Editors
             basicPanel.Children.Add(_resrefEdit);
             basicPanel.Children.Add(_resrefGenerateBtn);
 
-            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
-            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
+            AttachReferenceSearchMenus();
 
             // Appearance
             var appearanceLabel = new TextBlock { Text = "Appearance:" };
