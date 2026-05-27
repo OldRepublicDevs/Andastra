@@ -382,55 +382,6 @@ namespace KotorCLI.Tests
         }
 
         [Test]
-        public void Execute_ModuleGlob_OnlyScansMatchingModuleCapsule()
-        {
-            string installRoot = CreateInstallWithModuleScriptReferences(
-                matchingModuleName: "tar_m02aa.mod",
-                matchingScript: "k_in_tar_mod",
-                otherModuleName: "oth_m03aa.mod",
-                otherScript: "k_in_oth_mod");
-            try
-            {
-                var logger = new StandardLogger();
-                int matchInTar = FindRefsCommand.Execute(
-                    "k_in_tar_mod",
-                    installRoot,
-                    "script",
-                    overrideOnly: false,
-                    noOverride: true,
-                    noChitin: true,
-                    noModules: false,
-                    caseSensitive: false,
-                    partialMatch: false,
-                    jsonOutput: false,
-                    countOnly: false,
-                    moduleGlobFilters: new[] { "tar_m02*" },
-                    logger);
-                Assert.That(matchInTar, Is.EqualTo(0));
-
-                int missInOth = FindRefsCommand.Execute(
-                    "k_in_oth_mod",
-                    installRoot,
-                    "script",
-                    overrideOnly: false,
-                    noOverride: true,
-                    noChitin: true,
-                    noModules: false,
-                    caseSensitive: false,
-                    partialMatch: false,
-                    jsonOutput: false,
-                    countOnly: false,
-                    moduleGlobFilters: new[] { "tar_m02*" },
-                    logger);
-                Assert.That(missInOth, Is.EqualTo(1));
-            }
-            finally
-            {
-                DeleteDirectorySafe(installRoot);
-            }
-        }
-
-        [Test]
         public void Execute_ModuleGlob_OnlyScansMatchingModule()
         {
             string installRoot = CreateInstallWithModuleScriptReferences(
