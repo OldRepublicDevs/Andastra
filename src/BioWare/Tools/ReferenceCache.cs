@@ -95,6 +95,7 @@ namespace BioWare.Tools
     public class StrRefReferenceCache
     {
         private readonly BioWareGame _game;
+        private readonly int _ncsStrRefCandidateMinimum;
         private readonly Dictionary<int, Dictionary<ResourceIdentifier, List<string>>> _cache = new Dictionary<int, Dictionary<ResourceIdentifier, List<string>>>();
         private readonly Dictionary<string, HashSet<string>> _strref2daColumns;
         private int _totalReferencesFound;
@@ -103,8 +104,14 @@ namespace BioWare.Tools
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:136-159
         // Original: def __init__(self, game: Game):
         public StrRefReferenceCache(BioWareGame game)
+            : this(game, null)
+        {
+        }
+
+        public StrRefReferenceCache(BioWareGame game, int? ncsStrRefCandidateMinimum)
         {
             _game = game;
+            _ncsStrRefCandidateMinimum = ncsStrRefCandidateMinimum ?? NcsConstiScanner.StrRefCandidateMinimum;
 
             // Get game-specific 2DA column definitions
             if (_game == BioWareGame.K1)
@@ -228,7 +235,7 @@ namespace BioWare.Tools
         {
             foreach (NcsConstiScanner.ConstiInstruction instruction in NcsConstiScanner.ExtractConstiInstructions(data))
             {
-                if (instruction.Value < 0 || !NcsConstiScanner.IsPlausibleStrRefCandidate(instruction.Value))
+                if (instruction.Value < 0 || !NcsConstiScanner.IsPlausibleStrRefCandidate(instruction.Value, _ncsStrRefCandidateMinimum))
                 {
                     continue;
                 }
@@ -766,18 +773,19 @@ namespace BioWare.Tools
             Installation installation,
             List<int> strrefs,
             StrRefReferenceCache cache = null,
-            Action<string> logger = null)
+            Action<string> logger = null,
+            ReferenceSearchOptions options = null)
         {
             if (strrefs == null || strrefs.Count == 0)
             {
-                return (new Dictionary<int, List<StrRefSearchResult>>(), cache ?? new StrRefReferenceCache(installation.Game));
+                return (new Dictionary<int, List<StrRefSearchResult>>(), cache ?? new StrRefReferenceCache(installation.Game, options?.NcsStrRefCandidateMinimum));
             }
 
             // Build cache if not provided
             if (cache == null)
             {
                 logger?.Invoke($"Building StrRef cache for {strrefs.Count} StrRefs for Installation {installation.Path}...");
-                cache = new StrRefReferenceCache(installation.Game);
+                cache = new StrRefReferenceCache(installation.Game, options?.NcsStrRefCandidateMinimum);
 
                 // Scan all resources to build the cache
                 int resourceCount = 0;
