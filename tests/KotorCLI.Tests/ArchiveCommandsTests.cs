@@ -430,6 +430,214 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void ExecuteListArchive_ErfVerboseMode_ListsResources()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-erf-verbose-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string erfPath = CreateSampleErf(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = ListArchiveCommand.Execute(erfPath, true, null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteListArchive_ErfFilterNoMatch_ExitsNonZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-erf-filter-empty-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string erfPath = CreateSampleErf(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = ListArchiveCommand.Execute(erfPath, false, "does_not_exist_*", logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_ErfNoMatch_ExitsNonZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-erf-empty-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string erfPath = CreateSampleErf(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(erfPath, "missing_*", false, false, logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_ErfCaseSensitiveName_RejectsCaseMismatch()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-erf-case-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string erfPath = CreateSampleErf(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(erfPath, "Sample_*", true, false, logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_ErfCaseSensitiveName_MatchesExactCase()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-erf-case-name-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string erfPath = CreateSampleErf(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(erfPath, "sample_*", true, false, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_ErfCaseSensitiveContent_RejectsCaseMismatch()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-erf-case-content-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string erfPath = CreateSampleErf(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(erfPath, "Archive-Test", true, true, logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_ErfCaseSensitiveContent_MatchesExactCase()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-erf-case-content-match-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string erfPath = CreateSampleErf(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(erfPath, "archive-test", true, true, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_ErfContentModeDisabled_SkipsPayloadWhenNameDoesNotMatch()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-erf-nocontent-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string erfPath = CreateSampleErf(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(erfPath, "archive-test", false, false, logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void ExecuteListArchive_ModVerboseMode_ListsResources()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-mod-verbose-" + Guid.NewGuid().ToString("N"));
