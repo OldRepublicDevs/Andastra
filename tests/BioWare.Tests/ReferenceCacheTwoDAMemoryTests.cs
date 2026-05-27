@@ -52,6 +52,40 @@ namespace BioWare.Tests
         }
 
         [Test]
+        public void TwoDAMemoryReferenceCache_ToDictFromDict_RoundTripsUtcReference()
+        {
+            const int targetRow = 19;
+            var utc = new UTC();
+            utc.AppearanceId = targetRow;
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "twoda-dict-" + Guid.NewGuid().ToString("N") + ".utc");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_npc", ResourceType.UTC, bytes.Length, 0, filepath);
+                var original = new TwoDAMemoryReferenceCache(BioWareGame.K1);
+                original.ScanResource(resource, bytes);
+
+                TwoDAMemoryReferenceCache restored = TwoDAMemoryReferenceCache.FromDict(
+                    BioWareGame.K1,
+                    original.ToDict());
+
+                Assert.That(restored.HasReferences("appearance.2da", targetRow), Is.True);
+                Assert.That(restored.Game, Is.EqualTo(BioWareGame.K1));
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
         public void Find2DAMemoryReferences_OverrideUtc_FindsAppearanceField()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "twoda-find-" + Guid.NewGuid().ToString("N"));
