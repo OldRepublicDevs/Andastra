@@ -4,6 +4,7 @@ using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.GFF.Generics.UTC;
 using KotorCLI.Commands;
 using KotorCLI.Logging;
 using NUnit.Framework;
@@ -50,6 +51,62 @@ name = ""testpack""
 name = ""default""
 file = ""test.mod""
 ";
+
+        private const string UnpackRemoveDeletedConfig = @"[package]
+name = ""testpack""
+
+  [package.sources]
+  include = ""src/**/*.json""
+
+  [package.rules]
+  ""*.utc"" = ""src/blueprints/creatures""
+
+[target]
+name = ""default""
+file = ""test.mod""
+";
+
+        [Test]
+        public void Pack_Unpack_RemoveDeleted_RemovesStaleJsonNotInArchive()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-pack-unpack-rm-" + Guid.NewGuid().ToString("N"));
+            string originalDirectory = Directory.GetCurrentDirectory();
+            const string resref = "rm_creature";
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), UnpackRemoveDeletedConfig);
+
+                string creaturesDir = Path.Combine(projectDir, "src", "blueprints", "creatures");
+                Directory.CreateDirectory(creaturesDir);
+                string jsonPath = Path.Combine(creaturesDir, resref + ".utc.json");
+                GFF gff = UTCHelpers.DismantleUtc(new UTC(), BioWareGame.K1);
+                GFFAuto.WriteGff(gff, jsonPath, ResourceType.GFF_JSON);
+
+                Directory.SetCurrentDirectory(projectDir);
+                var logger = new StandardLogger();
+
+                int packExit = PackCommand.Execute(new[] { "default" }, false, false, false, logger);
+                Assert.That(packExit, Is.EqualTo(0));
+
+                string modPath = Path.Combine(projectDir, "test.mod");
+                Assert.That(File.Exists(modPath), Is.True);
+
+                string stalePath = Path.Combine(creaturesDir, "stale.utc.json");
+                File.WriteAllText(stalePath, "{}");
+
+                int unpackExit = UnpackCommand.Execute("default", modPath, true, logger);
+                Assert.That(unpackExit, Is.EqualTo(0));
+                Assert.That(File.Exists(stalePath), Is.False);
+                Assert.That(File.Exists(jsonPath), Is.True);
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(originalDirectory);
+                DeleteDirectorySafe(projectDir);
+            }
+        }
 
         [Test]
         public void Mixed_Pack_Install_Pipeline_ProducesModWithUtcAndNcs()
