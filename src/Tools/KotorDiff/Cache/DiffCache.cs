@@ -25,6 +25,9 @@ namespace KotorDiff.Cache
         [CanBeNull] public string StrrefCacheGame { get; set; } // Game type (K1/K2) for StrRef cache
         [CanBeNull] public Dictionary<string, object> StrrefCacheData { get; set; } // Serialized StrRef cache
 
+        [CanBeNull] public string TwodaCacheGame { get; set; }
+        [CanBeNull] public Dictionary<string, object> TwodaCacheData { get; set; }
+
         public DiffCache()
         {
             Files = new List<CachedFileComparison>();
@@ -65,6 +68,14 @@ namespace KotorDiff.Cache
             {
                 result["strref_cache_data"] = StrrefCacheData;
             }
+            if (TwodaCacheGame != null)
+            {
+                result["twoda_cache_game"] = TwodaCacheGame;
+            }
+            if (TwodaCacheData != null)
+            {
+                result["twoda_cache_data"] = TwodaCacheData;
+            }
 
             return result;
         }
@@ -103,7 +114,9 @@ namespace KotorDiff.Cache
                 Timestamp = data.ContainsKey("timestamp") ? data["timestamp"]?.ToString() : "",
                 Files = files,
                 StrrefCacheGame = ReadString(data, "strref_cache_game", "strrefCacheGame"),
-                StrrefCacheData = ReadStrrefCacheData(data)
+                StrrefCacheData = ReadNestedCacheData(data, "strref_cache_data", "strrefCacheData"),
+                TwodaCacheGame = ReadString(data, "twoda_cache_game", "twodaCacheGame"),
+                TwodaCacheData = ReadNestedCacheData(data, "twoda_cache_data", "twodaCacheData")
             };
         }
 
@@ -120,16 +133,19 @@ namespace KotorDiff.Cache
             return null;
         }
 
-        private static Dictionary<string, object> ReadStrrefCacheData(Dictionary<string, object> data)
+        private static Dictionary<string, object> ReadNestedCacheData(
+            Dictionary<string, object> data,
+            string snakeKey,
+            string camelKey)
         {
             object raw = null;
-            if (data.ContainsKey("strref_cache_data"))
+            if (data.ContainsKey(snakeKey))
             {
-                raw = data["strref_cache_data"];
+                raw = data[snakeKey];
             }
-            else if (data.ContainsKey("strrefCacheData"))
+            else if (data.ContainsKey(camelKey))
             {
-                raw = data["strrefCacheData"];
+                raw = data[camelKey];
             }
 
             if (raw == null)
