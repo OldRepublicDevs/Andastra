@@ -9,6 +9,12 @@ namespace BioWare.Tools
     /// </summary>
     public static class NcsConstiScanner
     {
+        /// <summary>
+        /// CONSTI values below this are usually 2DA row indices, enums, or loop counters — not TLK StrRefs.
+        /// Cache scans use this threshold; explicit StrRef queries still match any CONSTI via slow path.
+        /// </summary>
+        public const int StrRefCandidateMinimum = 100;
+
         public struct ConstiInstruction
         {
             public int ValueByteOffset;
@@ -89,6 +95,11 @@ namespace BioWare.Tools
             }
 
             return offsets;
+        }
+
+        public static bool IsPlausibleStrRefCandidate(int value)
+        {
+            return value >= StrRefCandidateMinimum;
         }
 
         private static void SkipInstructionPayload(RawBinaryReader reader, byte opcode, byte qualifier)
