@@ -24,6 +24,98 @@ name = ""default""
 file = ""test.mod""
 ";
 
+        private const string ScriptPipelineConfig = @"[package]
+name = ""testpack""
+
+  [package.sources]
+  include = ""src/**/*.nss""
+
+[target]
+name = ""default""
+file = ""test.mod""
+";
+
+        private const string MinimalNssSource = @"void main()
+{
+}
+";
+
+        [Test]
+        public void Compile_Pack_ProducesModWithCompiledScript()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-compile-pack-" + Guid.NewGuid().ToString("N"));
+            string originalDirectory = Directory.GetCurrentDirectory();
+            const string scriptResref = "mod_main";
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), ScriptPipelineConfig);
+
+                string scriptDir = Path.Combine(projectDir, "src", "scripts");
+                Directory.CreateDirectory(scriptDir);
+                File.WriteAllText(Path.Combine(scriptDir, scriptResref + ".nss"), MinimalNssSource);
+
+                Directory.SetCurrentDirectory(projectDir);
+                var logger = new StandardLogger();
+
+                int compileExit = CompileCommand.Execute(new[] { "default" }, false, null, null, logger);
+                Assert.That(compileExit, Is.EqualTo(0));
+
+                string cacheNcs = Path.Combine(projectDir, ".kotorcli", "cache", "default", scriptResref + ".ncs");
+                Assert.That(File.Exists(cacheNcs), Is.True, "Compile should write NCS into cache");
+
+                int packExit = PackCommand.Execute(new[] { "default" }, false, true, true, logger);
+                Assert.That(packExit, Is.EqualTo(0));
+
+                string modPath = Path.Combine(projectDir, "test.mod");
+                Assert.That(File.Exists(modPath), Is.True);
+
+                ERF mod = ERFAuto.ReadErf(modPath, ResourceType.MOD);
+                Assert.That(mod.Get(scriptResref, ResourceType.NCS), Is.Not.Null);
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(originalDirectory);
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
+        [Test]
+        public void Pack_WithInlineCompile_ProducesModFromNssSource()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-pack-compile-" + Guid.NewGuid().ToString("N"));
+            string originalDirectory = Directory.GetCurrentDirectory();
+            const string scriptResref = "pk_main";
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), ScriptPipelineConfig);
+
+                string scriptDir = Path.Combine(projectDir, "src", "scripts");
+                Directory.CreateDirectory(scriptDir);
+                File.WriteAllText(Path.Combine(scriptDir, scriptResref + ".nss"), MinimalNssSource);
+
+                Directory.SetCurrentDirectory(projectDir);
+                var logger = new StandardLogger();
+
+                int packExit = PackCommand.Execute(new[] { "default" }, false, true, false, logger);
+                Assert.That(packExit, Is.EqualTo(0));
+
+                string modPath = Path.Combine(projectDir, "test.mod");
+                Assert.That(File.Exists(modPath), Is.True);
+
+                ERF mod = ERFAuto.ReadErf(modPath, ResourceType.MOD);
+                Assert.That(mod.Get(scriptResref, ResourceType.NCS), Is.Not.Null);
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(originalDirectory);
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
         [Test]
         public void Convert_Pack_Install_Pipeline_ProducesInstalledMod()
         {
