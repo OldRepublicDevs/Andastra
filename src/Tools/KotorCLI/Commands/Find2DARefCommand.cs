@@ -48,6 +48,9 @@ namespace KotorCLI.Commands
             var countOnlyOption = Cli.Opt<bool>("--count-only", "Print only the number of matches");
             find2DaRefCommand.Options.Add(countOnlyOption);
 
+            var moduleGlobOption = Cli.Opt<string[]>("--module-glob", "Module filename glob (repeatable; e.g. tar_m02*)");
+            find2DaRefCommand.Options.Add(moduleGlobOption);
+
             find2DaRefCommand.SetAction(parseResult =>
             {
                 var twoda = parseResult.GetValue(twodaArgument);
@@ -59,6 +62,7 @@ namespace KotorCLI.Commands
                 var noModules = parseResult.GetValue(noModulesOption);
                 var json = parseResult.GetValue(jsonOption);
                 var countOnly = parseResult.GetValue(countOnlyOption);
+                var moduleGlob = parseResult.GetValue(moduleGlobOption);
 
                 var logger = new StandardLogger();
                 var exitCode = Execute(
@@ -71,6 +75,7 @@ namespace KotorCLI.Commands
                     noModules,
                     json,
                     countOnly,
+                    moduleGlob,
                     logger);
                 Environment.Exit(exitCode);
             });
@@ -88,7 +93,7 @@ namespace KotorCLI.Commands
             bool noChitin = false,
             bool noModules = false)
         {
-            return Execute(twodaFilename, rowIndex, installDir, overrideOnly, noOverride, noChitin, noModules, false, false, logger);
+            return Execute(twodaFilename, rowIndex, installDir, overrideOnly, noOverride, noChitin, noModules, false, false, null, logger);
         }
 
         public static int Execute(
@@ -101,7 +106,7 @@ namespace KotorCLI.Commands
             bool noModules,
             ILogger logger)
         {
-            return Execute(twodaFilename, rowIndex, installDir, overrideOnly, noOverride, noChitin, noModules, false, false, logger);
+            return Execute(twodaFilename, rowIndex, installDir, overrideOnly, noOverride, noChitin, noModules, false, false, null, logger);
         }
 
         public static int Execute(
@@ -114,6 +119,22 @@ namespace KotorCLI.Commands
             bool noModules,
             bool jsonOutput,
             bool countOnly,
+            ILogger logger)
+        {
+            return Execute(twodaFilename, rowIndex, installDir, overrideOnly, noOverride, noChitin, noModules, jsonOutput, countOnly, null, logger);
+        }
+
+        public static int Execute(
+            string twodaFilename,
+            int rowIndex,
+            string installDir,
+            bool overrideOnly,
+            bool noOverride,
+            bool noChitin,
+            bool noModules,
+            bool jsonOutput,
+            bool countOnly,
+            string[] moduleGlobFilters,
             ILogger logger)
         {
             if (string.IsNullOrWhiteSpace(twodaFilename))
@@ -158,7 +179,8 @@ namespace KotorCLI.Commands
                 noChitin,
                 noModules,
                 caseSensitive: false,
-                partialMatch: false);
+                partialMatch: false,
+                moduleGlobFilters);
 
             List<ReferenceSearchResult> results = ReferenceCacheHelpers.Find2DAMemoryReferences(
                 installation,
