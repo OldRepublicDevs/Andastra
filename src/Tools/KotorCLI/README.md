@@ -94,7 +94,7 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
   find-2da-ref appearance 17 --install-dir /path/to/kotor --override-only
 ```
 
-Flags: `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--module-glob`, `--json`, `--count-only`.
+Flags: `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--module-glob`, `--cache-file <path>`, `--rebuild-cache`, `--json`, `--count-only`.
 
 The `twoda` argument accepts a resname or filename (`appearance` or `appearance.2da`).
 
