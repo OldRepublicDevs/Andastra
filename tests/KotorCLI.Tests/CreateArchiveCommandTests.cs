@@ -217,6 +217,30 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void Execute_CreateRimFromEmptyDirectory_ProducesEmptyArchive()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-create-empty-dir-" + Guid.NewGuid().ToString("N"));
+            string inputDir = Path.Combine(tempDir, "in");
+            string rimPath = Path.Combine(tempDir, "packed.rim");
+            Directory.CreateDirectory(inputDir);
+
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = CreateArchiveCommand.Execute(inputDir, rimPath, "rim", null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(File.Exists(rimPath), Is.True);
+
+                var capsule = new LazyCapsule(rimPath);
+                Assert.That(capsule.GetResources().Count, Is.EqualTo(0));
+            }
+            finally
+            {
+                DeleteDirectorySafe(tempDir);
+            }
+        }
+
+        [Test]
         public void Execute_CreateRimWithFilterNoMatch_ProducesEmptyArchive()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-create-filter-empty-" + Guid.NewGuid().ToString("N"));
