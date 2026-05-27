@@ -1,8 +1,12 @@
-using System.Collections.Generic;
+using System;
+using System.IO;
 using BioWare.Common;
 using BioWare.Resource;
+using BioWare.Resource.Formats.BIF;
+using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.KEY;
 using KotorCLI.Commands;
+using KotorCLI.Logging;
 using NUnit.Framework;
 
 namespace KotorCLI.Tests
@@ -11,38 +15,38 @@ namespace KotorCLI.Tests
     public class ExtractCommandTests
     {
         [Test]
-        public void ResolveBifIndex_MatchesFilenameCaseInsensitive()
+        public void ExecuteExtractBif_WritesExtractedResourceFiles()
         {
-            var key = new KEY();
-            key.BifEntries.Add(new BifEntry { Filename = "data/models.bif" });
-            key.BifEntries.Add(new BifEntry { Filename = "data/textures_01.bif" });
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-extract-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
 
-            int? index = ExtractCommand.ResolveBifIndex(key, "/game/data/models.bif");
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "sample.bif");
+                string outputDir = Path.Combine(tempDir, "out");
 
-            Assert.That(index, Is.EqualTo(0));
+                byte[] utcBytes = GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.UTC);
+                var bif = new BIF();
+                bif.SetData(new ResRef("creature_a"), ResourceType.UTC, utcBytes);
+                File.WriteAllBytes(bifPath, new BIFBinaryWriter(bif).Write());
+
+                var logger = new StandardLogger();
+                int exitCode = ExtractCommand.Execute(bifPath, outputDir, null, null, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(Directory.GetFiles(outputDir).Length, Is.GreaterThan(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
         }
 
-        [Test]
-        public void BuildBifResourceLookup_FiltersByBifIndex()
-        {
-            var key = new KEY();
-            key.KeyEntries.Add(new KeyEntry
-            {
-                ResRef = new ResRef("npc001"),
-                ResType = ResourceType.UTC,
-                ResourceId = (uint)((1 << 20) | 3)
-            });
-            key.KeyEntries.Add(new KeyEntry
-            {
-                ResRef = new ResRef("npc002"),
-                ResType = ResourceType.UTC,
-                ResourceId = (uint)((0 << 20) | 3)
-            });
-
-            Dictionary<int, KeyEntry> lookup = ExtractCommand.BuildBifResourceLookup(key, 0);
-
-            Assert.That(lookup.Count, Is.EqualTo(1));
-            Assert.That(lookup[3].ResRef.ToString(), Is.EqualTo("npc002"));
-        }
     }
 }
