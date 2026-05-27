@@ -173,45 +173,41 @@ namespace KotorCLI.Commands
                         // Find all NSS files matching patterns
                         foreach (var pattern in includePatterns)
                         {
-                            var expandedPattern = config.ResolveTargetValue(target, "sources", pattern);
-                            if (expandedPattern is string patternStr)
+                            var matches = GlobPatternMatcher.FindFilesMatchingPattern(rootDir, pattern);
+                            foreach (var match in matches)
                             {
-                                var matches = GlobPatternMatcher.FindFilesMatchingPattern(rootDir, patternStr);
-                                foreach (var match in matches)
+                                var matchPath = new FileInfo(match);
+                                if (matchPath.Extension.Equals(".nss", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    var matchPath = new FileInfo(match);
-                                    if (matchPath.Extension.Equals(".nss", StringComparison.OrdinalIgnoreCase))
+                                    // Check against exclude patterns
+                                    bool excluded = false;
+                                    foreach (var excludePattern in excludePatterns)
                                     {
-                                        // Check against exclude patterns
-                                        bool excluded = false;
-                                        foreach (var excludePattern in excludePatterns)
+                                        var excludePath = Path.Combine(rootDir, excludePattern);
+                                        if (MatchPattern(match, excludePath))
                                         {
-                                            var expandedExclude = config.ResolveTargetValue(target, "sources", excludePattern);
-                                            if (expandedExclude is string excludeStr && MatchPattern(match, Path.Combine(rootDir, excludeStr)))
+                                            excluded = true;
+                                            break;
+                                        }
+                                    }
+
+                                    // Check against skipCompile patterns
+                                    if (!excluded)
+                                    {
+                                        foreach (var skipPattern in skipCompilePatterns)
+                                        {
+                                            if (MatchPattern(matchPath.Name, skipPattern))
                                             {
                                                 excluded = true;
+                                                logger.Debug($"Skipping compilation: {matchPath.Name}");
                                                 break;
                                             }
                                         }
+                                    }
 
-                                        // Check against skipCompile patterns
-                                        if (!excluded)
-                                        {
-                                            foreach (var skipPattern in skipCompilePatterns)
-                                            {
-                                                if (MatchPattern(matchPath.Name, skipPattern))
-                                                {
-                                                    excluded = true;
-                                                    logger.Debug($"Skipping compilation: {matchPath.Name}");
-                                                    break;
-                                                }
-                                            }
-                                        }
-
-                                        if (!excluded)
-                                        {
-                                            nssFiles.Add(match);
-                                        }
+                                    if (!excluded)
+                                    {
+                                        nssFiles.Add(match);
                                     }
                                 }
                             }
