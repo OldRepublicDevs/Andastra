@@ -42,7 +42,7 @@ namespace KotorCLI.Commands
 
         // Matching PyKotor implementation at Tools/KotorCLI/src/kotorcli/commands/key_pack.py:14-51
         // Original: def cmd_key_pack(args: Namespace, logger: Logger) -> int:
-        private static int Execute(string directory, string output, string bifDir, string filter, ILogger logger)
+        public static int Execute(string directory, string output, string bifDir, string filter, ILogger logger)
         {
             // Matching PyKotor: input_dir = pathlib.Path(args.directory)
             // Matching PyKotor: bif_dir = pathlib.Path(args.bif_dir) if hasattr(args, "bif_dir") and args.bif_dir else input_dir
