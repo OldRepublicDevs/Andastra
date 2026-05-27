@@ -38,6 +38,9 @@ namespace KotorCLI.Commands
             var noModulesOption = Cli.Opt<bool>("--no-modules", "Skip module capsules");
             findStrRefCommand.Options.Add(noModulesOption);
 
+            var noNcsOption = Cli.Opt<bool>("--no-ncs", "Skip NCS bytecode (CONSTI) scanning");
+            findStrRefCommand.Options.Add(noNcsOption);
+
             findStrRefCommand.SetAction(parseResult =>
             {
                 var strref = parseResult.GetValue(strrefArgument);
@@ -46,6 +49,7 @@ namespace KotorCLI.Commands
                 var noOverride = parseResult.GetValue(noOverrideOption);
                 var noChitin = parseResult.GetValue(noChitinOption);
                 var noModules = parseResult.GetValue(noModulesOption);
+                var noNcs = parseResult.GetValue(noNcsOption);
 
                 var logger = new StandardLogger();
                 var exitCode = Execute(
@@ -55,6 +59,7 @@ namespace KotorCLI.Commands
                     noOverride,
                     noChitin,
                     noModules,
+                    noNcs,
                     logger);
                 Environment.Exit(exitCode);
             });
@@ -62,16 +67,9 @@ namespace KotorCLI.Commands
             rootCommand.Add(findStrRefCommand);
         }
 
-        public static int Execute(
-            int strref,
-            string installDir,
-            ILogger logger,
-            bool overrideOnly = false,
-            bool noOverride = false,
-            bool noChitin = false,
-            bool noModules = false)
+        public static int Execute(int strref, string installDir, ILogger logger)
         {
-            return Execute(strref, installDir, overrideOnly, noOverride, noChitin, noModules, logger);
+            return Execute(strref, installDir, false, false, false, false, false, logger);
         }
 
         public static int Execute(
@@ -81,6 +79,19 @@ namespace KotorCLI.Commands
             bool noOverride,
             bool noChitin,
             bool noModules,
+            ILogger logger)
+        {
+            return Execute(strref, installDir, overrideOnly, noOverride, noChitin, noModules, false, logger);
+        }
+
+        public static int Execute(
+            int strref,
+            string installDir,
+            bool overrideOnly,
+            bool noOverride,
+            bool noChitin,
+            bool noModules,
+            bool noNcs,
             ILogger logger)
         {
             if (strref < 0)
@@ -120,6 +131,7 @@ namespace KotorCLI.Commands
                 noModules,
                 caseSensitive: false,
                 partialMatch: false);
+            options.IncludeNcsStrRefScan = !noNcs;
 
             List<StrRefSearchResult> strrefResults = ReferenceCacheHelpers.FindStrRefReferences(
                 installation,
