@@ -159,6 +159,35 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void ExecuteListArchive_BifWithSiblingKey_VerboseMode_ListsNamedResource()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-bif-verbose-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "sample.bif");
+                string keyPath = Path.Combine(tempDir, "sample.key");
+                WriteSampleBifKeyPair(bifPath, keyPath, "from_key", 0);
+
+                var logger = new StandardLogger();
+                int exitCode = ListArchiveCommand.Execute(bifPath, true, "from_key*", logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void ExecuteListArchive_KeyFile_ListsNamedEntry()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-key-" + Guid.NewGuid().ToString("N"));
@@ -1230,6 +1259,64 @@ namespace KotorCLI.Tests
                 var logger = new StandardLogger();
                 int exitCode = SearchArchiveCommand.Execute(bifPath, "missing_*", false, false, logger);
                 Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_BifWithSiblingKey_CaseSensitiveName_RejectsCaseMismatch()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-bif-case-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "sample.bif");
+                string keyPath = Path.Combine(tempDir, "sample.key");
+                WriteSampleBifKeyPair(bifPath, keyPath, "from_key", 0);
+
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(bifPath, "From_key*", true, false, logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteSearchArchive_BifWithSiblingKey_CaseSensitiveName_MatchesExactCase()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-search-bif-case-match-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = Path.Combine(tempDir, "sample.bif");
+                string keyPath = Path.Combine(tempDir, "sample.key");
+                WriteSampleBifKeyPair(bifPath, keyPath, "from_key", 0);
+
+                var logger = new StandardLogger();
+                int exitCode = SearchArchiveCommand.Execute(bifPath, "from_key*", true, false, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
             }
             finally
             {
