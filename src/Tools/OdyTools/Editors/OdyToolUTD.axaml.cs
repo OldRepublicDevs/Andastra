@@ -246,6 +246,7 @@ namespace OdyTools.Editors
                 // XAML loaded, set up signals and commit handlers
                 SetupSignals();
                 AttachCommitHandlers();
+                AttachReferenceSearchMenus();
             }
 
             // Try to find preview renderer and model info from XAML (safe: no name scope required)
@@ -308,8 +309,7 @@ namespace OdyTools.Editors
             basicPanel.Children.Add(_resrefEdit);
             basicPanel.Children.Add(_resrefGenerateBtn);
 
-            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
-            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
+            AttachReferenceSearchMenus();
 
             // Appearance
             var appearanceLabel = new TextBlock { Text = "Appearance:" };
@@ -532,6 +532,12 @@ namespace OdyTools.Editors
             {
                 SetupConversationComboBoxContextMenu(_conversationEdit);
             }
+        }
+
+        private void AttachReferenceSearchMenus()
+        {
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
         }
 
         private void SetupScriptComboBoxContextMenu(ComboBox comboBox, string scriptTypeName)
