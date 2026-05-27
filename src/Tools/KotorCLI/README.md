@@ -129,7 +129,7 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
 ## Known Issues
 
 1. **`launch` is a stub** — documents the full pipeline but exits unless `--dry-run` is used.
-2. **Remaining test gaps** — build-pipeline commands (`init`, `config`, `convert`, `compile`, `pack`, `install`, `unpack`, `list`) and format convert have automated coverage; archive list/search helpers and `list-archive` verbose/error paths are tested. **161** tests in `KotorCLI.Tests` on net9.0. `launch` remains stub-only.
+2. **Remaining test gaps** — build-pipeline commands (`init`, `config`, `convert`, `compile`, `pack`, `install`, `unpack`, `list`) and format convert have automated coverage; archive list/search helpers and `list-archive`/`search-archive` error paths are tested. **163** tests in `KotorCLI.Tests` on net9.0. `launch` remains stub-only.
 3. **System.CommandLine** — prefer `.Options.Add()` / current `Cli.Opt` helpers when touching command definitions.
 
 ## Next Steps
