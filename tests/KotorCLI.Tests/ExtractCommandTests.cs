@@ -200,21 +200,6 @@ namespace KotorCLI.Tests
             }
         }
 
-        private static void WriteSampleBifKeyPairWithTwoResources(string bifPath, string keyPath)
-        {
-            byte[] utcBytes = GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.UTC);
-            var bif = new BIF();
-            bif.SetData(ResRef.FromBlank(), ResourceType.UTC, utcBytes, 0);
-            bif.SetData(ResRef.FromBlank(), ResourceType.UTC, utcBytes, 1);
-            File.WriteAllBytes(bifPath, new BIFBinaryWriter(bif).Write());
-
-            var key = new KEY();
-            key.AddBif("sample.bif", (int)new FileInfo(bifPath).Length);
-            key.AddKeyEntry("creature_a", ResourceType.UTC, 0, 0);
-            key.AddKeyEntry("creature_b", ResourceType.UTC, 0, 1);
-            File.WriteAllBytes(keyPath, KEYAuto.BytesKey(key));
-        }
-
         private static string CreateSampleRimWithTwoResources(string tempDir)
         {
             string rimPath = Path.Combine(tempDir, "sample.rim");
