@@ -96,6 +96,40 @@ namespace BioWare.Tests
         }
 
         [Test]
+        public void StrRefReferenceCache_CustomMinimum_IndexesSmallConstiWhenMinZero()
+        {
+            const int smallLiteral = 50;
+            NCS ncs = NCSAuto.CompileNss("void main() { int n = " + smallLiteral + "; }", BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1, 0);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(smallLiteral), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void IsPlausibleStrRefCandidate_CustomMinimum_RespectsThreshold()
+        {
+            Assert.That(NcsConstiScanner.IsPlausibleStrRefCandidate(50, 100), Is.False);
+            Assert.That(NcsConstiScanner.IsPlausibleStrRefCandidate(50, 0), Is.True);
+        }
+
+        [Test]
         public void StrRefReferenceCache_SmallConsti_IsNotIndexed()
         {
             const int smallLiteral = 5;
