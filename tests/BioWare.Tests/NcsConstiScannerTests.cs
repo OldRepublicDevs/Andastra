@@ -94,5 +94,78 @@ namespace BioWare.Tests
                 }
             }
         }
+
+        [Test]
+        public void StrRefReferenceCache_SmallConsti_IsNotIndexed()
+        {
+            const int smallLiteral = 5;
+            NCS ncs = NCSAuto.CompileNss("void main() { int n = " + smallLiteral + "; }", BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(smallLiteral), Is.False);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void FindStrRefReferences_SmallConstiSlowPath_StillFindsLiteral()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ncs-find-small-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+
+            const int smallLiteral = 5;
+            NCS ncs = NCSAuto.CompileNss("void main() { int n = " + smallLiteral + "; }", BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_script.ncs"), bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                List<StrRefSearchResult> results = ReferenceCacheHelpers.FindStrRefReferences(
+                    installation,
+                    smallLiteral,
+                    null,
+                    null);
+
+                Assert.That(results, Is.Not.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void IsPlausibleStrRefCandidate_UsesMinimumThreshold()
+        {
+            Assert.That(NcsConstiScanner.IsPlausibleStrRefCandidate(99), Is.False);
+            Assert.That(NcsConstiScanner.IsPlausibleStrRefCandidate(100), Is.True);
+            Assert.That(NcsConstiScanner.IsPlausibleStrRefCandidate(424242), Is.True);
+        }
     }
 }
