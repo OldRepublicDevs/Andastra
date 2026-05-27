@@ -130,6 +130,7 @@ namespace KotorCLI.Commands
                         {
                             // Determine output file (remove .json extension, restore original extension)
                             var outputFile = jsonFile.Substring(0, jsonFile.Length - 5); // Remove .json
+                            var shouldConvert = true;
 
                             // Check if JSON file is newer than output file
                             if (File.Exists(outputFile))
@@ -139,14 +140,23 @@ namespace KotorCLI.Commands
                                 if (jsonTime <= outputTime)
                                 {
                                     logger.Debug($"Skipping {Path.GetFileName(jsonFile)} (up to date)");
-                                    continue;
+                                    shouldConvert = false;
                                 }
                             }
 
-                            // Read JSON GFF and convert to binary GFF
-                            var gff = GFFAuto.ReadGff(jsonFile, fileFormat: ResourceType.GFF_JSON);
-                            GFFAuto.WriteGff(gff, outputFile, ResourceType.GFF);
-                            convertedCount++;
+                            if (shouldConvert)
+                            {
+                                // Read JSON GFF and convert to binary GFF
+                                var gff = GFFAuto.ReadGff(jsonFile, fileFormat: ResourceType.GFF_JSON);
+                                GFFAuto.WriteGff(gff, outputFile, ResourceType.GFF);
+                                convertedCount++;
+                            }
+
+                            if (File.Exists(outputFile))
+                            {
+                                var cacheOutput = Path.Combine(cacheDir, Path.GetFileName(outputFile));
+                                File.Copy(outputFile, cacheOutput, true);
+                            }
                         }
                         catch (Exception ex)
                         {
