@@ -2816,6 +2816,133 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindTemplateResRefReferences_ChitinOnly_ReturnsFieldPath()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-chitin-tpl-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(installRoot);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.ResRef = new ResRef("p_chitin_tpl");
+            WriteChitinWithUtc(installRoot, utc);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = true,
+                    SearchModules = false,
+                    SearchOverride = false
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindTemplateResRefReferences(
+                    installation,
+                    "p_chitin_tpl",
+                    options);
+
+                Assert.That(results, Is.Not.Empty);
+                Assert.That(results, Has.Some.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath == "TemplateResRef"));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindConversationResRefReferences_ChitinOnly_ReturnsFieldPath()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-chitin-conv-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(installRoot);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.Conversation = new ResRef("chitin_dlg_ref");
+            WriteChitinWithUtc(installRoot, utc);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = true,
+                    SearchModules = false,
+                    SearchOverride = false
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindConversationResRefReferences(
+                    installation,
+                    "chitin_dlg_ref",
+                    options);
+
+                Assert.That(results, Is.Not.Empty);
+                Assert.That(results, Has.Some.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath == "Conversation"));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindScriptReferences_NoChitin_SkipsChitinResource()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-nochitin-script-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(installRoot);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.OnHeartbeat = new ResRef("k_chitin_only");
+            WriteChitinWithUtc(installRoot, utc);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = false
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindScriptReferences(
+                    installation,
+                    "k_chitin_only",
+                    options);
+
+                Assert.That(results, Is.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void FindScriptResRefInNcsBytes_NoMatchReturnsEmpty()
         {
             byte[] data = System.Text.Encoding.ASCII.GetBytes("abc def");
