@@ -26,6 +26,8 @@ Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare 
 
 **NCS override FindAndShow smoke landed (2026-05-28, plan 274 on `feat/holocron-port-phase-b`):** `ReferenceSearchHelper.FindAndShowScriptReferences` override `.ncs` byte-scan path; **174** reference-search tests total (**95** BioWare `ReferenceFinder` + **79** OdyTools helper/UI, including **36** `ReferenceSearchHelperTests`). See plan `274`.
 
+**KotorCLI find-2da-ref `--full-row` parity closed (2026-05-28, plans 107 / 276 on `feat/holocron-port-phase-b`):** BioWare `CollectTwoDARowReferences` shared with OdyTools `TwoDAMemoryReferenceHelper`; KotorCLI `find-2da-ref --full-row` loads 2DA from installation and sweeps label field-value + StrRef columns. **13** `Find2DARefCommandTests` + **2** `ReferenceCacheHelpersTwoDARowReferencesTests`. See plans `107`, `276`.
+
 ## Requirements
 
 - R1. `ReferenceFinder.FindScriptReferences(Installation, string scriptResRef, ReferenceSearchOptions options)` returns `List<ReferenceSearchResult>` with `FileResource` + `FieldPath`.
