@@ -1245,6 +1245,120 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindTemplateResRefReferences_FileTypesUtcOnly_FindsUtcNotUtp()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-tpl-ftutc-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            const string needle = "p_shared_tpl";
+
+            var utc = new UTC();
+            utc.ResRef = new ResRef(needle);
+            GFF utcGff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] utcBytes = GFFAuto.BytesGff(utcGff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), utcBytes);
+
+            var utp = new UTP();
+            utp.ResRef = new ResRef(needle);
+            GFF utpGff = UTPHelpers.DismantleUtp(utp, BioWareGame.K1);
+            byte[] utpBytes = GFFAuto.BytesGff(utpGff, ResourceType.UTP);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_place.utp"), utpBytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true,
+                    FileTypes = new HashSet<ResourceType> { ResourceType.UTC }
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindTemplateResRefReferences(
+                    installation,
+                    needle,
+                    options);
+
+                Assert.That(results, Is.Not.Empty);
+                Assert.That(results, Has.All.Matches<ReferenceSearchResult>(
+                    r => r.Resource.ResType == ResourceType.UTC));
+                Assert.That(results, Has.None.Matches<ReferenceSearchResult>(
+                    r => r.Resource.ResType == ResourceType.UTP));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindConversationResRefReferences_FileTypesUtcOnly_FindsUtcNotUtp()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-conv-ftutc-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            const string needle = "shared_dlg_ref";
+
+            var utc = new UTC();
+            utc.Conversation = new ResRef(needle);
+            GFF utcGff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] utcBytes = GFFAuto.BytesGff(utcGff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), utcBytes);
+
+            var utp = new UTP();
+            utp.Conversation = new ResRef(needle);
+            GFF utpGff = UTPHelpers.DismantleUtp(utp, BioWareGame.K1);
+            byte[] utpBytes = GFFAuto.BytesGff(utpGff, ResourceType.UTP);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_place.utp"), utpBytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true,
+                    FileTypes = new HashSet<ResourceType> { ResourceType.UTC }
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindConversationResRefReferences(
+                    installation,
+                    needle,
+                    options);
+
+                Assert.That(results, Is.Not.Empty);
+                Assert.That(results, Has.All.Matches<ReferenceSearchResult>(
+                    r => r.Resource.ResType == ResourceType.UTC));
+                Assert.That(results, Has.None.Matches<ReferenceSearchResult>(
+                    r => r.Resource.ResType == ResourceType.UTP));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void FindTagReferences_FileTypesUtcOnly_FindsUtcNotUtp()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "ref-tag-ftutc-" + Guid.NewGuid().ToString("N"));
@@ -2197,6 +2311,55 @@ namespace OdyTools.Tests
                     options);
 
                 Assert.That(results, Is.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindFieldValueReferences_NullFieldNames_SearchesAllFields()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-fld-null-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            const string needle = "wildcard_tag_value";
+
+            var utc = new UTC();
+            utc.Tag = needle;
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindFieldValueReferences(
+                    installation,
+                    needle,
+                    null,
+                    options);
+
+                Assert.That(results, Is.Not.Empty);
+                Assert.That(results, Has.Some.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath == "Tag" && r.MatchedValue == needle));
             }
             finally
             {
