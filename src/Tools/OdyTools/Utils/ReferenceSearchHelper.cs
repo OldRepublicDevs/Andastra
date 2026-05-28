@@ -42,6 +42,7 @@ namespace OdyTools.Utils
             tagEdit.TextChanged += UpdateEnabled;
             contextMenu.Opened += UpdateEnabled;
             tagEdit.ContextMenu = contextMenu;
+            UpdateEnabled(null, EventArgs.Empty);
         }
 
         public static void AttachTemplateResRefFindReferencesMenu(
@@ -72,6 +73,7 @@ namespace OdyTools.Utils
             resRefEdit.TextChanged += UpdateEnabled;
             contextMenu.Opened += UpdateEnabled;
             resRefEdit.ContextMenu = contextMenu;
+            UpdateEnabled(null, EventArgs.Empty);
         }
 
         public static ReferenceSearchOptions PromptSearchOptions(Window parent, ReferenceSearchOptions defaults)
