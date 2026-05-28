@@ -1,13 +1,34 @@
 ---
 title: "feat: odytool nss ncs disassembly tab (u5)"
 type: feat
-status: active
+status: complete
 date: 2026-05-24
+completed: 2026-05-28
 origin: docs/plans/2026-05-24-063-feat-pykotor-holocron-port-continuation-plan.md (U5)
 branch: feat/holocron-fac-kotorcli
+closure: docs/plans/2026-05-28-280-docs-close-plan-067-ncs-disassembly-plan.md
 ---
 
 # feat: OdyToolNSS NCS disassembly tab (U5)
+
+## Completion (2026-05-28)
+
+All requirements R1–R5 landed. Closed doc-only via plan **280**.
+
+| Req | Status | Evidence |
+|-----|--------|----------|
+| R1 | **Landed** | `Scripts.DisassembleNcsBytes` in `src/BioWare/Tools/Scripts.cs` |
+| R2 | **Landed** | `OdyToolNSS` tabbed Source + Disassembly UI |
+| R3 | **Landed** | `RefreshDisassembly` on load/compile paths |
+| R4 | **Landed** | Empty input returns empty string (test) |
+| R5 | **Landed** | **3** tests in `ScriptsDisassemblyTests.cs` |
+
+**Verification (2026-05-28):**
+
+```bash
+dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ScriptsDisassembly
+# Passed: 3
+```
 
 ## Summary
 
