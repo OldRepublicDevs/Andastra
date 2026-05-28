@@ -263,6 +263,90 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindAndShowConversationReferences_WhitespaceNeedle_DoesNotThrow()
+        {
+            string installRoot = CreateMinimalInstallRoot();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+                Assert.DoesNotThrow(() =>
+                    ReferenceSearchHelper.FindAndShowConversationReferences(
+                        null,
+                        "   ",
+                        installation,
+                        showOptionsDialog: false));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void FindAndShowTemplateResRefReferences_WhitespaceNeedle_DoesNotThrow()
+        {
+            string installRoot = CreateMinimalInstallRoot();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+                Assert.DoesNotThrow(() =>
+                    ReferenceSearchHelper.FindAndShowTemplateResRefReferences(
+                        null,
+                        "",
+                        installation,
+                        showOptionsDialog: false));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void FindAndShowConversationReferences_OverrideHit_CompletesWithoutException()
+        {
+            string installRoot = CreateInstallWithConversation();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+
+                Assert.DoesNotThrow(() =>
+                    ReferenceSearchHelper.FindAndShowConversationReferences(
+                        null,
+                        "test_dlg_ref",
+                        installation,
+                        showOptionsDialog: false));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void FindAndShowScriptReferences_OverrideHit_CompletesWithoutException()
+        {
+            string installRoot = CreateInstallWithScriptHeartbeat();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+
+                Assert.DoesNotThrow(() =>
+                    ReferenceSearchHelper.FindAndShowScriptReferences(
+                        null,
+                        "k_test_hb",
+                        installation,
+                        showOptionsDialog: false));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
         [AvaloniaTest]
         public void FindAndShowTagReferences_OverrideHit_CompletesWithoutException()
         {
@@ -311,6 +395,40 @@ namespace OdyTools.Tests
 
             var utc = new UTC();
             utc.ResRef = new ResRef("p_unique_tpl");
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
+
+            return installRoot;
+        }
+
+        private static string CreateInstallWithConversation()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "odytools-refhelper-dlg-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+
+            var utc = new UTC();
+            utc.Conversation = new ResRef("test_dlg_ref");
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
+
+            return installRoot;
+        }
+
+        private static string CreateInstallWithScriptHeartbeat()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "odytools-refhelper-script-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+
+            var utc = new UTC();
+            utc.OnHeartbeat = new ResRef("k_test_hb");
             GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
             byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
             File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
