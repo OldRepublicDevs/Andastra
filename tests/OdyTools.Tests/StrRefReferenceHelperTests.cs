@@ -74,6 +74,33 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void CollectStrRefReferences_NoMatch_ReturnsEmpty()
+        {
+            string installRoot = CreateInstallWithStrRef(88888);
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+                var options = new ReferenceSearchOptions
+                {
+                    SearchOverride = true,
+                    SearchChitin = false,
+                    SearchModules = false
+                };
+
+                List<ReferenceSearchResult> results = StrRefReferenceHelper.CollectStrRefReferences(
+                    99999,
+                    installation,
+                    options);
+
+                Assert.That(results, Is.Empty);
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
         public void CollectStrRefReferences_OverrideOnly_FindsSsfHit()
         {
             string installRoot = CreateInstallWithStrRef(88888);
