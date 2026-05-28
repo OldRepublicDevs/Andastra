@@ -142,6 +142,18 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindTagInGffBytes_NoMatchReturnsEmpty()
+        {
+            var utc = new UTC();
+            utc.Tag = "other_tag";
+
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            Assert.That(ReferenceFinder.FindTagInGffBytes(bytes, "missing_tag"), Is.Empty);
+        }
+
+        [Test]
         public void FindTagInGffBytes_PartialMatch_FindsSubstring()
         {
             var utc = new UTC();
@@ -223,6 +235,18 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindTemplateResRefInGffBytes_NoMatchReturnsEmpty()
+        {
+            var utc = new UTC();
+            utc.ResRef = new ResRef("p_other");
+
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            Assert.That(ReferenceFinder.FindTemplateResRefInGffBytes(bytes, "p_missing"), Is.Empty);
+        }
+
+        [Test]
         public void FindConversationResRefInGffBytes_FindsUtcConversationResRef()
         {
             var utc = new UTC();
@@ -252,6 +276,18 @@ namespace OdyTools.Tests
             var sensitive = new ReferenceSearchOptions { CaseSensitive = true };
             Assert.That(ReferenceFinder.FindConversationResRefInGffBytes(bytes, "test_dlg", sensitive), Is.Empty);
             Assert.That(ReferenceFinder.FindConversationResRefInGffBytes(bytes, "Test_Dlg", sensitive), Is.Not.Empty);
+        }
+
+        [Test]
+        public void FindConversationResRefInGffBytes_NoMatchReturnsEmpty()
+        {
+            var utc = new UTC();
+            utc.Conversation = new ResRef("other_dlg");
+
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            Assert.That(ReferenceFinder.FindConversationResRefInGffBytes(bytes, "missing_dlg"), Is.Empty);
         }
 
         [Test]
@@ -1418,6 +1454,100 @@ namespace OdyTools.Tests
                 Assert.That(results, Is.Not.Empty);
                 Assert.That(results, Has.Some.Matches<ReferenceSearchResult>(
                     r => r.FieldPath == "Tag"));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindTemplateResRefReferences_PartialMatch_OverrideUtc()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-tpl-partial-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.ResRef = new ResRef("p_creature_tpl");
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true,
+                    PartialMatch = true
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindTemplateResRefReferences(
+                    installation,
+                    "creature",
+                    options);
+
+                Assert.That(results, Is.Not.Empty);
+                Assert.That(results, Has.Some.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath == "TemplateResRef"));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindConversationResRefReferences_PartialMatch_OverrideUtc()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-conv-partial-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.Conversation = new ResRef("test_dialogue");
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true,
+                    PartialMatch = true
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindConversationResRefReferences(
+                    installation,
+                    "dialogue",
+                    options);
+
+                Assert.That(results, Is.Not.Empty);
+                Assert.That(results, Has.Some.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath == "Conversation"));
             }
             finally
             {
