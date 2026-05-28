@@ -45,8 +45,8 @@ Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare 
 
 - **In:** BioWare installation scan for GFF script ResRefs, FileResultsDialog field paths, UTC script field wiring.
 - **Originally out (now landed):** `ReferenceSearchOptionsDialog` UI, tag/template/conversation/field-value search, chitin/module scope matrix, `ReferenceSearchHelper` / `ScriptReferenceHelper` wiring tests.
-- **Still out:** Full NCS CONST instruction parsing beyond CONSTI StrRef heuristics (script ResRef byte scan lives in `ReferenceFinder.FindScriptResRefInNcsBytes`).
 - **Landed (2026-05-28, plan 286):** NCS StrRef indexing via `StrRefReferenceCache` / `ReferenceCacheHelpers` with `IncludeNcsStrRefScan` gating in cache build and batch lookup.
+- **Landed (2026-05-28, plan 287):** NCS CONSTS script ResRef scan via `NcsConstStringScanner` and CONSTS-first `ReferenceFinder.FindScriptResRefInNcsBytes` with `(NCS bytecode) offset_<n>` paths.
 - **Follow-up (landed in same branch):** UTD/UTP/UTT script combo **Find References** via `ScriptReferenceHelper`.
 
 ## Implementation Units
@@ -93,7 +93,7 @@ Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare 
 - `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ScriptReferenceHelperTests` (**8** tests)
 - `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ReferenceSearchOptionsDialogTests` (**9** tests)
 
-See plans `docs/plans/2026-05-28-224-*` through `docs/plans/2026-05-28-286-*` and plans **276**–**284** for slice history (parent-plan closures **107**, **108**, **066**, **069**, **067**, **064**, **065**, **070**, U4 KotorDiff).
+See plans `docs/plans/2026-05-28-224-*` through `docs/plans/2026-05-28-287-*` and plans **276**–**285** for slice history (parent-plan closures **107**, **108**, **066**, **069**, **067**, **064**, **065**, **070**, U4 KotorDiff).
 
 **KotorCLI find-2da-ref verification:**
 
