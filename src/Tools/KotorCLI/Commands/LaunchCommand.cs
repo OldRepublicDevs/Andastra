@@ -16,7 +16,7 @@ namespace KotorCLI.Commands
             // launch, serve, play, test are all aliases for the same command
             foreach (string alias in new[] { "launch", "serve", "play", "test" })
             {
-                var launchCommand = new Command(alias, "Convert, compile, pack, install, and launch target in-game (fail-fast stub; use --dry-run to resolve paths)");
+                var launchCommand = new Command(alias, "Convert, compile, pack, install, and launch target in-game (--install-only for install; --dry-run for path check; spawn stub otherwise)");
                 var targetsArgument = new Argument<string[]>("targets");
                 targetsArgument.Description = "Target to launch";
                 launchCommand.Add(targetsArgument);
@@ -26,6 +26,8 @@ namespace KotorCLI.Commands
                 launchCommand.Options.Add(installDirOption);
                 var dryRunOption = Cli.Opt<bool>("--dry-run", "Resolve and print the game executable path without launching");
                 launchCommand.Options.Add(dryRunOption);
+                var installOnlyOption = Cli.Opt<bool>("--install-only", "Run install (convert, compile, pack, copy to game) without launching the game");
+                launchCommand.Options.Add(installOnlyOption);
 
                 launchCommand.SetAction(parseResult =>
                 {
@@ -33,9 +35,10 @@ namespace KotorCLI.Commands
                     var gameBin = parseResult.GetValue(gameBinOption);
                     var installDir = parseResult.GetValue(installDirOption);
                     var dryRun = parseResult.GetValue(dryRunOption);
+                    var installOnly = parseResult.GetValue(installOnlyOption);
 
                     var logger = new StandardLogger();
-                    var exitCode = Execute(targets, gameBin, installDir, dryRun, logger);
+                    var exitCode = Execute(targets, gameBin, installDir, dryRun, installOnly, logger);
                     Environment.Exit(exitCode);
                 });
 
@@ -50,6 +53,22 @@ namespace KotorCLI.Commands
 
         public static int Execute(string[] targetNames, string gameBin, string installDir, bool dryRun, ILogger logger)
         {
+            return Execute(targetNames, gameBin, installDir, dryRun, false, logger);
+        }
+
+        public static int Execute(string[] targetNames, string gameBin, string installDir, bool dryRun, bool installOnly, ILogger logger)
+        {
+            if (installOnly)
+            {
+                if (dryRun)
+                {
+                    logger.Info("--install-only takes precedence over --dry-run; running install.");
+                }
+
+                logger.Info("Install-only mode: running install without launching the game.");
+                return InstallCommand.Execute(targetNames ?? Array.Empty<string>(), installDir, false, false, logger);
+            }
+
             string resolvedBinary = ResolveGameBinary(gameBin, installDir, logger);
             if (string.IsNullOrEmpty(resolvedBinary))
             {
