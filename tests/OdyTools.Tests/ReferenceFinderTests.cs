@@ -832,6 +832,132 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindTagReferences_NoModules_SkipsModuleUtc()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-notagmod-" + Guid.NewGuid().ToString("N"));
+            string modulesDir = Path.Combine(installRoot, "modules");
+            Directory.CreateDirectory(modulesDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.Tag = "mod_tag_ref";
+            WriteModuleWithUtc(Path.Combine(modulesDir, "test_mod.mod"), utc);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = false
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindTagReferences(
+                    installation,
+                    "mod_tag_ref",
+                    options);
+
+                Assert.That(results, Is.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindTemplateResRefReferences_NoModules_SkipsModuleUtc()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-notplmod-" + Guid.NewGuid().ToString("N"));
+            string modulesDir = Path.Combine(installRoot, "modules");
+            Directory.CreateDirectory(modulesDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.ResRef = new ResRef("p_mod_tpl");
+            WriteModuleWithUtc(Path.Combine(modulesDir, "test_mod.mod"), utc);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = false
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindTemplateResRefReferences(
+                    installation,
+                    "p_mod_tpl",
+                    options);
+
+                Assert.That(results, Is.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindConversationResRefReferences_NoModules_SkipsModuleUtc()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-noconvmod-" + Guid.NewGuid().ToString("N"));
+            string modulesDir = Path.Combine(installRoot, "modules");
+            Directory.CreateDirectory(modulesDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.Conversation = new ResRef("mod_dlg_ref");
+            WriteModuleWithUtc(Path.Combine(modulesDir, "test_mod.mod"), utc);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = false
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindConversationResRefReferences(
+                    installation,
+                    "mod_dlg_ref",
+                    options);
+
+                Assert.That(results, Is.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void FindTagReferences_PartialMatch_OverrideUtc()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "ref-tag-partial-" + Guid.NewGuid().ToString("N"));
