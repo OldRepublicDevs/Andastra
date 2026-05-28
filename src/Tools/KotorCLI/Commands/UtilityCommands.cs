@@ -1021,7 +1021,9 @@ namespace KotorCLI.Commands
                     {
                         if (fs.Length < 20) return false;
                         var magic = reader.ReadBytes(8);
-                        return magic.SequenceEqual("BIFFV1.0"u8.ToArray());
+                        // Matching BIFBinaryReader: "BIFFV1  " or compressed "BZF V1.0"
+                        return magic.SequenceEqual("BIFFV1  "u8.ToArray()) ||
+                               magic.SequenceEqual("BZF V1.0"u8.ToArray());
                     }
                 }
                 catch
