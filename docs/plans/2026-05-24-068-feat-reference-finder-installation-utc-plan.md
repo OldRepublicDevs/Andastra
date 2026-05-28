@@ -42,6 +42,8 @@ Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare 
 
 **KB e2e verification sync closed (2026-05-28, plan 291):** verification rows for plans **289**–**290** in `docs/knowledgebase/30-product-ux/odytools-editor-ux.md`. See plan `291`.
 
+**CONSTI threshold disambiguation doc sync closed (2026-05-28, plan 292):** KB row + plan **063** deferred update for `StrRefCandidateMinimum` partial landing. See plan `292`.
+
 ## Requirements
 
 - R1. `ReferenceFinder.FindScriptReferences(Installation, string scriptResRef, ReferenceSearchOptions options)` returns `List<ReferenceSearchResult>` with `FileResource` + `FieldPath`.
