@@ -20,7 +20,18 @@ branch: feat/holocron-fac-kotorcli
 | U4 KotorDiff integrate | **Landed** | shared KotorDiffApp host |
 | U5 NCS disassembly tab | **Landed** | plan 067 |
 | U6 Reference finder Phase 1 | **Landed** | plan 068 — installation search, UTC menu, field paths |
+| U6 Reference finder Phase 2 follow-up | **Landed** | plans 224–270 on `feat/holocron-port-phase-b` — tag/template/conversation/field-value search, options dialog, helper wiring tests; **171** reference-search tests (**95** BioWare `ReferenceFinder` + **76** OdyTools helper/UI). Authority: plan 068. |
 | U7 Doc sync | **Landed** | odytools-editor-ux.md updated |
+
+**Reference-search follow-up verification (2026-05-28):**
+
+```bash
+dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter ReferenceFinder
+dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ReferenceSearchHelperTests
+dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ScriptReferenceHelperTests
+dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~StrRefReferenceHelperTests
+dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~TwoDAMemoryReferenceHelperTests
+```
 
 ## Summary
 
@@ -86,7 +97,7 @@ BioWare and OdyTools already cover most PyKotor format parsers and Holocron per-
 ### Deferred to Follow-Up Work
 
 - **Module Designer depth** (`ModuleDesignerWindow` 3D/GIT instance editing): separate plan after GL/renderer strategy.
-- **Full reference finder NCS bytecode scanning** (`ReferenceCache` enablement): Phase 2 after disassembly UI validated.
+- **Full reference finder NCS bytecode scanning** (`ReferenceCache` enablement): still deferred; partial StrRef NCS scan covered in `StrRefReferenceHelper` / `ReferenceSearchOptionsDialog` (plans 261–270). GFF + SSF + helper wiring arc **complete** through plan 271.
 - **KotorCLI utility STUBs** (`grep`, `merge`, `diff`, `texture-convert`, `model-convert`, RIM pack, BIF extract matching): plan 059+.
 - **2DA editor spreadsheet UX completion** (`docs/twoda_editor_ux_and_feature_completion.md`): orthogonal UX slice.
 - **OdyPatch E2E mod install against real K1/TSL** ([plan 058 OdyPatch E2E runbook](2026-05-23-058-odypatch-e2e-runbook-plan.md)): runtime install validation.
