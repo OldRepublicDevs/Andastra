@@ -100,6 +100,35 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void CollectTwoDARowReferences_EmptyInstall_ReturnsEmpty()
+        {
+            string installRoot = CreateEmptyInstallRoot();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+                var options = new ReferenceSearchOptions
+                {
+                    SearchOverride = true,
+                    SearchChitin = false,
+                    SearchModules = false
+                };
+
+                List<ReferenceSearchResult> results = TwoDAMemoryReferenceHelper.CollectTwoDARowReferences(
+                    "appearance",
+                    9,
+                    null,
+                    installation,
+                    options);
+
+                Assert.That(results, Is.Empty);
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
         public void CollectTwoDARowReferences_OverrideOnly_FindsAppearanceMemoryRef()
         {
             string installRoot = CreateInstallWithAppearanceRow(9);
@@ -234,6 +263,16 @@ namespace OdyTools.Tests
             {
                 DeleteDirectorySafe(installRoot);
             }
+        }
+
+        private static string CreateEmptyInstallRoot()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "odytools-2da-empty-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+            return installRoot;
         }
 
         private static string CreateInstallWithAppearanceRow(int rowIndex)
