@@ -1932,5 +1932,27 @@ namespace OdyTools.Tests
             editor.Close();
         }
 
+        [AvaloniaTest]
+        public void OdyTool2DA_GetPrimarySelectedRowIndex_AfterSelect_ReturnsIndex()
+        {
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, CreateTestTwoDABytes(3));
+                SetSelection(editor, 1);
+
+                var method = typeof(OdyTool2DA).GetMethod(
+                    "GetPrimarySelectedRowIndex",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                Assert.That(method, Is.Not.Null);
+                int rowIndex = (int)method.Invoke(editor, null);
+                Assert.That(rowIndex, Is.EqualTo(1));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
     }
 }
