@@ -340,6 +340,69 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void ResolveGameBinary_K2PathEnvWithChitin_ResolvesSwkotor2Exe()
+        {
+            string tempDir = CreateTempLaunchDir();
+            string priorKotorPath = Environment.GetEnvironmentVariable("KOTOR_PATH");
+            string priorK1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            string priorK2Path = Environment.GetEnvironmentVariable("K2_PATH");
+
+            try
+            {
+                File.WriteAllBytes(Path.Combine(tempDir, "chitin.key"), new byte[0]);
+                string fakeExe = Path.Combine(tempDir, "swkotor2.exe");
+                File.WriteAllBytes(fakeExe, new byte[] { 0x4D, 0x5A });
+
+                Environment.SetEnvironmentVariable("KOTOR_PATH", null);
+                Environment.SetEnvironmentVariable("K1_PATH", null);
+                Environment.SetEnvironmentVariable("K2_PATH", tempDir);
+
+                var logger = new StandardLogger();
+                string resolved = LaunchCommand.ResolveGameBinary(null, null, logger);
+
+                Assert.That(resolved, Is.EqualTo(Path.GetFullPath(fakeExe)));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("KOTOR_PATH", priorKotorPath);
+                Environment.SetEnvironmentVariable("K1_PATH", priorK1Path);
+                Environment.SetEnvironmentVariable("K2_PATH", priorK2Path);
+                DeleteDirectorySafe(tempDir);
+            }
+        }
+
+        [Test]
+        public void Execute_DryRun_WithK2PathEnv_ResolvesSwkotor2Exe()
+        {
+            string tempDir = CreateTempLaunchDir();
+            string priorKotorPath = Environment.GetEnvironmentVariable("KOTOR_PATH");
+            string priorK1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            string priorK2Path = Environment.GetEnvironmentVariable("K2_PATH");
+
+            try
+            {
+                File.WriteAllBytes(Path.Combine(tempDir, "chitin.key"), new byte[0]);
+                string fakeExe = Path.Combine(tempDir, "swkotor2.exe");
+                File.WriteAllBytes(fakeExe, new byte[] { 0x4D, 0x5A });
+
+                Environment.SetEnvironmentVariable("KOTOR_PATH", null);
+                Environment.SetEnvironmentVariable("K1_PATH", null);
+                Environment.SetEnvironmentVariable("K2_PATH", tempDir);
+
+                var logger = new StandardLogger();
+                int exitCode = LaunchCommand.Execute(new[] { "test_mod" }, null, null, true, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("KOTOR_PATH", priorKotorPath);
+                Environment.SetEnvironmentVariable("K1_PATH", priorK1Path);
+                Environment.SetEnvironmentVariable("K2_PATH", priorK2Path);
+                DeleteDirectorySafe(tempDir);
+            }
+        }
+
+        [Test]
         public void Execute_WithoutDryRun_StillExitsNonZero()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-launch-" + Guid.NewGuid().ToString("N"));
