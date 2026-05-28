@@ -33,6 +33,25 @@ name = ""default""
 file = ""test.mod""
 ";
 
+        private const string ConvertPipelineConfig = @"[package]
+name = ""testpack""
+
+  [package.sources]
+  include = ""*.json""
+
+[target]
+name = ""default""
+file = ""test.mod""
+";
+
+        private const string CompilePipelineConfig = @"[package]
+name = ""testpack""
+
+[target]
+name = ""default""
+file = ""test.mod""
+";
+
         private static string RepoRoot =>
             Path.GetFullPath(Path.Combine(TestContext.CurrentContext.TestDirectory, "..", "..", "..", "..", ".."));
 
@@ -220,6 +239,136 @@ file = ""test.mod""
             finally
             {
                 DeleteDirectorySafe(projectDir);
+            }
+        }
+
+        [Test]
+        public void CliConvert_JsonGff_WritesBinary()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-convert-cli-" + Guid.NewGuid().ToString("N"));
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), ConvertPipelineConfig);
+
+                string jsonPath = Path.Combine(projectDir, "sample.utc.json");
+                string binaryPath = Path.Combine(projectDir, "sample.utc");
+                var gff = new GFF(GFFContent.GFF);
+                gff.Root.SetString("Label", "convert-cli");
+                GFFAuto.WriteGff(gff, jsonPath, ResourceType.GFF_JSON);
+
+                int exitCode = RunKotorCli("convert default", projectDir, out _, out string stderr);
+                Assert.That(exitCode, Is.EqualTo(0), stderr);
+                Assert.That(File.Exists(binaryPath), Is.True);
+
+                GFF roundTrip = GFFAuto.ReadGff(binaryPath, fileFormat: ResourceType.GFF);
+                Assert.That(roundTrip.Root.GetString("Label"), Is.EqualTo("convert-cli"));
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
+        [Test]
+        public void CliConvert_UnknownTarget_ExitsNonZero()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-convert-cli-unknown-" + Guid.NewGuid().ToString("N"));
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), ConvertPipelineConfig);
+
+                int exitCode = RunKotorCli("convert missing-target", projectDir, out _, out string stderr);
+                Assert.That(exitCode, Is.EqualTo(1), stderr);
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
+        [Test]
+        public void CliCompile_NoNssSources_ExitsZero()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-compile-cli-" + Guid.NewGuid().ToString("N"));
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), CompilePipelineConfig);
+
+                int exitCode = RunKotorCli("compile default", projectDir, out _, out string stderr);
+                Assert.That(exitCode, Is.EqualTo(0), stderr);
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
+        [Test]
+        public void CliInstall_WithPackedMod_CopiesToModules()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-install-cli-" + Guid.NewGuid().ToString("N"));
+            string fakeInstallDir = Path.Combine(Path.GetTempPath(), "kotorcli-install-cli-game-" + Guid.NewGuid().ToString("N"));
+            const string resref = "install_cre";
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                Directory.CreateDirectory(fakeInstallDir);
+                File.WriteAllText(Path.Combine(fakeInstallDir, "chitin.key"), "fake-key");
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), PackPipelineConfig);
+
+                WriteModWithUtc(Path.Combine(projectDir, "test.mod"), resref);
+
+                int exitCode = RunKotorCli(
+                    "install default --installDir \"" + fakeInstallDir + "\" --noPack",
+                    projectDir,
+                    out _,
+                    out string stderr);
+
+                string installedModPath = Path.Combine(fakeInstallDir, "modules", "test.mod");
+                Assert.That(exitCode, Is.EqualTo(0), stderr);
+                Assert.That(File.Exists(installedModPath), Is.True);
+
+                ERF installedMod = ERFAuto.ReadErf(installedModPath, ResourceType.MOD);
+                Assert.That(installedMod.Get(resref, ResourceType.UTC), Is.Not.Null);
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+                DeleteDirectorySafe(fakeInstallDir);
+            }
+        }
+
+        [Test]
+        public void CliInstall_InstallDirMissingChitin_ExitsNonZero()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-install-cli-nochitin-proj-" + Guid.NewGuid().ToString("N"));
+            string fakeInstallDir = Path.Combine(Path.GetTempPath(), "kotorcli-install-cli-nochitin-game-" + Guid.NewGuid().ToString("N"));
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                Directory.CreateDirectory(fakeInstallDir);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), PackPipelineConfig);
+                WriteModWithUtc(Path.Combine(projectDir, "test.mod"), "install_cre");
+
+                int exitCode = RunKotorCli(
+                    "install default --installDir \"" + fakeInstallDir + "\" --noPack",
+                    projectDir,
+                    out _,
+                    out string stderr);
+                Assert.That(exitCode, Is.EqualTo(1), stderr);
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+                DeleteDirectorySafe(fakeInstallDir);
             }
         }
 
