@@ -1966,6 +1966,67 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindFieldValueReferences_CaseSensitive_OverrideUtc()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-fld-case-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.Tag = "FindMeTag";
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var fieldNames = new HashSet<string> { "Tag" };
+                var insensitive = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true,
+                    CaseSensitive = false
+                };
+                Assert.That(
+                    ReferenceFinder.FindFieldValueReferences(installation, "findmetag", fieldNames, insensitive),
+                    Is.Not.Empty);
+
+                var sensitive = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true,
+                    CaseSensitive = true
+                };
+                Assert.That(
+                    ReferenceFinder.FindFieldValueReferences(installation, "findmetag", fieldNames, sensitive),
+                    Is.Empty);
+                List<ReferenceSearchResult> exactCase = ReferenceFinder.FindFieldValueReferences(
+                    installation,
+                    "FindMeTag",
+                    fieldNames,
+                    sensitive);
+                Assert.That(exactCase, Is.Not.Empty);
+                Assert.That(exactCase, Has.Some.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath == "Tag"));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void FindFieldValueReferences_PartialMatch_OverrideUtc()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "ref-fld-partial-" + Guid.NewGuid().ToString("N"));
@@ -2072,6 +2133,47 @@ namespace OdyTools.Tests
             var fieldNames = new HashSet<string> { "Tag" };
             List<string> paths = ReferenceFinder.FindFieldValueInGffBytes(bytes, "find_me_tag", null, fieldNames);
 
+            Assert.That(paths, Has.Some.EqualTo("Tag"));
+        }
+
+        [Test]
+        public void FindFieldValueInGffBytes_CaseSensitive_RequiresExactCase()
+        {
+            var utc = new UTC();
+            utc.Tag = "FindMeTag";
+
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            var fieldNames = new HashSet<string> { "Tag" };
+            var insensitive = new ReferenceSearchOptions { CaseSensitive = false };
+            Assert.That(
+                ReferenceFinder.FindFieldValueInGffBytes(bytes, "findmetag", insensitive, fieldNames),
+                Is.Not.Empty);
+
+            var sensitive = new ReferenceSearchOptions { CaseSensitive = true };
+            Assert.That(
+                ReferenceFinder.FindFieldValueInGffBytes(bytes, "findmetag", sensitive, fieldNames),
+                Is.Empty);
+            Assert.That(
+                ReferenceFinder.FindFieldValueInGffBytes(bytes, "FindMeTag", sensitive, fieldNames),
+                Is.Not.Empty);
+        }
+
+        [Test]
+        public void FindFieldValueInGffBytes_PartialMatch_FindsSubstring()
+        {
+            var utc = new UTC();
+            utc.Tag = "test_creature_tag";
+
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            var fieldNames = new HashSet<string> { "Tag" };
+            var options = new ReferenceSearchOptions { PartialMatch = true };
+            List<string> paths = ReferenceFinder.FindFieldValueInGffBytes(bytes, "creature", options, fieldNames);
+
+            Assert.That(paths, Is.Not.Empty);
             Assert.That(paths, Has.Some.EqualTo("Tag"));
         }
 
