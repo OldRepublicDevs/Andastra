@@ -24,6 +24,7 @@ branch: feat/holocron-fac-kotorcli
 | U6 KotorCLI find-2da-ref `--full-row` | **Landed** | plan **107** — BioWare `CollectTwoDARowReferences`, OdyTools delegate, KotorCLI `--full-row`; closed doc-only via plan **276** (2026-05-28). **13** KotorCLI + **2** BioWare TwoDARow tests. |
 | U6 OdyTools 2DA row sweep tests + README | **Landed** | plan **108** — `WithTwoDA` label/StrRef collect tests (**10** TwoDAMemoryReferenceHelper total); KotorCLI README wired/stub accuracy; closed via plan **277** (2026-05-28). |
 | U7 Doc sync | **Landed** | odytools-editor-ux.md updated |
+| Deferred follow-up (plan 070) | **Landed** | FAC removal tests, KotorCLI grep/diff + format convert integration; closed plan **283** (2026-05-28). |
 
 **Reference-search follow-up verification (2026-05-28):**
 
