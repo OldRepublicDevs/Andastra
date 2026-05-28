@@ -37,7 +37,7 @@ Legend: **wired** = functional CLI backed by BioWare or `Conversions`; **partial
 
 ### Archive test coverage (plans 140–186)
 
-Archive CLI commands have **substantial integration test coverage** in `tests/KotorCLI.Tests/` (**273** tests total on net9.0):
+Archive CLI commands have **substantial integration test coverage** in `tests/KotorCLI.Tests/` (**278** tests total on net9.0):
 
 | Area | Coverage |
 |------|----------|
@@ -141,11 +141,17 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
 
 ### Validation
 - `check-txi`, `check-2da` - TXI and 2DA validators (**wired**)
+- `validate-installation` - Installation path and essential 2DA checks (**wired** via `BioWare.Tools.Validation.ValidateInstallation`)
+
+```bash
+validate-installation --installation /path/to/kotor
+validate-installation --installation /path/to/kotor --no-essential
+```
 
 ## Known Issues
 
 1. **`launch` is a stub** — documents the full pipeline but exits unless `--dry-run` is used.
-2. **Remaining test gaps (non-archive)** — build-pipeline commands (`init`, `config`, `convert`, `compile`, `pack`, `install`, `unpack`, `list`), format convert integration, reference finders, and `launch` path resolution (`ResolveGameBinary`) have coverage; archive create/list/search/extract/key-pack is **substantially closed** (see Archive test coverage above). `stats`/`validate` integration tests cover GFF, 2DA, ERF, BIF, TLK, and NCS (plans 189–195). Remaining gaps: `launch` workflow beyond dry-run and any newly wired commands without tests. **273** tests in `KotorCLI.Tests` on net9.0.
+2. **Remaining test gaps (non-archive)** — build-pipeline commands (`init`, `config`, `convert`, `compile`, `pack`, `install`, `unpack`, `list`), format convert integration, reference finders, and `launch` path resolution (`ResolveGameBinary`) have coverage; archive create/list/search/extract/key-pack is **substantially closed** (see Archive test coverage above). `stats`/`validate` integration tests cover GFF, 2DA, ERF, BIF, TLK, and NCS (plans 189–195). `validate-installation` covers essential 2DA checks and `--no-essential` (plans 197–198). Remaining gaps: `launch` workflow beyond dry-run. **278** tests in `KotorCLI.Tests` on net9.0.
 3. **System.CommandLine** — prefer `.Options.Add()` / current `Cli.Opt` helpers when touching command definitions.
 
 ## Next Steps

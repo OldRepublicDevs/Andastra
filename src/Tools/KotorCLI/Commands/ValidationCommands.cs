@@ -47,6 +47,22 @@ namespace KotorCLI.Commands
                 Environment.Exit(exitCode);
             });
             rootCommand.Add(check2DaCmd);
+
+            var validateInstallCmd = new Command("validate-installation", "Validate a KOTOR installation directory");
+            var validateInstallPath = Cli.Opt<string>("--installation", "Path to KOTOR installation");
+            validateInstallPath.Required = true;
+            validateInstallCmd.Options.Add(validateInstallPath);
+            var noEssentialOption = Cli.Opt<bool>("--no-essential", "Skip checking essential 2DA files (appearance, baseitems, classes, genericdoors)");
+            validateInstallCmd.Options.Add(noEssentialOption);
+            validateInstallCmd.SetAction(parseResult =>
+            {
+                var install = parseResult.GetValue(validateInstallPath);
+                bool noEssential = parseResult.GetValue(noEssentialOption);
+                var logger = new StandardLogger();
+                int exitCode = ExecuteValidateInstallation(install, !noEssential, logger);
+                Environment.Exit(exitCode);
+            });
+            rootCommand.Add(validateInstallCmd);
         }
 
         public static int ExecuteCheckTxi(string installPath, string[] textures, ILogger logger)
@@ -133,6 +149,45 @@ namespace KotorCLI.Commands
             catch (Exception ex)
             {
                 logger.Error("check-2da failed: " + ex.Message);
+                return 1;
+            }
+        }
+
+        // Matching PyKotor: validation.validate_installation via BioWare.Tools.Validation.ValidateInstallation
+        public static int ExecuteValidateInstallation(string installPath, bool checkEssentialFiles, ILogger logger)
+        {
+            if (string.IsNullOrWhiteSpace(installPath))
+            {
+                logger.Error("Installation path cannot be empty");
+                return 1;
+            }
+
+            try
+            {
+                var installation = new Installation(installPath);
+                ValidationResult result = Validation.ValidateInstallation(installation, checkEssentialFiles);
+
+                foreach (string error in result.Errors)
+                {
+                    logger.Error(error);
+                }
+
+                foreach (string missingFile in result.MissingFiles)
+                {
+                    logger.Error("Missing essential file: " + missingFile);
+                }
+
+                if (result.Valid)
+                {
+                    logger.Info("Installation validation passed");
+                    return 0;
+                }
+
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("validate-installation failed: " + ex.Message);
                 return 1;
             }
         }
