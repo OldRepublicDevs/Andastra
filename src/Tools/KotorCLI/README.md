@@ -37,7 +37,7 @@ Legend: **wired** = functional CLI backed by BioWare or `Conversions`; **partial
 
 ### Archive test coverage (plans 140–186)
 
-Archive CLI commands have **substantial integration test coverage** in `tests/KotorCLI.Tests/` (**367** tests total on net9.0):
+Archive CLI commands have **substantial integration test coverage** in `tests/KotorCLI.Tests/` (**369** tests total on net9.0):
 
 | Area | Coverage |
 |------|----------|
@@ -169,7 +169,7 @@ validate-installation --installation /path/to/kotor --no-essential
 ## Known Issues
 
 1. **`launch` does not pass module load arguments** to the game process; mods must be installed to `modules/` (default workflow).
-2. **Remaining test gaps (non-archive)** — KotorCLI build-pipeline and utility CLI subprocess coverage is **substantially complete** (plans 209–223, **364** tests on net9.0): per-command and end-to-end pipeline (`init`/`config`/`list`/`convert`/`compile`/`pack`/`unpack`/`install`, failure paths including unknown targets and no-config dirs), format convert integration, installation ref-search, utilities, validation, and `launch` path resolution. Broader Holocron deferred items remain per plan 063.
+2. **Remaining test gaps (non-archive)** — KotorCLI build-pipeline and utility CLI subprocess coverage is **substantially complete** (plans 209–223, **369** tests on net9.0): per-command and end-to-end pipeline (`init`/`config`/`list`/`convert`/`compile`/`pack`/`unpack`/`install`, failure paths including unknown targets and no-config dirs), format convert integration, installation ref-search (including compiled NCS find-refs and `--ncs-strref-min` find-strref CLI tests, plans **289**–**294**), utilities, validation, and `launch` path resolution. Broader Holocron deferred items remain per plan 063.
 3. **System.CommandLine** — prefer `.Options.Add()` / current `Cli.Opt` helpers when touching command definitions.
 
 ## Next Steps

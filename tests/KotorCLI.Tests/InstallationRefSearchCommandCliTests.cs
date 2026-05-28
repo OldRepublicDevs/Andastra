@@ -101,6 +101,48 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void Cli_FindStrRef_SmallNcsConsti_WithHighMinThreshold_ExitsZero()
+        {
+            const int smallStrRef = 50;
+            string installRoot = CreateInstallWithNcsStrRef(smallStrRef);
+            try
+            {
+                int exitCode = RunKotorCli(
+                    "find-strref " + smallStrRef + " --installation \"" + installRoot + "\" --override-only --no-chitin --no-modules --ncs-strref-min 100",
+                    out string stdout,
+                    out string stderr);
+
+                string combined = stdout + stderr;
+                Assert.That(exitCode, Is.EqualTo(0), combined);
+                Assert.That(combined, Does.Contain(smallStrRef.ToString()));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Cli_FindStrRef_NegativeNcsStrRefMin_ExitsNonZero()
+        {
+            const int targetStrRef = 424242;
+            string installRoot = CreateInstallWithNcsStrRef(targetStrRef);
+            try
+            {
+                int exitCode = RunKotorCli(
+                    "find-strref " + targetStrRef + " --installation \"" + installRoot + "\" --override-only --no-chitin --no-modules --ncs-strref-min -1",
+                    out string stdout,
+                    out string stderr);
+
+                Assert.That(exitCode, Is.Not.EqualTo(0), stdout + stderr);
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
         public void Cli_Find2DARef_InOverride_ExitsZero()
         {
             string installRoot = CreateInstallWithAppearanceRow(12);

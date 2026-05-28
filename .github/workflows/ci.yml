@@ -26,21 +26,28 @@ jobs:
       - name: Restore dependencies
         run: |
           dotnet restore src/BioWare/BioWare.csproj
+          dotnet restore src/Tools/OdyPatch/OdyPatch.csproj
           dotnet restore tests/BioWare.Tests/BioWare.Tests.csproj
           dotnet restore tests/Andastra.Tests/Andastra.Tests.csproj
+          dotnet restore tests/OdyPatch.Tests/OdyPatch.Tests.csproj
 
       - name: Build BioWare
         run: dotnet build src/BioWare/BioWare.csproj --framework net9.0 -c Release --no-restore
+
+      - name: Build OdyPatch
+        run: dotnet build src/Tools/OdyPatch/OdyPatch.csproj --framework net9.0 -c Release --no-restore
 
       - name: Build tests
         run: |
           dotnet build tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0 -c Release --no-restore
           dotnet build tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0 -c Release --no-restore
+          dotnet build tests/OdyPatch.Tests/OdyPatch.Tests.csproj --framework net9.0 -c Release --no-restore
 
       - name: Test
         run: |
           dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0 -c Release --no-build --verbosity normal
           dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0 -c Release --no-build --verbosity normal
+          dotnet test tests/OdyPatch.Tests/OdyPatch.Tests.csproj --framework net9.0 -c Release --no-build --verbosity normal
 
   lint:
     name: Lint
