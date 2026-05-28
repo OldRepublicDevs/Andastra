@@ -55,6 +55,22 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindScriptResRefInGffBytes_PartialMatch_FindsSubstring()
+        {
+            var utc = new UTC();
+            utc.OnHeartbeat = new ResRef("k_creature_hb");
+
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            var options = new ReferenceSearchOptions { PartialMatch = true };
+            List<string> paths = ReferenceFinder.FindScriptResRefInGffBytes(bytes, "creature", options);
+
+            Assert.That(paths, Is.Not.Empty);
+            Assert.That(paths, Has.Some.EqualTo("ScriptHeartbeat"));
+        }
+
+        [Test]
         public void FindScriptReferences_OverrideUtc_ReturnsFieldPath()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "ref-find-" + Guid.NewGuid().ToString("N"));
@@ -1529,6 +1545,61 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindTagReferences_CaseSensitive_OverrideUtc()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-tag-case-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.Tag = "TestTag";
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var insensitive = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true,
+                    CaseSensitive = false
+                };
+                Assert.That(
+                    ReferenceFinder.FindTagReferences(installation, "testtag", insensitive),
+                    Is.Not.Empty);
+
+                var sensitive = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true,
+                    CaseSensitive = true
+                };
+                Assert.That(
+                    ReferenceFinder.FindTagReferences(installation, "testtag", sensitive),
+                    Is.Empty);
+                Assert.That(
+                    ReferenceFinder.FindTagReferences(installation, "TestTag", sensitive),
+                    Is.Not.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void FindTagReferences_PartialMatch_OverrideUtc()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "ref-tag-partial-" + Guid.NewGuid().ToString("N"));
@@ -1703,6 +1774,55 @@ namespace OdyTools.Tests
                 Assert.That(results, Is.Not.Empty);
                 Assert.That(results, Has.Some.Matches<ReferenceSearchResult>(
                     r => r.FieldPath == "Tag" && r.MatchedValue == "find_me_tag"));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindFieldValueReferences_PartialMatch_OverrideUtc()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-fld-partial-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.Tag = "test_creature_tag";
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var fieldNames = new HashSet<string> { "Tag" };
+                var options = new ReferenceSearchOptions
+                {
+                    SearchOverride = true,
+                    SearchChitin = false,
+                    SearchModules = false,
+                    PartialMatch = true
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindFieldValueReferences(
+                    installation,
+                    "creature",
+                    fieldNames,
+                    options);
+
+                Assert.That(results, Is.Not.Empty);
+                Assert.That(results, Has.Some.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath == "Tag"));
             }
             finally
             {
