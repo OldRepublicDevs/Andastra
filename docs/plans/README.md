@@ -77,6 +77,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 068 | [068-feat-reference-finder-installation-utc-plan.md](2026-05-24-068-feat-reference-finder-installation-utc-plan.md) | Reference finder installation + UTC |
 | 069 | [069-feat-holocron-u3-walkmesh-u6-utd-utp-utt-plan.md](2026-05-24-069-feat-holocron-u3-walkmesh-u6-utd-utp-utt-plan.md) | Walkmesh tests + UTD/UTP/UTT ref finder |
 | 297 | [297-feat-odypatch-validate-cli-test-plan.md](2026-05-28-297-feat-odypatch-validate-cli-test-plan.md) | OdyPatch `--validate` subprocess test project |
+| 298 | [298-chore-pr12-merge-readiness-post-297-plan.md](2026-05-28-298-chore-pr12-merge-readiness-post-297-plan.md) | PR #12 merge readiness post-plan-297 |
 
 ## Repo implications
 
