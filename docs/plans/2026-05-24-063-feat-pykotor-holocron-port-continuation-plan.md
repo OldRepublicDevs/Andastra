@@ -56,7 +56,7 @@ BioWare and OdyTools already cover most PyKotor format parsers and Holocron per-
 - **Indoor Builder MVP:** Wire Build/Save/Open and headless walkmesh validation before expanding renderer/paint UI.
 - **KotorCLI stubs:** Delegate to `BioWare.Tools.Conversions` and related helpers; STUB commands must never exit 0 without producing output.
 - **KotorDiff integration:** In-process call into shared KotorDiff library/executor from OdyTools rather than spawning external processes.
-- **Reference finder Phase 1:** Port script/tag/resref search API to BioWare and wire UTC script fields as the template; full NCS bytecode scanning remains Phase 2.
+- **Reference finder Phase 1:** Port script/tag/resref search API to BioWare and wire UTC script fields as the template; NCS bytecode scanning **landed** via plans **286** (StrRef CONSTI cache) and **287** (script ResRef CONSTS scanner).
 - **NCS UI:** Tabbed decompile + read-only disassembly using `Scripts.DisassembleNcs`; no separate NSEditor project initially.
 - **Vendor wiki:** `vendor/src/toolset/wiki/` and upstream GitHub repos are reference-only; Andastra KB + `src/` are authority.
 
@@ -100,7 +100,7 @@ BioWare and OdyTools already cover most PyKotor format parsers and Holocron per-
 ### Deferred to Follow-Up Work
 
 - **Module Designer depth** (`ModuleDesignerWindow` 3D/GIT instance editing): separate plan after GL/renderer strategy.
-- **Full reference finder NCS bytecode scanning** (`ReferenceCache` enablement): **landed** — StrRef CONSTI cache + `IncludeNcsStrRefScan` gating closed plan **286** (2026-05-28); CONSTS script ResRef scan closed plan **287** (2026-05-28). GFF + SSF + helper wiring arc **complete** through plan 271; parent-plan doc closures **276–284** (2026-05-28) mark plans **107**, **108**, **066**, **069**, **067**, **064**, **065**, **070**, and U4 KotorDiff integration complete.
+- **Full reference finder NCS bytecode scanning** (`ReferenceCache` enablement): **fully landed** — StrRef CONSTI cache + `IncludeNcsStrRefScan` gating closed plan **286** (2026-05-28); CONSTS script ResRef scan closed plan **287** (2026-05-28). KB verification table synced in plan **288** (2026-05-28). GFF + SSF + helper wiring arc **complete** through plan 271; parent-plan doc closures **276–284** (2026-05-28) mark plans **107**, **108**, **066**, **069**, **067**, **064**, **065**, **070**, and U4 KotorDiff integration complete. Remaining follow-up: generic NCS CONST / 2DA-memory CONSTI disambiguation (deferred).
 - **KotorCLI utility STUBs** (`grep`, `merge`, `diff`, `texture-convert`, `model-convert`, RIM pack, BIF extract matching): plan 059+.
 - **2DA editor spreadsheet UX completion** (`docs/twoda_editor_ux_and_feature_completion.md`): orthogonal UX slice.
 - **OdyPatch E2E mod install against real K1/TSL** ([plan 058 OdyPatch E2E runbook](2026-05-23-058-odypatch-e2e-runbook-plan.md)): runtime install validation.
@@ -421,7 +421,7 @@ flowchart TB
 - BioWare layer: `FindScriptReferences`, `FindTagReferences`, `FindTemplateResRefReferences` with scope options (override, modules, chitin — match Holocron defaults).
 - Return structured `ReferenceSearchResult` (file, field path, match context).
 - OdyTools: `ReferenceSearchOptionsDialog`; wire UTC script fields first; extend to UTD/UTP/UTT in same unit if low incremental cost.
-- Keep NCS bytecode scanning disabled until validated; document in code comment.
+- NCS bytecode scanning **enabled** — StrRef CONSTI via `ReferenceCache` (plan **286**); script ResRef via `NcsConstStringScanner` (plan **287**). Generic CONSTI disambiguation (StrRef vs 2DA-memory) remains deferred.
 
 **Patterns to follow:**
 - Existing TLK StrRef search via `ReferenceCacheHelpers`
