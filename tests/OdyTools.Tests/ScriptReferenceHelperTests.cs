@@ -82,6 +82,46 @@ namespace OdyTools.Tests
             }
         }
 
+        [Test]
+        [AvaloniaTest]
+        public void FindAndShowScriptReferences_NoMatch_CompletesWithoutException()
+        {
+            string installRoot = CreateInstallWithScriptHeartbeat();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+                var comboBox = new ComboBox { Text = "k_missing_script" };
+
+                Assert.DoesNotThrow(() =>
+                    ScriptReferenceHelper.FindAndShowScriptReferences(null, comboBox, installation));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void FindAndShowScriptReferences_SelectedItemFallback_WithInstallation_CompletesWithoutException()
+        {
+            string installRoot = CreateInstallWithScriptHeartbeat();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+                var comboBox = new ComboBox { Text = string.Empty };
+                comboBox.Items.Add("k_test_hb");
+                comboBox.SelectedItem = "k_test_hb";
+
+                Assert.DoesNotThrow(() =>
+                    ScriptReferenceHelper.FindAndShowScriptReferences(null, comboBox, installation));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
         private static string CreateInstallWithScriptHeartbeat()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "odytools-scriptref-" + Guid.NewGuid().ToString("N"));
