@@ -37,7 +37,7 @@ Legend: **wired** = functional CLI backed by BioWare or `Conversions`; **partial
 
 ### Archive test coverage (plans 140–186)
 
-Archive CLI commands have **substantial integration test coverage** in `tests/KotorCLI.Tests/` (**344** tests total on net9.0):
+Archive CLI commands have **substantial integration test coverage** in `tests/KotorCLI.Tests/` (**347** tests total on net9.0):
 
 | Area | Coverage |
 |------|----------|
@@ -169,7 +169,7 @@ validate-installation --installation /path/to/kotor --no-essential
 ## Known Issues
 
 1. **`launch` does not pass module load arguments** to the game process; mods must be installed to `modules/` (default workflow).
-2. **Remaining test gaps (non-archive)** — per-command and end-to-end pipeline CLI subprocess complete (`init`/`config`/`list`/`convert`/`compile`/`pack`/`unpack`/`install`, inline convert/compile via `pack`, convert→pack→install, mixed pack→install, compile→pack, pack→unpack roundtrip and remove-deleted; plans 214–218); format convert integration, reference finders, and `launch` path resolution (`ResolveGameBinary`) have coverage; archive create/list/search/extract/key-pack is **substantially closed** (see Archive test coverage above). `stats`, `validate`, `grep`, `diff`, `cat`, and `merge` unit + CLI subprocess complete (plans 189–195, 211–213). `validate-installation`, `check-txi`, and `check-2da` unit + CLI subprocess complete (plans 197–198, 209–210). `launch` alias dry-run (199), install-only unit + CLI (202–203), install+spawn unit (204) + CLI `--wait` (205). Installation ref-search CLI subprocess complete: `find-refs`, `find-strref`, `find-2da-ref`, `find-field-value` (plans 206–208). **344** tests in `KotorCLI.Tests` on net9.0.
+2. **Remaining test gaps (non-archive)** — per-command and end-to-end pipeline CLI subprocess complete (`init`/`config`/`list`/`convert`/`compile`/`pack`/`unpack`/`install`, inline convert/compile via `pack`, convert→pack→install, mixed pack→install, compile→pack, pack→unpack roundtrip and remove-deleted; plans 214–218); format convert integration, reference finders, and `launch` path resolution (`ResolveGameBinary`) unit + CLI dry-run coverage (plan 219); archive create/list/search/extract/key-pack is **substantially closed** (see Archive test coverage above). `stats`, `validate`, `grep`, `diff`, `cat`, and `merge` unit + CLI subprocess complete (plans 189–195, 211–213). `validate-installation`, `check-txi`, and `check-2da` unit + CLI subprocess complete (plans 197–198, 209–210). `launch` alias dry-run (199), install-only unit + CLI (202–203), install+spawn unit (204) + CLI `--wait` (205). Installation ref-search CLI subprocess complete: `find-refs`, `find-strref`, `find-2da-ref`, `find-field-value` (plans 206–208). **347** tests in `KotorCLI.Tests` on net9.0.
 3. **System.CommandLine** — prefer `.Options.Add()` / current `Cli.Opt` helpers when touching command definitions.
 
 ## Next Steps
