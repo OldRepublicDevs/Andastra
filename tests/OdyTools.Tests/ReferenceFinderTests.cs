@@ -636,6 +636,52 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindFieldValueReferences_NoOverride_SkipsOverrideUtc()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-fld-noovr-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.Tag = "find_me_tag";
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var fieldNames = new HashSet<string> { "Tag" };
+                var options = new ReferenceSearchOptions
+                {
+                    SearchOverride = false,
+                    SearchChitin = false,
+                    SearchModules = false
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindFieldValueReferences(
+                    installation,
+                    "find_me_tag",
+                    fieldNames,
+                    options);
+
+                Assert.That(results, Is.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void FindTagReferences_EmptyNeedleReturnsEmpty()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "ref-tag-empty-" + Guid.NewGuid().ToString("N"));
