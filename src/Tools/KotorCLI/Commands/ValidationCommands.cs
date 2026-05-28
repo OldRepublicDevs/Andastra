@@ -44,7 +44,7 @@ namespace KotorCLI.Commands
                 var name = parseResult.GetValue(check2DaName);
                 var install = parseResult.GetValue(check2DaInstall);
                 var logger = new StandardLogger();
-                var exitCode = CheckTwoDAFile(name, install, logger);
+                int exitCode = ExecuteCheck2da(install, name, logger);
                 Environment.Exit(exitCode);
             });
             rootCommand.Add(check2DaCmd);
@@ -96,9 +96,10 @@ namespace KotorCLI.Commands
             }
         }
 
-        private static int CheckTwoDAFile(string name, string installPath, ILogger logger)
+        // Matching PyKotor: validation.check_2da_file via BioWare.Tools.Validation.Check2daFile
+        public static int ExecuteCheck2da(string installPath, string twodaName, ILogger logger)
         {
-            if (string.IsNullOrWhiteSpace(name))
+            if (string.IsNullOrWhiteSpace(twodaName))
             {
                 logger.Error("2DA name cannot be empty");
                 return 1;
@@ -112,54 +113,65 @@ namespace KotorCLI.Commands
 
             try
             {
-                // Create installation instance to access resources
                 var installation = new Installation(installPath);
+                (bool found, List<string> paths) = Validation.Check2daFile(installation, twodaName);
 
-                // Check if the 2DA file exists in the installation
-                // Search in default order: Override, Modules, Chitin
-                var result = installation.Resource(name, ResourceType.TwoDA);
-
-                if (result != null && result.Data != null)
+                if (!found || paths == null || paths.Count == 0)
                 {
-                    logger.Info($"✓ 2DA file '{name}' exists in installation");
-                    logger.Info($"  Location: {result.FilePath ?? "Embedded in archive"}");
-                    logger.Info($"  Size: {result.Data.Length} bytes");
-
-                    // Try to load and validate the 2DA structure
-                    try
-                    {
-                        var twoDA = BioWare.Resource.Formats.TwoDA.TwoDA.FromBytes(result.Data);
-                        logger.Info($"  Valid 2DA structure: {twoDA.GetWidth()} columns x {twoDA.GetHeight()} rows");
-
-                        // Show first few headers if available
-                        var headers = twoDA.GetHeaders();
-                        if (headers.Count > 0)
-                        {
-                            var headerPreview = string.Join(", ", headers.GetRange(0, Math.Min(5, headers.Count)));
-                            if (headers.Count > 5)
-                            {
-                                headerPreview += ", ...";
-                            }
-                            logger.Info($"  Headers: {headerPreview}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.Warning($"  Could not parse 2DA structure: {ex.Message}");
-                        // Still consider it valid if we found the file, just warn about parsing issues
-                    }
-
-                    return 0;
+                    logger.Error("Missing 2DA: " + twodaName);
+                    return 1;
                 }
 
-                logger.Error($"✗ 2DA file '{name}' not found in installation");
-                logger.Info("  Searched locations: Override, Modules, Chitin");
-                return 1;
+                logger.Info("Found 2DA for " + twodaName + ":");
+                foreach (string path in paths)
+                {
+                    logger.Info("  " + path);
+                }
+
+                LogTwoDAStructureIfPossible(paths, logger);
+                return 0;
             }
             catch (Exception ex)
             {
-                logger.Error($"Failed to check 2DA file: {ex.Message}");
+                logger.Error("check-2da failed: " + ex.Message);
                 return 1;
+            }
+        }
+
+        private static void LogTwoDAStructureIfPossible(List<string> paths, ILogger logger)
+        {
+            if (paths == null || paths.Count == 0)
+            {
+                return;
+            }
+
+            string firstPath = paths[0];
+            if (string.IsNullOrEmpty(firstPath) || !System.IO.File.Exists(firstPath))
+            {
+                return;
+            }
+
+            try
+            {
+                byte[] data = System.IO.File.ReadAllBytes(firstPath);
+                var twoDA = BioWare.Resource.Formats.TwoDA.TwoDA.FromBytes(data);
+                logger.Info("  Valid 2DA structure: " + twoDA.GetWidth() + " columns x " + twoDA.GetHeight() + " rows");
+
+                var headers = twoDA.GetHeaders();
+                if (headers.Count > 0)
+                {
+                    var headerPreview = string.Join(", ", headers.GetRange(0, Math.Min(5, headers.Count)));
+                    if (headers.Count > 5)
+                    {
+                        headerPreview += ", ...";
+                    }
+
+                    logger.Info("  Headers: " + headerPreview);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Warning("  Could not parse 2DA structure: " + ex.Message);
             }
         }
     }
