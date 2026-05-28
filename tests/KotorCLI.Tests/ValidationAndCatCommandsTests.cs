@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using BioWare.Common;
 using BioWare.Resource;
@@ -259,6 +260,91 @@ namespace KotorCLI.Tests
             }
         }
 
+        [Test]
+        public void ExecuteValidateInstallation_NoEssentialEmptyInstall_ExitsZero()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-validate-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(installRoot);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = ValidationCommands.ExecuteValidateInstallation(installRoot, false, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void CliValidateInstallation_NoEssential_ExitsZero()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-validate-cli-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(installRoot);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            try
+            {
+                int exitCode = RunKotorCli(
+                    "validate-installation --installation \"" + installRoot + "\" --no-essential",
+                    out _,
+                    out string stderr);
+                Assert.That(exitCode, Is.EqualTo(0), stderr);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        private static string RepoRoot =>
+            Path.GetFullPath(Path.Combine(TestContext.CurrentContext.TestDirectory, "..", "..", "..", "..", ".."));
+
+        private static int RunKotorCli(string arguments, out string stdout, out string stderr)
+        {
+            string cliDll = Path.Combine(RepoRoot, "src", "Tools", "KotorCLI", "bin", "Debug", "net9.0", "KotorCLI.dll");
+            if (!File.Exists(cliDll))
+            {
+                cliDll = Path.Combine(RepoRoot, "src", "Tools", "KotorCLI", "bin", "Release", "net9.0", "KotorCLI.dll");
+            }
+
+            Assert.That(File.Exists(cliDll), Is.True, "KotorCLI.dll not built; run dotnet build first.");
+
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "dotnet",
+                Arguments = "exec \"" + cliDll + "\" " + arguments,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+
+            using (var process = Process.Start(startInfo))
+            {
+                stdout = process.StandardOutput.ReadToEnd();
+                stderr = process.StandardError.ReadToEnd();
+                process.WaitForExit();
+                return process.ExitCode;
+            }
+        }
         private static void WriteEssentialTwoDAFiles(string overrideDir)
         {
             var twoDA = new TwoDA(new List<string> { "label" });

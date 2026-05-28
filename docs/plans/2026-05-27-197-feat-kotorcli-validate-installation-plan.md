@@ -1,10 +1,10 @@
 ---
 title: "feat: kotorcli validate-installation command"
 type: feat
-status: complete
+status: completed
 date: 2026-05-27
 origin: docs/plans/2026-05-27-196-feat-kotorcli-launch-k2-path-env-plan.md
-branch: feat/kotorcli-validate-installation
+branch: feat/holocron-port-phase-b
 ---
 
 # feat: KotorCLI validate-installation (plan 197)
