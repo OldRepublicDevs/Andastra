@@ -38,4 +38,3 @@ Wire BioWare `ReferenceCacheHelpers.FindStrRefReferences` into OdyToolTLK and Ko
 - `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~StrRefReferenceHelperTests` (**8** tests)
 
 See plans `docs/plans/2026-05-28-261-*` and `docs/plans/2026-05-28-263-*` for wiring test slices.
-- `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~StrRefReferenceHelperTests` (**8** tests)
