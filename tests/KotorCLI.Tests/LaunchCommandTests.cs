@@ -1,5 +1,7 @@
 using System;
+using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.ERF;
@@ -510,6 +512,80 @@ file = ""test.mod""
         }
 
         [Test]
+        public void TryStartGameProcess_WithShellStub_Wait_ReturnsExitCode()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                Assert.Ignore("Shell stub launch tests require Linux.");
+            }
+
+            string markerPath = Path.Combine(Path.GetTempPath(), "kotorcli-launch-marker-" + Guid.NewGuid().ToString("N"));
+            string scriptPath = Path.Combine(Path.GetTempPath(), "kotorcli-launch-stub-" + Guid.NewGuid().ToString("N") + ".sh");
+            WriteShellStubScript(scriptPath, markerPath, 42);
+
+            try
+            {
+                var logger = new StandardLogger();
+                bool started = LaunchCommand.TryStartGameProcess(
+                    scriptPath,
+                    Path.GetDirectoryName(scriptPath),
+                    true,
+                    logger,
+                    out int processExitCode);
+
+                Assert.That(started, Is.True);
+                Assert.That(processExitCode, Is.EqualTo(42));
+                Assert.That(File.Exists(markerPath), Is.True);
+            }
+            finally
+            {
+                DeleteFileSafe(markerPath);
+                DeleteFileSafe(scriptPath);
+            }
+        }
+
+        [Test]
+        public void Execute_FullLaunch_WithWait_InstallsAndRunsStub()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                Assert.Ignore("Shell stub launch tests require Linux.");
+            }
+
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-launch-full-proj-" + Guid.NewGuid().ToString("N"));
+            string fakeInstallDir = Path.Combine(Path.GetTempPath(), "kotorcli-launch-full-game-" + Guid.NewGuid().ToString("N"));
+            string markerPath = Path.Combine(fakeInstallDir, "launch-ran.marker");
+            string originalDirectory = Directory.GetCurrentDirectory();
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                Directory.CreateDirectory(fakeInstallDir);
+                File.WriteAllText(Path.Combine(fakeInstallDir, "chitin.key"), "fake-key");
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), MinimalConfig);
+                WriteModWithUtc(Path.Combine(projectDir, "test.mod"), "launch_spawn");
+
+                string gameExe = Path.Combine(fakeInstallDir, "swkotor.exe");
+                WriteShellStubScript(gameExe, markerPath, 0);
+
+                Directory.SetCurrentDirectory(projectDir);
+
+                var logger = new StandardLogger();
+                int exitCode = LaunchCommand.Execute(new[] { "default" }, null, fakeInstallDir, false, false, true, logger);
+
+                Assert.That(exitCode, Is.EqualTo(0));
+                Assert.That(File.Exists(markerPath), Is.True);
+                Assert.That(File.Exists(Path.Combine(fakeInstallDir, "modules", "test.mod")), Is.True);
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(originalDirectory);
+                DeleteDirectorySafe(projectDir);
+                DeleteDirectorySafe(fakeInstallDir);
+            }
+        }
+
+        [Test]
         public void Execute_WithoutDryRun_StillExitsNonZero()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-launch-" + Guid.NewGuid().ToString("N"));
@@ -537,6 +613,49 @@ file = ""test.mod""
             var mod = new ERF(ERFType.MOD);
             mod.SetData(resref, ResourceType.UTC, bytes);
             ERFAuto.WriteErf(mod, modPath, ResourceType.MOD);
+        }
+
+        private static string WriteShellStubScript(string scriptPath, string markerPath, int exitCode)
+        {
+            string escapedMarker = markerPath.Replace("\"", "\\\"");
+            File.WriteAllText(
+                scriptPath,
+                "#!/bin/sh\n" +
+                "touch \"" + escapedMarker + "\"\n" +
+                "exit " + exitCode + "\n");
+            MakeExecutable(scriptPath);
+            return scriptPath;
+        }
+
+        private static void MakeExecutable(string path)
+        {
+            var chmod = new ProcessStartInfo
+            {
+                FileName = "/bin/chmod",
+                Arguments = "+x \"" + path + "\"",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            using (Process process = Process.Start(chmod))
+            {
+                process.WaitForExit();
+                Assert.That(process.ExitCode, Is.EqualTo(0), "chmod failed for " + path);
+            }
+        }
+
+        private static void DeleteFileSafe(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+            }
+            catch
+            {
+                // Best-effort cleanup.
+            }
         }
 
         private static string CreateTempLaunchDir()
