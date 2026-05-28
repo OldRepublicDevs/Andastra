@@ -37,7 +37,7 @@ Legend: **wired** = functional CLI backed by BioWare or `Conversions`; **partial
 
 ### Archive test coverage (plans 140–186)
 
-Archive CLI commands have **substantial integration test coverage** in `tests/KotorCLI.Tests/` (**263** tests total on net9.0):
+Archive CLI commands have **substantial integration test coverage** in `tests/KotorCLI.Tests/` (**265** tests total on net9.0):
 
 | Area | Coverage |
 |------|----------|
@@ -145,7 +145,7 @@ dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
 ## Known Issues
 
 1. **`launch` is a stub** — documents the full pipeline but exits unless `--dry-run` is used.
-2. **Remaining test gaps (non-archive)** — build-pipeline commands (`init`, `config`, `convert`, `compile`, `pack`, `install`, `unpack`, `list`), format convert integration, reference finders, and `launch` path resolution (`ResolveGameBinary`) have coverage; archive create/list/search/extract/key-pack is **substantially closed** (see Archive test coverage above). Remaining gaps: `launch` workflow beyond dry-run, extended `stats`/`validate` format coverage, and any newly wired commands without tests. **263** tests in `KotorCLI.Tests` on net9.0.
+2. **Remaining test gaps (non-archive)** — build-pipeline commands (`init`, `config`, `convert`, `compile`, `pack`, `install`, `unpack`, `list`), format convert integration, reference finders, and `launch` path resolution (`ResolveGameBinary`) have coverage; archive create/list/search/extract/key-pack is **substantially closed** (see Archive test coverage above). Remaining gaps: `launch` workflow beyond dry-run, extended `stats`/`validate` format coverage, and any newly wired commands without tests. **265** tests in `KotorCLI.Tests` on net9.0.
 3. **System.CommandLine** — prefer `.Options.Add()` / current `Cli.Opt` helpers when touching command definitions.
 
 ## Next Steps
