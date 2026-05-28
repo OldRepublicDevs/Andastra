@@ -11,6 +11,7 @@ using BioWare.Resource.Formats.GFF.Generics.UTC;
 using BioWare.Tools;
 using NUnit.Framework;
 using OdyTools.Data;
+using OdyTools.Dialogs;
 using OdyTools.Utils;
 
 namespace OdyTools.Tests
@@ -349,6 +350,116 @@ namespace OdyTools.Tests
 
         [Test]
         [AvaloniaTest]
+        public void PromptSearchOptions_NotAccepted_ReturnsNull()
+        {
+            ReferenceSearchOptions result = ReferenceSearchHelper.PromptSearchOptions(
+                null,
+                new ReferenceSearchOptions { SearchOverride = false });
+
+            Assert.That(result, Is.Null);
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void PromptSearchOptions_NullDefaults_NotAccepted_ReturnsNullWithoutThrow()
+        {
+            Assert.DoesNotThrow(() =>
+            {
+                ReferenceSearchOptions result = ReferenceSearchHelper.PromptSearchOptions(null, null);
+                Assert.That(result, Is.Null);
+            });
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void BuildPromptResult_Accepted_RoundTripsScopeToggles()
+        {
+            var dialog = new ReferenceSearchOptionsDialog(null, showStrRefNcsOptions: false);
+            var defaults = new ReferenceSearchOptions
+            {
+                SearchOverride = false,
+                SearchModules = true,
+                SearchChitin = false
+            };
+
+            ReferenceSearchOptions result = ReferenceSearchHelper.BuildPromptResult(defaults, dialog, accepted: true);
+
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.SearchOverride, Is.False);
+            Assert.That(result.SearchModules, Is.True);
+            Assert.That(result.SearchChitin, Is.False);
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void BuildPromptResult_NotAccepted_ReturnsNull()
+        {
+            var dialog = new ReferenceSearchOptionsDialog(null, showStrRefNcsOptions: false);
+
+            ReferenceSearchOptions result = ReferenceSearchHelper.BuildPromptResult(
+                new ReferenceSearchOptions { SearchOverride = true },
+                dialog,
+                accepted: false);
+
+            Assert.That(result, Is.Null);
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void BuildPromptResult_NullDefaults_Accepted_UsesFreshDefaults()
+        {
+            var dialog = new ReferenceSearchOptionsDialog(null, showStrRefNcsOptions: false);
+
+            ReferenceSearchOptions result = ReferenceSearchHelper.BuildPromptResult(null, dialog, accepted: true);
+
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.SearchOverride, Is.True);
+            Assert.That(result.SearchModules, Is.True);
+            Assert.That(result.SearchChitin, Is.True);
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void BuildPromptResult_StrRefNcsSection_RoundTripsScanAndMinimum()
+        {
+            var dialog = new ReferenceSearchOptionsDialog(null, showStrRefNcsOptions: true);
+            var defaults = new ReferenceSearchOptions
+            {
+                IncludeNcsStrRefScan = false,
+                NcsStrRefCandidateMinimum = 42
+            };
+
+            ReferenceSearchOptions result = ReferenceSearchHelper.BuildPromptResult(defaults, dialog, accepted: true);
+
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.IncludeNcsStrRefScan, Is.False);
+            Assert.That(result.NcsStrRefCandidateMinimum, Is.EqualTo(42));
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void FindAndShowTagReferences_ShowOptionsDialogTrue_Cancel_DoesNotThrow()
+        {
+            string installRoot = CreateMinimalInstallRoot();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+
+                Assert.DoesNotThrow(() =>
+                    ReferenceSearchHelper.FindAndShowTagReferences(
+                        null,
+                        "npc_tag",
+                        installation,
+                        showOptionsDialog: true));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        [AvaloniaTest]
         public void FindAndShowTagReferences_OverrideHit_CompletesWithoutException()
         {
             string installRoot = CreateMinimalInstallRoot();
@@ -415,13 +526,46 @@ namespace OdyTools.Tests
 
         [Test]
         [AvaloniaTest]
-        public void PromptSearchOptions_NullParent_NotAccepted_ReturnsNull()
+        public void FindAndShowConversationReferences_NoMatch_CompletesWithoutException()
         {
-            ReferenceSearchOptions result = ReferenceSearchHelper.PromptSearchOptions(
-                null,
-                new ReferenceSearchOptions { SearchOverride = true });
+            string installRoot = CreateInstallWithConversation();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
 
-            Assert.That(result, Is.Null);
+                Assert.DoesNotThrow(() =>
+                    ReferenceSearchHelper.FindAndShowConversationReferences(
+                        null,
+                        "missing_dlg_ref",
+                        installation,
+                        showOptionsDialog: false));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void FindAndShowScriptReferences_NoMatch_CompletesWithoutException()
+        {
+            string installRoot = CreateInstallWithScriptHeartbeat();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+
+                Assert.DoesNotThrow(() =>
+                    ReferenceSearchHelper.FindAndShowScriptReferences(
+                        null,
+                        "k_missing_script",
+                        installation,
+                        showOptionsDialog: false));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
         }
 
         private static string CreateMinimalInstallRoot()
