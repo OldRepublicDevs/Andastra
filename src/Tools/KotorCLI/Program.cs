@@ -81,6 +81,7 @@ namespace KotorCLI
             ScriptToolCommands.AddToRootCommand(rootCommand);
             ResourceToolCommands.AddToRootCommand(rootCommand);
             UtilityCommands.AddToRootCommand(rootCommand);
+            CatCommand.AddToRootCommand(rootCommand);
             ValidationCommands.AddToRootCommand(rootCommand);
             KeyPackCommand.AddToRootCommand(rootCommand);
 
