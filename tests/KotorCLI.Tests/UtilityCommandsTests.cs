@@ -5,6 +5,7 @@ using BioWare.Resource;
 using BioWare.Resource.Formats.BIF;
 using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.NCS;
 using BioWare.Resource.Formats.TLK;
 using BioWare.Resource.Formats.TwoDA;
 using KotorCLI.Commands;
@@ -396,6 +397,58 @@ namespace KotorCLI.Tests
             }
         }
 
+        [Test]
+        public void ExecuteStats_ValidNcs_ExitsZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-stats-ncs-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string ncsPath = WriteSampleNcs(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = UtilityCommands.ExecuteStats(ncsPath, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteValidate_ValidNcs_ExitsZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-validate-ncs-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string ncsPath = WriteSampleNcs(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = UtilityCommands.ExecuteValidate(ncsPath, false, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
         private static string WriteSampleUtc(string tempDir)
         {
             string utcPath = Path.Combine(tempDir, "sample.utc");
@@ -444,6 +497,14 @@ namespace KotorCLI.Tests
             tlk.Add("stats-validate-tlk-entry", string.Empty);
             File.WriteAllBytes(tlkPath, TLKAuto.BytesTlk(tlk, ResourceType.TLK));
             return tlkPath;
+        }
+
+        private static string WriteSampleNcs(string tempDir)
+        {
+            string ncsPath = Path.Combine(tempDir, "sample.ncs");
+            NCS ncs = NCSAuto.CompileNss("void main() { int n = 42; }", BioWareGame.K1);
+            NCSAuto.WriteNcs(ncs, ncsPath);
+            return ncsPath;
         }
     }
 }
