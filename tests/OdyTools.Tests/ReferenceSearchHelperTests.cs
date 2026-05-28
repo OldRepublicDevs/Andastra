@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Avalonia.Controls;
 using Avalonia.Headless.NUnit;
+using Avalonia.Interactivity;
 using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.GFF;
@@ -101,6 +102,102 @@ namespace OdyTools.Tests
                 var menuItem = textBox.ContextMenu.Items[0] as MenuItem;
                 Assert.That(menuItem, Is.Not.Null);
                 Assert.That(menuItem.Header?.ToString(), Is.EqualTo("Find Template ResRef References"));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void AttachTagFindReferencesMenu_EmptyTag_DisablesMenuItem()
+        {
+            string installRoot = CreateMinimalInstallRoot();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+                var textBox = new TextBox { Text = "npc_tag" };
+
+                ReferenceSearchHelper.AttachTagFindReferencesMenu(textBox, null, installation);
+                var menuItem = textBox.ContextMenu.Items[0] as MenuItem;
+
+                textBox.Text = string.Empty;
+                textBox.ContextMenu.RaiseEvent(new RoutedEventArgs(ContextMenu.OpenedEvent));
+
+                Assert.That(menuItem.IsEnabled, Is.False);
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void AttachTagFindReferencesMenu_WithTagAndInstallation_EnablesMenuItem()
+        {
+            string installRoot = CreateMinimalInstallRoot();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+                var textBox = new TextBox { Text = "npc_tag" };
+
+                ReferenceSearchHelper.AttachTagFindReferencesMenu(textBox, null, installation);
+                var menuItem = textBox.ContextMenu.Items[0] as MenuItem;
+
+                Assert.That(menuItem.IsEnabled, Is.True);
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void AttachTagFindReferencesMenu_NullInstallation_DisablesMenuItem()
+        {
+            var textBox = new TextBox();
+
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(textBox, null, null);
+            var menuItem = textBox.ContextMenu.Items[0] as MenuItem;
+
+            textBox.Text = "npc_tag";
+            textBox.ContextMenu.RaiseEvent(new RoutedEventArgs(ContextMenu.OpenedEvent));
+
+            Assert.That(menuItem.IsEnabled, Is.False);
+        }
+
+        [Test]
+        public void FindAndShowTemplateResRefReferences_NullInstallation_DoesNotThrow()
+        {
+            Assert.DoesNotThrow(() =>
+                ReferenceSearchHelper.FindAndShowTemplateResRefReferences(null, "p_npc001", null));
+        }
+
+        [Test]
+        public void FindAndShowConversationReferences_NullInstallation_DoesNotThrow()
+        {
+            Assert.DoesNotThrow(() =>
+                ReferenceSearchHelper.FindAndShowConversationReferences(null, "dlg_test", null));
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void FindAndShowTagReferences_OverrideHit_CompletesWithoutException()
+        {
+            string installRoot = CreateMinimalInstallRoot();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+
+                Assert.DoesNotThrow(() =>
+                    ReferenceSearchHelper.FindAndShowTagReferences(
+                        null,
+                        "npc_tag",
+                        installation,
+                        showOptionsDialog: false));
             }
             finally
             {
