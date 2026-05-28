@@ -76,6 +76,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 067 | [067-feat-odytool-nss-ncs-disassembly-plan.md](2026-05-24-067-feat-odytool-nss-ncs-disassembly-plan.md) | OdyToolNSS NCS disassembly tab |
 | 068 | [068-feat-reference-finder-installation-utc-plan.md](2026-05-24-068-feat-reference-finder-installation-utc-plan.md) | Reference finder installation + UTC |
 | 069 | [069-feat-holocron-u3-walkmesh-u6-utd-utp-utt-plan.md](2026-05-24-069-feat-holocron-u3-walkmesh-u6-utd-utp-utt-plan.md) | Walkmesh tests + UTD/UTP/UTT ref finder |
+| 297 | [297-feat-odypatch-validate-cli-test-plan.md](2026-05-28-297-feat-odypatch-validate-cli-test-plan.md) | OdyPatch `--validate` subprocess test project |
 
 ## Repo implications
 

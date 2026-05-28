@@ -36,7 +36,8 @@ Standalone editors → BioWare (typical)
 ## Test Coverage
 
 - `tests/OdyTools.Tests/` — editor tests (DLG, GFF, MDL, etc.). `[REPO]`
-- No dedicated OdyPatch test project in solution; headless `--validate` uses `tests/fixtures/odypatch-minimal-mod/` (plan 055). Manual `--install` verification: [odypatch-e2e-runbook.md](../50-execution/odypatch-e2e-runbook.md). `[REPO]`
+- `tests/OdyPatch.Tests/` — OdyPatch CLI subprocess tests (`--validate` fixture; plan 297). `[REPO]`
+- Headless `--validate` also runs in CI `nuget-pack-smoke` via `tests/fixtures/odypatch-minimal-mod/` (plan 055). Manual `--install` verification: [odypatch-e2e-runbook.md](../50-execution/odypatch-e2e-runbook.md). `[REPO]`
 
 ## AgentDecompile / RE Tooling
 
