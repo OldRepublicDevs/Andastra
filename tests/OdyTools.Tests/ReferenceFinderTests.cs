@@ -111,6 +111,7 @@ namespace OdyTools.Tests
             {
                 var installation = new Installation(installRoot);
                 Assert.That(ReferenceFinder.FindScriptReferences(installation, ""), Is.Empty);
+                Assert.That(ReferenceFinder.FindScriptReferences(installation, "   "), Is.Empty);
             }
             finally
             {
@@ -958,6 +959,96 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindFieldValueReferences_ModuleMod_FindsTag()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-fldmod-" + Guid.NewGuid().ToString("N"));
+            string modulesDir = Path.Combine(installRoot, "modules");
+            Directory.CreateDirectory(modulesDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.Tag = "mod_fld_tag";
+            WriteModuleWithUtc(Path.Combine(modulesDir, "test_mod.mod"), utc);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var fieldNames = new HashSet<string> { "Tag" };
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = true,
+                    SearchOverride = false
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindFieldValueReferences(
+                    installation,
+                    "mod_fld_tag",
+                    fieldNames,
+                    options);
+
+                Assert.That(results, Is.Not.Empty);
+                Assert.That(results, Has.Some.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath == "Tag" && r.MatchedValue == "mod_fld_tag"));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindFieldValueReferences_NoModules_SkipsModuleUtc()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-nofldmod-" + Guid.NewGuid().ToString("N"));
+            string modulesDir = Path.Combine(installRoot, "modules");
+            Directory.CreateDirectory(modulesDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.Tag = "mod_fld_tag";
+            WriteModuleWithUtc(Path.Combine(modulesDir, "test_mod.mod"), utc);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var fieldNames = new HashSet<string> { "Tag" };
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = false
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindFieldValueReferences(
+                    installation,
+                    "mod_fld_tag",
+                    fieldNames,
+                    options);
+
+                Assert.That(results, Is.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void FindTagReferences_PartialMatch_OverrideUtc()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "ref-tag-partial-" + Guid.NewGuid().ToString("N"));
@@ -1248,6 +1339,19 @@ namespace OdyTools.Tests
         public void FindConversationResRefReferences_NullInstallation_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => ReferenceFinder.FindConversationResRefReferences(null, "test_dlg_ref"));
+        }
+
+        [Test]
+        public void FindScriptResRefInNcsBytes_CaseSensitive_RequiresExactCase()
+        {
+            byte[] data = System.Text.Encoding.ASCII.GetBytes("abc k_Test_Hb xyz");
+
+            var insensitive = new ReferenceSearchOptions { CaseSensitive = false };
+            Assert.That(ReferenceFinder.FindScriptResRefInNcsBytes(data, "k_test_hb", insensitive), Is.Not.Empty);
+
+            var sensitive = new ReferenceSearchOptions { CaseSensitive = true };
+            Assert.That(ReferenceFinder.FindScriptResRefInNcsBytes(data, "k_test_hb", sensitive), Is.Empty);
+            Assert.That(ReferenceFinder.FindScriptResRefInNcsBytes(data, "k_Test_Hb", sensitive), Is.Not.Empty);
         }
 
         [Test]
