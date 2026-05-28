@@ -4,8 +4,10 @@ using System.IO;
 using BioWare.Common;
 using BioWare.Extract;
 using BioWare.Resource;
+using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.GFF.Generics.UTC;
+using BioWare.Resource.Formats.RIM;
 using BioWare.Tools;
 using NUnit.Framework;
 
@@ -541,6 +543,146 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindScriptReferences_ModuleMod_ReturnsFieldPath()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-mod-" + Guid.NewGuid().ToString("N"));
+            string modulesDir = Path.Combine(installRoot, "modules");
+            Directory.CreateDirectory(modulesDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            WriteModuleWithScriptReference(Path.Combine(modulesDir, "test_mod.mod"), "k_mod_ref");
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = true,
+                    SearchOverride = false
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindScriptReferences(
+                    installation,
+                    "k_mod_ref",
+                    options);
+
+                Assert.That(results, Is.Not.Empty);
+                Assert.That(results, Has.Some.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath == "ScriptHeartbeat" && r.MatchedValue == "k_mod_ref"));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindScriptReferences_NoModules_SkipsModuleUtc()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-nomod-" + Guid.NewGuid().ToString("N"));
+            string modulesDir = Path.Combine(installRoot, "modules");
+            Directory.CreateDirectory(modulesDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            WriteModuleWithScriptReference(Path.Combine(modulesDir, "test_mod.mod"), "k_mod_ref");
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = false
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindScriptReferences(
+                    installation,
+                    "k_mod_ref",
+                    options);
+
+                Assert.That(results, Is.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindScriptReferences_ModuleGlob_FiltersNonMatchingModule()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-modglob-" + Guid.NewGuid().ToString("N"));
+            string modulesDir = Path.Combine(installRoot, "modules");
+            Directory.CreateDirectory(modulesDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            WriteModuleWithScriptReference(Path.Combine(modulesDir, "tar_m01.mod"), "k_tar_only");
+            WriteModuleWithScriptReference(Path.Combine(modulesDir, "danm13.rim"), "k_dan_only");
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var tarOptions = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = true,
+                    SearchOverride = false,
+                    ModuleGlobFilters = new List<string> { "tar_m01*" }
+                };
+
+                List<ReferenceSearchResult> tarResults = ReferenceFinder.FindScriptReferences(
+                    installation,
+                    "k_tar_only",
+                    tarOptions);
+                Assert.That(tarResults, Is.Not.Empty);
+
+                List<ReferenceSearchResult> danMissResults = ReferenceFinder.FindScriptReferences(
+                    installation,
+                    "k_dan_only",
+                    tarOptions);
+                Assert.That(danMissResults, Is.Empty);
+
+                var danOptions = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = true,
+                    SearchOverride = false,
+                    ModuleGlobFilters = new List<string> { "danm13*" }
+                };
+
+                List<ReferenceSearchResult> danHitResults = ReferenceFinder.FindScriptReferences(
+                    installation,
+                    "k_dan_only",
+                    danOptions);
+                Assert.That(danHitResults, Is.Not.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void FindTagReferences_PartialMatch_OverrideUtc()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "ref-tag-partial-" + Guid.NewGuid().ToString("N"));
@@ -830,6 +972,28 @@ namespace OdyTools.Tests
         {
             byte[] data = System.Text.Encoding.ASCII.GetBytes("abc def");
             Assert.That(ReferenceFinder.FindScriptResRefInNcsBytes(data, "missing"), Is.Empty);
+        }
+
+        private static void WriteModuleWithScriptReference(string modulePath, string scriptResRef)
+        {
+            var utc = new UTC();
+            utc.OnHeartbeat = new ResRef(scriptResRef);
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            string ext = Path.GetExtension(modulePath);
+            if (ext.Equals(".rim", StringComparison.OrdinalIgnoreCase))
+            {
+                var rim = new RIM();
+                rim.SetData("test_npc", ResourceType.UTC, bytes);
+                RIMAuto.WriteRim(rim, modulePath, ResourceType.RIM);
+            }
+            else
+            {
+                var mod = new ERF(ERFType.MOD);
+                mod.SetData("test_npc", ResourceType.UTC, bytes);
+                ERFAuto.WriteErf(mod, modulePath, ResourceType.MOD);
+            }
         }
     }
 }
