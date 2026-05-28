@@ -9,6 +9,7 @@ using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.GFF.Generics;
 using BioWare.Resource.Formats.GFF.Generics.UTC;
+using BioWare.Resource.Formats.NCS;
 using BioWare.Resource.Formats.KEY;
 using BioWare.Resource.Formats.RIM;
 using BioWare.Tools;
@@ -416,6 +417,55 @@ namespace OdyTools.Tests
                 Assert.That(results, Is.Not.Empty);
                 Assert.That(results, Has.Some.Matches<ReferenceSearchResult>(
                     r => r.FieldPath != null && r.FieldPath.Contains("offset_") && r.MatchedValue == "k_ncs_ref"));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindScriptReferences_OverrideCompiledNcs_ReturnsNcsBytecodePath()
+        {
+            const string targetResRef = "k_target_hb";
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-ncs-consts-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { ExecuteScript(\"" + targetResRef + "\", OBJECT_SELF); }",
+                BioWareGame.K1);
+            byte[] ncsBytes = NCSAuto.BytesNcs(ncs);
+            File.WriteAllBytes(Path.Combine(overrideDir, "caller_script.ncs"), ncsBytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindScriptReferences(
+                    installation,
+                    targetResRef,
+                    options);
+
+                Assert.That(results, Is.Not.Empty);
+                Assert.That(results, Has.Some.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath != null
+                        && r.FieldPath.StartsWith("(NCS bytecode) offset_")
+                        && r.MatchedValue == targetResRef));
             }
             finally
             {
