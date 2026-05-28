@@ -25,6 +25,20 @@ name = ""default""
 file = ""test.mod""
 ";
 
+        private const string PackUnpackPipelineConfig = @"[package]
+name = ""testpack""
+
+  [package.sources]
+  include = ""src/**/*.json""
+
+  [package.rules]
+  ""*.utc"" = ""src/blueprints/creatures""
+
+[target]
+name = ""default""
+file = ""test.mod""
+";
+
         private const string PackPipelineConfig = @"[package]
 name = ""testpack""
 
@@ -214,6 +228,94 @@ file = ""test.mod""
                 string jsonPath = Path.Combine(projectDir, "src", "blueprints", "creatures", resref + ".utc.json");
                 Assert.That(exitCode, Is.EqualTo(0), stderr);
                 Assert.That(File.Exists(jsonPath), Is.True);
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
+        [Test]
+        public void CliPack_Unpack_RemoveDeleted_RemovesStaleJson()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-pack-unpack-rm-cli-" + Guid.NewGuid().ToString("N"));
+            const string resref = "rm_creature";
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), PackUnpackPipelineConfig);
+
+                string creaturesDir = Path.Combine(projectDir, "src", "blueprints", "creatures");
+                Directory.CreateDirectory(creaturesDir);
+                string jsonPath = Path.Combine(creaturesDir, resref + ".utc.json");
+                GFF gff = UTCHelpers.DismantleUtc(new UTC(), BioWareGame.K1);
+                GFFAuto.WriteGff(gff, jsonPath, ResourceType.GFF_JSON);
+
+                Assert.That(
+                    RunKotorCli("pack default", projectDir, out _, out string packErr),
+                    Is.EqualTo(0),
+                    packErr);
+
+                string modPath = Path.Combine(projectDir, "test.mod");
+                Assert.That(File.Exists(modPath), Is.True);
+
+                string stalePath = Path.Combine(creaturesDir, "stale.utc.json");
+                File.WriteAllText(stalePath, "{}");
+
+                Assert.That(
+                    RunKotorCli("unpack default \"" + modPath + "\" --removeDeleted", projectDir, out _, out string unpackErr),
+                    Is.EqualTo(0),
+                    unpackErr);
+                Assert.That(File.Exists(stalePath), Is.False);
+                Assert.That(File.Exists(jsonPath), Is.True);
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
+        [Test]
+        public void CliPack_Unpack_Roundtrip_RestoresJsonUnderRules()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-pack-unpack-rt-cli-" + Guid.NewGuid().ToString("N"));
+            const string resref = "rt_creature";
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), PackUnpackPipelineConfig);
+
+                string creaturesDir = Path.Combine(projectDir, "src", "blueprints", "creatures");
+                Directory.CreateDirectory(creaturesDir);
+                string jsonPath = Path.Combine(creaturesDir, resref + ".utc.json");
+                GFF gff = UTCHelpers.DismantleUtc(new UTC(), BioWareGame.K1);
+                gff.Root.SetString("Label", "roundtrip-cli");
+                GFFAuto.WriteGff(gff, jsonPath, ResourceType.GFF_JSON);
+
+                Assert.That(
+                    RunKotorCli("pack default", projectDir, out _, out string packErr),
+                    Is.EqualTo(0),
+                    packErr);
+
+                string modPath = Path.Combine(projectDir, "test.mod");
+                Assert.That(File.Exists(modPath), Is.True);
+
+                ERF packedMod = ERFAuto.ReadErf(modPath, ResourceType.MOD);
+                Assert.That(packedMod.Get(resref, ResourceType.UTC), Is.Not.Null);
+
+                File.Delete(jsonPath);
+                Assert.That(File.Exists(jsonPath), Is.False);
+
+                Assert.That(
+                    RunKotorCli("unpack default \"" + modPath + "\"", projectDir, out _, out string unpackErr),
+                    Is.EqualTo(0),
+                    unpackErr);
+                Assert.That(File.Exists(jsonPath), Is.True);
+
+                GFF restored = GFFAuto.ReadGff(jsonPath, fileFormat: ResourceType.GFF_JSON);
+                Assert.That(restored.Root.GetString("Label"), Is.EqualTo("roundtrip-cli"));
             }
             finally
             {
