@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Avalonia.Headless.NUnit;
 using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.GFF;
@@ -17,6 +18,87 @@ namespace OdyTools.Tests
     [TestFixture]
     public class TwoDAMemoryReferenceHelperTests
     {
+        [Test]
+        public void FindAndShowTwoDAMemoryReferences_NegativeRowIndex_DoesNotThrow()
+        {
+            Assert.DoesNotThrow(() =>
+                TwoDAMemoryReferenceHelper.FindAndShowTwoDAMemoryReferences(null, "appearance", -1, null));
+        }
+
+        [Test]
+        public void FindAndShowTwoDAMemoryReferences_NullInstallation_DoesNotThrow()
+        {
+            Assert.DoesNotThrow(() =>
+                TwoDAMemoryReferenceHelper.FindAndShowTwoDAMemoryReferences(null, "appearance", 9, null));
+        }
+
+        [Test]
+        public void FindAndShowTwoDAMemoryReferences_WhitespaceFilename_DoesNotThrow()
+        {
+            string installRoot = CreateInstallWithAppearanceRow(9);
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+                Assert.DoesNotThrow(() =>
+                    TwoDAMemoryReferenceHelper.FindAndShowTwoDAMemoryReferences(
+                        null,
+                        "   ",
+                        9,
+                        installation,
+                        showOptionsDialog: false));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void CollectTwoDARowReferences_NegativeRowIndex_ReturnsEmpty()
+        {
+            string installRoot = CreateInstallWithAppearanceRow(9);
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+
+                List<ReferenceSearchResult> results = TwoDAMemoryReferenceHelper.CollectTwoDARowReferences(
+                    "appearance",
+                    -1,
+                    null,
+                    installation,
+                    null);
+
+                Assert.That(results, Is.Empty);
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void FindAndShowTwoDAMemoryReferences_OverrideHit_CompletesWithoutException()
+        {
+            string installRoot = CreateInstallWithAppearanceRow(9);
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+
+                Assert.DoesNotThrow(() =>
+                    TwoDAMemoryReferenceHelper.FindAndShowTwoDAMemoryReferences(
+                        null,
+                        "appearance",
+                        9,
+                        installation,
+                        showOptionsDialog: false));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
         [Test]
         public void CollectTwoDARowReferences_OverrideOnly_FindsAppearanceMemoryRef()
         {
