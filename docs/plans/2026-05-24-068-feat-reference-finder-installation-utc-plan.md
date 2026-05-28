@@ -107,7 +107,7 @@ Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare 
 - `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ScriptReferenceHelperTests` (**8** tests)
 - `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ReferenceSearchOptionsDialogTests` (**9** tests)
 
-See plans `docs/plans/2026-05-28-224-*` through `docs/plans/2026-05-28-291-*` and plans **276**–**285** for slice history (parent-plan closures **107**, **108**, **066**, **069**, **067**, **064**, **065**, **070**, U4 KotorDiff). Plan **288** syncs NCS bytecode verification rows in `docs/knowledgebase/30-product-ux/odytools-editor-ux.md`. Plans **289**–**290** add compiled NCS end-to-end test coverage (BioWare installation + KotorCLI CLI). Plan **291** syncs KB verification rows for **289**–**290**.
+See plans `docs/plans/2026-05-28-224-*` through `docs/plans/2026-05-28-294-*` and plans **276**–**285** for slice history (parent-plan closures **107**, **108**, **066**, **069**, **067**, **064**, **065**, **070**, U4 KotorDiff). Plan **288** syncs NCS bytecode verification rows in `docs/knowledgebase/30-product-ux/odytools-editor-ux.md`. Plans **289**–**290** add compiled NCS end-to-end test coverage (BioWare installation + KotorCLI CLI). Plans **291**–**294** close post-PR-#11-merge KB sync and KotorCLI `--ncs-strref-min` CLI verification. Plan **295** documents closure milestone **291**–**294**.
 
 **KotorCLI find-2da-ref verification:**
 
