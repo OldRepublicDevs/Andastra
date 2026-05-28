@@ -337,6 +337,8 @@
                                 <MenuItem Header="Paste _Transposed" Name="ctxPasteTransposed" />
                                 <MenuItem Header="_Clear Cell" Name="ctxClearCell" />
                                 <Separator />
+                                <MenuItem Header="Find _References..." Name="ctxFindRowReferences" />
+                                <Separator />
                                 <MenuItem Header="_Insert Row" Name="ctxInsertRow" />
                                 <MenuItem Header="Insert Row _Above" Name="ctxInsertRowAbove" />
                                 <MenuItem Header="Insert Row _Below" Name="ctxInsertRowBelow" />
