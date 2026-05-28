@@ -363,6 +363,91 @@ namespace OdyTools.Tests
                 }
             }
         }
+
+        [Test]
+        public void FindTagReferences_EmptyNeedleReturnsEmpty()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-tag-empty-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(installRoot);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                Assert.That(ReferenceFinder.FindTagReferences(installation, ""), Is.Empty);
+                Assert.That(ReferenceFinder.FindTagReferences(installation, "   "), Is.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindTemplateResRefReferences_EmptyNeedleReturnsEmpty()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-templ-empty-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(installRoot);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                Assert.That(ReferenceFinder.FindTemplateResRefReferences(installation, ""), Is.Empty);
+                Assert.That(ReferenceFinder.FindTemplateResRefReferences(installation, "   "), Is.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindConversationResRefReferences_EmptyNeedleReturnsEmpty()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-conv-empty-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(installRoot);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                Assert.That(ReferenceFinder.FindConversationResRefReferences(installation, ""), Is.Empty);
+                Assert.That(ReferenceFinder.FindConversationResRefReferences(installation, "   "), Is.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindTagReferences_NullInstallation_ThrowsArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>(() => ReferenceFinder.FindTagReferences(null, "tag_needle"));
+        }
+
         [Test]
         public void FindScriptResRefInNcsBytes_FindsEmbeddedResRef()
         {
