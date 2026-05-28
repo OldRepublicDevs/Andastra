@@ -44,8 +44,8 @@ Add integration tests for `check-2da`, expose `ValidationCommands.ExecuteCheck2d
 
 - [x] `ExecuteCheck2da` is public and used by the CLI handler.
 - [x] Two new integration tests in `ValidationAndCatCommandsTests.cs` (missing + override found).
-- [x] All KotorCLI.Tests pass on net9.0 (**260** total after this plan).
-- [x] README test count updated to **260**.
+- [x] All KotorCLI.Tests pass on net9.0 (**261** total after this plan).
+- [x] README test count updated to **261**.
 
 ## Verification
 
