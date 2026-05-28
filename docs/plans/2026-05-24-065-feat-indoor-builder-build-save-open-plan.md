@@ -1,13 +1,37 @@
 ---
 title: "feat: indoor map builder build/save/open + embed tests"
 type: feat
-status: active
+status: complete
 date: 2026-05-24
+completed: 2026-05-28
 origin: docs/plans/2026-05-24-063-feat-pykotor-holocron-port-continuation-plan.md (U3)
 branch: feat/holocron-fac-kotorcli
+closure: docs/plans/2026-05-28-282-docs-close-plan-065-indoor-builder-plan.md
 ---
 
 # feat: Indoor Map Builder — build/save/open + embed tests (U3)
+
+## Completion (2026-05-28)
+
+All requirements R1–R5 landed. Walkmesh tests extended in plan **069** (closed **279**). Closed doc-only via plan **282**.
+
+| Req | Status | Evidence |
+|-----|--------|----------|
+| R1 | **Landed** | `FinalizeModuleData` calls `IndoorMapIo.EmbedIndoorJson(_mod, Write())` |
+| R2 | **Landed** | **3** `IndoorMapIoTests` in `tests/OdyTools.Tests/` |
+| R3 | **Landed** | **4** `IndoorMapWriteLoadTests` |
+| R4 | **Landed** | `IndoorBuilderWindow` Save/Open/Build/OpenMod wired |
+| R5 | **Landed** | `BuildMap` returns error when `_installation == null` |
+
+**Verification (2026-05-28):**
+
+```bash
+dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~IndoorMapIo
+# Passed: 3
+
+dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~IndoorMapWriteLoad
+# Passed: 4
+```
 
 ## Summary
 
