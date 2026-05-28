@@ -251,6 +251,22 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindTemplateResRefInGffBytes_PartialMatch_FindsSubstring()
+        {
+            var utc = new UTC();
+            utc.ResRef = new ResRef("p_creature_tpl");
+
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            var options = new ReferenceSearchOptions { PartialMatch = true };
+            List<string> paths = ReferenceFinder.FindTemplateResRefInGffBytes(bytes, "creature", options);
+
+            Assert.That(paths, Is.Not.Empty);
+            Assert.That(paths, Has.Some.EqualTo("TemplateResRef"));
+        }
+
+        [Test]
         public void FindTemplateResRefInGffBytes_NoMatchReturnsEmpty()
         {
             var utc = new UTC();
@@ -292,6 +308,22 @@ namespace OdyTools.Tests
             var sensitive = new ReferenceSearchOptions { CaseSensitive = true };
             Assert.That(ReferenceFinder.FindConversationResRefInGffBytes(bytes, "test_dlg", sensitive), Is.Empty);
             Assert.That(ReferenceFinder.FindConversationResRefInGffBytes(bytes, "Test_Dlg", sensitive), Is.Not.Empty);
+        }
+
+        [Test]
+        public void FindConversationResRefInGffBytes_PartialMatch_FindsSubstring()
+        {
+            var utc = new UTC();
+            utc.Conversation = new ResRef("test_dlg_ref");
+
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            var options = new ReferenceSearchOptions { PartialMatch = true };
+            List<string> paths = ReferenceFinder.FindConversationResRefInGffBytes(bytes, "dlg", options);
+
+            Assert.That(paths, Is.Not.Empty);
+            Assert.That(paths, Has.Some.EqualTo("Conversation"));
         }
 
         [Test]
@@ -2175,6 +2207,19 @@ namespace OdyTools.Tests
 
             Assert.That(paths, Is.Not.Empty);
             Assert.That(paths, Has.Some.EqualTo("Tag"));
+        }
+
+        [Test]
+        public void FindFieldValueInGffBytes_NoMatchReturnsEmpty()
+        {
+            var utc = new UTC();
+            utc.Tag = "find_me_tag";
+
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            var fieldNames = new HashSet<string> { "Tag" };
+            Assert.That(ReferenceFinder.FindFieldValueInGffBytes(bytes, "missing_value", null, fieldNames), Is.Empty);
         }
 
         [Test]
