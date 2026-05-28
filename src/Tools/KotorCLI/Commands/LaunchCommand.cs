@@ -1,5 +1,6 @@
 using System;
 using System.CommandLine;
+using System.Diagnostics;
 using System.IO;
 using KotorCLI.Logging;
 
@@ -16,7 +17,7 @@ namespace KotorCLI.Commands
             // launch, serve, play, test are all aliases for the same command
             foreach (string alias in new[] { "launch", "serve", "play", "test" })
             {
-                var launchCommand = new Command(alias, "Convert, compile, pack, install, and launch target in-game (--install-only for install; --dry-run for path check; spawn stub otherwise)");
+                var launchCommand = new Command(alias, "Convert, compile, pack, install, and launch target in-game (--install-only, --dry-run, --wait)");
                 var targetsArgument = new Argument<string[]>("targets");
                 targetsArgument.Description = "Target to launch";
                 launchCommand.Add(targetsArgument);
@@ -28,6 +29,8 @@ namespace KotorCLI.Commands
                 launchCommand.Options.Add(dryRunOption);
                 var installOnlyOption = Cli.Opt<bool>("--install-only", "Run install (convert, compile, pack, copy to game) without launching the game");
                 launchCommand.Options.Add(installOnlyOption);
+                var waitOption = Cli.Opt<bool>("--wait", "Wait for the game process to exit and return its exit code");
+                launchCommand.Options.Add(waitOption);
 
                 launchCommand.SetAction(parseResult =>
                 {
@@ -36,9 +39,10 @@ namespace KotorCLI.Commands
                     var installDir = parseResult.GetValue(installDirOption);
                     var dryRun = parseResult.GetValue(dryRunOption);
                     var installOnly = parseResult.GetValue(installOnlyOption);
+                    var waitForExit = parseResult.GetValue(waitOption);
 
                     var logger = new StandardLogger();
-                    var exitCode = Execute(targets, gameBin, installDir, dryRun, installOnly, logger);
+                    var exitCode = Execute(targets, gameBin, installDir, dryRun, installOnly, waitForExit, logger);
                     Environment.Exit(exitCode);
                 });
 
@@ -57,6 +61,11 @@ namespace KotorCLI.Commands
         }
 
         public static int Execute(string[] targetNames, string gameBin, string installDir, bool dryRun, bool installOnly, ILogger logger)
+        {
+            return Execute(targetNames, gameBin, installDir, dryRun, installOnly, false, logger);
+        }
+
+        public static int Execute(string[] targetNames, string gameBin, string installDir, bool dryRun, bool installOnly, bool waitForExit, ILogger logger)
         {
             if (installOnly)
             {
@@ -84,18 +93,94 @@ namespace KotorCLI.Commands
                     logger.Info("Targets: " + string.Join(", ", targetNames));
                 }
 
-                logger.Info("Launch is not yet implemented; dry-run only reports resolved paths.");
+                logger.Info("Dry-run only; skipping install and game launch.");
                 return 0;
             }
 
-            logger.Error("Launch command is not yet implemented. Use install + run the game executable manually.");
-            logger.Info("Planned workflow:");
-            logger.Info("  1. Call install command");
-            logger.Info("  2. Launch KOTOR game executable");
-            logger.Info("  3. Pass module load arguments");
-            logger.Info($"Resolved game executable (for manual launch): {resolvedBinary}");
-            logger.Info("Tip: pass --dry-run to verify path resolution without this error.");
-            return 1;
+            logger.Info("Running install before launch.");
+            int installExitCode = InstallCommand.Execute(targetNames ?? Array.Empty<string>(), installDir, false, false, logger);
+            if (installExitCode != 0)
+            {
+                logger.Error("Install failed; game will not be launched.");
+                return installExitCode;
+            }
+
+            string workingDirectory = DetermineInstallationDirectory(installDir, logger);
+            if (string.IsNullOrEmpty(workingDirectory))
+            {
+                workingDirectory = Path.GetDirectoryName(resolvedBinary);
+            }
+
+            logger.Info("Launching game: " + resolvedBinary);
+            int processExitCode;
+            if (!TryStartGameProcess(resolvedBinary, workingDirectory, waitForExit, logger, out processExitCode))
+            {
+                return 1;
+            }
+
+            if (waitForExit)
+            {
+                logger.Info("Game process exited with code: " + processExitCode);
+                return processExitCode;
+            }
+
+            logger.Info("Game process started.");
+            return 0;
+        }
+
+        internal static bool TryStartGameProcess(string gameBinaryPath, string workingDirectory, bool waitForExit, ILogger logger, out int processExitCode)
+        {
+            processExitCode = 0;
+            if (string.IsNullOrEmpty(gameBinaryPath) || !File.Exists(gameBinaryPath))
+            {
+                logger.Error("Game executable does not exist: " + gameBinaryPath);
+                return false;
+            }
+
+            string workDir = workingDirectory;
+            if (string.IsNullOrEmpty(workDir))
+            {
+                workDir = Path.GetDirectoryName(gameBinaryPath);
+            }
+
+            if (!string.IsNullOrEmpty(workDir) && !Directory.Exists(workDir))
+            {
+                logger.Error("Working directory does not exist: " + workDir);
+                return false;
+            }
+
+            try
+            {
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = gameBinaryPath,
+                    WorkingDirectory = workDir,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using (Process process = Process.Start(startInfo))
+                {
+                    if (process == null)
+                    {
+                        logger.Error("Process.Start returned null.");
+                        return false;
+                    }
+
+                    if (waitForExit)
+                    {
+                        process.WaitForExit();
+                        processExitCode = process.ExitCode;
+                    }
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Failed to start game process: " + ex.Message);
+                return false;
+            }
         }
 
         internal static string ResolveGameBinary(string gameBin, string installDir, ILogger logger)
