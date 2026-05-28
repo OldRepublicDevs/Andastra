@@ -132,6 +132,11 @@ namespace KotorCLI.Commands
                 kotorPath = Environment.GetEnvironmentVariable("K1_PATH");
             }
 
+            if (string.IsNullOrEmpty(kotorPath))
+            {
+                kotorPath = Environment.GetEnvironmentVariable("K2_PATH");
+            }
+
             if (!string.IsNullOrEmpty(kotorPath) && Directory.Exists(kotorPath))
             {
                 string chitinPath = Path.Combine(kotorPath, "chitin.key");
