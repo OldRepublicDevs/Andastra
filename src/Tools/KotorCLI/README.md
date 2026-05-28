@@ -37,7 +37,7 @@ Legend: **wired** = functional CLI backed by BioWare or `Conversions`; **partial
 
 ### Archive test coverage (plans 140–186)
 
-Archive CLI commands have **substantial integration test coverage** in `tests/KotorCLI.Tests/` (**368** tests total on net9.0):
+Archive CLI commands have **substantial integration test coverage** in `tests/KotorCLI.Tests/` (**369** tests total on net9.0):
 
 | Area | Coverage |
 |------|----------|
