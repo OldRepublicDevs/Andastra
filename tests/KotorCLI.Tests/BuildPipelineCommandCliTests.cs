@@ -513,6 +513,44 @@ file = ""test.mod""
         }
 
         [Test]
+        public void CliCompile_UnknownTarget_ExitsNonZero()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-compile-cli-unknown-" + Guid.NewGuid().ToString("N"));
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), CompilePipelineConfig);
+
+                int exitCode = RunKotorCli("compile missing-target", projectDir, out _, out string stderr);
+                Assert.That(exitCode, Is.EqualTo(1), stderr);
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
+        [Test]
+        public void CliInstall_UnknownTarget_ExitsNonZero()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-install-cli-unknown-" + Guid.NewGuid().ToString("N"));
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), PackPipelineConfig);
+
+                int exitCode = RunKotorCli("install missing-target", projectDir, out _, out string stderr);
+                Assert.That(exitCode, Is.EqualTo(1), stderr);
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
+        [Test]
         public void CliInstall_WithPackedMod_CopiesToModules()
         {
             string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-install-cli-" + Guid.NewGuid().ToString("N"));
