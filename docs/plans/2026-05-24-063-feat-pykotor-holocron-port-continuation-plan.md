@@ -16,11 +16,11 @@ branch: feat/holocron-fac-kotorcli
 |------|--------|-------|
 | U1 KotorCLI converts | **Landed** | plan 064 |
 | U2 OdyToolFAC | **Landed** | plan 064 |
-| U3 Indoor Builder | **Landed** | plan 065 (headless; in-game walkmesh open) |
+| U3 Indoor Builder | **Landed** | plan 065 (headless; in-game walkmesh open); walkmesh `AreaModel` tests via plan **069** (closed plan **279**, 2026-05-28). |
 | U4 KotorDiff integrate | **Landed** | shared KotorDiffApp host |
 | U5 NCS disassembly tab | **Landed** | plan 067 |
 | U6 Reference finder Phase 1 | **Landed** | plan 068 — installation search, UTC menu, field paths; plan **066** closed via plan **278** (2026-05-28). |
-| U6 Reference finder Phase 2 follow-up | **Landed** | plans 224–274 on `feat/holocron-port-phase-b` — tag/template/conversation/field-value search, options dialog, helper wiring tests; **174** reference-search tests (**95** BioWare `ReferenceFinder` + **79** OdyTools helper/UI). Authority: plan 068. |
+| U6 Reference finder Phase 2 follow-up | **Landed** | plans 224–274 on `feat/holocron-port-phase-b` — tag/template/conversation/field-value search, options dialog, helper wiring tests; **174** reference-search tests (**95** BioWare `ReferenceFinder` + **79** OdyTools helper/UI). UTD/UTP/UTT script combo wiring from plan **069** (closed plan **279**). Authority: plan 068. |
 | U6 KotorCLI find-2da-ref `--full-row` | **Landed** | plan **107** — BioWare `CollectTwoDARowReferences`, OdyTools delegate, KotorCLI `--full-row`; closed doc-only via plan **276** (2026-05-28). **13** KotorCLI + **2** BioWare TwoDARow tests. |
 | U6 OdyTools 2DA row sweep tests + README | **Landed** | plan **108** — `WithTwoDA` label/StrRef collect tests (**10** TwoDAMemoryReferenceHelper total); KotorCLI README wired/stub accuracy; closed via plan **277** (2026-05-28). |
 | U7 Doc sync | **Landed** | odytools-editor-ux.md updated |
