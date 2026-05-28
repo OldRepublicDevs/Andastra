@@ -57,6 +57,7 @@ namespace OdyTools.Editors
         private MenuItem _ctxInsertRow;
         private MenuItem _ctxInsertRowAbove;
         private MenuItem _ctxInsertRowBelow;
+        private MenuItem _ctxFindRowReferences;
 
         private const int UndoMaxLevels = 30;
 
@@ -213,6 +214,7 @@ namespace OdyTools.Editors
                 _ctxInsertRow = this.FindControl<MenuItem>("ctxInsertRow");
                 _ctxInsertRowAbove = this.FindControl<MenuItem>("ctxInsertRowAbove");
                 _ctxInsertRowBelow = this.FindControl<MenuItem>("ctxInsertRowBelow");
+                _ctxFindRowReferences = this.FindControl<MenuItem>("ctxFindRowReferences");
             }
             catch { }
 
@@ -302,6 +304,7 @@ namespace OdyTools.Editors
         {
             UpdateFormulaBarAndStatus();
             UpdateInsertRowVisibility();
+            UpdateFindRowReferencesVisibility();
         }
 
         /// <summary>Show "Insert Row" only when no row/cell is selected; show "Insert Row Above/Below" only when a cell is selected.</summary>
@@ -331,6 +334,72 @@ namespace OdyTools.Editors
                 _ctxInsertRowAbove.IsVisible = hasSelection;
             if (_ctxInsertRowBelow != null)
                 _ctxInsertRowBelow.IsVisible = hasSelection;
+        }
+
+        private void UpdateFindRowReferencesVisibility()
+        {
+            if (_ctxFindRowReferences == null)
+            {
+                return;
+            }
+
+            int rowIndex = GetPrimarySelectedRowIndex();
+            _ctxFindRowReferences.IsEnabled =
+                _installation?.Installation != null
+                && !string.IsNullOrWhiteSpace(_resname)
+                && rowIndex >= 0
+                && (_sourceData?.Count ?? 0) > 0;
+        }
+
+        private int GetPrimarySelectedRowIndex()
+        {
+            if (_twodaTable == null || _sourceData == null || _sourceData.Count == 0)
+            {
+                return -1;
+            }
+
+            if (_twodaTable.SelectedItem is ObservableCollection<string> primary)
+            {
+                int index = _sourceData.IndexOf(primary);
+                if (index >= 0)
+                {
+                    return index;
+                }
+            }
+
+            if (_twodaTable.SelectedItems != null && _twodaTable.SelectedItems.Count > 0)
+            {
+                var first = _twodaTable.SelectedItems[0] as ObservableCollection<string>;
+                if (first != null)
+                {
+                    return _sourceData.IndexOf(first);
+                }
+            }
+
+            return -1;
+        }
+
+        private void FindReferencesForSelectedRow()
+        {
+            if (_installation?.Installation == null || string.IsNullOrWhiteSpace(_resname))
+            {
+                return;
+            }
+
+            int rowIndex = GetPrimarySelectedRowIndex();
+            if (rowIndex < 0)
+            {
+                return;
+            }
+
+            TwoDA twoDA = TwoDAAuto.Read2DA(Build().Item1);
+            TwoDAMemoryReferenceHelper.FindAndShowTwoDARowReferences(
+                this,
+                _resname,
+                rowIndex,
+                twoDA,
+                _installation,
+                showOptionsDialog: true);
         }
 
         private void OnGridDoubleTapped(object sender, TappedEventArgs e)
@@ -796,6 +865,7 @@ namespace OdyTools.Editors
             Bind(PasteSelection, "actionPaste", "ctxPaste");
             Bind(PasteTransposed, "actionPasteTransposed", "ctxPasteTransposed");
             Bind(ClearCell, "actionClearCell", "ctxClearCell");
+            Bind(FindReferencesForSelectedRow, "ctxFindRowReferences");
             Bind(ShowFindDialog, "actionFind");
             Bind(ShowReplaceDialog, "actionReplace");
             Bind(ShowGoToRowDialog, "actionGoToRow", "tbGoToRow");
@@ -1143,6 +1213,7 @@ namespace OdyTools.Editors
                 _twodaTable?.Columns.Clear();
                 RebuildGridColumns();
                 UpdateStatusBar();
+                UpdateFindRowReferencesVisibility();
                 return;
             }
             TwoDA twoda = TwoDAAuto.Read2DA(data);
@@ -1168,6 +1239,7 @@ namespace OdyTools.Editors
 
             ResetVerticalHeaders();
             UpdateStatusBar();
+            UpdateFindRowReferencesVisibility();
         }
 
         private void UpdateStatusBar()

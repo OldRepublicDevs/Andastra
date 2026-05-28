@@ -1,12 +1,36 @@
 ---
 title: "feat: kotorcli find-2da-ref --full-row parity"
 type: feat
-status: active
+status: complete
 date: 2026-05-24
+completed: 2026-05-28
 branch: feat/holocron-port-phase-b
+closure: docs/plans/2026-05-24-276-docs-close-kotorcli-find-2da-ref-full-row-plan.md
 ---
 
 # feat: KotorCLI find-2da-ref --full-row (plan 107)
+
+## Completion (2026-05-28)
+
+All requirements R1–R5 landed before this closure slice. Authority: plan **276**.
+
+| Req | Status | Evidence |
+|-----|--------|----------|
+| R1 | **Landed** | `ReferenceCacheHelpers.CollectTwoDARowReferences` in `src/BioWare/Tools/ReferenceCache.cs` |
+| R2 | **Landed** | `TwoDAMemoryReferenceHelper.CollectTwoDARowReferences` delegates to BioWare |
+| R3 | **Landed** | `Find2DARefCommand` `--full-row` loads 2DA when available |
+| R4 | **Landed** | `ReferenceCacheHelpersTwoDARowReferencesTests` (**2**); `Find2DARefCommandTests` (**13** total filter) |
+| R5 | **Landed** | `src/Tools/KotorCLI/README.md` documents `--full-row` |
+
+**Verification (2026-05-28):**
+
+```bash
+dotnet test tests/KotorCLI.Tests/KotorCLI.Tests.csproj --framework net9.0 --filter FullyQualifiedName~Find2DARef
+# Passed: 13
+
+dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0 --filter FullyQualifiedName~TwoDARow
+# Passed: 2
+```
 
 ## Summary
 

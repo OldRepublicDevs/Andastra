@@ -1,13 +1,33 @@
 ---
 title: "feat: odytools twoda row sweep tests and kotorcli readme accuracy"
 type: feat
-status: active
+status: complete
 date: 2026-05-24
+completed: 2026-05-28
 origin: docs/plans/2026-05-24-083-feat-holocron-phase-n-2da-memory-find-refs-plan.md
 branch: feat/holocron-port-phase-b
+closure: docs/plans/2026-05-28-277-docs-odytools-twoda-sweep-readme-closure-plan.md
 ---
 
 # feat: OdyTools 2DA row sweep tests + KotorCLI README accuracy (plan 108)
+
+## Completion (2026-05-28)
+
+All requirements R1–R4 landed before this closure slice. Authority: plan **277**.
+
+| Req | Status | Evidence |
+|-----|--------|----------|
+| R1 | **Landed** | `CollectTwoDARowReferences_WithTwoDA_FindsLabelFieldValueRef` in `TwoDAMemoryReferenceHelperTests.cs` |
+| R2 | **Landed** | `CollectTwoDARowReferences_WithTwoDA_FindsRowStrRefColumnRef` in same file |
+| R3 | **Landed** | `src/Tools/KotorCLI/README.md` Status — partial implementation, wired/partial/stub legend |
+| R4 | **Landed** | README command tables mark wired surfaces (reference search, disassemble/assemble, utilities) |
+
+**Verification (2026-05-28):**
+
+```bash
+dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~TwoDAMemoryReferenceHelper
+# Passed: 10
+```
 
 ## Summary
 

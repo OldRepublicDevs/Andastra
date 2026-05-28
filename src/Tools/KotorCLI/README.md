@@ -4,7 +4,7 @@ A comprehensive build tool for KOTOR projects with cli-compatible syntax, ported
 
 ## Status
 
-**Partial implementation, many commands wired.** The Holocron port phase on this branch delivers installation reference search, archive extract/list/create/search, standalone format converters, script decompile/disassemble/assemble, resource converters, utilities, and validation checks through BioWare. The **kotorcli.cfg build pipeline** (`config`, `init`, `list`, `unpack`, `convert`, `compile`, `pack`, `install`) is implemented for typical mod workflows; **`launch`** remains a fail-fast stub. See command tables below for **wired** / **partial** / **stub** labels.
+**Partial implementation, many commands wired.** The Holocron port phase on this branch delivers installation reference search, archive extract/list/create/search, standalone format converters, script decompile/disassemble/assemble, resource converters, utilities, and validation checks through BioWare. The **kotorcli.cfg build pipeline** (`config`, `init`, `list`, `unpack`, `convert`, `compile`, `pack`, `install`) is implemented for typical mod workflows; **`launch`** runs install then starts the game executable (`--install-only`, `--dry-run`, `--wait`). See command tables below for **wired** / **partial** / **stub** labels.
 
 Legend: **wired** = functional CLI backed by BioWare or `Conversions`; **partial** = works with known gaps; **stub** = not implemented or fail-fast only.
 
@@ -26,7 +26,7 @@ Legend: **wired** = functional CLI backed by BioWare or `Conversions`; **partial
 - `compile` - Compile NSS for configured targets (**wired**)
 - `pack` - Pack sources into module archives (**wired**)
 - `install` - Convert, compile, pack, and copy to game install (**wired**)
-- `launch` - Full pipeline plus game launch (**stub** — fail-fast; use `--dry-run` to resolve paths only)
+- `launch` - Install then start game executable (**wired** for install + spawn; no module CLI args). Aliases: `serve`, `play`, `test`. Flags: `--install-only`, `--dry-run`, `--wait`.
 
 ### Archive Commands
 - `extract` - Extract KEY/BIF, RIM, ERF/MOD/SAV/HAK (**wired**)
@@ -37,7 +37,7 @@ Legend: **wired** = functional CLI backed by BioWare or `Conversions`; **partial
 
 ### Archive test coverage (plans 140–186)
 
-Archive CLI commands have **substantial integration test coverage** in `tests/KotorCLI.Tests/` (**278** tests total on net9.0):
+Archive CLI commands have **substantial integration test coverage** in `tests/KotorCLI.Tests/` (**367** tests total on net9.0):
 
 | Area | Coverage |
 |------|----------|
@@ -50,6 +50,24 @@ Archive CLI commands have **substantial integration test coverage** in `tests/Ko
 | `key-pack` | BIF directory to KEY (happy path, filter, missing directory) |
 
 Intentionally out of scope for archive closure: full `launch` pipeline and game-runtime behavior.
+
+### Launch (`launch` / `serve` / `play` / `test`)
+
+```bash
+# Install mod to game without resolving or spawning the executable
+launch default --install-only --installDir /path/to/kotor
+
+# Verify game binary resolution only (no install, no launch)
+launch default --dry-run --gameBin /path/to/swkotor.exe
+
+# Install mod to game, then start swkotor.exe (fire-and-forget)
+launch default --installDir /path/to/kotor
+
+# Same, but wait for the game process to exit (automation/tests)
+launch default --installDir /path/to/kotor --wait
+```
+
+When both `--install-only` and `--dry-run` are passed, **install-only wins** (dry-run is ignored). Full launch always runs **install** first, then starts the resolved executable with the installation directory as the working directory.
 
 ### Format Conversion Commands
 - `gff2json`, `json2gff` - GFF ↔ JSON (**wired**)
@@ -150,14 +168,14 @@ validate-installation --installation /path/to/kotor --no-essential
 
 ## Known Issues
 
-1. **`launch` is a stub** — documents the full pipeline but exits unless `--dry-run` is used.
-2. **Remaining test gaps (non-archive)** — build-pipeline commands (`init`, `config`, `convert`, `compile`, `pack`, `install`, `unpack`, `list`), format convert integration, reference finders, and `launch` path resolution (`ResolveGameBinary`) have coverage; archive create/list/search/extract/key-pack is **substantially closed** (see Archive test coverage above). `stats`/`validate` integration tests cover GFF, 2DA, ERF, BIF, TLK, and NCS (plans 189–195). `validate-installation` covers essential 2DA checks and `--no-essential` (plans 197–198). Remaining gaps: `launch` workflow beyond dry-run. **278** tests in `KotorCLI.Tests` on net9.0.
+1. **`launch` does not pass module load arguments** to the game process; mods must be installed to `modules/` (default workflow).
+2. **Remaining test gaps (non-archive)** — KotorCLI build-pipeline and utility CLI subprocess coverage is **substantially complete** (plans 209–223, **364** tests on net9.0): per-command and end-to-end pipeline (`init`/`config`/`list`/`convert`/`compile`/`pack`/`unpack`/`install`, failure paths including unknown targets and no-config dirs), format convert integration, installation ref-search, utilities, validation, and `launch` path resolution. Broader Holocron deferred items remain per plan 063.
 3. **System.CommandLine** — prefer `.Options.Add()` / current `Cli.Opt` helpers when touching command definitions.
 
 ## Next Steps
 
-1. Implement `launch` (or document a supported external launcher workflow).
-2. Expand coverage for partial utilities (`stats`, `validate`) and any newly wired commands.
+1. Broader Holocron deferred items (module designer, lip syncer, etc.) per plan 063.
+2. Expand coverage for any newly wired commands beyond current utility CLI subprocess suites.
 3. Keep this README inventory in sync when adding or stubbing commands.
 
 ## References

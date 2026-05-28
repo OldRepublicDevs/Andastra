@@ -1,5 +1,8 @@
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
+
+[assembly: InternalsVisibleTo("OdyTools.Tests")]
 
 [assembly: AssemblyCompany("OdyTools.NET")]
 [assembly: AssemblyConfiguration("Debug")]

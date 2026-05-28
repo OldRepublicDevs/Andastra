@@ -42,6 +42,7 @@ namespace OdyTools.Utils
             tagEdit.TextChanged += UpdateEnabled;
             contextMenu.Opened += UpdateEnabled;
             tagEdit.ContextMenu = contextMenu;
+            UpdateEnabled(null, EventArgs.Empty);
         }
 
         public static void AttachTemplateResRefFindReferencesMenu(
@@ -72,6 +73,7 @@ namespace OdyTools.Utils
             resRefEdit.TextChanged += UpdateEnabled;
             contextMenu.Opened += UpdateEnabled;
             resRefEdit.ContextMenu = contextMenu;
+            UpdateEnabled(null, EventArgs.Empty);
         }
 
         public static ReferenceSearchOptions PromptSearchOptions(Window parent, ReferenceSearchOptions defaults)
@@ -84,11 +86,22 @@ namespace OdyTools.Utils
             ReferenceSearchOptions defaults,
             bool showStrRefNcsOptions)
         {
-            defaults = defaults ?? new ReferenceSearchOptions();
             var dialog = new ReferenceSearchOptionsDialog(parent, showStrRefNcsOptions);
-            dialog.SetDefaults(defaults);
+            bool accepted = dialog.ShowDialogAndAccepted(parent);
+            return BuildPromptResult(defaults, dialog, accepted);
+        }
 
-            if (!dialog.ShowDialogAndAccepted(parent))
+        /// <summary>
+        /// Maps dialog UI to search options after prompt acceptance (testable without modal UI).
+        /// </summary>
+        internal static ReferenceSearchOptions BuildPromptResult(
+            ReferenceSearchOptions defaults,
+            ReferenceSearchOptionsDialog dialog,
+            bool accepted)
+        {
+            defaults = defaults ?? new ReferenceSearchOptions();
+            dialog.SetDefaults(defaults);
+            if (!accepted)
             {
                 return null;
             }

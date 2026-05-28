@@ -107,7 +107,7 @@ namespace BioWare.Tools
             return value >= minimum;
         }
 
-        private static void SkipInstructionPayload(RawBinaryReader reader, byte opcode, byte qualifier)
+        internal static void SkipInstructionPayload(RawBinaryReader reader, byte opcode, byte qualifier)
         {
             if (opcode == 0x04)
             {

@@ -1429,7 +1429,7 @@ namespace KotorCLI.Commands
             {
                 FileStats stats = FileStatsAnalyzer.AnalyzeFile(file);
                 stats.PrintToLogger(logger);
-                return 0;
+                return stats.IsValid ? 0 : 1;
             }
             catch (Exception ex)
             {

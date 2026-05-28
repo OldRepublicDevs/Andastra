@@ -195,6 +195,102 @@ namespace BioWare.Tests
         }
 
         [Test]
+        public void FindStrRefReferences_IncludeNcsStrRefScanFalse_SkipsOverrideNcs()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ncs-find-skip-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss("void main() { int n = " + targetStrRef + "; }", BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_script.ncs"), bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchOverride = true,
+                    SearchChitin = false,
+                    SearchModules = false,
+                    IncludeNcsStrRefScan = false
+                };
+
+                List<StrRefSearchResult> results = ReferenceCacheHelpers.FindStrRefReferences(
+                    installation,
+                    targetStrRef,
+                    null,
+                    null,
+                    options);
+
+                Assert.That(results, Is.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindAllStrRefReferences_IncludeNcsStrRefScanFalse_SkipsOverrideNcs()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ncs-batch-skip-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss("void main() { int n = " + targetStrRef + "; }", BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_script.ncs"), bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchOverride = true,
+                    SearchChitin = false,
+                    SearchModules = false,
+                    IncludeNcsStrRefScan = false
+                };
+
+                (Dictionary<int, List<StrRefSearchResult>> batchResults, StrRefReferenceCache cache) =
+                    ReferenceCacheHelpers.FindAllStrRefReferences(
+                        installation,
+                        new List<int> { targetStrRef },
+                        null,
+                        null,
+                        options);
+
+                Assert.That(batchResults[targetStrRef], Is.Empty);
+                Assert.That(cache.HasReferences(targetStrRef), Is.False);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void IsPlausibleStrRefCandidate_UsesMinimumThreshold()
         {
             Assert.That(NcsConstiScanner.IsPlausibleStrRefCandidate(99), Is.False);

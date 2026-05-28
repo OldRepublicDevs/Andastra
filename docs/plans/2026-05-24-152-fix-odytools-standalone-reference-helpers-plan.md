@@ -1,7 +1,7 @@
 ---
 title: "fix: odyTools standalone reference helper wiring"
 type: fix
-status: active
+status: completed
 date: 2026-05-24
 origin: ci-investigation-pr7-solution-build
 branch: feat/holocron-port-phase-b

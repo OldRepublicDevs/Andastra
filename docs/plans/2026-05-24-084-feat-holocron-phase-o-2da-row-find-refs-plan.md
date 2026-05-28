@@ -5,6 +5,7 @@ status: complete
 date: 2026-05-24
 origin: docs/plans/2026-05-24-083-feat-holocron-phase-n-2da-memory-find-refs-plan.md
 branch: feat/holocron-port-phase-b
+follow_up_landed: 2026-05-28
 ---
 
 # feat: Holocron port phase O (plan 084)
@@ -25,7 +26,16 @@ Complete Holocron `ComboBox2DA` “Find References” by merging 2DA memory refs
 - ReferenceSearchOptions dialog in ComboBox2DA deferred (use installation-wide defaults).
 - Reference cache persistence deferred.
 
+## Follow-up landed (2026-05-28, plans 262–263 on `feat/holocron-port-phase-b`)
+
+- **262:** `TwoDAMemoryReferenceHelper.FindAndShowTwoDAMemoryReferences` guard clauses and override wiring smoke (**4** tests).
+- **263:** `CollectTwoDARowReferences` empty-result precondition on empty override install (**1** test in TwoDA suite).
+- **OdyTools:** **10** tests in `tests/OdyTools.Tests/TwoDAMemoryReferenceHelperTests.cs`.
+
 ## Verification
 
 - `dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0 --filter FieldValue`
 - `dotnet test tests/KotorCLI.Tests/KotorCLI.Tests.csproj --framework net9.0 --filter FindFieldValue`
+- `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~TwoDAMemoryReferenceHelperTests` (**10** tests)
+
+See plans `docs/plans/2026-05-28-262-*`, `263-*`, and `264-*` for wiring and closure slices.

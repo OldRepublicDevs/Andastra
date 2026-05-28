@@ -1,13 +1,37 @@
 ---
 title: "feat: holocron port phase A — KotorCLI converts + OdyToolFAC"
 type: feat
-status: active
+status: complete
 date: 2026-05-24
+completed: 2026-05-28
 origin: docs/plans/2026-05-24-063-feat-pykotor-holocron-port-continuation-plan.md (U1, U2)
 branch: feat/holocron-fac-kotorcli
+closure: docs/plans/2026-05-28-281-docs-close-plan-064-kotorcli-fac-plan.md
 ---
 
 # feat: Holocron port phase A — KotorCLI converts + OdyToolFAC
+
+## Completion (2026-05-28)
+
+All requirements R1–R5 landed on `feat/holocron-fac-kotorcli`. Closed doc-only via plan **281**.
+
+| Req | Status | Evidence |
+|-----|--------|----------|
+| R1 | **Landed** | `FormatConvertCommands.cs` delegates to BioWare `Conversions` (no STUB-only paths) |
+| R2 | **Landed** | `OdyToolFAC.axaml` + `FACHelpers` load/save |
+| R3 | **Landed** | `WindowUtils` routes `ResourceType.FAC` → `OdyToolFAC` |
+| R4 | **Landed** | `OdyToolFAC.Standalone.csproj` in solution |
+| R5 | **Landed** | **3** `OdyToolFACTests` pass |
+
+**Verification (2026-05-28):**
+
+```bash
+dotnet test tests/KotorCLI.Tests/KotorCLI.Tests.csproj --framework net9.0 --filter FullyQualifiedName~FormatConvert
+# Passed: 21
+
+dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~OdyToolFAC
+# Passed: 3
+```
 
 ## Summary
 

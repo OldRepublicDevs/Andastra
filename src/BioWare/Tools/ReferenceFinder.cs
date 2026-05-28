@@ -12,8 +12,7 @@ using FileResource = BioWare.Extract.FileResource;
 namespace BioWare.Tools
 {
     /// <summary>
-    /// Holocron/PyKotor reference finder surface (GFF script ResRef, Tag, TemplateResRef, NCS byte scan).
-    /// Full NCS CONST instruction parsing remains deferred.
+    /// Holocron/PyKotor reference finder surface (GFF script ResRef, Tag, TemplateResRef, NCS CONSTS scan).
     /// </summary>
     public class ReferenceSearchOptions
     {
@@ -420,7 +419,7 @@ namespace BioWare.Tools
         }
 
         /// <summary>
-        /// Scan NCS bytecode for embedded script ResRef string constants (byte-offset hits).
+        /// Scan NCS bytecode for script ResRef string constants (CONSTS-first, byte-scan fallback).
         /// </summary>
         public static List<string> FindScriptResRefInNcsBytes(byte[] data, string resRefNeedle)
         {
@@ -433,6 +432,7 @@ namespace BioWare.Tools
             ReferenceSearchOptions options)
         {
             var paths = new List<string>();
+            var seenOffsets = new HashSet<int>();
             if (data == null || data.Length == 0 || string.IsNullOrWhiteSpace(resRefNeedle))
             {
                 return paths;
@@ -444,6 +444,19 @@ namespace BioWare.Tools
                 ? StringComparison.Ordinal
                 : StringComparison.OrdinalIgnoreCase;
 
+            foreach (NcsConstStringScanner.ConstsInstruction instruction in NcsConstStringScanner.ExtractConstsInstructions(data))
+            {
+                if (!ValueMatches(instruction.Value, needle, options))
+                {
+                    continue;
+                }
+
+                if (seenOffsets.Add(instruction.StringByteOffset))
+                {
+                    paths.Add(FormatNcsBytecodeFieldPath(instruction.StringByteOffset));
+                }
+            }
+
             for (int offset = 0; offset < data.Length; offset++)
             {
                 if (!ByteSequenceMatches(data, offset, needle, comparison))
@@ -451,13 +464,23 @@ namespace BioWare.Tools
                     continue;
                 }
 
-                if (IsEmbeddedResRefMatch(data, offset, needle.Length))
+                if (!IsEmbeddedResRefMatch(data, offset, needle.Length))
                 {
-                    paths.Add("offset_" + offset);
+                    continue;
+                }
+
+                if (seenOffsets.Add(offset))
+                {
+                    paths.Add(FormatNcsBytecodeFieldPath(offset));
                 }
             }
 
             return paths;
+        }
+
+        private static string FormatNcsBytecodeFieldPath(int byteOffset)
+        {
+            return "(NCS bytecode) offset_" + byteOffset;
         }
 
         private static bool ByteSequenceMatches(byte[] data, int offset, string needle, StringComparison comparison)

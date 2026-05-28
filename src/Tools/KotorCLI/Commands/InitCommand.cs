@@ -143,6 +143,15 @@ description = ""Default target""
 
             if (!string.IsNullOrEmpty(initFile))
             {
+                string initPath = Path.GetFullPath(initFile.Trim());
+                if (initFile.Trim() == "." || string.Equals(initPath, targetDir, StringComparison.OrdinalIgnoreCase))
+                {
+                    initFile = null;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(initFile))
+            {
                 // Unpack the initial file into the default target
                 logger.Info($"Unpacking initial file: {initFile}");
 

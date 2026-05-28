@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
@@ -8,8 +9,13 @@ using Avalonia.Controls;
 using Avalonia.Headless.NUnit;
 using BioWare.Common;
 using BioWare.Resource;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.GFF.Generics.UTC;
 using BioWare.Resource.Formats.TwoDA;
+using BioWare.Tools;
+using OdyTools.Data;
 using OdyTools.Editors;
+using OdyTools.Utils;
 using NUnit.Framework;
 
 namespace OdyTools.Tests
@@ -1930,6 +1936,93 @@ namespace OdyTools.Tests
             Assert.That(grid.Columns.Count, Is.GreaterThan(0), "Should have columns");
 
             editor.Close();
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_Build_SuppliesTwoDAForRowReferenceCollect()
+        {
+            const int targetRow = 1;
+            const string rowLabel = "creature_01";
+            string installRoot = Path.Combine(Path.GetTempPath(), "odytools-2da-build-ref-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+
+            var utc = new UTC();
+            utc.AppearanceId = targetRow;
+            utc.Tag = rowLabel;
+            var gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            File.WriteAllBytes(
+                Path.Combine(overrideDir, "test_npc.utc"),
+                GFFAuto.BytesGff(gff, ResourceType.UTC));
+
+            var source = new TwoDA(new List<string> { "label", "name" });
+            source.AddRow();
+            source.SetLabel(0, "row0");
+            source.AddRow();
+            source.SetLabel(targetRow, rowLabel);
+            source.SetCellString(targetRow, "name", "x");
+
+            var editor = new OdyTool2DA(null, null);
+            try
+            {
+                editor.Load("appearance.2da", "appearance", ResourceType.TwoDA, TwoDAAuto.BytesTwoDA(source));
+
+                TwoDA built = TwoDAAuto.Read2DA(editor.Build().Item1);
+                Assert.That(built.GetHeight(), Is.EqualTo(2));
+                Assert.That(built.GetLabel(targetRow), Is.EqualTo(rowLabel));
+
+                var installation = new OdyInstallation(installRoot, "Test");
+                var options = new ReferenceSearchOptions
+                {
+                    SearchOverride = true,
+                    SearchChitin = false,
+                    SearchModules = false
+                };
+
+                List<ReferenceSearchResult> results = TwoDAMemoryReferenceHelper.CollectTwoDARowReferences(
+                    "appearance",
+                    targetRow,
+                    built,
+                    installation,
+                    options);
+
+                Assert.That(results.Count, Is.GreaterThanOrEqualTo(2));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_GetPrimarySelectedRowIndex_AfterSelect_ReturnsIndex()
+        {
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, CreateTestTwoDABytes(3));
+                SetSelection(editor, 1);
+
+                var method = typeof(OdyTool2DA).GetMethod(
+                    "GetPrimarySelectedRowIndex",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                Assert.That(method, Is.Not.Null);
+                int rowIndex = (int)method.Invoke(editor, null);
+                Assert.That(rowIndex, Is.EqualTo(1));
+            }
+            finally
+            {
+                editor.Close();
+            }
         }
 
     }

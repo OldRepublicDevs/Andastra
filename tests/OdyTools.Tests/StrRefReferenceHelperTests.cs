@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Avalonia.Headless.NUnit;
 using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.NCS;
@@ -15,6 +16,90 @@ namespace OdyTools.Tests
     [TestFixture]
     public class StrRefReferenceHelperTests
     {
+        [Test]
+        public void FindAndShowStrRefReferences_NegativeStrRef_DoesNotThrow()
+        {
+            Assert.DoesNotThrow(() =>
+                StrRefReferenceHelper.FindAndShowStrRefReferences(null, -1, null));
+        }
+
+        [Test]
+        public void FindAndShowStrRefReferences_NullInstallation_DoesNotThrow()
+        {
+            Assert.DoesNotThrow(() =>
+                StrRefReferenceHelper.FindAndShowStrRefReferences(null, 88888, null));
+        }
+
+        [Test]
+        public void CollectStrRefReferences_NegativeStrRef_ReturnsEmpty()
+        {
+            string installRoot = CreateInstallWithStrRef(88888);
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+
+                List<ReferenceSearchResult> results = StrRefReferenceHelper.CollectStrRefReferences(
+                    -1,
+                    installation,
+                    null);
+
+                Assert.That(results, Is.Empty);
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void FindAndShowStrRefReferences_OverrideHit_CompletesWithoutException()
+        {
+            string installRoot = CreateInstallWithStrRef(88888);
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+
+                Assert.DoesNotThrow(() =>
+                    StrRefReferenceHelper.FindAndShowStrRefReferences(
+                        null,
+                        88888,
+                        installation,
+                        showOptionsDialog: false));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void CollectStrRefReferences_NoMatch_ReturnsEmpty()
+        {
+            string installRoot = CreateInstallWithStrRef(88888);
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+                var options = new ReferenceSearchOptions
+                {
+                    SearchOverride = true,
+                    SearchChitin = false,
+                    SearchModules = false
+                };
+
+                List<ReferenceSearchResult> results = StrRefReferenceHelper.CollectStrRefReferences(
+                    99999,
+                    installation,
+                    options);
+
+                Assert.That(results, Is.Empty);
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
         [Test]
         public void CollectStrRefReferences_OverrideOnly_FindsSsfHit()
         {
