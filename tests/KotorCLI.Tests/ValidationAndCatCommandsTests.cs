@@ -187,6 +187,91 @@ namespace KotorCLI.Tests
             }
         }
 
+        [Test]
+        public void ExecuteValidateInstallation_MinimalEssentialInstall_ExitsZero()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-validate-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            WriteEssentialTwoDAFiles(overrideDir);
+
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = ValidationCommands.ExecuteValidateInstallation(installRoot, true, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteValidateInstallation_NonexistentPath_ExitsNonZero()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-validate-missing-" + Guid.NewGuid().ToString("N"));
+
+            var logger = new StandardLogger();
+            int exitCode = ValidationCommands.ExecuteValidateInstallation(installRoot, true, logger);
+            Assert.That(exitCode, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ExecuteValidateInstallation_MissingEssentialTwoDA_ExitsNonZero()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-validate-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var twoDA = new TwoDA(new List<string> { "label" });
+            twoDA.AddRow();
+            byte[] twoDaBytes = TwoDAAuto.BytesTwoDA(twoDA);
+            File.WriteAllBytes(Path.Combine(overrideDir, "appearance.2da"), twoDaBytes);
+            File.WriteAllBytes(Path.Combine(overrideDir, "baseitems.2da"), twoDaBytes);
+            File.WriteAllBytes(Path.Combine(overrideDir, "classes.2da"), twoDaBytes);
+
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = ValidationCommands.ExecuteValidateInstallation(installRoot, true, logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        private static void WriteEssentialTwoDAFiles(string overrideDir)
+        {
+            var twoDA = new TwoDA(new List<string> { "label" });
+            twoDA.AddRow();
+            byte[] twoDaBytes = TwoDAAuto.BytesTwoDA(twoDA);
+
+            string[] essentialNames = { "appearance", "baseitems", "classes", "genericdoors" };
+            foreach (string name in essentialNames)
+            {
+                File.WriteAllBytes(Path.Combine(overrideDir, name + ".2da"), twoDaBytes);
+            }
+        }
+
     }
 
     [TestFixture]
