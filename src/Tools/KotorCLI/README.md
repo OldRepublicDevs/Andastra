@@ -181,4 +181,3 @@ validate-installation --installation /path/to/kotor --no-essential
 ## References
 
 Original Python implementation: `vendor/PyKotor/Tools/KotorCLI/`
-

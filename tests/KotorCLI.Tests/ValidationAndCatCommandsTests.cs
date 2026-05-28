@@ -545,7 +545,6 @@ namespace KotorCLI.Tests
                 return process.ExitCode;
             }
         }
-
         private static void WriteEssentialTwoDAFiles(string overrideDir)
         {
             var twoDA = new TwoDA(new List<string> { "label" });
