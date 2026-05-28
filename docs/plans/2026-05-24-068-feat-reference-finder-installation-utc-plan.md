@@ -40,6 +40,8 @@ Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare 
 
 **KotorCLI find-refs compiled NCS CLI test closed (2026-05-28, plan 290):** `Cli_FindRefs_Script_CompiledNcsInOverride_ExitsZero` in `FindRefsCommandCliTests`. See plan `290`.
 
+**KB e2e verification sync closed (2026-05-28, plan 291):** verification rows for plans **289**–**290** in `docs/knowledgebase/30-product-ux/odytools-editor-ux.md`. See plan `291`.
+
 ## Requirements
 
 - R1. `ReferenceFinder.FindScriptReferences(Installation, string scriptResRef, ReferenceSearchOptions options)` returns `List<ReferenceSearchResult>` with `FileResource` + `FieldPath`.
@@ -101,7 +103,7 @@ Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare 
 - `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ScriptReferenceHelperTests` (**8** tests)
 - `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ReferenceSearchOptionsDialogTests` (**9** tests)
 
-See plans `docs/plans/2026-05-28-224-*` through `docs/plans/2026-05-28-290-*` and plans **276**–**285** for slice history (parent-plan closures **107**, **108**, **066**, **069**, **067**, **064**, **065**, **070**, U4 KotorDiff). Plan **288** syncs NCS bytecode verification rows in `docs/knowledgebase/30-product-ux/odytools-editor-ux.md`. Plans **289**–**290** add compiled NCS end-to-end test coverage (BioWare installation + KotorCLI CLI).
+See plans `docs/plans/2026-05-28-224-*` through `docs/plans/2026-05-28-291-*` and plans **276**–**285** for slice history (parent-plan closures **107**, **108**, **066**, **069**, **067**, **064**, **065**, **070**, U4 KotorDiff). Plan **288** syncs NCS bytecode verification rows in `docs/knowledgebase/30-product-ux/odytools-editor-ux.md`. Plans **289**–**290** add compiled NCS end-to-end test coverage (BioWare installation + KotorCLI CLI). Plan **291** syncs KB verification rows for **289**–**290**.
 
 **KotorCLI find-2da-ref verification:**
 
