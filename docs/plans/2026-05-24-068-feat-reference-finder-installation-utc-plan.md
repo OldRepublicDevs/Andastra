@@ -14,7 +14,9 @@ follow_up_landed: 2026-05-28
 
 Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare `ReferenceFinder` with installation-wide script ResRef search returning structured results with GFF field paths; show field paths in `FileResultsDialog`; wire **Find References** on UTC script combo context menus.
 
-**Follow-up landed (2026-05-28, plans 224–259 on `feat/holocron-port-phase-b`):** tag, template ResRef, conversation, and field-value installation search; `ReferenceSearchOptionsDialog`; `ReferenceSearchHelper` / `ScriptReferenceHelper` editor wiring; **95** `ReferenceFinderTests` + **42** OdyTools UI/options/wiring tests.
+**Follow-up landed (2026-05-28, plans 224–260 on `feat/holocron-port-phase-b`):** tag, template ResRef, conversation, and field-value installation search; `ReferenceSearchOptionsDialog`; `ReferenceSearchHelper` / `ScriptReferenceHelper` editor wiring; **95** `ReferenceFinderTests` + **42** OdyTools UI/options/wiring tests.
+
+**StrRef/2DA helper follow-up landed (2026-05-28, plans 261–264 on `feat/holocron-port-phase-b`):** `StrRefReferenceHelper` and `TwoDAMemoryReferenceHelper` FindAndShow wiring + empty-result collect tests; **148** reference-search tests total (**95** BioWare `ReferenceFinder` + **53** OdyTools helper/wiring, including **8** StrRef + **10** TwoDA helper tests). See plans `082`, `084`, `261`–`263`.
 
 ## Requirements
 
@@ -76,4 +78,9 @@ Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare 
 - `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ScriptReferenceHelperTests` (**5** tests)
 - `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ReferenceSearchOptionsDialogTests` (**9** tests)
 
-See plans `docs/plans/2026-05-28-224-*` through `docs/plans/2026-05-28-260-*` for slice history.
+See plans `docs/plans/2026-05-28-224-*` through `docs/plans/2026-05-28-264-*` for slice history.
+
+**StrRef/2DA helper verification (OdyTools):**
+
+- `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~StrRefReferenceHelperTests` (**8** tests)
+- `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~TwoDAMemoryReferenceHelperTests` (**10** tests)
