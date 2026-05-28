@@ -22,7 +22,7 @@ Enable `StrRefReferenceCache` NCS scanning by extracting CONSTI instructions fro
 ## Scope Boundaries
 
 - KotorDiff `ReferenceAnalyzers` refactor to call BioWare scanner deferred.
-- Distinguishing StrRef vs 2DA-memory CONSTI deferred (Holocron adds all CONSTI to cache).
+- Distinguishing StrRef vs 2DA-memory CONSTI **partially landed** (2026-05-28, plan **292**): `StrRefCandidateMinimum` threshold skips low CONSTI in cache scans; slow path still matches any CONSTI. Opcode-context disambiguation remains deferred.
 
 ## Verification
 
