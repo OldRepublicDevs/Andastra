@@ -41,22 +41,33 @@ Ongoing knowledgebase and onboarding maintenance. Initial KB landed via [PR #2](
 
 Full index: [docs/plans/README.md](../../plans/README.md)
 
-## PR #4 (open)
-
-Branch `docs/post-pr3-tracker-sync` — [PR #4](https://github.com/th3w1zard1/Andastra/pull/4). Docs-only maintenance batch (plans 056–063). `[REPO]`
+## PR #4 outcome
 
 | Item | Status |
 |------|--------|
+| Merge | **Merged** to `master` (plans 056–063) `[REPO]` |
 | Scope | Post-PR #3 tracker refresh; OdyPatch validate fixture + E2E runbook documentation arc |
-| Plans | 056–063 (drift remediations #47–#54) |
-| Code risk | None — KB, README, AGENTS.md, tool READMEs only |
-| Local validate | `--validate` fixture exit 0 verified (plan 062) `[REPO]` |
+
+## PR #12 (open)
+
+Branch `feat/holocron-port-phase-b` — [PR #12](https://github.com/th3w1zard1/Andastra/pull/12). Post-PR-#11 doc/test arc (plans **291**–**298**). `[REPO]`
+
+| Item | Status |
+|------|--------|
+| Scope | KB e2e verification sync, CONSTI disambiguation docs, KotorCLI `--ncs-strref-min` CLI tests, OdyPatch `--validate` subprocess test |
+| Plans | **291**–**298** (post-PR-#11 closure + merge readiness gates **296**, **298**) |
+| Test coverage | KotorCLI **369/369**; OdyPatch validate CLI **1/1** via `tests/OdyPatch.Tests/` in CI `test` job (plan **297**) `[REPO]` |
+| Code risk | Low — doc sync + test/CI wiring; no engine/runtime behavior changes |
+| Local validate | `dotnet test tests/OdyPatch.Tests/OdyPatch.Tests.csproj --framework net9.0 -c Release` green (plan **298**) `[REPO]` |
 
 ### Merge gate
 
-- [ ] Re-check `gh pr checks 4` on latest HEAD — all required jobs pass
-- [ ] Docs-only diff — no runtime/engine behavior changes
-- [ ] After merge: update this section to PR #4 outcome; suggested next slice moves to 064+
+- [x] Branch mergeable with `master`
+- [x] All meaningful CI checks pass (except Snyk quota — not a code defect)
+- [x] Post-PR-#11 reference-search documentation arc complete (**291**–**296**)
+- [x] OdyPatch `--validate` automated test gap closed (**297**)
+- [x] KB tracker + AGENTS.md synced post-297 (**298**)
+- [ ] After merge: update this section to PR #12 outcome; suggested next slice moves to 299+
 
 ## Local validation (green path)
 
@@ -73,7 +84,7 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 
 | Job | Notes |
 |-----|-------|
-| CI — Test / Lint | BioWare + Andastra.Tests ladder |
+| CI — Test / Lint | BioWare + Andastra.Tests + OdyPatch.Tests ladder (plan 297) |
 | CI — Solution Build (net9.0) | `-m:1` serialization (plan 031) |
 | CI — NuGet Pack Smoke | `nuget-pack-smoke` — pack + CLI `--help` + `--validate` fixture (plans 051/053/055) |
 | Test Builds matrix | net48-win, net9.0 linux/osx/win |
