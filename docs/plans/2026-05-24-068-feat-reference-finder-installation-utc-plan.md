@@ -36,6 +36,10 @@ Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare 
 
 **NCS CONSTS script ResRef scanner closed (2026-05-28, plan 287):** `NcsConstStringScanner` + CONSTS-first `FindScriptResRefInNcsBytes` with `(NCS bytecode) offset_<n>` paths; **3** `NcsConstStringScannerTests` + **5** `FindScriptResRefInNcsBytes` tests. See plan `287`.
 
+**Compiled NCS installation test closed (2026-05-28, plan 289):** `FindScriptReferences_OverrideCompiledNcs_ReturnsNcsBytecodePath` in `ReferenceFinderTests`. See plan `289`.
+
+**KotorCLI find-refs compiled NCS CLI test closed (2026-05-28, plan 290):** `Cli_FindRefs_Script_CompiledNcsInOverride_ExitsZero` in `FindRefsCommandCliTests`. See plan `290`.
+
 ## Requirements
 
 - R1. `ReferenceFinder.FindScriptReferences(Installation, string scriptResRef, ReferenceSearchOptions options)` returns `List<ReferenceSearchResult>` with `FileResource` + `FieldPath`.
@@ -97,7 +101,7 @@ Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare 
 - `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ScriptReferenceHelperTests` (**8** tests)
 - `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ReferenceSearchOptionsDialogTests` (**9** tests)
 
-See plans `docs/plans/2026-05-28-224-*` through `docs/plans/2026-05-28-288-*` and plans **276**–**285** for slice history (parent-plan closures **107**, **108**, **066**, **069**, **067**, **064**, **065**, **070**, U4 KotorDiff). Plan **288** syncs NCS bytecode verification rows in `docs/knowledgebase/30-product-ux/odytools-editor-ux.md`.
+See plans `docs/plans/2026-05-28-224-*` through `docs/plans/2026-05-28-290-*` and plans **276**–**285** for slice history (parent-plan closures **107**, **108**, **066**, **069**, **067**, **064**, **065**, **070**, U4 KotorDiff). Plan **288** syncs NCS bytecode verification rows in `docs/knowledgebase/30-product-ux/odytools-editor-ux.md`. Plans **289**–**290** add compiled NCS end-to-end test coverage (BioWare installation + KotorCLI CLI).
 
 **KotorCLI find-2da-ref verification:**
 
