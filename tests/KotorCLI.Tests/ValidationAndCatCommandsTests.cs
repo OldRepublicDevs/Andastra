@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.RIM;
+using BioWare.Resource.Formats.TwoDA;
 using KotorCLI.Commands;
 using KotorCLI.Logging;
 using NUnit.Framework;
@@ -72,6 +74,73 @@ namespace KotorCLI.Tests
                 }
             }
         }
+
+        [Test]
+        public void ExecuteCheck2da_MissingTwoDA_ExitsNonZero()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-2da-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(installRoot);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = ValidationCommands.ExecuteCheck2da(
+                    installRoot,
+                    "nonexistent_2da",
+                    logger);
+                Assert.That(exitCode, Is.EqualTo(1));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteCheck2da_FoundInOverride_ExitsZero()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-2da-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+
+            var twoDA = new TwoDA(new List<string> { "label" });
+            twoDA.AddRow();
+            File.WriteAllBytes(
+                Path.Combine(overrideDir, "test_twoda.2da"),
+                TwoDAAuto.BytesTwoDA(twoDA));
+
+            try
+            {
+                var logger = new StandardLogger();
+                int exitCode = ValidationCommands.ExecuteCheck2da(
+                    installRoot,
+                    "test_twoda",
+                    logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
     }
 
     [TestFixture]
