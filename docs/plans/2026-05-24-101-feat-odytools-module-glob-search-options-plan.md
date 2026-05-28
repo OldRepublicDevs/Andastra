@@ -1,7 +1,7 @@
 ---
 title: "feat: odyTools module-glob in reference search dialog"
 type: feat
-status: active
+status: complete
 date: 2026-05-24
 origin: docs/plans/2026-05-24-100-feat-kotorcli-find-module-glob-plan.md
 branch: feat/holocron-port-phase-b
