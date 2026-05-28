@@ -568,6 +568,72 @@ namespace OdyTools.Tests
             }
         }
 
+        [Test]
+        [AvaloniaTest]
+        public void FindAndShowTemplateResRefReferences_ShowOptionsDialogTrue_Cancel_DoesNotThrow()
+        {
+            string installRoot = CreateInstallWithTemplateResRef();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+
+                Assert.DoesNotThrow(() =>
+                    ReferenceSearchHelper.FindAndShowTemplateResRefReferences(
+                        null,
+                        "p_unique_tpl",
+                        installation,
+                        showOptionsDialog: true));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void FindAndShowScriptReferences_ShowOptionsDialogTrue_Cancel_DoesNotThrow()
+        {
+            string installRoot = CreateInstallWithScriptHeartbeat();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+
+                Assert.DoesNotThrow(() =>
+                    ReferenceSearchHelper.FindAndShowScriptReferences(
+                        null,
+                        "k_test_hb",
+                        installation,
+                        showOptionsDialog: true));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void FindAndShowConversationReferences_ShowOptionsDialogTrue_Cancel_DoesNotThrow()
+        {
+            string installRoot = CreateInstallWithConversation();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+
+                Assert.DoesNotThrow(() =>
+                    ReferenceSearchHelper.FindAndShowConversationReferences(
+                        null,
+                        "test_dlg_ref",
+                        installation,
+                        showOptionsDialog: true));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
         private static string CreateMinimalInstallRoot()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "odytools-refhelper-" + Guid.NewGuid().ToString("N"));
