@@ -1,6 +1,11 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using BioWare.Common;
+using BioWare.Resource;
+using BioWare.Resource.Formats.ERF;
+using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.GFF.Generics.UTC;
 using NUnit.Framework;
 
 namespace KotorCLI.Tests
@@ -8,6 +13,26 @@ namespace KotorCLI.Tests
     [TestFixture]
     public class BuildPipelineCommandCliTests
     {
+        private const string UnpackPipelineConfig = @"[package]
+name = ""testpack""
+
+  [package.rules]
+  ""*.utc"" = ""src/blueprints/creatures""
+  ""*"" = ""src""
+
+[target]
+name = ""default""
+file = ""test.mod""
+";
+
+        private const string PackPipelineConfig = @"[package]
+name = ""testpack""
+
+[target]
+name = ""default""
+file = ""test.mod""
+";
+
         private static string RepoRoot =>
             Path.GetFullPath(Path.Combine(TestContext.CurrentContext.TestDirectory, "..", "..", "..", "..", ".."));
 
@@ -107,6 +132,104 @@ namespace KotorCLI.Tests
             {
                 DeleteDirectorySafe(projectDir);
             }
+        }
+
+        [Test]
+        public void CliUnpack_FromMod_WritesCreatureJson()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-unpack-cli-" + Guid.NewGuid().ToString("N"));
+            const string resref = "cli_creature";
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), UnpackPipelineConfig);
+
+                string modPath = Path.Combine(projectDir, "test.mod");
+                WriteModWithUtc(modPath, resref);
+
+                int exitCode = RunKotorCli(
+                    "unpack default \"" + modPath + "\" --removeDeleted",
+                    projectDir,
+                    out _,
+                    out string stderr);
+
+                string jsonPath = Path.Combine(projectDir, "src", "blueprints", "creatures", resref + ".utc.json");
+                Assert.That(exitCode, Is.EqualTo(0), stderr);
+                Assert.That(File.Exists(jsonPath), Is.True);
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
+        [Test]
+        public void CliPack_WithCache_WritesMod()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-pack-cli-" + Guid.NewGuid().ToString("N"));
+            const string resref = "pack_cli_cre";
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), PackPipelineConfig);
+
+                string cacheDir = Path.Combine(projectDir, ".kotorcli", "cache", "default");
+                Directory.CreateDirectory(cacheDir);
+                string cacheUtcPath = Path.Combine(cacheDir, resref + ".utc");
+                GFF gff = UTCHelpers.DismantleUtc(new UTC(), BioWareGame.K1);
+                GFFAuto.WriteGff(gff, cacheUtcPath, ResourceType.UTC);
+
+                int exitCode = RunKotorCli(
+                    "pack default --noConvert --noCompile",
+                    projectDir,
+                    out _,
+                    out string stderr);
+
+                string modPath = Path.Combine(projectDir, "test.mod");
+                Assert.That(exitCode, Is.EqualTo(0), stderr);
+                Assert.That(File.Exists(modPath), Is.True);
+
+                ERF mod = ERFAuto.ReadErf(modPath, ResourceType.MOD);
+                Assert.That(mod.Get(resref, ResourceType.UTC), Is.Not.Null);
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
+        [Test]
+        public void CliPack_UnknownTarget_ExitsNonZero()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-pack-cli-unknown-" + Guid.NewGuid().ToString("N"));
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), PackPipelineConfig);
+
+                int exitCode = RunKotorCli(
+                    "pack missing-target --noConvert --noCompile",
+                    projectDir,
+                    out _,
+                    out string stderr);
+                Assert.That(exitCode, Is.EqualTo(1), stderr);
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
+        private static void WriteModWithUtc(string modPath, string resref)
+        {
+            GFF gff = UTCHelpers.DismantleUtc(new UTC(), BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            var mod = new ERF(ERFType.MOD);
+            mod.SetData(resref, ResourceType.UTC, bytes);
+            ERFAuto.WriteErf(mod, modPath, ResourceType.MOD);
         }
 
         private static int RunKotorCli(string arguments, string workingDirectory, out string stdout, out string stderr)
