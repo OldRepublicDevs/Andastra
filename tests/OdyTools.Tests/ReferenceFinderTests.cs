@@ -682,6 +682,56 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindFieldValueInGffBytes_TagField_Matches()
+        {
+            var utc = new UTC();
+            utc.Tag = "find_me_tag";
+
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            var fieldNames = new HashSet<string> { "Tag" };
+            List<string> paths = ReferenceFinder.FindFieldValueInGffBytes(bytes, "find_me_tag", null, fieldNames);
+
+            Assert.That(paths, Has.Some.EqualTo("Tag"));
+        }
+
+        [Test]
+        public void FindFieldValueReferences_EmptyNeedleReturnsEmpty()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-fld-empty-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(installRoot);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var fieldNames = new HashSet<string> { "Tag" };
+                Assert.That(ReferenceFinder.FindFieldValueReferences(installation, "", fieldNames), Is.Empty);
+                Assert.That(ReferenceFinder.FindFieldValueReferences(installation, "   ", fieldNames), Is.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindFieldValueReferences_NullInstallation_ThrowsArgumentNullException()
+        {
+            var fieldNames = new HashSet<string> { "Tag" };
+            Assert.Throws<ArgumentNullException>(() =>
+                ReferenceFinder.FindFieldValueReferences(null, "find_me_tag", fieldNames));
+        }
+
+        [Test]
         public void FindTagReferences_EmptyNeedleReturnsEmpty()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "ref-tag-empty-" + Guid.NewGuid().ToString("N"));
