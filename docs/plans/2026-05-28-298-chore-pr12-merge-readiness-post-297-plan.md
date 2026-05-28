@@ -1,8 +1,9 @@
 ---
 title: "chore: pr12 merge readiness post-plan-297"
 type: chore
-status: in_progress
+status: complete
 date: 2026-05-28
+completed: 2026-05-28
 origin: docs/plans/2026-05-28-297-feat-odypatch-validate-cli-test-plan.md
 branch: feat/holocron-port-phase-b
 ---
