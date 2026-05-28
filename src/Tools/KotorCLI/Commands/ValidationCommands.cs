@@ -1,7 +1,6 @@
 using System;
 using System.CommandLine;
 using System.Collections.Generic;
-using BioWare.Common;
 using BioWare.Extract;
 using BioWare.Tools;
 using KotorCLI.Logging;
