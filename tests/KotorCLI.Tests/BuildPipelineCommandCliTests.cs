@@ -167,6 +167,69 @@ file = ""test.mod""
         }
 
         [Test]
+        public void CliConfig_LocalUnset_RemovesKey()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-config-cli-unset-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(projectDir);
+            const string configKey = "editor";
+            const string configValue = "vim";
+
+            try
+            {
+                Assert.That(
+                    RunKotorCli("init . . --default --vcs none", projectDir, out _, out string initErr),
+                    Is.EqualTo(0),
+                    initErr);
+
+                Assert.That(
+                    RunKotorCli("config " + configKey + " \"" + configValue + "\" --local", projectDir, out _, out string setErr),
+                    Is.EqualTo(0),
+                    setErr);
+
+                string userConfigPath = Path.Combine(projectDir, ".kotorcli", "user.cfg");
+                Assert.That(File.ReadAllText(userConfigPath), Does.Contain(configKey));
+
+                int unsetExit = RunKotorCli(
+                    "config " + configKey + " _ --local --unset",
+                    projectDir,
+                    out _,
+                    out string unsetErr);
+                Assert.That(unsetExit, Is.EqualTo(0), unsetErr);
+                Assert.That(File.ReadAllText(userConfigPath), Does.Not.Contain(configKey + " ="));
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
+        [Test]
+        public void CliConfig_LocalListEmpty_ExitsZero()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-config-cli-list-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(projectDir);
+
+            try
+            {
+                Assert.That(
+                    RunKotorCli("init . . --default --vcs none", projectDir, out _, out string initErr),
+                    Is.EqualTo(0),
+                    initErr);
+
+                int exitCode = RunKotorCli(
+                    "config _ _ --local --list",
+                    projectDir,
+                    out _,
+                    out string stderr);
+                Assert.That(exitCode, Is.EqualTo(0), stderr);
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
+        [Test]
         public void CliList_AfterInit_ExitsZero()
         {
             string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-list-cli-" + Guid.NewGuid().ToString("N"));
