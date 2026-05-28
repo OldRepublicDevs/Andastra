@@ -169,13 +169,13 @@ validate-installation --installation /path/to/kotor --no-essential
 ## Known Issues
 
 1. **`launch` does not pass module load arguments** to the game process; mods must be installed to `modules/` (default workflow).
-2. **Remaining test gaps (non-archive)** — build-pipeline commands (`init`, `config`, `convert`, `compile`, `pack`, `install`, `unpack`, `list`), format convert integration, reference finders, and `launch` path resolution (`ResolveGameBinary`) have coverage; archive create/list/search/extract/key-pack is **substantially closed** (see Archive test coverage above). `stats`/`validate` integration tests cover GFF, 2DA, ERF, BIF, TLK, and NCS (plans 189–195). `validate-installation`, `check-txi`, and `check-2da` unit + CLI subprocess complete (plans 197–198, 209–210). `launch` alias dry-run (199), install-only unit + CLI (202–203), install+spawn unit (204) + CLI `--wait` (205). Installation ref-search CLI subprocess complete: `find-refs`, `find-strref`, `find-2da-ref`, `find-field-value` (plans 206–208). **313** tests in `KotorCLI.Tests` on net9.0.
+2. **Remaining test gaps (non-archive)** — build-pipeline commands (`init`, `config`, `convert`, `compile`, `pack`, `install`, `unpack`, `list`), format convert integration, reference finders, and `launch` path resolution (`ResolveGameBinary`) have coverage; archive create/list/search/extract/key-pack is **substantially closed** (see Archive test coverage above). `stats` and `validate` unit + CLI subprocess complete (plans 189–195, 211). `validate-installation`, `check-txi`, and `check-2da` unit + CLI subprocess complete (plans 197–198, 209–210). `launch` alias dry-run (199), install-only unit + CLI (202–203), install+spawn unit (204) + CLI `--wait` (205). Installation ref-search CLI subprocess complete: `find-refs`, `find-strref`, `find-2da-ref`, `find-field-value` (plans 206–208). **317** tests in `KotorCLI.Tests` on net9.0.
 3. **System.CommandLine** — prefer `.Options.Add()` / current `Cli.Opt` helpers when touching command definitions.
 
 ## Next Steps
 
 1. Broader Holocron deferred items (module designer, lip syncer, etc.) per plan 063.
-2. Expand coverage for partial utilities (`stats`, `validate`) and any newly wired commands.
+2. Expand coverage for any newly wired commands beyond current utility CLI subprocess suites.
 3. Keep this README inventory in sync when adding or stubbing commands.
 
 ## References
