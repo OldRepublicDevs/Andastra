@@ -415,7 +415,7 @@ namespace OdyTools.Tests
 
                 Assert.That(results, Is.Not.Empty);
                 Assert.That(results, Has.Some.Matches<ReferenceSearchResult>(
-                    r => r.FieldPath != null && r.FieldPath.StartsWith("offset_") && r.MatchedValue == "k_ncs_ref"));
+                    r => r.FieldPath != null && r.FieldPath.Contains("offset_") && r.MatchedValue == "k_ncs_ref"));
             }
             finally
             {
@@ -1453,7 +1453,7 @@ namespace OdyTools.Tests
                 Assert.That(results, Has.All.Matches<ReferenceSearchResult>(
                     r => r.FieldPath == "ScriptHeartbeat"));
                 Assert.That(results, Has.None.Matches<ReferenceSearchResult>(
-                    r => r.FieldPath != null && r.FieldPath.StartsWith("offset_")));
+                    r => r.FieldPath != null && r.FieldPath.Contains("offset_")));
             }
             finally
             {
@@ -1502,7 +1502,7 @@ namespace OdyTools.Tests
 
                 Assert.That(results, Is.Not.Empty);
                 Assert.That(results, Has.All.Matches<ReferenceSearchResult>(
-                    r => r.FieldPath != null && r.FieldPath.StartsWith("offset_")));
+                    r => r.FieldPath != null && r.FieldPath.Contains("offset_")));
                 Assert.That(results, Has.None.Matches<ReferenceSearchResult>(
                     r => r.FieldPath == "ScriptHeartbeat"));
             }
@@ -2700,7 +2700,22 @@ namespace OdyTools.Tests
             List<string> paths = ReferenceFinder.FindScriptResRefInNcsBytes(data, "k_test_hb");
 
             Assert.That(paths, Is.Not.Empty);
-            Assert.That(paths, Has.Some.StartsWith("offset_"));
+            Assert.That(paths, Has.Some.StartsWith("(NCS bytecode) offset_"));
+        }
+
+        [Test]
+        public void FindScriptResRefInNcsBytes_CompiledExecuteScript_FindsConstsLiteral()
+        {
+            const string targetResRef = "k_target_hb";
+            var ncs = BioWare.Resource.Formats.NCS.NCSAuto.CompileNss(
+                "void main() { ExecuteScript(\"" + targetResRef + "\", OBJECT_SELF); }",
+                BioWareGame.K1);
+            byte[] bytes = BioWare.Resource.Formats.NCS.NCSAuto.BytesNcs(ncs);
+
+            List<string> paths = ReferenceFinder.FindScriptResRefInNcsBytes(bytes, targetResRef);
+
+            Assert.That(paths, Is.Not.Empty);
+            Assert.That(paths, Has.Some.StartsWith("(NCS bytecode) offset_"));
         }
 
         [Test]
