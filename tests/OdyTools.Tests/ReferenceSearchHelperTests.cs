@@ -111,6 +111,85 @@ namespace OdyTools.Tests
 
         [Test]
         [AvaloniaTest]
+        public void AttachTemplateResRefFindReferencesMenu_EmptyResRef_DisablesMenuItem()
+        {
+            string installRoot = CreateMinimalInstallRoot();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+                var textBox = new TextBox { Text = "p_unique_tpl" };
+
+                ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(textBox, null, installation);
+                var menuItem = textBox.ContextMenu.Items[0] as MenuItem;
+
+                textBox.Text = string.Empty;
+                textBox.ContextMenu.RaiseEvent(new RoutedEventArgs(ContextMenu.OpenedEvent));
+
+                Assert.That(menuItem.IsEnabled, Is.False);
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void AttachTemplateResRefFindReferencesMenu_WithResRefAndInstallation_EnablesMenuItem()
+        {
+            string installRoot = CreateMinimalInstallRoot();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+                var textBox = new TextBox { Text = "p_unique_tpl" };
+
+                ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(textBox, null, installation);
+                var menuItem = textBox.ContextMenu.Items[0] as MenuItem;
+
+                Assert.That(menuItem.IsEnabled, Is.True);
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void AttachTemplateResRefFindReferencesMenu_NullInstallation_DisablesMenuItem()
+        {
+            var textBox = new TextBox { Text = "p_unique_tpl" };
+
+            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(textBox, null, null);
+            var menuItem = textBox.ContextMenu.Items[0] as MenuItem;
+
+            Assert.That(menuItem.IsEnabled, Is.False);
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void FindAndShowTemplateResRefReferences_OverrideHit_CompletesWithoutException()
+        {
+            string installRoot = CreateInstallWithTemplateResRef();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+
+                Assert.DoesNotThrow(() =>
+                    ReferenceSearchHelper.FindAndShowTemplateResRefReferences(
+                        null,
+                        "p_unique_tpl",
+                        installation,
+                        showOptionsDialog: false));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        [AvaloniaTest]
         public void AttachTagFindReferencesMenu_EmptyTag_DisablesMenuItem()
         {
             string installRoot = CreateMinimalInstallRoot();
@@ -215,6 +294,23 @@ namespace OdyTools.Tests
 
             var utc = new UTC();
             utc.Tag = "npc_tag";
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
+
+            return installRoot;
+        }
+
+        private static string CreateInstallWithTemplateResRef()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "odytools-refhelper-tpl-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+
+            var utc = new UTC();
+            utc.ResRef = new ResRef("p_unique_tpl");
             GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
             byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
             File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
