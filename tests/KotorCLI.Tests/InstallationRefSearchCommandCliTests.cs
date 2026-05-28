@@ -5,7 +5,9 @@ using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.GFF.Generics.UTC;
+using BioWare.Resource.Formats.NCS;
 using BioWare.Resource.Formats.SSF;
+using BioWare.Tools;
 using NUnit.Framework;
 
 namespace KotorCLI.Tests
@@ -45,6 +47,48 @@ namespace KotorCLI.Tests
             {
                 int exitCode = RunKotorCli(
                     "find-strref 99998 --installation \"" + installRoot + "\" --override-only --no-chitin --no-modules --no-ncs",
+                    out string stdout,
+                    out string stderr);
+
+                Assert.That(exitCode, Is.Not.EqualTo(0), stdout + stderr);
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Cli_FindStrRef_NcsInOverride_ExitsZero()
+        {
+            const int targetStrRef = 424242;
+            string installRoot = CreateInstallWithNcsStrRef(targetStrRef);
+            try
+            {
+                int exitCode = RunKotorCli(
+                    "find-strref " + targetStrRef + " --installation \"" + installRoot + "\" --override-only --no-chitin --no-modules",
+                    out string stdout,
+                    out string stderr);
+
+                string combined = stdout + stderr;
+                Assert.That(exitCode, Is.EqualTo(0), combined);
+                Assert.That(combined, Does.Contain(targetStrRef.ToString()));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Cli_FindStrRef_NcsOnly_SkipsWithNoNcsFlag()
+        {
+            const int targetStrRef = 424242;
+            string installRoot = CreateInstallWithNcsStrRef(targetStrRef);
+            try
+            {
+                int exitCode = RunKotorCli(
+                    "find-strref " + targetStrRef + " --installation \"" + installRoot + "\" --override-only --no-chitin --no-modules --no-ncs",
                     out string stdout,
                     out string stderr);
 
@@ -191,6 +235,21 @@ namespace KotorCLI.Tests
             ssf.SetData(SSFSound.BATTLE_CRY_1, strref);
             byte[] bytes = SSFAuto.BytesSsf(ssf);
             File.WriteAllBytes(Path.Combine(overrideDir, "test_set.ssf"), bytes);
+
+            return installRoot;
+        }
+
+        private static string CreateInstallWithNcsStrRef(int strref)
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-ncs-strref-cli-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+
+            NCS ncs = NCSAuto.CompileNss("void main() { int n = " + strref + "; }", BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_script.ncs"), bytes);
 
             return installRoot;
         }
