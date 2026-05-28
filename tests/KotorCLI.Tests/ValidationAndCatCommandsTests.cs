@@ -141,6 +141,52 @@ namespace KotorCLI.Tests
             }
         }
 
+        [Test]
+        public void ExecuteCheck2da_ValidStructure_LogsDimensions()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-2da-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var twoDA = new TwoDA(new List<string> { "label", "name", "value" });
+            twoDA.AddRow();
+            twoDA.AddRow();
+            File.WriteAllBytes(
+                Path.Combine(overrideDir, "sample.2da"),
+                TwoDAAuto.BytesTwoDA(twoDA));
+
+            var output = new StringWriter();
+            TextWriter originalOut = Console.Out;
+
+            try
+            {
+                Console.SetOut(output);
+                var logger = new StandardLogger(noColor: true);
+                int exitCode = ValidationCommands.ExecuteCheck2da(
+                    installRoot,
+                    "sample",
+                    logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+
+                string log = output.ToString();
+                Assert.That(log, Does.Contain("Valid 2DA structure: 3 columns x 2 rows"));
+                Assert.That(log, Does.Contain("Headers: label, name, value"));
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
     }
 
     [TestFixture]
