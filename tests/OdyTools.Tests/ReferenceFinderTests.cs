@@ -1600,6 +1600,183 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindTemplateResRefReferences_CaseSensitive_OverrideUtc()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-tpl-case-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.ResRef = new ResRef("p_Creature_Tpl");
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var insensitive = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true,
+                    CaseSensitive = false
+                };
+                Assert.That(
+                    ReferenceFinder.FindTemplateResRefReferences(installation, "p_creature_tpl", insensitive),
+                    Is.Not.Empty);
+
+                var sensitive = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true,
+                    CaseSensitive = true
+                };
+                Assert.That(
+                    ReferenceFinder.FindTemplateResRefReferences(installation, "p_creature_tpl", sensitive),
+                    Is.Empty);
+                List<ReferenceSearchResult> exactCase = ReferenceFinder.FindTemplateResRefReferences(
+                    installation,
+                    "p_Creature_Tpl",
+                    sensitive);
+                Assert.That(exactCase, Is.Not.Empty);
+                Assert.That(exactCase, Has.Some.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath == "TemplateResRef"));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindConversationResRefReferences_CaseSensitive_OverrideUtc()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-conv-case-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.Conversation = new ResRef("Test_Dlg");
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var insensitive = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true,
+                    CaseSensitive = false
+                };
+                Assert.That(
+                    ReferenceFinder.FindConversationResRefReferences(installation, "test_dlg", insensitive),
+                    Is.Not.Empty);
+
+                var sensitive = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true,
+                    CaseSensitive = true
+                };
+                Assert.That(
+                    ReferenceFinder.FindConversationResRefReferences(installation, "test_dlg", sensitive),
+                    Is.Empty);
+                List<ReferenceSearchResult> exactCase = ReferenceFinder.FindConversationResRefReferences(
+                    installation,
+                    "Test_Dlg",
+                    sensitive);
+                Assert.That(exactCase, Is.Not.Empty);
+                Assert.That(exactCase, Has.Some.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath == "Conversation"));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindScriptReferences_CaseSensitive_OverrideUtc()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-script-case-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.OnHeartbeat = new ResRef("k_Test_Hb");
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var insensitive = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true,
+                    CaseSensitive = false
+                };
+                Assert.That(
+                    ReferenceFinder.FindScriptReferences(installation, "k_test_hb", insensitive),
+                    Is.Not.Empty);
+
+                var sensitive = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true,
+                    CaseSensitive = true
+                };
+                Assert.That(
+                    ReferenceFinder.FindScriptReferences(installation, "k_test_hb", sensitive),
+                    Is.Empty);
+                List<ReferenceSearchResult> exactCase = ReferenceFinder.FindScriptReferences(
+                    installation,
+                    "k_Test_Hb",
+                    sensitive);
+                Assert.That(exactCase, Is.Not.Empty);
+                Assert.That(exactCase, Has.Some.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath == "ScriptHeartbeat"));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void FindTagReferences_PartialMatch_OverrideUtc()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "ref-tag-partial-" + Guid.NewGuid().ToString("N"));
