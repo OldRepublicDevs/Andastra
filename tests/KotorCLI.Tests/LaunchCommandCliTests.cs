@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.ERF;
@@ -64,6 +65,51 @@ file = ""test.mod""
         [TestCase("serve")]
         [TestCase("play")]
         [TestCase("test")]
+        public void CliAlias_FullLaunch_WithWait_InstallsAndRunsStub(string alias)
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                Assert.Ignore("Shell stub launch CLI tests require Linux.");
+            }
+
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-launch-cli-spawn-proj-" + Guid.NewGuid().ToString("N"));
+            string fakeInstallDir = Path.Combine(Path.GetTempPath(), "kotorcli-launch-cli-spawn-game-" + Guid.NewGuid().ToString("N"));
+            string markerPath = Path.Combine(fakeInstallDir, "cli-launch-ran.marker");
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                Directory.CreateDirectory(fakeInstallDir);
+                File.WriteAllText(Path.Combine(fakeInstallDir, "chitin.key"), "fake-key");
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), MinimalConfig);
+                WriteModWithUtc(Path.Combine(projectDir, "test.mod"), "cli_spawn");
+
+                string gameExe = Path.Combine(fakeInstallDir, "swkotor.exe");
+                WriteShellStubScript(gameExe, markerPath, 0);
+
+                int exitCode = RunKotorCli(
+                    alias + " default --installDir \"" + fakeInstallDir + "\" --wait",
+                    projectDir,
+                    out string stdout,
+                    out string stderr);
+
+                string combined = stdout + stderr;
+                Assert.That(exitCode, Is.EqualTo(0), combined);
+                Assert.That(File.Exists(markerPath), Is.True, combined);
+                Assert.That(File.Exists(Path.Combine(fakeInstallDir, "modules", "test.mod")), Is.True, combined);
+                Assert.That(combined.ToLowerInvariant(), Does.Contain("launching game"));
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+                DeleteDirectorySafe(fakeInstallDir);
+            }
+        }
+
+        [TestCase("launch")]
+        [TestCase("serve")]
+        [TestCase("play")]
+        [TestCase("test")]
         public void CliAlias_DryRun_WithGameBin_ExitsZero(string alias)
         {
             string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-launch-cli-" + Guid.NewGuid().ToString("N"));
@@ -97,6 +143,33 @@ file = ""test.mod""
             var mod = new ERF(ERFType.MOD);
             mod.SetData(resref, ResourceType.UTC, bytes);
             ERFAuto.WriteErf(mod, modPath, ResourceType.MOD);
+        }
+
+        private static void WriteShellStubScript(string scriptPath, string markerPath, int exitCode)
+        {
+            string escapedMarker = markerPath.Replace("\"", "\\\"");
+            File.WriteAllText(
+                scriptPath,
+                "#!/bin/sh\n" +
+                "touch \"" + escapedMarker + "\"\n" +
+                "exit " + exitCode + "\n");
+            MakeExecutable(scriptPath);
+        }
+
+        private static void MakeExecutable(string path)
+        {
+            var chmod = new ProcessStartInfo
+            {
+                FileName = "/bin/chmod",
+                Arguments = "+x \"" + path + "\"",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            using (Process process = Process.Start(chmod))
+            {
+                process.WaitForExit();
+                Assert.That(process.ExitCode, Is.EqualTo(0), "chmod failed for " + path);
+            }
         }
 
         private static int RunKotorCli(string arguments, out string stdout, out string stderr)
