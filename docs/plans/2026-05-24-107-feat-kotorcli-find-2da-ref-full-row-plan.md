@@ -5,7 +5,7 @@ status: complete
 date: 2026-05-24
 completed: 2026-05-28
 branch: feat/holocron-port-phase-b
-closure: docs/plans/2026-05-28-276-docs-kotorcli-find-2da-ref-full-row-closure-plan.md
+closure: docs/plans/2026-05-24-276-docs-close-kotorcli-find-2da-ref-full-row-plan.md
 ---
 
 # feat: KotorCLI find-2da-ref --full-row (plan 107)
