@@ -8,6 +8,7 @@ using BioWare.Resource;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.GFF.Generics;
 using BioWare.Resource.Formats.GFF.Generics.UTC;
+using BioWare.Tools;
 using NUnit.Framework;
 using OdyTools.Data;
 using OdyTools.Utils;
@@ -366,6 +367,61 @@ namespace OdyTools.Tests
             {
                 DeleteDirectorySafe(installRoot);
             }
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void FindAndShowTagReferences_NoMatch_CompletesWithoutException()
+        {
+            string installRoot = CreateMinimalInstallRoot();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+
+                Assert.DoesNotThrow(() =>
+                    ReferenceSearchHelper.FindAndShowTagReferences(
+                        null,
+                        "nonexistent_tag_xyz",
+                        installation,
+                        showOptionsDialog: false));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void FindAndShowTemplateResRefReferences_NoMatch_CompletesWithoutException()
+        {
+            string installRoot = CreateInstallWithTemplateResRef();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+
+                Assert.DoesNotThrow(() =>
+                    ReferenceSearchHelper.FindAndShowTemplateResRefReferences(
+                        null,
+                        "p_missing_tpl",
+                        installation,
+                        showOptionsDialog: false));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void PromptSearchOptions_NullParent_NotAccepted_ReturnsNull()
+        {
+            ReferenceSearchOptions result = ReferenceSearchHelper.PromptSearchOptions(
+                null,
+                new ReferenceSearchOptions { SearchOverride = true });
+
+            Assert.That(result, Is.Null);
         }
 
         private static string CreateMinimalInstallRoot()
