@@ -5,6 +5,7 @@ using BioWare.Resource;
 using BioWare.Resource.Formats.BIF;
 using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.TLK;
 using BioWare.Resource.Formats.TwoDA;
 using KotorCLI.Commands;
 using KotorCLI.Logging;
@@ -343,6 +344,58 @@ namespace KotorCLI.Tests
             }
         }
 
+        [Test]
+        public void ExecuteStats_ValidTlk_ExitsZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-stats-tlk-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string tlkPath = WriteSampleTlk(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = UtilityCommands.ExecuteStats(tlkPath, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteValidate_ValidTlk_ExitsZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-validate-tlk-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string tlkPath = WriteSampleTlk(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = UtilityCommands.ExecuteValidate(tlkPath, false, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
         private static string WriteSampleUtc(string tempDir)
         {
             string utcPath = Path.Combine(tempDir, "sample.utc");
@@ -382,6 +435,15 @@ namespace KotorCLI.Tests
             bif.SetData(new ResRef("creature_a"), ResourceType.UTC, utcBytes);
             File.WriteAllBytes(bifPath, new BIFBinaryWriter(bif).Write());
             return bifPath;
+        }
+
+        private static string WriteSampleTlk(string tempDir)
+        {
+            string tlkPath = Path.Combine(tempDir, "sample.tlk");
+            var tlk = new TLK(Language.English);
+            tlk.Add("stats-validate-tlk-entry", string.Empty);
+            File.WriteAllBytes(tlkPath, TLKAuto.BytesTlk(tlk, ResourceType.TLK));
+            return tlkPath;
         }
     }
 }
