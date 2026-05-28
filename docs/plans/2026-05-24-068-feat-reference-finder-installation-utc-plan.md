@@ -32,6 +32,10 @@ Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare 
 
 **UTD/UTP/UTT script ref finder closed (2026-05-28, plan 069 / 279 on `feat/holocron-port-phase-b`):** `ScriptReferenceHelper` + template editor **Find References** wiring; **8** `ScriptReferenceHelperTests`. See plans `069`, `279`.
 
+**NCS StrRef cache gating closed (2026-05-28, plan 286):** `IncludeNcsStrRefScan` gates NCS indexing in `BuildStrRefReferenceCache` and batch lookup; **10** `NcsConstiScannerTests` + **2** KotorCLI CLI tests. See plan `286`.
+
+**NCS CONSTS script ResRef scanner closed (2026-05-28, plan 287):** `NcsConstStringScanner` + CONSTS-first `FindScriptResRefInNcsBytes` with `(NCS bytecode) offset_<n>` paths; **3** `NcsConstStringScannerTests` + **5** `FindScriptResRefInNcsBytes` tests. See plan `287`.
+
 ## Requirements
 
 - R1. `ReferenceFinder.FindScriptReferences(Installation, string scriptResRef, ReferenceSearchOptions options)` returns `List<ReferenceSearchResult>` with `FileResource` + `FieldPath`.
@@ -93,7 +97,7 @@ Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare 
 - `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ScriptReferenceHelperTests` (**8** tests)
 - `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ReferenceSearchOptionsDialogTests` (**9** tests)
 
-See plans `docs/plans/2026-05-28-224-*` through `docs/plans/2026-05-28-287-*` and plans **276**–**285** for slice history (parent-plan closures **107**, **108**, **066**, **069**, **067**, **064**, **065**, **070**, U4 KotorDiff).
+See plans `docs/plans/2026-05-28-224-*` through `docs/plans/2026-05-28-288-*` and plans **276**–**285** for slice history (parent-plan closures **107**, **108**, **066**, **069**, **067**, **064**, **065**, **070**, U4 KotorDiff). Plan **288** syncs NCS bytecode verification rows in `docs/knowledgebase/30-product-ux/odytools-editor-ux.md`.
 
 **KotorCLI find-2da-ref verification:**
 
