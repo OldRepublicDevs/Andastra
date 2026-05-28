@@ -20,7 +20,7 @@ branch: feat/holocron-fac-kotorcli
 | U4 KotorDiff integrate | **Landed** | shared KotorDiffApp host |
 | U5 NCS disassembly tab | **Landed** | plan 067 |
 | U6 Reference finder Phase 1 | **Landed** | plan 068 — installation search, UTC menu, field paths |
-| U6 Reference finder Phase 2 follow-up | **Landed** | plans 224–270 on `feat/holocron-port-phase-b` — tag/template/conversation/field-value search, options dialog, helper wiring tests; **171** reference-search tests (**95** BioWare `ReferenceFinder` + **76** OdyTools helper/UI). Authority: plan 068. |
+| U6 Reference finder Phase 2 follow-up | **Landed** | plans 224–272 on `feat/holocron-port-phase-b` — tag/template/conversation/field-value search, options dialog, helper wiring tests; **173** reference-search tests (**95** BioWare `ReferenceFinder` + **78** OdyTools helper/UI). Authority: plan 068. |
 | U7 Doc sync | **Landed** | odytools-editor-ux.md updated |
 
 **Reference-search follow-up verification (2026-05-28):**
