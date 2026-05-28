@@ -4,10 +4,12 @@ using System.IO;
 using BioWare.Common;
 using BioWare.Extract;
 using BioWare.Resource;
+using BioWare.Resource.Formats.BIF;
 using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.GFF.Generics;
 using BioWare.Resource.Formats.GFF.Generics.UTC;
+using BioWare.Resource.Formats.KEY;
 using BioWare.Resource.Formats.RIM;
 using BioWare.Tools;
 using NUnit.Framework;
@@ -2687,10 +2689,155 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindTagReferences_ChitinOnly_ReturnsFieldPath()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-chitin-tag-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(installRoot);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.Tag = "chitin_tag_ref";
+            WriteChitinWithUtc(installRoot, utc);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = true,
+                    SearchModules = false,
+                    SearchOverride = false
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindTagReferences(
+                    installation,
+                    "chitin_tag_ref",
+                    options);
+
+                Assert.That(results, Is.Not.Empty);
+                Assert.That(results, Has.Some.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath == "Tag"));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindScriptReferences_ChitinOnly_ReturnsFieldPath()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-chitin-script-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(installRoot);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.OnHeartbeat = new ResRef("k_chitin_hb");
+            WriteChitinWithUtc(installRoot, utc);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = true,
+                    SearchModules = false,
+                    SearchOverride = false
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindScriptReferences(
+                    installation,
+                    "k_chitin_hb",
+                    options);
+
+                Assert.That(results, Is.Not.Empty);
+                Assert.That(results, Has.Some.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath == "ScriptHeartbeat"));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindTagReferences_NoChitin_SkipsChitinResource()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-nochitin-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(installRoot);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.Tag = "chitin_only_tag";
+            WriteChitinWithUtc(installRoot, utc);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = false
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindTagReferences(
+                    installation,
+                    "chitin_only_tag",
+                    options);
+
+                Assert.That(results, Is.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void FindScriptResRefInNcsBytes_NoMatchReturnsEmpty()
         {
             byte[] data = System.Text.Encoding.ASCII.GetBytes("abc def");
             Assert.That(ReferenceFinder.FindScriptResRefInNcsBytes(data, "missing"), Is.Empty);
+        }
+
+        private static void WriteChitinWithUtc(string installRoot, UTC utc, string resName = "test_npc")
+        {
+            string bifPath = Path.Combine(installRoot, "data.bif");
+            string keyPath = Path.Combine(installRoot, "chitin.key");
+
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            var bif = new BIF();
+            bif.SetData(new ResRef(resName), ResourceType.UTC, bytes, 0);
+            File.WriteAllBytes(bifPath, new BIFBinaryWriter(bif).Write());
+
+            var key = new KEY();
+            key.AddBif("data.bif", (int)new FileInfo(bifPath).Length);
+            key.AddKeyEntry(resName, ResourceType.UTC, 0, 0);
+            File.WriteAllBytes(keyPath, KEYAuto.BytesKey(key));
         }
 
         private static void WriteModuleWithScriptReference(string modulePath, string scriptResRef)
