@@ -287,6 +287,128 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void CliCheckTxi_MissingTexture_ExitsNonZero()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-txi-cli-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(installRoot);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            try
+            {
+                int exitCode = RunKotorCli(
+                    "check-txi --installation \"" + installRoot + "\" --textures nonexistent_texture",
+                    out _,
+                    out string stderr);
+                Assert.That(exitCode, Is.EqualTo(1), stderr);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void CliCheckTxi_FoundInOverride_ExitsZero()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-txi-cli-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllText(Path.Combine(overrideDir, "test_tex.txi"), "blending additive");
+
+            try
+            {
+                int exitCode = RunKotorCli(
+                    "check-txi --installation \"" + installRoot + "\" --textures test_tex",
+                    out _,
+                    out string stderr);
+                Assert.That(exitCode, Is.EqualTo(0), stderr);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void CliCheck2da_MissingTwoDA_ExitsNonZero()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-2da-cli-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(installRoot);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            try
+            {
+                int exitCode = RunKotorCli(
+                    "check-2da --2da nonexistent_2da --installation \"" + installRoot + "\"",
+                    out _,
+                    out string stderr);
+                Assert.That(exitCode, Is.EqualTo(1), stderr);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void CliCheck2da_FoundInOverride_ExitsZero()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-2da-cli-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+
+            var twoDA = new TwoDA(new List<string> { "label" });
+            twoDA.AddRow();
+            File.WriteAllBytes(
+                Path.Combine(overrideDir, "test_twoda.2da"),
+                TwoDAAuto.BytesTwoDA(twoDA));
+
+            try
+            {
+                int exitCode = RunKotorCli(
+                    "check-2da --2da test_twoda --installation \"" + installRoot + "\"",
+                    out _,
+                    out string stderr);
+                Assert.That(exitCode, Is.EqualTo(0), stderr);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void CliValidateInstallation_NoEssential_ExitsZero()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-validate-cli-" + Guid.NewGuid().ToString("N"));
