@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using BioWare.Common;
 using BioWare.Resource;
+using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.TwoDA;
 using KotorCLI.Commands;
@@ -237,6 +238,58 @@ namespace KotorCLI.Tests
             }
         }
 
+        [Test]
+        public void ExecuteStats_ValidErf_ExitsZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-stats-erf-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string erfPath = WriteSampleErf(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = UtilityCommands.ExecuteStats(erfPath, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteValidate_ValidErf_ExitsZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-validate-erf-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string erfPath = WriteSampleErf(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = UtilityCommands.ExecuteValidate(erfPath, false, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
         private static string WriteSampleUtc(string tempDir)
         {
             string utcPath = Path.Combine(tempDir, "sample.utc");
@@ -252,6 +305,20 @@ namespace KotorCLI.Tests
             twoDA.AddRow();
             File.WriteAllBytes(twoDaPath, TwoDAAuto.BytesTwoDA(twoDA));
             return twoDaPath;
+        }
+
+        private static string WriteSampleErf(string tempDir)
+        {
+            string erfPath = Path.Combine(tempDir, "sample.erf");
+            var gff = new GFF(GFFContent.GFF);
+            gff.Root.SetString("Label", "stats-validate-test");
+            byte[] utcBytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            var erf = new ERF(ERFType.ERF);
+            erf.SetData("sample_npc", ResourceType.UTC, utcBytes);
+            erf.SetData("other_res", ResourceType.GFF, GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.GFF));
+            ERFAuto.WriteErf(erf, erfPath, ResourceType.ERF);
+            return erfPath;
         }
     }
 }
