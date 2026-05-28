@@ -20,6 +20,8 @@ Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare 
 
 **ReferenceSearchHelper prompt/cancel follow-up landed (2026-05-28, plans 265–268 on `feat/holocron-port-phase-b`):** `BuildPromptResult` accept round-trip, no-match FindAndShow smoke, and `showOptionsDialog: true` cancel coverage for tag/template/script/conversation; **169** reference-search tests total (**95** BioWare `ReferenceFinder` + **74** OdyTools helper/UI, including **34** `ReferenceSearchHelperTests`). See plans `265`–`267`.
 
+**ScriptReferenceHelper combo follow-up landed (2026-05-28, plans 269–270 on `feat/holocron-port-phase-b`):** editor combo no-match and selected-item fallback with installation; **171** reference-search tests total (**95** BioWare `ReferenceFinder` + **76** OdyTools helper/UI, including **7** `ScriptReferenceHelperTests`). See plan `269`.
+
 ## Requirements
 
 - R1. `ReferenceFinder.FindScriptReferences(Installation, string scriptResRef, ReferenceSearchOptions options)` returns `List<ReferenceSearchResult>` with `FileResource` + `FieldPath`.
@@ -77,10 +79,10 @@ Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare 
 - `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter ReferenceFinder` (**95** tests)
 - `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~FileResultsDialogReferenceSearchTests` (**8** tests)
 - `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ReferenceSearchHelperTests` (**34** tests)
-- `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ScriptReferenceHelperTests` (**5** tests)
+- `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ScriptReferenceHelperTests` (**7** tests)
 - `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ReferenceSearchOptionsDialogTests` (**9** tests)
 
-See plans `docs/plans/2026-05-28-224-*` through `docs/plans/2026-05-28-268-*` for slice history.
+See plans `docs/plans/2026-05-28-224-*` through `docs/plans/2026-05-28-270-*` for slice history.
 
 **StrRef/2DA helper verification (OdyTools):**
 
