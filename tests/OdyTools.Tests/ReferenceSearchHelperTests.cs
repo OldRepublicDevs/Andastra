@@ -634,6 +634,18 @@ namespace OdyTools.Tests
             }
         }
 
+        [Test]
+        [AvaloniaTest]
+        public void PromptSearchOptions_StrRefNcsOptions_NotAccepted_ReturnsNull()
+        {
+            ReferenceSearchOptions result = ReferenceSearchHelper.PromptSearchOptions(
+                null,
+                new ReferenceSearchOptions { IncludeNcsStrRefScan = false },
+                showStrRefNcsOptions: true);
+
+            Assert.That(result, Is.Null);
+        }
+
         private static string CreateMinimalInstallRoot()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "odytools-refhelper-" + Guid.NewGuid().ToString("N"));
