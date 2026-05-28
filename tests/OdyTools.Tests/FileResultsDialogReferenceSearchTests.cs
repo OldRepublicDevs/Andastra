@@ -95,5 +95,50 @@ namespace OdyTools.Tests
             Assert.That(string.Compare(first, second, System.StringComparison.OrdinalIgnoreCase), Is.LessThanOrEqualTo(0));
             Assert.That(first, Does.Contain("alpha_npc"));
         }
+
+        [Test]
+        [AvaloniaTest]
+        public void FromReferenceSearch_EmptyResults_LeavesListEmpty()
+        {
+            FileResultsDialog dialog = FileResultsDialog.FromReferenceSearch(
+                null,
+                new List<ReferenceSearchResult>(),
+                null);
+
+            Assert.That(dialog.Ui.ResultList.Items.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void FromReferenceSearch_NullResults_LeavesListEmpty()
+        {
+            FileResultsDialog dialog = FileResultsDialog.FromReferenceSearch(null, null, null);
+
+            Assert.That(dialog.Ui.ResultList.Items.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void FromReferenceSearch_NoFieldPath_UsesBaseDisplayOnly()
+        {
+            string filepath = Path.Combine(Path.GetTempPath(), "Override", "test_npc.utc");
+            var resource = new FileResource("test_npc", ResourceType.UTC, 128, 0, filepath);
+            var results = new List<ReferenceSearchResult>
+            {
+                new ReferenceSearchResult
+                {
+                    Resource = resource,
+                    FieldPath = null,
+                    MatchedValue = "npc_tag"
+                }
+            };
+
+            FileResultsDialog dialog = FileResultsDialog.FromReferenceSearch(null, results, null);
+
+            Assert.That(dialog.Ui.ResultList.Items.Count, Is.EqualTo(1));
+            string display = dialog.Ui.ResultList.Items[0].ToString();
+            Assert.That(display, Does.Contain("Override/test_npc.utc"));
+            Assert.That(display, Does.Not.Contain("::"));
+        }
     }
 }
