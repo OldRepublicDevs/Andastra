@@ -122,6 +122,27 @@ namespace OdyTools.Tests
             }
         }
 
+        [Test]
+        [AvaloniaTest]
+        public void FindAndShowScriptReferences_ComboTextPreferredOverSelectedItem_CompletesWithoutException()
+        {
+            string installRoot = CreateInstallWithScriptHeartbeat();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+                var comboBox = new ComboBox { Text = "k_missing_script" };
+                comboBox.Items.Add("k_test_hb");
+                comboBox.SelectedItem = "k_test_hb";
+
+                Assert.DoesNotThrow(() =>
+                    ScriptReferenceHelper.FindAndShowScriptReferences(null, comboBox, installation));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
         private static string CreateInstallWithScriptHeartbeat()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "odytools-scriptref-" + Guid.NewGuid().ToString("N"));
