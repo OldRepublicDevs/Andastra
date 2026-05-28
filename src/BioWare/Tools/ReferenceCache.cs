@@ -95,6 +95,7 @@ namespace BioWare.Tools
     public class StrRefReferenceCache
     {
         private readonly BioWareGame _game;
+        private readonly int _ncsStrRefCandidateMinimum;
         private readonly Dictionary<int, Dictionary<ResourceIdentifier, List<string>>> _cache = new Dictionary<int, Dictionary<ResourceIdentifier, List<string>>>();
         private readonly Dictionary<string, HashSet<string>> _strref2daColumns;
         private int _totalReferencesFound;
@@ -103,8 +104,14 @@ namespace BioWare.Tools
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:136-159
         // Original: def __init__(self, game: Game):
         public StrRefReferenceCache(BioWareGame game)
+            : this(game, null)
+        {
+        }
+
+        public StrRefReferenceCache(BioWareGame game, int? ncsStrRefCandidateMinimum)
         {
             _game = game;
+            _ncsStrRefCandidateMinimum = ncsStrRefCandidateMinimum ?? NcsConstiScanner.StrRefCandidateMinimum;
 
             // Get game-specific 2DA column definitions
             if (_game == BioWareGame.K1)
@@ -119,6 +126,16 @@ namespace BioWare.Tools
             {
                 _strref2daColumns = new Dictionary<string, HashSet<string>>();
             }
+        }
+
+        public BioWareGame Game
+        {
+            get { return _game; }
+        }
+
+        public int NcsStrRefCandidateMinimum
+        {
+            get { return _ncsStrRefCandidateMinimum; }
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:161-201
@@ -146,9 +163,10 @@ namespace BioWare.Tools
                 {
                     ScanSSF(identifier, data);
                 }
-                // NCS files - NCS scanning temporarily disabled pending bytecode analysis implementation
-                // NCS files contain compiled NWScript bytecode which requires specialized parsing
-                // GFF files
+                else if (restype == ResourceType.NCS)
+                {
+                    ScanNCS(identifier, data);
+                }
                 else if (restype.IsGff())
                 {
                     try
@@ -220,6 +238,22 @@ namespace BioWare.Tools
                     LogDebug($"Found StrRef {strref.Value} in SSF file '{filename}' at sound slot '{sound}'");
                     AddReference(strref.Value, identifier, location);
                 }
+            }
+        }
+
+        private void ScanNCS(ResourceIdentifier identifier, byte[] data)
+        {
+            foreach (NcsConstiScanner.ConstiInstruction instruction in NcsConstiScanner.ExtractConstiInstructions(data))
+            {
+                if (instruction.Value < 0 || !NcsConstiScanner.IsPlausibleStrRefCandidate(instruction.Value, _ncsStrRefCandidateMinimum))
+                {
+                    continue;
+                }
+
+                string location = "offset_" + instruction.ValueByteOffset;
+                string filename = identifier.ResName + "." + identifier.ResType.Extension;
+                LogDebug("Found StrRef " + instruction.Value + " in NCS file '" + filename + "' at byte offset " + instruction.ValueByteOffset);
+                AddReference(instruction.Value, identifier, location);
             }
         }
 
@@ -360,9 +394,12 @@ namespace BioWare.Tools
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:436-479
         // Original: @classmethod def from_dict(cls, game: Game, data: dict[str, list[dict[str, str | list[str]]]]) -> StrRefReferenceCache:
-        public static StrRefReferenceCache FromDict(BioWareGame game, Dictionary<string, List<Dictionary<string, object>>> data)
+        public static StrRefReferenceCache FromDict(
+            BioWareGame game,
+            Dictionary<string, List<Dictionary<string, object>>> data,
+            int? ncsStrRefCandidateMinimum = null)
         {
-            var cache = new StrRefReferenceCache(game);
+            var cache = new StrRefReferenceCache(game, ncsStrRefCandidateMinimum);
 
             foreach (var kvp in data)
             {
@@ -375,8 +412,13 @@ namespace BioWare.Tools
                 {
                     string resname = refData["resname"].ToString();
                     string restypeExt = refData["restype"].ToString();
-                    var locationsList = refData["locations"] as List<object>;
-                    var locations = locationsList?.Cast<string>().ToList() ?? new List<string>();
+                    object locationsValue;
+                    if (!refData.TryGetValue("locations", out locationsValue))
+                    {
+                        locationsValue = null;
+                    }
+
+                    List<string> locations = ConvertLocationsFromRefData(locationsValue);
 
                     // Recreate ResourceIdentifier
                     ResourceType restype = ResourceType.FromExtension(restypeExt);
@@ -400,6 +442,47 @@ namespace BioWare.Tools
             LogVerbose($"Restored StrRef cache from saved data: {cache._cache.Count} StrRefs, {cache._totalReferencesFound} references");
 
             return cache;
+        }
+
+        private static List<string> ConvertLocationsFromRefData(object locationsValue)
+        {
+            var locations = new List<string>();
+            if (locationsValue == null)
+            {
+                return locations;
+            }
+
+            if (locationsValue is List<string> stringList)
+            {
+                locations.AddRange(stringList);
+                return locations;
+            }
+
+            if (locationsValue is IEnumerable<object> objectList)
+            {
+                foreach (object item in objectList)
+                {
+                    if (item != null)
+                    {
+                        locations.Add(item.ToString());
+                    }
+                }
+
+                return locations;
+            }
+
+            if (locationsValue is System.Collections.IEnumerable enumerable && !(locationsValue is string))
+            {
+                foreach (object item in enumerable)
+                {
+                    if (item != null)
+                    {
+                        locations.Add(item.ToString());
+                    }
+                }
+            }
+
+            return locations;
         }
 
         private static void LogDebug(string msg)
@@ -439,6 +522,11 @@ namespace BioWare.Tools
         public TwoDAMemoryReferenceCache(BioWareGame game)
         {
             _game = game;
+        }
+
+        public BioWareGame Game
+        {
+            get { return _game; }
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:508-535
@@ -505,6 +593,18 @@ namespace BioWare.Tools
                         {
                             rowIndex = intVal;
                         }
+                        else if (field.value is short shortVal)
+                        {
+                            rowIndex = shortVal;
+                        }
+                        else if (field.value is sbyte sbyteVal)
+                        {
+                            rowIndex = sbyteVal;
+                        }
+                        else if (field.value is long longVal)
+                        {
+                            rowIndex = (int)longVal;
+                        }
                     }
                     else if (field.fieldType == GFFFieldType.UInt8 || field.fieldType == GFFFieldType.UInt16 || field.fieldType == GFFFieldType.UInt32 || field.fieldType == GFFFieldType.UInt64)
                     {
@@ -515,6 +615,18 @@ namespace BioWare.Tools
                         else if (field.value is int intVal)
                         {
                             rowIndex = intVal;
+                        }
+                        else if (field.value is ushort ushortVal)
+                        {
+                            rowIndex = ushortVal;
+                        }
+                        else if (field.value is byte byteVal)
+                        {
+                            rowIndex = byteVal;
+                        }
+                        else if (field.value is ulong ulongVal)
+                        {
+                            rowIndex = (int)ulongVal;
                         }
                     }
 
@@ -675,8 +787,7 @@ namespace BioWare.Tools
                 {
                     string resname = refData["resname"].ToString();
                     string restypeExt = refData["restype"].ToString();
-                    var locationsList = refData["locations"] as List<object>;
-                    var locations = locationsList?.Cast<string>().ToList() ?? new List<string>();
+                    var locations = ConvertLocationsFromRefData(refData["locations"]);
 
                     // Recreate ResourceIdentifier
                     ResourceType restype = ResourceType.FromExtension(restypeExt);
@@ -698,6 +809,47 @@ namespace BioWare.Tools
             }
 
             return cache;
+        }
+
+        private static List<string> ConvertLocationsFromRefData(object locationsValue)
+        {
+            var locations = new List<string>();
+            if (locationsValue == null)
+            {
+                return locations;
+            }
+
+            if (locationsValue is List<string> stringList)
+            {
+                locations.AddRange(stringList);
+                return locations;
+            }
+
+            if (locationsValue is IEnumerable<object> objectList)
+            {
+                foreach (object item in objectList)
+                {
+                    if (item != null)
+                    {
+                        locations.Add(item.ToString());
+                    }
+                }
+
+                return locations;
+            }
+
+            if (locationsValue is System.Collections.IEnumerable enumerable && !(locationsValue is string))
+            {
+                foreach (object item in enumerable)
+                {
+                    if (item != null)
+                    {
+                        locations.Add(item.ToString());
+                    }
+                }
+            }
+
+            return locations;
         }
 
         private static void LogVerbose(string msg)
@@ -725,65 +877,19 @@ namespace BioWare.Tools
             Installation installation,
             List<int> strrefs,
             StrRefReferenceCache cache = null,
-            Action<string> logger = null)
+            Action<string> logger = null,
+            ReferenceSearchOptions options = null)
         {
             if (strrefs == null || strrefs.Count == 0)
             {
-                return (new Dictionary<int, List<StrRefSearchResult>>(), cache ?? new StrRefReferenceCache(installation.Game));
+                return (new Dictionary<int, List<StrRefSearchResult>>(), cache ?? new StrRefReferenceCache(installation.Game, options?.NcsStrRefCandidateMinimum));
             }
 
             // Build cache if not provided
             if (cache == null)
             {
                 logger?.Invoke($"Building StrRef cache for {strrefs.Count} StrRefs for Installation {installation.Path}...");
-                cache = new StrRefReferenceCache(installation.Game);
-
-                // Scan all resources to build the cache
-                int resourceCount = 0;
-                int skippedCount = 0;
-                int lastLoggedCount = 0;
-                int logInterval = 500; // Log progress every 500 resources
-
-                var allResources = GetAllResources(installation);
-                foreach (var resource in allResources)
-                {
-                    try
-                    {
-                        // Skip RIM files - they're not used at runtime
-                        string filePath = resource.FilePath;
-                        if (filePath.IndexOf("rims", StringComparison.OrdinalIgnoreCase) >= 0)
-                        {
-                            skippedCount++;
-                            continue;
-                        }
-
-                        // Filter by resource type: Only scan types that can contain StrRefs
-                        ResourceType restype = resource.ResType;
-                        bool canContainStrref = restype.IsGff() || restype == ResourceType.TwoDA || restype == ResourceType.SSF || restype == ResourceType.NCS;
-                        if (!canContainStrref)
-                        {
-                            skippedCount++;
-                            continue;
-                        }
-
-                        byte[] data = resource.GetData();
-                        cache.ScanResource(resource, data);
-                        resourceCount++;
-
-                        // Log progress periodically
-                        if (logger != null && resourceCount - lastLoggedCount >= logInterval)
-                        {
-                            logger($"  Scanning for StrRefs... {resourceCount} resources processed for Installation {installation.Path}");
-                            lastLoggedCount = resourceCount;
-                        }
-                    }
-                    catch
-                    {
-                        skippedCount++;
-                    }
-                }
-
-                logger?.Invoke($"Cache built: scanned {resourceCount} resources (skipped {skippedCount} files) for Installation {installation.Path}");
+                cache = BuildStrRefReferenceCache(installation, logger, options);
             }
 
             // Convert cache entries to StrRefSearchResult format
@@ -881,6 +987,59 @@ namespace BioWare.Tools
             return (results, cache);
         }
 
+        /// <summary>
+        /// Scan an installation once and return a populated StrRef reference cache.
+        /// </summary>
+        public static StrRefReferenceCache BuildStrRefReferenceCache(
+            Installation installation,
+            Action<string> logger = null,
+            ReferenceSearchOptions options = null)
+        {
+            var cache = new StrRefReferenceCache(installation.Game, options != null ? options.NcsStrRefCandidateMinimum : null);
+            int resourceCount = 0;
+            int skippedCount = 0;
+            int lastLoggedCount = 0;
+            int logInterval = 500;
+
+            foreach (FileResource resource in GetAllResources(installation, options))
+            {
+                try
+                {
+                    string filePath = resource.FilePath;
+                    if (filePath.IndexOf("rims", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        skippedCount++;
+                        continue;
+                    }
+
+                    ResourceType restype = resource.ResType;
+                    bool canContainStrref = restype.IsGff() || restype == ResourceType.TwoDA || restype == ResourceType.SSF || restype == ResourceType.NCS;
+                    if (!canContainStrref)
+                    {
+                        skippedCount++;
+                        continue;
+                    }
+
+                    byte[] data = resource.GetData();
+                    cache.ScanResource(resource, data);
+                    resourceCount++;
+
+                    if (logger != null && resourceCount - lastLoggedCount >= logInterval)
+                    {
+                        logger("  Scanning for StrRefs... " + resourceCount + " resources processed for Installation " + installation.Path);
+                        lastLoggedCount = resourceCount;
+                    }
+                }
+                catch
+                {
+                    skippedCount++;
+                }
+            }
+
+            logger?.Invoke("Cache built: scanned " + resourceCount + " resources (skipped " + skippedCount + " files) for Installation " + installation.Path);
+            return cache;
+        }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:906-1254
         // Original: def find_strref_references(...) -> list[StrRefSearchResult]:
         /// <summary>
@@ -892,8 +1051,11 @@ namespace BioWare.Tools
             Installation installation,
             int strref,
             StrRefReferenceCache cache = null,
-            Action<string> logger = null)
+            Action<string> logger = null,
+            ReferenceSearchOptions options = null)
         {
+            options = options ?? new ReferenceSearchOptions();
+
             // If cache is provided, use it for faster lookup
             if (cache != null)
             {
@@ -905,8 +1067,7 @@ namespace BioWare.Tools
 
                 // Build a map of ResourceIdentifier -> FileResource
                 var identifierToResource = new Dictionary<ResourceIdentifier, FileResource>();
-                var allResourcesForMap = GetAllResources(installation);
-                foreach (var res in allResourcesForMap)
+                foreach (FileResource res in GetAllResources(installation, options))
                 {
                     try
                     {
@@ -925,6 +1086,11 @@ namespace BioWare.Tools
                     try
                     {
                         if (!identifierToResource.TryGetValue(identifier, out FileResource foundResource) || foundResource == null)
+                        {
+                            continue;
+                        }
+
+                        if (!ShouldScanNcsStrRefs(options) && foundResource.ResType == ResourceType.NCS)
                         {
                             continue;
                         }
@@ -950,6 +1116,11 @@ namespace BioWare.Tools
                             }
                             else if (locStr.StartsWith("offset_"))
                             {
+                                if (!ShouldScanNcsStrRefs(options))
+                                {
+                                    continue;
+                                }
+
                                 if (int.TryParse(locStr.Replace("offset_", ""), out int byteOffset))
                                 {
                                     locations.Add(new NCSRefLocation(byteOffset));
@@ -977,9 +1148,7 @@ namespace BioWare.Tools
 
             // No cache available - scan all resources (slower path)
             var scanResults = new List<StrRefSearchResult>();
-            var allResources = GetAllResources(installation);
-
-            foreach (var resource in allResources)
+            foreach (var resource in GetAllResources(installation, options))
             {
                 ResourceType restype = resource.ResType;
 
@@ -1016,71 +1185,169 @@ namespace BioWare.Tools
                         scanResults.Add(result);
                     }
                 }
+                else if (restype == ResourceType.NCS)
+                {
+                    if (!ShouldScanNcsStrRefs(options))
+                    {
+                        continue;
+                    }
+
+                    var result = ScanNCSForStrRef(resource, installation, strref, logger);
+                    if (result != null)
+                    {
+                        scanResults.Add(result);
+                    }
+                }
             }
 
             return scanResults;
         }
 
+        private static StrRefSearchResult ScanNCSForStrRef(
+            FileResource resource,
+            Installation installation,
+            int strref,
+            Action<string> logger)
+        {
+            try
+            {
+                List<int> offsets = NcsConstiScanner.ExtractConstiOffsetsForValue(resource.GetData(), strref);
+                if (offsets == null || offsets.Count == 0)
+                {
+                    return null;
+                }
+
+                var locations = new List<object>();
+                foreach (int offset in offsets)
+                {
+                    locations.Add(new NCSRefLocation(offset));
+                    logger?.Invoke("    Found at: NCS offset " + offset + " at " + resource.FilePath);
+                }
+
+                return new StrRefSearchResult(resource, locations);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         // Helper method to get all resources from an Installation
-        private static List<FileResource> GetAllResources(Installation installation)
+        private static List<FileResource> GetAllResources(Installation installation, ReferenceSearchOptions options = null)
         {
             var allResources = new List<FileResource>();
+            bool searchChitin = options == null || options.SearchChitin;
+            bool searchOverride = options == null || options.SearchOverride;
+            bool searchModules = options == null || options.SearchModules;
 
-            // Get chitin resources
-            allResources.AddRange(installation.ChitinResources());
-
-            // Get core resources (includes patch.erf for K1)
-            allResources.AddRange(installation.CoreResources());
-
-            // Get override resources
-            string overridePath = installation.OverridePath();
-            if (Directory.Exists(overridePath))
+            if (searchChitin)
             {
-                var overrideFiles = Directory.GetFiles(overridePath, "*.*", SearchOption.AllDirectories);
-                foreach (string file in overrideFiles)
+                try
                 {
-                    try
+                    allResources.AddRange(installation.ChitinResources());
+                }
+                catch
+                {
+                    // Minimal/test installs may lack readable chitin.key.
+                }
+
+                try
+                {
+                    foreach (FileResource resource in installation.CoreResources())
                     {
-                        var identifier = ResourceIdentifier.FromPath(file);
-                        if (identifier.ResType != ResourceType.INVALID && !identifier.ResType.IsInvalid)
+                        if (!ContainsResource(allResources, resource))
                         {
-                            var fileInfo = new FileInfo(file);
-                            allResources.Add(new FileResource(identifier.ResName, identifier.ResType, (int)fileInfo.Length, 0, file));
+                            allResources.Add(resource);
                         }
                     }
-                    catch
+                }
+                catch
+                {
+                    // Patch/core enumeration is optional for reference scans.
+                }
+            }
+
+            if (searchOverride)
+            {
+                string overridePath = installation.OverridePath();
+                if (Directory.Exists(overridePath))
+                {
+                    var overrideFiles = Directory.GetFiles(overridePath, "*.*", SearchOption.AllDirectories);
+                    foreach (string file in overrideFiles)
                     {
-                        // Skip invalid files
+                        try
+                        {
+                            var identifier = ResourceIdentifier.FromPath(file);
+                            if (identifier.ResType != ResourceType.INVALID && !identifier.ResType.IsInvalid)
+                            {
+                                var fileInfo = new FileInfo(file);
+                                allResources.Add(new FileResource(identifier.ResName, identifier.ResType, (int)fileInfo.Length, 0, file));
+                            }
+                        }
+                        catch
+                        {
+                            // Skip invalid files
+                        }
                     }
                 }
             }
 
-            // Get module resources
-            // TODO: HACK - Using fully qualified name to avoid circular dependency
-            // Installation.GetModulesPath is a static method, so we can call it without a project reference
-            string modulesPath = Installation.GetModulesPath(installation.Path);
-            if (Directory.Exists(modulesPath))
+            if (searchModules)
             {
-                var moduleFiles = Directory.GetFiles(modulesPath, "*.rim")
-                    .Concat(Directory.GetFiles(modulesPath, "*.mod"))
-                    .Concat(Directory.GetFiles(modulesPath, "*.erf"))
-                    .ToList();
-
-                foreach (string moduleFile in moduleFiles)
+                // TODO: HACK - Using fully qualified name to avoid circular dependency
+                // Installation.GetModulesPath is a static method, so we can call it without a project reference
+                string modulesPath = Installation.GetModulesPath(installation.Path);
+                if (Directory.Exists(modulesPath))
                 {
-                    try
+                    var moduleFiles = Directory.GetFiles(modulesPath, "*.rim")
+                        .Concat(Directory.GetFiles(modulesPath, "*.mod"))
+                        .Concat(Directory.GetFiles(modulesPath, "*.erf"))
+                        .ToList();
+
+                    foreach (string moduleFile in moduleFiles)
                     {
-                        var capsule = new LazyCapsule(moduleFile);
-                        allResources.AddRange(capsule.GetResources());
-                    }
-                    catch
-                    {
-                        // Skip invalid modules
+                        if (!ModuleGlobMatcher.MatchesAnyModuleGlob(moduleFile, options?.ModuleGlobFilters))
+                        {
+                            continue;
+                        }
+
+                        try
+                        {
+                            var capsule = new LazyCapsule(moduleFile);
+                            allResources.AddRange(capsule.GetResources());
+                        }
+                        catch
+                        {
+                            // Skip invalid modules
+                        }
                     }
                 }
             }
 
             return allResources;
+        }
+
+        private static bool ShouldScanNcsStrRefs(ReferenceSearchOptions options)
+        {
+            return options == null || options.IncludeNcsStrRefScan;
+        }
+
+        private static bool ContainsResource(List<FileResource> resources, FileResource candidate)
+        {
+            if (candidate == null)
+            {
+                return false;
+            }
+
+            foreach (FileResource existing in resources)
+            {
+                if (existing != null && existing.Identifier.Equals(candidate.Identifier))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         // Helper to scan 2DA file for StrRef
@@ -1216,9 +1483,325 @@ namespace BioWare.Tools
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:57-61
         // Original: def _get_gff_field_to_2da_mapping(): ...
+        public static string FormatStrRefLocation(object location)
+        {
+            if (location == null)
+            {
+                return "(unknown)";
+            }
+
+            if (location is GFFRefLocation gffLocation)
+            {
+                return gffLocation.FieldPath ?? "(GFF)";
+            }
+
+            if (location is TwoDARefLocation twoDaLocation)
+            {
+                return "Row " + twoDaLocation.RowIndex + ", Column '" + twoDaLocation.ColumnName + "'";
+            }
+
+            if (location is SSFRefLocation ssfLocation)
+            {
+                return "Sound " + ssfLocation.Sound;
+            }
+
+            if (location is NCSRefLocation ncsLocation)
+            {
+                return "(NCS bytecode) offset_" + ncsLocation.ByteOffset;
+            }
+
+            return location.ToString();
+        }
+
+        public static List<ReferenceSearchResult> ConvertToReferenceSearchResults(
+            IEnumerable<StrRefSearchResult> results,
+            int strref)
+        {
+            var converted = new List<ReferenceSearchResult>();
+            if (results == null)
+            {
+                return converted;
+            }
+
+            string matchedValue = strref.ToString();
+            foreach (StrRefSearchResult result in results)
+            {
+                if (result?.Resource == null || result.Locations == null)
+                {
+                    continue;
+                }
+
+                foreach (object location in result.Locations)
+                {
+                    converted.Add(new ReferenceSearchResult
+                    {
+                        Resource = result.Resource,
+                        FieldPath = FormatStrRefLocation(location),
+                        MatchedValue = matchedValue
+                    });
+                }
+            }
+
+            return converted;
+        }
+
+        public static string NormalizeTwoDAFilename(string twodaFilename)
+        {
+            if (string.IsNullOrWhiteSpace(twodaFilename))
+            {
+                return twodaFilename;
+            }
+
+            string trimmed = twodaFilename.Trim();
+            if (!trimmed.EndsWith(".2da", StringComparison.OrdinalIgnoreCase))
+            {
+                return trimmed + ".2da";
+            }
+
+            return trimmed;
+        }
+
+        /// <summary>
+        /// Scan an installation once and return a populated 2DA memory reference cache.
+        /// </summary>
+        public static TwoDAMemoryReferenceCache BuildTwoDAMemoryReferenceCache(
+            Installation installation,
+            Action<string> logger = null,
+            ReferenceSearchOptions options = null)
+        {
+            var cache = new TwoDAMemoryReferenceCache(installation.Game);
+            int resourceCount = 0;
+            int skippedCount = 0;
+
+            foreach (FileResource resource in GetAllResources(installation, options))
+            {
+                try
+                {
+                    if (resource.FilePath.IndexOf("rims", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        skippedCount++;
+                        continue;
+                    }
+
+                    if (!resource.ResType.IsGff())
+                    {
+                        skippedCount++;
+                        continue;
+                    }
+
+                    cache.ScanResource(resource, resource.GetData());
+                    resourceCount++;
+                }
+                catch
+                {
+                    skippedCount++;
+                }
+            }
+
+            logger?.Invoke("Cache built: scanned " + resourceCount + " GFF resources (skipped " + skippedCount + " files) for Installation " + installation.Path);
+            return cache;
+        }
+
+        public static List<ReferenceSearchResult> Find2DAMemoryReferences(
+            Installation installation,
+            string twodaFilename,
+            int rowIndex,
+            TwoDAMemoryReferenceCache cache = null,
+            Action<string> logger = null,
+            ReferenceSearchOptions options = null)
+        {
+            if (installation == null || rowIndex < 0)
+            {
+                return new List<ReferenceSearchResult>();
+            }
+
+            string normalizedFilename = NormalizeTwoDAFilename(twodaFilename);
+            if (string.IsNullOrEmpty(normalizedFilename))
+            {
+                return new List<ReferenceSearchResult>();
+            }
+
+            if (cache == null)
+            {
+                logger?.Invoke("Building 2DA memory reference cache for " + normalizedFilename + " row " + rowIndex + "...");
+                cache = BuildTwoDAMemoryReferenceCache(installation, logger, options);
+            }
+
+            List<(ResourceIdentifier identifier, List<string> locations)> cacheEntries =
+                cache.GetReferences(normalizedFilename, rowIndex);
+
+            return ConvertTwoDAMemoryCacheEntries(
+                installation,
+                cacheEntries,
+                normalizedFilename,
+                rowIndex,
+                options);
+        }
+
+        private static List<ReferenceSearchResult> ConvertTwoDAMemoryCacheEntries(
+            Installation installation,
+            List<(ResourceIdentifier identifier, List<string> locations)> cacheEntries,
+            string twodaFilename,
+            int rowIndex,
+            ReferenceSearchOptions options = null)
+        {
+            var converted = new List<ReferenceSearchResult>();
+            if (cacheEntries == null || cacheEntries.Count == 0)
+            {
+                return converted;
+            }
+
+            var identifierToResource = new Dictionary<ResourceIdentifier, FileResource>();
+            foreach (FileResource res in GetAllResources(installation, options))
+            {
+                try
+                {
+                    identifierToResource[res.Identifier] = res;
+                }
+                catch
+                {
+                    // Skip invalid resources.
+                }
+            }
+
+            string matchedValue = twodaFilename + ":" + rowIndex;
+            foreach (var entry in cacheEntries)
+            {
+                ResourceIdentifier identifier = entry.identifier;
+                List<string> locations = entry.locations;
+                if (!identifierToResource.TryGetValue(identifier, out FileResource foundResource) || foundResource == null)
+                {
+                    continue;
+                }
+
+                if (locations == null)
+                {
+                    continue;
+                }
+
+                foreach (string fieldPath in locations)
+                {
+                    converted.Add(new ReferenceSearchResult
+                    {
+                        Resource = foundResource,
+                        FieldPath = fieldPath,
+                        MatchedValue = matchedValue
+                    });
+                }
+            }
+
+            return converted;
+        }
+
         public static Dictionary<string, ResourceIdentifier> GffFieldTo2daMapping()
         {
             return Extract.TwoDARegistry.GffFieldMapping();
+        }
+
+        [CanBeNull]
+        public static TwoDA TryLoadTwoDAFromInstallation(Installation installation, string twodaFilename)
+        {
+            if (installation == null || string.IsNullOrWhiteSpace(twodaFilename))
+            {
+                return null;
+            }
+
+            string resname = NormalizeTwoDAFilename(twodaFilename);
+            if (string.IsNullOrEmpty(resname))
+            {
+                return null;
+            }
+
+            if (resname.EndsWith(".2da", StringComparison.OrdinalIgnoreCase))
+            {
+                resname = resname.Substring(0, resname.Length - 4);
+            }
+
+            ResourceResult result = installation.Resource(resname, ResourceType.TwoDA);
+            if (result == null || result.Data == null || result.Data.Length == 0)
+            {
+                return null;
+            }
+
+            try
+            {
+                return TwoDAAuto.Read2DA(result.Data, 0, result.Data.Length, ResourceType.TwoDA);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public static List<ReferenceSearchResult> CollectTwoDARowReferences(
+            Installation installation,
+            string twodaFilename,
+            int rowIndex,
+            TwoDA twoDA = null,
+            TwoDAMemoryReferenceCache twodaMemoryCache = null,
+            Action<string> logger = null,
+            ReferenceSearchOptions options = null)
+        {
+            var results = new List<ReferenceSearchResult>();
+            if (installation == null || rowIndex < 0 || string.IsNullOrWhiteSpace(twodaFilename))
+            {
+                return results;
+            }
+
+            results.AddRange(Find2DAMemoryReferences(
+                installation,
+                twodaFilename,
+                rowIndex,
+                twodaMemoryCache,
+                logger,
+                options));
+
+            TwoDA table = twoDA ?? TryLoadTwoDAFromInstallation(installation, twodaFilename);
+            if (table == null || rowIndex < 0 || rowIndex >= table.GetHeight())
+            {
+                return results;
+            }
+
+            string rowLabel = table.GetLabel(rowIndex);
+            if (!string.IsNullOrWhiteSpace(rowLabel))
+            {
+                results.AddRange(ReferenceFinder.FindFieldValueReferences(
+                    installation,
+                    rowLabel.Trim(),
+                    null,
+                    options));
+            }
+
+            foreach (string header in table.GetHeaders())
+            {
+                if (string.IsNullOrEmpty(header) || header == ">>##HEADER##<<")
+                {
+                    continue;
+                }
+
+                string cellValue = table.GetCellString(rowIndex, header);
+                if (string.IsNullOrWhiteSpace(cellValue))
+                {
+                    continue;
+                }
+
+                string trimmed = cellValue.Trim();
+                int strref;
+                if (!int.TryParse(trimmed, out strref) || strref <= 0)
+                {
+                    continue;
+                }
+
+                List<StrRefSearchResult> strrefResults = FindStrRefReferences(
+                    installation,
+                    strref,
+                    null,
+                    null,
+                    options);
+                results.AddRange(ConvertToReferenceSearchResults(strrefResults, strref));
+            }
+
+            return results;
         }
     }
 }

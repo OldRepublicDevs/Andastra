@@ -52,7 +52,7 @@ namespace KotorCLI.Commands
             rootCommand.Add(createArchiveCommand);
         }
 
-        private static int Execute(string directory, string output, string type, string filter, ILogger logger)
+        public static int Execute(string directory, string output, string type, string filter, ILogger logger)
         {
             string inputDir = Path.GetFullPath(directory);
             if (!Directory.Exists(inputDir))

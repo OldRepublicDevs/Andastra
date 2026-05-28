@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using BioWare;
 using BioWare.Resource.Formats.ERF;
+using BioWare.Resource.Formats.RIM;
 using BioWare.Common;
 using BioWare.Resource;
 using KotorCLI.Configuration;
@@ -47,7 +47,7 @@ namespace KotorCLI.Commands
             rootCommand.Add(packCommand);
         }
 
-        private static int Execute(string[] targetNames, bool clean, bool noConvert, bool noCompile, ILogger logger)
+        public static int Execute(string[] targetNames, bool clean, bool noConvert, bool noCompile, ILogger logger)
         {
             // Pack command orchestrates: convert -> compile -> pack
             // Matching PyKotor implementation at Tools/KotorCLI/src/kotorcli/commands/pack.py
@@ -151,7 +151,7 @@ namespace KotorCLI.Commands
 
                         foreach (var pattern in includePatterns)
                         {
-                            var matches = FindFilesMatchingPattern(rootDir, pattern);
+                            var matches = GlobPatternMatcher.FindFilesMatchingPattern(rootDir, pattern);
                             foreach (var match in matches)
                             {
                                 if (File.Exists(match))
@@ -194,7 +194,7 @@ namespace KotorCLI.Commands
 
                         foreach (var pattern in filterPatterns)
                         {
-                            if (MatchPattern(fileName, pattern))
+                            if (GlobPatternMatcher.MatchPattern(fileName, pattern))
                             {
                                 shouldFilter = true;
                                 logger.Debug($"Filtering out: {fileName}");
@@ -330,8 +330,82 @@ namespace KotorCLI.Commands
                     }
                     else if (extension == "rim")
                     {
-                        logger.Error("RIM packing not yet implemented");
-                        return 1;
+                        try
+                        {
+                            var rim = new RIM();
+
+                            foreach (var cacheFile in filteredFiles)
+                            {
+                                try
+                                {
+                                    var fileName = Path.GetFileName(cacheFile);
+                                    var stem = Path.GetFileNameWithoutExtension(cacheFile);
+                                    var ext = Path.GetExtension(cacheFile).TrimStart('.');
+
+                                    string resref;
+                                    string actualExt = ext;
+
+                                    if (stem.Contains("."))
+                                    {
+                                        var parts = stem.Split('.');
+                                        if (parts.Length >= 2)
+                                        {
+                                            actualExt = parts[parts.Length - 1];
+                                            resref = string.Join(".", parts.Take(parts.Length - 1));
+                                        }
+                                        else
+                                        {
+                                            resref = stem;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        resref = stem;
+                                    }
+
+                                    ResourceType restype;
+                                    try
+                                    {
+                                        restype = ResourceType.FromExtension(actualExt);
+                                        if (restype.IsInvalid)
+                                        {
+                                            logger.Warning($"Unknown resource type for {fileName}, skipping");
+                                            continue;
+                                        }
+                                    }
+                                    catch (Exception)
+                                    {
+                                        logger.Warning($"Failed to determine resource type for {fileName}, skipping");
+                                        continue;
+                                    }
+
+                                    byte[] fileData = File.ReadAllBytes(cacheFile);
+                                    rim.SetData(resref, restype, fileData);
+                                }
+                                catch (Exception ex)
+                                {
+                                    logger.Warning($"Failed to add {Path.GetFileName(cacheFile)} to RIM: {ex.Message}");
+                                }
+                            }
+
+                            var outputDir = Path.GetDirectoryName(outputFile);
+                            if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
+                            {
+                                Directory.CreateDirectory(outputDir);
+                            }
+
+                            RIMAuto.WriteRim(rim, outputFile, ResourceType.RIM);
+                            logger.Info($"Successfully packed {outputFile}");
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.Error($"Failed to pack RIM: {ex.Message}");
+                            if (logger.IsDebug)
+                            {
+                                logger.Debug($"Stack trace: {ex.StackTrace}");
+                            }
+                            return 1;
+                        }
                     }
                     else
                     {
@@ -351,93 +425,6 @@ namespace KotorCLI.Commands
                 }
                 return 1;
             }
-        }
-
-        /// <summary>
-        /// Find files matching a glob pattern.
-        /// Matching PyKotor: glob.glob() behavior
-        /// </summary>
-        private static List<string> FindFilesMatchingPattern(string rootDir, string pattern)
-        {
-            var results = new List<string>();
-
-            try
-            {
-                // Handle different pattern types
-                if (pattern.Contains("**"))
-                {
-                    // Recursive pattern - search all subdirectories
-                    var searchPattern = pattern.Replace("**/", "").Replace("/**", "").Replace("**", "*");
-                    if (Directory.Exists(rootDir))
-                    {
-                        // Expand ** to recursive search
-                        var basePattern = pattern;
-                        if (basePattern.StartsWith("**/"))
-                        {
-                            basePattern = basePattern.Substring(3);
-                        }
-                        var filePattern = Path.GetFileName(basePattern);
-                        var dirPattern = Path.GetDirectoryName(basePattern);
-
-                        if (string.IsNullOrEmpty(dirPattern) || dirPattern == ".")
-                        {
-                            // Search all directories
-                            results.AddRange(Directory.GetFiles(rootDir, filePattern, SearchOption.AllDirectories));
-                        }
-                        else
-                        {
-                            // Search in specific subdirectory pattern
-                            var searchDirs = Directory.GetDirectories(rootDir, dirPattern, SearchOption.AllDirectories);
-                            foreach (var dir in searchDirs)
-                            {
-                                results.AddRange(Directory.GetFiles(dir, filePattern, SearchOption.TopDirectoryOnly));
-                            }
-                        }
-                    }
-                }
-                else if (pattern.Contains("*") || pattern.Contains("?"))
-                {
-                    // Simple wildcard pattern
-                    var directory = Path.GetDirectoryName(Path.Combine(rootDir, pattern));
-                    var filePattern = Path.GetFileName(pattern);
-
-                    if (string.IsNullOrEmpty(directory) || directory == ".")
-                    {
-                        directory = rootDir;
-                    }
-
-                    if (Directory.Exists(directory))
-                    {
-                        results.AddRange(Directory.GetFiles(directory, filePattern, SearchOption.TopDirectoryOnly));
-                    }
-                }
-                else
-                {
-                    // Exact file path
-                    var fullPath = Path.Combine(rootDir, pattern);
-                    if (File.Exists(fullPath))
-                    {
-                        results.Add(fullPath);
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // Ignore errors and continue
-            }
-
-            return results;
-        }
-
-        /// <summary>
-        /// Match a path against a glob pattern.
-        /// Matching PyKotor: fnmatch.fnmatch() behavior
-        /// </summary>
-        private static bool MatchPattern(string path, string pattern)
-        {
-            // Simple pattern matching - convert glob pattern to regex
-            var regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
-            return Regex.IsMatch(path, regexPattern, RegexOptions.IgnoreCase);
         }
 
         /// <summary>

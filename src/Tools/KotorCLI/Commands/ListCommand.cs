@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using KotorCLI.Configuration;
 using KotorCLI.Logging;
 using Tomlyn.Model;
@@ -39,7 +38,7 @@ namespace KotorCLI.Commands
             rootCommand.Add(listCommand);
         }
 
-        private static int Execute(string[] targets, bool quiet, bool verbose, ILogger logger)
+        public static int Execute(string[] targets, bool quiet, bool verbose, ILogger logger)
         {
             var configPath = ConfigFileFinder.FindConfigFile();
             if (configPath == null)
@@ -136,90 +135,32 @@ namespace KotorCLI.Commands
             // Find all files matching include patterns
             foreach (var pattern in includePatterns)
             {
-                var expandedPattern = config.ResolveTargetValue(target, "sources", pattern);
-                if (expandedPattern is string patternStr)
+                var matches = GlobPatternMatcher.FindFilesMatchingPattern(rootDir, pattern);
+                foreach (var match in matches)
                 {
-                    var matches = FindFilesMatchingPattern(rootDir, patternStr);
-                    foreach (var match in matches)
+                    bool excluded = false;
+                    foreach (var excludePattern in excludePatterns)
                     {
-                        // Check if file should be excluded
-                        bool excluded = false;
-                        foreach (var excludePattern in excludePatterns)
+                        var excludePath = Path.Combine(rootDir, excludePattern);
+                        if (GlobPatternMatcher.MatchPattern(match, excludePath))
                         {
-                            var expandedExclude = config.ResolveTargetValue(target, "sources", excludePattern);
-                            if (expandedExclude is string excludeStr && MatchPattern(match, Path.Combine(rootDir, excludeStr)))
-                            {
-                                excluded = true;
-                                break;
-                            }
+                            excluded = true;
+                            break;
                         }
+                    }
 
-                        if (!excluded)
+                    if (!excluded)
+                    {
+                        var relativePath = GetRelativePath(rootDir, match);
+                        if (!sourceFiles.Contains(relativePath))
                         {
-                            // Convert to relative path from root directory
-                            var relativePath = GetRelativePath(rootDir, match);
-                            if (!sourceFiles.Contains(relativePath))
-                            {
-                                sourceFiles.Add(relativePath);
-                            }
+                            sourceFiles.Add(relativePath);
                         }
                     }
                 }
             }
 
             return sourceFiles;
-        }
-
-        private static List<string> FindFilesMatchingPattern(string rootDir, string pattern)
-        {
-            var results = new List<string>();
-
-            try
-            {
-                // Handle different pattern types
-                if (pattern.Contains("**"))
-                {
-                    // Recursive pattern - search all subdirectories
-                    var searchPattern = pattern.Replace("**/", "").Replace("/**", "").Replace("**", "*");
-                    if (Directory.Exists(rootDir))
-                    {
-                        results.AddRange(Directory.GetFiles(rootDir, searchPattern, SearchOption.AllDirectories));
-                    }
-                }
-                else if (pattern.Contains("*") || pattern.Contains("?"))
-                {
-                    // Simple wildcard pattern
-                    var directory = Path.GetDirectoryName(Path.Combine(rootDir, pattern));
-                    var filePattern = Path.GetFileName(pattern);
-
-                    if (Directory.Exists(directory))
-                    {
-                        results.AddRange(Directory.GetFiles(directory, filePattern, SearchOption.TopDirectoryOnly));
-                    }
-                }
-                else
-                {
-                    // Exact file path
-                    var fullPath = Path.Combine(rootDir, pattern);
-                    if (File.Exists(fullPath))
-                    {
-                        results.Add(fullPath);
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // Ignore errors and continue
-            }
-
-            return results;
-        }
-
-        private static bool MatchPattern(string path, string pattern)
-        {
-            // Simple pattern matching - convert glob pattern to regex
-            var regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
-            return Regex.IsMatch(path, regexPattern, RegexOptions.IgnoreCase);
         }
 
         private static string GetRelativePath(string rootDir, string fullPath)

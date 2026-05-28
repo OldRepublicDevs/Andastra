@@ -1,5 +1,6 @@
 using System;
 using System.CommandLine;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -47,7 +48,7 @@ namespace KotorCLI.Commands
             rootCommand.Add(unpackCommand);
         }
 
-        internal static int Execute(string targetName, string unpackFile, bool removeDeleted, ILogger logger)
+        public static int Execute(string targetName, string unpackFile, bool removeDeleted, ILogger logger)
         {
             var configPath = ConfigFileFinder.FindConfigFile();
             if (configPath == null)
@@ -138,6 +139,8 @@ namespace KotorCLI.Commands
                 var cacheDir = Path.Combine(Path.GetDirectoryName(configPath), ".kotorcli", "cache", actualTargetName);
                 Directory.CreateDirectory(cacheDir);
 
+                var projectRoot = Path.GetDirectoryName(configPath);
+                var writtenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 var unpackedCount = 0;
 
                 // Unpack ERF
@@ -145,53 +148,10 @@ namespace KotorCLI.Commands
                 {
                     foreach (var resource in erf)
                     {
-                        var resref = resource.ResRef.ToString();
-                        var resType = resource.ResType;
-                        var filename = $"{resref}.{resType.Extension}";
-
-                        // Determine destination based on rules
-                        var destination = DetermineDestination(filename, resType, rules, Path.GetDirectoryName(configPath));
-
-                        if (destination == null)
+                        if (TryUnpackResource(resource.ResRef.ToString(), resource.ResType, resource.Data, rules, projectRoot, logger, writtenPaths))
                         {
-                            logger.Debug($"No rule found for {filename}, skipping");
-                            continue;
+                            unpackedCount++;
                         }
-
-                        Directory.CreateDirectory(Path.GetDirectoryName(destination));
-
-                        // Get resource data
-                        var resourceData = resource.Data;
-
-                        // Convert to JSON if GFF format
-                        if (resType.IsGff())
-                        {
-                            try
-                            {
-                                var reader = new GFFBinaryReader(resourceData);
-                                var gff = reader.Load();
-
-                                // Write as JSON
-                                var jsonDest = destination + ".json";
-                                GFFAuto.WriteGff(gff, jsonDest, ResourceType.GFF_JSON);
-
-                                destination = jsonDest;
-                                logger.Debug($"Converted {filename} to JSON: {Path.GetFileName(destination)}");
-                            }
-                            catch (Exception ex)
-                            {
-                                logger.Warning($"Failed to convert {filename} to JSON: {ex.Message}, writing as binary");
-                                File.WriteAllBytes(destination, resourceData);
-                            }
-                        }
-                        else
-                        {
-                            // Write binary file for non-GFF resources
-                            File.WriteAllBytes(destination, resourceData);
-                            logger.Debug($"Extracted {filename}: {Path.GetFileName(destination)}");
-                        }
-
-                        unpackedCount++;
                     }
                 }
 
@@ -200,59 +160,19 @@ namespace KotorCLI.Commands
                 {
                     foreach (var resource in rim)
                     {
-                        var resref = resource.ResRef.ToString();
-                        var resType = resource.ResType;
-                        var filename = $"{resref}.{resType.Extension}";
-
-                        // Determine destination based on rules
-                        var destination = DetermineDestination(filename, resType, rules, Path.GetDirectoryName(configPath));
-
-                        if (destination == null)
+                        if (TryUnpackResource(resource.ResRef.ToString(), resource.ResType, resource.Data, rules, projectRoot, logger, writtenPaths))
                         {
-                            logger.Debug($"No rule found for {filename}, skipping");
-                            continue;
+                            unpackedCount++;
                         }
-
-                        Directory.CreateDirectory(Path.GetDirectoryName(destination));
-
-                        // Get resource data
-                        var resourceData = resource.Data;
-
-                        // Convert to JSON if GFF format
-                        if (resType.IsGff())
-                        {
-                            try
-                            {
-                                var reader = new GFFBinaryReader(resourceData);
-                                var gff = reader.Load();
-
-                                // Write as JSON
-                                var jsonDest = destination + ".json";
-                                GFFAuto.WriteGff(gff, jsonDest, ResourceType.GFF_JSON);
-
-                                destination = jsonDest;
-                                logger.Debug($"Converted {filename} to JSON: {Path.GetFileName(destination)}");
-                            }
-                            catch (Exception ex)
-                            {
-                                logger.Warning($"Failed to convert {filename} to JSON: {ex.Message}, writing as binary");
-                                File.WriteAllBytes(destination, resourceData);
-                            }
-                        }
-                        else
-                        {
-                            // Write binary file for non-GFF resources
-                            File.WriteAllBytes(destination, resourceData);
-                            logger.Debug($"Extracted {filename}: {Path.GetFileName(destination)}");
-                        }
-
-                        unpackedCount++;
                     }
                 }
 
                 logger.Info($"Successfully unpacked {unpackedCount} files");
 
-                // TODO: PLACEHOLDER - Handle removeDeleted option (would require tracking previous unpacks)
+                if (removeDeleted)
+                {
+                    RemoveDeletedSources(writtenPaths, CollectRuleRoots(rules, projectRoot), projectRoot, logger);
+                }
 
                 return 0;
             }
@@ -264,6 +184,111 @@ namespace KotorCLI.Commands
                     logger.Debug($"Stack trace: {ex.StackTrace}");
                 }
                 return 1;
+            }
+        }
+
+        private static bool TryUnpackResource(
+            string resref,
+            ResourceType resType,
+            byte[] resourceData,
+            Dictionary<string, string> rules,
+            string rootDir,
+            ILogger logger,
+            HashSet<string> writtenPaths)
+        {
+            var filename = $"{resref}.{resType.Extension}";
+            var destination = DetermineDestination(filename, resType, rules, rootDir);
+            if (destination == null)
+            {
+                logger.Debug($"No rule found for {filename}, skipping");
+                return false;
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(destination));
+
+            if (resType.IsGff())
+            {
+                try
+                {
+                    var reader = new GFFBinaryReader(resourceData);
+                    var gff = reader.Load();
+                    var jsonDest = destination + ".json";
+                    GFFAuto.WriteGff(gff, jsonDest, ResourceType.GFF_JSON);
+                    destination = jsonDest;
+                    logger.Debug($"Converted {filename} to JSON: {Path.GetFileName(destination)}");
+                }
+                catch (Exception ex)
+                {
+                    logger.Warning($"Failed to convert {filename} to JSON: {ex.Message}, writing as binary");
+                    File.WriteAllBytes(destination, resourceData);
+                }
+            }
+            else
+            {
+                File.WriteAllBytes(destination, resourceData);
+                logger.Debug($"Extracted {filename}: {Path.GetFileName(destination)}");
+            }
+
+            writtenPaths.Add(Path.GetFullPath(destination));
+            return true;
+        }
+
+        internal static HashSet<string> CollectRuleRoots(Dictionary<string, string> rules, string rootDir)
+        {
+            var roots = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                Path.GetFullPath(Path.Combine(rootDir, "src"))
+            };
+
+            if (rules != null)
+            {
+                foreach (string destination in rules.Values)
+                {
+                    roots.Add(Path.GetFullPath(Path.Combine(rootDir, destination)));
+                }
+            }
+
+            return roots;
+        }
+
+        internal static void RemoveDeletedSources(
+            HashSet<string> writtenPaths,
+            HashSet<string> scanRoots,
+            string projectRoot,
+            ILogger logger)
+        {
+            string kotorcliDir = Path.GetFullPath(Path.Combine(projectRoot, ".kotorcli"));
+            int removed = 0;
+
+            foreach (string root in scanRoots)
+            {
+                if (!Directory.Exists(root))
+                {
+                    continue;
+                }
+
+                foreach (string file in Directory.GetFiles(root, "*", SearchOption.AllDirectories))
+                {
+                    string fullPath = Path.GetFullPath(file);
+                    if (fullPath.StartsWith(kotorcliDir, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    if (writtenPaths.Contains(fullPath))
+                    {
+                        continue;
+                    }
+
+                    File.Delete(fullPath);
+                    removed++;
+                    logger.Debug($"Removed stale source: {fullPath}");
+                }
+            }
+
+            if (removed > 0)
+            {
+                logger.Info($"Removed {removed} stale source file(s)");
             }
         }
 

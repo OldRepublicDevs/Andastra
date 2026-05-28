@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.RegularExpressions;
 using BioWare;
 using BioWare.Common;
 using BioWare.Resource.Formats.NCS;
@@ -51,7 +50,7 @@ namespace KotorCLI.Commands
             rootCommand.Add(compileCommand);
         }
 
-        internal static int Execute(string[] targetNames, bool clean, string[] files, string[] skipCompile, ILogger logger)
+        public static int Execute(string[] targetNames, bool clean, string[] files, string[] skipCompile, ILogger logger)
         {
             // Load configuration
             var configPath = ConfigFileFinder.FindConfigFile();
@@ -154,7 +153,7 @@ namespace KotorCLI.Commands
                                 foreach (var pattern in includePatterns)
                                 {
                                     var patternPath = Path.Combine(rootDir, pattern);
-                                    var matches = FindFilesMatchingPattern(rootDir, pattern);
+                                    var matches = GlobPatternMatcher.FindFilesMatchingPattern(rootDir, pattern);
                                     foreach (var match in matches)
                                     {
                                         var matchPath = new FileInfo(match);
@@ -173,45 +172,41 @@ namespace KotorCLI.Commands
                         // Find all NSS files matching patterns
                         foreach (var pattern in includePatterns)
                         {
-                            var expandedPattern = config.ResolveTargetValue(target, "sources", pattern);
-                            if (expandedPattern is string patternStr)
+                            var matches = GlobPatternMatcher.FindFilesMatchingPattern(rootDir, pattern);
+                            foreach (var match in matches)
                             {
-                                var matches = FindFilesMatchingPattern(rootDir, patternStr);
-                                foreach (var match in matches)
+                                var matchPath = new FileInfo(match);
+                                if (matchPath.Extension.Equals(".nss", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    var matchPath = new FileInfo(match);
-                                    if (matchPath.Extension.Equals(".nss", StringComparison.OrdinalIgnoreCase))
+                                    // Check against exclude patterns
+                                    bool excluded = false;
+                                    foreach (var excludePattern in excludePatterns)
                                     {
-                                        // Check against exclude patterns
-                                        bool excluded = false;
-                                        foreach (var excludePattern in excludePatterns)
+                                        var excludePath = Path.Combine(rootDir, excludePattern);
+                                        if (GlobPatternMatcher.MatchPattern(match, excludePath))
                                         {
-                                            var expandedExclude = config.ResolveTargetValue(target, "sources", excludePattern);
-                                            if (expandedExclude is string excludeStr && MatchPattern(match, Path.Combine(rootDir, excludeStr)))
+                                            excluded = true;
+                                            break;
+                                        }
+                                    }
+
+                                    // Check against skipCompile patterns
+                                    if (!excluded)
+                                    {
+                                        foreach (var skipPattern in skipCompilePatterns)
+                                        {
+                                            if (GlobPatternMatcher.MatchPattern(matchPath.Name, skipPattern))
                                             {
                                                 excluded = true;
+                                                logger.Debug($"Skipping compilation: {matchPath.Name}");
                                                 break;
                                             }
                                         }
+                                    }
 
-                                        // Check against skipCompile patterns
-                                        if (!excluded)
-                                        {
-                                            foreach (var skipPattern in skipCompilePatterns)
-                                            {
-                                                if (MatchPattern(matchPath.Name, skipPattern))
-                                                {
-                                                    excluded = true;
-                                                    logger.Debug($"Skipping compilation: {matchPath.Name}");
-                                                    break;
-                                                }
-                                            }
-                                        }
-
-                                        if (!excluded)
-                                        {
-                                            nssFiles.Add(match);
-                                        }
+                                    if (!excluded)
+                                    {
+                                        nssFiles.Add(match);
                                     }
                                 }
                             }
@@ -420,93 +415,6 @@ namespace KotorCLI.Commands
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Find files matching a glob pattern.
-        /// Matching PyKotor: glob.glob() behavior
-        /// </summary>
-        private static List<string> FindFilesMatchingPattern(string rootDir, string pattern)
-        {
-            var results = new List<string>();
-
-            try
-            {
-                // Handle different pattern types
-                if (pattern.Contains("**"))
-                {
-                    // Recursive pattern - search all subdirectories
-                    var searchPattern = pattern.Replace("**/", "").Replace("/**", "").Replace("**", "*");
-                    if (Directory.Exists(rootDir))
-                    {
-                        // Expand ** to recursive search
-                        var basePattern = pattern;
-                        if (basePattern.StartsWith("**/"))
-                        {
-                            basePattern = basePattern.Substring(3);
-                        }
-                        var filePattern = Path.GetFileName(basePattern);
-                        var dirPattern = Path.GetDirectoryName(basePattern);
-
-                        if (string.IsNullOrEmpty(dirPattern) || dirPattern == ".")
-                        {
-                            // Search all directories
-                            results.AddRange(Directory.GetFiles(rootDir, filePattern, SearchOption.AllDirectories));
-                        }
-                        else
-                        {
-                            // Search in specific subdirectory pattern
-                            var searchDirs = Directory.GetDirectories(rootDir, dirPattern, SearchOption.AllDirectories);
-                            foreach (var dir in searchDirs)
-                            {
-                                results.AddRange(Directory.GetFiles(dir, filePattern, SearchOption.TopDirectoryOnly));
-                            }
-                        }
-                    }
-                }
-                else if (pattern.Contains("*") || pattern.Contains("?"))
-                {
-                    // Simple wildcard pattern
-                    var directory = Path.GetDirectoryName(Path.Combine(rootDir, pattern));
-                    var filePattern = Path.GetFileName(pattern);
-
-                    if (string.IsNullOrEmpty(directory) || directory == ".")
-                    {
-                        directory = rootDir;
-                    }
-
-                    if (Directory.Exists(directory))
-                    {
-                        results.AddRange(Directory.GetFiles(directory, filePattern, SearchOption.TopDirectoryOnly));
-                    }
-                }
-                else
-                {
-                    // Exact file path
-                    var fullPath = Path.Combine(rootDir, pattern);
-                    if (File.Exists(fullPath))
-                    {
-                        results.Add(fullPath);
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // Ignore errors and continue
-            }
-
-            return results;
-        }
-
-        /// <summary>
-        /// Match a path against a glob pattern.
-        /// Matching PyKotor: fnmatch.fnmatch() behavior
-        /// </summary>
-        private static bool MatchPattern(string path, string pattern)
-        {
-            // Simple pattern matching - convert glob pattern to regex
-            var regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
-            return Regex.IsMatch(path, regexPattern, RegexOptions.IgnoreCase);
         }
 
         /// <summary>

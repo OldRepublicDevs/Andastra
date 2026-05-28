@@ -246,6 +246,7 @@ namespace OdyTools.Editors
                 // XAML loaded, set up signals and commit handlers
                 SetupSignals();
                 AttachCommitHandlers();
+                AttachReferenceSearchMenus();
             }
 
             // Try to find preview renderer and model info from XAML (safe: no name scope required)
@@ -307,6 +308,8 @@ namespace OdyTools.Editors
             basicPanel.Children.Add(resrefLabel);
             basicPanel.Children.Add(_resrefEdit);
             basicPanel.Children.Add(_resrefGenerateBtn);
+
+            AttachReferenceSearchMenus();
 
             // Appearance
             var appearanceLabel = new TextBlock { Text = "Appearance:" };
@@ -531,6 +534,12 @@ namespace OdyTools.Editors
             }
         }
 
+        private void AttachReferenceSearchMenus()
+        {
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
+        }
+
         private void SetupScriptComboBoxContextMenu(ComboBox comboBox, string scriptTypeName)
         {
             if (comboBox == null) return;
@@ -632,10 +641,16 @@ namespace OdyTools.Editors
             openInEditorItem.Click += (sender, e) => EditConversation();
             contextMenu.Items.Add(openInEditorItem);
 
+            var findReferencesItem = new MenuItem { Header = "Find References", IsEnabled = false };
+            findReferencesItem.Click += (sender, e) => ConversationReferenceHelper.FindAndShowConversationReferences(this, comboBox, _installation);
+            contextMenu.Items.Add(findReferencesItem);
+
             void UpdateOpenEnabled(object s, EventArgs e)
             {
                 string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
-                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
+                bool hasConversation = !string.IsNullOrWhiteSpace(text);
+                openInEditorItem.IsEnabled = hasConversation;
+                findReferencesItem.IsEnabled = hasConversation && _installation?.Installation != null;
             }
             comboBox.SelectionChanged += UpdateOpenEnabled;
             contextMenu.Opened += (s, e) => UpdateOpenEnabled(s, e);

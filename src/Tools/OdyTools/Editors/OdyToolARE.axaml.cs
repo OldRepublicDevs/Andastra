@@ -147,6 +147,8 @@ namespace OdyTools.Editors
             panel.Children.Add(tagLabel);
             panel.Children.Add(tagPanel);
 
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+
             // Camera Style field - matching Python: self.ui.cameraStyleSelect
             // Matching Python: for label in cameras.get_column("name"): self.ui.cameraStyleSelect.addItem(label.title())
             var cameraStyleLabel = new TextBlock { Text = "Camera Style:" };
@@ -1732,6 +1734,14 @@ namespace OdyTools.Editors
             openInEditorItem.Click += (sender, e) => OpenScriptInEditor(comboBox, scriptTypeName);
             menuItems.Add(openInEditorItem);
 
+            var findReferencesItem = new MenuItem
+            {
+                Header = "Find References",
+                IsEnabled = false
+            };
+            findReferencesItem.Click += (sender, e) => ScriptReferenceHelper.FindAndShowScriptReferences(this, comboBox, _installation);
+            menuItems.Add(findReferencesItem);
+
             // "Create New Script" menu item - creates a new NSS file
             var createNewItem = new MenuItem
             {
@@ -1754,6 +1764,7 @@ namespace OdyTools.Editors
                 string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
                 bool hasScriptName = !string.IsNullOrWhiteSpace(text);
                 openInEditorItem.IsEnabled = hasScriptName;
+                findReferencesItem.IsEnabled = hasScriptName && _installation != null;
                 viewLocationItem.IsEnabled = hasScriptName;
             }
 

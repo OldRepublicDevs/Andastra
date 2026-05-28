@@ -13,6 +13,7 @@ using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.GFF.Generics;
 using OdyTools.Data;
 using OdyTools.Dialogs;
+using OdyTools.Utils;
 
 namespace OdyTools.Editors
 {
@@ -132,6 +133,8 @@ namespace OdyTools.Editors
             _tagEdit.TextChanged += (s, e) => OnValueChanged();
             basicPanel.Children.Add(tagLabel);
             basicPanel.Children.Add(_tagEdit);
+
+            AttachReferenceSearchMenus();
 
             // VO ID
             var voIdLabel = new TextBlock { Text = "VO ID:" };
@@ -296,6 +299,11 @@ namespace OdyTools.Editors
             return menu;
         }
 
+        private void AttachReferenceSearchMenus()
+        {
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+        }
+
         private void AttachCommitHandlers()
         {
             void OnCommit(object s, EventArgs e) { if (!_undoRedoInProgress) PushState(); }
@@ -329,10 +337,16 @@ namespace OdyTools.Editors
             openInEditorItem.Click += (sender, e) => OpenScriptInEditor(comboBox, scriptTypeName);
             contextMenu.Items.Add(openInEditorItem);
 
+            var findReferencesItem = new MenuItem { Header = "Find References", IsEnabled = false };
+            findReferencesItem.Click += (sender, e) => ScriptReferenceHelper.FindAndShowScriptReferences(this, comboBox, _installation);
+            contextMenu.Items.Add(findReferencesItem);
+
             void UpdateOpenEnabled(object s, EventArgs e)
             {
                 string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
-                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
+                bool hasScript = !string.IsNullOrWhiteSpace(text);
+                openInEditorItem.IsEnabled = hasScript;
+                findReferencesItem.IsEnabled = hasScript && _installation != null;
             }
             comboBox.SelectionChanged += UpdateOpenEnabled;
             contextMenu.Opened += (s, e) => UpdateOpenEnabled(s, e);
@@ -653,6 +667,7 @@ namespace OdyTools.Editors
             var findBtn = EditorHelpers.FindControlSafe<Button>(this, "findButton");
             if (findBtn != null) findBtn.Click += (s, e) => ShowFindDialog();
             AttachCommitHandlers();
+            AttachReferenceSearchMenus();
             Opened += (s, e) => { UpdateStatusBar(); _tagEdit?.Focus(); };
             KeyDown += OnWindowKeyDown;
         }

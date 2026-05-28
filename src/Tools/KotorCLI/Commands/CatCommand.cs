@@ -1,5 +1,9 @@
 using System;
 using System.CommandLine;
+using System.IO;
+using BioWare.Common;
+using BioWare.Extract.Capsule;
+using BioWare.Resource;
 using KotorCLI.Logging;
 
 namespace KotorCLI.Commands
@@ -28,26 +32,84 @@ namespace KotorCLI.Commands
                 var type = parseResult.GetValue(typeOption);
 
                 var logger = new StandardLogger();
-                var exitCode = Execute(archive, resource, type, logger);
+                int exitCode = Execute(archive, resource, type, logger);
                 Environment.Exit(exitCode);
             });
 
             rootCommand.Add(catCommand);
         }
 
-        private static int Execute(string archive, string resource, string type, ILogger logger)
+        public static int Execute(string archive, string resource, string type, ILogger logger)
         {
-            logger.Info("Cat command not yet fully implemented");
-            logger.Info($"Would display resource: {resource} from {archive}");
+            if (string.IsNullOrWhiteSpace(archive))
+            {
+                logger.Error("Archive path is required");
+                return 1;
+            }
 
-            // TODO: Implement cat logic
-            // This requires:
-            // - Detecting archive type (ERF, RIM)
-            // - Reading archive
-            // - Finding resource by name (and type if specified)
-            // - Outputting resource content to stdout
+            if (string.IsNullOrWhiteSpace(resource))
+            {
+                logger.Error("Resource name is required");
+                return 1;
+            }
 
-            return 0;
+            if (!File.Exists(archive))
+            {
+                logger.Error("Archive file does not exist: " + archive);
+                return 1;
+            }
+
+            try
+            {
+                ResourceType resourceType = ResourceType.INVALID;
+                if (!string.IsNullOrWhiteSpace(type))
+                {
+                    resourceType = ResourceType.FromExtension(type.TrimStart('.'));
+                }
+
+                var capsule = new LazyCapsule(archive);
+                string resName = resource.Trim();
+                foreach (BioWare.Extract.FileResource fileResource in capsule.GetResources())
+                {
+                    if (fileResource == null)
+                    {
+                        continue;
+                    }
+
+                    if (!string.Equals(fileResource.ResName, resName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    if (resourceType != ResourceType.INVALID && !resourceType.IsInvalid &&
+                        fileResource.ResType != resourceType)
+                    {
+                        continue;
+                    }
+
+                    byte[] data = fileResource.GetData();
+                    if (data == null)
+                    {
+                        logger.Error("Resource data is empty: " + resName);
+                        return 1;
+                    }
+
+                    using (Stream stdout = Console.OpenStandardOutput())
+                    {
+                        stdout.Write(data, 0, data.Length);
+                    }
+
+                    return 0;
+                }
+
+                logger.Error("Resource not found in archive: " + resName);
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Cat failed: " + ex.Message);
+                return 1;
+            }
         }
     }
 }

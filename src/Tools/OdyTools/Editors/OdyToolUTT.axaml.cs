@@ -174,7 +174,54 @@ namespace OdyTools.Editors
                 else
                 {
                     AttachCommitHandlers();
+                    AttachReferenceSearchMenus();
+                    AttachXamlScriptContextMenus();
                 }
+            }
+        }
+
+        private void AttachReferenceSearchMenus()
+        {
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
+        }
+
+        private void AttachXamlScriptContextMenus()
+        {
+            if (_onClickEdit != null)
+            {
+                _onClickEdit.IsEditable = true;
+                SetupScriptComboBoxContextMenu(_onClickEdit, "OnClick");
+            }
+            if (_onDisarmEdit != null)
+            {
+                _onDisarmEdit.IsEditable = true;
+                SetupScriptComboBoxContextMenu(_onDisarmEdit, "OnDisarm");
+            }
+            if (_onEnterSelect != null)
+            {
+                _onEnterSelect.IsEditable = true;
+                SetupScriptComboBoxContextMenu(_onEnterSelect, "OnEnter");
+            }
+            if (_onExitSelect != null)
+            {
+                _onExitSelect.IsEditable = true;
+                SetupScriptComboBoxContextMenu(_onExitSelect, "OnExit");
+            }
+            if (_onHeartbeatSelect != null)
+            {
+                _onHeartbeatSelect.IsEditable = true;
+                SetupScriptComboBoxContextMenu(_onHeartbeatSelect, "OnHeartbeat");
+            }
+            if (_onTrapTriggeredEdit != null)
+            {
+                _onTrapTriggeredEdit.IsEditable = true;
+                SetupScriptComboBoxContextMenu(_onTrapTriggeredEdit, "OnTrapTriggered");
+            }
+            if (_onUserDefinedSelect != null)
+            {
+                _onUserDefinedSelect.IsEditable = true;
+                SetupScriptComboBoxContextMenu(_onUserDefinedSelect, "OnUserDefined");
             }
         }
 
@@ -343,6 +390,8 @@ namespace OdyTools.Editors
             resrefPanel.Children.Add(_resrefGenerateButton);
             basicPanel.Children.Add(resrefLabel);
             basicPanel.Children.Add(resrefPanel);
+
+            AttachReferenceSearchMenus();
 
             // Type
             var typeLabel = new TextBlock { Text = "Type:" };

@@ -25,6 +25,9 @@ namespace KotorDiff.Cache
         [CanBeNull] public string StrrefCacheGame { get; set; } // Game type (K1/K2) for StrRef cache
         [CanBeNull] public Dictionary<string, object> StrrefCacheData { get; set; } // Serialized StrRef cache
 
+        [CanBeNull] public string TwodaCacheGame { get; set; }
+        [CanBeNull] public Dictionary<string, object> TwodaCacheData { get; set; }
+
         public DiffCache()
         {
             Files = new List<CachedFileComparison>();
@@ -65,6 +68,14 @@ namespace KotorDiff.Cache
             {
                 result["strref_cache_data"] = StrrefCacheData;
             }
+            if (TwodaCacheGame != null)
+            {
+                result["twoda_cache_game"] = TwodaCacheGame;
+            }
+            if (TwodaCacheData != null)
+            {
+                result["twoda_cache_data"] = TwodaCacheData;
+            }
 
             return result;
         }
@@ -102,9 +113,63 @@ namespace KotorDiff.Cache
                 Yours = data.ContainsKey("yours") ? data["yours"]?.ToString() : null,
                 Timestamp = data.ContainsKey("timestamp") ? data["timestamp"]?.ToString() : "",
                 Files = files,
-                StrrefCacheGame = data.ContainsKey("strref_cache_game") ? data["strref_cache_game"]?.ToString() : null,
-                StrrefCacheData = data.ContainsKey("strref_cache_data") ? data["strref_cache_data"] as Dictionary<string, object> : null
+                StrrefCacheGame = ReadString(data, "strref_cache_game", "strrefCacheGame"),
+                StrrefCacheData = ReadNestedCacheData(data, "strref_cache_data", "strrefCacheData"),
+                TwodaCacheGame = ReadString(data, "twoda_cache_game", "twodaCacheGame"),
+                TwodaCacheData = ReadNestedCacheData(data, "twoda_cache_data", "twodaCacheData")
             };
+        }
+
+        private static string ReadString(Dictionary<string, object> data, params string[] keys)
+        {
+            foreach (string key in keys)
+            {
+                if (data.ContainsKey(key) && data[key] != null)
+                {
+                    return data[key].ToString();
+                }
+            }
+
+            return null;
+        }
+
+        private static Dictionary<string, object> ReadNestedCacheData(
+            Dictionary<string, object> data,
+            string snakeKey,
+            string camelKey)
+        {
+            object raw = null;
+            if (data.ContainsKey(snakeKey))
+            {
+                raw = data[snakeKey];
+            }
+            else if (data.ContainsKey(camelKey))
+            {
+                raw = data[camelKey];
+            }
+
+            if (raw == null)
+            {
+                return null;
+            }
+
+            if (raw is Dictionary<string, object> typed)
+            {
+                return typed;
+            }
+
+            if (raw is Dictionary<object, object> loose)
+            {
+                var converted = new Dictionary<string, object>();
+                foreach (KeyValuePair<object, object> kvp in loose)
+                {
+                    converted[kvp.Key.ToString()] = kvp.Value;
+                }
+
+                return converted;
+            }
+
+            return null;
         }
     }
 }

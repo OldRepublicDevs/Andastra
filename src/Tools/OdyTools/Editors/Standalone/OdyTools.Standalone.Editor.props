@@ -46,6 +46,10 @@
     <Compile Include="$(_OdyToolsRoot)\Utils\AtomicFileWriter.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\BackupRotator.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\DialogHelper.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Utils\ReferenceSearchHelper.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Utils\TwoDAMemoryReferenceHelper.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\FileResultsDialog.axaml.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\ReferenceSearchOptionsDialog.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\Edit\ComboBox2DA.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\IMediaPlayer.cs" />
     <Compile Include="$(_OdyToolsRoot)\Widgets\NAudioMediaPlayer.cs" />
@@ -54,6 +58,7 @@
 
   <ItemGroup>
     <AvaloniaXaml Include="$(_OdyToolsRoot)\Widgets\Edit\ComboBox2DA.axaml" Link="Widgets/Edit/ComboBox2DA.axaml" />
+    <AvaloniaXaml Include="$(_OdyToolsRoot)\Dialogs\FileResultsDialog.axaml" Link="Dialogs/FileResultsDialog.axaml" />
   </ItemGroup>
 
   <!-- OutputType: WinExe for Windows, Exe for cross-platform RID -->

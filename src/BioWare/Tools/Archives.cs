@@ -762,32 +762,16 @@ namespace BioWare.Tools
                 var reader = new BIFBinaryReader(bifPath);
                 BIF bifData = reader.Load();
 
-                // Create BIF entry
-                var bifEntry = new BifEntry
-                {
-                    Filename = bifFilename,
-                    Filesize = bifSize
-                };
                 int bifIndex = key.BifEntries.Count;
-                key.BifEntries.Add(bifEntry);
+                key.AddBif(bifFilename, bifSize);
 
                 // Add resource entries
                 int i = 0;
                 foreach (var resource in bifData)
                 {
-                    string resref = resource.ResRef?.ToString() ?? $"resource_{i:D5}";
+                    string resref = resource.ResRef?.ToString() ?? string.Format("resource_{0:D5}", i);
                     ResourceType restype = resource.ResType ?? ResourceType.INVALID;
-
-                    // Resource ID: top 12 bits = BIF index, bottom 20 bits = resource index
-                    uint resourceId = (uint)((bifIndex << 20) | i);
-
-                    var keyEntry = new KeyEntry
-                    {
-                        ResRef = new ResRef(resref),
-                        ResType = restype,
-                        ResourceId = resourceId
-                    };
-                    key.KeyEntries.Add(keyEntry);
+                    key.AddKeyEntry(resref, restype, bifIndex, i);
                     i++;
                 }
             }
@@ -795,7 +779,7 @@ namespace BioWare.Tools
             // Build lookup tables and write KEY
             key.BuildLookupTables();
             EnsureOutputDirectoryForFile(outputPath);
-            KEYAuto.WriteKey(key, outputPath);
+            File.WriteAllBytes(outputPath, KEYAuto.BytesKey(key));
         }
 
         /// <summary>
@@ -840,7 +824,10 @@ namespace BioWare.Tools
             int bifIndex = -1;
             for (int i = 0; i < keyData.BifEntries.Count; i++)
             {
-                if (string.Equals(keyData.BifEntries[i].Filename, bifFileName, StringComparison.OrdinalIgnoreCase))
+                BifEntry bifEntry = keyData.BifEntries[i];
+                string entryName = bifEntry.Filename ?? string.Empty;
+                if (string.Equals(entryName, bifFileName, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(Path.GetFileName(entryName), bifFileName, StringComparison.OrdinalIgnoreCase))
                 {
                     bifIndex = i;
                     break;
@@ -853,21 +840,33 @@ namespace BioWare.Tools
                 return;
             }
 
-            // Create lookup dictionary: ResourceId -> KeyEntry for this BIF
-            var keyEntryLookup = new Dictionary<uint, KeyEntry>();
+            // Create lookup dictionary: resource index and full resource id -> KeyEntry
+            var keyEntryLookup = new Dictionary<int, KeyEntry>();
             foreach (KeyEntry keyEntry in keyData.KeyEntries)
             {
                 if (keyEntry.BifIndex == bifIndex)
                 {
-                    keyEntryLookup[keyEntry.ResourceId] = keyEntry;
+                    keyEntryLookup[keyEntry.ResIndex] = keyEntry;
+                    keyEntryLookup[(int)keyEntry.ResourceId] = keyEntry;
                 }
             }
 
             // Merge KEY data into BIF resources
+            int resourceIndex = 0;
             foreach (BIFResource bifResource in bifData.Resources)
             {
-                uint resourceId = (uint)bifResource.ResnameKeyIndex;
-                if (keyEntryLookup.TryGetValue(resourceId, out KeyEntry keyEntry))
+                KeyEntry keyEntry = null;
+                if (!keyEntryLookup.TryGetValue(bifResource.ResnameKeyIndex, out keyEntry))
+                {
+                    keyEntryLookup.TryGetValue(bifResource.ResnameKeyIndex & 0xFFFFF, out keyEntry);
+                }
+
+                if (keyEntry == null)
+                {
+                    keyEntryLookup.TryGetValue(resourceIndex, out keyEntry);
+                }
+
+                if (keyEntry != null)
                 {
                     // Set ResRef from KEY entry
                     bifResource.ResRef = keyEntry.ResRef;
@@ -876,9 +875,11 @@ namespace BioWare.Tools
                     {
                         // Log mismatch but don't change - BIF data is authoritative for type
                         System.Diagnostics.Debug.WriteLine(
-                            $"KEY and BIF disagree on type for resource ID {resourceId}: KEY={keyEntry.ResType}, BIF={bifResource.ResType}");
+                            $"KEY and BIF disagree on type for resource ID {keyEntry.ResourceId}: KEY={keyEntry.ResType}, BIF={bifResource.ResType}");
                     }
                 }
+
+                resourceIndex++;
             }
         }
     }

@@ -44,7 +44,7 @@ namespace KotorCLI.Commands
             rootCommand.Add(installCommand);
         }
 
-        private static int Execute(string[] targetNames, string installDir, bool noPack, bool clean, ILogger logger)
+        public static int Execute(string[] targetNames, string installDir, bool noPack, bool clean, ILogger logger)
         {
             // Find config file
             var configPath = ConfigFileFinder.FindConfigFile();

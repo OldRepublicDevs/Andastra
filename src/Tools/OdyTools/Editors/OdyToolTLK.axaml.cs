@@ -20,6 +20,7 @@ using BioWare.Resource;
 using OdyTools.Common;
 using OdyTools.Data;
 using OdyTools.Dialogs;
+using OdyTools.Utils;
 
 namespace OdyTools.Editors
 {
@@ -665,23 +666,16 @@ namespace OdyTools.Editors
 
         private void FindLocalizedStringReferences()
         {
-            if (_installation == null || _selectedEntry == null) return;
-            int strref = _selectedEntry.StringRef;
-            try
+            if (_installation == null || _selectedEntry == null)
             {
-                var install = _installation;
-                if (install?.Installation == null) return;
-                var results = BioWare.Tools.ReferenceCacheHelpers.FindStrRefReferences(
-                    install.Installation, strref, null, s => System.Console.WriteLine(s));
-                var fileResources = results?.Select(r => r.Resource).Distinct().ToList() ?? new List<BioWare.Extract.FileResource>();
-                var dialog = new Dialogs.FileResultsDialog(this as Window, fileResources, install);
-                dialog.SearchResultsSelected += (resource) => { /* Could open resource in appropriate editor */ };
-                dialog.Show();
+                return;
             }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine($"Find references failed: {ex}");
-            }
+
+            StrRefReferenceHelper.FindAndShowStrRefReferences(
+                this as Window,
+                _selectedEntry.StringRef,
+                _installation,
+                showOptionsDialog: true);
         }
 
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)

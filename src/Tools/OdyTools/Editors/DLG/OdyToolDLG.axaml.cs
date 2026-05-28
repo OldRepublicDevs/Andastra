@@ -1032,6 +1032,17 @@ namespace OdyTools.Editors.DLG
             {
                 return;
             }
+
+            if (string.Equals(searchType, "script", StringComparison.OrdinalIgnoreCase))
+            {
+                ReferenceSearchHelper.FindAndShowScriptReferences(
+                    this,
+                    searchText.Trim(),
+                    _installation,
+                    showOptionsDialog: true);
+                return;
+            }
+
             var results = new List<FileResource>();
             var overrideList = _installation.OverrideResources() ?? new List<FileResource>();
             foreach (var fileRes in overrideList.Where(r => r != null && (r.ResType == ResourceType.NSS || r.ResType == ResourceType.NCS)))
@@ -2365,68 +2376,12 @@ namespace OdyTools.Editors.DLG
             {
                 return;
             }
-            var results = new List<FileResource>();
-            string resrefLower = dialogResref.Trim().ToLowerInvariant();
-            var typesToSearch = new[] { ResourceType.UTC, ResourceType.UTP, ResourceType.UTD };
-            List<FileResource> overrideList = null;
-            try
-            {
-                overrideList = _installation.OverrideResources();
-            }
-            catch
-            {
-                overrideList = new List<FileResource>();
-            }
-            foreach (var restype in typesToSearch)
-            {
-                foreach (var fileRes in overrideList.Where(r => r != null && r.ResType == restype))
-                {
-                    try
-                    {
-                        var rr = _installation.Resource(fileRes.ResName, restype, new[] { SearchLocation.OVERRIDE });
-                        byte[] data = rr?.Data;
-                        if (data == null || data.Length == 0)
-                        {
-                            continue;
-                        }
-                        string convResref = null;
-                        if (restype == ResourceType.UTC)
-                        {
-                            var utc = ResourceAutoHelpers.ReadUtc(data);
-                            convResref = utc?.Conversation?.ToString()?.Trim().ToLowerInvariant();
-                        }
-                        else if (restype == ResourceType.UTP)
-                        {
-                            var utp = ResourceAutoHelpers.ReadUtp(data);
-                            convResref = utp?.Conversation?.ToString()?.Trim().ToLowerInvariant();
-                        }
-                        else if (restype == ResourceType.UTD)
-                        {
-                            var utd = ResourceAutoHelpers.ReadUtd(data);
-                            convResref = utd?.Conversation?.ToString()?.Trim().ToLowerInvariant();
-                        }
-                        if (convResref == resrefLower && fileRes != null)
-                        {
-                            results.Add(fileRes);
-                        }
-                    }
-                    catch
-                    {
-                        // Skip malformed resources
-                    }
-                }
-            }
-            if (results.Count == 0)
-            {
-                DialogHelper.ShowWindow(this,
-                    Localization.Tr("No references found"),
-                    string.Format(Localization.Tr("No references found for dialog '{0}'."), dialogResref),
-                    IconType.Info);
-                return;
-            }
-            var dialog = new LoadFromLocationResultDialog(this, results, _installation);
-            dialog.Title = string.Format(Localization.Tr("{0} reference(s) found for dialog '{1}'"), results.Count, dialogResref);
-            dialog.Show();
+
+            ReferenceSearchHelper.FindAndShowConversationReferences(
+                this,
+                dialogResref.Trim(),
+                _installation,
+                showOptionsDialog: true);
         }
 
         /// <summary>

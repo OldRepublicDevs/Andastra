@@ -101,38 +101,14 @@ namespace BioWare.Resource.Formats.SSF
         /// <param name="level">The indentation level (default: 0).</param>
         private static void IndentXml(XElement element, int level = 0)
         {
-            // Calculate indentation string (2 spaces per level)
-            // Matching Python: i: str = "\n" + level * "  "
-            string indent = "\n" + new string(' ', level * 2);
-
             if (element.Elements().Any())
             {
-                // Element has children
-                // Matching Python: if len(elem):
-                if (string.IsNullOrWhiteSpace(element.Value))
-                {
-                    // Set text to indentation + 2 spaces for children
-                    // Matching Python: elem.text = f"{i}  "
-                    element.Value = indent + "  ";
-                }
-
-                // Recursively indent child elements
-                // Matching Python: for e in elem: indent(e, level + 1)
+                // Do not assign element.Value when children exist — in LINQ to XML that
+                // replaces child nodes and produces an empty <xml /> document.
                 foreach (var child in element.Elements())
                 {
                     IndentXml(child, level + 1);
                 }
-
-                // Set tail to indentation
-                // Matching Python: elem.tail = i
-                // Note: XElement doesn't have a direct tail property, but we can handle this
-                // by ensuring proper formatting in the final output
-            }
-            else if (level > 0)
-            {
-                // Empty element at non-root level
-                // Matching Python: elif level and (not elem.tail or not elem.tail.strip()): elem.tail = i
-                // Note: XElement handles this automatically in ToString()
             }
         }
     }

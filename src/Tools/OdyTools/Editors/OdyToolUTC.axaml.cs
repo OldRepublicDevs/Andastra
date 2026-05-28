@@ -317,6 +317,8 @@ namespace OdyTools.Editors
             AddFormRow(profilePanel, "Last Name:", _lastNameEdit = new LocalizedStringEdit(), _lastNameRandomBtn = new Button { Content = "?" }, () => RandomizeLastName());
             AddFormRow(profilePanel, "Tag:", _tagEdit = new TextBox(), _tagGenerateBtn = new Button { Content = "-" }, () => GenerateTag());
             AddFormRow(profilePanel, "ResRef:", _resrefEdit = new TextBox { MaxLength = 16 });
+            ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+            ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
             AddFormRow(profilePanel, "Appearance:", _appearanceSelect = new ComboBox());
             AddFormRow(profilePanel, "Soundset:", _soundsetSelect = new ComboBox());
             AddFormRow(profilePanel, "Conversation:", _conversationEdit = new ComboBox { IsEditable = true }, _conversationModifyBtn = new Button { Content = "Edit" }, () => EditConversation());
@@ -645,10 +647,16 @@ namespace OdyTools.Editors
             openInEditorItem.Click += (sender, e) => EditConversation();
             contextMenu.Items.Add(openInEditorItem);
 
+            var findReferencesItem = new MenuItem { Header = "Find References", IsEnabled = false };
+            findReferencesItem.Click += (sender, e) => ConversationReferenceHelper.FindAndShowConversationReferences(this, comboBox, _installation);
+            contextMenu.Items.Add(findReferencesItem);
+
             void UpdateOpenEnabled(object s, EventArgs e)
             {
                 string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
-                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
+                bool hasConversation = !string.IsNullOrWhiteSpace(text);
+                openInEditorItem.IsEnabled = hasConversation;
+                findReferencesItem.IsEnabled = hasConversation && _installation?.Installation != null;
             }
             comboBox.SelectionChanged += UpdateOpenEnabled;
             contextMenu.Opened += (s, e) => UpdateOpenEnabled(s, e);

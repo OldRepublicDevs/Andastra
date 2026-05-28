@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Xml;
 using System.Xml.Linq;
 using BioWare.Common;
 using BioWare.Resource;
@@ -41,8 +42,7 @@ namespace BioWare.Resource.Formats.TLK
             }
             else if (fileFormat == ResourceType.TLK_XML)
             {
-                var doc = CreateXmlDocument(tlk);
-                doc.Save(target);
+                SaveXmlDocument(CreateXmlDocument(tlk), target);
             }
             else
             {
@@ -69,10 +69,9 @@ namespace BioWare.Resource.Formats.TLK
             }
             if (fileFormat == ResourceType.TLK_XML)
             {
-                var doc = CreateXmlDocument(tlk);
                 using (var ms = new MemoryStream())
                 {
-                    doc.Save(ms);
+                    SaveXmlDocument(CreateXmlDocument(tlk), ms);
                     return ms.ToArray();
                 }
             }
@@ -175,7 +174,38 @@ namespace BioWare.Resource.Formats.TLK
         private static string ReadText(object source)
         {
             byte[] data = ResourceAutoHelpers.SourceDispatcher.ToBytes(source);
-            return Encoding.UTF8.GetString(data);
+            string text = Encoding.UTF8.GetString(data);
+            if (text.Length > 0 && text[0] == '\uFEFF')
+            {
+                text = text.Substring(1);
+            }
+            return text;
+        }
+
+        private static void SaveXmlDocument(XDocument doc, string target)
+        {
+            var settings = new XmlWriterSettings
+            {
+                Indent = true,
+                Encoding = new UTF8Encoding(false)
+            };
+            using (var writer = XmlWriter.Create(target, settings))
+            {
+                doc.Save(writer);
+            }
+        }
+
+        private static void SaveXmlDocument(XDocument doc, Stream target)
+        {
+            var settings = new XmlWriterSettings
+            {
+                Indent = true,
+                Encoding = new UTF8Encoding(false)
+            };
+            using (var writer = XmlWriter.Create(target, settings))
+            {
+                doc.Save(writer);
+            }
         }
 
         private static TLK DeserializeModel(TlkSerializableModel model)

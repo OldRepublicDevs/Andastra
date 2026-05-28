@@ -63,11 +63,9 @@ namespace BioWare.Resource.Formats.KEY
             ResourceType format = fileFormat ?? ResourceType.KEY;
             if (key == null) throw new ArgumentNullException(nameof(key));
             ValidateKeyFormat(format, nameof(fileFormat));
-            using (var ms = new MemoryStream())
-            {
-                WriteKey(key, ms, format);
-                return ms.ToArray();
-            }
+            var writer = new KEYBinaryWriter(key);
+            writer.Write();
+            return writer.GetData();
         }
 
         private static void ValidateKeyFormat(ResourceType format, string formatParamName)

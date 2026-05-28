@@ -309,6 +309,8 @@ namespace OdyTools.Editors
             editMenu.Items.Add(new Separator());
             editMenu.Items.Add(new MenuItem { Header = "Find _Strref...", Name = "actionFindStrref" });
             editMenu.Items.Add(new MenuItem { Header = "Find Strref _Next", Name = "actionFindStrrefNext" });
+            editMenu.Items.Add(new Separator());
+            editMenu.Items.Add(new MenuItem { Header = "Find StrRef _References in Installation...", Name = "actionFindStrrefInstallation" });
             menu.Items.Add(editMenu);
             return menu;
         }
@@ -334,7 +336,53 @@ namespace OdyTools.Editors
                 ("actionRedo", Redo),
                 ("actionFindStrref", ShowFindStrrefDialog),
                 ("actionFindStrrefNext", FindStrrefNext),
+                ("actionFindStrrefInstallation", FindStrRefReferencesInInstallation),
             });
+        }
+
+        private void FindStrRefReferencesInInstallation()
+        {
+            if (_installation?.Installation == null)
+            {
+                _ = DialogHelper.ShowAsync(
+                    "Installation Required",
+                    "Select a game installation to search for StrRef references.",
+                    ButtonEnum.Ok,
+                    IconType.Info);
+                return;
+            }
+
+            int strref = GetSelectedStrRef();
+            if (strref < 0)
+            {
+                _ = DialogHelper.ShowAsync(
+                    "No StrRef Selected",
+                    "Select a sound slot with a valid StrRef (0 or greater) to search the installation.",
+                    ButtonEnum.Ok,
+                    IconType.Info);
+                return;
+            }
+
+            StrRefReferenceHelper.FindAndShowStrRefReferences(
+                this,
+                strref,
+                _installation,
+                showOptionsDialog: true);
+        }
+
+        private int GetSelectedStrRef()
+        {
+            if (!_selectedSound.HasValue || _spinBySound == null)
+            {
+                return -1;
+            }
+
+            if (!_spinBySound.TryGetValue(_selectedSound.Value, out NumericUpDown spin) || spin == null)
+            {
+                return -1;
+            }
+
+            return (int)(spin.Value ?? -1);
         }
 
         private void OnSpinCommitted()
