@@ -314,6 +314,84 @@ namespace KotorCLI.Tests
             }
         }
 
+        [Test]
+        public void CliValidateInstallation_MinimalEssentialInstall_ExitsZero()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-validate-cli-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            WriteEssentialTwoDAFiles(overrideDir);
+
+            try
+            {
+                int exitCode = RunKotorCli(
+                    "validate-installation --installation \"" + installRoot + "\"",
+                    out _,
+                    out string stderr);
+                Assert.That(exitCode, Is.EqualTo(0), stderr);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void CliValidateInstallation_NonexistentPath_ExitsNonZero()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-validate-cli-missing-" + Guid.NewGuid().ToString("N"));
+
+            int exitCode = RunKotorCli(
+                "validate-installation --installation \"" + installRoot + "\"",
+                out _,
+                out string stderr);
+            Assert.That(exitCode, Is.EqualTo(1), stderr);
+        }
+
+        [Test]
+        public void CliValidateInstallation_MissingEssentialTwoDA_ExitsNonZero()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-validate-cli-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var twoDA = new TwoDA(new List<string> { "label" });
+            twoDA.AddRow();
+            byte[] twoDaBytes = TwoDAAuto.BytesTwoDA(twoDA);
+            File.WriteAllBytes(Path.Combine(overrideDir, "appearance.2da"), twoDaBytes);
+            File.WriteAllBytes(Path.Combine(overrideDir, "baseitems.2da"), twoDaBytes);
+            File.WriteAllBytes(Path.Combine(overrideDir, "classes.2da"), twoDaBytes);
+
+            try
+            {
+                int exitCode = RunKotorCli(
+                    "validate-installation --installation \"" + installRoot + "\"",
+                    out _,
+                    out string stderr);
+                Assert.That(exitCode, Is.EqualTo(1), stderr);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
         private static string RepoRoot =>
             Path.GetFullPath(Path.Combine(TestContext.CurrentContext.TestDirectory, "..", "..", "..", "..", ".."));
 
