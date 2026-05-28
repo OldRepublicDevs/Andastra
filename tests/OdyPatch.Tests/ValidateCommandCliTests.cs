@@ -53,6 +53,7 @@ namespace OdyPatch.Tests
 
                 using (Process buildProcess = Process.Start(buildPsi))
                 {
+                    Assert.That(buildProcess, Is.Not.Null, "Failed to start OdyPatch build process.");
                     buildProcess.WaitForExit(180000);
                     Assert.That(buildProcess.ExitCode, Is.EqualTo(0), "OdyPatch build failed before integration test.");
                 }
@@ -75,6 +76,7 @@ namespace OdyPatch.Tests
 
             using (Process process = Process.Start(psi))
             {
+                Assert.That(process, Is.Not.Null, "Failed to start OdyPatch CLI process.");
                 stdout = process.StandardOutput.ReadToEnd();
                 stderr = process.StandardError.ReadToEnd();
                 process.WaitForExit(180000);
