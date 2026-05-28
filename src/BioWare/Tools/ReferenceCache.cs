@@ -897,7 +897,7 @@ namespace BioWare.Tools
 
             // Build a map of ResourceIdentifier -> FileResource by iterating Installation ONCE
             var identifierToResource = new Dictionary<ResourceIdentifier, FileResource>();
-            var allResourcesForMapping = GetAllResources(installation);
+            var allResourcesForMapping = GetAllResources(installation, options);
             foreach (var res in allResourcesForMapping)
             {
                 try
@@ -931,6 +931,11 @@ namespace BioWare.Tools
                             continue;
                         }
 
+                        if (!ShouldScanNcsStrRefs(options) && foundResource.ResType == ResourceType.NCS)
+                        {
+                            continue;
+                        }
+
                         // Convert location strings to proper location objects
                         var locations = new List<object>();
 
@@ -957,6 +962,11 @@ namespace BioWare.Tools
                             }
                             else if (locStr.StartsWith("offset_"))
                             {
+                                if (!ShouldScanNcsStrRefs(options))
+                                {
+                                    continue;
+                                }
+
                                 // NCS reference: "offset_1234"
                                 if (int.TryParse(locStr.Replace("offset_", ""), out int byteOffset))
                                 {
@@ -1013,7 +1023,8 @@ namespace BioWare.Tools
                     }
 
                     ResourceType restype = resource.ResType;
-                    bool canContainStrref = restype.IsGff() || restype == ResourceType.TwoDA || restype == ResourceType.SSF || restype == ResourceType.NCS;
+                    bool canContainStrref = restype.IsGff() || restype == ResourceType.TwoDA || restype == ResourceType.SSF ||
+                        (restype == ResourceType.NCS && ShouldScanNcsStrRefs(options));
                     if (!canContainStrref)
                     {
                         skippedCount++;
