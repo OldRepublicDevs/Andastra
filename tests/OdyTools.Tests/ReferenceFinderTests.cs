@@ -2479,6 +2479,21 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindFieldValueInGffBytes_NullFieldNames_SearchesAllFields()
+        {
+            var utc = new UTC();
+            utc.Tag = "wildcard_tag_value";
+
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            List<string> paths = ReferenceFinder.FindFieldValueInGffBytes(bytes, "wildcard_tag_value", null, null);
+
+            Assert.That(paths, Is.Not.Empty);
+            Assert.That(paths, Has.Some.EqualTo("Tag"));
+        }
+
+        [Test]
         public void FindFieldValueInGffBytes_NoMatchReturnsEmpty()
         {
             var utc = new UTC();
@@ -2925,6 +2940,96 @@ namespace OdyTools.Tests
                 List<ReferenceSearchResult> results = ReferenceFinder.FindScriptReferences(
                     installation,
                     "k_chitin_only",
+                    options);
+
+                Assert.That(results, Is.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindFieldValueReferences_ChitinOnly_ReturnsFieldPath()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-chitin-fld-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(installRoot);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            const string needle = "chitin_field_tag";
+
+            var utc = new UTC();
+            utc.Tag = needle;
+            WriteChitinWithUtc(installRoot, utc);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var fieldNames = new HashSet<string> { "Tag" };
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = true,
+                    SearchModules = false,
+                    SearchOverride = false
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindFieldValueReferences(
+                    installation,
+                    needle,
+                    fieldNames,
+                    options);
+
+                Assert.That(results, Is.Not.Empty);
+                Assert.That(results, Has.Some.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath == "Tag" && r.MatchedValue == needle));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindFieldValueReferences_NoChitin_SkipsChitinResource()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-nochitin-fld-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(installRoot);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.Tag = "chitin_only_field";
+            WriteChitinWithUtc(installRoot, utc);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var fieldNames = new HashSet<string> { "Tag" };
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = false
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindFieldValueReferences(
+                    installation,
+                    "chitin_only_field",
+                    fieldNames,
                     options);
 
                 Assert.That(results, Is.Empty);
