@@ -38,4 +38,4 @@ Complete Holocron `ComboBox2DA` “Find References” by merging 2DA memory refs
 - `dotnet test tests/KotorCLI.Tests/KotorCLI.Tests.csproj --framework net9.0 --filter FindFieldValue`
 - `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~TwoDAMemoryReferenceHelperTests` (**10** tests)
 
-See plans `docs/plans/2026-05-28-262-*` and `docs/plans/2026-05-28-263-*` for wiring test slices.
+See plans `docs/plans/2026-05-28-262-*`, `263-*`, and `264-*` for wiring and closure slices.
