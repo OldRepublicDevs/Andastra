@@ -15,7 +15,7 @@ Standard commands per `README.md`. Key notes:
 - **Restore**: `dotnet restore Andastra.sln` succeeds on current branch. Full solution **build** succeeds on Linux net9.0 (2026-05-23): `dotnet build Andastra.sln --framework net9.0`. CI `solution-build` uses `-m:1` to avoid parallel deps locks (plan 031).
 - **Build core libraries**: `dotnet build src/BioWare/BioWare.csproj` builds cleanly for both `net9.0` and `net48`.
 - **Build tests**: `dotnet build tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0` and `dotnet build tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0`.
-- **Run tests**: `dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0` and `dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0`.
+- **Run tests**: `dotnet test tests/Andastra.Tests/Andastra.Tests.csproj --framework net9.0`, `dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0`, and `dotnet test tests/OdyPatch.Tests/OdyPatch.Tests.csproj --framework net9.0 -c Release` (plan 297 — OdyPatch `--validate` subprocess).
 - **Lint**: `dotnet build src/BioWare/BioWare.csproj --configuration Release -p:RunAnalyzersDuringBuild=true --framework net9.0`.
 - **OdyTools** and **OdyPatch** build on net9.0 after delegate-wiring fixes (2026-05-23). Standalone editors use shared props including `DialogHelper.cs`.
 - The `powershell: not found` warnings during BioWare builds (`Remove-DuplicateUsings.ps1` pre-build target) are harmless on Linux.
