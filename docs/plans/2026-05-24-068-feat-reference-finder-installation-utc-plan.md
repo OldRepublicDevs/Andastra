@@ -44,6 +44,8 @@ Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare 
 
 **CONSTI threshold disambiguation doc sync closed (2026-05-28, plan 292):** KB row + plan **063** deferred update for `StrRefCandidateMinimum` partial landing. See plan `292`.
 
+**KotorCLI find-strref ncs-min CLI tests closed (2026-05-28, plans 293–294):** slow-path `--ncs-strref-min 100` hit + negative min validation subprocess tests. See plans `293`, `294`.
+
 ## Requirements
 
 - R1. `ReferenceFinder.FindScriptReferences(Installation, string scriptResRef, ReferenceSearchOptions options)` returns `List<ReferenceSearchResult>` with `FileResource` + `FieldPath`.
