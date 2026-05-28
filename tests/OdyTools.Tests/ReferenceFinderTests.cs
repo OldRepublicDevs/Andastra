@@ -174,6 +174,23 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindScriptResRefInGffBytes_CaseSensitive_RequiresExactCase()
+        {
+            var utc = new UTC();
+            utc.OnHeartbeat = new ResRef("k_Test_Hb");
+
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            var insensitive = new ReferenceSearchOptions { CaseSensitive = false };
+            Assert.That(ReferenceFinder.FindScriptResRefInGffBytes(bytes, "k_test_hb", insensitive), Is.Not.Empty);
+
+            var sensitive = new ReferenceSearchOptions { CaseSensitive = true };
+            Assert.That(ReferenceFinder.FindScriptResRefInGffBytes(bytes, "k_test_hb", sensitive), Is.Empty);
+            Assert.That(ReferenceFinder.FindScriptResRefInGffBytes(bytes, "k_Test_Hb", sensitive), Is.Not.Empty);
+        }
+
+        [Test]
         public void FindTemplateResRefInGffBytes_FindsUtcTemplateResRef()
         {
             var utc = new UTC();
@@ -1202,6 +1219,124 @@ namespace OdyTools.Tests
                     "dan_tag_only",
                     danOptions);
                 Assert.That(danHitResults, Is.Not.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindTemplateResRefReferences_ModuleGlob_FiltersNonMatchingModule()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-tplglob-" + Guid.NewGuid().ToString("N"));
+            string modulesDir = Path.Combine(installRoot, "modules");
+            Directory.CreateDirectory(modulesDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var tarUtc = new UTC();
+            tarUtc.ResRef = new ResRef("p_tar_tpl");
+            WriteModuleWithUtc(Path.Combine(modulesDir, "tar_m01.mod"), tarUtc);
+
+            var danUtc = new UTC();
+            danUtc.ResRef = new ResRef("p_dan_tpl");
+            WriteModuleWithUtc(Path.Combine(modulesDir, "danm13.rim"), danUtc);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var tarOptions = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = true,
+                    SearchOverride = false,
+                    ModuleGlobFilters = new List<string> { "tar_m01*" }
+                };
+
+                Assert.That(
+                    ReferenceFinder.FindTemplateResRefReferences(installation, "p_tar_tpl", tarOptions),
+                    Is.Not.Empty);
+                Assert.That(
+                    ReferenceFinder.FindTemplateResRefReferences(installation, "p_dan_tpl", tarOptions),
+                    Is.Empty);
+
+                var danOptions = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = true,
+                    SearchOverride = false,
+                    ModuleGlobFilters = new List<string> { "danm13*" }
+                };
+
+                Assert.That(
+                    ReferenceFinder.FindTemplateResRefReferences(installation, "p_dan_tpl", danOptions),
+                    Is.Not.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindConversationResRefReferences_ModuleGlob_FiltersNonMatchingModule()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-convglob-" + Guid.NewGuid().ToString("N"));
+            string modulesDir = Path.Combine(installRoot, "modules");
+            Directory.CreateDirectory(modulesDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var tarUtc = new UTC();
+            tarUtc.Conversation = new ResRef("tar_dlg_ref");
+            WriteModuleWithUtc(Path.Combine(modulesDir, "tar_m01.mod"), tarUtc);
+
+            var danUtc = new UTC();
+            danUtc.Conversation = new ResRef("dan_dlg_ref");
+            WriteModuleWithUtc(Path.Combine(modulesDir, "danm13.rim"), danUtc);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var tarOptions = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = true,
+                    SearchOverride = false,
+                    ModuleGlobFilters = new List<string> { "tar_m01*" }
+                };
+
+                Assert.That(
+                    ReferenceFinder.FindConversationResRefReferences(installation, "tar_dlg_ref", tarOptions),
+                    Is.Not.Empty);
+                Assert.That(
+                    ReferenceFinder.FindConversationResRefReferences(installation, "dan_dlg_ref", tarOptions),
+                    Is.Empty);
+
+                var danOptions = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = true,
+                    SearchOverride = false,
+                    ModuleGlobFilters = new List<string> { "danm13*" }
+                };
+
+                Assert.That(
+                    ReferenceFinder.FindConversationResRefReferences(installation, "dan_dlg_ref", danOptions),
+                    Is.Not.Empty);
             }
             finally
             {
