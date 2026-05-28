@@ -1,7 +1,7 @@
 ---
 title: "test: kotorcli validate-installation cli subprocess"
 type: test
-status: complete
+status: completed
 date: 2026-05-28
 origin: docs/plans/2026-05-27-197-feat-kotorcli-validate-installation-plan.md
 branch: feat/holocron-port-phase-b
