@@ -268,6 +268,28 @@ file = ""test.mod""
             }
         }
 
+        [TestCase("convert default")]
+        [TestCase("compile default")]
+        [TestCase("pack default")]
+        [TestCase("install default")]
+        [TestCase("unpack default test.mod")]
+        public void CliPipeline_NoConfigDirectory_ExitsNonZero(string command)
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-nocfg-cli-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(projectDir);
+
+            try
+            {
+                int exitCode = RunKotorCli(command, projectDir, out _, out string stderr);
+                Assert.That(exitCode, Is.EqualTo(1), stderr);
+                Assert.That(stderr.ToLowerInvariant(), Does.Contain("kotorcli"));
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
         [Test]
         public void CliUnpack_FromMod_WritesCreatureJson()
         {

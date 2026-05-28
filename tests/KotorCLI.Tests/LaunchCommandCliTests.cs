@@ -25,6 +25,27 @@ file = ""test.mod""
         private static string RepoRoot =>
             Path.GetFullPath(Path.Combine(TestContext.CurrentContext.TestDirectory, "..", "..", "..", "..", ".."));
 
+        [Test]
+        public void CliLaunch_InstallOnly_NoConfigDirectory_ExitsNonZero()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-launch-cli-nocfg-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(projectDir);
+
+            try
+            {
+                int exitCode = RunKotorCli(
+                    "launch default --install-only",
+                    projectDir,
+                    out _,
+                    out string stderr);
+                Assert.That(exitCode, Is.EqualTo(1), stderr);
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
         [TestCase("launch")]
         [TestCase("serve")]
         [TestCase("play")]
