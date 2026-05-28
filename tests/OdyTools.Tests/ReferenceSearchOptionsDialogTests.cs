@@ -62,6 +62,42 @@ namespace OdyTools.Tests
 
         [Test]
         [AvaloniaTest]
+        public void ToSearchOptions_ScopeToggles_RoundTripFromDefaults()
+        {
+            var dialog = new ReferenceSearchOptionsDialog(null, showStrRefNcsOptions: false);
+            dialog.SetDefaults(new ReferenceSearchOptions
+            {
+                SearchOverride = false,
+                SearchModules = true,
+                SearchChitin = false
+            });
+
+            ReferenceSearchOptions options = dialog.ToSearchOptions();
+
+            Assert.That(options.SearchOverride, Is.False);
+            Assert.That(options.SearchModules, Is.True);
+            Assert.That(options.SearchChitin, Is.False);
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void ToSearchOptions_CaseSensitivePartialMatch_RoundTripFromDefaults()
+        {
+            var dialog = new ReferenceSearchOptionsDialog(null, showStrRefNcsOptions: false);
+            dialog.SetDefaults(new ReferenceSearchOptions
+            {
+                CaseSensitive = true,
+                PartialMatch = true
+            });
+
+            ReferenceSearchOptions options = dialog.ToSearchOptions();
+
+            Assert.That(options.CaseSensitive, Is.True);
+            Assert.That(options.PartialMatch, Is.True);
+        }
+
+        [Test]
+        [AvaloniaTest]
         public void ToSearchOptions_ModuleGlobFilters_RoundTripFromDefaults()
         {
             var dialog = new ReferenceSearchOptionsDialog(null, showStrRefNcsOptions: false);
