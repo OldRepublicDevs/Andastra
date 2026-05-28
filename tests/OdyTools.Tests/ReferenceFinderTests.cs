@@ -1136,6 +1136,66 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindFieldValueReferences_ModuleGlob_FiltersNonMatchingModule()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-fldglob-" + Guid.NewGuid().ToString("N"));
+            string modulesDir = Path.Combine(installRoot, "modules");
+            Directory.CreateDirectory(modulesDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var tarUtc = new UTC();
+            tarUtc.Tag = "tar_fld_tag";
+            WriteModuleWithUtc(Path.Combine(modulesDir, "tar_m01.mod"), tarUtc);
+
+            var danUtc = new UTC();
+            danUtc.Tag = "dan_fld_tag";
+            WriteModuleWithUtc(Path.Combine(modulesDir, "danm13.rim"), danUtc);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var fieldNames = new HashSet<string> { "Tag" };
+                var tarOptions = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = true,
+                    SearchOverride = false,
+                    ModuleGlobFilters = new List<string> { "tar_m01*" }
+                };
+
+                Assert.That(
+                    ReferenceFinder.FindFieldValueReferences(installation, "tar_fld_tag", fieldNames, tarOptions),
+                    Is.Not.Empty);
+                Assert.That(
+                    ReferenceFinder.FindFieldValueReferences(installation, "dan_fld_tag", fieldNames, tarOptions),
+                    Is.Empty);
+
+                var danOptions = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = true,
+                    SearchOverride = false,
+                    ModuleGlobFilters = new List<string> { "danm13*" }
+                };
+
+                Assert.That(
+                    ReferenceFinder.FindFieldValueReferences(installation, "dan_fld_tag", fieldNames, danOptions),
+                    Is.Not.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void FindScriptReferences_FileTypesUtcOnly_FindsUtcNotNcs()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "ref-ftutc-" + Guid.NewGuid().ToString("N"));
@@ -1407,6 +1467,53 @@ namespace OdyTools.Tests
                 Assert.That(
                     ReferenceFinder.FindConversationResRefReferences(installation, "dan_dlg_ref", danOptions),
                     Is.Not.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindScriptReferences_PartialMatch_OverrideUtc()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-script-partial-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.OnHeartbeat = new ResRef("k_creature_hb");
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true,
+                    PartialMatch = true
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindScriptReferences(
+                    installation,
+                    "creature",
+                    options);
+
+                Assert.That(results, Is.Not.Empty);
+                Assert.That(results, Has.Some.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath == "ScriptHeartbeat"));
             }
             finally
             {
@@ -1833,6 +1940,14 @@ namespace OdyTools.Tests
             var sensitive = new ReferenceSearchOptions { CaseSensitive = true };
             Assert.That(ReferenceFinder.FindScriptResRefInNcsBytes(data, "k_test_hb", sensitive), Is.Empty);
             Assert.That(ReferenceFinder.FindScriptResRefInNcsBytes(data, "k_Test_Hb", sensitive), Is.Not.Empty);
+        }
+
+        [Test]
+        public void FindScriptResRefInNcsBytes_EmptyNeedleReturnsEmpty()
+        {
+            byte[] data = System.Text.Encoding.ASCII.GetBytes("abc k_test_hb xyz");
+            Assert.That(ReferenceFinder.FindScriptResRefInNcsBytes(data, ""), Is.Empty);
+            Assert.That(ReferenceFinder.FindScriptResRefInNcsBytes(data, "   "), Is.Empty);
         }
 
         [Test]
