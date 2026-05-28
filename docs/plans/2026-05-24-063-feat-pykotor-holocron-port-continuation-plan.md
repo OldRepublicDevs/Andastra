@@ -14,8 +14,8 @@ branch: feat/holocron-fac-kotorcli
 
 | Unit | Status | Notes |
 |------|--------|-------|
-| U1 KotorCLI converts | **Landed** | plan 064 |
-| U2 OdyToolFAC | **Landed** | plan 064 |
+| U1 KotorCLI converts | **Landed** | plan 064 — BioWare `Conversions` wiring; closed plan **281** (2026-05-28). **21** FormatConvert tests. |
+| U2 OdyToolFAC | **Landed** | plan 064 — FAC editor + standalone; closed plan **281** (2026-05-28). **3** OdyToolFAC tests. |
 | U3 Indoor Builder | **Landed** | plan 065 (headless; in-game walkmesh open); walkmesh `AreaModel` tests via plan **069** (closed plan **279**, 2026-05-28). |
 | U4 KotorDiff integrate | **Landed** | shared KotorDiffApp host |
 | U5 NCS disassembly tab | **Landed** | plan 067 — `DisassembleNcsBytes` + OdyToolNSS tab; closed plan **280** (2026-05-28). **3** ScriptsDisassembly tests. |
