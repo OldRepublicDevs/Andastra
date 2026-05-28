@@ -28,6 +28,8 @@ Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare 
 
 **KotorCLI find-2da-ref `--full-row` parity closed (2026-05-28, plans 107 / 276 on `feat/holocron-port-phase-b`):** BioWare `CollectTwoDARowReferences` shared with OdyTools `TwoDAMemoryReferenceHelper`; KotorCLI `find-2da-ref --full-row` loads 2DA from installation and sweeps label field-value + StrRef columns. **13** `Find2DARefCommandTests` + **2** `ReferenceCacheHelpersTwoDARowReferencesTests`. See plans `107`, `276`.
 
+**OdyTools 2DA row sweep + README closed (2026-05-28, plans 108 / 277 on `feat/holocron-port-phase-b`):** `CollectTwoDARowReferences_WithTwoDA_FindsLabelFieldValueRef` and `_FindsRowStrRefColumnRef` in `TwoDAMemoryReferenceHelperTests`; KotorCLI README wired/partial/stub inventory. **10** `TwoDAMemoryReferenceHelperTests`. See plans `108`, `277`.
+
 ## Requirements
 
 - R1. `ReferenceFinder.FindScriptReferences(Installation, string scriptResRef, ReferenceSearchOptions options)` returns `List<ReferenceSearchResult>` with `FileResource` + `FieldPath`.
