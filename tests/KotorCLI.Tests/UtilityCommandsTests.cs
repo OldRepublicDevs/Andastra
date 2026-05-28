@@ -3,6 +3,7 @@ using System.IO;
 using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.TwoDA;
 using KotorCLI.Commands;
 using KotorCLI.Logging;
 using NUnit.Framework;
@@ -184,12 +185,73 @@ namespace KotorCLI.Tests
             Assert.That(exitCode, Is.EqualTo(1));
         }
 
+        [Test]
+        public void ExecuteStats_ValidTwoDA_ExitsZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-stats-2da-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string twoDaPath = WriteSampleTwoDA(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = UtilityCommands.ExecuteStats(twoDaPath, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteValidate_ValidTwoDA_ExitsZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-validate-2da-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string twoDaPath = WriteSampleTwoDA(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = UtilityCommands.ExecuteValidate(twoDaPath, false, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
         private static string WriteSampleUtc(string tempDir)
         {
             string utcPath = Path.Combine(tempDir, "sample.utc");
             byte[] utcBytes = GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.UTC);
             File.WriteAllBytes(utcPath, utcBytes);
             return utcPath;
+        }
+
+        private static string WriteSampleTwoDA(string tempDir)
+        {
+            string twoDaPath = Path.Combine(tempDir, "sample.2da");
+            var twoDA = new TwoDA(new System.Collections.Generic.List<string> { "label", "value" });
+            twoDA.AddRow();
+            File.WriteAllBytes(twoDaPath, TwoDAAuto.BytesTwoDA(twoDA));
+            return twoDaPath;
         }
     }
 }
