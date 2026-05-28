@@ -156,6 +156,23 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindTagInGffBytes_CaseSensitive_RequiresExactCase()
+        {
+            var utc = new UTC();
+            utc.Tag = "TestTag";
+
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            var insensitive = new ReferenceSearchOptions { CaseSensitive = false };
+            Assert.That(ReferenceFinder.FindTagInGffBytes(bytes, "testtag", insensitive), Is.Not.Empty);
+
+            var sensitive = new ReferenceSearchOptions { CaseSensitive = true };
+            Assert.That(ReferenceFinder.FindTagInGffBytes(bytes, "testtag", sensitive), Is.Empty);
+            Assert.That(ReferenceFinder.FindTagInGffBytes(bytes, "TestTag", sensitive), Is.Not.Empty);
+        }
+
+        [Test]
         public void FindTemplateResRefInGffBytes_FindsUtcTemplateResRef()
         {
             var utc = new UTC();
@@ -955,6 +972,24 @@ namespace OdyTools.Tests
         public void FindTagReferences_NullInstallation_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => ReferenceFinder.FindTagReferences(null, "tag_needle"));
+        }
+
+        [Test]
+        public void FindScriptReferences_NullInstallation_ThrowsArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>(() => ReferenceFinder.FindScriptReferences(null, "k_test_hb"));
+        }
+
+        [Test]
+        public void FindTemplateResRefReferences_NullInstallation_ThrowsArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>(() => ReferenceFinder.FindTemplateResRefReferences(null, "p_unique_tpl"));
+        }
+
+        [Test]
+        public void FindConversationResRefReferences_NullInstallation_ThrowsArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>(() => ReferenceFinder.FindConversationResRefReferences(null, "test_dlg_ref"));
         }
 
         [Test]
