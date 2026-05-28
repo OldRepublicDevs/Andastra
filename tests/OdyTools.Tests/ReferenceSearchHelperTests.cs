@@ -646,6 +646,28 @@ namespace OdyTools.Tests
             Assert.That(result, Is.Null);
         }
 
+        [Test]
+        [AvaloniaTest]
+        public void FindAndShowScriptReferences_OverrideNcs_CompletesWithoutException()
+        {
+            string installRoot = CreateInstallWithOverrideNcs();
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+
+                Assert.DoesNotThrow(() =>
+                    ReferenceSearchHelper.FindAndShowScriptReferences(
+                        null,
+                        "k_ncs_ref",
+                        installation,
+                        showOptionsDialog: false));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
         private static string CreateMinimalInstallRoot()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "odytools-refhelper-" + Guid.NewGuid().ToString("N"));
@@ -710,6 +732,20 @@ namespace OdyTools.Tests
             GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
             byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
             File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
+
+            return installRoot;
+        }
+
+        private static string CreateInstallWithOverrideNcs()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "odytools-refhelper-ncs-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+
+            byte[] ncsBytes = System.Text.Encoding.ASCII.GetBytes("prefix k_ncs_ref suffix");
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_script.ncs"), ncsBytes);
 
             return installRoot;
         }
