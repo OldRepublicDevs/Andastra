@@ -273,6 +273,52 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindTemplateResRefReferences_OverrideUtc_ReturnsFieldPath()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-templ-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.ResRef = new ResRef("p_unique_tpl");
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindTemplateResRefReferences(
+                    installation,
+                    "p_unique_tpl",
+                    options);
+
+                Assert.That(results, Is.Not.Empty);
+                Assert.That(results, Has.Some.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath == "TemplateResRef" && r.MatchedValue == "p_unique_tpl"));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void FindTagReferences_OverrideUtc_ReturnsFieldPath()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "ref-tag-" + Guid.NewGuid().ToString("N"));
