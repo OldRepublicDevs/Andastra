@@ -25,6 +25,8 @@ Content authoring and inspection workflows for OdyTools and standalone editors.
 | OdyToolNSS NCS disassembly tab | Green — `DisassembleNcsBytes` + tab UI tests `[REPO]` (2026-05-24) |
 | Reference finder (script ResRef, UTC/UTD/UTP/UTT/UTE/UTM/ARE/IFO context menus) | Green — override fixture tests `[REPO]` (2026-05-24) |
 | Reference search options dialog (override/modules/chitin, module-glob, StrRef NCS scan) | Green — `ReferenceSearchOptionsDialogTests` `[REPO]` (2026-05-24) |
+| StrRef find-refs NCS CONSTI cache path | Green — `StrRefReferenceCache` / `IncludeNcsStrRefScan` gating; **10** NcsConsti + **2** CLI tests `[REPO]` (plan **286**, 2026-05-28) |
+| Script ResRef NCS CONSTS scanner paths | Green — `NcsConstStringScanner` + `(NCS bytecode) offset_<n>` field paths; **3** NcsConstString + **5** FindScriptResRefInNcsBytes tests `[REPO]` (plan **287**, 2026-05-28) |
 | 2DA editor / ComboBox2DA row **Find References** | Green — `TwoDAMemoryReferenceHelper` + `OdyTool2DA` context menu (plans 083, 200) `[REPO]` |
 | KotorDiff in-app (Tools menu) | Green — shared `KotorDiffApp` host `[REPO]` (2026-05-24) |
 | Indoor Map Builder Build/Save/Open | Partial — headless build + WOK AreaModel tests; in-game walkmesh **Unverified** `[OPEN]` |
