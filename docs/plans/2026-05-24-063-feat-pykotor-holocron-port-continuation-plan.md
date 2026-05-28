@@ -100,7 +100,7 @@ BioWare and OdyTools already cover most PyKotor format parsers and Holocron per-
 ### Deferred to Follow-Up Work
 
 - **Module Designer depth** (`ModuleDesignerWindow` 3D/GIT instance editing): separate plan after GL/renderer strategy.
-- **Full reference finder NCS bytecode scanning** (`ReferenceCache` enablement): still deferred; partial StrRef NCS scan covered in `StrRefReferenceHelper` / `ReferenceSearchOptionsDialog` (plans 261–270). GFF + SSF + helper wiring arc **complete** through plan 271.
+- **Full reference finder NCS bytecode scanning** (`ReferenceCache` enablement): still deferred; partial StrRef NCS scan covered in `StrRefReferenceHelper` / `ReferenceSearchOptionsDialog` (plans 261–270). GFF + SSF + helper wiring arc **complete** through plan 271; parent-plan doc closures **276–284** (2026-05-28) mark plans **107**, **108**, **066**, **069**, **067**, **064**, **065**, **070**, and U4 KotorDiff integration complete.
 - **KotorCLI utility STUBs** (`grep`, `merge`, `diff`, `texture-convert`, `model-convert`, RIM pack, BIF extract matching): plan 059+.
 - **2DA editor spreadsheet UX completion** (`docs/twoda_editor_ux_and_feature_completion.md`): orthogonal UX slice.
 - **OdyPatch E2E mod install against real K1/TSL** ([plan 058 OdyPatch E2E runbook](2026-05-23-058-odypatch-e2e-runbook-plan.md)): runtime install validation.
