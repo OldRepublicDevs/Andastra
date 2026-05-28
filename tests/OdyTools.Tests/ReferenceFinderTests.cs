@@ -6,6 +6,7 @@ using BioWare.Extract;
 using BioWare.Resource;
 using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.GFF.Generics;
 using BioWare.Resource.Formats.GFF.Generics.UTC;
 using BioWare.Resource.Formats.RIM;
 using BioWare.Tools;
@@ -1244,6 +1245,63 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindTagReferences_FileTypesUtcOnly_FindsUtcNotUtp()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-tag-ftutc-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            const string needle = "shared_tag_ref";
+
+            var utc = new UTC();
+            utc.Tag = needle;
+            GFF utcGff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] utcBytes = GFFAuto.BytesGff(utcGff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), utcBytes);
+
+            var utp = new UTP();
+            utp.Tag = needle;
+            GFF utpGff = UTPHelpers.DismantleUtp(utp, BioWareGame.K1);
+            byte[] utpBytes = GFFAuto.BytesGff(utpGff, ResourceType.UTP);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_place.utp"), utpBytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true,
+                    FileTypes = new HashSet<ResourceType> { ResourceType.UTC }
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindTagReferences(
+                    installation,
+                    needle,
+                    options);
+
+                Assert.That(results, Is.Not.Empty);
+                Assert.That(results, Has.All.Matches<ReferenceSearchResult>(
+                    r => r.Resource.ResType == ResourceType.UTC));
+                Assert.That(results, Has.None.Matches<ReferenceSearchResult>(
+                    r => r.Resource.ResType == ResourceType.UTP));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void FindScriptReferences_FileTypesUtcOnly_FindsUtcNotNcs()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "ref-ftutc-" + Guid.NewGuid().ToString("N"));
@@ -2154,6 +2212,52 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindFieldValueReferences_WrongFieldName_SkipsNonListedFields()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-fld-wrong-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.Tag = "secret_tag_value";
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var fieldNames = new HashSet<string> { "Comment" };
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindFieldValueReferences(
+                    installation,
+                    "secret_tag_value",
+                    fieldNames,
+                    options);
+
+                Assert.That(results, Is.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void FindFieldValueInGffBytes_TagField_Matches()
         {
             var utc = new UTC();
@@ -2220,6 +2324,21 @@ namespace OdyTools.Tests
 
             var fieldNames = new HashSet<string> { "Tag" };
             Assert.That(ReferenceFinder.FindFieldValueInGffBytes(bytes, "missing_value", null, fieldNames), Is.Empty);
+        }
+
+        [Test]
+        public void FindFieldValueInGffBytes_WrongFieldName_SkipsNonListedFields()
+        {
+            var utc = new UTC();
+            utc.Tag = "secret_tag_value";
+
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+
+            var fieldNames = new HashSet<string> { "Comment" };
+            Assert.That(
+                ReferenceFinder.FindFieldValueInGffBytes(bytes, "secret_tag_value", null, fieldNames),
+                Is.Empty);
         }
 
         [Test]
