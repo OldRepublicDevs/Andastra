@@ -5,6 +5,7 @@ using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.GFF.Generics.UTC;
+using BioWare.Resource.Formats.NCS;
 using NUnit.Framework;
 
 namespace KotorCLI.Tests
@@ -19,6 +20,13 @@ namespace KotorCLI.Tests
         public void Cli_FindRefs_Script_InOverride_ExitsZero()
         {
             RunCliHitTest("k_cli_sub", "script", CreateInstallWithScriptReference("k_cli_sub"));
+        }
+
+        [Test]
+        public void Cli_FindRefs_Script_CompiledNcsInOverride_ExitsZero()
+        {
+            const string targetResRef = "k_cli_ncs_target";
+            RunCliHitTest(targetResRef, "script", CreateInstallWithCompiledNcsScriptReference(targetResRef));
         }
 
         [Test]
@@ -132,6 +140,22 @@ namespace KotorCLI.Tests
             GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
             byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
             File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
+
+            return installRoot;
+        }
+
+        private static string CreateInstallWithCompiledNcsScriptReference(string scriptResRef)
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-findrefs-ncs-cli-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { ExecuteScript(\"" + scriptResRef + "\", OBJECT_SELF); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+            File.WriteAllBytes(Path.Combine(overrideDir, "caller_script.ncs"), bytes);
 
             return installRoot;
         }
