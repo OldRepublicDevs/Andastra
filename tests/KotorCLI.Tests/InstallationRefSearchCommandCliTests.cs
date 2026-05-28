@@ -78,6 +78,46 @@ namespace KotorCLI.Tests
         }
 
         [Test]
+        public void Cli_FindFieldValue_InOverride_ExitsZero()
+        {
+            string installRoot = CreateInstallWithTag("cli_fv_tag");
+            try
+            {
+                int exitCode = RunKotorCli(
+                    "find-field-value cli_fv_tag --installation \"" + installRoot + "\" --override-only --no-chitin --no-modules",
+                    out string stdout,
+                    out string stderr);
+
+                string combined = stdout + stderr;
+                Assert.That(exitCode, Is.EqualTo(0), combined);
+                Assert.That(combined, Does.Contain("cli_fv_tag"));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void Cli_FindFieldValue_NoMatch_ExitsNonZero()
+        {
+            string installRoot = CreateInstallWithTag("cli_fv_tag");
+            try
+            {
+                int exitCode = RunKotorCli(
+                    "find-field-value missing_fv_value --installation \"" + installRoot + "\" --override-only --no-chitin --no-modules",
+                    out string stdout,
+                    out string stderr);
+
+                Assert.That(exitCode, Is.Not.EqualTo(0), stdout + stderr);
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
         public void Cli_Find2DARef_NoMatch_ExitsNonZero()
         {
             string installRoot = CreateInstallWithAppearanceRow(12);
@@ -151,6 +191,23 @@ namespace KotorCLI.Tests
             ssf.SetData(SSFSound.BATTLE_CRY_1, strref);
             byte[] bytes = SSFAuto.BytesSsf(ssf);
             File.WriteAllBytes(Path.Combine(overrideDir, "test_set.ssf"), bytes);
+
+            return installRoot;
+        }
+
+        private static string CreateInstallWithTag(string tag)
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-field-cli-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+
+            var utc = new UTC();
+            utc.Tag = tag;
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] bytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), bytes);
 
             return installRoot;
         }
