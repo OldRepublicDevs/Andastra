@@ -52,6 +52,44 @@ name = ""default""
 file = ""test.mod""
 ";
 
+        private const string MixedPipelineConfig = @"[package]
+name = ""testpack""
+
+  [package.sources]
+  include = [""src/**/*.json"", ""src/**/*.nss""]
+
+[target]
+name = ""default""
+file = ""test.mod""
+";
+
+        private const string ScriptPipelineConfig = @"[package]
+name = ""testpack""
+
+  [package.sources]
+  include = ""src/**/*.nss""
+
+[target]
+name = ""default""
+file = ""test.mod""
+";
+
+        private const string InlineConvertPipelineConfig = @"[package]
+name = ""testpack""
+
+  [package.sources]
+  include = ""src/**/*.json""
+
+[target]
+name = ""default""
+file = ""test.mod""
+";
+
+        private const string MinimalNssSource = @"void main()
+{
+}
+";
+
         private static string RepoRoot =>
             Path.GetFullPath(Path.Combine(TestContext.CurrentContext.TestDirectory, "..", "..", "..", "..", ".."));
 
@@ -346,6 +384,126 @@ file = ""test.mod""
         }
 
         [Test]
+        public void CliPack_WithInlineConvert_FromJson_WritesMod()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-pack-inline-conv-" + Guid.NewGuid().ToString("N"));
+            const string resref = "pk_creature";
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), InlineConvertPipelineConfig);
+
+                string srcDir = Path.Combine(projectDir, "src", "blueprints", "creatures");
+                Directory.CreateDirectory(srcDir);
+                string jsonPath = Path.Combine(srcDir, resref + ".utc.json");
+                var gff = new GFF(GFFContent.GFF);
+                gff.Root.SetString("Label", "pack-inline-convert");
+                GFFAuto.WriteGff(gff, jsonPath, ResourceType.GFF_JSON);
+
+                int exitCode = RunKotorCli("pack default", projectDir, out _, out string stderr);
+
+                string modPath = Path.Combine(projectDir, "test.mod");
+                Assert.That(exitCode, Is.EqualTo(0), stderr);
+                Assert.That(File.Exists(modPath), Is.True);
+
+                ERF mod = ERFAuto.ReadErf(modPath, ResourceType.MOD);
+                Assert.That(mod.Get(resref, ResourceType.UTC), Is.Not.Null);
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
+        [Test]
+        public void CliPack_WithInlineCompile_FromNss_WritesMod()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-pack-inline-comp-" + Guid.NewGuid().ToString("N"));
+            const string scriptResref = "pk_main";
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), ScriptPipelineConfig);
+
+                string scriptDir = Path.Combine(projectDir, "src", "scripts");
+                Directory.CreateDirectory(scriptDir);
+                File.WriteAllText(Path.Combine(scriptDir, scriptResref + ".nss"), MinimalNssSource);
+
+                int exitCode = RunKotorCli("pack default", projectDir, out _, out string stderr);
+
+                string modPath = Path.Combine(projectDir, "test.mod");
+                Assert.That(exitCode, Is.EqualTo(0), stderr);
+                Assert.That(File.Exists(modPath), Is.True);
+
+                ERF mod = ERFAuto.ReadErf(modPath, ResourceType.MOD);
+                Assert.That(mod.Get(scriptResref, ResourceType.NCS), Is.Not.Null);
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+            }
+        }
+
+        [Test]
+        public void CliConvert_Pack_Install_FullChain_ProducesInstalledMod()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-conv-pack-inst-" + Guid.NewGuid().ToString("N"));
+            string fakeInstallDir = Path.Combine(Path.GetTempPath(), "kotorcli-conv-pack-inst-game-" + Guid.NewGuid().ToString("N"));
+            const string resref = "plc_creature";
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                Directory.CreateDirectory(fakeInstallDir);
+                File.WriteAllText(Path.Combine(fakeInstallDir, "chitin.key"), "fake-key");
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), InlineConvertPipelineConfig);
+
+                string srcDir = Path.Combine(projectDir, "src", "blueprints", "creatures");
+                Directory.CreateDirectory(srcDir);
+                string jsonPath = Path.Combine(srcDir, resref + ".utc.json");
+                var gff = new GFF(GFFContent.GFF);
+                gff.Root.SetString("Label", "pipeline-cli-chain");
+                GFFAuto.WriteGff(gff, jsonPath, ResourceType.GFF_JSON);
+
+                Assert.That(
+                    RunKotorCli("convert default", projectDir, out _, out string convertErr),
+                    Is.EqualTo(0),
+                    convertErr);
+
+                string cacheUtc = Path.Combine(projectDir, ".kotorcli", "cache", "default", resref + ".utc");
+                Assert.That(File.Exists(cacheUtc), Is.True, "convert should stage binary GFF in cache");
+
+                Assert.That(
+                    RunKotorCli("pack default --noConvert --noCompile", projectDir, out _, out string packErr),
+                    Is.EqualTo(0),
+                    packErr);
+
+                string modPath = Path.Combine(projectDir, "test.mod");
+                Assert.That(File.Exists(modPath), Is.True);
+
+                int installExit = RunKotorCli(
+                    "install default --installDir \"" + fakeInstallDir + "\" --noPack",
+                    projectDir,
+                    out _,
+                    out string installErr);
+
+                string installedModPath = Path.Combine(fakeInstallDir, "modules", "test.mod");
+                Assert.That(installExit, Is.EqualTo(0), installErr);
+                Assert.That(File.Exists(installedModPath), Is.True);
+
+                ERF installedMod = ERFAuto.ReadErf(installedModPath, ResourceType.MOD);
+                Assert.That(installedMod.Get(resref, ResourceType.UTC), Is.Not.Null);
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+                DeleteDirectorySafe(fakeInstallDir);
+            }
+        }
+
+        [Test]
         public void CliInstall_InstallDirMissingChitin_ExitsNonZero()
         {
             string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-install-cli-nochitin-proj-" + Guid.NewGuid().ToString("N"));
@@ -369,6 +527,107 @@ file = ""test.mod""
             {
                 DeleteDirectorySafe(projectDir);
                 DeleteDirectorySafe(fakeInstallDir);
+            }
+        }
+
+        [Test]
+        public void CliMixed_PackThenInstall_ProducesModWithUtcAndNcs()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-mixed-cli-" + Guid.NewGuid().ToString("N"));
+            string fakeInstallDir = Path.Combine(Path.GetTempPath(), "kotorcli-mixed-cli-game-" + Guid.NewGuid().ToString("N"));
+            const string creatureResref = "mx_creature";
+            const string scriptResref = "mx_main";
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                Directory.CreateDirectory(fakeInstallDir);
+                File.WriteAllText(Path.Combine(fakeInstallDir, "chitin.key"), "fake-key");
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), MixedPipelineConfig);
+
+                string creatureDir = Path.Combine(projectDir, "src", "blueprints", "creatures");
+                Directory.CreateDirectory(creatureDir);
+                string jsonPath = Path.Combine(creatureDir, creatureResref + ".utc.json");
+                var gff = new GFF(GFFContent.GFF);
+                gff.Root.SetString("Label", "mixed-cli");
+                GFFAuto.WriteGff(gff, jsonPath, ResourceType.GFF_JSON);
+
+                string scriptDir = Path.Combine(projectDir, "src", "scripts");
+                Directory.CreateDirectory(scriptDir);
+                File.WriteAllText(Path.Combine(scriptDir, scriptResref + ".nss"), MinimalNssSource);
+
+                Assert.That(
+                    RunKotorCli("pack default", projectDir, out _, out string packErr),
+                    Is.EqualTo(0),
+                    packErr);
+
+                string modPath = Path.Combine(projectDir, "test.mod");
+                Assert.That(File.Exists(modPath), Is.True);
+
+                ERF packedMod = ERFAuto.ReadErf(modPath, ResourceType.MOD);
+                Assert.That(packedMod.Get(creatureResref, ResourceType.UTC), Is.Not.Null);
+                Assert.That(packedMod.Get(scriptResref, ResourceType.NCS), Is.Not.Null);
+
+                Assert.That(
+                    RunKotorCli(
+                        "install default --installDir \"" + fakeInstallDir + "\" --noPack",
+                        projectDir,
+                        out _,
+                        out string installErr),
+                    Is.EqualTo(0),
+                    installErr);
+
+                string installedModPath = Path.Combine(fakeInstallDir, "modules", "test.mod");
+                Assert.That(File.Exists(installedModPath), Is.True);
+
+                ERF installedMod = ERFAuto.ReadErf(installedModPath, ResourceType.MOD);
+                Assert.That(installedMod.Get(creatureResref, ResourceType.UTC), Is.Not.Null);
+                Assert.That(installedMod.Get(scriptResref, ResourceType.NCS), Is.Not.Null);
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
+                DeleteDirectorySafe(fakeInstallDir);
+            }
+        }
+
+        [Test]
+        public void CliCompile_ThenPack_ProducesModWithNcs()
+        {
+            string projectDir = Path.Combine(Path.GetTempPath(), "kotorcli-compile-pack-cli-" + Guid.NewGuid().ToString("N"));
+            const string scriptResref = "mod_main";
+
+            try
+            {
+                Directory.CreateDirectory(projectDir);
+                File.WriteAllText(Path.Combine(projectDir, "kotorcli.cfg"), ScriptPipelineConfig);
+
+                string scriptDir = Path.Combine(projectDir, "src", "scripts");
+                Directory.CreateDirectory(scriptDir);
+                File.WriteAllText(Path.Combine(scriptDir, scriptResref + ".nss"), MinimalNssSource);
+
+                Assert.That(
+                    RunKotorCli("compile default", projectDir, out _, out string compileErr),
+                    Is.EqualTo(0),
+                    compileErr);
+
+                string cacheNcs = Path.Combine(projectDir, ".kotorcli", "cache", "default", scriptResref + ".ncs");
+                Assert.That(File.Exists(cacheNcs), Is.True, "Compile should write NCS into cache");
+
+                Assert.That(
+                    RunKotorCli("pack default --noConvert --noCompile", projectDir, out _, out string packErr),
+                    Is.EqualTo(0),
+                    packErr);
+
+                string modPath = Path.Combine(projectDir, "test.mod");
+                Assert.That(File.Exists(modPath), Is.True);
+
+                ERF mod = ERFAuto.ReadErf(modPath, ResourceType.MOD);
+                Assert.That(mod.Get(scriptResref, ResourceType.NCS), Is.Not.Null);
+            }
+            finally
+            {
+                DeleteDirectorySafe(projectDir);
             }
         }
 
