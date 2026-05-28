@@ -1049,6 +1049,174 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void FindScriptReferences_FileTypesUtcOnly_FindsUtcNotNcs()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-ftutc-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.OnHeartbeat = new ResRef("k_filter_ref");
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] utcBytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), utcBytes);
+            byte[] ncsBytes = System.Text.Encoding.ASCII.GetBytes("abc k_filter_ref xyz");
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_script.ncs"), ncsBytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true,
+                    FileTypes = new HashSet<ResourceType> { ResourceType.UTC }
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindScriptReferences(
+                    installation,
+                    "k_filter_ref",
+                    options);
+
+                Assert.That(results, Is.Not.Empty);
+                Assert.That(results, Has.All.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath == "ScriptHeartbeat"));
+                Assert.That(results, Has.None.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath != null && r.FieldPath.StartsWith("offset_")));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindScriptReferences_FileTypesNcsOnly_FindsNcsNotUtc()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-ftncs-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var utc = new UTC();
+            utc.OnHeartbeat = new ResRef("k_filter_ref");
+            GFF gff = UTCHelpers.DismantleUtc(utc, BioWareGame.K1);
+            byte[] utcBytes = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_npc.utc"), utcBytes);
+            byte[] ncsBytes = System.Text.Encoding.ASCII.GetBytes("abc k_filter_ref xyz");
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_script.ncs"), ncsBytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var options = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = false,
+                    SearchOverride = true,
+                    FileTypes = new HashSet<ResourceType> { ResourceType.NCS }
+                };
+
+                List<ReferenceSearchResult> results = ReferenceFinder.FindScriptReferences(
+                    installation,
+                    "k_filter_ref",
+                    options);
+
+                Assert.That(results, Is.Not.Empty);
+                Assert.That(results, Has.All.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath != null && r.FieldPath.StartsWith("offset_")));
+                Assert.That(results, Has.None.Matches<ReferenceSearchResult>(
+                    r => r.FieldPath == "ScriptHeartbeat"));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindTagReferences_ModuleGlob_FiltersNonMatchingModule()
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "ref-tagglob-" + Guid.NewGuid().ToString("N"));
+            string modulesDir = Path.Combine(installRoot, "modules");
+            Directory.CreateDirectory(modulesDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+
+            var tarUtc = new UTC();
+            tarUtc.Tag = "tar_tag_only";
+            WriteModuleWithUtc(Path.Combine(modulesDir, "tar_m01.mod"), tarUtc);
+
+            var danUtc = new UTC();
+            danUtc.Tag = "dan_tag_only";
+            WriteModuleWithUtc(Path.Combine(modulesDir, "danm13.rim"), danUtc);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var tarOptions = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = true,
+                    SearchOverride = false,
+                    ModuleGlobFilters = new List<string> { "tar_m01*" }
+                };
+
+                List<ReferenceSearchResult> tarResults = ReferenceFinder.FindTagReferences(
+                    installation,
+                    "tar_tag_only",
+                    tarOptions);
+                Assert.That(tarResults, Is.Not.Empty);
+
+                List<ReferenceSearchResult> danMissResults = ReferenceFinder.FindTagReferences(
+                    installation,
+                    "dan_tag_only",
+                    tarOptions);
+                Assert.That(danMissResults, Is.Empty);
+
+                var danOptions = new ReferenceSearchOptions
+                {
+                    SearchChitin = false,
+                    SearchModules = true,
+                    SearchOverride = false,
+                    ModuleGlobFilters = new List<string> { "danm13*" }
+                };
+
+                List<ReferenceSearchResult> danHitResults = ReferenceFinder.FindTagReferences(
+                    installation,
+                    "dan_tag_only",
+                    danOptions);
+                Assert.That(danHitResults, Is.Not.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void FindTagReferences_PartialMatch_OverrideUtc()
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "ref-tag-partial-" + Guid.NewGuid().ToString("N"));
