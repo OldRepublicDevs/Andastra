@@ -140,5 +140,52 @@ namespace OdyTools.Tests
             Assert.That(display, Does.Contain("Override/test_npc.utc"));
             Assert.That(display, Does.Not.Contain("::"));
         }
+
+        [Test]
+        [AvaloniaTest]
+        public void FromReferenceSearch_FlatFilepath_UsesFilenameOnly()
+        {
+            var resource = new FileResource("test_npc", ResourceType.UTC, 128, 0, "test_npc.utc");
+            var results = new List<ReferenceSearchResult>
+            {
+                new ReferenceSearchResult
+                {
+                    Resource = resource,
+                    FieldPath = "Tag",
+                    MatchedValue = "npc_tag"
+                }
+            };
+
+            FileResultsDialog dialog = FileResultsDialog.FromReferenceSearch(null, results, null);
+
+            Assert.That(dialog.Ui.ResultList.Items.Count, Is.EqualTo(1));
+            string display = dialog.Ui.ResultList.Items[0].ToString();
+            Assert.That(display, Is.EqualTo("test_npc.utc :: Tag"));
+            Assert.That(display, Does.Not.Contain("/"));
+        }
+
+        [Test]
+        [AvaloniaTest]
+        public void FromReferenceSearch_EmptyFieldPath_UsesBaseDisplayOnly()
+        {
+            string filepath = Path.Combine(Path.GetTempPath(), "Override", "test_npc.utc");
+            var resource = new FileResource("test_npc", ResourceType.UTC, 128, 0, filepath);
+            var results = new List<ReferenceSearchResult>
+            {
+                new ReferenceSearchResult
+                {
+                    Resource = resource,
+                    FieldPath = string.Empty,
+                    MatchedValue = "npc_tag"
+                }
+            };
+
+            FileResultsDialog dialog = FileResultsDialog.FromReferenceSearch(null, results, null);
+
+            Assert.That(dialog.Ui.ResultList.Items.Count, Is.EqualTo(1));
+            string display = dialog.Ui.ResultList.Items[0].ToString();
+            Assert.That(display, Does.Contain("Override/test_npc.utc"));
+            Assert.That(display, Does.Not.Contain("::"));
+        }
     }
 }
