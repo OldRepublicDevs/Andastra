@@ -3144,6 +3144,47 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public void ReferenceSearchResult_DisplayLabel_WithoutMatchedValue_OmitsEqualsClause()
+        {
+            var resource = new FileResource("test_npc", ResourceType.UTC, 128, 0, "/tmp/test_npc.utc");
+            var result = new ReferenceSearchResult
+            {
+                Resource = resource,
+                FieldPath = "ScriptHeartbeat",
+                MatchedValue = null
+            };
+
+            Assert.That(result.DisplayLabel, Is.EqualTo("test_npc.utc :: ScriptHeartbeat"));
+        }
+
+        [Test]
+        public void ReferenceSearchResult_DisplayLabel_WithoutResource_ReturnsFieldPathOnly()
+        {
+            var result = new ReferenceSearchResult
+            {
+                Resource = null,
+                FieldPath = "Tag",
+                MatchedValue = "orphan"
+            };
+
+            Assert.That(result.DisplayLabel, Is.EqualTo("Tag"));
+        }
+
+        [Test]
+        public void ReferenceSearchResult_DisplayLabel_WithResourceOnly_ReturnsFileName()
+        {
+            var resource = new FileResource("test_script", ResourceType.NCS, 64, 0, "/tmp/test_script.ncs");
+            var result = new ReferenceSearchResult
+            {
+                Resource = resource,
+                FieldPath = null,
+                MatchedValue = null
+            };
+
+            Assert.That(result.DisplayLabel, Is.EqualTo("test_script.ncs"));
+        }
+
+        [Test]
         public void FindScriptResRefInNcsBytes_NoMatchReturnsEmpty()
         {
             byte[] data = System.Text.Encoding.ASCII.GetBytes("abc def");
