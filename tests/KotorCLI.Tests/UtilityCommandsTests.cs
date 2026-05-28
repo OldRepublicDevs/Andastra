@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using BioWare.Common;
 using BioWare.Resource;
+using BioWare.Resource.Formats.BIF;
 using BioWare.Resource.Formats.ERF;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.TwoDA;
@@ -290,6 +291,58 @@ namespace KotorCLI.Tests
             }
         }
 
+        [Test]
+        public void ExecuteStats_ValidBif_ExitsZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-stats-bif-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = WriteSampleBif(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = UtilityCommands.ExecuteStats(bifPath, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void ExecuteValidate_ValidBif_ExitsZero()
+        {
+            string tempDir = Path.Combine(Path.GetTempPath(), "kotorcli-validate-bif-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                string bifPath = WriteSampleBif(tempDir);
+                var logger = new StandardLogger();
+                int exitCode = UtilityCommands.ExecuteValidate(bifPath, false, logger);
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
         private static string WriteSampleUtc(string tempDir)
         {
             string utcPath = Path.Combine(tempDir, "sample.utc");
@@ -319,6 +372,16 @@ namespace KotorCLI.Tests
             erf.SetData("other_res", ResourceType.GFF, GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.GFF));
             ERFAuto.WriteErf(erf, erfPath, ResourceType.ERF);
             return erfPath;
+        }
+
+        private static string WriteSampleBif(string tempDir)
+        {
+            string bifPath = Path.Combine(tempDir, "sample.bif");
+            byte[] utcBytes = GFFAuto.BytesGff(new GFF(GFFContent.GFF), ResourceType.UTC);
+            var bif = new BIF();
+            bif.SetData(new ResRef("creature_a"), ResourceType.UTC, utcBytes);
+            File.WriteAllBytes(bifPath, new BIFBinaryWriter(bif).Write());
+            return bifPath;
         }
     }
 }
