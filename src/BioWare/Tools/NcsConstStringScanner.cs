@@ -5,25 +5,19 @@ using BioWare.Common;
 namespace BioWare.Tools
 {
     /// <summary>
-    /// Walks NCS V1.0 bytecode and extracts CONSTI (opcode 0x04, qualifier 0x03) operands.
+    /// Walks NCS V1.0 bytecode and extracts CONSTS (opcode 0x04, qualifier 0x05) string operands.
     /// </summary>
-    public static class NcsConstiScanner
+    public static class NcsConstStringScanner
     {
-        /// <summary>
-        /// CONSTI values below this are usually 2DA row indices, enums, or loop counters — not TLK StrRefs.
-        /// Cache scans use this threshold; explicit StrRef queries still match any CONSTI via slow path.
-        /// </summary>
-        public const int StrRefCandidateMinimum = 100;
-
-        public struct ConstiInstruction
+        public struct ConstsInstruction
         {
-            public int ValueByteOffset;
-            public int Value;
+            public int StringByteOffset;
+            public string Value;
         }
 
-        public static List<ConstiInstruction> ExtractConstiInstructions(byte[] ncsData)
+        public static List<ConstsInstruction> ExtractConstsInstructions(byte[] ncsData)
         {
-            var instructions = new List<ConstiInstruction>();
+            var instructions = new List<ConstsInstruction>();
             if (ncsData == null || ncsData.Length < 13)
             {
                 return instructions;
@@ -58,14 +52,15 @@ namespace BioWare.Tools
                         byte opcode = reader.ReadUInt8();
                         byte qualifier = reader.ReadUInt8();
 
-                        if (opcode == 0x04 && qualifier == 0x03)
+                        if (opcode == 0x04 && qualifier == 0x05)
                         {
-                            int valueOffset = reader.Position;
-                            int constValue = reader.ReadInt32(bigEndian: true);
-                            instructions.Add(new ConstiInstruction
+                            ushort strLen = reader.ReadUInt16(bigEndian: true);
+                            int stringOffset = reader.Position;
+                            string constValue = reader.ReadString(strLen, "ascii");
+                            instructions.Add(new ConstsInstruction
                             {
-                                ValueByteOffset = valueOffset,
-                                Value = constValue
+                                StringByteOffset = stringOffset,
+                                Value = constValue ?? string.Empty
                             });
                         }
                         else
@@ -83,35 +78,37 @@ namespace BioWare.Tools
             return instructions;
         }
 
-        public static List<int> ExtractConstiOffsetsForValue(byte[] ncsData, int targetValue)
+        public static List<int> ExtractConstsOffsetsForValue(
+            byte[] ncsData,
+            string targetValue,
+            StringComparison comparison = StringComparison.Ordinal)
         {
             var offsets = new List<int>();
-            foreach (ConstiInstruction instruction in ExtractConstiInstructions(ncsData))
+            if (string.IsNullOrEmpty(targetValue))
             {
-                if (instruction.Value == targetValue)
+                return offsets;
+            }
+
+            foreach (ConstsInstruction instruction in ExtractConstsInstructions(ncsData))
+            {
+                if (string.Equals(instruction.Value, targetValue, comparison))
                 {
-                    offsets.Add(instruction.ValueByteOffset);
+                    offsets.Add(instruction.StringByteOffset);
                 }
             }
 
             return offsets;
         }
 
-        public static bool IsPlausibleStrRefCandidate(int value)
-        {
-            return IsPlausibleStrRefCandidate(value, StrRefCandidateMinimum);
-        }
-
-        public static bool IsPlausibleStrRefCandidate(int value, int minimum)
-        {
-            return value >= minimum;
-        }
-
-        internal static void SkipInstructionPayload(RawBinaryReader reader, byte opcode, byte qualifier)
+        private static void SkipInstructionPayload(RawBinaryReader reader, byte opcode, byte qualifier)
         {
             if (opcode == 0x04)
             {
-                if (qualifier == 0x04)
+                if (qualifier == 0x03 || qualifier == 0x06)
+                {
+                    reader.Skip(4);
+                }
+                else if (qualifier == 0x04)
                 {
                     reader.Skip(4);
                 }
@@ -119,10 +116,6 @@ namespace BioWare.Tools
                 {
                     ushort strLen = reader.ReadUInt16(bigEndian: true);
                     reader.Skip(strLen);
-                }
-                else if (qualifier == 0x06)
-                {
-                    reader.Skip(4);
                 }
             }
             else if (opcode == 0x01 || opcode == 0x03 || opcode == 0x26 || opcode == 0x27)
