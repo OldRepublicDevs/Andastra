@@ -5,13 +5,16 @@ status: complete
 date: 2026-05-24
 origin: docs/plans/2026-05-24-063-feat-pykotor-holocron-port-continuation-plan.md (U6 phase 2)
 branch: feat/holocron-fac-kotorcli
+follow_up_landed: 2026-05-28
 ---
 
 # feat: Reference finder phase 2 — installation search and UTC wiring
 
 ## Summary
 
-Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare `ReferenceFinder` with installation-wide script ResRef search returning structured results with GFF field paths; show field paths in `FileResultsDialog`; wire **Find References** on UTC script combo context menus. Defers `ReferenceSearchOptionsDialog`, tag/template_resref search, and NCS bytecode scanning.
+Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare `ReferenceFinder` with installation-wide script ResRef search returning structured results with GFF field paths; show field paths in `FileResultsDialog`; wire **Find References** on UTC script combo context menus.
+
+**Follow-up landed (2026-05-28, plans 224–259 on `feat/holocron-port-phase-b`):** tag, template ResRef, conversation, and field-value installation search; `ReferenceSearchOptionsDialog`; `ReferenceSearchHelper` / `ScriptReferenceHelper` editor wiring; **95** `ReferenceFinderTests` + **42** OdyTools UI/options/wiring tests.
 
 ## Requirements
 
@@ -25,7 +28,8 @@ Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare 
 ## Scope Boundaries
 
 - **In:** BioWare installation scan for GFF script ResRefs, FileResultsDialog field paths, UTC script field wiring.
-- **Out:** ReferenceSearchOptionsDialog UI, tag search, NCS bytecode reference scan.
+- **Originally out (now landed):** `ReferenceSearchOptionsDialog` UI, tag/template/conversation/field-value search, chitin/module scope matrix, `ReferenceSearchHelper` / `ScriptReferenceHelper` wiring tests.
+- **Still out:** NCS bytecode reference scan via `ReferenceCache` (StrRef/NCS scan partially covered in `StrRefReferenceHelper`).
 - **Follow-up (landed in same branch):** UTD/UTP/UTT script combo **Find References** via `ScriptReferenceHelper`.
 
 ## Implementation Units
@@ -66,4 +70,10 @@ Deliver holocron **U6 phase 2** on `feat/holocron-fac-kotorcli`: extend BioWare 
 
 - `dotnet build src/BioWare/BioWare.csproj --framework net9.0`
 - `dotnet build src/Tools/OdyTools/OdyTools.csproj --framework net9.0`
-- `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter ReferenceFinder`
+- `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter ReferenceFinder` (**95** tests)
+- `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~FileResultsDialogReferenceSearchTests` (**8** tests)
+- `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ReferenceSearchHelperTests` (**20** tests)
+- `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ScriptReferenceHelperTests` (**5** tests)
+- `dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ReferenceSearchOptionsDialogTests` (**9** tests)
+
+See plans `docs/plans/2026-05-28-224-*` through `docs/plans/2026-05-28-260-*` for slice history.
