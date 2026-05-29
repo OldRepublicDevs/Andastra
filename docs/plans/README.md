@@ -1,6 +1,6 @@
 # LFG Plan Index (2026-05-23)
 
-Vertical slices: [PR #2](https://github.com/th3w1zard1/Andastra/pull/2) (plans 001–048) and [PR #3](https://github.com/th3w1zard1/Andastra/pull/3) (plans 049–055) merged to `master` 2026-05-24. [PR #12](https://github.com/th3w1zard1/Andastra/pull/12) (plans 291–298), [PR #13](https://github.com/th3w1zard1/Andastra/pull/13) (plan 299), [PR #14](https://github.com/th3w1zard1/Andastra/pull/14) (plan 300), [PR #15](https://github.com/th3w1zard1/Andastra/pull/15) (plan 301), [PR #16](https://github.com/th3w1zard1/Andastra/pull/16) (plan 302), and [PR #17](https://github.com/th3w1zard1/Andastra/pull/17) (plan 303) merged 2026-05-28. Maintenance tracker: [pr-merge-readiness.md](../knowledgebase/90-meta/pr-merge-readiness.md).
+Vertical slices: [PR #2](https://github.com/th3w1zard1/Andastra/pull/2) (plans 001–048) and [PR #3](https://github.com/th3w1zard1/Andastra/pull/3) (plans 049–055) merged to `master` 2026-05-24. [PR #12](https://github.com/th3w1zard1/Andastra/pull/12) (plans 291–298), [PR #13](https://github.com/th3w1zard1/Andastra/pull/13) (plan 299), [PR #14](https://github.com/th3w1zard1/Andastra/pull/14) (plan 300), [PR #15](https://github.com/th3w1zard1/Andastra/pull/15) (plan 301), [PR #16](https://github.com/th3w1zard1/Andastra/pull/16) (plan 302), [PR #17](https://github.com/th3w1zard1/Andastra/pull/17) (plan 303), [PR #18](https://github.com/th3w1zard1/Andastra/pull/18) (plan 304), and [PR #19](https://github.com/th3w1zard1/Andastra/pull/19) (plan 305) merged 2026-05-28. Maintenance tracker: [pr-merge-readiness.md](../knowledgebase/90-meta/pr-merge-readiness.md).
 
 Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 
@@ -85,6 +85,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 303 | [303-feat-ncs-consti-opcode-context-disambiguation-plan.md](2026-05-24-303-feat-ncs-consti-opcode-context-disambiguation-plan.md) | NCS CONSTI opcode-context StrRef disambiguation v1 |
 | 304 | [304-chore-merge-pr17-post-merge-tracker-plan.md](2026-05-28-304-chore-merge-pr17-post-merge-tracker-plan.md) | Merge PR #17 + post-merge tracker sync |
 | 305 | [305-feat-ncs-consti-action-signature-plan.md](2026-05-24-305-feat-ncs-consti-action-signature-plan.md) | NCS CONSTI action-signature StrRef slot matching |
+| 306 | [306-chore-merge-pr19-post-merge-tracker-plan.md](2026-05-28-306-chore-merge-pr19-post-merge-tracker-plan.md) | Merge PR #19 + post-merge tracker sync |
 
 ## Repo implications
 
