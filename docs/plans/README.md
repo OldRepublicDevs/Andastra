@@ -90,6 +90,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 308 | [308-chore-merge-pr21-post-merge-tracker-plan.md](2026-05-28-308-chore-merge-pr21-post-merge-tracker-plan.md) | Merge PR #21 + post-merge tracker sync |
 | 309 | [309-feat-ncs-consti-cptopsp-variable-strref-plan.md](2026-05-28-309-feat-ncs-consti-cptopsp-variable-strref-plan.md) | NCS CONSTI variable StrRef CPTOPSP→ACTION forward trace |
 | 310 | [310-chore-merge-pr23-post-merge-tracker-plan.md](2026-05-29-310-chore-merge-pr23-post-merge-tracker-plan.md) | Merge PR #23 + post-merge tracker sync |
+| 311 | [311-feat-ncs-consti-cptopbp-global-strref-plan.md](2026-05-29-311-feat-ncs-consti-cptopbp-global-strref-plan.md) | NCS CONSTI global StrRef CPTOPBP cross-subroutine trace |
 
 ## Repo implications
 
