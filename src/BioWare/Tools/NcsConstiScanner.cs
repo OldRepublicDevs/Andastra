@@ -441,7 +441,7 @@ namespace BioWare.Tools
         private const int VariableStrRefForwardScanLimitBytes = 128;
         private const int RelayStoreDiscoveryLimitBytes = 32;
 
-        private static bool TryFindNextCpdownspAfterLoad(
+        private static bool TryFindNextStackStoreAfterLoad(
             byte[] ncsData,
             int afterLoadOpcodeOffset,
             int scanLimit,
@@ -463,7 +463,8 @@ namespace BioWare.Tools
             int limit = Math.Min(scanLimit, afterLoadOpcodeOffset + RelayStoreDiscoveryLimitBytes);
             while (offset + 8 <= limit)
             {
-                if (ncsData[offset] == 0x01)
+                byte opcode = ncsData[offset];
+                if (opcode == 0x01 || opcode == 0x26)
                 {
                     if (TryReadStackCopyOperands(ncsData, offset, out storeOffset, out storeSize)
                         && storeSize == 4)
@@ -485,6 +486,23 @@ namespace BioWare.Tools
             }
 
             return false;
+        }
+
+        private static bool TryFindNextCpdownspAfterLoad(
+            byte[] ncsData,
+            int afterLoadOpcodeOffset,
+            int scanLimit,
+            out int storeOpcodeOffset,
+            out int storeOffset,
+            out int storeSize)
+        {
+            return TryFindNextStackStoreAfterLoad(
+                ncsData,
+                afterLoadOpcodeOffset,
+                scanLimit,
+                out storeOpcodeOffset,
+                out storeOffset,
+                out storeSize);
         }
 
         private static bool TryFindStrRefConsumerViaStackReload(
@@ -528,12 +546,12 @@ namespace BioWare.Tools
                             return true;
                         }
 
-                        if (opcode == 0x03)
+                        if (opcode == 0x03 || opcode == 0x27)
                         {
                             int relayStoreOpcodeOffset;
                             int relayStoreOffset;
                             int relayStoreSize;
-                            if (TryFindNextCpdownspAfterLoad(
+                            if (TryFindNextStackStoreAfterLoad(
                                     ncsData,
                                     scanOffset,
                                     scanLimit,
