@@ -455,6 +455,7 @@ namespace BioWare.Tools
             int scanLimit = Math.Min(ncsData.Length, storeOpcodeOffset + 8 + VariableStrRefForwardScanLimitBytes);
             int scanOffset = storeOpcodeOffset + 8;
             int stackPointerDelta = 0;
+            byte storeOpcode = ncsData[storeOpcodeOffset];
             while (scanOffset + 8 <= scanLimit)
             {
                 byte opcode = ncsData[scanOffset];
@@ -501,6 +502,57 @@ namespace BioWare.Tools
                 }
 
                 scanOffset += instructionSize;
+            }
+
+            if (storeOpcode == 0x26)
+            {
+                return TryFindStrRefConsumerViaBpReload(ncsData, storedConsti, storeOffset, storeSize);
+            }
+
+            return false;
+        }
+
+        private static bool TryFindStrRefConsumerViaBpReload(
+            byte[] ncsData,
+            ConstiInstruction storedConsti,
+            int storeOffset,
+            int storeSize)
+        {
+            if (storeSize != 4 || ncsData == null || ncsData.Length < 21)
+            {
+                return false;
+            }
+
+            int scanLimit = ncsData.Length - 8;
+            for (int scanOffset = 13; scanOffset + 8 <= scanLimit; scanOffset++)
+            {
+                if (ncsData[scanOffset] != 0x27)
+                {
+                    continue;
+                }
+
+                int loadOffset;
+                int loadSize;
+                if (!TryReadStackCopyOperands(ncsData, scanOffset, out loadOffset, out loadSize)
+                    || loadSize != storeSize
+                    || loadOffset != storeOffset)
+                {
+                    continue;
+                }
+
+                int actionId;
+                List<ActionStackSlot> stackSlots;
+                int argRunStart = FindActionArgumentRunStart(ncsData, scanOffset);
+                if (TryGetActionArgumentRunFrom(
+                        ncsData,
+                        argRunStart,
+                        storedConsti.ValueByteOffset,
+                        out actionId,
+                        out stackSlots)
+                    && IsConstiAtStrRefParameterSlot(actionId, storedConsti.ValueByteOffset, stackSlots))
+                {
+                    return true;
+                }
             }
 
             return false;
