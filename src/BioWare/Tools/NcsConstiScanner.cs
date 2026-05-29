@@ -622,12 +622,7 @@ namespace BioWare.Tools
                     }
                 }
 
-                int instructionSize = GetInstructionSizeAt(ncsData, scanOffset);
-                if (instructionSize <= 0)
-                {
-                    break;
-                }
-
+                int instructionSize = GetInstructionStepSizeAt(ncsData, scanOffset);
                 scanOffset += instructionSize;
             }
 
@@ -818,11 +813,6 @@ namespace BioWare.Tools
                 return 2;
             }
 
-            if (opcode == 0x02)
-            {
-                return 2;
-            }
-
             if (opcode == 0x2D)
             {
                 return 2;
@@ -854,6 +844,18 @@ namespace BioWare.Tools
             }
 
             return 0;
+        }
+
+        private static int GetInstructionStepSizeAt(byte[] ncsData, int opcodeOffset)
+        {
+            int instructionSize = GetInstructionSizeAt(ncsData, opcodeOffset);
+            if (instructionSize > 0)
+            {
+                return instructionSize;
+            }
+
+            // Match NCSActionPatcher: unknown opcode — minimal 2-byte step for full-file walks only.
+            return 2;
         }
 
         internal static void SkipInstructionPayload(RawBinaryReader reader, byte opcode, byte qualifier)
