@@ -29,7 +29,9 @@ namespace BioWare.Tests
         public void StrRefReferenceCache_NcsLiteral_IsFound()
         {
             const int targetStrRef = 424242;
-            NCS ncs = NCSAuto.CompileNss("void main() { int n = " + targetStrRef + "; }", BioWareGame.K1);
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { ActionSpeakStringByStrRef(" + targetStrRef + "); }",
+                BioWareGame.K1);
             byte[] bytes = NCSAuto.BytesNcs(ncs);
 
             string filepath = Path.Combine(Path.GetTempPath(), "ncs-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
@@ -99,7 +101,9 @@ namespace BioWare.Tests
         public void StrRefReferenceCache_CustomMinimum_IndexesSmallConstiWhenMinZero()
         {
             const int smallLiteral = 50;
-            NCS ncs = NCSAuto.CompileNss("void main() { int n = " + smallLiteral + "; }", BioWareGame.K1);
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { ActionSpeakStringByStrRef(" + smallLiteral + "); }",
+                BioWareGame.K1);
             byte[] bytes = NCSAuto.BytesNcs(ncs);
 
             string filepath = Path.Combine(Path.GetTempPath(), "ncs-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
@@ -463,6 +467,85 @@ namespace BioWare.Tests
 
             Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, volume), Is.Not.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
             Assert.That(NcsConstiScanner.ShouldIndexAsStrRefCandidate(bytes, volume, NcsConstiScanner.StrRefCandidateMinimum), Is.False);
+        }
+
+        [Test]
+        public void GetConstiUsageContext_LocalIntStore_ReturnsStackStored()
+        {
+            const int largeLiteral = 424242;
+            NCS ncs = NCSAuto.CompileNss("void main() { int n = " + largeLiteral + "; }", BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == largeLiteral);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StackStored));
+            Assert.That(NcsConstiScanner.ShouldIndexAsStrRefCandidate(bytes, match, NcsConstiScanner.StrRefCandidateMinimum), Is.False);
+        }
+
+        [Test]
+        public void StrRefReferenceCache_LocalIntStore_IsNotIndexed()
+        {
+            const int largeLiteral = 424242;
+            NCS ncs = NCSAuto.CompileNss("void main() { int n = " + largeLiteral + "; }", BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-local-int-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(largeLiteral), Is.False);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void FindStrRefReferences_LocalIntStoreSlowPath_StillFindsLiteral()
+        {
+            const int largeLiteral = 424242;
+            NCS ncs = NCSAuto.CompileNss("void main() { int n = " + largeLiteral + "; }", BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string installRoot = Path.Combine(Path.GetTempPath(), "ncs-local-find-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_script.ncs"), bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                List<StrRefSearchResult> results = ReferenceCacheHelpers.FindStrRefReferences(
+                    installation,
+                    largeLiteral,
+                    null,
+                    null);
+
+                Assert.That(results, Is.Not.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
         }
     }
 }
