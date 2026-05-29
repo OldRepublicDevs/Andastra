@@ -183,6 +183,14 @@ namespace BioWare.Tools
 
             if (IsStackStoreOpcode(opcode))
             {
+                int storeOffset;
+                int storeSize;
+                if (TryReadStackCopyOperands(ncsData, nextOffset, out storeOffset, out storeSize)
+                    && TryFindStrRefConsumerViaStackReload(ncsData, instruction, nextOffset, storeOffset, storeSize))
+                {
+                    return ConstiUsageContext.StrRefConsumer;
+                }
+
                 return ConstiUsageContext.StackStored;
             }
 
@@ -405,6 +413,314 @@ namespace BioWare.Tools
         private static bool IsStackSpillOrLoadOpcode(byte opcode)
         {
             return opcode == 0x01 || opcode == 0x03 || opcode == 0x26 || opcode == 0x27;
+        }
+
+        private static bool TryReadStackCopyOperands(byte[] ncsData, int opcodeOffset, out int stackOffset, out int copySize)
+        {
+            stackOffset = 0;
+            copySize = 0;
+            if (opcodeOffset + 8 > ncsData.Length)
+            {
+                return false;
+            }
+
+            byte opcode = ncsData[opcodeOffset];
+            if (!IsStackStoreOpcode(opcode) && opcode != 0x03 && opcode != 0x27)
+            {
+                return false;
+            }
+
+            stackOffset = (ncsData[opcodeOffset + 2] << 24)
+                | (ncsData[opcodeOffset + 3] << 16)
+                | (ncsData[opcodeOffset + 4] << 8)
+                | ncsData[opcodeOffset + 5];
+            copySize = (ncsData[opcodeOffset + 6] << 8) | ncsData[opcodeOffset + 7];
+            return true;
+        }
+
+        private const int VariableStrRefForwardScanLimitBytes = 128;
+
+        private static bool TryFindStrRefConsumerViaStackReload(
+            byte[] ncsData,
+            ConstiInstruction storedConsti,
+            int storeOpcodeOffset,
+            int storeOffset,
+            int storeSize)
+        {
+            if (storeSize != 4)
+            {
+                return false;
+            }
+
+            int scanLimit = Math.Min(ncsData.Length, storeOpcodeOffset + 8 + VariableStrRefForwardScanLimitBytes);
+            int scanOffset = storeOpcodeOffset + 8;
+            int stackPointerDelta = 0;
+            while (scanOffset + 8 <= scanLimit)
+            {
+                byte opcode = ncsData[scanOffset];
+                if (opcode == 0x03 || opcode == 0x27)
+                {
+                    int loadOffset;
+                    int loadSize;
+                    if (TryReadStackCopyOperands(ncsData, scanOffset, out loadOffset, out loadSize)
+                        && loadSize == storeSize
+                        && (loadOffset == storeOffset || loadOffset + stackPointerDelta == storeOffset))
+                    {
+                        int actionId;
+                        List<ActionStackSlot> stackSlots;
+                        int argRunStart = FindActionArgumentRunStart(ncsData, scanOffset);
+                        if (TryGetActionArgumentRunFrom(
+                                ncsData,
+                                argRunStart,
+                                storedConsti.ValueByteOffset,
+                                out actionId,
+                                out stackSlots)
+                            && IsConstiAtStrRefParameterSlot(actionId, storedConsti.ValueByteOffset, stackSlots))
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                int instructionSize = GetInstructionSizeAt(ncsData, scanOffset);
+                if (instructionSize <= 0)
+                {
+                    break;
+                }
+
+                if (opcode == 0x1B || opcode == 0x23 || opcode == 0x24)
+                {
+                    if (scanOffset + 6 <= ncsData.Length)
+                    {
+                        int movOffset = (ncsData[scanOffset + 2] << 24)
+                            | (ncsData[scanOffset + 3] << 16)
+                            | (ncsData[scanOffset + 4] << 8)
+                            | ncsData[scanOffset + 5];
+                        stackPointerDelta += movOffset;
+                    }
+                }
+
+                scanOffset += instructionSize;
+            }
+
+            return false;
+        }
+
+        private static int FindActionArgumentRunStart(byte[] ncsData, int loadOpcodeOffset)
+        {
+            int runStart = loadOpcodeOffset;
+            while (runStart > 13)
+            {
+                int previousStart = runStart - 2;
+                bool found = false;
+                while (previousStart >= 13)
+                {
+                    int size = GetInstructionSizeAt(ncsData, previousStart);
+                    if (size > 0 && previousStart + size == runStart)
+                    {
+                        found = true;
+                        break;
+                    }
+
+                    previousStart--;
+                }
+
+                if (!found)
+                {
+                    break;
+                }
+
+                byte previousOpcode = ncsData[previousStart];
+                if (IsStackStoreOpcode(previousOpcode) || previousOpcode == 0x1B || previousOpcode == 0x23 || previousOpcode == 0x24)
+                {
+                    break;
+                }
+
+                if (previousOpcode == 0x04 || previousOpcode == 0x03 || previousOpcode == 0x27)
+                {
+                    runStart = previousStart;
+                    continue;
+                }
+
+                break;
+            }
+
+            return runStart;
+        }
+
+        private static bool TryGetActionArgumentRunFrom(
+            byte[] ncsData,
+            int runStart,
+            int linkedConstiValueByteOffset,
+            out int actionId,
+            out List<ActionStackSlot> stackSlots)
+        {
+            actionId = -1;
+            stackSlots = new List<ActionStackSlot>();
+
+            int scanOffset = runStart;
+            while (scanOffset + 2 <= ncsData.Length)
+            {
+                byte opcode = ncsData[scanOffset];
+                byte qualifier = ncsData[scanOffset + 1];
+
+                if (opcode == 0x04 && qualifier == 0x03)
+                {
+                    stackSlots.Add(new ActionStackSlot
+                    {
+                        IsIntConst = true,
+                        ValueByteOffset = scanOffset + 2
+                    });
+                    scanOffset += 6;
+                    continue;
+                }
+
+                if (opcode == 0x04 && (qualifier == 0x04 || qualifier == 0x06))
+                {
+                    stackSlots.Add(new ActionStackSlot { IsIntConst = false, ValueByteOffset = -1 });
+                    scanOffset += GetConstantPushInstructionSizeAt(ncsData, scanOffset);
+                    continue;
+                }
+
+                if (opcode == 0x04 && qualifier == 0x05)
+                {
+                    stackSlots.Add(new ActionStackSlot { IsIntConst = false, ValueByteOffset = -1 });
+                    scanOffset += GetConstantPushInstructionSizeAt(ncsData, scanOffset);
+                    continue;
+                }
+
+                if (opcode == 0x03 || opcode == 0x27)
+                {
+                    stackSlots.Add(new ActionStackSlot
+                    {
+                        IsIntConst = true,
+                        ValueByteOffset = linkedConstiValueByteOffset
+                    });
+                    int loadSize;
+                    int loadOffset;
+                    if (!TryReadStackCopyOperands(ncsData, scanOffset, out loadOffset, out loadSize))
+                    {
+                        return false;
+                    }
+
+                    scanOffset += 8;
+                    continue;
+                }
+
+                if (opcode == 0x02)
+                {
+                    int rsaddSize = GetInstructionSizeAt(ncsData, scanOffset);
+                    if (rsaddSize <= 0)
+                    {
+                        return false;
+                    }
+
+                    scanOffset += rsaddSize;
+                    continue;
+                }
+
+                if (opcode == 0x1B || opcode == 0x23 || opcode == 0x24)
+                {
+                    int movSize = GetInstructionSizeAt(ncsData, scanOffset);
+                    if (movSize <= 0)
+                    {
+                        return false;
+                    }
+
+                    scanOffset += movSize;
+                    continue;
+                }
+
+                if (IsStackSpillOrLoadOpcode(opcode) && opcode != 0x03 && opcode != 0x27)
+                {
+                    return false;
+                }
+
+                if (opcode == 0x05 && scanOffset + 4 <= ncsData.Length)
+                {
+                    actionId = (ncsData[scanOffset + 2] << 8) | ncsData[scanOffset + 3];
+                    return StrRefParamIndicesByActionId.ContainsKey(actionId);
+                }
+
+                break;
+            }
+
+            return false;
+        }
+
+        private static int GetInstructionSizeAt(byte[] ncsData, int opcodeOffset)
+        {
+            if (opcodeOffset + 2 > ncsData.Length)
+            {
+                return 0;
+            }
+
+            byte opcode = ncsData[opcodeOffset];
+            byte qualifier = ncsData[opcodeOffset + 1];
+
+            int constantSize = GetConstantPushInstructionSizeAt(ncsData, opcodeOffset);
+            if (constantSize > 0)
+            {
+                return constantSize;
+            }
+
+            if (opcode == 0x01 || opcode == 0x03 || opcode == 0x26 || opcode == 0x27)
+            {
+                return 8;
+            }
+
+            if (opcode == 0x2C)
+            {
+                return 10;
+            }
+
+            if (opcode == 0x02)
+            {
+                return 2;
+            }
+
+            if (opcode == 0x1B || opcode == 0x1D || opcode == 0x1E || opcode == 0x1F ||
+                opcode == 0x23 || opcode == 0x24 || opcode == 0x25 || opcode == 0x28 || opcode == 0x29)
+            {
+                return 6;
+            }
+
+            if (opcode == 0x02)
+            {
+                return 2;
+            }
+
+            if (opcode == 0x2D)
+            {
+                return 2;
+            }
+
+            if (opcode == 0x05)
+            {
+                return 5;
+            }
+
+            if (opcode == 0x21)
+            {
+                return 8;
+            }
+
+            if ((opcode == 0x0B || opcode == 0x0C) && qualifier == 0x24)
+            {
+                return 4;
+            }
+
+            if (opcode >= 0x06 && opcode <= 0x18)
+            {
+                return 2;
+            }
+
+            if (opcode >= 0x0B && opcode <= 0x10)
+            {
+                return 2;
+            }
+
+            return 0;
         }
 
         internal static void SkipInstructionPayload(RawBinaryReader reader, byte opcode, byte qualifier)
