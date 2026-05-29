@@ -148,6 +148,15 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Plans | **313**–**314** (merge + tracker sync **314**) |
 | CI on merge | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
 
+## PR #29 outcome
+
+| Item | Status |
+|------|--------|
+| Merge | **Merged** to `master` 2026-05-29 @ `58a2697fe` via [PR #29](https://github.com/th3w1zard1/Andastra/pull/29) `[REPO]` |
+| Scope | NCS CONSTI instruction-aligned CPTOPBP scan (plan **315**): `GetInstructionSizeAt` walk replaces byte scan; extended opcode sizes for cross-subroutine files, **31** NcsConsti tests |
+| Plans | **315**–**316** (merge + tracker sync **316**) |
+| CI on merge | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
+
 ## Local validation (green path)
 
 | Check | Command / artifact | Status |
@@ -177,13 +186,13 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (315+)
+## Suggested next slices (317+)
 
 | Plan | Topic |
 |------|-------|
-| 315 | Instruction-aligned `CPTOPBP` scan optimization (plan 311 follow-on) |
-| 315+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
-| 315+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 317+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
+| 317+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 317+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
 
 ## Repo implications
 
