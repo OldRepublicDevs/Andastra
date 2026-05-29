@@ -64,7 +64,16 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 |------|--------|
 | Merge | **Merged** to `master` 2026-05-28 @ `360e48647` via [PR #13](https://github.com/th3w1zard1/Andastra/pull/13) `[REPO]` |
 | Scope | Post-PR-#12 tracker sync (plan **299**): `pr-merge-readiness.md` PR #12 outcome, plan index, plan **063** milestone |
-| Plans | **299**–**300** (merge + tracker sync **300**) |
+| Plans | **299** (tracker sync) |
+| CI on merge | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
+
+## PR #14 outcome
+
+| Item | Status |
+|------|--------|
+| Merge | **Merged** to `master` 2026-05-28 @ `64a3308d2` via [PR #14](https://github.com/th3w1zard1/Andastra/pull/14) `[REPO]` |
+| Scope | Post-PR-#13 tracker sync (plan **300**): PR #13 outcome, plan index, plan **063** milestone |
+| Plans | **300**–**301** (merge + tracker sync **301**) |
 | CI on merge | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
 
 ## Local validation (green path)
@@ -96,12 +105,12 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (300+)
+## Suggested next slices (301+)
 
 | Plan | Topic |
 |------|-------|
-| 300+ | Opcode-context CONSTI disambiguation (StrRef vs 2DA-memory) per plan **063** |
-| 300+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 301+ | Opcode-context CONSTI disambiguation (StrRef vs 2DA-memory) per plan **063** |
+| 301+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
 
 ## Repo implications
 
