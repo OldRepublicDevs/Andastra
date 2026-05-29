@@ -98,6 +98,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 316 | [316-chore-merge-pr29-post-merge-tracker-plan.md](2026-05-29-316-chore-merge-pr29-post-merge-tracker-plan.md) | Merge PR #29 + post-merge tracker sync |
 | 317 | [317-feat-ncs-consti-deep-multihop-local-strref-plan.md](2026-05-29-317-feat-ncs-consti-deep-multihop-local-strref-plan.md) | NCS CONSTI deep multi-hop local StrRef trace |
 | 318 | [318-chore-merge-pr31-post-merge-tracker-plan.md](2026-05-29-318-chore-merge-pr31-post-merge-tracker-plan.md) | Merge PR #31 + post-merge tracker sync |
+| 321 | [321-feat-ncs-consti-bp-multihop-local-strref-plan.md](2026-05-29-321-feat-ncs-consti-bp-multihop-local-strref-plan.md) | NCS CONSTI BP multi-hop local StrRef relay |
 
 ## Repo implications
 
