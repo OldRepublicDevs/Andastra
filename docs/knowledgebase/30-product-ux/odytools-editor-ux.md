@@ -29,7 +29,7 @@ Content authoring and inspection workflows for OdyTools and standalone editors.
 | Script ResRef NCS CONSTS scanner paths | Green — `NcsConstStringScanner` + `(NCS bytecode) offset_<n>` field paths; **3** NcsConstString + **5** FindScriptResRefInNcsBytes tests `[REPO]` (plan **287**, 2026-05-28) |
 | Compiled NCS script ResRef installation e2e | Green — `FindScriptReferences_OverrideCompiledNcs_ReturnsNcsBytecodePath`; **1** ReferenceFinder test `[REPO]` (plan **289**, 2026-05-28) |
 | KotorCLI find-refs compiled NCS CLI subprocess | Green — `Cli_FindRefs_Script_CompiledNcsInOverride_ExitsZero`; **1** FindRefsCommandCli test `[REPO]` (plan **290**, 2026-05-28) |
-| NCS CONSTI StrRef vs 2DA-memory threshold disambiguation | Partial — `NcsConstiScanner.StrRefCandidateMinimum` (default **100**) excludes low CONSTI from cache indexing; slow-path StrRef queries still match; OdyTools options + KotorCLI `--ncs-strref-min`; **4** NcsConsti threshold/cache tests + **2** CLI subprocess tests `[REPO]` (plans **086**/**095**/**099**/**292**–**294**, 2026-05-28) |
+| NCS CONSTI StrRef vs 2DA-memory threshold disambiguation | Partial — threshold + opcode-context v1 (`GetConstiUsageContext`, `ShouldIndexAsStrRefCandidate`); **14** NcsConsti tests + **2** CLI subprocess tests `[REPO]` (plans **086**/**095**/**099**/**292**–**294**/**303**, 2026-05-24) |
 | 2DA editor / ComboBox2DA row **Find References** | Green — `TwoDAMemoryReferenceHelper` + `OdyTool2DA` context menu (plans 083, 200) `[REPO]` |
 | KotorDiff in-app (Tools menu) | Green — shared `KotorDiffApp` host `[REPO]` (2026-05-24) |
 | Indoor Map Builder Build/Save/Open | Partial — headless build + WOK AreaModel tests; in-game walkmesh **Unverified** `[OPEN]` |
