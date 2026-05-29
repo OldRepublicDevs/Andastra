@@ -86,6 +86,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 304 | [304-chore-merge-pr17-post-merge-tracker-plan.md](2026-05-28-304-chore-merge-pr17-post-merge-tracker-plan.md) | Merge PR #17 + post-merge tracker sync |
 | 305 | [305-feat-ncs-consti-action-signature-plan.md](2026-05-24-305-feat-ncs-consti-action-signature-plan.md) | NCS CONSTI action-signature StrRef slot matching |
 | 306 | [306-chore-merge-pr19-post-merge-tracker-plan.md](2026-05-28-306-chore-merge-pr19-post-merge-tracker-plan.md) | Merge PR #19 + post-merge tracker sync |
+| 307 | [307-feat-ncs-consti-stack-store-heuristic-plan.md](2026-05-28-307-feat-ncs-consti-stack-store-heuristic-plan.md) | NCS CONSTI stack-store / CPTOPSP run-break heuristics |
 
 ## Repo implications
 
