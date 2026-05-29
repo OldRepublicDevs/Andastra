@@ -21,6 +21,27 @@ namespace BioWare.Tools
             public int Value;
         }
 
+        /// <summary>
+        /// Heuristic classification of how a CONSTI operand is used in the next instruction.
+        /// </summary>
+        public enum ConstiUsageContext
+        {
+            Unknown = 0,
+            StrRefConsumer = 1,
+            GenericInteger = 2
+        }
+
+        /// <summary>
+        /// NWScript ACTION indices whose first stack argument is a TLK StrRef (K1/TSL shared table).
+        /// </summary>
+        private static readonly int[] StrRefConsumerActionIds =
+        {
+            239, // GetStringByStrRef
+            240, // ActionSpeakStringByStrRef
+            671, // BarkString
+            700  // ActionBarkString
+        };
+
         public static List<ConstiInstruction> ExtractConstiInstructions(byte[] ncsData)
         {
             var instructions = new List<ConstiInstruction>();
@@ -105,6 +126,145 @@ namespace BioWare.Tools
         public static bool IsPlausibleStrRefCandidate(int value, int minimum)
         {
             return value >= minimum;
+        }
+
+        public static ConstiUsageContext GetConstiUsageContext(byte[] ncsData, ConstiInstruction instruction)
+        {
+            if (ncsData == null)
+            {
+                return ConstiUsageContext.Unknown;
+            }
+
+            int nextOffset = instruction.ValueByteOffset + 4;
+            if (nextOffset + 2 > ncsData.Length)
+            {
+                return ConstiUsageContext.Unknown;
+            }
+
+            byte opcode = ncsData[nextOffset];
+            byte qualifier = ncsData[nextOffset + 1];
+
+            if (IsGenericIntegerConsumerOpcode(opcode, qualifier))
+            {
+                return ConstiUsageContext.GenericInteger;
+            }
+
+            int actionId;
+            if (TryFindStrRefConsumerActionAfterConstiRun(ncsData, instruction, out actionId))
+            {
+                return ConstiUsageContext.StrRefConsumer;
+            }
+
+            return ConstiUsageContext.Unknown;
+        }
+
+        private static bool TryFindStrRefConsumerActionAfterConstiRun(
+            byte[] ncsData,
+            ConstiInstruction instruction,
+            out int actionId)
+        {
+            actionId = -1;
+            int constiOpcodeOffset = instruction.ValueByteOffset - 2;
+            if (constiOpcodeOffset < 0)
+            {
+                return false;
+            }
+
+            if (HasConstiInstructionImmediatelyBefore(ncsData, constiOpcodeOffset))
+            {
+                return false;
+            }
+
+            int scanOffset = instruction.ValueByteOffset + 4;
+            int maxScanEnd = Math.Min(ncsData.Length, scanOffset + 16);
+            while (scanOffset + 2 <= maxScanEnd)
+            {
+                byte opcode = ncsData[scanOffset];
+                byte qualifier = ncsData[scanOffset + 1];
+
+                if (opcode == 0x05)
+                {
+                    if (scanOffset + 4 > ncsData.Length)
+                    {
+                        return false;
+                    }
+
+                    actionId = (ncsData[scanOffset + 2] << 8) | ncsData[scanOffset + 3];
+                    return IsStrRefConsumerAction(actionId);
+                }
+
+                if (opcode == 0x04 && qualifier == 0x03)
+                {
+                    scanOffset += 6;
+                    continue;
+                }
+
+                break;
+            }
+
+            return false;
+        }
+
+        private static bool HasConstiInstructionImmediatelyBefore(byte[] ncsData, int constiOpcodeOffset)
+        {
+            int previousOffset = constiOpcodeOffset - 6;
+            if (previousOffset < 13)
+            {
+                return false;
+            }
+
+            return ncsData[previousOffset] == 0x04 && ncsData[previousOffset + 1] == 0x03;
+        }
+
+        public static bool ShouldIndexAsStrRefCandidate(byte[] ncsData, ConstiInstruction instruction, int minimum)
+        {
+            if (instruction.Value < 0)
+            {
+                return false;
+            }
+
+            ConstiUsageContext context = GetConstiUsageContext(ncsData, instruction);
+            if (context == ConstiUsageContext.GenericInteger)
+            {
+                return false;
+            }
+
+            if (context == ConstiUsageContext.StrRefConsumer)
+            {
+                return true;
+            }
+
+            return IsPlausibleStrRefCandidate(instruction.Value, minimum);
+        }
+
+        private static bool IsStrRefConsumerAction(int actionId)
+        {
+            for (int i = 0; i < StrRefConsumerActionIds.Length; i++)
+            {
+                if (StrRefConsumerActionIds[i] == actionId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsGenericIntegerConsumerOpcode(byte opcode, byte qualifier)
+        {
+            // Comparison ops (LT/GT/EQUAL/etc.) — qualifiers vary by operand types (0x03 int-int, 0x20 mixed, etc.).
+            if (opcode >= 0x0B && opcode <= 0x10)
+            {
+                return true;
+            }
+
+            // Integer arithmetic / bitwise immediately consuming the CONSTI stack value.
+            if (opcode >= 0x06 && opcode <= 0x18 && (qualifier == 0x03 || qualifier == 0x20 || qualifier == 0x23))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         internal static void SkipInstructionPayload(RawBinaryReader reader, byte opcode, byte qualifier)
