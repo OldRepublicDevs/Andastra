@@ -139,6 +139,15 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Plans | **311**–**312** (merge + tracker sync **312**) |
 | CI on merge | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
 
+## PR #27 outcome
+
+| Item | Status |
+|------|--------|
+| Merge | **Merged** to `master` 2026-05-29 @ `76855e679` via [PR #27](https://github.com/th3w1zard1/Andastra/pull/27) `[REPO]` |
+| Scope | NCS CONSTI multi-hop local StrRef trace (plan **313**): chained `CPTOPSP`→`CPDOWNSP` relay for `n→m→ACTION`, **31** NcsConsti tests |
+| Plans | **313**–**314** (merge + tracker sync **314**) |
+| CI on merge | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
+
 ## Local validation (green path)
 
 | Check | Command / artifact | Status |
@@ -168,13 +177,13 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (313+)
+## Suggested next slices (315+)
 
 | Plan | Topic |
 |------|-------|
-| 313 | Multi-hop local variable StrRef trace (`n→m→ACTION`) or CPTOPBP scan alignment optimization |
-| 313+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
-| 313+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 315 | Instruction-aligned `CPTOPBP` scan optimization (plan 311 follow-on) |
+| 315+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
+| 315+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
 
 ## Repo implications
 
