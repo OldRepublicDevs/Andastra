@@ -1,8 +1,9 @@
 ---
 title: "refactor: NCS CONSTI GetInstructionSizeAt walk hardening"
 type: refactor
-status: in_progress
+status: complete
 date: 2026-05-29
+completed: 2026-05-29
 origin: docs/plans/2026-05-29-318-chore-merge-pr31-post-merge-tracker-plan.md
 branch: feat/plan-319-ncs-instruction-size-hardening
 ---
@@ -15,8 +16,8 @@ Close CONSTI scanner maintenance gap: `GetInstructionSizeAt` returned **0** for 
 
 ## Requirements
 
-- R1. Unknown/unlisted NCS opcodes return size **2** instead of **0** in `GetInstructionSizeAt`.
-- R2. Remove duplicate `0x02` branch (no behavior change).
+- R1. Add `GetInstructionStepSizeAt` for BP full-file walks: unknown opcodes step **2** bytes (align `NCSActionPatcher`); keep `GetInstructionSizeAt` returning **0** for unknown so forward/relay scans abort safely.
+- R2. Remove duplicate `0x02` branch; merge `0x2D` into shared 2-byte opcode group (no behavior change).
 - R3. All **33** NcsConsti tests pass.
 - R4. Update plan **063** CONSTI note.
 
