@@ -480,6 +480,25 @@ namespace BioWare.Tools
                         {
                             return true;
                         }
+
+                        if (opcode == 0x03
+                            && scanOffset + 16 <= scanLimit
+                            && ncsData[scanOffset + 8] == 0x01)
+                        {
+                            int relayStoreOffset;
+                            int relayStoreSize;
+                            if (TryReadStackCopyOperands(ncsData, scanOffset + 8, out relayStoreOffset, out relayStoreSize)
+                                && relayStoreSize == storeSize
+                                && TryFindStrRefConsumerViaStackReload(
+                                    ncsData,
+                                    storedConsti,
+                                    scanOffset + 8,
+                                    relayStoreOffset,
+                                    relayStoreSize))
+                            {
+                                return true;
+                            }
+                        }
                     }
                 }
 
