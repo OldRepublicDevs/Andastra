@@ -1,8 +1,9 @@
 ---
 title: "feat: NCS CONSTI deep multi-hop local StrRef trace"
 type: feat
-status: in_progress
+status: complete
 date: 2026-05-29
+completed: 2026-05-29
 origin: docs/plans/2026-05-29-313-feat-ncs-consti-multihop-local-strref-plan.md
 branch: feat/plan-317-deep-multihop-local-strref
 ---
