@@ -297,5 +297,112 @@ namespace BioWare.Tests
             Assert.That(NcsConstiScanner.IsPlausibleStrRefCandidate(100), Is.True);
             Assert.That(NcsConstiScanner.IsPlausibleStrRefCandidate(424242), Is.True);
         }
+
+        [Test]
+        public void GetConstiUsageContext_StrRefAction_ReturnsStrRefConsumer()
+        {
+            const int smallStrRef = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { ActionSpeakStringByStrRef(" + smallStrRef + "); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == smallStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+            Assert.That(NcsConstiScanner.ShouldIndexAsStrRefCandidate(bytes, match, NcsConstiScanner.StrRefCandidateMinimum), Is.True);
+        }
+
+        [Test]
+        public void StrRefReferenceCache_StrRefActionSmallLiteral_IsIndexed()
+        {
+            const int smallStrRef = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { ActionSpeakStringByStrRef(" + smallStrRef + "); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-strref-action-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(smallStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_ComparisonLiteral_ReturnsGenericInteger()
+        {
+            const int bound = 150;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { if (0 < " + bound + ") {} }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = default(NcsConstiScanner.ConstiInstruction);
+            bool found = false;
+            for (int i = 0; i < instructions.Count; i++)
+            {
+                if (instructions[i].Value == bound)
+                {
+                    match = instructions[i];
+                    found = true;
+                    break;
+                }
+            }
+
+            Assert.That(found, Is.True, "Expected CONSTI literal " + bound);
+            int nextOffset = match.ValueByteOffset + 4;
+            byte nextOpcode = bytes[nextOffset];
+            byte nextQualifier = bytes[nextOffset + 1];
+            Assert.That(
+                NcsConstiScanner.GetConstiUsageContext(bytes, match),
+                Is.EqualTo(NcsConstiScanner.ConstiUsageContext.GenericInteger),
+                "Next opcode 0x" + nextOpcode.ToString("X2") + " qualifier 0x" + nextQualifier.ToString("X2"));
+            Assert.That(NcsConstiScanner.ShouldIndexAsStrRefCandidate(bytes, match, NcsConstiScanner.StrRefCandidateMinimum), Is.False);
+        }
+
+        [Test]
+        public void StrRefReferenceCache_ComparisonLiteral_IsNotIndexed()
+        {
+            const int bound = 150;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { if (0 < " + bound + ") {} }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-loop-bound-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(bound), Is.False);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
     }
 }
