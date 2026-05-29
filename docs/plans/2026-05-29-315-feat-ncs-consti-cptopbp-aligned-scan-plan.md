@@ -1,8 +1,9 @@
 ---
 title: "feat: NCS CONSTI instruction-aligned CPTOPBP scan"
 type: feat
-status: in_progress
+status: complete
 date: 2026-05-29
+completed: 2026-05-29
 origin: docs/plans/2026-05-29-311-feat-ncs-consti-cptopbp-global-strref-plan.md
 branch: feat/plan-315-cptopbp-aligned-scan
 ---
@@ -16,6 +17,7 @@ Optimize plan **311** `TryFindStrRefConsumerViaBpReload`: replace byte-by-byte `
 ## Requirements
 
 - R1. Walk NCS from offset 13 using `GetInstructionSizeAt`; only evaluate `CPTOPBP` (0x27) at instruction boundaries.
+- R1b. Extend `GetInstructionSizeAt` for `RETN`, `NOTx`, `SAVEBP`, `RESTOREBP` so cross-subroutine files scan completely.
 - R2. Preserve plan **311** behavior: matching BP offset/size + StrRef ACTION slot validation.
 - R3. All **31** existing NcsConsti tests pass.
 - R4. Update plan **063** note.
