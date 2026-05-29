@@ -166,6 +166,16 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Plans | **317**–**318** (merge + tracker sync **318**) |
 | CI on merge | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
 
+## PR #33 pending
+
+| Item | Status |
+|------|--------|
+| Merge | **Open** — [PR #33](https://github.com/th3w1zard1/Andastra/pull/33) awaiting merge to `master` `[REPO]` |
+| Scope | NCS CONSTI `GetInstructionSizeAt` walk hardening (plan **319**): `GetInstructionStepSizeAt` for BP full-file walks; unknown opcodes step 2 bytes in BP path only; `GetInstructionSizeAt` still returns 0 for unknown in forward/relay scans; **33** NcsConsti tests |
+| Plans | **319**–**320** (feature + pending tracker sync **320**) |
+| CI on PR | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
+| Post-merge | Promote this section to outcome with merge SHA when PR #33 lands |
+
 ## Local validation (green path)
 
 | Check | Command / artifact | Status |
@@ -195,13 +205,14 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (319+)
+## Suggested next slices (321+)
 
 | Plan | Topic |
 |------|-------|
-| 319+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
-| 319+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
-| 319+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
+| 321+ | Promote PR #33 pending → outcome in tracker after merge |
+| 321+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
+| 321+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 321+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
 
 ## Repo implications
 
