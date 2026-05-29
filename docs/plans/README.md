@@ -1,6 +1,6 @@
 # LFG Plan Index (2026-05-23)
 
-Vertical slices: [PR #2](https://github.com/th3w1zard1/Andastra/pull/2) (plans 001–048) and [PR #3](https://github.com/th3w1zard1/Andastra/pull/3) (plans 049–055) merged to `master` 2026-05-24. [PR #12](https://github.com/th3w1zard1/Andastra/pull/12) (plans 291–298), [PR #13](https://github.com/th3w1zard1/Andastra/pull/13) (plan 299), and [PR #14](https://github.com/th3w1zard1/Andastra/pull/14) (plan 300) merged 2026-05-28. Maintenance tracker: [pr-merge-readiness.md](../knowledgebase/90-meta/pr-merge-readiness.md).
+Vertical slices: [PR #2](https://github.com/th3w1zard1/Andastra/pull/2) (plans 001–048) and [PR #3](https://github.com/th3w1zard1/Andastra/pull/3) (plans 049–055) merged to `master` 2026-05-24. [PR #12](https://github.com/th3w1zard1/Andastra/pull/12) (plans 291–298), [PR #13](https://github.com/th3w1zard1/Andastra/pull/13) (plan 299), [PR #14](https://github.com/th3w1zard1/Andastra/pull/14) (plan 300), and [PR #15](https://github.com/th3w1zard1/Andastra/pull/15) (plan 301) merged 2026-05-28. Maintenance tracker: [pr-merge-readiness.md](../knowledgebase/90-meta/pr-merge-readiness.md).
 
 Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 
@@ -81,6 +81,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 299 | [299-chore-merge-pr12-post-merge-tracker-plan.md](2026-05-28-299-chore-merge-pr12-post-merge-tracker-plan.md) | Merge PR #12 + post-merge tracker sync |
 | 300 | [300-chore-merge-pr13-post-merge-tracker-plan.md](2026-05-28-300-chore-merge-pr13-post-merge-tracker-plan.md) | Merge PR #13 + post-merge tracker sync |
 | 301 | [301-chore-merge-pr14-post-merge-tracker-plan.md](2026-05-28-301-chore-merge-pr14-post-merge-tracker-plan.md) | Merge PR #14 + post-merge tracker sync |
+| 302 | [302-chore-merge-pr15-post-merge-tracker-plan.md](2026-05-28-302-chore-merge-pr15-post-merge-tracker-plan.md) | Merge PR #15 + post-merge tracker sync |
 
 ## Repo implications
 
