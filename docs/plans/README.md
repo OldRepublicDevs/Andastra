@@ -1,6 +1,6 @@
 # LFG Plan Index (2026-05-23)
 
-Vertical slices: [PR #2](https://github.com/th3w1zard1/Andastra/pull/2) (plans 001–048) and [PR #3](https://github.com/th3w1zard1/Andastra/pull/3) (plans 049–055) merged to `master` 2026-05-24. [PR #12](https://github.com/th3w1zard1/Andastra/pull/12) (plans 291–298), [PR #13](https://github.com/th3w1zard1/Andastra/pull/13) (plan 299), [PR #14](https://github.com/th3w1zard1/Andastra/pull/14) (plan 300), [PR #15](https://github.com/th3w1zard1/Andastra/pull/15) (plan 301), [PR #16](https://github.com/th3w1zard1/Andastra/pull/16) (plan 302), [PR #17](https://github.com/th3w1zard1/Andastra/pull/17) (plan 303), [PR #18](https://github.com/th3w1zard1/Andastra/pull/18) (plan 304), [PR #19](https://github.com/th3w1zard1/Andastra/pull/19) (plan 305), [PR #21](https://github.com/th3w1zard1/Andastra/pull/21) (plan 307), [PR #22](https://github.com/th3w1zard1/Andastra/pull/22) (plan 308), [PR #23](https://github.com/th3w1zard1/Andastra/pull/23) (plan 309), and [PR #25](https://github.com/th3w1zard1/Andastra/pull/25) (plan 311) merged 2026-05-29. Maintenance tracker: [pr-merge-readiness.md](../knowledgebase/90-meta/pr-merge-readiness.md).
+Vertical slices: [PR #2](https://github.com/th3w1zard1/Andastra/pull/2) (plans 001–048) and [PR #3](https://github.com/th3w1zard1/Andastra/pull/3) (plans 049–055) merged to `master` 2026-05-24. [PR #12](https://github.com/th3w1zard1/Andastra/pull/12) (plans 291–298), [PR #13](https://github.com/th3w1zard1/Andastra/pull/13) (plan 299), [PR #14](https://github.com/th3w1zard1/Andastra/pull/14) (plan 300), [PR #15](https://github.com/th3w1zard1/Andastra/pull/15) (plan 301), [PR #16](https://github.com/th3w1zard1/Andastra/pull/16) (plan 302), [PR #17](https://github.com/th3w1zard1/Andastra/pull/17) (plan 303), [PR #18](https://github.com/th3w1zard1/Andastra/pull/18) (plan 304), [PR #19](https://github.com/th3w1zard1/Andastra/pull/19) (plan 305), [PR #21](https://github.com/th3w1zard1/Andastra/pull/21) (plan 307), [PR #22](https://github.com/th3w1zard1/Andastra/pull/22) (plan 308), [PR #23](https://github.com/th3w1zard1/Andastra/pull/23) (plan 309), and [PR #25](https://github.com/th3w1zard1/Andastra/pull/25) (plan 311) merged 2026-05-29. [pr-merge-readiness.md](../knowledgebase/90-meta/pr-merge-readiness.md).
 
 Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 
@@ -92,6 +92,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 310 | [310-chore-merge-pr23-post-merge-tracker-plan.md](2026-05-29-310-chore-merge-pr23-post-merge-tracker-plan.md) | Merge PR #23 + post-merge tracker sync |
 | 311 | [311-feat-ncs-consti-cptopbp-global-strref-plan.md](2026-05-29-311-feat-ncs-consti-cptopbp-global-strref-plan.md) | NCS CONSTI global StrRef CPTOPBP cross-subroutine trace |
 | 312 | [312-chore-merge-pr25-post-merge-tracker-plan.md](2026-05-29-312-chore-merge-pr25-post-merge-tracker-plan.md) | Merge PR #25 + post-merge tracker sync |
+| 313 | [313-feat-ncs-consti-multihop-local-strref-plan.md](2026-05-29-313-feat-ncs-consti-multihop-local-strref-plan.md) | NCS CONSTI multi-hop local StrRef trace (n→m→ACTION) |
 
 ## Repo implications
 
