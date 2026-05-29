@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using BioWare.Common;
+using BioWare.Common.Script;
 
 namespace BioWare.Tools
 {
@@ -32,15 +33,45 @@ namespace BioWare.Tools
         }
 
         /// <summary>
-        /// NWScript ACTION indices whose first stack argument is a TLK StrRef (K1/TSL shared table).
+        /// NWScript ACTION indices with int StrRef parameters, mapped to parameter indices (from ScriptDefs).
         /// </summary>
-        private static readonly int[] StrRefConsumerActionIds =
+        private static readonly Dictionary<int, int[]> StrRefParamIndicesByActionId = BuildStrRefParamIndicesByActionId();
+
+        private static Dictionary<int, int[]> BuildStrRefParamIndicesByActionId()
         {
-            239, // GetStringByStrRef
-            240, // ActionSpeakStringByStrRef
-            671, // BarkString
-            700  // ActionBarkString
-        };
+            var map = new Dictionary<int, int[]>();
+            List<ScriptFunction> functions = ScriptDefs.KOTOR_FUNCTIONS;
+            for (int actionId = 0; actionId < functions.Count; actionId++)
+            {
+                ScriptFunction function = functions[actionId];
+                var indices = new List<int>();
+                for (int paramIndex = 0; paramIndex < function.Params.Count; paramIndex++)
+                {
+                    ScriptParam param = function.Params[paramIndex];
+                    if (param.DataType == DataType.Int && IsStrRefParameterName(param.Name))
+                    {
+                        indices.Add(paramIndex);
+                    }
+                }
+
+                if (indices.Count > 0)
+                {
+                    map[actionId] = indices.ToArray();
+                }
+            }
+
+            return map;
+        }
+
+        private static bool IsStrRefParameterName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return false;
+            }
+
+            return name.IndexOf("strref", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
 
         public static List<ConstiInstruction> ExtractConstiInstructions(byte[] ncsData)
         {
@@ -150,7 +181,9 @@ namespace BioWare.Tools
             }
 
             int actionId;
-            if (TryFindStrRefConsumerActionAfterConstiRun(ncsData, instruction, out actionId))
+            List<ActionStackSlot> stackSlots;
+            if (TryGetActionArgumentRun(ncsData, instruction, out actionId, out stackSlots)
+                && IsConstiAtStrRefParameterSlot(actionId, instruction.ValueByteOffset, stackSlots))
             {
                 return ConstiUsageContext.StrRefConsumer;
             }
@@ -158,45 +191,80 @@ namespace BioWare.Tools
             return ConstiUsageContext.Unknown;
         }
 
-        private static bool TryFindStrRefConsumerActionAfterConstiRun(
+        private struct ActionStackSlot
+        {
+            public bool IsIntConst;
+            public int ValueByteOffset;
+        }
+
+        private static bool TryGetActionArgumentRun(
             byte[] ncsData,
-            ConstiInstruction instruction,
-            out int actionId)
+            ConstiInstruction fromInstruction,
+            out int actionId,
+            out List<ActionStackSlot> stackSlots)
         {
             actionId = -1;
-            int constiOpcodeOffset = instruction.ValueByteOffset - 2;
+            stackSlots = new List<ActionStackSlot>();
+
+            int constiOpcodeOffset = fromInstruction.ValueByteOffset - 2;
             if (constiOpcodeOffset < 0)
             {
                 return false;
             }
 
-            if (HasConstiInstructionImmediatelyBefore(ncsData, constiOpcodeOffset))
+            int runStart = constiOpcodeOffset;
+            while (runStart > 13)
             {
-                return false;
+                int previousStart = runStart - 6;
+                if (previousStart < 13 || !IsConstantPushAt(ncsData, previousStart))
+                {
+                    break;
+                }
+
+                int previousSize = GetConstantPushInstructionSizeAt(ncsData, previousStart);
+                if (previousSize <= 0 || previousStart + previousSize != runStart)
+                {
+                    break;
+                }
+
+                runStart = previousStart;
             }
 
-            int scanOffset = instruction.ValueByteOffset + 4;
-            int maxScanEnd = Math.Min(ncsData.Length, scanOffset + 16);
-            while (scanOffset + 2 <= maxScanEnd)
+            int scanOffset = runStart;
+            while (scanOffset + 2 <= ncsData.Length)
             {
                 byte opcode = ncsData[scanOffset];
                 byte qualifier = ncsData[scanOffset + 1];
 
-                if (opcode == 0x05)
-                {
-                    if (scanOffset + 4 > ncsData.Length)
-                    {
-                        return false;
-                    }
-
-                    actionId = (ncsData[scanOffset + 2] << 8) | ncsData[scanOffset + 3];
-                    return IsStrRefConsumerAction(actionId);
-                }
-
                 if (opcode == 0x04 && qualifier == 0x03)
                 {
+                    stackSlots.Add(new ActionStackSlot
+                    {
+                        IsIntConst = true,
+                        ValueByteOffset = scanOffset + 2
+                    });
                     scanOffset += 6;
                     continue;
+                }
+
+                if (opcode == 0x04 && (qualifier == 0x04 || qualifier == 0x06))
+                {
+                    stackSlots.Add(new ActionStackSlot { IsIntConst = false, ValueByteOffset = -1 });
+                    scanOffset += GetConstantPushInstructionSizeAt(ncsData, scanOffset);
+                    continue;
+                }
+
+                if (opcode == 0x04 && qualifier == 0x05)
+                {
+                    stackSlots.Add(new ActionStackSlot { IsIntConst = false, ValueByteOffset = -1 });
+                    scanOffset += GetConstantPushInstructionSizeAt(ncsData, scanOffset);
+                    continue;
+                }
+
+                if (opcode == 0x05 && scanOffset + 4 <= ncsData.Length)
+                {
+                    actionId = (ncsData[scanOffset + 2] << 8) | ncsData[scanOffset + 3];
+                    return StrRefParamIndicesByActionId.ContainsKey(actionId);
                 }
 
                 break;
@@ -205,15 +273,79 @@ namespace BioWare.Tools
             return false;
         }
 
-        private static bool HasConstiInstructionImmediatelyBefore(byte[] ncsData, int constiOpcodeOffset)
+        private static bool IsConstantPushAt(byte[] ncsData, int opcodeOffset)
         {
-            int previousOffset = constiOpcodeOffset - 6;
-            if (previousOffset < 13)
+            return GetConstantPushInstructionSizeAt(ncsData, opcodeOffset) > 0;
+        }
+
+        private static int GetConstantPushInstructionSizeAt(byte[] ncsData, int opcodeOffset)
+        {
+            if (opcodeOffset + 2 > ncsData.Length)
+            {
+                return 0;
+            }
+
+            byte opcode = ncsData[opcodeOffset];
+            byte qualifier = ncsData[opcodeOffset + 1];
+            if (opcode != 0x04)
+            {
+                return 0;
+            }
+
+            if (qualifier == 0x03 || qualifier == 0x04 || qualifier == 0x06)
+            {
+                return 6;
+            }
+
+            if (qualifier == 0x05)
+            {
+                if (opcodeOffset + 4 > ncsData.Length)
+                {
+                    return 0;
+                }
+
+                ushort strLen = (ushort)((ncsData[opcodeOffset + 2] << 8) | ncsData[opcodeOffset + 3]);
+                return 4 + strLen;
+            }
+
+            return 0;
+        }
+
+        private static bool IsConstiAtStrRefParameterSlot(int actionId, int valueByteOffset, List<ActionStackSlot> stackSlots)
+        {
+            int[] strRefParamIndices;
+            if (!StrRefParamIndicesByActionId.TryGetValue(actionId, out strRefParamIndices)
+                || strRefParamIndices.Length == 0
+                || stackSlots.Count == 0)
             {
                 return false;
             }
 
-            return ncsData[previousOffset] == 0x04 && ncsData[previousOffset + 1] == 0x03;
+            int slotIndex = -1;
+            for (int i = 0; i < stackSlots.Count; i++)
+            {
+                if (stackSlots[i].IsIntConst && stackSlots[i].ValueByteOffset == valueByteOffset)
+                {
+                    slotIndex = i;
+                    break;
+                }
+            }
+
+            if (slotIndex < 0)
+            {
+                return false;
+            }
+
+            int paramIndex = slotIndex;
+            for (int i = 0; i < strRefParamIndices.Length; i++)
+            {
+                if (strRefParamIndices[i] == paramIndex)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public static bool ShouldIndexAsStrRefCandidate(byte[] ncsData, ConstiInstruction instruction, int minimum)
@@ -235,19 +367,6 @@ namespace BioWare.Tools
             }
 
             return IsPlausibleStrRefCandidate(instruction.Value, minimum);
-        }
-
-        private static bool IsStrRefConsumerAction(int actionId)
-        {
-            for (int i = 0; i < StrRefConsumerActionIds.Length; i++)
-            {
-                if (StrRefConsumerActionIds[i] == actionId)
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         private static bool IsGenericIntegerConsumerOpcode(byte opcode, byte qualifier)
