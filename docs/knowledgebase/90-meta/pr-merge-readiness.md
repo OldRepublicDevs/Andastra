@@ -85,6 +85,15 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Plans | **301**–**302** (merge + tracker sync **302**) |
 | CI on merge | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
 
+## PR #16 outcome
+
+| Item | Status |
+|------|--------|
+| Merge | **Merged** to `master` 2026-05-28 @ `75fc00744` via [PR #16](https://github.com/th3w1zard1/Andastra/pull/16) `[REPO]` |
+| Scope | Post-PR-#15 tracker sync (plan **302**): PR #15 outcome, plan index, plan **063** milestone |
+| Plans | **302** |
+| CI on merge | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
+
 ## Local validation (green path)
 
 | Check | Command / artifact | Status |
@@ -114,12 +123,12 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (302+)
+## Suggested next slices (304+)
 
 | Plan | Topic |
 |------|-------|
-| 302+ | Opcode-context CONSTI disambiguation (StrRef vs 2DA-memory) per plan **063** |
-| 302+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 304+ | Deep CONSTI action-signature / stack analysis per plan **063** |
+| 304+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
 
 ## Repo implications
 
