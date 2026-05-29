@@ -84,6 +84,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 302 | [302-chore-merge-pr15-post-merge-tracker-plan.md](2026-05-28-302-chore-merge-pr15-post-merge-tracker-plan.md) | Merge PR #15 + post-merge tracker sync |
 | 303 | [303-feat-ncs-consti-opcode-context-disambiguation-plan.md](2026-05-24-303-feat-ncs-consti-opcode-context-disambiguation-plan.md) | NCS CONSTI opcode-context StrRef disambiguation v1 |
 | 304 | [304-chore-merge-pr17-post-merge-tracker-plan.md](2026-05-28-304-chore-merge-pr17-post-merge-tracker-plan.md) | Merge PR #17 + post-merge tracker sync |
+| 305 | [305-feat-ncs-consti-action-signature-plan.md](2026-05-24-305-feat-ncs-consti-action-signature-plan.md) | NCS CONSTI action-signature StrRef slot matching |
 
 ## Repo implications
 
