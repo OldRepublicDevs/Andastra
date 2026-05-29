@@ -29,7 +29,8 @@ namespace BioWare.Tools
         {
             Unknown = 0,
             StrRefConsumer = 1,
-            GenericInteger = 2
+            GenericInteger = 2,
+            StackStored = 3
         }
 
         /// <summary>
@@ -180,6 +181,11 @@ namespace BioWare.Tools
                 return ConstiUsageContext.GenericInteger;
             }
 
+            if (IsStackStoreOpcode(opcode))
+            {
+                return ConstiUsageContext.StackStored;
+            }
+
             int actionId;
             List<ActionStackSlot> stackSlots;
             if (TryGetActionArgumentRun(ncsData, instruction, out actionId, out stackSlots)
@@ -259,6 +265,11 @@ namespace BioWare.Tools
                     stackSlots.Add(new ActionStackSlot { IsIntConst = false, ValueByteOffset = -1 });
                     scanOffset += GetConstantPushInstructionSizeAt(ncsData, scanOffset);
                     continue;
+                }
+
+                if (IsStackSpillOrLoadOpcode(opcode))
+                {
+                    return false;
                 }
 
                 if (opcode == 0x05 && scanOffset + 4 <= ncsData.Length)
@@ -356,7 +367,7 @@ namespace BioWare.Tools
             }
 
             ConstiUsageContext context = GetConstiUsageContext(ncsData, instruction);
-            if (context == ConstiUsageContext.GenericInteger)
+            if (context == ConstiUsageContext.GenericInteger || context == ConstiUsageContext.StackStored)
             {
                 return false;
             }
@@ -384,6 +395,16 @@ namespace BioWare.Tools
             }
 
             return false;
+        }
+
+        private static bool IsStackStoreOpcode(byte opcode)
+        {
+            return opcode == 0x01 || opcode == 0x26;
+        }
+
+        private static bool IsStackSpillOrLoadOpcode(byte opcode)
+        {
+            return opcode == 0x01 || opcode == 0x03 || opcode == 0x26 || opcode == 0x27;
         }
 
         internal static void SkipInstructionPayload(RawBinaryReader reader, byte opcode, byte qualifier)
