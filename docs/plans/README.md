@@ -1,6 +1,6 @@
 # LFG Plan Index (2026-05-23)
 
-Vertical slices: [PR #2](https://github.com/th3w1zard1/Andastra/pull/2) (plans 001–048) and [PR #3](https://github.com/th3w1zard1/Andastra/pull/3) (plans 049–055) merged to `master` 2026-05-24. [PR #4](https://github.com/th3w1zard1/Andastra/pull/4) (plans 056+) open on `docs/post-pr3-tracker-sync`. Maintenance tracker: [pr-merge-readiness.md](../knowledgebase/90-meta/pr-merge-readiness.md).
+Vertical slices: [PR #2](https://github.com/th3w1zard1/Andastra/pull/2) (plans 001–048) and [PR #3](https://github.com/th3w1zard1/Andastra/pull/3) (plans 049–055) merged to `master` 2026-05-24. [PR #12](https://github.com/th3w1zard1/Andastra/pull/12) (plans 291–298) merged 2026-05-28. Maintenance tracker: [pr-merge-readiness.md](../knowledgebase/90-meta/pr-merge-readiness.md).
 
 Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 
@@ -78,6 +78,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 069 | [069-feat-holocron-u3-walkmesh-u6-utd-utp-utt-plan.md](2026-05-24-069-feat-holocron-u3-walkmesh-u6-utd-utp-utt-plan.md) | Walkmesh tests + UTD/UTP/UTT ref finder |
 | 297 | [297-feat-odypatch-validate-cli-test-plan.md](2026-05-28-297-feat-odypatch-validate-cli-test-plan.md) | OdyPatch `--validate` subprocess test project |
 | 298 | [298-chore-pr12-merge-readiness-post-297-plan.md](2026-05-28-298-chore-pr12-merge-readiness-post-297-plan.md) | PR #12 merge readiness post-plan-297 |
+| 299 | [299-chore-merge-pr12-post-merge-tracker-plan.md](2026-05-28-299-chore-merge-pr12-post-merge-tracker-plan.md) | Merge PR #12 + post-merge tracker sync |
 
 ## Repo implications
 
