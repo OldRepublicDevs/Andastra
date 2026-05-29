@@ -439,6 +439,53 @@ namespace BioWare.Tools
         }
 
         private const int VariableStrRefForwardScanLimitBytes = 128;
+        private const int RelayStoreDiscoveryLimitBytes = 32;
+
+        private static bool TryFindNextCpdownspAfterLoad(
+            byte[] ncsData,
+            int afterLoadOpcodeOffset,
+            int scanLimit,
+            out int storeOpcodeOffset,
+            out int storeOffset,
+            out int storeSize)
+        {
+            storeOpcodeOffset = 0;
+            storeOffset = 0;
+            storeSize = 0;
+
+            int loadInstructionSize = GetInstructionSizeAt(ncsData, afterLoadOpcodeOffset);
+            if (loadInstructionSize <= 0)
+            {
+                return false;
+            }
+
+            int offset = afterLoadOpcodeOffset + loadInstructionSize;
+            int limit = Math.Min(scanLimit, afterLoadOpcodeOffset + RelayStoreDiscoveryLimitBytes);
+            while (offset + 8 <= limit)
+            {
+                if (ncsData[offset] == 0x01)
+                {
+                    if (TryReadStackCopyOperands(ncsData, offset, out storeOffset, out storeSize)
+                        && storeSize == 4)
+                    {
+                        storeOpcodeOffset = offset;
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                int instructionSize = GetInstructionSizeAt(ncsData, offset);
+                if (instructionSize <= 0)
+                {
+                    break;
+                }
+
+                offset += instructionSize;
+            }
+
+            return false;
+        }
 
         private static bool TryFindStrRefConsumerViaStackReload(
             byte[] ncsData,
@@ -481,18 +528,22 @@ namespace BioWare.Tools
                             return true;
                         }
 
-                        if (opcode == 0x03
-                            && scanOffset + 16 <= scanLimit
-                            && ncsData[scanOffset + 8] == 0x01)
+                        if (opcode == 0x03)
                         {
+                            int relayStoreOpcodeOffset;
                             int relayStoreOffset;
                             int relayStoreSize;
-                            if (TryReadStackCopyOperands(ncsData, scanOffset + 8, out relayStoreOffset, out relayStoreSize)
-                                && relayStoreSize == storeSize
+                            if (TryFindNextCpdownspAfterLoad(
+                                    ncsData,
+                                    scanOffset,
+                                    scanLimit,
+                                    out relayStoreOpcodeOffset,
+                                    out relayStoreOffset,
+                                    out relayStoreSize)
                                 && TryFindStrRefConsumerViaStackReload(
                                     ncsData,
                                     storedConsti,
-                                    scanOffset + 8,
+                                    relayStoreOpcodeOffset,
                                     relayStoreOffset,
                                     relayStoreSize))
                             {
