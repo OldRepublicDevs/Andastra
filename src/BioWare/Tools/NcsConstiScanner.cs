@@ -543,35 +543,41 @@ namespace BioWare.Tools
             }
 
             int scanLimit = ncsData.Length - 8;
-            for (int scanOffset = 13; scanOffset + 8 <= scanLimit; scanOffset++)
+            int scanOffset = 13;
+            while (scanOffset + 8 <= scanLimit)
             {
-                if (ncsData[scanOffset] != 0x27)
+                byte opcode = ncsData[scanOffset];
+                if (opcode == 0x27)
                 {
-                    continue;
+                    int loadOffset;
+                    int loadSize;
+                    if (TryReadStackCopyOperands(ncsData, scanOffset, out loadOffset, out loadSize)
+                        && loadSize == storeSize
+                        && loadOffset == storeOffset)
+                    {
+                        int actionId;
+                        List<ActionStackSlot> stackSlots;
+                        int argRunStart = FindActionArgumentRunStart(ncsData, scanOffset);
+                        if (TryGetActionArgumentRunFrom(
+                                ncsData,
+                                argRunStart,
+                                storedConsti.ValueByteOffset,
+                                out actionId,
+                                out stackSlots)
+                            && IsConstiAtStrRefParameterSlot(actionId, storedConsti.ValueByteOffset, stackSlots))
+                        {
+                            return true;
+                        }
+                    }
                 }
 
-                int loadOffset;
-                int loadSize;
-                if (!TryReadStackCopyOperands(ncsData, scanOffset, out loadOffset, out loadSize)
-                    || loadSize != storeSize
-                    || loadOffset != storeOffset)
+                int instructionSize = GetInstructionSizeAt(ncsData, scanOffset);
+                if (instructionSize <= 0)
                 {
-                    continue;
+                    break;
                 }
 
-                int actionId;
-                List<ActionStackSlot> stackSlots;
-                int argRunStart = FindActionArgumentRunStart(ncsData, scanOffset);
-                if (TryGetActionArgumentRunFrom(
-                        ncsData,
-                        argRunStart,
-                        storedConsti.ValueByteOffset,
-                        out actionId,
-                        out stackSlots)
-                    && IsConstiAtStrRefParameterSlot(actionId, storedConsti.ValueByteOffset, stackSlots))
-                {
-                    return true;
-                }
+                scanOffset += instructionSize;
             }
 
             return false;
@@ -754,6 +760,11 @@ namespace BioWare.Tools
                 opcode == 0x23 || opcode == 0x24 || opcode == 0x25 || opcode == 0x28 || opcode == 0x29)
             {
                 return 6;
+            }
+
+            if (opcode == 0x20 || opcode == 0x22 || opcode == 0x2A || opcode == 0x2B)
+            {
+                return 2;
             }
 
             if (opcode == 0x02)
