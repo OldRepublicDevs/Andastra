@@ -121,6 +121,15 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Plans | **307**–**308** (merge + tracker sync **308**) |
 | CI on merge | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
 
+## PR #23 outcome
+
+| Item | Status |
+|------|--------|
+| Merge | **Merged** to `master` 2026-05-29 @ `ced72418b` via [PR #23](https://github.com/th3w1zard1/Andastra/pull/23) `[REPO]` |
+| Scope | NCS CONSTI variable StrRef CPTOPSP forward trace (plan **309**): `MOVSP`-adjusted reload + StrRef ACTION slot match, **25** NcsConsti tests |
+| Plans | **309**–**310** (merge + tracker sync **310**) |
+| CI on merge | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
+
 ## Local validation (green path)
 
 | Check | Command / artifact | Status |
