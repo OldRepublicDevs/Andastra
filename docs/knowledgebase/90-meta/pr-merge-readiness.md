@@ -54,8 +54,17 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 |------|--------|
 | Merge | **Merged** to `master` 2026-05-28 @ `9860ada2a` via [PR #12](https://github.com/th3w1zard1/Andastra/pull/12) `[REPO]` |
 | Scope | Post-PR-#11 KB/CLI verification (**291**–**296**), OdyPatch `--validate` subprocess test (**297**), merge-readiness closure (**298**) |
-| Plans | **291**–**299** (merge + tracker sync **299**) |
+| Plans | **291**–**298** (merge-readiness **296**, **298**) |
 | Test coverage | KotorCLI **369/369**; OdyPatch validate CLI **1/1** via `tests/OdyPatch.Tests/` in CI `test` job (plan **297**) `[REPO]` |
+| CI on merge | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
+
+## PR #13 outcome
+
+| Item | Status |
+|------|--------|
+| Merge | **Merged** to `master` 2026-05-28 @ `360e48647` via [PR #13](https://github.com/th3w1zard1/Andastra/pull/13) `[REPO]` |
+| Scope | Post-PR-#12 tracker sync (plan **299**): `pr-merge-readiness.md` PR #12 outcome, plan index, plan **063** milestone |
+| Plans | **299**–**300** (merge + tracker sync **300**) |
 | CI on merge | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
 
 ## Local validation (green path)
@@ -87,12 +96,12 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (299+)
+## Suggested next slices (300+)
 
 | Plan | Topic |
 |------|-------|
-| 299+ | Opcode-context CONSTI disambiguation (StrRef vs 2DA-memory) per plan **063** |
-| 299+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 300+ | Opcode-context CONSTI disambiguation (StrRef vs 2DA-memory) per plan **063** |
+| 300+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
 
 ## Repo implications
 
