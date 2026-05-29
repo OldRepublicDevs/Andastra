@@ -245,7 +245,7 @@ namespace BioWare.Tools
         {
             foreach (NcsConstiScanner.ConstiInstruction instruction in NcsConstiScanner.ExtractConstiInstructions(data))
             {
-                if (instruction.Value < 0 || !NcsConstiScanner.IsPlausibleStrRefCandidate(instruction.Value, _ncsStrRefCandidateMinimum))
+                if (!NcsConstiScanner.ShouldIndexAsStrRefCandidate(data, instruction, _ncsStrRefCandidateMinimum))
                 {
                     continue;
                 }
