@@ -1,8 +1,9 @@
 ---
 title: "chore: merge pr25 and post-merge tracker sync"
 type: chore
-status: in_progress
+status: complete
 date: 2026-05-29
+completed: 2026-05-29
 origin: docs/plans/2026-05-29-311-feat-ncs-consti-cptopbp-global-strref-plan.md
 branch: docs/post-pr25-tracker-sync
 ---
