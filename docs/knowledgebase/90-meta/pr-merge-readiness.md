@@ -150,12 +150,13 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (308+)
+## Suggested next slices (311+)
 
 | Plan | Topic |
 |------|-------|
-| 309 | Variable StrRef CPTOPSP→ACTION forward trace (plan **063** CONSTI backlog) |
-| 308+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 311 | `CPTOPBP` global variable StrRef reload (plan **063** CONSTI backlog) |
+| 311+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
+| 311+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
 
 ## Repo implications
 
