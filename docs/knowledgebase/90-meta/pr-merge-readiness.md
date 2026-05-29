@@ -48,26 +48,15 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Merge | **Merged** to `master` (plans 056–063) `[REPO]` |
 | Scope | Post-PR #3 tracker refresh; OdyPatch validate fixture + E2E runbook documentation arc |
 
-## PR #12 (open)
-
-Branch `feat/holocron-port-phase-b` — [PR #12](https://github.com/th3w1zard1/Andastra/pull/12). Post-PR-#11 doc/test arc (plans **291**–**298**). `[REPO]`
+## PR #12 outcome
 
 | Item | Status |
 |------|--------|
-| Scope | KB e2e verification sync, CONSTI disambiguation docs, KotorCLI `--ncs-strref-min` CLI tests, OdyPatch `--validate` subprocess test |
-| Plans | **291**–**298** (post-PR-#11 closure + merge readiness gates **296**, **298**) |
+| Merge | **Merged** to `master` 2026-05-28 @ `9860ada2a` via [PR #12](https://github.com/th3w1zard1/Andastra/pull/12) `[REPO]` |
+| Scope | Post-PR-#11 KB/CLI verification (**291**–**296**), OdyPatch `--validate` subprocess test (**297**), merge-readiness closure (**298**) |
+| Plans | **291**–**299** (merge + tracker sync **299**) |
 | Test coverage | KotorCLI **369/369**; OdyPatch validate CLI **1/1** via `tests/OdyPatch.Tests/` in CI `test` job (plan **297**) `[REPO]` |
-| Code risk | Low — doc sync + test/CI wiring; no engine/runtime behavior changes |
-| Local validate | `dotnet test tests/OdyPatch.Tests/OdyPatch.Tests.csproj --framework net9.0 -c Release` green (plan **298**) `[REPO]` |
-
-### Merge gate
-
-- [x] Branch mergeable with `master`
-- [x] All meaningful CI checks pass (except Snyk quota — not a code defect)
-- [x] Post-PR-#11 reference-search documentation arc complete (**291**–**296**)
-- [x] OdyPatch `--validate` automated test gap closed (**297**)
-- [x] KB tracker + AGENTS.md synced post-297 (**298**)
-- [ ] After merge: update this section to PR #12 outcome; suggested next slice moves to 299+
+| CI on merge | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
 
 ## Local validation (green path)
 
@@ -98,11 +87,12 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (064+)
+## Suggested next slices (299+)
 
 | Plan | Topic |
 |------|-------|
-| 064+ | Record OdyPatch E2E verification outcomes after manual runbook execution |
+| 299+ | Opcode-context CONSTI disambiguation (StrRef vs 2DA-memory) per plan **063** |
+| 299+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
 
 ## Repo implications
 
