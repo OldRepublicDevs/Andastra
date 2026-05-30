@@ -166,15 +166,23 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Plans | **317**–**318** (merge + tracker sync **318**) |
 | CI on merge | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
 
-## PR #33 pending
+## PR #34 outcome
 
 | Item | Status |
 |------|--------|
-| Merge | **Open** — [PR #33](https://github.com/th3w1zard1/Andastra/pull/33) awaiting merge to `master` `[REPO]` |
-| Scope | NCS CONSTI `GetInstructionSizeAt` walk hardening (plan **319**): `GetInstructionStepSizeAt` for BP full-file walks; unknown opcodes step 2 bytes in BP path only; `GetInstructionSizeAt` still returns 0 for unknown in forward/relay scans; **33** NcsConsti tests |
+| Merge | **Merged** to `master` 2026-05-30 @ `4514f2b05` via [PR #34](https://github.com/th3w1zard1/Andastra/pull/34) `[REPO]` |
+| Scope | NCS CONSTI BP multi-hop + full-file cross-sub relay (plans **321**–**322**): CPTOPBP relay hop in forward scan; `TryFindStrRefConsumerViaBpReload` relay recursion + `GetInstructionStepSizeAt`; **37** NcsConsti tests |
+| Plans | **321**–**323** (feature **321**/**322** + tracker sync **323**) |
+| CI on merge | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
+
+## PR #33 outcome
+
+| Item | Status |
+|------|--------|
+| Merge | **Merged** to `master` 2026-05-30 @ `8bdf07844` via [PR #33](https://github.com/th3w1zard1/Andastra/pull/33) `[REPO]` |
+| Scope | NCS CONSTI `GetInstructionSizeAt` walk hardening (plan **319**): scoped `GetInstructionStepSizeAt` for BP full-file walks; `GetInstructionSizeAt` returns 0 for unknown opcodes in forward/relay scans; **37** NcsConsti tests on `master` |
 | Plans | **319**–**320** (feature + pending tracker sync **320**) |
-| CI on PR | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
-| Post-merge | Promote this section to outcome with merge SHA when PR #33 lands |
+| CI on merge | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
 
 ## Local validation (green path)
 
@@ -205,14 +213,13 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (321+)
+## Suggested next slices (324+)
 
 | Plan | Topic |
 |------|-------|
-| 321+ | Promote PR #33 pending → outcome in tracker after merge |
-| 321+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
-| 321+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
-| 321+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
+| 324+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
+| 324+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 324+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
 
 ## Repo implications
 
