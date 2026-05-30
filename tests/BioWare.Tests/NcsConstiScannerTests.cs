@@ -877,5 +877,50 @@ namespace BioWare.Tests
                 }
             }
         }
+
+        [Test]
+        public void GetConstiUsageContext_GlobalBpCrossSubThreeHopLocalStrRef_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "int g;\nvoid sub1() {\n    int m = g;\n    int k = m;\n    ActionSpeakStringByStrRef(k);\n}\nvoid main() {\n    g = " + targetStrRef + ";\n    sub1();\n}",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+            Assert.That(NcsConstiScanner.ShouldIndexAsStrRefCandidate(bytes, match, NcsConstiScanner.StrRefCandidateMinimum), Is.True);
+        }
+
+        [Test]
+        public void StrRefReferenceCache_GlobalBpCrossSubThreeHopLocalStrRef_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "int g;\nvoid sub1() {\n    int m = g;\n    int k = m;\n    ActionSpeakStringByStrRef(k);\n}\nvoid main() {\n    g = " + targetStrRef + ";\n    sub1();\n}",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-bp-crosssub-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
     }
 }
