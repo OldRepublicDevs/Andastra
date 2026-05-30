@@ -637,15 +637,30 @@ namespace BioWare.Tools
                         {
                             return true;
                         }
+
+                        int relayStoreOpcodeOffset;
+                        int relayStoreOffset;
+                        int relayStoreSize;
+                        if (TryFindNextStackStoreAfterLoad(
+                                ncsData,
+                                scanOffset,
+                                ncsData.Length,
+                                out relayStoreOpcodeOffset,
+                                out relayStoreOffset,
+                                out relayStoreSize)
+                            && TryFindStrRefConsumerViaStackReload(
+                                ncsData,
+                                storedConsti,
+                                relayStoreOpcodeOffset,
+                                relayStoreOffset,
+                                relayStoreSize))
+                        {
+                            return true;
+                        }
                     }
                 }
 
-                int instructionSize = GetInstructionSizeAt(ncsData, scanOffset);
-                if (instructionSize <= 0)
-                {
-                    break;
-                }
-
+                int instructionSize = GetInstructionStepSizeAt(ncsData, scanOffset);
                 scanOffset += instructionSize;
             }
 
@@ -872,6 +887,18 @@ namespace BioWare.Tools
             }
 
             return 0;
+        }
+
+        private static int GetInstructionStepSizeAt(byte[] ncsData, int opcodeOffset)
+        {
+            int instructionSize = GetInstructionSizeAt(ncsData, opcodeOffset);
+            if (instructionSize > 0)
+            {
+                return instructionSize;
+            }
+
+            // Match NCSActionPatcher: unknown opcode — minimal 2-byte step for full-file walks only.
+            return 2;
         }
 
         internal static void SkipInstructionPayload(RawBinaryReader reader, byte opcode, byte qualifier)
