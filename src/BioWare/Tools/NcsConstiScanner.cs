@@ -851,11 +851,6 @@ namespace BioWare.Tools
                 return 2;
             }
 
-            if (opcode == 0x02)
-            {
-                return 2;
-            }
-
             if (opcode == 0x2D)
             {
                 return 2;
