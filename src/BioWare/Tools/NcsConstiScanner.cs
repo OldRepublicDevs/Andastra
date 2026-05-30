@@ -505,6 +505,20 @@ namespace BioWare.Tools
                 out storeSize);
         }
 
+        private static int TryResolveJumpTarget(byte[] ncsData, int opcodeOffset)
+        {
+            if (opcodeOffset + 6 > ncsData.Length)
+            {
+                return -1;
+            }
+
+            int relative = (ncsData[opcodeOffset + 2] << 24)
+                | (ncsData[opcodeOffset + 3] << 16)
+                | (ncsData[opcodeOffset + 4] << 8)
+                | ncsData[opcodeOffset + 5];
+            return relative + opcodeOffset;
+        }
+
         private static bool TryFindStrRefConsumerViaStackReload(
             byte[] ncsData,
             ConstiInstruction storedConsti,
@@ -518,9 +532,36 @@ namespace BioWare.Tools
             }
 
             int scanLimit = Math.Min(ncsData.Length, storeOpcodeOffset + 8 + VariableStrRefForwardScanLimitBytes);
-            int scanOffset = storeOpcodeOffset + 8;
-            int stackPointerDelta = 0;
             byte storeOpcode = ncsData[storeOpcodeOffset];
+            if (TryFindStrRefConsumerViaStackReloadFromScan(
+                    ncsData,
+                    storedConsti,
+                    storeOffset,
+                    storeSize,
+                    storeOpcodeOffset + 8,
+                    scanLimit,
+                    0))
+            {
+                return true;
+            }
+
+            if (storeOpcode == 0x26)
+            {
+                return TryFindStrRefConsumerViaBpReload(ncsData, storedConsti, storeOffset, storeSize);
+            }
+
+            return false;
+        }
+
+        private static bool TryFindStrRefConsumerViaStackReloadFromScan(
+            byte[] ncsData,
+            ConstiInstruction storedConsti,
+            int storeOffset,
+            int storeSize,
+            int scanOffset,
+            int scanLimit,
+            int stackPointerDelta)
+        {
             while (scanOffset + 8 <= scanLimit)
             {
                 byte opcode = ncsData[scanOffset];
@@ -571,6 +612,24 @@ namespace BioWare.Tools
                     }
                 }
 
+                if (opcode == 0x1D || opcode == 0x1F || opcode == 0x25)
+                {
+                    int jumpTarget = TryResolveJumpTarget(ncsData, scanOffset);
+                    if (jumpTarget > 0
+                        && jumpTarget < scanLimit
+                        && TryFindStrRefConsumerViaStackReloadFromScan(
+                            ncsData,
+                            storedConsti,
+                            storeOffset,
+                            storeSize,
+                            jumpTarget,
+                            scanLimit,
+                            stackPointerDelta))
+                    {
+                        return true;
+                    }
+                }
+
                 int instructionSize = GetInstructionSizeAt(ncsData, scanOffset);
                 if (instructionSize <= 0)
                 {
@@ -590,11 +649,6 @@ namespace BioWare.Tools
                 }
 
                 scanOffset += instructionSize;
-            }
-
-            if (storeOpcode == 0x26)
-            {
-                return TryFindStrRefConsumerViaBpReload(ncsData, storedConsti, storeOffset, storeSize);
             }
 
             return false;
