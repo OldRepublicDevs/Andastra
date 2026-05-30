@@ -100,6 +100,8 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 318 | [318-chore-merge-pr31-post-merge-tracker-plan.md](2026-05-29-318-chore-merge-pr31-post-merge-tracker-plan.md) | Merge PR #31 + post-merge tracker sync |
 | 319 | [319-refactor-ncs-instruction-size-hardening-plan.md](2026-05-29-319-refactor-ncs-instruction-size-hardening-plan.md) | NCS CONSTI GetInstructionSizeAt walk hardening |
 | 320 | [320-chore-pr33-pending-tracker-sync-plan.md](2026-05-29-320-chore-pr33-pending-tracker-sync-plan.md) | PR #33 pending tracker sync (plan 319) |
+| 321 | [321-feat-ncs-consti-bp-multihop-local-strref-plan.md](2026-05-29-321-feat-ncs-consti-bp-multihop-local-strref-plan.md) | NCS CONSTI BP multi-hop local StrRef relay |
+| 322 | [322-feat-ncs-consti-bp-fullfile-relay-plan.md](2026-05-29-322-feat-ncs-consti-bp-fullfile-relay-plan.md) | NCS CONSTI BP full-file cross-sub relay trace |
 
 ## Repo implications
 
