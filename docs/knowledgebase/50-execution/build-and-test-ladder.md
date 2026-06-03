@@ -40,7 +40,7 @@ dotnet test tests/KotorCLI.Tests/KotorCLI.Tests.csproj --framework net9.0 --filt
 dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~StrRefReferenceHelperTests
 ```
 
-Expected on `master` post [PR #52](https://github.com/th3w1zard1/Andastra/pull/52): **86** NcsConsti + **18** FindStrRefCommand + **12** CLI ref-search + **10** StrRefReferenceHelper tests pass. `[REPO]`
+Expected on `master` post [PR #52](https://github.com/th3w1zard1/Andastra/pull/52): **86** NcsConsti + **18** FindStrRefCommand + **12** CLI ref-search + **10** StrRefReferenceHelper tests pass. After plan **364** / PR merge: **88** NcsConsti. `[REPO]`
 
 ### Step 3c — ReferenceFinder + script ResRef ref-search (when relevant)
 
