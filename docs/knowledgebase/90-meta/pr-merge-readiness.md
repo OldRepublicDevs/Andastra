@@ -182,7 +182,7 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 |------|--------|
 | Merge | **Open** — [PR #36](https://github.com/th3w1zard1/Andastra/pull/36) awaiting merge to `master` `[REPO]` |
 | Scope | NCS CONSTI control-flow forward scan (plans **324**–**329**) + regression/cache/subroutine tests (**328**, **330**–**335**) + KotorCLI find-strref gating (**337**, **338**) + BioWare slow/cache CF tests (**339**) + find-strref slow/cache docs (**340**); **74** NcsConsti + **18** FindStrRef + **12** CLI ref-search tests |
-| Plans | **324**–**340** (feature **324**–**335**, **337**–**339**; docs **340**; tracker sync **325**, **336**) |
+| Plans | **324**–**341** (feature **324**–**335**, **337**–**339**; docs **340**–**341**; tracker sync **325**, **336**) |
 | CI on PR | Solution Build, Test, Lint **pass**; duplicate CodeQL run failure + `code/snyk` quota documented as non-blocking `[REPO]` |
 | Merge readiness | **Ready** — full control-flow arc landed; no open scanner gaps in regression suite `[REPO]` |
 | Post-merge | Promote this section to outcome with merge SHA when PR #36 lands |
