@@ -133,6 +133,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 351 | [351-chore-merge-pr40-tracker-sync-plan.md](2026-05-24-351-chore-merge-pr40-tracker-sync-plan.md) | Merge PR #40 + post-merge tracker sync |
 | 352 | [352-docs-plan063-build-ladder-sync-plan.md](2026-05-24-352-docs-plan063-build-ladder-sync-plan.md) | Sync plan 063 with build-ladder ref-search steps |
 | 353 | [353-chore-merge-pr42-tracker-sync-plan.md](2026-05-24-353-chore-merge-pr42-tracker-sync-plan.md) | Merge PR #42 + post-merge tracker sync |
+| 354 | [354-docs-ref-search-ladder-arc-closure-plan.md](2026-05-24-354-docs-ref-search-ladder-arc-closure-plan.md) | Ref-search ladder arc closure local validation |
 
 ## Repo implications
 
