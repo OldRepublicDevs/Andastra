@@ -1,8 +1,9 @@
 ---
 title: "docs: KotorCLI find-strref slow vs cache NCS behavior"
 type: docs
-status: active
+status: complete
 date: 2026-05-24
+completed: 2026-06-03
 origin: docs/plans/2026-05-24-339-test-bioware-find-strref-cf-slow-cache-plan.md
 branch: feat/plan-324-ncs-consti-conditional-strref
 ---
