@@ -107,6 +107,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 326 | [326-fix-ncs-consti-guarded-jump-fork-plan.md](2026-05-24-326-fix-ncs-consti-guarded-jump-fork-plan.md) | NCS CONSTI guarded JZ/JNZ jump fork |
 | 327 | [327-fix-ncs-consti-local-condition-resolve-plan.md](2026-05-24-327-fix-ncs-consti-local-condition-resolve-plan.md) | NCS CONSTI local condition resolve + scan cutoff |
 | 328 | [328-test-ncs-consti-control-flow-cache-plan.md](2026-05-24-328-test-ncs-consti-control-flow-cache-plan.md) | NCS CONSTI control-flow cache integration tests |
+| 329 | [329-fix-ncs-consti-while-break-scan-plan.md](2026-05-24-329-fix-ncs-consti-while-break-scan-plan.md) | NCS CONSTI while-break linear scan continuation |
 
 ## Repo implications
 
