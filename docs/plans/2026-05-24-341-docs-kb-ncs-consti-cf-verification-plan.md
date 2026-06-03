@@ -1,8 +1,9 @@
 ---
 title: "docs: kb verification sync for ncs consti cf arc"
 type: docs
-status: active
+status: complete
 date: 2026-05-24
+completed: 2026-06-03
 origin: docs/plans/2026-05-24-340-docs-kotorcli-find-strref-slow-cache-plan.md
 branch: feat/plan-324-ncs-consti-conditional-strref
 ---
