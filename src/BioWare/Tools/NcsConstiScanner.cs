@@ -553,28 +553,37 @@ namespace BioWare.Tools
             return false;
         }
 
-        private static bool TryReadConstIntImmediatelyBeforeJump(byte[] ncsData, int jumpOpcodeOffset, out int constValue)
+        private static int FindPreviousInstructionStart(byte[] ncsData, int opcodeOffset)
+        {
+            if (opcodeOffset <= 13)
+            {
+                return -1;
+            }
+
+            for (int candidate = opcodeOffset - 2; candidate >= 13; candidate--)
+            {
+                int size = GetInstructionSizeAt(ncsData, candidate);
+                if (size > 0 && candidate + size == opcodeOffset)
+                {
+                    return candidate;
+                }
+            }
+
+            return -1;
+        }
+
+        private static bool TryReadConstIntImmediatelyBeforeInstruction(byte[] ncsData, int instructionOffset, out int constValue)
         {
             constValue = 0;
-            if (jumpOpcodeOffset <= 13)
+            if (instructionOffset <= 13)
             {
                 return false;
             }
 
-            int offset = jumpOpcodeOffset;
+            int offset = instructionOffset;
             for (int step = 0; step < 6 && offset > 13; step++)
             {
-                int foundStart = -1;
-                for (int candidate = offset - 2; candidate >= 13; candidate--)
-                {
-                    int size = GetInstructionSizeAt(ncsData, candidate);
-                    if (size > 0 && candidate + size == offset)
-                    {
-                        foundStart = candidate;
-                        break;
-                    }
-                }
-
+                int foundStart = FindPreviousInstructionStart(ncsData, offset);
                 if (foundStart < 0)
                 {
                     return false;
@@ -582,7 +591,7 @@ namespace BioWare.Tools
 
                 byte opcode = ncsData[foundStart];
                 byte qualifier = ncsData[foundStart + 1];
-                if (opcode == 0x04 && qualifier == 0x03 && foundStart + 6 <= jumpOpcodeOffset)
+                if (opcode == 0x04 && qualifier == 0x03 && foundStart + 6 <= instructionOffset)
                 {
                     constValue = (ncsData[foundStart + 2] << 24)
                         | (ncsData[foundStart + 3] << 16)
@@ -603,10 +612,78 @@ namespace BioWare.Tools
             return false;
         }
 
+        private static bool TryReadConstIntFromLocalLoad(byte[] ncsData, int cptopspOffset, out int constValue)
+        {
+            constValue = 0;
+            int loadOffset;
+            int loadSize;
+            if (!TryReadStackCopyOperands(ncsData, cptopspOffset, out loadOffset, out loadSize) || loadSize != 4)
+            {
+                return false;
+            }
+
+            int offset = cptopspOffset;
+            int stackPointerDelta = 0;
+            for (int step = 0; step < 12 && offset > 13; step++)
+            {
+                int foundStart = FindPreviousInstructionStart(ncsData, offset);
+                if (foundStart < 0)
+                {
+                    return false;
+                }
+
+                byte opcode = ncsData[foundStart];
+                if (opcode == 0x01)
+                {
+                    int storeOffset;
+                    int storeSize;
+                    if (TryReadStackCopyOperands(ncsData, foundStart, out storeOffset, out storeSize)
+                        && storeSize == loadSize
+                        && (storeOffset == loadOffset || storeOffset + stackPointerDelta == loadOffset)
+                        && TryReadConstIntImmediatelyBeforeInstruction(ncsData, foundStart, out constValue))
+                    {
+                        return true;
+                    }
+                }
+
+                if (opcode == 0x1B || opcode == 0x23 || opcode == 0x24)
+                {
+                    if (foundStart + 6 <= ncsData.Length)
+                    {
+                        int movOffset = (ncsData[foundStart + 2] << 24)
+                            | (ncsData[foundStart + 3] << 16)
+                            | (ncsData[foundStart + 4] << 8)
+                            | ncsData[foundStart + 5];
+                        stackPointerDelta -= movOffset;
+                    }
+                }
+
+                offset = foundStart;
+            }
+
+            return false;
+        }
+
+        private static bool TryResolveJumpConditionConstInt(byte[] ncsData, int jumpOpcodeOffset, out int constValue)
+        {
+            if (TryReadConstIntImmediatelyBeforeInstruction(ncsData, jumpOpcodeOffset, out constValue))
+            {
+                return true;
+            }
+
+            int previousStart = FindPreviousInstructionStart(ncsData, jumpOpcodeOffset);
+            if (previousStart >= 0 && ncsData[previousStart] == 0x03)
+            {
+                return TryReadConstIntFromLocalLoad(ncsData, previousStart, out constValue);
+            }
+
+            return false;
+        }
+
         private static bool ShouldForkConditionalJumpTarget(byte[] ncsData, int jumpOpcodeOffset, byte opcode)
         {
             int constValue;
-            if (!TryReadConstIntImmediatelyBeforeJump(ncsData, jumpOpcodeOffset, out constValue))
+            if (!TryResolveJumpConditionConstInt(ncsData, jumpOpcodeOffset, out constValue))
             {
                 return false;
             }
@@ -683,11 +760,26 @@ namespace BioWare.Tools
                     }
                 }
 
-                if (opcode == 0x1D || opcode == 0x1F || opcode == 0x25)
+                if (opcode == 0x1D)
                 {
-                    bool shouldFork = opcode == 0x1D
-                        || ShouldForkConditionalJumpTarget(ncsData, scanOffset, opcode);
-                    if (shouldFork)
+                    int jumpTarget = TryResolveJumpTarget(ncsData, scanOffset);
+                    if (jumpTarget > 0
+                        && jumpTarget < scanLimit
+                        && TryFindStrRefConsumerViaStackReloadFromScan(
+                            ncsData,
+                            storedConsti,
+                            storeOffset,
+                            storeSize,
+                            jumpTarget,
+                            scanLimit,
+                            stackPointerDelta))
+                    {
+                        return true;
+                    }
+                }
+                else if (opcode == 0x1F || opcode == 0x25)
+                {
+                    if (ShouldForkConditionalJumpTarget(ncsData, scanOffset, opcode))
                     {
                         int jumpTarget = TryResolveJumpTarget(ncsData, scanOffset);
                         if (jumpTarget > 0
@@ -704,6 +796,8 @@ namespace BioWare.Tools
                             return true;
                         }
                     }
+
+                    break;
                 }
 
                 int instructionSize = GetInstructionSizeAt(ncsData, scanOffset);
