@@ -182,9 +182,9 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 |------|--------|
 | Merge | **Open** — [PR #36](https://github.com/th3w1zard1/Andastra/pull/36) awaiting merge to `master` `[REPO]` |
 | Scope | NCS CONSTI control-flow arc (plans **324**–**341** on [PR #36](https://github.com/th3w1zard1/Andastra/pull/36)): scanner + cache/subroutine tests + KotorCLI gating + BioWare slow/cache tests + README/KB docs; **74** NcsConsti + **18** FindStrRef + **12** CLI ref-search tests |
-| Plans | **324**–**342** (feature **324**–**335**, **337**–**339**; docs **340**–**342**; tracker sync **325**, **336**) |
+| Plans | **324**–**343** (feature **324**–**335**, **337**–**339**; docs **340**–**343**; tracker sync **325**, **336**) |
 | CI on PR | Solution Build, Test, Lint **pass**; duplicate CodeQL run failure + `code/snyk` quota documented as non-blocking `[REPO]` |
-| Merge readiness | **Ready — arc complete** — full control-flow vertical slice landed; local ref-search suites green (2026-06-03) `[REPO]` |
+| Merge readiness | **Ready — arc complete** — full control-flow vertical slice landed; local ref-search suites green (2026-06-03); PR title synced plans **324**–**342** (plan **343**) `[REPO]` |
 | Post-merge | Promote this section to outcome with merge SHA when PR #36 lands |
 
 ## Local validation (green path)
