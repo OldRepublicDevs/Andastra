@@ -137,6 +137,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 355 | [355-chore-merge-pr44-tracker-sync-plan.md](2026-05-24-355-chore-merge-pr44-tracker-sync-plan.md) | Merge PR #44 + post-merge tracker sync |
 | 356 | [356-feat-ncs-consti-jsr-call-literal-strref-plan.md](2026-05-24-356-feat-ncs-consti-jsr-call-literal-strref-plan.md) | NCS CONSTI JSR call-literal StrRef consumer detection |
 | 357 | [357-chore-merge-pr46-tracker-sync-plan.md](2026-05-24-357-chore-merge-pr46-tracker-sync-plan.md) | Merge PR #46 + post-merge tracker sync |
+| 358 | [358-feat-ncs-consti-jsr-multi-arg-slot-plan.md](2026-05-24-358-feat-ncs-consti-jsr-multi-arg-slot-plan.md) | NCS CONSTI JSR multi-arg slot alignment |
 
 ## Repo implications
 
