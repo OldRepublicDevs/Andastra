@@ -1,8 +1,9 @@
 ---
 title: "test: NCS CONSTI remaining control-flow probes"
 type: test
-status: active
+status: complete
 date: 2026-05-24
+completed: 2026-06-03
 origin: docs/plans/2026-05-24-330-test-ncs-consti-while-zero-if-live-plan.md
 branch: feat/plan-324-ncs-consti-conditional-strref
 ---
@@ -16,7 +17,7 @@ Add four CONSTI control-flow regression probes not yet covered after plan **330*
 ## Requirements
 
 - R1. `GetConstiUsageContext_DoWhileBreakLocalStrRefViaCptopsp_ReturnsStrRefConsumer` — `do { break; } while (1); ActionSpeakStringByStrRef(n);`
-- R2. `GetConstiUsageContext_WhileInfiniteDeadReturnLocalStrRef_ReturnsStrRefConsumer` — `while (1) { if (0) return; } ActionSpeakStringByStrRef(n);`
+- R2. `GetConstiUsageContext_WhileOneDeadIfReturnLocalStrRef_ReturnsStrRefConsumer` — `while (1) { if (0) return; } ActionSpeakStringByStrRef(n);` (requires backward-JMP guard in scanner)
 - R3. `GetConstiUsageContext_DeadForBodyLocalStrRef_RemainsStackStored` — `for (i = 0; i < 0; i++) { ActionSpeakStringByStrRef(n); }` (never-entered body stays stack-stored)
 - R4. `GetConstiUsageContext_NestedDeadIfReturnLocalStrRef_ReturnsStrRefConsumer` — `if (0) { if (0) return; } ActionSpeakStringByStrRef(n);`
 - R5. **52** NcsConsti tests pass (48 existing + 4 new)
