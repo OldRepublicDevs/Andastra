@@ -153,6 +153,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 371 | [371-chore-merge-pr59-tracker-sync-plan.md](2026-05-24-371-chore-merge-pr59-tracker-sync-plan.md) | Merge PR #59 + post-merge tracker sync |
 | 372 | [372-feat-ncs-consti-two-hop-mixed-const-relay-plan.md](2026-05-24-372-feat-ncs-consti-two-hop-mixed-const-relay-plan.md) | NCS CONSTI two-hop mixed CONST/CPTOPSP nested JSR relay |
 | 373 | [373-chore-merge-pr61-tracker-sync-plan.md](2026-05-24-373-chore-merge-pr61-tracker-sync-plan.md) | Merge PR #61 + post-merge tracker sync |
+| 374 | [374-feat-ncs-consti-four-hop-multi-arg-jsr-relay-plan.md](2026-05-24-374-feat-ncs-consti-four-hop-multi-arg-jsr-relay-plan.md) | NCS CONSTI four-hop multi-arg nested JSR relay |
 
 ## Repo implications
 
