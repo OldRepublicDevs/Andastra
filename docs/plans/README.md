@@ -112,6 +112,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 331 | [331-fix-ncs-consti-backward-jmp-scan-plan.md](2026-05-24-331-fix-ncs-consti-backward-jmp-scan-plan.md) | NCS CONSTI backward JMP scan termination |
 | 332 | [332-test-ncs-consti-advanced-cf-cache-plan.md](2026-05-24-332-test-ncs-consti-advanced-cf-cache-plan.md) | NCS CONSTI advanced control-flow cache integration tests |
 | 333 | [333-test-ncs-consti-cf-cache-completion-plan.md](2026-05-24-333-test-ncs-consti-cf-cache-completion-plan.md) | NCS CONSTI control-flow cache completion tests |
+| 334 | [334-test-ncs-consti-subroutine-cf-plan.md](2026-05-24-334-test-ncs-consti-subroutine-cf-plan.md) | NCS CONSTI subroutine and edge-case cache probes |
 
 ## Repo implications
 
