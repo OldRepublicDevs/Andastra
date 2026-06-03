@@ -1,8 +1,9 @@
 ---
 title: "docs: pr36 title refresh and plan 342 closure"
 type: docs
-status: active
+status: complete
 date: 2026-05-24
+completed: 2026-06-03
 origin: docs/plans/2026-05-24-342-docs-pr36-arc-closure-plan.md
 branch: feat/plan-324-ncs-consti-conditional-strref
 ---
