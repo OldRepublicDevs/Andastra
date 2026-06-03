@@ -247,6 +247,15 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Plans | **356**–**357** (feature **356** + tracker sync **357**); see [plan 063](../../plans/2026-05-24-063-feat-pykotor-holocron-port-continuation-plan.md) for remaining CONSTI backlog |
 | CI on merge | Solution Build, Test, Lint **pass**; duplicate CodeQL + `code/snyk` quota documented as non-blocking `[REPO]` |
 
+## PR #48 outcome
+
+| Item | Status |
+|------|--------|
+| Merge | **Merged** to `master` 2026-06-03 @ `24340bc4c` via [PR #48](https://github.com/th3w1zard1/Andastra/pull/48) `[REPO]` |
+| Scope | NCS CONSTI JSR multi-arg slot alignment (plan **358**): caller CONST push slot must match callee CPTOPSP param index before `StrRefConsumer`; **80** NcsConsti tests (+3) |
+| Plans | **358**–**359** (feature **358** + tracker sync **359**); nested JSR chains and full stack simulation remain deferred per plan **063** |
+| CI on merge | Solution Build, Test, Lint **pass**; duplicate CodeQL + `code/snyk` quota documented as non-blocking `[REPO]` |
+
 ## Local validation (green path)
 
 | Check | Command / artifact | Status |
@@ -278,14 +287,14 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (358+)
+## Suggested next slices (359+)
 
 | Plan | Topic |
 |------|-------|
-| 358+ | Full CONSTI stack simulation for exotic control-flow per plan **063** (JSR call-literal landed in **356**) |
-| 358+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
-| 358+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
-| 358+ | NCS CONSTI JSR multi-arg / nested call patterns beyond call-literal heuristic (plan **356** follow-up) |
+| 359+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
+| 359+ | NCS CONSTI nested JSR call chains beyond call-literal heuristic (plan **358** follow-up) |
+| 359+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 359+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
 
 ## Repo implications
 
