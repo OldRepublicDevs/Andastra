@@ -140,6 +140,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 358 | [358-feat-ncs-consti-jsr-multi-arg-slot-plan.md](2026-05-24-358-feat-ncs-consti-jsr-multi-arg-slot-plan.md) | NCS CONSTI JSR multi-arg slot alignment |
 | 359 | [359-chore-merge-pr48-tracker-sync-plan.md](2026-05-24-359-chore-merge-pr48-tracker-sync-plan.md) | Merge PR #48 + post-merge tracker sync |
 | 360 | [360-feat-ncs-consti-nested-jsr-relay-plan.md](2026-05-24-360-feat-ncs-consti-nested-jsr-relay-plan.md) | NCS CONSTI nested JSR relay StrRef |
+| 361 | [361-chore-merge-pr50-tracker-sync-plan.md](2026-05-24-361-chore-merge-pr50-tracker-sync-plan.md) | Merge PR #50 + post-merge tracker sync |
 
 ## Repo implications
 
