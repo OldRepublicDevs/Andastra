@@ -211,6 +211,15 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Plans | **348**–**349** (docs **348** + tracker sync **349**) |
 | CI on merge | Solution Build, Test, Lint **pass**; duplicate CodeQL + `code/snyk` quota documented as non-blocking `[REPO]` |
 
+## PR #40 outcome
+
+| Item | Status |
+|------|--------|
+| Merge | **Merged** to `master` 2026-06-03 @ `a517c0fd4` via [PR #40](https://github.com/th3w1zard1/Andastra/pull/40) `[REPO]` |
+| Scope | build-and-test-ladder **Step 3c** ReferenceFinder filter commands (plan **350**): ReferenceFinderTests (**97**), ReferenceSearchHelper (**36**), ScriptReferenceHelper (**8**), FindRefsCommand (**21**); stale plan **286** NcsConsti count fix in `odytools-editor-ux.md` |
+| Plans | **350**–**351** (docs **350** + tracker sync **351**) |
+| CI on merge | Solution Build, Test, Lint **pass**; duplicate CodeQL + `code/snyk` quota documented as non-blocking `[REPO]` |
+
 ## Local validation (green path)
 
 | Check | Command / artifact | Status |
@@ -240,13 +249,13 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (349+)
+## Suggested next slices (351+)
 
 | Plan | Topic |
 |------|-------|
-| 349+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
-| 349+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
-| 349+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
+| 351+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
+| 351+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 351+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
 
 ## Repo implications
 
