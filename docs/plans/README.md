@@ -105,6 +105,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 324 | [324-feat-ncs-consti-jump-fork-strref-scan-plan.md](2026-05-24-324-feat-ncs-consti-jump-fork-strref-scan-plan.md) | NCS CONSTI jump-fork SP forward scan for local StrRef |
 | 325 | [325-chore-pr36-pending-tracker-sync-plan.md](2026-05-24-325-chore-pr36-pending-tracker-sync-plan.md) | PR #36 pending tracker sync (plan 324) |
 | 326 | [326-fix-ncs-consti-guarded-jump-fork-plan.md](2026-05-24-326-fix-ncs-consti-guarded-jump-fork-plan.md) | NCS CONSTI guarded JZ/JNZ jump fork |
+| 327 | [327-fix-ncs-consti-local-condition-resolve-plan.md](2026-05-24-327-fix-ncs-consti-local-condition-resolve-plan.md) | NCS CONSTI local condition resolve + scan cutoff |
 
 ## Repo implications
 
