@@ -1018,6 +1018,8 @@ namespace BioWare.Tools
         }
 
         private const int SubroutineStrRefEntryScanLimitBytes = 128;
+        private const int MaxNestedJsrRelayDepth = 4;
+        private const int NestedJsrRelayForwardScanLimitBytes = 32;
 
         private static bool TryFindStrRefConsumerViaJsrCall(byte[] ncsData, ConstiInstruction instruction)
         {
@@ -1053,7 +1055,8 @@ namespace BioWare.Tools
                 jsrTarget,
                 instruction,
                 callerSlotIndex,
-                stackSlots.Count);
+                stackSlots.Count,
+                0);
         }
 
         private static bool TryCollectJsrCallPushRun(
@@ -1144,8 +1147,14 @@ namespace BioWare.Tools
             int subroutineStart,
             ConstiInstruction instruction,
             int callerSlotIndex,
-            int callerArgCount)
+            int callerArgCount,
+            int relayDepth)
         {
+            if (relayDepth > MaxNestedJsrRelayDepth)
+            {
+                return false;
+            }
+
             int scanLimit = Math.Min(ncsData.Length, subroutineStart + SubroutineStrRefEntryScanLimitBytes);
             int scanOffset = subroutineStart;
 
@@ -1183,6 +1192,15 @@ namespace BioWare.Tools
                             {
                                 return true;
                             }
+
+                            if (TryFollowNestedJsrRelay(
+                                    ncsData,
+                                    scanOffset,
+                                    instruction,
+                                    relayDepth))
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -1194,6 +1212,138 @@ namespace BioWare.Tools
                 }
 
                 scanOffset += instructionSize;
+            }
+
+            return false;
+        }
+
+        private static bool TryFollowNestedJsrRelay(
+            byte[] ncsData,
+            int paramLoadOpcodeOffset,
+            ConstiInstruction instruction,
+            int relayDepth)
+        {
+            List<ActionStackSlot> relayStackSlots;
+            int nestedJsrTarget;
+            if (!TryCollectJsrCallPushRunFrom(
+                    ncsData,
+                    paramLoadOpcodeOffset,
+                    instruction.ValueByteOffset,
+                    NestedJsrRelayForwardScanLimitBytes,
+                    out relayStackSlots,
+                    out nestedJsrTarget))
+            {
+                return false;
+            }
+
+            if (relayStackSlots.Count == 0 || nestedJsrTarget <= 13 || nestedJsrTarget >= ncsData.Length)
+            {
+                return false;
+            }
+
+            int relayedSlotIndex = -1;
+            for (int i = 0; i < relayStackSlots.Count; i++)
+            {
+                if (relayStackSlots[i].IsIntConst
+                    && relayStackSlots[i].ValueByteOffset == instruction.ValueByteOffset)
+                {
+                    relayedSlotIndex = i;
+                    break;
+                }
+            }
+
+            if (relayedSlotIndex < 0)
+            {
+                return false;
+            }
+
+            return SubroutineUsesStrRefActionOnStackParam(
+                ncsData,
+                nestedJsrTarget,
+                instruction,
+                relayedSlotIndex,
+                relayStackSlots.Count,
+                relayDepth + 1);
+        }
+
+        private static bool TryCollectJsrCallPushRunFrom(
+            byte[] ncsData,
+            int runStart,
+            int linkedConstiValueByteOffset,
+            int forwardScanLimitBytes,
+            out List<ActionStackSlot> stackSlots,
+            out int jsrTarget)
+        {
+            stackSlots = new List<ActionStackSlot>();
+            jsrTarget = -1;
+
+            if (runStart < 13)
+            {
+                return false;
+            }
+
+            int scanLimit = Math.Min(ncsData.Length, runStart + forwardScanLimitBytes);
+            int scanOffset = runStart;
+
+            while (scanOffset + 2 <= scanLimit)
+            {
+                byte opcode = ncsData[scanOffset];
+                byte qualifier = ncsData[scanOffset + 1];
+
+                if (opcode == 0x04 && qualifier == 0x03)
+                {
+                    stackSlots.Add(new ActionStackSlot
+                    {
+                        IsIntConst = true,
+                        ValueByteOffset = scanOffset + 2
+                    });
+                    scanOffset += 6;
+                    continue;
+                }
+
+                if (opcode == 0x04)
+                {
+                    int pushSize = GetConstantPushInstructionSizeAt(ncsData, scanOffset);
+                    if (pushSize <= 0)
+                    {
+                        return false;
+                    }
+
+                    stackSlots.Add(new ActionStackSlot { IsIntConst = false, ValueByteOffset = -1 });
+                    scanOffset += pushSize;
+                    continue;
+                }
+
+                if (opcode == 0x03 || opcode == 0x27)
+                {
+                    stackSlots.Add(new ActionStackSlot
+                    {
+                        IsIntConst = true,
+                        ValueByteOffset = linkedConstiValueByteOffset
+                    });
+                    int loadSize;
+                    int loadOffset;
+                    if (!TryReadStackCopyOperands(ncsData, scanOffset, out loadOffset, out loadSize))
+                    {
+                        return false;
+                    }
+
+                    scanOffset += 8;
+                    continue;
+                }
+
+                if (opcode == 0x1E)
+                {
+                    if (stackSlots.Count == 0)
+                    {
+                        return false;
+                    }
+
+                    jsrTarget = TryResolveJumpTarget(ncsData, scanOffset);
+                    return jsrTarget > 13 && jsrTarget < ncsData.Length;
+                }
+
+                return false;
             }
 
             return false;
