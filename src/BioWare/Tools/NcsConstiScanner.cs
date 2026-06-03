@@ -722,6 +722,74 @@ namespace BioWare.Tools
             return movOffset < 0;
         }
 
+        private static bool IsForwardLoopBreakJump(byte[] ncsData, int jumpTarget, int loopHead, int scanLimit)
+        {
+            int offset = jumpTarget;
+            for (int i = 0; i < 24 && offset + 2 <= scanLimit; i++)
+            {
+                byte op = ncsData[offset];
+                if (op == 0x20)
+                {
+                    return false;
+                }
+
+                if (op == 0x1D)
+                {
+                    int target = TryResolveJumpTarget(ncsData, offset);
+                    if (target > 0 && target <= loopHead + 4)
+                    {
+                        return false;
+                    }
+                }
+
+                int step = GetInstructionSizeAt(ncsData, offset);
+                if (step <= 0)
+                {
+                    break;
+                }
+
+                offset += step;
+            }
+
+            return true;
+        }
+
+        private static bool HasForwardLoopExitJump(byte[] ncsData, int loopHead, int backEdgeOffset, int scanLimit)
+        {
+            int backEdgeSize = GetInstructionSizeAt(ncsData, backEdgeOffset);
+            if (backEdgeSize <= 0)
+            {
+                return false;
+            }
+
+            int minExitTarget = backEdgeOffset + backEdgeSize;
+            int offset = loopHead;
+            while (offset < backEdgeOffset && offset + 2 <= scanLimit)
+            {
+                byte op = ncsData[offset];
+                if (op == 0x1D)
+                {
+                    int target = TryResolveJumpTarget(ncsData, offset);
+                    if (target >= minExitTarget
+                        && target < scanLimit
+                        && IsForwardLoopBreakJump(ncsData, target, loopHead, scanLimit))
+                    {
+                        return true;
+                    }
+                }
+
+                int step = GetInstructionSizeAt(ncsData, offset);
+                if (step <= 0)
+                {
+                    break;
+                }
+
+                offset += step;
+            }
+
+            return false;
+        }
+
         private static bool ShouldContinueLinearAfterConditionalJump(byte[] ncsData, int jumpOpcodeOffset, byte opcode)
         {
             int constValue;
@@ -818,6 +886,13 @@ namespace BioWare.Tools
                             stackPointerDelta))
                     {
                         return true;
+                    }
+
+                    if (jumpTarget > 0
+                        && jumpTarget <= scanOffset
+                        && !HasForwardLoopExitJump(ncsData, jumpTarget, scanOffset, scanLimit))
+                    {
+                        break;
                     }
                 }
                 else if (opcode == 0x1F || opcode == 0x25)
