@@ -120,6 +120,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 339 | [339-test-bioware-find-strref-cf-slow-cache-plan.md](2026-05-24-339-test-bioware-find-strref-cf-slow-cache-plan.md) | BioWare FindStrRefReferences slow vs cache CF tests |
 | 340 | [340-docs-kotorcli-find-strref-slow-cache-plan.md](2026-05-24-340-docs-kotorcli-find-strref-slow-cache-plan.md) | KotorCLI find-strref slow vs cache NCS behavior docs |
 | 341 | [341-docs-kb-ncs-consti-cf-verification-plan.md](2026-05-24-341-docs-kb-ncs-consti-cf-verification-plan.md) | KB verification sync for NCS CONSTI CF arc |
+| 342 | [342-docs-pr36-arc-closure-plan.md](2026-05-24-342-docs-pr36-arc-closure-plan.md) | PR #36 arc closure — plan 063 sync |
 
 ## Repo implications
 
