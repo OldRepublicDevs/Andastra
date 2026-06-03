@@ -701,6 +701,48 @@ namespace BioWare.Tools
             return false;
         }
 
+        private static bool IsReturnCleanupMovspAfterJump(byte[] ncsData, int jumpOpcodeOffset)
+        {
+            int jumpSize = GetInstructionSizeAt(ncsData, jumpOpcodeOffset);
+            if (jumpSize <= 0)
+            {
+                return false;
+            }
+
+            int nextStart = jumpOpcodeOffset + jumpSize;
+            if (nextStart + 6 > ncsData.Length || ncsData[nextStart] != 0x1B)
+            {
+                return false;
+            }
+
+            int movOffset = (ncsData[nextStart + 2] << 24)
+                | (ncsData[nextStart + 3] << 16)
+                | (ncsData[nextStart + 4] << 8)
+                | ncsData[nextStart + 5];
+            return movOffset < 0;
+        }
+
+        private static bool ShouldContinueLinearAfterConditionalJump(byte[] ncsData, int jumpOpcodeOffset, byte opcode)
+        {
+            int constValue;
+            if (!TryResolveJumpConditionConstInt(ncsData, jumpOpcodeOffset, out constValue))
+            {
+                return false;
+            }
+
+            if (opcode == 0x1F && constValue != 0)
+            {
+                return !IsReturnCleanupMovspAfterJump(ncsData, jumpOpcodeOffset);
+            }
+
+            if (opcode == 0x25 && constValue == 0)
+            {
+                return !IsReturnCleanupMovspAfterJump(ncsData, jumpOpcodeOffset);
+            }
+
+            return false;
+        }
+
         private static bool TryFindStrRefConsumerViaStackReloadFromScan(
             byte[] ncsData,
             ConstiInstruction storedConsti,
@@ -797,7 +839,10 @@ namespace BioWare.Tools
                         }
                     }
 
-                    break;
+                    if (!ShouldContinueLinearAfterConditionalJump(ncsData, scanOffset, opcode))
+                    {
+                        break;
+                    }
                 }
 
                 int instructionSize = GetInstructionSizeAt(ncsData, scanOffset);
