@@ -29,3 +29,7 @@ dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0 --filter
 ## Scope Boundaries
 
 - Characterization tests only; scanner from plan **362** already handles depth 3 without code changes.
+
+## Implementation Notes
+
+- **Test-only outcome (confirmed):** three-hop multi-arg probe passes without scanner changes; `MaxNestedJsrRelayDepth = 4` already covers depth 3 (same as plan **364**).
