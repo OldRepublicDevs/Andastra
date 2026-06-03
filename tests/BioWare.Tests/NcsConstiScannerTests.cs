@@ -1377,6 +1377,94 @@ namespace BioWare.Tests
         }
 
         [Test]
+        public void GetConstiUsageContext_SubroutineDeadReturnLocalStrRef_RemainsStackStored()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void sub1() {\n    int n = " + targetStrRef + ";\n    if (1) return;\n    ActionSpeakStringByStrRef(n);\n}\nvoid main() { sub1(); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StackStored));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_SubroutineDeadReturnLocalStrRef_IsNotIndexed()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void sub1() {\n    int n = " + targetStrRef + ";\n    if (1) return;\n    ActionSpeakStringByStrRef(n);\n}\nvoid main() { sub1(); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-subdeadret-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.False);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_SubroutineInfiniteLoopLocalStrRef_RemainsStackStored()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void sub1() {\n    int n = " + targetStrRef + ";\n    while (1) { if (0) return; }\n    ActionSpeakStringByStrRef(n);\n}\nvoid main() { sub1(); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StackStored));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_SubroutineInfiniteLoopLocalStrRef_IsNotIndexed()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void sub1() {\n    int n = " + targetStrRef + ";\n    while (1) { if (0) return; }\n    ActionSpeakStringByStrRef(n);\n}\nvoid main() { sub1(); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-subinfl-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.False);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
         public void StrRefReferenceCache_WhileZeroReturnLocalStrRef_IsIndexed()
         {
             const int targetStrRef = 424242;
