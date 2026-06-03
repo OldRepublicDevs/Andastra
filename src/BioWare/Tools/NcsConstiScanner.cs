@@ -553,6 +553,77 @@ namespace BioWare.Tools
             return false;
         }
 
+        private static bool TryReadConstIntImmediatelyBeforeJump(byte[] ncsData, int jumpOpcodeOffset, out int constValue)
+        {
+            constValue = 0;
+            if (jumpOpcodeOffset <= 13)
+            {
+                return false;
+            }
+
+            int offset = jumpOpcodeOffset;
+            for (int step = 0; step < 6 && offset > 13; step++)
+            {
+                int foundStart = -1;
+                for (int candidate = offset - 2; candidate >= 13; candidate--)
+                {
+                    int size = GetInstructionSizeAt(ncsData, candidate);
+                    if (size > 0 && candidate + size == offset)
+                    {
+                        foundStart = candidate;
+                        break;
+                    }
+                }
+
+                if (foundStart < 0)
+                {
+                    return false;
+                }
+
+                byte opcode = ncsData[foundStart];
+                byte qualifier = ncsData[foundStart + 1];
+                if (opcode == 0x04 && qualifier == 0x03 && foundStart + 6 <= jumpOpcodeOffset)
+                {
+                    constValue = (ncsData[foundStart + 2] << 24)
+                        | (ncsData[foundStart + 3] << 16)
+                        | (ncsData[foundStart + 4] << 8)
+                        | ncsData[foundStart + 5];
+                    return true;
+                }
+
+                if (opcode == 0x1B || opcode == 0x23 || opcode == 0x24 || opcode == 0x2D || opcode == 0x02)
+                {
+                    offset = foundStart;
+                    continue;
+                }
+
+                return false;
+            }
+
+            return false;
+        }
+
+        private static bool ShouldForkConditionalJumpTarget(byte[] ncsData, int jumpOpcodeOffset, byte opcode)
+        {
+            int constValue;
+            if (!TryReadConstIntImmediatelyBeforeJump(ncsData, jumpOpcodeOffset, out constValue))
+            {
+                return false;
+            }
+
+            if (opcode == 0x1F)
+            {
+                return constValue == 0;
+            }
+
+            if (opcode == 0x25)
+            {
+                return constValue != 0;
+            }
+
+            return false;
+        }
+
         private static bool TryFindStrRefConsumerViaStackReloadFromScan(
             byte[] ncsData,
             ConstiInstruction storedConsti,
@@ -614,19 +685,24 @@ namespace BioWare.Tools
 
                 if (opcode == 0x1D || opcode == 0x1F || opcode == 0x25)
                 {
-                    int jumpTarget = TryResolveJumpTarget(ncsData, scanOffset);
-                    if (jumpTarget > 0
-                        && jumpTarget < scanLimit
-                        && TryFindStrRefConsumerViaStackReloadFromScan(
-                            ncsData,
-                            storedConsti,
-                            storeOffset,
-                            storeSize,
-                            jumpTarget,
-                            scanLimit,
-                            stackPointerDelta))
+                    bool shouldFork = opcode == 0x1D
+                        || ShouldForkConditionalJumpTarget(ncsData, scanOffset, opcode);
+                    if (shouldFork)
                     {
-                        return true;
+                        int jumpTarget = TryResolveJumpTarget(ncsData, scanOffset);
+                        if (jumpTarget > 0
+                            && jumpTarget < scanLimit
+                            && TryFindStrRefConsumerViaStackReloadFromScan(
+                                ncsData,
+                                storedConsti,
+                                storeOffset,
+                                storeSize,
+                                jumpTarget,
+                                scanLimit,
+                                stackPointerDelta))
+                        {
+                            return true;
+                        }
                     }
                 }
 
