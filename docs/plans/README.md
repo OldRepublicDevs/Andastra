@@ -115,6 +115,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 334 | [334-test-ncs-consti-subroutine-cf-plan.md](2026-05-24-334-test-ncs-consti-subroutine-cf-plan.md) | NCS CONSTI subroutine and edge-case cache probes |
 | 335 | [335-test-ncs-consti-subroutine-dead-path-plan.md](2026-05-24-335-test-ncs-consti-subroutine-dead-path-plan.md) | NCS CONSTI subroutine dead-path probes |
 | 336 | [336-chore-pr36-merge-readiness-plan.md](2026-05-24-336-chore-pr36-merge-readiness-plan.md) | PR #36 merge-readiness tracker sync |
+| 337 | [337-test-kotorcli-find-strref-cf-gating-plan.md](2026-05-24-337-test-kotorcli-find-strref-cf-gating-plan.md) | KotorCLI find-strref control-flow gating tests |
 
 ## Repo implications
 
