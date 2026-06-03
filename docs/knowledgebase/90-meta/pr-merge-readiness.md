@@ -181,8 +181,8 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Item | Status |
 |------|--------|
 | Merge | **Open** — [PR #36](https://github.com/th3w1zard1/Andastra/pull/36) awaiting merge to `master` `[REPO]` |
-| Scope | NCS CONSTI jump-fork SP forward scan (plan **324**) + guarded conditional fork (plan **326**): fork at `JMP`/`JZ`/`JNZ` with literal `if` guard; early-return + dead-return regression tests; **40** NcsConsti tests |
-| Plans | **324**–**326** (feature **324**, pending tracker **325**, guarded fork fix **326**) |
+| Scope | NCS CONSTI jump-fork SP forward scan (plans **324**–**327**): literal + local `if` condition resolve; scan cutoff after `JZ`/`JNZ`; regression tests for early/dead/variable returns; **42** NcsConsti tests |
+| Plans | **324**–**327** (feature **324**, tracker **325**, guarded fork **326**, local condition **327**) |
 | CI on PR | Solution Build, Test, Lint **pass**; duplicate CodeQL run failure + `code/snyk` quota documented as non-blocking `[REPO]` |
 | Post-merge | Promote this section to outcome with merge SHA when PR #36 lands |
 
