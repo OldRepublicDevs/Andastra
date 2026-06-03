@@ -265,12 +265,21 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Plans | **360**–**361** (feature **360** + tracker sync **361**); full stack simulation remains deferred per plan **063** |
 | CI on merge | Solution Build, Test, Lint **pass**; duplicate CodeQL + `code/snyk` quota documented as non-blocking `[REPO]` |
 
+## Plan 362 slice (nested JSR multi-arg relay)
+
+| Item | Status |
+|------|--------|
+| Branch | `feat/plan-362-nested-jsr-multi-arg-relay` |
+| Scope | NCS CONSTI nested JSR **multi-arg** relay StrRef (plan **362**): backwalk contiguous CPTOPSP/CONST push run before nested JSR; `TryCptopspMatchesCallerSlot` maps inner push-run slot index to caller slot; **86** NcsConsti tests (+3) |
+| Root cause | Single-arg relay (plan **360**) matched CPTOPSP via stack offset only; multi-arg `relay(a,s)→speak(a,s)` requires full push-run collection from run start and slot-index alignment at the matching CPTOPSP |
+| Plans | **362**; full stack simulation remains deferred per plan **063** |
+
 ## Local validation (green path)
 
 | Check | Command / artifact | Status |
 |-------|-------------------|--------|
 | BioWare + tests | `dotnet build/test` per [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md) | Green `[REPO]` |
-| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**83**), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**361**, 2026-06-03) |
+| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**86**), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**362**, 2026-06-03) |
 | Ref-search Step 3c (ReferenceFinder) | `--filter` ReferenceFinderTests (**97**), ReferenceSearchHelper (**36**), ScriptReferenceHelper (**8**), FindRefsCommand (**21**) | Green `[REPO]` (plans **348**–**353**, 2026-06-03) |
 | Full solution | `dotnet build Andastra.sln --framework net9.0 -c Release -m:1` | Green Linux net9.0 `[REPO]` |
 | Tool chain | OdyTools, OdyPatch, OdyPatch.UI, KotorCLI, ConvertKotorGame | Green net9.0 `[REPO]` |
