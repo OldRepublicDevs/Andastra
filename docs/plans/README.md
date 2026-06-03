@@ -109,6 +109,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 328 | [328-test-ncs-consti-control-flow-cache-plan.md](2026-05-24-328-test-ncs-consti-control-flow-cache-plan.md) | NCS CONSTI control-flow cache integration tests |
 | 329 | [329-fix-ncs-consti-while-break-scan-plan.md](2026-05-24-329-fix-ncs-consti-while-break-scan-plan.md) | NCS CONSTI while-break linear scan continuation |
 | 330 | [330-test-ncs-consti-while-zero-if-live-plan.md](2026-05-24-330-test-ncs-consti-while-zero-if-live-plan.md) | NCS CONSTI while-zero and if-one-live tests |
+| 331 | [331-test-ncs-consti-control-flow-probes-plan.md](2026-05-24-331-test-ncs-consti-control-flow-probes-plan.md) | NCS CONSTI do-while, for, nested-if control-flow probes |
 
 ## Repo implications
 
