@@ -155,6 +155,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 373 | [373-chore-merge-pr61-tracker-sync-plan.md](2026-05-24-373-chore-merge-pr61-tracker-sync-plan.md) | Merge PR #61 + post-merge tracker sync |
 | 374 | [374-feat-ncs-consti-four-hop-multi-arg-jsr-relay-plan.md](2026-05-24-374-feat-ncs-consti-four-hop-multi-arg-jsr-relay-plan.md) | NCS CONSTI four-hop multi-arg nested JSR relay |
 | 375 | [375-chore-merge-pr63-tracker-sync-plan.md](2026-05-24-375-chore-merge-pr63-tracker-sync-plan.md) | Merge PR #63 + post-merge tracker sync |
+| 376 | [376-feat-odytool-lip-batch-processor-plan.md](2026-05-24-376-feat-odytool-lip-batch-processor-plan.md) | OdyTool LIP batch WAV processor (Holocron parity) |
 
 ## Repo implications
 
