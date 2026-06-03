@@ -122,6 +122,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 341 | [341-docs-kb-ncs-consti-cf-verification-plan.md](2026-05-24-341-docs-kb-ncs-consti-cf-verification-plan.md) | KB verification sync for NCS CONSTI CF arc |
 | 342 | [342-docs-pr36-arc-closure-plan.md](2026-05-24-342-docs-pr36-arc-closure-plan.md) | PR #36 arc closure — plan 063 sync |
 | 343 | [343-docs-pr36-title-refresh-plan.md](2026-05-24-343-docs-pr36-title-refresh-plan.md) | PR #36 title refresh + plan 342 closure |
+| 344 | [344-chore-merge-pr36-tracker-sync-plan.md](2026-05-24-344-chore-merge-pr36-tracker-sync-plan.md) | Merge PR #36 + post-merge tracker sync |
 
 ## Repo implications
 
