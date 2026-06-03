@@ -301,12 +301,21 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Plans | **368**–**369** (feature **368** + tracker sync **369**); full stack simulation remains deferred per plan **063** |
 | CI on merge | Solution Build, Test, Lint **pass**; duplicate CodeQL + `code/snyk` quota documented as non-blocking `[REPO]` |
 
+## PR #59 outcome
+
+| Item | Status |
+|------|--------|
+| Merge | **Merged** to `master` 2026-06-03 @ `69710ae01` via [PR #59](https://github.com/th3w1zard1/Andastra/pull/59) `[REPO]` |
+| Scope | NCS CONSTI three-hop mixed CONST+CPTOPSP nested JSR relay characterization (plan **370**): `relay→mid→inner→speak(0,s)` chain; test-only — scanner from plan **362** handles depth 3 mixed push runs; **94** NcsConsti tests (+2) |
+| Plans | **370**–**371** (feature **370** + tracker sync **371**); full stack simulation remains deferred per plan **063** |
+| CI on merge | Solution Build, Test, Lint **pass**; duplicate CodeQL + `code/snyk` quota documented as non-blocking `[REPO]` |
+
 ## Local validation (green path)
 
 | Check | Command / artifact | Status |
 |-------|-------------------|--------|
 | BioWare + tests | `dotnet build/test` per [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md) | Green `[REPO]` |
-| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**92**), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**369**, 2026-06-03) |
+| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**94**), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**371**, 2026-06-03) |
 | Ref-search Step 3c (ReferenceFinder) | `--filter` ReferenceFinderTests (**97**), ReferenceSearchHelper (**36**), ScriptReferenceHelper (**8**), FindRefsCommand (**21**) | Green `[REPO]` (plans **348**–**353**, 2026-06-03) |
 | Full solution | `dotnet build Andastra.sln --framework net9.0 -c Release -m:1` | Green Linux net9.0 `[REPO]` |
 | Tool chain | OdyTools, OdyPatch, OdyPatch.UI, KotorCLI, ConvertKotorGame | Green net9.0 `[REPO]` |
@@ -332,13 +341,13 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (369+)
+## Suggested next slices (371+)
 
 | Plan | Topic |
 |------|-------|
-| 369+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
-| 369+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
-| 369+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
+| 371+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
+| 371+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 371+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
 
 ## Repo implications
 
