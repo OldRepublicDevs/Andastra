@@ -181,8 +181,8 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Item | Status |
 |------|--------|
 | Merge | **Open** — [PR #36](https://github.com/th3w1zard1/Andastra/pull/36) awaiting merge to `master` `[REPO]` |
-| Scope | NCS CONSTI control-flow forward scan (plans **324**–**329**) + regression/cache/subroutine tests (**328**, **330**–**335**) + KotorCLI find-strref gating (**337**, **338**) + BioWare slow/cache CF tests (**339**); **74** NcsConsti + **18** FindStrRef + **12** CLI ref-search tests |
-| Plans | **324**–**339** (feature **324**–**335**, **337**–**339**; tracker sync **325**, **336**) |
+| Scope | NCS CONSTI control-flow forward scan (plans **324**–**329**) + regression/cache/subroutine tests (**328**, **330**–**335**) + KotorCLI find-strref gating (**337**, **338**) + BioWare slow/cache CF tests (**339**) + find-strref slow/cache docs (**340**); **74** NcsConsti + **18** FindStrRef + **12** CLI ref-search tests |
+| Plans | **324**–**340** (feature **324**–**335**, **337**–**339**; docs **340**; tracker sync **325**, **336**) |
 | CI on PR | Solution Build, Test, Lint **pass**; duplicate CodeQL run failure + `code/snyk` quota documented as non-blocking `[REPO]` |
 | Merge readiness | **Ready** — full control-flow arc landed; no open scanner gaps in regression suite `[REPO]` |
 | Post-merge | Promote this section to outcome with merge SHA when PR #36 lands |
@@ -220,7 +220,7 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 
 | Plan | Topic |
 |------|-------|
-| 336+ | **Merge [PR #36](https://github.com/th3w1zard1/Andastra/pull/36)** (plans **324**–**335** NCS CONSTI control-flow arc); promote pending → outcome |
+| 336+ | **Merge [PR #36](https://github.com/th3w1zard1/Andastra/pull/36)** (plans **324**–**340** NCS CONSTI arc + find-strref docs); promote pending → outcome |
 | 336+ | Merge [PR #35](https://github.com/th3w1zard1/Andastra/pull/35) (plan **323** PR #33–#34 tracker sync) |
 | 336+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
 | 336+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
