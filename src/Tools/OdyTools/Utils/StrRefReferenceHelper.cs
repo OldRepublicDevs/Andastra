@@ -92,10 +92,19 @@ namespace OdyTools.Utils
                 SearchOverride = true
             };
 
+            StrRefReferenceCache cache = null;
+            if (options.IncludeNcsStrRefScan)
+            {
+                cache = ReferenceCacheHelpers.BuildStrRefReferenceCache(
+                    installation.Installation,
+                    null,
+                    options);
+            }
+
             List<StrRefSearchResult> strrefResults = ReferenceCacheHelpers.FindStrRefReferences(
                 installation.Installation,
                 strref,
-                null,
+                cache,
                 null,
                 options);
 

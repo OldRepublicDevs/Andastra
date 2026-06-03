@@ -183,6 +183,64 @@ namespace OdyTools.Tests
             }
         }
 
+        [Test]
+        public void CollectStrRefReferences_NcsDeadReturnLocalStrRef_CachePath_IsEmpty()
+        {
+            const int targetStrRef = 424242;
+            string installRoot = CreateInstallWithNcsDeadReturnLocalStrRef(targetStrRef);
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+                var options = new ReferenceSearchOptions
+                {
+                    SearchOverride = true,
+                    SearchChitin = false,
+                    SearchModules = false,
+                    IncludeNcsStrRefScan = true
+                };
+
+                List<ReferenceSearchResult> results = StrRefReferenceHelper.CollectStrRefReferences(
+                    targetStrRef,
+                    installation,
+                    options);
+
+                Assert.That(results, Is.Empty);
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
+        [Test]
+        public void CollectStrRefReferences_NcsEarlyReturnLiveConsumer_CachePath_FindsHit()
+        {
+            const int targetStrRef = 424242;
+            string installRoot = CreateInstallWithNcsEarlyReturnLiveConsumer(targetStrRef);
+            try
+            {
+                var installation = new OdyInstallation(installRoot, "Test");
+                var options = new ReferenceSearchOptions
+                {
+                    SearchOverride = true,
+                    SearchChitin = false,
+                    SearchModules = false,
+                    IncludeNcsStrRefScan = true
+                };
+
+                List<ReferenceSearchResult> results = StrRefReferenceHelper.CollectStrRefReferences(
+                    targetStrRef,
+                    installation,
+                    options);
+
+                Assert.That(results, Is.Not.Empty);
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+            }
+        }
+
         private static string CreateInstallWithStrRef(int strref)
         {
             string installRoot = Path.Combine(Path.GetTempPath(), "odytools-strref-" + Guid.NewGuid().ToString("N"));
@@ -208,6 +266,40 @@ namespace OdyTools.Tests
             File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
 
             NCS ncs = NCSAuto.CompileNss("void main() { int n = " + strref + "; }", BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_script.ncs"), bytes);
+
+            return installRoot;
+        }
+
+        private static string CreateInstallWithNcsDeadReturnLocalStrRef(int strref)
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "odytools-ncs-deadret-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() {\n    int n = " + strref + ";\n    if (1) return;\n    ActionSpeakStringByStrRef(n);\n}",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_script.ncs"), bytes);
+
+            return installRoot;
+        }
+
+        private static string CreateInstallWithNcsEarlyReturnLiveConsumer(int strref)
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "odytools-ncs-live-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() {\n    int n = " + strref + ";\n    if (0) return;\n    ActionSpeakStringByStrRef(n);\n}",
+                BioWareGame.K1);
             byte[] bytes = NCSAuto.BytesNcs(ncs);
             File.WriteAllBytes(Path.Combine(overrideDir, "test_script.ncs"), bytes);
 
