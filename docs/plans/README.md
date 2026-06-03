@@ -127,6 +127,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 345 | [345-chore-reconcile-plan323-tracker-sync-plan.md](2026-05-24-345-chore-reconcile-plan323-tracker-sync-plan.md) | Reconcile plan 323 tracker sync on master |
 | 346 | [346-feat-odytools-strref-cache-path-plan.md](2026-05-24-346-feat-odytools-strref-cache-path-plan.md) | OdyTools StrRefReferenceHelper cache-path NCS gating |
 | 347 | [347-chore-merge-pr37-tracker-sync-plan.md](2026-05-24-347-chore-merge-pr37-tracker-sync-plan.md) | Merge PR #37 + post-merge tracker sync |
+| 348 | [348-docs-build-ladder-strref-filters-plan.md](2026-05-24-348-docs-build-ladder-strref-filters-plan.md) | build-and-test-ladder StrRef ref-search filter commands |
 
 ## Repo implications
 
