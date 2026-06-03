@@ -104,6 +104,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 322 | [322-feat-ncs-consti-bp-fullfile-relay-plan.md](2026-05-29-322-feat-ncs-consti-bp-fullfile-relay-plan.md) | NCS CONSTI BP full-file cross-sub relay trace |
 | 324 | [324-feat-ncs-consti-jump-fork-strref-scan-plan.md](2026-05-24-324-feat-ncs-consti-jump-fork-strref-scan-plan.md) | NCS CONSTI jump-fork SP forward scan for local StrRef |
 | 325 | [325-chore-pr36-pending-tracker-sync-plan.md](2026-05-24-325-chore-pr36-pending-tracker-sync-plan.md) | PR #36 pending tracker sync (plan 324) |
+| 326 | [326-fix-ncs-consti-guarded-jump-fork-plan.md](2026-05-24-326-fix-ncs-consti-guarded-jump-fork-plan.md) | NCS CONSTI guarded JZ/JNZ jump fork |
 
 ## Repo implications
 
