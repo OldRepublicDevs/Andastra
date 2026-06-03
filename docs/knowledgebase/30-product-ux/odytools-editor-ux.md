@@ -25,7 +25,7 @@ Content authoring and inspection workflows for OdyTools and standalone editors.
 | OdyToolNSS NCS disassembly tab | Green — `DisassembleNcsBytes` + tab UI tests `[REPO]` (2026-05-24) |
 | Reference finder (script ResRef, UTC/UTD/UTP/UTT/UTE/UTM/ARE/IFO context menus) | Green — override fixture tests `[REPO]` (2026-05-24) |
 | Reference search options dialog (override/modules/chitin, module-glob, StrRef NCS scan) | Green — `ReferenceSearchOptionsDialogTests` `[REPO]` (2026-05-24) |
-| StrRef find-refs NCS CONSTI cache path | Green — `StrRefReferenceCache` / `IncludeNcsStrRefScan` gating; **10** NcsConsti + **2** CLI tests `[REPO]` (plan **286**, 2026-05-28) |
+| StrRef find-refs NCS CONSTI cache path | Green — `StrRefReferenceCache` / `IncludeNcsStrRefScan` gating; **2** KotorCLI CLI tests at plan **286** baseline; superseded by **74** NcsConsti + **10** StrRefReferenceHelper rows (plans **324**–**346**) `[REPO]` |
 | Script ResRef NCS CONSTS scanner paths | Green — `NcsConstStringScanner` + `(NCS bytecode) offset_<n>` field paths; **3** NcsConstString + **5** FindScriptResRefInNcsBytes tests `[REPO]` (plan **287**, 2026-05-28) |
 | Compiled NCS script ResRef installation e2e | Green — `FindScriptReferences_OverrideCompiledNcs_ReturnsNcsBytecodePath`; **1** ReferenceFinder test `[REPO]` (plan **289**, 2026-05-28) |
 | KotorCLI find-refs compiled NCS CLI subprocess | Green — `Cli_FindRefs_Script_CompiledNcsInOverride_ExitsZero`; **1** FindRefsCommandCli test `[REPO]` (plan **290**, 2026-05-28) |
