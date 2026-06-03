@@ -29,7 +29,11 @@ Content authoring and inspection workflows for OdyTools and standalone editors.
 | Script ResRef NCS CONSTS scanner paths | Green — `NcsConstStringScanner` + `(NCS bytecode) offset_<n>` field paths; **3** NcsConstString + **5** FindScriptResRefInNcsBytes tests `[REPO]` (plan **287**, 2026-05-28) |
 | Compiled NCS script ResRef installation e2e | Green — `FindScriptReferences_OverrideCompiledNcs_ReturnsNcsBytecodePath`; **1** ReferenceFinder test `[REPO]` (plan **289**, 2026-05-28) |
 | KotorCLI find-refs compiled NCS CLI subprocess | Green — `Cli_FindRefs_Script_CompiledNcsInOverride_ExitsZero`; **1** FindRefsCommandCli test `[REPO]` (plan **290**, 2026-05-28) |
-| NCS CONSTI StrRef vs 2DA-memory threshold disambiguation | Partial — threshold + opcode-context + action-signature + stack-store heuristics; **20** NcsConsti tests + **2** CLI subprocess tests `[REPO]` (plans **086**/**095**/**099**/**292**–**294**/**303**/**305**/**307**, 2026-05-28) |
+| NCS CONSTI StrRef vs 2DA-memory threshold disambiguation | Green — threshold + opcode-context + action-signature + stack-store heuristics; **74** NcsConsti tests `[REPO]` (plans **086**/**095**/**099**/**292**–**294**/**303**/**305**/**307**/**324**–**335**, 2026-05-28) |
+| NCS CONSTI control-flow reachability (JZ/JNZ/JMP fork, while-break, subroutine/infinite-loop) | Green — `NcsConstiScanner` forward scan + cache indexing; **74** NcsConsti tests `[REPO]` (plans **324**–**335**, 2026-05-24) |
+| KotorCLI find-strref cache-path NCS control-flow gating | Green — in-process + CLI subprocess cache-path tests; **18** FindStrRef + **12** InstallationRefSearch CLI tests `[REPO]` (plans **337**–**338**, 2026-05-24) |
+| BioWare find-strref slow vs cache NCS semantics | Green — slow path matches raw CONSTI; cache path excludes dead-path consumers; **3** BioWare FindStrRefReferences CF tests `[REPO]` (plan **339**, 2026-05-24) |
+| KotorCLI find-strref slow vs cache documentation | Green — README table + examples under `find-strref` `[REPO]` (plan **340**, 2026-05-24) |
 | 2DA editor / ComboBox2DA row **Find References** | Green — `TwoDAMemoryReferenceHelper` + `OdyTool2DA` context menu (plans 083, 200) `[REPO]` |
 | KotorDiff in-app (Tools menu) | Green — shared `KotorDiffApp` host `[REPO]` (2026-05-24) |
 | Indoor Map Builder Build/Save/Open | Partial — headless build + WOK AreaModel tests; in-game walkmesh **Unverified** `[OPEN]` |
