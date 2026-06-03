@@ -181,8 +181,8 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Item | Status |
 |------|--------|
 | Merge | **Open** — [PR #36](https://github.com/th3w1zard1/Andastra/pull/36) awaiting merge to `master` `[REPO]` |
-| Scope | NCS CONSTI control-flow forward scan (plans **324**–**329**) + regression/cache tests (**328**, **330**–**334**); **67** NcsConsti tests |
-| Plans | **324**–**334** |
+| Scope | NCS CONSTI control-flow forward scan (plans **324**–**329**) + regression/cache tests (**328**, **330**–**335**); **71** NcsConsti tests |
+| Plans | **324**–**335** |
 | CI on PR | Solution Build, Test, Lint **pass**; duplicate CodeQL run failure + `code/snyk` quota documented as non-blocking `[REPO]` |
 | Post-merge | Promote this section to outcome with merge SHA when PR #36 lands |
 
