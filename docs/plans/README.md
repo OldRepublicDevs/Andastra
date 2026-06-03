@@ -110,6 +110,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 329 | [329-fix-ncs-consti-while-break-scan-plan.md](2026-05-24-329-fix-ncs-consti-while-break-scan-plan.md) | NCS CONSTI while-break linear scan continuation |
 | 330 | [330-test-ncs-consti-while-zero-if-live-plan.md](2026-05-24-330-test-ncs-consti-while-zero-if-live-plan.md) | NCS CONSTI while-zero and if-one-live tests |
 | 331 | [331-fix-ncs-consti-backward-jmp-scan-plan.md](2026-05-24-331-fix-ncs-consti-backward-jmp-scan-plan.md) | NCS CONSTI backward JMP scan termination |
+| 332 | [332-test-ncs-consti-advanced-cf-cache-plan.md](2026-05-24-332-test-ncs-consti-advanced-cf-cache-plan.md) | NCS CONSTI advanced control-flow cache integration tests |
 
 ## Repo implications
 
