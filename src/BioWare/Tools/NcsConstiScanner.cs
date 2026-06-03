@@ -805,7 +805,8 @@ namespace BioWare.Tools
                 if (opcode == 0x1D)
                 {
                     int jumpTarget = TryResolveJumpTarget(ncsData, scanOffset);
-                    if (jumpTarget > 0
+                    // Forward JMP forks only — backward edges are loop back-edges and recurse indefinitely.
+                    if (jumpTarget > scanOffset
                         && jumpTarget < scanLimit
                         && TryFindStrRefConsumerViaStackReloadFromScan(
                             ncsData,
