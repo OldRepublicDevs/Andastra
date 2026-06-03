@@ -35,6 +35,19 @@ dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filt
 
 Expected on `master` post [PR #36](https://github.com/th3w1zard1/Andastra/pull/36) / [PR #37](https://github.com/th3w1zard1/Andastra/pull/37): **74** NcsConsti + **18** FindStrRefCommand + **12** CLI ref-search + **10** StrRefReferenceHelper tests pass. `[REPO]`
 
+### Step 3c — ReferenceFinder + script ResRef ref-search (when relevant)
+
+After GFF script ResRef / installation reference-search / OdyTools helper wiring changes (plan **068** arc):
+
+```bash
+dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ReferenceFinderTests
+dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ReferenceSearchHelperTests
+dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~ScriptReferenceHelperTests
+dotnet test tests/KotorCLI.Tests/KotorCLI.Tests.csproj --framework net9.0 --filter FullyQualifiedName~FindRefsCommand
+```
+
+Expected on `master`: **97** ReferenceFinder + **36** ReferenceSearchHelper + **8** ScriptReferenceHelper + **21** FindRefsCommand tests pass. `[REPO]`
+
 ### Step 4 — Andastra tests
 
 ```bash
