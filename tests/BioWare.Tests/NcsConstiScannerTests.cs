@@ -1523,6 +1523,136 @@ namespace BioWare.Tests
         }
 
         [Test]
+        public void FindStrRefReferences_DeadReturnSlowPath_StillFindsLiteral()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() {\n    int n = " + targetStrRef + ";\n    if (1) return;\n    ActionSpeakStringByStrRef(n);\n}",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string installRoot = Path.Combine(Path.GetTempPath(), "ncs-deadret-slow-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_script.ncs"), bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                List<StrRefSearchResult> results = ReferenceCacheHelpers.FindStrRefReferences(
+                    installation,
+                    targetStrRef,
+                    null,
+                    null);
+
+                Assert.That(results, Is.Not.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindStrRefReferences_DeadReturnCachePath_IsEmpty()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() {\n    int n = " + targetStrRef + ";\n    if (1) return;\n    ActionSpeakStringByStrRef(n);\n}",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string installRoot = Path.Combine(Path.GetTempPath(), "ncs-deadret-cache-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+            string ncsPath = Path.Combine(overrideDir, "test_script.ncs");
+            File.WriteAllBytes(ncsPath, bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, ncsPath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                List<StrRefSearchResult> results = ReferenceCacheHelpers.FindStrRefReferences(
+                    installation,
+                    targetStrRef,
+                    cache,
+                    null);
+
+                Assert.That(results, Is.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
+        public void FindStrRefReferences_EarlyReturnLiveCachePath_FindsConsumer()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() {\n    int n = " + targetStrRef + ";\n    if (0) return;\n    ActionSpeakStringByStrRef(n);\n}",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string installRoot = Path.Combine(Path.GetTempPath(), "ncs-live-cache-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+            string ncsPath = Path.Combine(overrideDir, "test_script.ncs");
+            File.WriteAllBytes(ncsPath, bytes);
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, ncsPath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                List<StrRefSearchResult> results = ReferenceCacheHelpers.FindStrRefReferences(
+                    installation,
+                    targetStrRef,
+                    cache,
+                    null);
+
+                Assert.That(results, Is.Not.Empty);
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(installRoot, true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+            }
+        }
+
+        [Test]
         public void GetConstiUsageContext_ElseBranchLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
         {
             const int targetStrRef = 424242;
