@@ -34,7 +34,8 @@ Content authoring and inspection workflows for OdyTools and standalone editors.
 | KotorCLI find-strref cache-path NCS control-flow gating | Green — in-process + CLI subprocess cache-path tests; **18** FindStrRef + **12** InstallationRefSearch CLI tests `[REPO]` (plans **337**–**338**, 2026-05-24) |
 | BioWare find-strref slow vs cache NCS semantics | Green — slow path matches raw CONSTI; cache path excludes dead-path consumers; **3** BioWare FindStrRefReferences CF tests `[REPO]` (plan **339**, 2026-05-24) |
 | KotorCLI find-strref slow vs cache documentation | Green — README table + examples under `find-strref` `[REPO]` (plan **340**, 2026-05-24) |
-| OdyTools StrRef find-refs cache-path NCS gating | Green — `StrRefReferenceHelper` builds `StrRefReferenceCache` when `IncludeNcsStrRefScan`; **10** StrRefReferenceHelper tests `[REPO]` (plan **346**, 2026-05-24) |
+| OdyTools StrRef find-refs cache-path NCS gating | Green — `StrRefReferenceHelper` builds `StrRefReferenceCache` when `IncludeNcsStrRefScan`; **10** StrRefReferenceHelper tests `[REPO]` (plan **346**, 2026-06-03) |
+| build-and-test-ladder ref-search filter steps | Green — **Step 3b** NCS CONSTI/StrRef + **Step 3c** ReferenceFinder targeted `dotnet test` filters in [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md) `[REPO]` (plans **348**–**351**, 2026-06-03) |
 | 2DA editor / ComboBox2DA row **Find References** | Green — `TwoDAMemoryReferenceHelper` + `OdyTool2DA` context menu (plans 083, 200) `[REPO]` |
 | KotorDiff in-app (Tools menu) | Green — shared `KotorDiffApp` host `[REPO]` (2026-05-24) |
 | Indoor Map Builder Build/Save/Open | Partial — headless build + WOK AreaModel tests; in-game walkmesh **Unverified** `[OPEN]` |

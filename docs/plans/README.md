@@ -131,6 +131,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 349 | [349-chore-merge-pr38-tracker-sync-plan.md](2026-05-24-349-chore-merge-pr38-tracker-sync-plan.md) | Merge PR #38 + post-merge tracker sync |
 | 350 | [350-docs-build-ladder-reference-finder-filters-plan.md](2026-05-24-350-docs-build-ladder-reference-finder-filters-plan.md) | build-and-test-ladder ReferenceFinder filter commands |
 | 351 | [351-chore-merge-pr40-tracker-sync-plan.md](2026-05-24-351-chore-merge-pr40-tracker-sync-plan.md) | Merge PR #40 + post-merge tracker sync |
+| 352 | [352-docs-plan063-build-ladder-sync-plan.md](2026-05-24-352-docs-plan063-build-ladder-sync-plan.md) | Sync plan 063 with build-ladder ref-search steps |
 
 ## Repo implications
 
