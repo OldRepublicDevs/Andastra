@@ -1026,19 +1026,89 @@ namespace BioWare.Tools
                 return false;
             }
 
+            List<ActionStackSlot> stackSlots;
+            int jsrTarget;
+            if (!TryCollectJsrCallPushRun(ncsData, instruction, out stackSlots, out jsrTarget))
+            {
+                return false;
+            }
+
+            int callerSlotIndex = -1;
+            for (int i = 0; i < stackSlots.Count; i++)
+            {
+                if (stackSlots[i].IsIntConst && stackSlots[i].ValueByteOffset == instruction.ValueByteOffset)
+                {
+                    callerSlotIndex = i;
+                    break;
+                }
+            }
+
+            if (callerSlotIndex < 0)
+            {
+                return false;
+            }
+
+            return SubroutineUsesStrRefActionOnStackParam(
+                ncsData,
+                jsrTarget,
+                instruction,
+                callerSlotIndex,
+                stackSlots.Count);
+        }
+
+        private static bool TryCollectJsrCallPushRun(
+            byte[] ncsData,
+            ConstiInstruction instruction,
+            out List<ActionStackSlot> stackSlots,
+            out int jsrTarget)
+        {
+            stackSlots = null;
+            jsrTarget = -1;
+
             int constiOpcodeOffset = instruction.ValueByteOffset - 2;
             if (constiOpcodeOffset < 13)
             {
                 return false;
             }
 
-            int scanLimit = Math.Min(ncsData.Length, constiOpcodeOffset + VariableStrRefForwardScanLimitBytes);
-            int scanOffset = constiOpcodeOffset;
-            bool includesThisConsti = false;
+            int runStart = constiOpcodeOffset;
+            while (runStart > 13)
+            {
+                int previousStart = runStart - 6;
+                if (previousStart < 13 || !IsConstantPushAt(ncsData, previousStart))
+                {
+                    break;
+                }
+
+                int previousSize = GetConstantPushInstructionSizeAt(ncsData, previousStart);
+                if (previousSize <= 0 || previousStart + previousSize != runStart)
+                {
+                    break;
+                }
+
+                runStart = previousStart;
+            }
+
+            stackSlots = new List<ActionStackSlot>();
+            int scanLimit = Math.Min(ncsData.Length, runStart + VariableStrRefForwardScanLimitBytes);
+            int scanOffset = runStart;
 
             while (scanOffset + 2 <= scanLimit)
             {
                 byte opcode = ncsData[scanOffset];
+                byte qualifier = ncsData[scanOffset + 1];
+
+                if (opcode == 0x04 && qualifier == 0x03)
+                {
+                    stackSlots.Add(new ActionStackSlot
+                    {
+                        IsIntConst = true,
+                        ValueByteOffset = scanOffset + 2
+                    });
+                    scanOffset += 6;
+                    continue;
+                }
+
                 if (opcode == 0x04)
                 {
                     int pushSize = GetConstantPushInstructionSizeAt(ncsData, scanOffset);
@@ -1047,30 +1117,20 @@ namespace BioWare.Tools
                         return false;
                     }
 
-                    if (scanOffset + 2 <= instruction.ValueByteOffset
-                        && instruction.ValueByteOffset < scanOffset + pushSize)
-                    {
-                        includesThisConsti = true;
-                    }
-
+                    stackSlots.Add(new ActionStackSlot { IsIntConst = false, ValueByteOffset = -1 });
                     scanOffset += pushSize;
                     continue;
                 }
 
                 if (opcode == 0x1E)
                 {
-                    if (!includesThisConsti)
+                    if (stackSlots.Count == 0)
                     {
                         return false;
                     }
 
-                    int target = TryResolveJumpTarget(ncsData, scanOffset);
-                    if (target <= 13 || target >= ncsData.Length)
-                    {
-                        return false;
-                    }
-
-                    return SubroutineUsesStrRefActionOnStackParam(ncsData, target);
+                    jsrTarget = TryResolveJumpTarget(ncsData, scanOffset);
+                    return jsrTarget > 13 && jsrTarget < ncsData.Length;
                 }
 
                 return false;
@@ -1079,7 +1139,12 @@ namespace BioWare.Tools
             return false;
         }
 
-        private static bool SubroutineUsesStrRefActionOnStackParam(byte[] ncsData, int subroutineStart)
+        private static bool SubroutineUsesStrRefActionOnStackParam(
+            byte[] ncsData,
+            int subroutineStart,
+            ConstiInstruction instruction,
+            int callerSlotIndex,
+            int callerArgCount)
         {
             int scanLimit = Math.Min(ncsData.Length, subroutineStart + SubroutineStrRefEntryScanLimitBytes);
             int scanOffset = subroutineStart;
@@ -1099,26 +1164,25 @@ namespace BioWare.Tools
                     if (TryReadStackCopyOperands(ncsData, scanOffset, out loadOffset, out loadSize)
                         && loadSize == 4)
                     {
-                        int afterLoad = scanOffset + 8;
-                        int actionScanLimit = Math.Min(scanLimit, afterLoad + 32);
-                        for (int actionOffset = afterLoad; actionOffset + 4 <= actionScanLimit; )
+                        int paramIndex;
+                        if (TryMapStackLoadOffsetToParamIndex(loadOffset, callerArgCount, out paramIndex)
+                            && paramIndex == callerSlotIndex)
                         {
-                            if (ncsData[actionOffset] == 0x05)
+                            int actionId;
+                            List<ActionStackSlot> actionStackSlots;
+                            if (TryGetActionArgumentRunFrom(
+                                    ncsData,
+                                    scanOffset,
+                                    instruction.ValueByteOffset,
+                                    out actionId,
+                                    out actionStackSlots)
+                                && IsConstiAtStrRefParameterSlot(
+                                    actionId,
+                                    instruction.ValueByteOffset,
+                                    actionStackSlots))
                             {
-                                int actionId = (ncsData[actionOffset + 2] << 8) | ncsData[actionOffset + 3];
-                                if (StrRefParamIndicesByActionId.ContainsKey(actionId))
-                                {
-                                    return true;
-                                }
+                                return true;
                             }
-
-                            int step = GetInstructionSizeAt(ncsData, actionOffset);
-                            if (step <= 0)
-                            {
-                                break;
-                            }
-
-                            actionOffset += step;
                         }
                     }
                 }
@@ -1133,6 +1197,25 @@ namespace BioWare.Tools
             }
 
             return false;
+        }
+
+        private static bool TryMapStackLoadOffsetToParamIndex(int loadOffset, int argCount, out int paramIndex)
+        {
+            paramIndex = -1;
+            if (loadOffset >= 0 || argCount <= 0)
+            {
+                return false;
+            }
+
+            // JSR args are pushed left-to-right; the last pushed arg sits at SP-4 on callee entry.
+            int absoluteOffset = -loadOffset;
+            if (absoluteOffset <= 0 || absoluteOffset % 4 != 0 || absoluteOffset > argCount * 4)
+            {
+                return false;
+            }
+
+            paramIndex = argCount - (absoluteOffset / 4);
+            return paramIndex >= 0 && paramIndex < argCount;
         }
 
         private static int FindActionArgumentRunStart(byte[] ncsData, int loadOpcodeOffset)
