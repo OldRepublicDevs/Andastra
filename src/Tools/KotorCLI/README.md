@@ -123,6 +123,33 @@ Flags: `--override-only`, `--no-override`, `--no-chitin`, `--no-modules`, `--mod
 
 NCS hits report bytecode offsets (`(NCS bytecode) offset_<n>` in field-path display).
 
+#### NCS CONSTI: slow path vs cache path
+
+`find-strref` uses two lookup strategies for NCS bytecode. The CLI picks the path from whether a StrRef cache is in play:
+
+| Path | When | NCS behavior |
+|------|------|--------------|
+| **Slow** | Default (no `--cache-file`) | Scans every NCS resource and matches **any** CONSTI operand equal to the queried StrRef (`ExtractConstiOffsetsForValue`). No control-flow analysis; dead code after unconditional `return` may still report hits. |
+| **Cache** | `--cache-file <path>` (load or build) | Uses a pre-built `StrRefReferenceCache`. NCS entries are indexed only when `NcsConstiScanner.ShouldIndexAsStrRefCandidate` passes: usage context (StrRef consumer vs generic integer vs stack store), forward control-flow reachability, and `--ncs-strref-min` (default **100**) for unknown-context operands. |
+
+Implications for mod authors:
+
+- **One-off queries** (no cache file) are exhaustive for NCS literals but may include unreachable CONSTI (e.g. code after `if (1) return;`).
+- **Repeated or batch queries** should use `--cache-file` (optionally `--rebuild-cache`) for faster lookups and fewer false-positive NCS hits on dead paths.
+- **`--ncs-strref-min`** affects cache indexing only; the slow path still matches any CONSTI value you query explicitly.
+
+Example: build cache once, then query (cache path):
+
+```bash
+dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
+  find-strref 12345 --install-dir /path/to/kotor --cache-file /tmp/strref-cache.json --rebuild-cache
+
+dotnet run --project src/Tools/KotorCLI/KotorCLI.csproj --framework net9.0 -- \
+  find-strref 67890 --install-dir /path/to/kotor --cache-file /tmp/strref-cache.json
+```
+
+Same query without `--cache-file` uses the slow path (raw CONSTI match). See BioWare tests `FindStrRefReferences_*SlowPath*` / `*CachePath*` (plan **339**) and KotorCLI `FindStrRefCommandTests` cache-path gating (plans **337**–**338**).
+
 **find-2da-ref** — 2DA row index referenced from GFF (e.g. `Appearance_Type` → `appearance.2da`):
 
 ```bash

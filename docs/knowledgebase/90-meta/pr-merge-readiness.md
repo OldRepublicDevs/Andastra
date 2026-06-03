@@ -176,6 +176,17 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | CI on PR | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
 | Post-merge | Promote this section to outcome with merge SHA when PR #33 lands |
 
+## PR #36 pending
+
+| Item | Status |
+|------|--------|
+| Merge | **Open** — [PR #36](https://github.com/th3w1zard1/Andastra/pull/36) awaiting merge to `master` `[REPO]` |
+| Scope | NCS CONSTI control-flow arc (plans **324**–**341** on [PR #36](https://github.com/th3w1zard1/Andastra/pull/36)): scanner + cache/subroutine tests + KotorCLI gating + BioWare slow/cache tests + README/KB docs; **74** NcsConsti + **18** FindStrRef + **12** CLI ref-search tests |
+| Plans | **324**–**343** (feature **324**–**335**, **337**–**339**; docs **340**–**343**; tracker sync **325**, **336**) |
+| CI on PR | Solution Build, Test, Lint **pass**; duplicate CodeQL run failure + `code/snyk` quota documented as non-blocking `[REPO]` |
+| Merge readiness | **Ready — arc complete** — full control-flow vertical slice landed; local ref-search suites green (2026-06-03); PR title synced plans **324**–**342** (plan **343**) `[REPO]` |
+| Post-merge | Promote this section to outcome with merge SHA when PR #36 lands |
+
 ## Local validation (green path)
 
 | Check | Command / artifact | Status |
@@ -205,14 +216,15 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (321+)
+## Suggested next slices (336+)
 
 | Plan | Topic |
 |------|-------|
-| 321+ | Promote PR #33 pending → outcome in tracker after merge |
-| 321+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
-| 321+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
-| 321+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
+| 336+ | **Merge [PR #36](https://github.com/th3w1zard1/Andastra/pull/36)** (plans **324**–**340** NCS CONSTI arc + find-strref docs); promote pending → outcome |
+| 336+ | Merge [PR #35](https://github.com/th3w1zard1/Andastra/pull/35) (plan **323** PR #33–#34 tracker sync) |
+| 336+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
+| 336+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 336+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
 
 ## Repo implications
 

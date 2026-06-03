@@ -222,6 +222,62 @@ namespace KotorCLI.Tests
             }
         }
 
+        [Test]
+        public void Cli_FindStrRef_NcsDeadReturn_CachePath_ExitsNonZero()
+        {
+            const int targetStrRef = 424242;
+            string installRoot = CreateInstallWithNcsDeadReturnLocalStrRef(targetStrRef);
+            string cacheFile = Path.Combine(Path.GetTempPath(), "kotorcli-deadret-cli-cache-" + Guid.NewGuid().ToString("N") + ".json");
+            try
+            {
+                int exitCode = RunKotorCli(
+                    "find-strref " + targetStrRef
+                    + " --installation \"" + installRoot + "\" --override-only --no-chitin --no-modules"
+                    + " --cache-file \"" + cacheFile + "\" --rebuild-cache",
+                    out string stdout,
+                    out string stderr);
+
+                Assert.That(exitCode, Is.Not.EqualTo(0), stdout + stderr);
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+                if (File.Exists(cacheFile))
+                {
+                    File.Delete(cacheFile);
+                }
+            }
+        }
+
+        [Test]
+        public void Cli_FindStrRef_NcsEarlyReturnLive_CachePath_ExitsZero()
+        {
+            const int targetStrRef = 424242;
+            string installRoot = CreateInstallWithNcsEarlyReturnLiveLocalStrRef(targetStrRef);
+            string cacheFile = Path.Combine(Path.GetTempPath(), "kotorcli-live-cli-cache-" + Guid.NewGuid().ToString("N") + ".json");
+            try
+            {
+                int exitCode = RunKotorCli(
+                    "find-strref " + targetStrRef
+                    + " --installation \"" + installRoot + "\" --override-only --no-chitin --no-modules"
+                    + " --cache-file \"" + cacheFile + "\" --rebuild-cache",
+                    out string stdout,
+                    out string stderr);
+
+                string combined = stdout + stderr;
+                Assert.That(exitCode, Is.EqualTo(0), combined);
+                Assert.That(combined, Does.Contain(targetStrRef.ToString()));
+            }
+            finally
+            {
+                DeleteDirectorySafe(installRoot);
+                if (File.Exists(cacheFile))
+                {
+                    File.Delete(cacheFile);
+                }
+            }
+        }
+
         private static int RunKotorCli(string arguments, out string stdout, out string stderr)
         {
             string cliDll = Path.Combine(RepoRoot, "src", "Tools", "KotorCLI", "bin", "Debug", "net9.0", "KotorCLI.dll");
@@ -290,6 +346,40 @@ namespace KotorCLI.Tests
             File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
 
             NCS ncs = NCSAuto.CompileNss("void main() { int n = " + strref + "; }", BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_script.ncs"), bytes);
+
+            return installRoot;
+        }
+
+        private static string CreateInstallWithNcsDeadReturnLocalStrRef(int strref)
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-ncs-deadret-cli-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() {\n    int n = " + strref + ";\n    if (1) return;\n    ActionSpeakStringByStrRef(n);\n}",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+            File.WriteAllBytes(Path.Combine(overrideDir, "test_script.ncs"), bytes);
+
+            return installRoot;
+        }
+
+        private static string CreateInstallWithNcsEarlyReturnLiveLocalStrRef(int strref)
+        {
+            string installRoot = Path.Combine(Path.GetTempPath(), "kotorcli-ncs-live-cli-" + Guid.NewGuid().ToString("N"));
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(Path.Combine(installRoot, "SWKOTOR.EXE"), new byte[0]);
+            File.WriteAllBytes(Path.Combine(installRoot, "chitin.key"), new byte[0]);
+
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() {\n    int n = " + strref + ";\n    if (0) return;\n    ActionSpeakStringByStrRef(n);\n}",
+                BioWareGame.K1);
             byte[] bytes = NCSAuto.BytesNcs(ncs);
             File.WriteAllBytes(Path.Combine(overrideDir, "test_script.ncs"), bytes);
 

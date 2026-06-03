@@ -505,6 +505,20 @@ namespace BioWare.Tools
                 out storeSize);
         }
 
+        private static int TryResolveJumpTarget(byte[] ncsData, int opcodeOffset)
+        {
+            if (opcodeOffset + 6 > ncsData.Length)
+            {
+                return -1;
+            }
+
+            int relative = (ncsData[opcodeOffset + 2] << 24)
+                | (ncsData[opcodeOffset + 3] << 16)
+                | (ncsData[opcodeOffset + 4] << 8)
+                | ncsData[opcodeOffset + 5];
+            return relative + opcodeOffset;
+        }
+
         private static bool TryFindStrRefConsumerViaStackReload(
             byte[] ncsData,
             ConstiInstruction storedConsti,
@@ -518,9 +532,294 @@ namespace BioWare.Tools
             }
 
             int scanLimit = Math.Min(ncsData.Length, storeOpcodeOffset + 8 + VariableStrRefForwardScanLimitBytes);
-            int scanOffset = storeOpcodeOffset + 8;
-            int stackPointerDelta = 0;
             byte storeOpcode = ncsData[storeOpcodeOffset];
+            if (TryFindStrRefConsumerViaStackReloadFromScan(
+                    ncsData,
+                    storedConsti,
+                    storeOffset,
+                    storeSize,
+                    storeOpcodeOffset + 8,
+                    scanLimit,
+                    0))
+            {
+                return true;
+            }
+
+            if (storeOpcode == 0x26)
+            {
+                return TryFindStrRefConsumerViaBpReload(ncsData, storedConsti, storeOffset, storeSize);
+            }
+
+            return false;
+        }
+
+        private static int FindPreviousInstructionStart(byte[] ncsData, int opcodeOffset)
+        {
+            if (opcodeOffset <= 13)
+            {
+                return -1;
+            }
+
+            for (int candidate = opcodeOffset - 2; candidate >= 13; candidate--)
+            {
+                int size = GetInstructionSizeAt(ncsData, candidate);
+                if (size > 0 && candidate + size == opcodeOffset)
+                {
+                    return candidate;
+                }
+            }
+
+            return -1;
+        }
+
+        private static bool TryReadConstIntImmediatelyBeforeInstruction(byte[] ncsData, int instructionOffset, out int constValue)
+        {
+            constValue = 0;
+            if (instructionOffset <= 13)
+            {
+                return false;
+            }
+
+            int offset = instructionOffset;
+            for (int step = 0; step < 6 && offset > 13; step++)
+            {
+                int foundStart = FindPreviousInstructionStart(ncsData, offset);
+                if (foundStart < 0)
+                {
+                    return false;
+                }
+
+                byte opcode = ncsData[foundStart];
+                byte qualifier = ncsData[foundStart + 1];
+                if (opcode == 0x04 && qualifier == 0x03 && foundStart + 6 <= instructionOffset)
+                {
+                    constValue = (ncsData[foundStart + 2] << 24)
+                        | (ncsData[foundStart + 3] << 16)
+                        | (ncsData[foundStart + 4] << 8)
+                        | ncsData[foundStart + 5];
+                    return true;
+                }
+
+                if (opcode == 0x1B || opcode == 0x23 || opcode == 0x24 || opcode == 0x2D || opcode == 0x02)
+                {
+                    offset = foundStart;
+                    continue;
+                }
+
+                return false;
+            }
+
+            return false;
+        }
+
+        private static bool TryReadConstIntFromLocalLoad(byte[] ncsData, int cptopspOffset, out int constValue)
+        {
+            constValue = 0;
+            int loadOffset;
+            int loadSize;
+            if (!TryReadStackCopyOperands(ncsData, cptopspOffset, out loadOffset, out loadSize) || loadSize != 4)
+            {
+                return false;
+            }
+
+            int offset = cptopspOffset;
+            int stackPointerDelta = 0;
+            for (int step = 0; step < 12 && offset > 13; step++)
+            {
+                int foundStart = FindPreviousInstructionStart(ncsData, offset);
+                if (foundStart < 0)
+                {
+                    return false;
+                }
+
+                byte opcode = ncsData[foundStart];
+                if (opcode == 0x01)
+                {
+                    int storeOffset;
+                    int storeSize;
+                    if (TryReadStackCopyOperands(ncsData, foundStart, out storeOffset, out storeSize)
+                        && storeSize == loadSize
+                        && (storeOffset == loadOffset || storeOffset + stackPointerDelta == loadOffset)
+                        && TryReadConstIntImmediatelyBeforeInstruction(ncsData, foundStart, out constValue))
+                    {
+                        return true;
+                    }
+                }
+
+                if (opcode == 0x1B || opcode == 0x23 || opcode == 0x24)
+                {
+                    if (foundStart + 6 <= ncsData.Length)
+                    {
+                        int movOffset = (ncsData[foundStart + 2] << 24)
+                            | (ncsData[foundStart + 3] << 16)
+                            | (ncsData[foundStart + 4] << 8)
+                            | ncsData[foundStart + 5];
+                        stackPointerDelta -= movOffset;
+                    }
+                }
+
+                offset = foundStart;
+            }
+
+            return false;
+        }
+
+        private static bool TryResolveJumpConditionConstInt(byte[] ncsData, int jumpOpcodeOffset, out int constValue)
+        {
+            if (TryReadConstIntImmediatelyBeforeInstruction(ncsData, jumpOpcodeOffset, out constValue))
+            {
+                return true;
+            }
+
+            int previousStart = FindPreviousInstructionStart(ncsData, jumpOpcodeOffset);
+            if (previousStart >= 0 && ncsData[previousStart] == 0x03)
+            {
+                return TryReadConstIntFromLocalLoad(ncsData, previousStart, out constValue);
+            }
+
+            return false;
+        }
+
+        private static bool ShouldForkConditionalJumpTarget(byte[] ncsData, int jumpOpcodeOffset, byte opcode)
+        {
+            int constValue;
+            if (!TryResolveJumpConditionConstInt(ncsData, jumpOpcodeOffset, out constValue))
+            {
+                return false;
+            }
+
+            if (opcode == 0x1F)
+            {
+                return constValue == 0;
+            }
+
+            if (opcode == 0x25)
+            {
+                return constValue != 0;
+            }
+
+            return false;
+        }
+
+        private static bool IsReturnCleanupMovspAfterJump(byte[] ncsData, int jumpOpcodeOffset)
+        {
+            int jumpSize = GetInstructionSizeAt(ncsData, jumpOpcodeOffset);
+            if (jumpSize <= 0)
+            {
+                return false;
+            }
+
+            int nextStart = jumpOpcodeOffset + jumpSize;
+            if (nextStart + 6 > ncsData.Length || ncsData[nextStart] != 0x1B)
+            {
+                return false;
+            }
+
+            int movOffset = (ncsData[nextStart + 2] << 24)
+                | (ncsData[nextStart + 3] << 16)
+                | (ncsData[nextStart + 4] << 8)
+                | ncsData[nextStart + 5];
+            return movOffset < 0;
+        }
+
+        private static bool IsForwardLoopBreakJump(byte[] ncsData, int jumpTarget, int loopHead, int scanLimit)
+        {
+            int offset = jumpTarget;
+            for (int i = 0; i < 24 && offset + 2 <= scanLimit; i++)
+            {
+                byte op = ncsData[offset];
+                if (op == 0x20)
+                {
+                    return false;
+                }
+
+                if (op == 0x1D)
+                {
+                    int target = TryResolveJumpTarget(ncsData, offset);
+                    if (target > 0 && target <= loopHead + 4)
+                    {
+                        return false;
+                    }
+                }
+
+                int step = GetInstructionSizeAt(ncsData, offset);
+                if (step <= 0)
+                {
+                    break;
+                }
+
+                offset += step;
+            }
+
+            return true;
+        }
+
+        private static bool HasForwardLoopExitJump(byte[] ncsData, int loopHead, int backEdgeOffset, int scanLimit)
+        {
+            int backEdgeSize = GetInstructionSizeAt(ncsData, backEdgeOffset);
+            if (backEdgeSize <= 0)
+            {
+                return false;
+            }
+
+            int minExitTarget = backEdgeOffset + backEdgeSize;
+            int offset = loopHead;
+            while (offset < backEdgeOffset && offset + 2 <= scanLimit)
+            {
+                byte op = ncsData[offset];
+                if (op == 0x1D)
+                {
+                    int target = TryResolveJumpTarget(ncsData, offset);
+                    if (target >= minExitTarget
+                        && target < scanLimit
+                        && IsForwardLoopBreakJump(ncsData, target, loopHead, scanLimit))
+                    {
+                        return true;
+                    }
+                }
+
+                int step = GetInstructionSizeAt(ncsData, offset);
+                if (step <= 0)
+                {
+                    break;
+                }
+
+                offset += step;
+            }
+
+            return false;
+        }
+
+        private static bool ShouldContinueLinearAfterConditionalJump(byte[] ncsData, int jumpOpcodeOffset, byte opcode)
+        {
+            int constValue;
+            if (!TryResolveJumpConditionConstInt(ncsData, jumpOpcodeOffset, out constValue))
+            {
+                return false;
+            }
+
+            if (opcode == 0x1F && constValue != 0)
+            {
+                return !IsReturnCleanupMovspAfterJump(ncsData, jumpOpcodeOffset);
+            }
+
+            if (opcode == 0x25 && constValue == 0)
+            {
+                return !IsReturnCleanupMovspAfterJump(ncsData, jumpOpcodeOffset);
+            }
+
+            return false;
+        }
+
+        private static bool TryFindStrRefConsumerViaStackReloadFromScan(
+            byte[] ncsData,
+            ConstiInstruction storedConsti,
+            int storeOffset,
+            int storeSize,
+            int scanOffset,
+            int scanLimit,
+            int stackPointerDelta)
+        {
             while (scanOffset + 8 <= scanLimit)
             {
                 byte opcode = ncsData[scanOffset];
@@ -571,6 +870,57 @@ namespace BioWare.Tools
                     }
                 }
 
+                if (opcode == 0x1D)
+                {
+                    int jumpTarget = TryResolveJumpTarget(ncsData, scanOffset);
+                    // Forward JMP forks only — backward edges are loop back-edges and recurse indefinitely.
+                    if (jumpTarget > scanOffset
+                        && jumpTarget < scanLimit
+                        && TryFindStrRefConsumerViaStackReloadFromScan(
+                            ncsData,
+                            storedConsti,
+                            storeOffset,
+                            storeSize,
+                            jumpTarget,
+                            scanLimit,
+                            stackPointerDelta))
+                    {
+                        return true;
+                    }
+
+                    if (jumpTarget > 0
+                        && jumpTarget <= scanOffset
+                        && !HasForwardLoopExitJump(ncsData, jumpTarget, scanOffset, scanLimit))
+                    {
+                        break;
+                    }
+                }
+                else if (opcode == 0x1F || opcode == 0x25)
+                {
+                    if (ShouldForkConditionalJumpTarget(ncsData, scanOffset, opcode))
+                    {
+                        int jumpTarget = TryResolveJumpTarget(ncsData, scanOffset);
+                        if (jumpTarget > 0
+                            && jumpTarget < scanLimit
+                            && TryFindStrRefConsumerViaStackReloadFromScan(
+                                ncsData,
+                                storedConsti,
+                                storeOffset,
+                                storeSize,
+                                jumpTarget,
+                                scanLimit,
+                                stackPointerDelta))
+                        {
+                            return true;
+                        }
+                    }
+
+                    if (!ShouldContinueLinearAfterConditionalJump(ncsData, scanOffset, opcode))
+                    {
+                        break;
+                    }
+                }
+
                 int instructionSize = GetInstructionSizeAt(ncsData, scanOffset);
                 if (instructionSize <= 0)
                 {
@@ -590,11 +940,6 @@ namespace BioWare.Tools
                 }
 
                 scanOffset += instructionSize;
-            }
-
-            if (storeOpcode == 0x26)
-            {
-                return TryFindStrRefConsumerViaBpReload(ncsData, storedConsti, storeOffset, storeSize);
             }
 
             return false;
