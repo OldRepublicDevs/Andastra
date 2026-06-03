@@ -1142,6 +1142,39 @@ namespace BioWare.Tools
             return false;
         }
 
+        private static bool TryCptopspMatchesCallerSlot(
+            byte[] ncsData,
+            int cptopspOpcodeOffset,
+            int linkedConstiValueByteOffset,
+            int callerSlotIndex,
+            int callerArgCount,
+            int loadOffset)
+        {
+            int pushRunStart = FindContiguousPushRunStart(ncsData, cptopspOpcodeOffset);
+            List<ActionStackSlot> relayStackSlots;
+            int nestedJsrTarget;
+            if (TryCollectJsrCallPushRunFrom(
+                    ncsData,
+                    pushRunStart,
+                    linkedConstiValueByteOffset,
+                    NestedJsrRelayForwardScanLimitBytes,
+                    out relayStackSlots,
+                    out nestedJsrTarget))
+            {
+                int pushRunSlotIndex = GetPushSlotIndexAtOpcodeOffset(
+                    ncsData,
+                    pushRunStart,
+                    cptopspOpcodeOffset,
+                    linkedConstiValueByteOffset,
+                    NestedJsrRelayForwardScanLimitBytes);
+                return pushRunSlotIndex == callerSlotIndex;
+            }
+
+            int paramIndex;
+            return TryMapStackLoadOffsetToParamIndex(loadOffset, callerArgCount, out paramIndex)
+                && paramIndex == callerSlotIndex;
+        }
+
         private static bool SubroutineUsesStrRefActionOnStackParam(
             byte[] ncsData,
             int subroutineStart,
@@ -1173,9 +1206,14 @@ namespace BioWare.Tools
                     if (TryReadStackCopyOperands(ncsData, scanOffset, out loadOffset, out loadSize)
                         && loadSize == 4)
                     {
-                        int paramIndex;
-                        if (TryMapStackLoadOffsetToParamIndex(loadOffset, callerArgCount, out paramIndex)
-                            && paramIndex == callerSlotIndex)
+                        bool paramMatchesCallerSlot = TryCptopspMatchesCallerSlot(
+                            ncsData,
+                            scanOffset,
+                            instruction.ValueByteOffset,
+                            callerSlotIndex,
+                            callerArgCount,
+                            loadOffset);
+                        if (paramMatchesCallerSlot)
                         {
                             int actionId;
                             List<ActionStackSlot> actionStackSlots;
@@ -1223,11 +1261,12 @@ namespace BioWare.Tools
             ConstiInstruction instruction,
             int relayDepth)
         {
+            int pushRunStart = FindContiguousPushRunStart(ncsData, paramLoadOpcodeOffset);
             List<ActionStackSlot> relayStackSlots;
             int nestedJsrTarget;
             if (!TryCollectJsrCallPushRunFrom(
                     ncsData,
-                    paramLoadOpcodeOffset,
+                    pushRunStart,
                     instruction.ValueByteOffset,
                     NestedJsrRelayForwardScanLimitBytes,
                     out relayStackSlots,
@@ -1241,17 +1280,12 @@ namespace BioWare.Tools
                 return false;
             }
 
-            int relayedSlotIndex = -1;
-            for (int i = 0; i < relayStackSlots.Count; i++)
-            {
-                if (relayStackSlots[i].IsIntConst
-                    && relayStackSlots[i].ValueByteOffset == instruction.ValueByteOffset)
-                {
-                    relayedSlotIndex = i;
-                    break;
-                }
-            }
-
+            int relayedSlotIndex = GetPushSlotIndexAtOpcodeOffset(
+                ncsData,
+                pushRunStart,
+                paramLoadOpcodeOffset,
+                instruction.ValueByteOffset,
+                NestedJsrRelayForwardScanLimitBytes);
             if (relayedSlotIndex < 0)
             {
                 return false;
@@ -1264,6 +1298,98 @@ namespace BioWare.Tools
                 relayedSlotIndex,
                 relayStackSlots.Count,
                 relayDepth + 1);
+        }
+
+        private static int FindContiguousPushRunStart(byte[] ncsData, int pushOpcodeOffset)
+        {
+            int runStart = pushOpcodeOffset;
+            while (runStart > 13)
+            {
+                int previousStart = FindPreviousInstructionStart(ncsData, runStart);
+                if (previousStart < 13)
+                {
+                    break;
+                }
+
+                int previousSize = GetInstructionSizeAt(ncsData, previousStart);
+                if (previousSize <= 0 || previousStart + previousSize != runStart)
+                {
+                    break;
+                }
+
+                byte previousOpcode = ncsData[previousStart];
+                if (previousOpcode == 0x03 || previousOpcode == 0x27)
+                {
+                    runStart = previousStart;
+                    continue;
+                }
+
+                if (previousOpcode == 0x04 && IsConstantPushAt(ncsData, previousStart))
+                {
+                    runStart = previousStart;
+                    continue;
+                }
+
+                break;
+            }
+
+            return runStart;
+        }
+
+        private static int GetPushSlotIndexAtOpcodeOffset(
+            byte[] ncsData,
+            int runStart,
+            int targetOpcodeOffset,
+            int linkedConstiValueByteOffset,
+            int forwardScanLimitBytes)
+        {
+            if (runStart < 13 || targetOpcodeOffset < runStart)
+            {
+                return -1;
+            }
+
+            int scanLimit = Math.Min(ncsData.Length, runStart + forwardScanLimitBytes);
+            int scanOffset = runStart;
+            int slotIndex = 0;
+
+            while (scanOffset + 2 <= scanLimit && scanOffset <= targetOpcodeOffset)
+            {
+                if (scanOffset == targetOpcodeOffset)
+                {
+                    return slotIndex;
+                }
+
+                byte opcode = ncsData[scanOffset];
+                byte qualifier = ncsData[scanOffset + 1];
+                int instructionSize = 0;
+
+                if (opcode == 0x04 && qualifier == 0x03)
+                {
+                    instructionSize = 6;
+                }
+                else if (opcode == 0x04)
+                {
+                    instructionSize = GetConstantPushInstructionSizeAt(ncsData, scanOffset);
+                }
+                else if (opcode == 0x03 || opcode == 0x27)
+                {
+                    instructionSize = 8;
+                }
+                else if (opcode == 0x1E)
+                {
+                    break;
+                }
+
+                if (instructionSize <= 0)
+                {
+                    return -1;
+                }
+
+                slotIndex++;
+                scanOffset += instructionSize;
+            }
+
+            return -1;
         }
 
         private static bool TryCollectJsrCallPushRunFrom(
