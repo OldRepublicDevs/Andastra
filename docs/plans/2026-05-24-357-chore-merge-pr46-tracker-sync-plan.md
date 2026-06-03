@@ -19,7 +19,7 @@ branch: docs/plan-357-merge-pr46-tracker-sync
 - R1. Merge PR #46 — **done** @ `c859cbd3c` (2026-06-03).
 - R2. Tracker **PR #46 outcome** section in `pr-merge-readiness.md`.
 - R3. Refresh Step 3b NcsConsti baseline **74 → 77** in `pr-merge-readiness.md`, `build-and-test-ladder.md`, `odytools-editor-ux.md`.
-- R4. Note plan **356** / PR **#46** in plan **063**; refresh suggested next slices to **358+**; index **357**.
+- R4. Note plan **356** / PR **#46** in plan **063**; refresh suggested next slices to **357+**; index **357**.
 
 ## Verification
 
