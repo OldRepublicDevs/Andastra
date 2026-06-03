@@ -193,6 +193,15 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Plans | **324**–**344** (feature **324**–**335**, **337**–**339**; docs **340**–**344**; tracker sync **325**, **336**, **344**) |
 | CI on merge | Solution Build, Test, Lint **pass**; duplicate CodeQL + `code/snyk` quota documented as non-blocking `[REPO]` |
 
+## PR #37 outcome
+
+| Item | Status |
+|------|--------|
+| Merge | **Merged** to `master` 2026-06-03 @ `211a82204` via [PR #37](https://github.com/th3w1zard1/Andastra/pull/37) `[REPO]` |
+| Scope | OdyTools `StrRefReferenceHelper` cache-path NCS gating (plan **346**): builds `StrRefReferenceCache` when `IncludeNcsStrRefScan`; **10** StrRefReferenceHelper tests |
+| Plans | **346**–**347** (feature **346** + tracker sync **347**) |
+| CI on merge | Solution Build, Test, Lint **pass**; duplicate CodeQL + `code/snyk` quota documented as non-blocking `[REPO]` |
+
 ## Local validation (green path)
 
 | Check | Command / artifact | Status |
