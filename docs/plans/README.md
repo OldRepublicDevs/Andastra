@@ -118,6 +118,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 337 | [337-test-kotorcli-find-strref-cf-gating-plan.md](2026-05-24-337-test-kotorcli-find-strref-cf-gating-plan.md) | KotorCLI find-strref control-flow gating tests |
 | 338 | [338-test-kotorcli-cli-find-strref-cf-plan.md](2026-05-24-338-test-kotorcli-cli-find-strref-cf-plan.md) | KotorCLI CLI find-strref cache-path control-flow tests |
 | 339 | [339-test-bioware-find-strref-cf-slow-cache-plan.md](2026-05-24-339-test-bioware-find-strref-cf-slow-cache-plan.md) | BioWare FindStrRefReferences slow vs cache CF tests |
+| 340 | [340-docs-kotorcli-find-strref-slow-cache-plan.md](2026-05-24-340-docs-kotorcli-find-strref-slow-cache-plan.md) | KotorCLI find-strref slow vs cache NCS behavior docs |
 
 ## Repo implications
 
