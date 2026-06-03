@@ -252,7 +252,7 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Check | Command / artifact | Status |
 |-------|-------------------|--------|
 | BioWare + tests | `dotnet build/test` per [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md) | Green `[REPO]` |
-| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**77**), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**356**, 2026-06-03) |
+| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**77**), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**357**, 2026-06-03) |
 | Ref-search Step 3c (ReferenceFinder) | `--filter` ReferenceFinderTests (**97**), ReferenceSearchHelper (**36**), ScriptReferenceHelper (**8**), FindRefsCommand (**21**) | Green `[REPO]` (plans **348**–**353**, 2026-06-03) |
 | Full solution | `dotnet build Andastra.sln --framework net9.0 -c Release -m:1` | Green Linux net9.0 `[REPO]` |
 | Tool chain | OdyTools, OdyPatch, OdyPatch.UI, KotorCLI, ConvertKotorGame | Green net9.0 `[REPO]` |
@@ -278,13 +278,14 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (357+)
+## Suggested next slices (358+)
 
 | Plan | Topic |
 |------|-------|
-| 357+ | Full CONSTI stack simulation for exotic control-flow per plan **063** (JSR call-literal landed in **356**) |
-| 357+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
-| 357+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
+| 358+ | Full CONSTI stack simulation for exotic control-flow per plan **063** (JSR call-literal landed in **356**) |
+| 358+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 358+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
+| 358+ | NCS CONSTI JSR multi-arg / nested call patterns beyond call-literal heuristic (plan **356** follow-up) |
 
 ## Repo implications
 
