@@ -279,7 +279,7 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Check | Command / artifact | Status |
 |-------|-------------------|--------|
 | BioWare + tests | `dotnet build/test` per [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md) | Green `[REPO]` |
-| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**86**), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**363**, 2026-06-03) |
+| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**88**), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**364**, 2026-06-03) |
 | Ref-search Step 3c (ReferenceFinder) | `--filter` ReferenceFinderTests (**97**), ReferenceSearchHelper (**36**), ScriptReferenceHelper (**8**), FindRefsCommand (**21**) | Green `[REPO]` (plans **348**–**353**, 2026-06-03) |
 | Full solution | `dotnet build Andastra.sln --framework net9.0 -c Release -m:1` | Green Linux net9.0 `[REPO]` |
 | Tool chain | OdyTools, OdyPatch, OdyPatch.UI, KotorCLI, ConvertKotorGame | Green net9.0 `[REPO]` |
@@ -305,13 +305,13 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (363+)
+## Suggested next slices (364+)
 
 | Plan | Topic |
 |------|-------|
-| 363+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
-| 363+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
-| 363+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
+| 364+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
+| 364+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 364+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
 
 ## Repo implications
 

@@ -2036,5 +2036,49 @@ namespace BioWare.Tests
                 }
             }
         }
+
+        [Test]
+        public void GetConstiUsageContext_TwoHopNestedJsrMultiArgRelayStrRef_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void speak(int a, int s) { ActionSpeakStringByStrRef(s); }\nvoid mid(int a, int s) { speak(a, s); }\nvoid relay(int a, int s) { mid(a, s); }\nvoid main() { relay(0, " + targetStrRef + "); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_TwoHopNestedJsrMultiArgRelayStrRef_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void speak(int a, int s) { ActionSpeakStringByStrRef(s); }\nvoid mid(int a, int s) { speak(a, s); }\nvoid relay(int a, int s) { mid(a, s); }\nvoid main() { relay(0, " + targetStrRef + "); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-two-hop-multi-jsr-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
     }
 }
