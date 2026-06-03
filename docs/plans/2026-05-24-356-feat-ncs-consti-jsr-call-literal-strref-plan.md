@@ -1,7 +1,8 @@
 ---
 title: "feat: ncs consti jsr call-literal strref consumer"
 type: feat
-status: active
+status: complete
+completed: 2026-06-03
 date: 2026-05-24
 origin: docs/plans/2026-05-24-063-feat-pykotor-holocron-port-continuation-plan.md
 branch: feat/plan-356-jsr-call-literal-strref
