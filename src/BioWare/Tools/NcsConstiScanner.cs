@@ -202,6 +202,11 @@ namespace BioWare.Tools
                 return ConstiUsageContext.StrRefConsumer;
             }
 
+            if (TryFindStrRefConsumerViaJsrCall(ncsData, instruction))
+            {
+                return ConstiUsageContext.StrRefConsumer;
+            }
+
             return ConstiUsageContext.Unknown;
         }
 
@@ -1006,6 +1011,124 @@ namespace BioWare.Tools
                 }
 
                 int instructionSize = GetInstructionStepSizeAt(ncsData, scanOffset);
+                scanOffset += instructionSize;
+            }
+
+            return false;
+        }
+
+        private const int SubroutineStrRefEntryScanLimitBytes = 128;
+
+        private static bool TryFindStrRefConsumerViaJsrCall(byte[] ncsData, ConstiInstruction instruction)
+        {
+            if (ncsData == null || ncsData.Length < 21)
+            {
+                return false;
+            }
+
+            int constiOpcodeOffset = instruction.ValueByteOffset - 2;
+            if (constiOpcodeOffset < 13)
+            {
+                return false;
+            }
+
+            int scanLimit = Math.Min(ncsData.Length, constiOpcodeOffset + VariableStrRefForwardScanLimitBytes);
+            int scanOffset = constiOpcodeOffset;
+            bool includesThisConsti = false;
+
+            while (scanOffset + 2 <= scanLimit)
+            {
+                byte opcode = ncsData[scanOffset];
+                if (opcode == 0x04)
+                {
+                    int pushSize = GetConstantPushInstructionSizeAt(ncsData, scanOffset);
+                    if (pushSize <= 0)
+                    {
+                        return false;
+                    }
+
+                    if (scanOffset + 2 <= instruction.ValueByteOffset
+                        && instruction.ValueByteOffset < scanOffset + pushSize)
+                    {
+                        includesThisConsti = true;
+                    }
+
+                    scanOffset += pushSize;
+                    continue;
+                }
+
+                if (opcode == 0x1E)
+                {
+                    if (!includesThisConsti)
+                    {
+                        return false;
+                    }
+
+                    int target = TryResolveJumpTarget(ncsData, scanOffset);
+                    if (target <= 13 || target >= ncsData.Length)
+                    {
+                        return false;
+                    }
+
+                    return SubroutineUsesStrRefActionOnStackParam(ncsData, target);
+                }
+
+                return false;
+            }
+
+            return false;
+        }
+
+        private static bool SubroutineUsesStrRefActionOnStackParam(byte[] ncsData, int subroutineStart)
+        {
+            int scanLimit = Math.Min(ncsData.Length, subroutineStart + SubroutineStrRefEntryScanLimitBytes);
+            int scanOffset = subroutineStart;
+
+            while (scanOffset + 8 <= scanLimit)
+            {
+                byte opcode = ncsData[scanOffset];
+                if (opcode == 0x20)
+                {
+                    break;
+                }
+
+                if (opcode == 0x03 || opcode == 0x27)
+                {
+                    int loadOffset;
+                    int loadSize;
+                    if (TryReadStackCopyOperands(ncsData, scanOffset, out loadOffset, out loadSize)
+                        && loadSize == 4)
+                    {
+                        int afterLoad = scanOffset + 8;
+                        int actionScanLimit = Math.Min(scanLimit, afterLoad + 32);
+                        for (int actionOffset = afterLoad; actionOffset + 4 <= actionScanLimit; )
+                        {
+                            if (ncsData[actionOffset] == 0x05)
+                            {
+                                int actionId = (ncsData[actionOffset + 2] << 8) | ncsData[actionOffset + 3];
+                                if (StrRefParamIndicesByActionId.ContainsKey(actionId))
+                                {
+                                    return true;
+                                }
+                            }
+
+                            int step = GetInstructionSizeAt(ncsData, actionOffset);
+                            if (step <= 0)
+                            {
+                                break;
+                            }
+
+                            actionOffset += step;
+                        }
+                    }
+                }
+
+                int instructionSize = GetInstructionSizeAt(ncsData, scanOffset);
+                if (instructionSize <= 0)
+                {
+                    break;
+                }
+
                 scanOffset += instructionSize;
             }
 
