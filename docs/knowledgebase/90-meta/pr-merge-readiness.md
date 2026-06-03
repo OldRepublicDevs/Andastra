@@ -238,12 +238,21 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Plans | **354**–**355** (docs **354** + tracker sync **355**) |
 | CI on merge | Solution Build, Test, Lint **pass**; duplicate CodeQL + `code/snyk` quota documented as non-blocking `[REPO]` |
 
+## PR #46 outcome
+
+| Item | Status |
+|------|--------|
+| Merge | **Merged** to `master` 2026-06-03 @ `c859cbd3c` via [PR #46](https://github.com/th3w1zard1/Andastra/pull/46) `[REPO]` |
+| Scope | NCS CONSTI JSR call-literal StrRef consumer detection (plan **356**): `TryFindStrRefConsumerViaJsrCall` + callee CPTOPSP/CPTOPBP→StrRef ACTION heuristic; **77** NcsConsti tests (+3) |
+| Plans | **356**–**357** (feature **356** + tracker sync **357**); see [plan 063](../../plans/2026-05-24-063-feat-pykotor-holocron-port-continuation-plan.md) for remaining CONSTI backlog |
+| CI on merge | Solution Build, Test, Lint **pass**; duplicate CodeQL + `code/snyk` quota documented as non-blocking `[REPO]` |
+
 ## Local validation (green path)
 
 | Check | Command / artifact | Status |
 |-------|-------------------|--------|
 | BioWare + tests | `dotnet build/test` per [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md) | Green `[REPO]` |
-| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**74**), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**353**, 2026-06-03) |
+| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**77**), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**357**, 2026-06-03) |
 | Ref-search Step 3c (ReferenceFinder) | `--filter` ReferenceFinderTests (**97**), ReferenceSearchHelper (**36**), ScriptReferenceHelper (**8**), FindRefsCommand (**21**) | Green `[REPO]` (plans **348**–**353**, 2026-06-03) |
 | Full solution | `dotnet build Andastra.sln --framework net9.0 -c Release -m:1` | Green Linux net9.0 `[REPO]` |
 | Tool chain | OdyTools, OdyPatch, OdyPatch.UI, KotorCLI, ConvertKotorGame | Green net9.0 `[REPO]` |
@@ -269,13 +278,14 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (355+)
+## Suggested next slices (358+)
 
 | Plan | Topic |
 |------|-------|
-| 355+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
-| 355+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
-| 355+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
+| 358+ | Full CONSTI stack simulation for exotic control-flow per plan **063** (JSR call-literal landed in **356**) |
+| 358+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 358+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
+| 358+ | NCS CONSTI JSR multi-arg / nested call patterns beyond call-literal heuristic (plan **356** follow-up) |
 
 ## Repo implications
 
