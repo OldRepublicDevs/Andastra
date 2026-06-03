@@ -1,8 +1,9 @@
 ---
 title: "feat: odyTools strref helper cache-path ncs gating"
 type: feat
-status: active
+status: complete
 date: 2026-05-24
+completed: 2026-06-03
 origin: docs/plans/2026-05-24-339-test-bioware-find-strref-cf-slow-cache-plan.md
 branch: feat/plan-346-odytools-strref-cache-path
 ---
