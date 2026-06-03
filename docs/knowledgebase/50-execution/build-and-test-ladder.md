@@ -22,6 +22,13 @@ dotnet build tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0
 dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0
 ```
 
+### Ref-search targeted filters (Steps 3b–3c)
+
+Use after reference-search or NCS CONSTI changes — not on every build:
+
+- **Step 3b** — NCS CONSTI / StrRef cache-path / KotorCLI find-strref / OdyTools StrRef helper
+- **Step 3c** — GFF script ResRef / ReferenceFinder / installation find-refs wiring
+
 ### Step 3b — NCS CONSTI + StrRef ref-search (when relevant)
 
 After NCS CONSTI / find-strref / OdyTools StrRef helper changes (plans **324**–**347**):
