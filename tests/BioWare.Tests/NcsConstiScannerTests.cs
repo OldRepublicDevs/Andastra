@@ -1014,6 +1014,36 @@ namespace BioWare.Tests
         }
 
         [Test]
+        public void GetConstiUsageContext_ElseBranchLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() {\n    int n = " + targetStrRef + ";\n    if (0) { ActionSpeakStringByStrRef(1); } else { ActionSpeakStringByStrRef(n); }\n}",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void GetConstiUsageContext_WhileBreakLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() {\n    int n = " + targetStrRef + ";\n    while (1) { break; }\n    ActionSpeakStringByStrRef(n);\n}",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
         public void StrRefReferenceCache_GlobalBpCrossSubThreeHopLocalStrRef_IsIndexed()
         {
             const int targetStrRef = 424242;
