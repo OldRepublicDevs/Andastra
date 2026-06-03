@@ -125,6 +125,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 343 | [343-docs-pr36-title-refresh-plan.md](2026-05-24-343-docs-pr36-title-refresh-plan.md) | PR #36 title refresh + plan 342 closure |
 | 344 | [344-chore-merge-pr36-tracker-sync-plan.md](2026-05-24-344-chore-merge-pr36-tracker-sync-plan.md) | Merge PR #36 + post-merge tracker sync |
 | 345 | [345-chore-reconcile-plan323-tracker-sync-plan.md](2026-05-24-345-chore-reconcile-plan323-tracker-sync-plan.md) | Reconcile plan 323 tracker sync on master |
+| 346 | [346-feat-odytools-strref-cache-path-plan.md](2026-05-24-346-feat-odytools-strref-cache-path-plan.md) | OdyTools StrRefReferenceHelper cache-path NCS gating |
 
 ## Repo implications
 
