@@ -181,9 +181,10 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Item | Status |
 |------|--------|
 | Merge | **Open** — [PR #36](https://github.com/th3w1zard1/Andastra/pull/36) awaiting merge to `master` `[REPO]` |
-| Scope | NCS CONSTI control-flow forward scan (plans **324**–**329**) + regression/cache tests (**328**, **330**–**335**); **71** NcsConsti tests |
-| Plans | **324**–**335** |
+| Scope | NCS CONSTI control-flow forward scan (plans **324**–**329**) + regression/cache/subroutine tests (**328**, **330**–**335**); **71** NcsConsti tests; main + subroutine live/dead context and cache parity |
+| Plans | **324**–**336** (feature **324**–**335**; tracker sync **325**, **336**) |
 | CI on PR | Solution Build, Test, Lint **pass**; duplicate CodeQL run failure + `code/snyk` quota documented as non-blocking `[REPO]` |
+| Merge readiness | **Ready** — full control-flow arc landed; no open scanner gaps in regression suite `[REPO]` |
 | Post-merge | Promote this section to outcome with merge SHA when PR #36 lands |
 
 ## Local validation (green path)
@@ -215,15 +216,15 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (326+)
+## Suggested next slices (336+)
 
 | Plan | Topic |
 |------|-------|
-| 326+ | Promote PR #36 pending → outcome in tracker after merge |
-| 326+ | Merge [PR #35](https://github.com/th3w1zard1/Andastra/pull/35) (plan **323** PR #33–#34 tracker sync) |
-| 326+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
-| 326+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
-| 326+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
+| 336+ | **Merge [PR #36](https://github.com/th3w1zard1/Andastra/pull/36)** (plans **324**–**335** NCS CONSTI control-flow arc); promote pending → outcome |
+| 336+ | Merge [PR #35](https://github.com/th3w1zard1/Andastra/pull/35) (plan **323** PR #33–#34 tracker sync) |
+| 336+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
+| 336+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 336+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
 
 ## Repo implications
 
