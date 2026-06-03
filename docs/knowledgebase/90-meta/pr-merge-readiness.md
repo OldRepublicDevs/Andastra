@@ -319,12 +319,21 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Plans | **372**–**373** (feature **372** + tracker sync **373**); full stack simulation remains deferred per plan **063** |
 | CI on merge | Solution Build, Test, Lint **pass**; duplicate CodeQL + `code/snyk` quota documented as non-blocking `[REPO]` |
 
+## PR #63 outcome
+
+| Item | Status |
+|------|--------|
+| Merge | **Merged** to `master` 2026-05-24 @ `10ad250e5` via [PR #63](https://github.com/th3w1zard1/Andastra/pull/63) `[REPO]` |
+| Scope | NCS CONSTI four-hop multi-arg nested JSR relay characterization (plan **374**): `outer→relay→mid→inner→speak` chain; test-only — scanner from plan **362** at `MaxNestedJsrRelayDepth = 4`; **98** NcsConsti tests (+2) |
+| Plans | **374**–**375** (feature **374** + tracker sync **375**); bounded relay arc complete — full stack simulation remains deferred per plan **063** |
+| CI on merge | Solution Build, Test, Lint **pass**; duplicate CodeQL + `code/snyk` quota documented as non-blocking `[REPO]` |
+
 ## Local validation (green path)
 
 | Check | Command / artifact | Status |
 |-------|-------------------|--------|
 | BioWare + tests | `dotnet build/test` per [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md) | Green `[REPO]` |
-| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**96**), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**373**, 2026-05-24) |
+| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**98**), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**375**, 2026-05-24) |
 | Ref-search Step 3c (ReferenceFinder) | `--filter` ReferenceFinderTests (**97**), ReferenceSearchHelper (**36**), ScriptReferenceHelper (**8**), FindRefsCommand (**21**) | Green `[REPO]` (plans **348**–**353**, 2026-06-03) |
 | Full solution | `dotnet build Andastra.sln --framework net9.0 -c Release -m:1` | Green Linux net9.0 `[REPO]` |
 | Tool chain | OdyTools, OdyPatch, OdyPatch.UI, KotorCLI, ConvertKotorGame | Green net9.0 `[REPO]` |
@@ -350,14 +359,14 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (373+)
+## Suggested next slices (375+)
 
 | Plan | Topic |
 |------|-------|
-| 373+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
-| 373+ | Four-hop multi-arg nested JSR relay (bounded relay arc continuation) |
-| 373+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
-| 373+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
+| 375+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
+| 375+ | Four-hop mixed CONST+CPTOPSP nested JSR relay (bounded relay arc continuation) |
+| 375+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 375+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
 
 ## Repo implications
 
