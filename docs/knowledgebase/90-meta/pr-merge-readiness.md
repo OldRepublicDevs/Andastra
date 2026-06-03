@@ -176,6 +176,16 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | CI on PR | All meaningful checks **pass**; `code/snyk` quota failure documented as non-blocking `[REPO]` |
 | Post-merge | Promote this section to outcome with merge SHA when PR #33 lands |
 
+## PR #36 pending
+
+| Item | Status |
+|------|--------|
+| Merge | **Open** — [PR #36](https://github.com/th3w1zard1/Andastra/pull/36) awaiting merge to `master` `[REPO]` |
+| Scope | NCS CONSTI jump-fork SP forward scan (plan **324**): fork `TryFindStrRefConsumerViaStackReloadFromScan` at `JMP`/`JZ`/`JNZ` targets so dead-branch `MOVSP` deltas do not break `CPTOPSP` StrRef consumer matching; early-return regression test; **38** NcsConsti tests |
+| Plans | **324**–**325** (feature + pending tracker sync **325**) |
+| CI on PR | Solution Build, Test, Lint **pass**; duplicate CodeQL run failure + `code/snyk` quota documented as non-blocking `[REPO]` |
+| Post-merge | Promote this section to outcome with merge SHA when PR #36 lands |
+
 ## Local validation (green path)
 
 | Check | Command / artifact | Status |
@@ -205,14 +215,15 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (321+)
+## Suggested next slices (326+)
 
 | Plan | Topic |
 |------|-------|
-| 321+ | Promote PR #33 pending → outcome in tracker after merge |
-| 321+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
-| 321+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
-| 321+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
+| 326+ | Promote PR #36 pending → outcome in tracker after merge |
+| 326+ | Merge [PR #35](https://github.com/th3w1zard1/Andastra/pull/35) (plan **323** PR #33–#34 tracker sync) |
+| 326+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
+| 326+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 326+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
 
 ## Repo implications
 
