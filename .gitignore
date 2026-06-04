@@ -74,3 +74,4 @@ publish_*.log
 *.log
 agentdecompile_projects/
 .history/
+.compound-engineering/*.local.yaml
