@@ -20,6 +20,33 @@ Port Holocron `LIPEditor.load_audio`, `play_preview`, and `stop_preview` into `O
 - R3. Loading audio clears undo/redo stacks (Holocron clears undo manager on new audio).
 - R4. Unit test covers `LoadAudioFile` duration wiring without GUI file picker.
 
+## Implementation Units
+
+### U1. Audio load UI and `LoadAudioFile`
+
+**Goal:** WAV picker row, duration from WAV, undo clear, player source wiring.
+
+**Requirements:** R1, R3
+
+**Files:**
+- `src/Tools/OdyTools/Editors/OdyToolLIP.axaml.cs`
+- `src/Tools/OdyTools/Editors/OdyToolLIP.Standalone.csproj`
+
+**Test scenarios:**
+- Covers R4: `LoadAudioFile` sets `Duration` from WAV header length.
+- Load audio after keyframe edit clears `CanUndo` / `CanRedo`.
+
+### U2. Preview playback controls
+
+**Goal:** Play/Stop wired to `NAudioMediaPlayer`; dispose on window close.
+
+**Requirements:** R2
+
+**Files:**
+- `src/Tools/OdyTools/Editors/OdyToolLIP.axaml.cs`
+
+**Test scenarios:** Test expectation: none — playback requires audio device; covered by manual/local validation.
+
 ## Verification
 
 ```bash
@@ -29,5 +56,5 @@ dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filt
 
 ## Scope Boundaries
 
-- No playback scrubber / position sync with keyframes (Holocron `on_playback_position_changed`) — follow-up.
+- No playback scrubber / position sync with keyframes (Holocron `on_playback_position_changed`) — follow-up plan 379.
 - No lip shape preview image — follow-up.
