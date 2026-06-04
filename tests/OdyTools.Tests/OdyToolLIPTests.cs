@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Headless;
@@ -53,6 +54,65 @@ namespace OdyTools.Tests
                     Assert.That(loaded.Frames[1].Shape, Is.EqualTo(LIPShape.OH));
                 }, CancellationToken.None);
             }
+        }
+
+        [Test]
+        public async Task OdyToolLIP_LoadAudioFile_SetsDurationFromWav()
+        {
+            string wavPath = CreateTempWav(3.5f);
+            try
+            {
+                using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+                {
+                    await session.Dispatch(() =>
+                    {
+                        var editor = new OdyToolLIP(null, null);
+                        editor.LoadAudioFile(wavPath);
+                        Assert.That(editor.AudioFilePath, Is.EqualTo(wavPath));
+                        Assert.That(editor.Duration, Is.EqualTo(3.5f).Within(0.01f));
+                    }, CancellationToken.None);
+                }
+            }
+            finally
+            {
+                if (File.Exists(wavPath))
+                {
+                    File.Delete(wavPath);
+                }
+            }
+        }
+
+        private static string CreateTempWav(float durationSeconds, int sampleRate = 44100)
+        {
+            int blockAlign = 2;
+            int frameCount = (int)(durationSeconds * sampleRate);
+            int dataSize = frameCount * blockAlign;
+            byte[] wavBytes;
+            using (var ms = new MemoryStream())
+            {
+                using (var bw = new System.IO.BinaryWriter(ms))
+                {
+                    bw.Write(new byte[] { 0x52, 0x49, 0x46, 0x46 });
+                    bw.Write((uint)(4 + 8 + 16 + 8 + dataSize));
+                    bw.Write(new byte[] { 0x57, 0x41, 0x56, 0x45 });
+                    bw.Write(new byte[] { 0x66, 0x6D, 0x74, 0x20 });
+                    bw.Write((uint)16);
+                    bw.Write((ushort)1);
+                    bw.Write((ushort)1);
+                    bw.Write((uint)sampleRate);
+                    bw.Write((uint)(sampleRate * blockAlign));
+                    bw.Write((ushort)blockAlign);
+                    bw.Write((ushort)16);
+                    bw.Write(new byte[] { 0x64, 0x61, 0x74, 0x61 });
+                    bw.Write((uint)dataSize);
+                    bw.Write(new byte[dataSize]);
+                }
+                wavBytes = ms.ToArray();
+            }
+
+            string path = Path.Combine(Path.GetTempPath(), "odylip_" + Guid.NewGuid().ToString("N") + ".wav");
+            File.WriteAllBytes(path, wavBytes);
+            return path;
         }
     }
 }
