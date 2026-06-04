@@ -82,6 +82,37 @@ namespace OdyTools.Tests
             }
         }
 
+        [Test]
+        public async Task OdyToolLIP_LoadAudioFile_ClearsUndoHistory()
+        {
+            string wavPath = CreateTempWav(2.0f);
+            try
+            {
+                using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+                {
+                    await session.Dispatch(() =>
+                    {
+                        var editor = new OdyToolLIP(null, null);
+                        editor.New();
+                        editor.Duration = 5.0f;
+                        editor.AddKeyframe(1.0f, LIPShape.AH);
+                        Assert.That(editor.CanUndo, Is.True);
+
+                        editor.LoadAudioFile(wavPath);
+                        Assert.That(editor.CanUndo, Is.False);
+                        Assert.That(editor.CanRedo, Is.False);
+                    }, CancellationToken.None);
+                }
+            }
+            finally
+            {
+                if (File.Exists(wavPath))
+                {
+                    File.Delete(wavPath);
+                }
+            }
+        }
+
         private static string CreateTempWav(float durationSeconds, int sampleRate = 44100)
         {
             int blockAlign = 2;
