@@ -29,6 +29,7 @@ namespace OdyTools.Widgets
         public void SetSource(string filePath)
         {
             Stop();
+            DisposeReader();
             DisposeOwnedStream();
             if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
             {
@@ -36,7 +37,6 @@ namespace OdyTools.Widgets
                 return;
             }
             _filePath = filePath;
-            InitReader();
         }
 
         /// <summary>
@@ -51,7 +51,6 @@ namespace OdyTools.Widgets
             if (wavBytes != null && wavBytes.Length > 0)
             {
                 _ownedStream = new MemoryStream(wavBytes);
-                InitReader();
             }
         }
 
