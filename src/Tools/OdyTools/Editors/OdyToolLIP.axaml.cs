@@ -22,6 +22,14 @@ namespace OdyTools.Editors
         private float _duration;
 
         private Avalonia.Controls.TextBlock _statusText;
+        private bool _uiSyncInProgress;
+        private ListBox _keyframeList;
+        private NumericUpDown _durationSpin;
+        private NumericUpDown _timeSpin;
+        private ComboBox _shapeCombo;
+        private Button _addKeyframeButton;
+        private Button _updateKeyframeButton;
+        private Button _deleteKeyframeButton;
         private readonly List<byte[]> _undoStack = new List<byte[]>();
         private readonly List<byte[]> _redoStack = new List<byte[]>();
         private bool _undoRedoInProgress;
@@ -80,16 +88,285 @@ namespace OdyTools.Editors
 
         private void SetupUI()
         {
-            var panel = new StackPanel();
             var dock = new DockPanel();
             var menu = BuildMenu();
             dock.Children.Add(menu);
             DockPanel.SetDock(menu, Dock.Top);
-            dock.Children.Add(panel);
+            dock.Children.Add(BuildEditorPanel());
             _statusText = new Avalonia.Controls.TextBlock { Name = "statusText", Text = "LIP", Margin = new Avalonia.Thickness(4, 2) };
             dock.Children.Add(_statusText);
             DockPanel.SetDock(_statusText, Dock.Bottom);
             SetContentOrInject(dock);
+        }
+
+        private Control BuildEditorPanel()
+        {
+            var root = new Grid
+            {
+                Margin = new Avalonia.Thickness(8),
+                RowDefinitions = new RowDefinitions("Auto,*,Auto,Auto"),
+                ColumnDefinitions = new ColumnDefinitions("*"),
+            };
+
+            var durationRow = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"),
+                Margin = new Avalonia.Thickness(0, 0, 0, 8),
+            };
+            durationRow.Children.Add(new TextBlock
+            {
+                Text = "Duration (s):",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Avalonia.Thickness(0, 0, 8, 0),
+            });
+            _durationSpin = new NumericUpDown
+            {
+                Minimum = 0,
+                Maximum = 999.999m,
+                Increment = 0.001m,
+                FormatString = "F3",
+                Width = 120,
+            };
+            _durationSpin.ValueChanged += OnDurationSpinChanged;
+            Grid.SetColumn(_durationSpin, 1);
+            durationRow.Children.Add(_durationSpin);
+            Grid.SetRow(durationRow, 0);
+            root.Children.Add(durationRow);
+
+            _keyframeList = new ListBox { MinHeight = 180 };
+            _keyframeList.SelectionChanged += OnKeyframeSelectionChanged;
+            Grid.SetRow(_keyframeList, 1);
+            root.Children.Add(_keyframeList);
+
+            var editRow = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("Auto,Auto,*,Auto,Auto,Auto"),
+                Margin = new Avalonia.Thickness(0, 8, 0, 0),
+            };
+            editRow.Children.Add(new TextBlock
+            {
+                Text = "Time (s):",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Avalonia.Thickness(0, 0, 8, 0),
+            });
+            _timeSpin = new NumericUpDown
+            {
+                Minimum = 0,
+                Maximum = 999.999m,
+                Increment = 0.001m,
+                FormatString = "F3",
+                Width = 100,
+            };
+            Grid.SetColumn(_timeSpin, 1);
+            editRow.Children.Add(_timeSpin);
+
+            editRow.Children.Add(new TextBlock
+            {
+                Text = "Shape:",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Avalonia.Thickness(12, 0, 8, 0),
+            });
+            Grid.SetColumn(editRow.Children[editRow.Children.Count - 1], 2);
+
+            _shapeCombo = new ComboBox { MinWidth = 100, VerticalAlignment = VerticalAlignment.Center };
+            foreach (LIPShape shape in Enum.GetValues(typeof(LIPShape)))
+            {
+                _shapeCombo.Items.Add(shape);
+            }
+
+            if (_shapeCombo.Items.Count > 0)
+            {
+                _shapeCombo.SelectedIndex = 0;
+            }
+
+            Grid.SetColumn(_shapeCombo, 3);
+            editRow.Children.Add(_shapeCombo);
+
+            _addKeyframeButton = new Button { Content = "Add", Margin = new Avalonia.Thickness(8, 0, 0, 0) };
+            _addKeyframeButton.Click += (s, e) => OnAddKeyframeClick();
+            Grid.SetColumn(_addKeyframeButton, 4);
+            editRow.Children.Add(_addKeyframeButton);
+
+            _updateKeyframeButton = new Button { Content = "Update", Margin = new Avalonia.Thickness(4, 0, 0, 0) };
+            _updateKeyframeButton.Click += (s, e) => OnUpdateKeyframeClick();
+            Grid.SetColumn(_updateKeyframeButton, 5);
+            editRow.Children.Add(_updateKeyframeButton);
+
+            var buttonRow = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Spacing = 6,
+                Margin = new Avalonia.Thickness(0, 8, 0, 0),
+            };
+            _deleteKeyframeButton = new Button { Content = "Delete Selected" };
+            _deleteKeyframeButton.Click += (s, e) => OnDeleteKeyframeClick();
+            buttonRow.Children.Add(_deleteKeyframeButton);
+
+            var editPanel = new StackPanel();
+            editPanel.Children.Add(editRow);
+            editPanel.Children.Add(buttonRow);
+            Grid.SetRow(editPanel, 2);
+            root.Children.Add(editPanel);
+
+            return root;
+        }
+
+        private static string FormatKeyframeLabel(LIPKeyFrame frame)
+        {
+            return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:F3}s — {1}", frame.Time, frame.Shape);
+        }
+
+        private void RefreshKeyframeList()
+        {
+            if (_keyframeList == null)
+            {
+                return;
+            }
+
+            _uiSyncInProgress = true;
+            try
+            {
+                int selectedIndex = _keyframeList.SelectedIndex;
+                _keyframeList.Items.Clear();
+                if (_lip != null && _lip.Frames != null)
+                {
+                    foreach (LIPKeyFrame frame in _lip.Frames)
+                    {
+                        _keyframeList.Items.Add(FormatKeyframeLabel(frame));
+                    }
+                }
+
+                if (selectedIndex >= 0 && selectedIndex < _keyframeList.Items.Count)
+                {
+                    _keyframeList.SelectedIndex = selectedIndex;
+                }
+
+                if (_durationSpin != null)
+                {
+                    _durationSpin.Value = (decimal)_duration;
+                }
+
+                if (_timeSpin != null)
+                {
+                    _timeSpin.Maximum = _duration > 0f ? (decimal)_duration : 999.999m;
+                }
+
+                UpdateStatusBar();
+            }
+            finally
+            {
+                _uiSyncInProgress = false;
+            }
+        }
+
+        private void OnDurationSpinChanged(object sender, NumericUpDownValueChangedEventArgs e)
+        {
+            if (_uiSyncInProgress || _durationSpin == null)
+            {
+                return;
+            }
+
+            float newDuration = (float)(_durationSpin.Value ?? 0m);
+            if (Math.Abs(_duration - newDuration) < 1e-6f)
+            {
+                return;
+            }
+
+            Duration = newDuration;
+            RefreshKeyframeList();
+        }
+
+        private void OnKeyframeSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_uiSyncInProgress || _keyframeList == null || _lip == null)
+            {
+                return;
+            }
+
+            int index = _keyframeList.SelectedIndex;
+            if (index < 0 || index >= _lip.Frames.Count)
+            {
+                return;
+            }
+
+            LIPKeyFrame frame = _lip.Frames[index];
+            _uiSyncInProgress = true;
+            try
+            {
+                if (_timeSpin != null)
+                {
+                    _timeSpin.Value = (decimal)frame.Time;
+                }
+
+                if (_shapeCombo != null)
+                {
+                    _shapeCombo.SelectedItem = frame.Shape;
+                }
+            }
+            finally
+            {
+                _uiSyncInProgress = false;
+            }
+        }
+
+        private LIPShape GetSelectedShape()
+        {
+            if (_shapeCombo?.SelectedItem is LIPShape shape)
+            {
+                return shape;
+            }
+
+            return LIPShape.MPB;
+        }
+
+        private float GetTimeSpinValue()
+        {
+            return _timeSpin != null ? (float)(_timeSpin.Value ?? 0m) : 0f;
+        }
+
+        private void OnAddKeyframeClick()
+        {
+            AddKeyframe(GetTimeSpinValue(), GetSelectedShape());
+            RefreshKeyframeList();
+        }
+
+        private void OnUpdateKeyframeClick()
+        {
+            if (_keyframeList == null || _lip == null)
+            {
+                return;
+            }
+
+            int index = _keyframeList.SelectedIndex;
+            if (index < 0 || index >= _lip.Frames.Count)
+            {
+                return;
+            }
+
+            UpdateKeyframe(index, GetTimeSpinValue(), GetSelectedShape());
+            RefreshKeyframeList();
+            if (index < _keyframeList.Items.Count)
+            {
+                _keyframeList.SelectedIndex = index;
+            }
+        }
+
+        private void OnDeleteKeyframeClick()
+        {
+            if (_keyframeList == null || _lip == null)
+            {
+                return;
+            }
+
+            int index = _keyframeList.SelectedIndex;
+            if (index < 0 || index >= _lip.Frames.Count)
+            {
+                return;
+            }
+
+            DeleteKeyframe(index);
+            RefreshKeyframeList();
         }
 
         private void SetupSignals()
@@ -323,11 +600,17 @@ namespace OdyTools.Editors
         }
 
         /// <summary>
-        /// Loads LIP into editor state. UI binding for keyframes/duration can be expanded when additional fields are added.
+        /// Loads LIP into editor state and refreshes keyframe UI.
         /// </summary>
         private void LoadLIP(LIP lip)
         {
             _lip = lip ?? _lip;
+            if (_lip != null)
+            {
+                _duration = _lip.Length;
+            }
+
+            RefreshKeyframeList();
         }
 
         public override Tuple<byte[], byte[]> Build()
@@ -351,7 +634,7 @@ namespace OdyTools.Editors
             _lip = new LIP();
             _duration = 0.0f;
             _lastFindIndex = -1;
-            UpdateStatusBar();
+            RefreshKeyframeList();
         }
 
         public override void SaveAs()
@@ -384,6 +667,7 @@ namespace OdyTools.Editors
                 _lip.Length = _duration;
             }
             _lip.Add(time, shape);
+            RefreshKeyframeList();
             // Note: In Python, lip.length is set to duration when creating, not based on max keyframe time
             // The duration property is separate from the max keyframe time
         }
@@ -398,6 +682,7 @@ namespace OdyTools.Editors
                 PushState();
                 _lip.Remove(index);
                 _lip.Add(time, shape);
+                RefreshKeyframeList();
             }
         }
 
@@ -410,6 +695,7 @@ namespace OdyTools.Editors
             {
                 PushState();
                 _lip.Remove(index);
+                RefreshKeyframeList();
             }
         }
     }
