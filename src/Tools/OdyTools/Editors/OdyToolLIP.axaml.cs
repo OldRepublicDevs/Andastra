@@ -8,6 +8,7 @@ using Avalonia.Platform.Storage;
 using BioWare.Resource.Formats.LIP;
 using BioWare.Common;
 using OdyTools.Data;
+using OdyTools.Dialogs;
 
 namespace OdyTools.Editors
 {
@@ -71,6 +72,9 @@ namespace OdyTools.Editors
             editMenu.Items.Add(new MenuItem { Header = "Find...", Name = "actionFind" });
             editMenu.Items.Add(new MenuItem { Header = "Find _Next", Name = "actionFindNext" });
             menu.Items.Add(editMenu);
+            var toolsMenu = new MenuItem { Header = "_Tools" };
+            toolsMenu.Items.Add(new MenuItem { Header = "Batch Process WAV to LIP...", Name = "actionBatchProcessWavToLip" });
+            menu.Items.Add(toolsMenu);
             return menu;
         }
 
@@ -103,7 +107,14 @@ namespace OdyTools.Editors
                 ("actionRedo", Redo),
                 ("actionFind", ShowFindDialog),
                 ("actionFindNext", FindNextMatch),
+                ("actionBatchProcessWavToLip", ShowBatchProcessorDialog),
             });
+        }
+
+        private async void ShowBatchProcessorDialog()
+        {
+            var dialog = new LipBatchProcessorDialog(this);
+            await dialog.ShowDialog(this);
         }
 
         private void PushState()
