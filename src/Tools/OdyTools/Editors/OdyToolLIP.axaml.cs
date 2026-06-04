@@ -291,7 +291,7 @@ namespace OdyTools.Editors
                 throw new FileNotFoundException("Audio file not found.", wavPath);
             }
 
-            _previewPlayer?.Stop();
+            StopPreview();
 
             float duration = LipBatchProcessor.GetWavDurationSeconds(wavPath);
             _audioFilePath = wavPath;
@@ -421,7 +421,12 @@ namespace OdyTools.Editors
             }
 
             int keyframeIndex = GetKeyframeIndexAtTime(_lip, currentTime);
-            if (_keyframeList != null && keyframeIndex >= 0 && keyframeIndex < _keyframeList.Items.Count)
+            if (_keyframeList == null)
+            {
+                return;
+            }
+
+            if (keyframeIndex >= 0 && keyframeIndex < _keyframeList.Items.Count)
             {
                 if (_keyframeList.SelectedIndex != keyframeIndex)
                 {
@@ -434,6 +439,18 @@ namespace OdyTools.Editors
                     {
                         _playbackSyncInProgress = false;
                     }
+                }
+            }
+            else if (_keyframeList.SelectedIndex >= 0)
+            {
+                _playbackSyncInProgress = true;
+                try
+                {
+                    _keyframeList.SelectedIndex = -1;
+                }
+                finally
+                {
+                    _playbackSyncInProgress = false;
                 }
             }
         }
