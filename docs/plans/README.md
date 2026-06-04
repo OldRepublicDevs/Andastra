@@ -158,11 +158,10 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 376 | [376-feat-odytool-lip-batch-processor-plan.md](2026-05-24-376-feat-odytool-lip-batch-processor-plan.md) | OdyTool LIP batch WAV processor (Holocron parity) |
 | 377 | [377-feat-odytool-lip-keyframe-editor-ui-plan.md](2026-05-24-377-feat-odytool-lip-keyframe-editor-ui-plan.md) | OdyTool LIP keyframe editor UI |
 | 378 | [378-feat-odytool-lip-audio-preview-plan.md](2026-05-24-378-feat-odytool-lip-audio-preview-plan.md) | OdyTool LIP load audio and preview playback |
-| 407 | [407-fix-codeql-advanced-default-setup-conflict-plan.md](2026-06-05-407-fix-codeql-advanced-default-setup-conflict-plan.md) | Remove CodeQL Advanced workflow; default setup authoritative |
-| 434 | [434-feat-stridegamefps-linux-tfm-fix-plan.md](2026-05-24-434-feat-stridegamefps-linux-tfm-fix-plan.md) | StrideGameFPS Linux net9.0 TFM for NuGet CI restore |
-
+| 379 | [379-feat-odytool-lip-playback-sync-plan.md](2026-05-24-379-feat-odytool-lip-playback-sync-plan.md) | OdyTool LIP playback position sync and preview label |
 | 386 | [386-chore-merge-pr65-pr66-tracker-sync-plan.md](2026-06-05-386-chore-merge-pr65-pr66-tracker-sync-plan.md) | Merge PR #65–#66 + post-merge tracker sync |
 | 407 | [407-fix-codeql-advanced-default-setup-conflict-plan.md](2026-06-05-407-fix-codeql-advanced-default-setup-conflict-plan.md) | Remove CodeQL Advanced workflow; default setup authoritative |
+| 434 | [434-feat-stridegamefps-linux-tfm-fix-plan.md](2026-05-24-434-feat-stridegamefps-linux-tfm-fix-plan.md) | StrideGameFPS Linux net9.0 TFM for NuGet CI restore |
 
 ## Repo implications
 
