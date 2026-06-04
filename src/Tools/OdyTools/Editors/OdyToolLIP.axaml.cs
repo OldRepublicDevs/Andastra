@@ -261,6 +261,8 @@ namespace OdyTools.Editors
                 throw new FileNotFoundException("Audio file not found.", wavPath);
             }
 
+            _previewPlayer?.Stop();
+
             float duration = LipBatchProcessor.GetWavDurationSeconds(wavPath);
             _audioFilePath = wavPath;
             if (_audioPathBox != null)
@@ -784,6 +786,8 @@ namespace OdyTools.Editors
         // Properties for tests
         public LIP Lip => _lip;
         public string AudioFilePath => _audioFilePath;
+        public bool CanUndo => _undoStack.Count > 0;
+        public bool CanRedo => _redoStack.Count > 0;
         public float Duration
         {
             get => _duration;
