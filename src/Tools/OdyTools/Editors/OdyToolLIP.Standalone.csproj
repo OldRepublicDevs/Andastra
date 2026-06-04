@@ -26,8 +26,6 @@
     <Compile Include="$(_OdyToolsRoot)\Common\Localization.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\LipBatchProcessor.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\LipBatchProcessorDialog.cs" />
-    <Compile Include="$(_OdyToolsRoot)\Widgets\IMediaPlayer.cs" />
-    <Compile Include="$(_OdyToolsRoot)\Widgets\NAudioMediaPlayer.cs" />
   </ItemGroup>
   <ItemGroup>
     <AvaloniaXaml Remove="**\*.axaml" />
