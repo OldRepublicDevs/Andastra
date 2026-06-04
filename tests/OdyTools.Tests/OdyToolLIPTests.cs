@@ -113,6 +113,32 @@ namespace OdyTools.Tests
             }
         }
 
+        [Test]
+        public void OdyToolLIP_GetKeyframeIndexAtTime_UsesLastKeyframeBeforeTime()
+        {
+            var lip = new LIP();
+            lip.Add(1.0f, LIPShape.AH);
+            lip.Add(2.5f, LIPShape.OH);
+
+            Assert.That(OdyToolLIP.GetKeyframeIndexAtTime(lip, 0.5f), Is.EqualTo(-1));
+            Assert.That(OdyToolLIP.GetKeyframeIndexAtTime(lip, 1.0f), Is.EqualTo(0));
+            Assert.That(OdyToolLIP.GetKeyframeIndexAtTime(lip, 1.5f), Is.EqualTo(0));
+            Assert.That(OdyToolLIP.GetKeyframeIndexAtTime(lip, 2.5f), Is.EqualTo(1));
+            Assert.That(OdyToolLIP.GetKeyframeIndexAtTime(lip, 3.0f), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void OdyToolLIP_GetShapeAtPlaybackTime_ReturnsDiscreteShape()
+        {
+            var lip = new LIP();
+            lip.Add(1.0f, LIPShape.AH);
+            lip.Add(2.5f, LIPShape.OH);
+
+            Assert.That(OdyToolLIP.GetShapeAtPlaybackTime(lip, 1.2f), Is.EqualTo(LIPShape.AH));
+            Assert.That(OdyToolLIP.GetShapeAtPlaybackTime(lip, 2.6f), Is.EqualTo(LIPShape.OH));
+            Assert.That(OdyToolLIP.GetShapeAtPlaybackTime(lip, 0.1f), Is.Null);
+        }
+
         private static string CreateTempWav(float durationSeconds, int sampleRate = 44100)
         {
             int blockAlign = 2;
