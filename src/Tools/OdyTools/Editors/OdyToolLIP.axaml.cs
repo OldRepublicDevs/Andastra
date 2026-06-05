@@ -8,17 +8,19 @@ using Avalonia.Layout;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using BioWare.Resource.Formats.LIP;
+using BioWare.Resource.Formats.TwoDA;
 using BioWare.Common;
 using OdyTools.Data;
 using OdyTools.Dialogs;
 using OdyTools.Utils;
 using OdyTools.Widgets;
+using OdyTools.Widgets.Edit;
 
 namespace OdyTools.Editors
 {
     public partial class OdyToolLIP : Editor
     {
-        private const int MinEditorWidth = 480;
+        private const int MinEditorWidth = 820;
         private const int MinEditorHeight = 400;
         private const int UndoMaxLevels = 30;
 
@@ -43,6 +45,9 @@ namespace OdyTools.Editors
         private TextBlock _previewLabel;
         private DispatcherTimer _previewTimer;
         private bool _playbackSyncInProgress;
+        private ModelRenderer _headPreviewRenderer;
+        private ComboBox2DA _appearanceSelect;
+        private TextBlock _headPreviewNotice;
         private readonly List<byte[]> _undoStack = new List<byte[]>();
         private readonly List<byte[]> _redoStack = new List<byte[]>();
         private bool _undoRedoInProgress;
@@ -72,6 +77,7 @@ namespace OdyTools.Editors
             MinWidth = MinEditorWidth;
             MinHeight = MinEditorHeight;
             New();
+            SetupHeadPreview();
         }
 
         private void InitializeComponent()
@@ -124,6 +130,65 @@ namespace OdyTools.Editors
             var root = new Grid
             {
                 Margin = new Avalonia.Thickness(8),
+                ColumnDefinitions = new ColumnDefinitions("320,*"),
+            };
+
+            var headPanel = BuildHeadPreviewPanel();
+            Grid.SetColumn(headPanel, 0);
+            root.Children.Add(headPanel);
+
+            var editorPanel = BuildLipEditorPanel();
+            Grid.SetColumn(editorPanel, 1);
+            root.Children.Add(editorPanel);
+
+            return root;
+        }
+
+        private Control BuildHeadPreviewPanel()
+        {
+            var panel = new StackPanel
+            {
+                Margin = new Avalonia.Thickness(0, 0, 8, 0),
+                Spacing = 6,
+            };
+
+            panel.Children.Add(new TextBlock
+            {
+                Text = "Head preview",
+                FontWeight = Avalonia.Media.FontWeight.SemiBold,
+            });
+
+            _appearanceSelect = new ComboBox2DA { MinWidth = 200 };
+            _appearanceSelect.SelectionChanged += (s, e) => RefreshHeadPreview();
+            panel.Children.Add(_appearanceSelect);
+
+            _headPreviewRenderer = new ModelRenderer
+            {
+                MinHeight = 220,
+                Height = 260,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+            };
+            if (_installation != null)
+            {
+                _headPreviewRenderer.Installation = _installation;
+            }
+
+            panel.Children.Add(_headPreviewRenderer);
+
+            _headPreviewNotice = new TextBlock
+            {
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                IsVisible = false,
+            };
+            panel.Children.Add(_headPreviewNotice);
+
+            return panel;
+        }
+
+        private Control BuildLipEditorPanel()
+        {
+            var root = new Grid
+            {
                 RowDefinitions = new RowDefinitions("Auto,Auto,Auto,*,Auto"),
                 ColumnDefinitions = new ColumnDefinitions("*"),
             };
@@ -281,6 +346,98 @@ namespace OdyTools.Editors
             return root;
         }
 
+        private void SetupHeadPreview()
+        {
+            if (_headPreviewNotice == null)
+            {
+                return;
+            }
+
+            if (_installation == null)
+            {
+                _headPreviewNotice.Text = LipHeadPreviewHelper.NoInstallationMessage;
+                _headPreviewNotice.IsVisible = true;
+                if (_appearanceSelect != null)
+                {
+                    _appearanceSelect.IsEnabled = false;
+                }
+                _headPreviewRenderer?.ClearModel();
+                return;
+            }
+
+            _headPreviewNotice.IsVisible = false;
+            if (_appearanceSelect != null)
+            {
+                _appearanceSelect.IsEnabled = true;
+            }
+            if (_headPreviewRenderer != null)
+            {
+                _headPreviewRenderer.Installation = _installation;
+            }
+
+            PopulateAppearanceCombo();
+            RefreshHeadPreview();
+        }
+
+        private void PopulateAppearanceCombo()
+        {
+            if (_appearanceSelect == null || _installation == null)
+            {
+                return;
+            }
+
+            _installation.HtBatchCache2DA(new List<string> { OdyInstallation.TwoDAAppearances });
+            TwoDA appearances = _installation.HtGetCache2DA(OdyInstallation.TwoDAAppearances);
+            _appearanceSelect.Items.Clear();
+            if (appearances == null)
+            {
+                return;
+            }
+
+            _appearanceSelect.SetContext(appearances, _installation, OdyInstallation.TwoDAAppearances);
+            List<string> labels = appearances.GetColumn("label");
+            _appearanceSelect.SetItems(labels, sortAlphabetically: true);
+            if (_appearanceSelect.Items.Count > 0)
+            {
+                _appearanceSelect.SetSelectedIndex(0);
+            }
+        }
+
+        private void RefreshHeadPreview()
+        {
+            if (_headPreviewRenderer == null)
+            {
+                return;
+            }
+
+            if (_installation == null)
+            {
+                _headPreviewRenderer.ClearModel();
+                return;
+            }
+
+            int appearanceId = _appearanceSelect != null ? _appearanceSelect.SelectedIndex : 0;
+            byte[] mdlData;
+            byte[] mdxData;
+            if (!LipHeadPreviewHelper.TryLoadHeadModel(_installation, appearanceId, out mdlData, out mdxData, out _))
+            {
+                _headPreviewRenderer.ClearModel();
+                return;
+            }
+
+            _headPreviewRenderer.SetModel(mdlData, mdxData);
+        }
+
+        private void UpdateHeadPlaybackHint(LIPShape? shape)
+        {
+            if (_headPreviewRenderer == null)
+            {
+                return;
+            }
+
+            _headPreviewRenderer.SetPlaybackHint(shape.HasValue ? shape.Value.ToString() : string.Empty);
+        }
+
         /// <summary>
         /// Loads a WAV file for preview playback and sets duration from audio length (Holocron load_audio).
         /// </summary>
@@ -420,6 +577,8 @@ namespace OdyTools.Editors
                 _previewLabel.Text = shape.HasValue ? shape.Value.ToString() : "None";
             }
 
+            UpdateHeadPlaybackHint(shape);
+
             int keyframeIndex = GetKeyframeIndexAtTime(_lip, currentTime);
             if (_keyframeList == null)
             {
@@ -461,6 +620,8 @@ namespace OdyTools.Editors
             {
                 _previewLabel.Text = "None";
             }
+
+            UpdateHeadPlaybackHint(null);
         }
 
         /// <summary>
