@@ -7,6 +7,7 @@ using BioWare.Resource;
 using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.SSF;
 using BioWare.Resource.Formats.GFF.Generics.UTC;
+using BioWare.Tools;
 using KotorDiff.Diff;
 using NUnit.Framework;
 
@@ -32,6 +33,37 @@ namespace KotorDiff.Tests
                 HashSet<FileResource> found = ReferenceAnalyzers.CollectInstallationStrRefResources(
                     installation,
                     targetStrRef);
+
+                Assert.That(found, Is.Not.Empty);
+                Assert.That(found, Has.Some.Matches<FileResource>(
+                    r => string.Equals(r.ResName, "test_set", StringComparison.OrdinalIgnoreCase)
+                         && r.ResType == ResourceType.SSF));
+            }
+            finally
+            {
+                TryDeleteDirectory(installRoot);
+            }
+        }
+
+        [Test]
+        public void CollectInstallationStrRefResources_WithBuiltCache_FindsOverrideSsf()
+        {
+            const int targetStrRef = 424242;
+            string installRoot = CreateStubInstallRoot();
+            string overrideDir = Path.Combine(installRoot, "Override");
+            Directory.CreateDirectory(overrideDir);
+            File.WriteAllBytes(
+                Path.Combine(overrideDir, "test_set.ssf"),
+                CreateSsfBytesWithStrRef(targetStrRef));
+
+            try
+            {
+                var installation = new Installation(installRoot);
+                StrRefReferenceCache cache = ReferenceCacheHelpers.BuildStrRefReferenceCache(installation);
+                HashSet<FileResource> found = ReferenceAnalyzers.CollectInstallationStrRefResources(
+                    installation,
+                    targetStrRef,
+                    cache);
 
                 Assert.That(found, Is.Not.Empty);
                 Assert.That(found, Has.Some.Matches<FileResource>(
