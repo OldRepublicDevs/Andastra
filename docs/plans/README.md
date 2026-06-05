@@ -158,6 +158,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 376 | [376-feat-odytool-lip-batch-processor-plan.md](2026-05-24-376-feat-odytool-lip-batch-processor-plan.md) | OdyTool LIP batch WAV processor (Holocron parity) |
 | 377 | [377-feat-odytool-lip-keyframe-editor-ui-plan.md](2026-05-24-377-feat-odytool-lip-keyframe-editor-ui-plan.md) | OdyTool LIP keyframe editor UI |
 | 420 | [420-chore-ncs-consti-arc-tracker-sync-plan.md](2026-06-05-420-chore-ncs-consti-arc-tracker-sync-plan.md) | NCS CONSTI arc closure tracker sync |
+| 423 | [423-chore-stack-simulation-arc-tracker-sync-plan.md](2026-06-05-423-chore-stack-simulation-arc-tracker-sync-plan.md) | Stack simulation arc tracker sync |
 
 ## Repo implications
 
