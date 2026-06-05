@@ -191,6 +191,7 @@ namespace KotorDiff.Diff
             List<Modifications2DA> twodaModifications,
             List<ModificationsSSF> ssfModifications,
             List<ModificationsNCS> ncsModifications,
+            StrRefReferenceCache strrefCache = null,
             Action<string> logFunc = null)
         {
             if (logFunc == null)
@@ -291,7 +292,7 @@ namespace KotorDiff.Diff
                             foundResources = CollectInstallationStrRefResources(
                                 installation,
                                 oldStrref,
-                                null,
+                                strrefCache,
                                 logFunc);
                         }
                         else
