@@ -537,7 +537,19 @@ namespace OdyTools.Editors
         private void AttachReferenceSearchMenus()
         {
             ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+            FieldValueReferenceHelper.AppendFieldValueFindReferencesMenuItem(
+                _tagEdit.ContextMenu,
+                _tagEdit,
+                this,
+                _installation,
+                () => "Tag");
             ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
+            FieldValueReferenceHelper.AppendFieldValueFindReferencesMenuItem(
+                _resrefEdit.ContextMenu,
+                _resrefEdit,
+                this,
+                _installation,
+                () => "TemplateResRef");
         }
 
         private void SetupScriptComboBoxContextMenu(ComboBox comboBox, string scriptTypeName)
