@@ -158,6 +158,9 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 376 | [376-feat-odytool-lip-batch-processor-plan.md](2026-05-24-376-feat-odytool-lip-batch-processor-plan.md) | OdyTool LIP batch WAV processor (Holocron parity) |
 | 377 | [377-feat-odytool-lip-keyframe-editor-ui-plan.md](2026-05-24-377-feat-odytool-lip-keyframe-editor-ui-plan.md) | OdyTool LIP keyframe editor UI |
 
+| 386 | [386-chore-merge-pr65-pr66-tracker-sync-plan.md](2026-06-05-386-chore-merge-pr65-pr66-tracker-sync-plan.md) | Merge PR #65–#66 + post-merge tracker sync |
+| 407 | [407-fix-codeql-advanced-default-setup-conflict-plan.md](2026-06-05-407-fix-codeql-advanced-default-setup-conflict-plan.md) | Remove CodeQL Advanced workflow; default setup authoritative |
+
 ## Repo implications
 
 - New LFG slices: add a row here and update [pr-merge-readiness.md](../knowledgebase/90-meta/pr-merge-readiness.md).

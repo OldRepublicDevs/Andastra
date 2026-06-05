@@ -1,7 +1,8 @@
 ---
 title: "feat: odyTool LIP batch WAV processor (holocron parity)"
 type: feat
-status: active
+status: complete
+completed: 2026-06-04
 date: 2026-05-24
 origin: vendor/src/toolset/gui/editors/lip/batch_processor.py
 branch: feat/plan-376-lip-batch-processor
