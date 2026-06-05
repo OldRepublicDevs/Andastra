@@ -1,7 +1,8 @@
 ---
 title: "LIP editor playback sync and 3D preview arc"
 date: 2026-05-24
-status: active
+status: complete
+completed: 2026-05-24
 ---
 
 # LIP editor playback sync and 3D preview arc
