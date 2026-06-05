@@ -74,6 +74,8 @@ namespace OdyTools.Widgets
         private bool _glReady;
 
         private readonly Dictionary<string, uint> _textureCache = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
+        private string _baseOverlayText = string.Empty;
+        private string _playbackHint = string.Empty;
 
         public OdyInstallation Installation
         {
@@ -132,7 +134,7 @@ namespace OdyTools.Widgets
 
             if (_mdlData == null || _mdlData.Length <= 12)
             {
-                UpdateOverlay(_installation == null ? "No installation – set game path in Settings" : "No model loaded");
+                SetBaseOverlay(_installation == null ? "No installation – set game path in Settings" : "No model loaded");
                 _viewport.InvalidateVisual();
                 return;
             }
@@ -150,7 +152,7 @@ namespace OdyTools.Widgets
 
                 string modelName = !string.IsNullOrWhiteSpace(_parsedModel?.Name) ? _parsedModel.Name : "model";
                 int meshCount = _convertedModel.Meshes.Count;
-                UpdateOverlay("Model: " + modelName + " | Meshes: " + meshCount);
+                SetBaseOverlay("Model: " + modelName + " | Meshes: " + meshCount);
                 ResetCamera();
                 _renderTimer?.Start();
             }
@@ -160,7 +162,7 @@ namespace OdyTools.Widgets
                 _parsedModel = null;
                 _drawableModel = null;
                 _convertedModel = null;
-                UpdateOverlay("Failed to parse model");
+                SetBaseOverlay("Failed to parse model");
                 _renderTimer?.Stop();
             }
 
@@ -175,8 +177,26 @@ namespace OdyTools.Widgets
             _drawableModel = null;
             _convertedModel = null;
             _renderTimer?.Stop();
-            UpdateOverlay(_installation == null ? "No installation – set game path in Settings" : "No model loaded");
+            _playbackHint = string.Empty;
+            SetBaseOverlay(_installation == null ? "No installation – set game path in Settings" : "No model loaded");
             _viewport.InvalidateVisual();
+        }
+
+        /// <summary>
+        /// Appends active LIP viseme hint to the model status overlay during playback.
+        /// </summary>
+        public void SetPlaybackHint(string hint)
+        {
+            _playbackHint = string.IsNullOrWhiteSpace(hint) || hint == "None" ? string.Empty : hint.Trim();
+            RefreshCombinedOverlay();
+        }
+
+        /// <summary>
+        /// Sets mouth-state overlay text (viseme label without "Mouth:" prefix).
+        /// </summary>
+        public void SetMouthStateLabel(string label)
+        {
+            SetPlaybackHint(label);
         }
 
         public void InitializeGraphics(object graphicsDevice, Func<string, object> materialResolver = null)
@@ -300,7 +320,7 @@ namespace OdyTools.Widgets
                 string bodyModel = modelTuple.Item1;
                 if (string.IsNullOrWhiteSpace(bodyModel))
                 {
-                    UpdateOverlay("Failed to resolve creature body model");
+                    SetBaseOverlay("Failed to resolve creature body model");
                     return;
                 }
 
@@ -312,13 +332,13 @@ namespace OdyTools.Widgets
                 }
                 else
                 {
-                    UpdateOverlay("Missing MDL/MDX for creature model: " + bodyModel);
+                    SetBaseOverlay("Missing MDL/MDX for creature model: " + bodyModel);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine("[ModelRenderer] Failed to load creature model: " + ex.Message);
-                UpdateOverlay("Creature preview failed");
+                SetBaseOverlay("Creature preview failed");
             }
             finally
             {
@@ -423,6 +443,29 @@ namespace OdyTools.Widgets
             _cameraTarget = Vector3.Zero;
             _cameraUp = Vector3.UnitY;
             UpdateViewMatrix();
+        }
+
+        private void SetBaseOverlay(string text)
+        {
+            _baseOverlayText = text ?? string.Empty;
+            RefreshCombinedOverlay();
+        }
+
+        private void RefreshCombinedOverlay()
+        {
+            if (string.IsNullOrEmpty(_playbackHint))
+            {
+                UpdateOverlay(_baseOverlayText);
+                return;
+            }
+
+            if (string.IsNullOrEmpty(_baseOverlayText))
+            {
+                UpdateOverlay("Mouth: " + _playbackHint);
+                return;
+            }
+
+            UpdateOverlay(_baseOverlayText + " | Mouth: " + _playbackHint);
         }
 
         private void UpdateOverlay(string text)
