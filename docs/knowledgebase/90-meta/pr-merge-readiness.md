@@ -328,6 +328,15 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Plans | **374**–**375** (feature **374** + tracker sync **375**); bounded relay arc complete — full stack simulation remains deferred per plan **063** |
 | CI on merge | Solution Build, Test, Lint **pass**; duplicate CodeQL + `code/snyk` quota documented as non-blocking `[REPO]` |
 
+## PR #66 outcome
+
+| Item | Status |
+|------|--------|
+| Merge | **Merged** to `master` 2026-06-05 @ `3b2ff6553` via [PR #66](https://github.com/th3w1zard1/Andastra/pull/66) `[REPO]` |
+| Scope | OdyTool LIP keyframe editor UI (plan **377**): duration field, keyframe list, add/update/delete actions, list selection sync; audio/viseme preview deferred; **2** OdyToolLIP tests |
+| Plans | **377** (feature); tracker sync **409** |
+| CI on merge | Solution Build, Test, Lint **pass**; duplicate CodeQL Advanced + `code/snyk` quota documented as non-blocking `[REPO]` |
+
 ## Local validation (green path)
 
 | Check | Command / artifact | Status |
@@ -350,6 +359,7 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 | CI — NuGet Pack Smoke | `nuget-pack-smoke` — pack + CLI `--help` + `--validate` fixture (plans 051/053/055) |
 | Test Builds matrix | net48-win, net9.0 linux/osx/win |
 | dotnet-desktop | Windows BioWare + full tool stack |
+| CodeQL | **Default setup** (repo settings) scans on push/PR; **CodeQL Advanced** workflow (`.github/workflows/codeql.yml`) fails SARIF upload while default setup is enabled — fix pending [PR #74](https://github.com/th3w1zard1/Andastra/pull/74) (plan **407**). After merge: expect only default CodeQL; no duplicate advanced workflow. |
 
 ## Known remaining gaps (non-blocking)
 
@@ -359,14 +369,20 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (375+)
+## Suggested next slices (409+)
 
 | Plan | Topic |
 |------|-------|
-| 375+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
-| 375+ | Four-hop mixed CONST+CPTOPSP nested JSR relay (bounded relay arc continuation) |
-| 375+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
-| 375+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
+| 378–380 | OdyTool LIP audio preview, playback sync, 3D head preview (open PR **#67**–**#69**) |
+| 383 | Four-hop mixed CONST+CPTOPSP nested JSR relay (open PR **#70**) |
+| 383+ | KotorDiff installation ref search + StrRef batch cache (open PR **#71**) |
+| 406+ | OdyTools FieldValueReferenceHelper + GFF wiring (open PR **#72**) |
+| 386 | PR #65–#66 post-merge tracker sync (open PR **#73**) |
+| 407 | Remove CodeQL Advanced workflow conflict (open PR **#74**); post-merge: default CodeQL only |
+| 408 | Complete plan **375** closure + refresh next slices (open PR **#75**) |
+| 410+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
+| 410+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 410+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
 
 ## Repo implications
 
