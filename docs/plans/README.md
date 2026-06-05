@@ -159,6 +159,8 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 377 | [377-feat-odytool-lip-keyframe-editor-ui-plan.md](2026-05-24-377-feat-odytool-lip-keyframe-editor-ui-plan.md) | OdyTool LIP keyframe editor UI |
 | 409 | [409-feat-ncs-consti-arithmetic-strref-relay-plan.md](2026-06-05-409-feat-ncs-consti-arithmetic-strref-relay-plan.md) | NCS CONSTI arithmetic StrRef relay v1 |
 | 410 | [410-feat-ncs-consti-five-hop-multi-arg-jsr-relay-plan.md](2026-06-05-410-feat-ncs-consti-five-hop-multi-arg-jsr-relay-plan.md) | NCS CONSTI five-hop multi-arg nested JSR relay |
+| 418 | [418-test-ncs-consti-six-hop-multi-arg-jsr-relay-plan.md](2026-06-05-418-test-ncs-consti-six-hop-multi-arg-jsr-relay-plan.md) | NCS CONSTI six-hop multi-arg nested JSR relay |
+| 419 | [419-test-ncs-consti-six-hop-mixed-const-relay-plan.md](2026-06-05-419-test-ncs-consti-six-hop-mixed-const-relay-plan.md) | NCS CONSTI six-hop mixed CONST+CPTOPSP JSR relay |
 
 ## Repo implications
 
