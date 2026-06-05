@@ -22,12 +22,14 @@ dotnet build tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0
 dotnet test tests/BioWare.Tests/BioWare.Tests.csproj --framework net9.0
 ```
 
-### Ref-search targeted filters (Steps 3b–3c)
+### Ref-search targeted filters (Steps 3b–3d)
 
 Use after reference-search or NCS CONSTI changes — not on every build:
 
 - **Step 3b** — NCS CONSTI / StrRef cache-path / KotorCLI find-strref / OdyTools StrRef helper
 - **Step 3c** — GFF script ResRef / ReferenceFinder / installation find-refs wiring
+- **Step 3d** — OdyTools GFF field-value reference helper
+- **Step 3d** — GFF field-value / `FieldValueReferenceHelper` template editor wiring
 
 ### Step 3b — NCS CONSTI + StrRef ref-search (when relevant)
 
@@ -54,6 +56,16 @@ dotnet test tests/KotorCLI.Tests/KotorCLI.Tests.csproj --framework net9.0 --filt
 ```
 
 Expected on `master`: **97** ReferenceFinder + **36** ReferenceSearchHelper + **8** ScriptReferenceHelper + **21** FindRefsCommand tests pass. `[REPO]`
+
+### Step 3d — Field-value ref-search (when relevant)
+
+After OdyTools `FieldValueReferenceHelper` / template editor field-value wiring changes (plans **406**–**409**):
+
+```bash
+dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~FieldValueReferenceHelperTests
+```
+
+Expected on `master` post plan **409**: **8** FieldValueReferenceHelper tests pass. `[REPO]`
 
 ### Step 4 — Andastra tests
 
