@@ -1018,7 +1018,7 @@ namespace BioWare.Tools
         }
 
         private const int SubroutineStrRefEntryScanLimitBytes = 128;
-        private const int MaxNestedJsrRelayDepth = 4;
+        private const int MaxNestedJsrRelayDepth = 5;
         private const int NestedJsrRelayForwardScanLimitBytes = 32;
 
         private static bool TryFindStrRefConsumerViaJsrCall(byte[] ncsData, ConstiInstruction instruction)
