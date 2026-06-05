@@ -1,7 +1,8 @@
 ---
 title: "feat: ncs consti four-hop mixed const cptopsp jsr relay"
 type: feat
-status: active
+status: complete
+completed: 2026-06-05
 date: 2026-06-05
 origin: docs/knowledgebase/90-meta/pr-merge-readiness.md
 branch: feat/plan-383-four-hop-mixed-const-relay
