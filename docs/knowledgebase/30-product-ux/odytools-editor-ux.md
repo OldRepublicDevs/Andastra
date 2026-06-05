@@ -38,6 +38,11 @@ Content authoring and inspection workflows for OdyTools and standalone editors.
 | build-and-test-ladder ref-search filter steps | Green — **Step 3b** NCS CONSTI/StrRef + **Step 3c** ReferenceFinder targeted `dotnet test` filters in [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md) `[REPO]` (plans **348**–**351**, 2026-06-03) |
 | 2DA editor / ComboBox2DA row **Find References** | Green — `TwoDAMemoryReferenceHelper` + `OdyTool2DA` context menu (plans 083, 200) `[REPO]` |
 | KotorDiff in-app (Tools menu) | Green — shared `KotorDiffApp` host `[REPO]` (2026-05-24) |
+| OdyToolLIP keyframe editor UI | Green — list/add/update/delete + `Build` roundtrip; **10** `OdyToolLIPTests` `[REPO]` (plan **377**, 2026-05-24) |
+| OdyToolLIP batch WAV→LIP processor | Green — Holocron placeholder shapes; **5** `LipBatchProcessorTests` `[REPO]` (plan **376**, 2026-05-24) |
+| OdyToolLIP audio load and preview playback | Green — WAV load, NAudio play/stop; covered in `OdyToolLIPTests` `[REPO]` (plan **378**, PR **#67**) |
+| OdyToolLIP playback sync (viseme label + keyframe highlight) | Green — discrete shape/index at playback time; **10** `OdyToolLIPTests` `[REPO]` (plan **379**, PR **#68**) |
+| OdyToolLIP 3D head preview (Appearance + mouth overlay) | Green — `LipHeadPreviewHelper` + `ModelRenderer` hint; **15** LIP/batch tests `[REPO]` (plan **380**, PR **#69**) |
 | Indoor Map Builder Build/Save/Open | Partial — headless build + WOK AreaModel tests; in-game walkmesh **Unverified** `[OPEN]` |
 | Editor roundtrip fidelity vs original Holocron/PyKotor | **Unverified** `[OPEN]` |
 | Full AIO launch UX on Linux | **Partial** — compile green; GUI runtime not CI-tested `[OPEN]` |
