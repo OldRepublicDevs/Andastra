@@ -1,7 +1,7 @@
 ---
 title: "feat: odyTools FieldValueReferenceHelper UTP/UTD wiring"
 type: feat
-status: active
+status: completed
 date: 2026-06-05
 origin: docs/plans/2026-06-05-409-feat-odytools-fieldvalue-utc-wiring-plan.md
 branch: feat/plan-412-odytools-fieldvalue-utp-utd-wiring
