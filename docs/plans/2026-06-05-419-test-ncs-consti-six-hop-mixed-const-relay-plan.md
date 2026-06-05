@@ -11,18 +11,19 @@ branch: feat/plan-419-ncs-consti-six-hop-mixed-const-relay
 
 ## Summary
 
-PR **#80** (plan **411**) adds five-hop mixed CONST+CPTOPSP relay (`inner` calls `speak(0, s)`). PR **#87** (plan **418**) raises `MaxNestedJsrRelayDepth` to **6** for six-hop symmetric multi-arg relay. This slice stacks on **#87** and extends mixed relay to **6** hops (`root→deepest→outer→relay→mid→inner→speak(0,s)`) with **+2** NcsConsti characterization tests.
+PR **#80** (plan **411**) adds five-hop mixed CONST+CPTOPSP relay (`inner` calls `speak(0, s)`). PR **#87** (plan **418**) raises `MaxNestedJsrRelayDepth` to **6** for six-hop symmetric multi-arg relay. This slice stacks on **#87**, raises depth to **7** for the extra `mid2` mixed-relay layer, and adds six-hop mixed tests (`root→deepest→outer→relay→mid→mid2→inner→speak(0,s)`) with **+2** NcsConsti characterization tests.
 
 ## Problem Frame
 
-The NCS CONSTI nested JSR relay arc characterizes how `StrRefReferenceCache` traces StrRef constants through multi-level subroutine calls. Mixed relay (CONST first arg + CPTOPSP second arg at the leaf callee) is a distinct push pattern from symmetric multi-arg relay. Five-hop mixed is covered by plan **411**; six-hop mixed completes the depth ladder at the current `MaxNestedJsrRelayDepth = 6` ceiling.
+The NCS CONSTI nested JSR relay arc characterizes how `StrRefReferenceCache` traces StrRef constants through multi-level subroutine calls. Mixed relay (CONST first arg + CPTOPSP second arg at the leaf callee) is a distinct push pattern from symmetric multi-arg relay. Five-hop mixed is covered by plan **411**; six-hop mixed completes the mixed-relay depth ladder at `MaxNestedJsrRelayDepth = 7`.
 
 ## Requirements
 
-- R1. Six-hop mixed relay NSS: `root→deepest→outer→relay→mid→inner→speak(0,s)` → `StrRefConsumer`.
-- R2. `GetConstiUsageContext_SixHopMixedConstCptopspRelayStrRef_ReturnsStrRefConsumer` and matching `StrRefReferenceCache` indexing test.
-- R3. **107** NcsConsti tests pass (105 from plan **418** + 2).
-- R4. Index plan **419** in `docs/plans/README.md`; refresh tracker Step 3b count when applicable.
+- R1. `MaxNestedJsrRelayDepth` **6 → 7** (six-hop mixed adds `mid2` vs six-hop multi-arg).
+- R2. Six-hop mixed relay NSS: `root→deepest→outer→relay→mid→mid2→inner→speak(0,s)` → `StrRefConsumer`.
+- R3. `GetConstiUsageContext_SixHopMixedConstCptopspRelayStrRef_ReturnsStrRefConsumer` and matching `StrRefReferenceCache` indexing test.
+- R4. **107** NcsConsti tests pass (105 from plan **418** + 2).
+- R5. Index plan **419** in `docs/plans/README.md`; refresh tracker Step 3b count when applicable.
 
 ## Key Technical Decisions
 
