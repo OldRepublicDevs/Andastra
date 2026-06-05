@@ -1,8 +1,9 @@
 ---
 title: "feat: odyTool LIP load audio and preview playback"
 type: feat
-status: active
+status: complete
 date: 2026-05-24
+completed: 2026-05-24
 origin: vendor/src/toolset/gui/editors/lip/lip_editor.py
 branch: feat/plan-378-lip-audio-preview
 ---
