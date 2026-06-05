@@ -333,7 +333,7 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Check | Command / artifact | Status |
 |-------|-------------------|--------|
 | BioWare + tests | `dotnet build/test` per [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md) | Green `[REPO]` |
-| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**98** on `master`; **112** pending **#91**), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**422**, 2026-06-05) |
+| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**98** on `master`; **123** pending **#94**), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**425**, 2026-06-05) |
 | Ref-search Step 3c (ReferenceFinder) | `--filter` ReferenceFinderTests (**97**), ReferenceSearchHelper (**36**), ScriptReferenceHelper (**8**), FindRefsCommand (**21**) | Green `[REPO]` (plans **348**–**353**, 2026-06-03) |
 | Full solution | `dotnet build Andastra.sln --framework net9.0 -c Release -m:1` | Green Linux net9.0 `[REPO]` |
 | Tool chain | OdyTools, OdyPatch, OdyPatch.UI, KotorCLI, ConvertKotorGame | Green net9.0 `[REPO]` |
@@ -372,25 +372,28 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 
 **Merge order (recommended):** **#77** → **#79** → **#80** → **#70** (rebase as needed) → **#87** (after **#79**) → **#88** (after **#87**). Resolve `MaxNestedJsrRelayDepth` conflicts (**#79**/**#80** at 5, **#87**/**#88** at 6). Bounded relay arc complete at six hops. `[REPO]`
 
-## NCS CONSTI stack simulation arc (open PR stack, plans 421–422)
+## NCS CONSTI stack simulation arc (open PR stack, plans 421–425)
 
 | PR | Plan | Scope | CI |
 |----|------|-------|-----|
 | [#89](https://github.com/th3w1zard1/Andastra/pull/89) | **420** | NCS relay arc tracker sync (docs) | Green `[REPO]` |
 | [#90](https://github.com/th3w1zard1/Andastra/pull/90) | **421** | Arithmetic StrRef relay v2 (MUL/MOD/chained ADD) | Green `[REPO]` |
 | [#91](https://github.com/th3w1zard1/Andastra/pull/91) | **422** | Arithmetic local StrRef via `CPDOWNSP`→`CPTOPSP` (**112** NcsConsti tests) | Green `[REPO]` |
+| [#92](https://github.com/th3w1zard1/Andastra/pull/92) | **423** | Stack simulation arc tracker sync (docs) | Green `[REPO]` |
+| [#93](https://github.com/th3w1zard1/Andastra/pull/93) | **424** | Arithmetic cache probes + local SUB (**117** NcsConsti tests) | Green `[REPO]` |
+| [#94](https://github.com/th3w1zard1/Andastra/pull/94) | **425** | DIV + local MUL/MOD arithmetic (**123** NcsConsti tests) | Green `[REPO]` |
 
-**Merge order (recommended):** **#89** (docs, independent) → **#90** → **#91** (stack on **#88** relay tip at **107** tests; rebase after relay merges). Plan **409**/**#77** arithmetic v1 is superseded by **#90** tip — close **#77** when **#90** lands. `[REPO]`
+**Merge order (recommended):** **#89** (docs, independent) → **#90** → **#91** → **#92** (docs, stacks on **#89**) → **#93** → **#94** (feature stack on **#91**/**#88** relay tip at **107** tests; rebase after relay merges). Plan **409**/**#77** arithmetic v1 is superseded by **#90** tip — close **#77** when **#90** lands. Binary-int arithmetic operator matrix complete at **#94**. `[REPO]`
 
-## Suggested next slices (423+)
+## Suggested next slices (426+)
 
 | Plan | Topic |
 |------|-------|
 | 417+ | Field-value arc merge stack **#81**–**#86** (open PR **#86**) |
-| 423+ | Post-merge tracker sync after stack-simulation **#90**–**#91** lands |
-| 423+ | Stack simulation v4 (local SUB, arithmetic cache probes, DIV) |
-| 423+ | Merge **#74** (CodeQL) early; KotorDiff installation ref search (**#71**) |
-| 423+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 426+ | Post-merge tracker sync after stack-simulation **#90**–**#94** lands |
+| 426+ | Local chained arithmetic or local DIV if modder patterns warrant |
+| 426+ | Merge **#74** (CodeQL) early; KotorDiff installation ref search (**#71**) |
+| 426+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
 
 ## Repo implications
 
