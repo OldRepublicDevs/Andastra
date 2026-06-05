@@ -157,6 +157,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 375 | [375-chore-merge-pr63-tracker-sync-plan.md](2026-05-24-375-chore-merge-pr63-tracker-sync-plan.md) | Merge PR #63 + post-merge tracker sync |
 | 376 | [376-feat-odytool-lip-batch-processor-plan.md](2026-05-24-376-feat-odytool-lip-batch-processor-plan.md) | OdyTool LIP batch WAV processor (Holocron parity) |
 | 377 | [377-feat-odytool-lip-keyframe-editor-ui-plan.md](2026-05-24-377-feat-odytool-lip-keyframe-editor-ui-plan.md) | OdyTool LIP keyframe editor UI |
+| 412 | [412-feat-odytools-fieldvalue-utp-utd-wiring-plan.md](2026-06-05-412-feat-odytools-fieldvalue-utp-utd-wiring-plan.md) | FieldValueReferenceHelper UTP/UTD wiring |
 
 ## Repo implications
 
