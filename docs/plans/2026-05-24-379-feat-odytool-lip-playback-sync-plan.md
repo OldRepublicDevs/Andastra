@@ -1,8 +1,9 @@
 ---
 title: "feat: odyTool LIP playback position sync and preview label"
 type: feat
-status: active
+status: complete
 date: 2026-05-24
+completed: 2026-05-24
 origin: docs/brainstorms/2026-05-24-lip-editor-playback-preview-requirements.md
 branch: feat/plan-379-lip-playback-sync
 depends_on: plan 378
