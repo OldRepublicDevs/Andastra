@@ -4,8 +4,8 @@ Vertical slices: [PR #2](https://github.com/th3w1zard1/Andastra/pull/2) (plans 0
 
 Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 
-| # | Plan file | Topic |
-|---|-----------|-------|
+| # | Plan | Summary |
+|---|------|---------|
 | 001 | [001-feat-andastra-knowledgebase-plan.md](2026-05-23-001-feat-andastra-knowledgebase-plan.md) | Evidence-first KB initial |
 | 002 | [002-feat-kb-onboarding-completion-plan.md](2026-05-23-002-feat-kb-onboarding-completion-plan.md) | KB onboarding entry points |
 | 003 | [003-fix-ci-workflow-path-drift-plan.md](2026-05-23-003-fix-ci-workflow-path-drift-plan.md) | CI workflow path drift |
@@ -68,7 +68,6 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 060 | [060-dev-setup-validate-sync-plan.md](2026-05-23-060-dev-setup-validate-sync-plan.md) | Dev setup validate sync |
 | 061 | [061-agents-build-health-validate-sync-plan.md](2026-05-23-061-agents-build-health-validate-sync-plan.md) | AGENTS.md build health validate sync |
 | 062 | [062-odypatch-readme-validate-verify-plan.md](2026-05-23-062-odypatch-readme-validate-verify-plan.md) | OdyPatch README validate sync |
-| 063 | [063-pr4-merge-readiness-plan.md](2026-05-23-063-pr4-merge-readiness-plan.md) | PR #4 merge readiness gate |
 | 063 | [063-feat-pykotor-holocron-port-continuation-plan.md](2026-05-24-063-feat-pykotor-holocron-port-continuation-plan.md) | PyKotor/Holocron port U1–U7 (complete) |
 | 064 | [064-feat-holocron-u1-u2-kotorcli-fac-plan.md](2026-05-24-064-feat-holocron-u1-u2-kotorcli-fac-plan.md) | KotorCLI converts + OdyToolFAC |
 | 065 | [065-feat-indoor-builder-build-save-open-plan.md](2026-05-24-065-feat-indoor-builder-build-save-open-plan.md) | Indoor Builder Build/Save/Open |
@@ -159,6 +158,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 377 | [377-feat-odytool-lip-keyframe-editor-ui-plan.md](2026-05-24-377-feat-odytool-lip-keyframe-editor-ui-plan.md) | OdyTool LIP keyframe editor UI |
 | 378 | [378-feat-odytool-lip-audio-preview-plan.md](2026-05-24-378-feat-odytool-lip-audio-preview-plan.md) | OdyTool LIP load audio and preview playback |
 | 379 | [379-feat-odytool-lip-playback-sync-plan.md](2026-05-24-379-feat-odytool-lip-playback-sync-plan.md) | OdyTool LIP playback position sync and preview label |
+| 380 | [380-feat-odytool-lip-3d-head-preview-plan.md](2026-05-24-380-feat-odytool-lip-3d-head-preview-plan.md) | OdyTool LIP 3D head preview from installation Appearance |
 | 386 | [386-chore-merge-pr65-pr66-tracker-sync-plan.md](2026-06-05-386-chore-merge-pr65-pr66-tracker-sync-plan.md) | Merge PR #65–#66 + post-merge tracker sync |
 | 407 | [407-fix-codeql-advanced-default-setup-conflict-plan.md](2026-06-05-407-fix-codeql-advanced-default-setup-conflict-plan.md) | Remove CodeQL Advanced workflow; default setup authoritative |
 | 434 | [434-feat-stridegamefps-linux-tfm-fix-plan.md](2026-05-24-434-feat-stridegamefps-linux-tfm-fix-plan.md) | StrideGameFPS Linux net9.0 TFM for NuGet CI restore |
