@@ -159,6 +159,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 377 | [377-feat-odytool-lip-keyframe-editor-ui-plan.md](2026-05-24-377-feat-odytool-lip-keyframe-editor-ui-plan.md) | OdyTool LIP keyframe editor UI |
 | 378 | [378-feat-odytool-lip-audio-preview-plan.md](2026-05-24-378-feat-odytool-lip-audio-preview-plan.md) | OdyTool LIP load audio and preview playback |
 | 379 | [379-feat-odytool-lip-playback-sync-plan.md](2026-05-24-379-feat-odytool-lip-playback-sync-plan.md) | OdyTool LIP playback position sync and preview label |
+| 380 | [380-feat-odytool-lip-3d-head-preview-plan.md](2026-05-24-380-feat-odytool-lip-3d-head-preview-plan.md) | OdyTool LIP 3D head preview from installation Appearance |
 
 ## Repo implications
 
