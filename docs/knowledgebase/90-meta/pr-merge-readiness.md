@@ -370,8 +370,9 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 | 386 | PR #65–#66 post-merge tracker sync (open PR **#73**) |
 | 407 | Remove CodeQL Advanced workflow conflict (open PR **#74**) |
 | 408 | Complete plan **375** closure + refresh next slices (open PR **#75**) |
-| 409 | NCS CONSTI arithmetic StrRef relay v1 (stack simulation slice) |
-| 410+ | Full CONSTI stack simulation beyond arithmetic relay (CPTOPSP/CFG) per plan **063** |
+| 409 | NCS CONSTI arithmetic StrRef relay v1 (open PR **#77**) |
+| 410 | Five-hop multi-arg nested JSR relay (plan **410**) |
+| 410+ | Full CONSTI stack simulation beyond relay depth (CPTOPSP/CFG) per plan **063** |
 | 410+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
 
 ## Repo implications
