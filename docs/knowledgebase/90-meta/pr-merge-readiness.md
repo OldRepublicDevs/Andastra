@@ -333,7 +333,7 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Check | Command / artifact | Status |
 |-------|-------------------|--------|
 | BioWare + tests | `dotnet build/test` per [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md) | Green `[REPO]` |
-| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**98**), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**375**, 2026-05-24) |
+| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**98** on `master`; **107** pending **#88**), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**419**, 2026-06-05) |
 | Ref-search Step 3c (ReferenceFinder) | `--filter` ReferenceFinderTests (**97**), ReferenceSearchHelper (**36**), ScriptReferenceHelper (**8**), FindRefsCommand (**21**) | Green `[REPO]` (plans **348**–**353**, 2026-06-03) |
 | Full solution | `dotnet build Andastra.sln --framework net9.0 -c Release -m:1` | Green Linux net9.0 `[REPO]` |
 | Tool chain | OdyTools, OdyPatch, OdyPatch.UI, KotorCLI, ConvertKotorGame | Green net9.0 `[REPO]` |
@@ -359,14 +359,28 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (375+)
+## NCS CONSTI relay arc (open PR stack, plans 409–419)
+
+| PR | Plan | Scope | CI |
+|----|------|-------|-----|
+| [#70](https://github.com/th3w1zard1/Andastra/pull/70) | **383** | Four-hop mixed CONST+CPTOPSP relay | Green `[REPO]` |
+| [#77](https://github.com/th3w1zard1/Andastra/pull/77) | **409** | Arithmetic StrRef relay v1 | Green `[REPO]` |
+| [#79](https://github.com/th3w1zard1/Andastra/pull/79) | **410** | Five-hop multi-arg JSR relay (`MaxNestedJsrRelayDepth = 5`) | Green `[REPO]` |
+| [#80](https://github.com/th3w1zard1/Andastra/pull/80) | **411** | Five-hop mixed CONST+CPTOPSP relay | Green `[REPO]` |
+| [#87](https://github.com/th3w1zard1/Andastra/pull/87) | **418** | Six-hop multi-arg JSR relay (depth **5 → 6**) | Green `[REPO]` |
+| [#88](https://github.com/th3w1zard1/Andastra/pull/88) | **419** | Six-hop mixed CONST+CPTOPSP relay (**107** NcsConsti tests) | Green `[REPO]` |
+
+**Merge order (recommended):** **#77** → **#79** → **#80** → **#70** (rebase as needed) → **#87** (after **#79**) → **#88** (after **#87**). Resolve `MaxNestedJsrRelayDepth` conflicts (**#79**/**#80** at 5, **#87**/**#88** at 6). Bounded relay arc complete at six hops — full stack simulation remains deferred per plan **063**. `[REPO]`
+
+## Suggested next slices (420+)
 
 | Plan | Topic |
 |------|-------|
-| 375+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
-| 375+ | Four-hop mixed CONST+CPTOPSP nested JSR relay (bounded relay arc continuation) |
-| 375+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
-| 375+ | ReferenceFinder / OdyTools vertical slices per plan **063** backlog |
+| 417+ | Field-value arc tracker sync / merge stack **#81**–**#86** (open PR **#86**) |
+| 420+ | Post-merge tracker sync after NCS relay stack **#70**–**#88** lands |
+| 420+ | Full CONSTI stack simulation for exotic control-flow (CPTOPSP/CFG) per plan **063** |
+| 420+ | Merge **#74** (CodeQL) early; KotorDiff installation ref search (**#71**) |
+| 420+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
 
 ## Repo implications
 
