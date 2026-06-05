@@ -318,7 +318,19 @@ namespace OdyTools.Editors
             AddFormRow(profilePanel, "Tag:", _tagEdit = new TextBox(), _tagGenerateBtn = new Button { Content = "-" }, () => GenerateTag());
             AddFormRow(profilePanel, "ResRef:", _resrefEdit = new TextBox { MaxLength = 16 });
             ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
+            FieldValueReferenceHelper.AppendFieldValueFindReferencesMenuItem(
+                _tagEdit.ContextMenu,
+                _tagEdit,
+                this,
+                _installation,
+                () => "Tag");
             ReferenceSearchHelper.AttachTemplateResRefFindReferencesMenu(_resrefEdit, this, _installation);
+            FieldValueReferenceHelper.AppendFieldValueFindReferencesMenuItem(
+                _resrefEdit.ContextMenu,
+                _resrefEdit,
+                this,
+                _installation,
+                () => "TemplateResRef");
             AddFormRow(profilePanel, "Appearance:", _appearanceSelect = new ComboBox());
             AddFormRow(profilePanel, "Soundset:", _soundsetSelect = new ComboBox());
             AddFormRow(profilePanel, "Conversation:", _conversationEdit = new ComboBox { IsEditable = true }, _conversationModifyBtn = new Button { Content = "Edit" }, () => EditConversation());
