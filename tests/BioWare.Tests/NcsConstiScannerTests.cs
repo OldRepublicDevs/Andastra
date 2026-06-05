@@ -559,6 +559,50 @@ namespace BioWare.Tests
         }
 
         [Test]
+        public void GetConstiUsageContext_ArithmeticDivStrRefLiteral_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { ActionSpeakStringByStrRef(" + targetStrRef + " / 1); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_ArithmeticDivStrRefLiteral_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { ActionSpeakStringByStrRef(" + targetStrRef + " / 1); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-arith-div-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
         public void GetConstiUsageContext_ChainedArithmeticAddStrRefLiteral_ReturnsStrRefConsumer()
         {
             const int targetStrRef = 424242;
@@ -675,6 +719,94 @@ namespace BioWare.Tests
             byte[] bytes = NCSAuto.BytesNcs(ncs);
 
             string filepath = Path.Combine(Path.GetTempPath(), "ncs-arith-local-sub-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_ArithmeticLocalMulStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " * 1; ActionSpeakStringByStrRef(n); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_ArithmeticLocalMulStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " * 1; ActionSpeakStringByStrRef(n); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-arith-local-mul-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_ArithmeticLocalModStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " % 1000000; ActionSpeakStringByStrRef(n); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_ArithmeticLocalModStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " % 1000000; ActionSpeakStringByStrRef(n); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-arith-local-mod-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
             File.WriteAllBytes(filepath, bytes);
 
             try
