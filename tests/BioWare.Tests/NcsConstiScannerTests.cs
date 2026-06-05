@@ -2258,6 +2258,50 @@ namespace BioWare.Tests
         }
 
         [Test]
+        public void GetConstiUsageContext_FourHopMixedConstCptopspRelayStrRef_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void speak(int a, int s) { ActionSpeakStringByStrRef(s); }\nvoid inner(int a, int s) { speak(0, s); }\nvoid mid(int a, int s) { inner(a, s); }\nvoid relay(int a, int s) { mid(a, s); }\nvoid outer(int a, int s) { relay(a, s); }\nvoid main() { outer(99, " + targetStrRef + "); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_FourHopMixedConstCptopspRelayStrRef_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void speak(int a, int s) { ActionSpeakStringByStrRef(s); }\nvoid inner(int a, int s) { speak(0, s); }\nvoid mid(int a, int s) { inner(a, s); }\nvoid relay(int a, int s) { mid(a, s); }\nvoid outer(int a, int s) { relay(a, s); }\nvoid main() { outer(99, " + targetStrRef + "); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-four-hop-mixed-const-jsr-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
         public void GetConstiUsageContext_NestedJsrMixedConstCptopspRelayStrRef_ReturnsStrRefConsumer()
         {
             const int targetStrRef = 424242;
