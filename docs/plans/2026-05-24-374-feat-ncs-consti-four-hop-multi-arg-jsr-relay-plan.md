@@ -1,7 +1,8 @@
 ---
 title: "feat: ncs consti four-hop multi-arg nested jsr relay"
 type: feat
-status: active
+status: complete
+completed: 2026-05-24
 date: 2026-05-24
 origin: docs/plans/2026-05-24-368-feat-ncs-consti-three-hop-multi-arg-jsr-relay-plan.md
 branch: feat/plan-374-four-hop-multi-arg-jsr-relay
