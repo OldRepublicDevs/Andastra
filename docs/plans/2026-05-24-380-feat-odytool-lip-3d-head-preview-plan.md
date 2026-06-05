@@ -1,8 +1,9 @@
 ---
 title: "feat: odyTool LIP 3D head preview with appearance picker"
 type: feat
-status: active
+status: complete
 date: 2026-05-24
+completed: 2026-05-24
 origin: docs/brainstorms/2026-05-24-lip-editor-playback-preview-requirements.md
 branch: feat/plan-380-lip-3d-head-preview
 depends_on: plan 379
