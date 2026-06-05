@@ -722,7 +722,9 @@ namespace KotorDiff.AppCore
                 if (firstPath is Installation installationPath)
                 {
                     baseDataPath = new DirectoryInfo(installationPath.Path);
-                    batchStrrefCache = new StrRefReferenceCache(installationPath.Game);
+                    batchStrrefCache = ReferenceCacheHelpers.BuildStrRefReferenceCache(
+                        installationPath,
+                        (string msg) => LogOutput(msg));
                 }
                 else if (firstPath is string pathStr && Directory.Exists(pathStr))
                 {
@@ -739,7 +741,9 @@ namespace KotorDiff.AppCore
                 try
                 {
                     var installation = new Installation(baseDataPath.FullName);
-                    batchStrrefCache = new StrRefReferenceCache(installation.Game);
+                    batchStrrefCache = ReferenceCacheHelpers.BuildStrRefReferenceCache(
+                        installation,
+                        (string msg) => LogOutput(msg));
                 }
                 catch (Exception)
                 {
