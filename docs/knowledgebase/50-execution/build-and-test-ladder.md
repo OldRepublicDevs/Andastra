@@ -58,13 +58,13 @@ Expected on `master`: **97** ReferenceFinder + **36** ReferenceSearchHelper + **
 
 ### Step 3d — Field-value ref-search (when relevant)
 
-After OdyTools `FieldValueReferenceHelper` / template editor field-value wiring changes (plans **406**–**415**):
+After OdyTools `FieldValueReferenceHelper` / template editor field-value wiring changes (plans **406**–**416**):
 
 ```bash
 dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~FieldValueReferenceHelperTests
 ```
 
-Expected on `master` post plan **415**: **10** FieldValueReferenceHelper tests pass; UT* template editors wired (GFF on plan **406** / PR **#72**). `[REPO]`
+Expected on `master` post plan **416**: **10** FieldValueReferenceHelper tests pass; UT* + GFF editors wired on unified stack. `[REPO]`
 
 ### Step 4 — Andastra tests
 
