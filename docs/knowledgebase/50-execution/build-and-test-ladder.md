@@ -40,7 +40,7 @@ dotnet test tests/KotorCLI.Tests/KotorCLI.Tests.csproj --framework net9.0 --filt
 dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~StrRefReferenceHelperTests
 ```
 
-Expected on `master` post [PR #63](https://github.com/th3w1zard1/Andastra/pull/63) (plan **374**): **98** NcsConsti + **18** FindStrRefCommand + **12** CLI ref-search + **10** StrRefReferenceHelper tests pass. Prior baseline post [PR #61](https://github.com/th3w1zard1/Andastra/pull/61) (plan **372**): **96** NcsConsti. `[REPO]`
+Expected on `master` post [PR #63](https://github.com/th3w1zard1/Andastra/pull/63) (plan **374**): **98** NcsConsti + **18** FindStrRefCommand + **12** CLI ref-search + **10** StrRefReferenceHelper tests pass. Open relay stack tip ([PR #88](https://github.com/th3w1zard1/Andastra/pull/88), plan **419**): **107** NcsConsti at `MaxNestedJsrRelayDepth = 6`. Prior baseline post [PR #61](https://github.com/th3w1zard1/Andastra/pull/61) (plan **372**): **96** NcsConsti. `[REPO]`
 
 ### Step 3c — ReferenceFinder + script ResRef ref-search (when relevant)
 
