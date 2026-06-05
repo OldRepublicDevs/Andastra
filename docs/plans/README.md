@@ -158,6 +158,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 376 | [376-feat-odytool-lip-batch-processor-plan.md](2026-05-24-376-feat-odytool-lip-batch-processor-plan.md) | OdyTool LIP batch WAV processor (Holocron parity) |
 | 377 | [377-feat-odytool-lip-keyframe-editor-ui-plan.md](2026-05-24-377-feat-odytool-lip-keyframe-editor-ui-plan.md) | OdyTool LIP keyframe editor UI |
 | 409 | [409-feat-ncs-consti-arithmetic-strref-relay-plan.md](2026-06-05-409-feat-ncs-consti-arithmetic-strref-relay-plan.md) | NCS CONSTI arithmetic StrRef relay v1 |
+| 410 | [410-feat-ncs-consti-five-hop-multi-arg-jsr-relay-plan.md](2026-06-05-410-feat-ncs-consti-five-hop-multi-arg-jsr-relay-plan.md) | NCS CONSTI five-hop multi-arg nested JSR relay |
 
 ## Repo implications
 
