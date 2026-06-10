@@ -172,6 +172,8 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 440 | [440-chore-stack-simulation-arc-tracker-sync-v8-plan.md](2026-06-10-440-chore-stack-simulation-arc-tracker-sync-v8-plan.md) | Stack simulation arc tracker sync v8 (#106–#108) |
 | 441 | [441-feat-ncs-consti-triple-multihop-combined-arithmetic-local-strref-relay-plan.md](2026-06-10-441-feat-ncs-consti-triple-multihop-combined-arithmetic-local-strref-relay-plan.md) | NCS CONSTI triple multihop combined arithmetic StrRef relay |
 | 442 | [442-chore-stack-simulation-arc-tracker-sync-v9-plan.md](2026-06-10-442-chore-stack-simulation-arc-tracker-sync-v9-plan.md) | Stack simulation arc tracker sync v9 (#108–#110) |
+| 443 | [443-feat-ncs-consti-four-hop-identity-double-arithmetic-local-strref-relay-plan.md](2026-06-10-443-feat-ncs-consti-four-hop-identity-double-arithmetic-local-strref-relay-plan.md) | NCS CONSTI four-hop identity double arithmetic StrRef relay |
+| 444 | [444-chore-stack-simulation-arc-tracker-sync-v10-plan.md](2026-06-10-444-chore-stack-simulation-arc-tracker-sync-v10-plan.md) | Stack simulation arc tracker sync v10 (#110–#112) |
 
 ## Repo implications
 
