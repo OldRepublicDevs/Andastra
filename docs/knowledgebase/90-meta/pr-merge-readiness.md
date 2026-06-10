@@ -402,7 +402,7 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 | [#113](https://github.com/th3w1zard1/Andastra/pull/113) | **444** | Stack simulation arc tracker sync v10 (docs) | Green `[REPO]` |
 | [#114](https://github.com/th3w1zard1/Andastra/pull/114) | **445** | Four-hop identity combined arithmetic StrRef relay (**145** NcsConsti tests) | Green `[REPO]` |
 | [#115](https://github.com/th3w1zard1/Andastra/pull/115) | **446** | Stack simulation arc tracker sync v11 (docs) | Green `[REPO]` |
-| [#116](https://github.com/th3w1zard1/Andastra/pull/116) | **447** | Four-hop identity second-offset local StrRef relay (**147** NcsConsti tests) | Green `[REPO]` |
+| [#116](https://github.com/th3w1zard1/Andastra/pull/116) | **447** | Four-hop identity second-offset StrRef relay (**147** NcsConsti tests) | Green `[REPO]` |
 
 **Merge order (recommended):** **#89** (docs, independent) → **#90** → **#91** → **#92** (docs, stacks on **#89**) → **#93** → **#94** → **#96** → **#98** → **#99** → **#101** → **#104** → **#106** → **#108** → **#110** → **#112** → **#114** → **#116** (feature stack on **#91**/**#88** relay tip at **107** tests; rebase after relay merges). **#95**/**#97**/**#100**/**#102**/**#105**/**#107**/**#109**/**#111**/**#113**/**#115** (docs v2–v11, stack on **#92**/**#95**/**#97**/**#100**/**#102**/**#105**/**#107**/**#109**/**#111**/**#113**) can merge alongside doc slices. Plan **409**/**#77** arithmetic v1 is superseded by **#90** tip — close **#77** when **#90** lands. Local arithmetic multihop relay characterization complete at **#116** (**147** tests). `[REPO]`
 
