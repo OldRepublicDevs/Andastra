@@ -1335,6 +1335,52 @@ namespace BioWare.Tests
         }
 
         [Test]
+        public void GetConstiUsageContext_FourHopIdentitySecondOffsetLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + "; int m = n + " + secondOffset + "; int p = m; int q = p; ActionSpeakStringByStrRef(q); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_FourHopIdentitySecondOffsetLocalStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + "; int m = n + " + secondOffset + "; int p = m; int q = p; ActionSpeakStringByStrRef(q); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-four-hop-identity-second-offset-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
         public void GetConstiUsageContext_BarkStringSecondArg_ReturnsStrRefConsumer()
         {
             const int smallStrRef = 50;
