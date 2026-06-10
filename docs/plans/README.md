@@ -158,6 +158,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 376 | [376-feat-odytool-lip-batch-processor-plan.md](2026-05-24-376-feat-odytool-lip-batch-processor-plan.md) | OdyTool LIP batch WAV processor (Holocron parity) |
 | 377 | [377-feat-odytool-lip-keyframe-editor-ui-plan.md](2026-05-24-377-feat-odytool-lip-keyframe-editor-ui-plan.md) | OdyTool LIP keyframe editor UI |
 | 407 | [407-fix-codeql-advanced-default-setup-conflict-plan.md](2026-06-05-407-fix-codeql-advanced-default-setup-conflict-plan.md) | Remove CodeQL Advanced workflow; default setup authoritative |
+| 434 | [434-feat-stridegamefps-linux-tfm-fix-plan.md](2026-05-24-434-feat-stridegamefps-linux-tfm-fix-plan.md) | StrideGameFPS Linux net9.0 TFM for NuGet CI restore |
 
 ## Repo implications
 
