@@ -338,6 +338,7 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Full solution | `dotnet build Andastra.sln --framework net9.0 -c Release -m:1` | Green Linux net9.0 `[REPO]` |
 | Tool chain | OdyTools, OdyPatch, OdyPatch.UI, KotorCLI, ConvertKotorGame | Green net9.0 `[REPO]` |
 | OdyPatch NuGet pack | `./helper_scripts/build-nuget.sh` | Green net9.0 Linux; CI `nuget-pack-smoke` (help + validate smoke, plans 051/053/055) `[REPO]` |
+| StrideGameFPS orphan csproj | `dotnet restore/build src/StrideGameFPS/StrideGameFPS.csproj --framework net9.0` | Linux `net9.0` stub green (plan **434**); fixes NETSDK1013 when submit-nuget restores discovered csproj files `[REPO]` |
 
 ## CI expectations (post-merge)
 
@@ -347,7 +348,7 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 |-----|-------|
 | CI — Test / Lint | BioWare + Andastra.Tests + OdyPatch.Tests ladder (plan 297) |
 | CI — Solution Build (net9.0) | `-m:1` serialization (plan 031) |
-| CI — NuGet Pack Smoke | `nuget-pack-smoke` — pack + CLI `--help` + `--validate` fixture (plans 051/053/055) |
+| CI — NuGet Pack Smoke | `nuget-pack-smoke` — pack + CLI `--help` + `--validate` fixture (plans 051/053/055); submit-nuget `find` restore requires orphan csproj TFMs — StrideGameFPS Linux stub (plan **434**) |
 | Test Builds matrix | net48-win, net9.0 linux/osx/win |
 | dotnet-desktop | Windows BioWare + full tool stack |
 
