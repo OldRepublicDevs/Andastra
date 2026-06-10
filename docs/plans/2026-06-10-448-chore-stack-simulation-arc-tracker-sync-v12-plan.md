@@ -17,7 +17,7 @@ Plan **446**/**#115** indexed stack-simulation open PR stack through **#114** at
 
 - R1. `pr-merge-readiness.md`: add **#115**–**#116**; Step 3b **147** pending **#116**; plans **348**–**447**.
 - R2. `build-and-test-ladder.md`: Step 3b open-tip **147** at **#116**; **#114** at **145**.
-- R3. Refresh suggested next slices for **449+** (remove four-hop identity second-offset — landed **#116**).
+- R3. Refresh suggested next slices for **448+** (remove four-hop identity second-offset — landed **#116**).
 
 ## Verification
 
