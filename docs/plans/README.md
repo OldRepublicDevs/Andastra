@@ -161,6 +161,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 423 | [423-chore-stack-simulation-arc-tracker-sync-plan.md](2026-06-05-423-chore-stack-simulation-arc-tracker-sync-plan.md) | Stack simulation arc tracker sync |
 | 426 | [426-chore-stack-simulation-arc-tracker-sync-v2-plan.md](2026-06-05-426-chore-stack-simulation-arc-tracker-sync-v2-plan.md) | Stack simulation arc tracker sync v2 (#93–#94) |
 | 428 | [428-chore-stack-simulation-arc-tracker-sync-v3-plan.md](2026-06-05-428-chore-stack-simulation-arc-tracker-sync-v3-plan.md) | Stack simulation arc tracker sync v3 (#95–#96) |
+| 431 | [431-chore-stack-simulation-arc-tracker-sync-v4-plan.md](2026-06-05-431-chore-stack-simulation-arc-tracker-sync-v4-plan.md) | Stack simulation arc tracker sync v4 (#97–#99) |
 
 ## Repo implications
 
