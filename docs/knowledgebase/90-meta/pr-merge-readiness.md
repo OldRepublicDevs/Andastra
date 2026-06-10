@@ -418,7 +418,7 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 |----|------|-------|-----|
 | [#103](https://github.com/th3w1zard1/Andastra/pull/103) | **434** | StrideGameFPS Linux `net9.0` stub — fixes submit-nuget NETSDK1013 | submit-nuget green `[REPO]` |
 
-Merge **#103** to `master` early so stacked feature PRs (**#98**–**#121**) pick up green submit-nuget on rebase. `[REPO]`
+Merge **#103** to `master` early so stacked feature PRs (**#98**–**#123**) pick up green submit-nuget on rebase. `[REPO]`
 
 ## Suggested next slices (454+)
 
