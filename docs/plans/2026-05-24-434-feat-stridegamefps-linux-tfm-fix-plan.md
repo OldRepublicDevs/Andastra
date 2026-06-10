@@ -2,7 +2,7 @@
 title: "fix: StrideGameFPS Linux TargetFramework for NuGet CI restore"
 type: fix
 status: completed
-date: 2026-06-10
+date: 2026-05-24
 origin: NETSDK1013 on Linux when NuGet/submit workflow restores all csproj files
 ---
 
