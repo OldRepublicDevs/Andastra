@@ -166,6 +166,8 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 434 | [434-feat-stridegamefps-linux-tfm-fix-plan.md](2026-05-24-434-feat-stridegamefps-linux-tfm-fix-plan.md) | StrideGameFPS Linux TFM stub (submit-nuget NETSDK1013) |
 | 435 | [435-feat-ncs-consti-second-hop-arithmetic-local-strref-relay-plan.md](2026-06-10-435-feat-ncs-consti-second-hop-arithmetic-local-strref-relay-plan.md) | NCS CONSTI second-hop non-zero local ADD StrRef relay |
 | 436 | [436-chore-stack-simulation-arc-tracker-sync-v6-plan.md](2026-06-10-436-chore-stack-simulation-arc-tracker-sync-v6-plan.md) | Stack simulation arc tracker sync v6 (#102–#104, #103 CI) |
+| 437 | [437-feat-ncs-consti-double-hop-arithmetic-local-strref-relay-plan.md](2026-06-10-437-feat-ncs-consti-double-hop-arithmetic-local-strref-relay-plan.md) | NCS CONSTI double-hop non-zero local ADD StrRef relay |
+| 438 | [438-chore-stack-simulation-arc-tracker-sync-v7-plan.md](2026-06-10-438-chore-stack-simulation-arc-tracker-sync-v7-plan.md) | Stack simulation arc tracker sync v7 (#104–#106) |
 
 ## Repo implications
 
