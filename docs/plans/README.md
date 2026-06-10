@@ -173,6 +173,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 437 | [437-feat-ncs-consti-double-hop-arithmetic-local-strref-relay-plan.md](2026-06-10-437-feat-ncs-consti-double-hop-arithmetic-local-strref-relay-plan.md) | NCS CONSTI double-hop non-zero local ADD StrRef relay |
 | 439 | [439-feat-ncs-consti-triple-multihop-double-arithmetic-local-strref-relay-plan.md](2026-06-10-439-feat-ncs-consti-triple-multihop-double-arithmetic-local-strref-relay-plan.md) | NCS CONSTI triple multihop double arithmetic StrRef relay |
 | 441 | [441-feat-ncs-consti-triple-multihop-combined-arithmetic-local-strref-relay-plan.md](2026-06-10-441-feat-ncs-consti-triple-multihop-combined-arithmetic-local-strref-relay-plan.md) | NCS CONSTI triple multihop combined arithmetic StrRef relay |
+| 443 | [443-feat-ncs-consti-four-hop-identity-double-arithmetic-local-strref-relay-plan.md](2026-06-10-443-feat-ncs-consti-four-hop-identity-double-arithmetic-local-strref-relay-plan.md) | NCS CONSTI four-hop identity double arithmetic StrRef relay |
 
 ## Repo implications
 
