@@ -160,6 +160,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 420 | [420-chore-ncs-consti-arc-tracker-sync-plan.md](2026-06-05-420-chore-ncs-consti-arc-tracker-sync-plan.md) | NCS CONSTI arc closure tracker sync |
 | 423 | [423-chore-stack-simulation-arc-tracker-sync-plan.md](2026-06-05-423-chore-stack-simulation-arc-tracker-sync-plan.md) | Stack simulation arc tracker sync |
 | 426 | [426-chore-stack-simulation-arc-tracker-sync-v2-plan.md](2026-06-05-426-chore-stack-simulation-arc-tracker-sync-v2-plan.md) | Stack simulation arc tracker sync v2 (#93–#94) |
+| 428 | [428-chore-stack-simulation-arc-tracker-sync-v3-plan.md](2026-06-05-428-chore-stack-simulation-arc-tracker-sync-v3-plan.md) | Stack simulation arc tracker sync v3 (#95–#96) |
 
 ## Repo implications
 
