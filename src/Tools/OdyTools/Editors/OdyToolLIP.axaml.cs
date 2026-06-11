@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -9,6 +10,8 @@ using BioWare.Resource.Formats.LIP;
 using BioWare.Common;
 using OdyTools.Data;
 using OdyTools.Dialogs;
+using OdyTools.Utils;
+using OdyTools.Widgets;
 
 namespace OdyTools.Editors
 {
@@ -30,6 +33,12 @@ namespace OdyTools.Editors
         private Button _addKeyframeButton;
         private Button _updateKeyframeButton;
         private Button _deleteKeyframeButton;
+        private TextBox _audioPathBox;
+        private Button _loadAudioButton;
+        private Button _playPreviewButton;
+        private Button _stopPreviewButton;
+        private string _audioFilePath;
+        private NAudioMediaPlayer _previewPlayer;
         private readonly List<byte[]> _undoStack = new List<byte[]>();
         private readonly List<byte[]> _redoStack = new List<byte[]>();
         private bool _undoRedoInProgress;
@@ -46,6 +55,7 @@ namespace OdyTools.Editors
         {
             _lip = null;
             _duration = 0.0f;
+            _previewPlayer = new NAudioMediaPlayer();
             InitializeComponent();
             SetupSignals();
             SetupMenuHandlers();
@@ -104,9 +114,38 @@ namespace OdyTools.Editors
             var root = new Grid
             {
                 Margin = new Avalonia.Thickness(8),
-                RowDefinitions = new RowDefinitions("Auto,*,Auto,Auto"),
+                RowDefinitions = new RowDefinitions("Auto,Auto,*,Auto"),
                 ColumnDefinitions = new ColumnDefinitions("*"),
             };
+
+            var audioRow = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,Auto,Auto"),
+                Margin = new Avalonia.Thickness(0, 0, 0, 8),
+            };
+            audioRow.Children.Add(new TextBlock
+            {
+                Text = "Audio:",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Avalonia.Thickness(0, 0, 8, 0),
+            });
+            _audioPathBox = new TextBox { IsReadOnly = true, Watermark = "No audio loaded" };
+            Grid.SetColumn(_audioPathBox, 1);
+            audioRow.Children.Add(_audioPathBox);
+            _loadAudioButton = new Button { Content = "Load...", Margin = new Avalonia.Thickness(8, 0, 0, 0) };
+            _loadAudioButton.Click += async (s, e) => await LoadAudioFromPickerAsync();
+            Grid.SetColumn(_loadAudioButton, 2);
+            audioRow.Children.Add(_loadAudioButton);
+            _playPreviewButton = new Button { Content = "Play", Margin = new Avalonia.Thickness(4, 0, 0, 0) };
+            _playPreviewButton.Click += (s, e) => PlayPreview();
+            Grid.SetColumn(_playPreviewButton, 3);
+            audioRow.Children.Add(_playPreviewButton);
+            _stopPreviewButton = new Button { Content = "Stop", Margin = new Avalonia.Thickness(4, 0, 0, 0) };
+            _stopPreviewButton.Click += (s, e) => StopPreview();
+            Grid.SetColumn(_stopPreviewButton, 4);
+            audioRow.Children.Add(_stopPreviewButton);
+            Grid.SetRow(audioRow, 0);
+            root.Children.Add(audioRow);
 
             var durationRow = new Grid
             {
@@ -130,12 +169,12 @@ namespace OdyTools.Editors
             _durationSpin.ValueChanged += OnDurationSpinChanged;
             Grid.SetColumn(_durationSpin, 1);
             durationRow.Children.Add(_durationSpin);
-            Grid.SetRow(durationRow, 0);
+            Grid.SetRow(durationRow, 1);
             root.Children.Add(durationRow);
 
             _keyframeList = new ListBox { MinHeight = 180 };
             _keyframeList.SelectionChanged += OnKeyframeSelectionChanged;
-            Grid.SetRow(_keyframeList, 1);
+            Grid.SetRow(_keyframeList, 2);
             root.Children.Add(_keyframeList);
 
             var editRow = new Grid
@@ -206,10 +245,104 @@ namespace OdyTools.Editors
             var editPanel = new StackPanel();
             editPanel.Children.Add(editRow);
             editPanel.Children.Add(buttonRow);
-            Grid.SetRow(editPanel, 2);
+            Grid.SetRow(editPanel, 3);
             root.Children.Add(editPanel);
 
             return root;
+        }
+
+        /// <summary>
+        /// Loads a WAV file for preview playback and sets duration from audio length (Holocron load_audio).
+        /// </summary>
+        public void LoadAudioFile(string wavPath)
+        {
+            if (string.IsNullOrWhiteSpace(wavPath) || !File.Exists(wavPath))
+            {
+                throw new FileNotFoundException("Audio file not found.", wavPath);
+            }
+
+            _previewPlayer?.Stop();
+
+            float duration = LipBatchProcessor.GetWavDurationSeconds(wavPath);
+            _audioFilePath = wavPath;
+            if (_audioPathBox != null)
+            {
+                _audioPathBox.Text = wavPath;
+            }
+
+            _undoStack.Clear();
+            _redoStack.Clear();
+            _duration = duration;
+            if (_lip != null)
+            {
+                _lip.Length = duration;
+            }
+
+            if (_previewPlayer != null)
+            {
+                _previewPlayer.SetSource(wavPath);
+            }
+
+            RefreshKeyframeList();
+        }
+
+        private async Task LoadAudioFromPickerAsync()
+        {
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel?.StorageProvider == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var options = new FilePickerOpenOptions
+                {
+                    Title = "Select Audio File",
+                    AllowMultiple = false,
+                    FileTypeFilter = new[]
+                    {
+                        new FilePickerFileType("Audio Files") { Patterns = new[] { "*.wav" } },
+                    },
+                };
+
+                var files = await topLevel.StorageProvider.OpenFilePickerAsync(options);
+                if (files == null || files.Count == 0)
+                {
+                    return;
+                }
+
+                string path = files[0].Path.LocalPath;
+                LoadAudioFile(path);
+            }
+            catch (Exception ex)
+            {
+                await DialogHelper.ShowWindowAsync(this, "Error", ex.Message, MsBox.Avalonia.Enums.ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error);
+            }
+        }
+
+        private async void PlayPreview()
+        {
+            if (string.IsNullOrWhiteSpace(_audioFilePath))
+            {
+                await DialogHelper.ShowWindowAsync(
+                    this,
+                    "Error",
+                    "Please load an audio file first",
+                    MsBox.Avalonia.Enums.ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Warning);
+                return;
+            }
+
+            if (_previewPlayer != null)
+            {
+                _previewPlayer.Play();
+            }
+        }
+
+        private void StopPreview()
+        {
+            _previewPlayer?.Stop();
         }
 
         private static string FormatKeyframeLabel(LIPKeyFrame frame)
@@ -373,6 +506,14 @@ namespace OdyTools.Editors
         {
             Opened += (s, e) => { UpdateStatusBar(); Focus(); };
             KeyDown += OnWindowKeyDown;
+            Closed += (s, e) =>
+            {
+                if (_previewPlayer != null)
+                {
+                    _previewPlayer.Dispose();
+                    _previewPlayer = null;
+                }
+            };
         }
 
         private void SetupMenuHandlers()
@@ -644,6 +785,9 @@ namespace OdyTools.Editors
 
         // Properties for tests
         public LIP Lip => _lip;
+        public string AudioFilePath => _audioFilePath;
+        public bool CanUndo => _undoStack.Count > 0;
+        public bool CanRedo => _redoStack.Count > 0;
         public float Duration
         {
             get => _duration;
