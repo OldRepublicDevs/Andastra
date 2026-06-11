@@ -2148,5 +2148,79 @@ namespace OdyTools.Tests
             }
         }
 
+        private static bool GetColumnSelectionActive(OdyTool2DA editor)
+        {
+            var fi = typeof(OdyTool2DA).GetField("_columnSelectionActive", BindingFlags.NonPublic | BindingFlags.Instance);
+            return fi != null && (bool)fi.GetValue(editor);
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_ShiftClickRange_SelectsRectangle()
+        {
+            byte[] data = CreateTestTwoDABytes(5);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.SelectCellRange(0, 1, 2, 3);
+                Assert.That(editor.IsCellRangeActive, Is.True);
+                Assert.That(GetStatusText(editor), Does.Contain("Range:"));
+                Assert.That(GetStatusText(editor), Does.Contain("R0"));
+                Assert.That(GetStatusText(editor), Does.Contain("R2"));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public async Task OdyTool2DA_CopySelection_WithActiveRange_CopiesBlockOnly()
+        {
+            byte[] data = CreateTestTwoDABytes(5);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.SelectCellRange(0, 2, 2, 3);
+                editor.CopySelection();
+                await Task.Delay(150);
+                var clip = await (editor as Window)?.Clipboard?.GetTextAsync();
+                Assert.That(clip, Is.Not.Null.And.Not.Empty);
+                var lines = clip.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+                Assert.That(lines.Length, Is.EqualTo(3), "Range spans 3 rows");
+                Assert.That(lines[0].Split('\t').Length, Is.EqualTo(2), "Range spans 2 columns");
+                Assert.That(lines[0], Does.Contain("PMBTest"));
+                Assert.That(lines[0], Does.Contain("100"));
+                Assert.That(clip, Does.Not.Contain("Human"), "Full-row columns outside range excluded");
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_SelectCellRange_ClearsColumnHighlight()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                SetSelection(editor, 0);
+                SetCurrentColumn(editor, 2);
+                Assert.That(editor.TryHandleSelectionShortcut(Key.Space, KeyModifiers.Control), Is.True);
+                Assert.That(GetColumnSelectionActive(editor), Is.True);
+                editor.SelectCellRange(0, 1, 1, 2);
+                Assert.That(GetColumnSelectionActive(editor), Is.False);
+                Assert.That(editor.IsCellRangeActive, Is.True);
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
     }
 }
