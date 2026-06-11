@@ -214,6 +214,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 464 | [464-chore-stack-simulation-arc-tracker-sync-v20-plan.md](2026-06-10-464-chore-stack-simulation-arc-tracker-sync-v20-plan.md) | Stack simulation arc tracker sync v20 |
 | 465 | [465-chore-multi-day-pr-merge-holocron-integration-plan.md](2026-06-11-465-chore-multi-day-pr-merge-holocron-integration-plan.md) | Multi-day PR merge + Holocron integration |
 | 466 | [466-chore-post-d1-tracker-sync-v21-plan.md](2026-06-10-466-chore-post-d1-tracker-sync-v21-plan.md) | Post-D1 tracker sync v21 (165→167 NcsConsti) |
+| 467 | [467-feat-fieldvalue-ut-editor-wiring-plan.md](2026-06-11-467-feat-fieldvalue-ut-editor-wiring-plan.md) | Field-value find-refs on UT editors (plans 412–416) |
 
 ## Repo implications
 

@@ -333,9 +333,9 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Check | Command / artifact | Status |
 |-------|-------------------|--------|
 | BioWare + tests | `dotnet build/test` per [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md) | Green `[REPO]` |
-| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**167** post Day 2 five-hop relay; **165** post Day 1 land; **163** at plan **463** tip), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**466**, 2026-06-11) |
+| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**167** post Day 2; **165** post Day 1), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**466**, 2026-06-11) |
 | Ref-search Step 3c (ReferenceFinder) | `--filter` ReferenceFinderTests (**97**), ReferenceSearchHelper (**36**), ScriptReferenceHelper (**8**), FindRefsCommand (**21**) | Green `[REPO]` (plans **348**–**353**, 2026-06-03) |
-| Ref-search Step 3d (FieldValue) | `--filter` FieldValueReferenceHelperTests (**10**) | Pending [PR #85](https://github.com/th3w1zard1/Andastra/pull/85) stack **#81**–**#85** (plans **412**–**416**) `[REPO]` |
+| Ref-search Step 3d (FieldValue) | `--filter` FieldValueReferenceHelper (**10** post plan **467**) | Green pending plan **467** PR merge `[REPO]` |
 | Full solution | `dotnet build Andastra.sln --framework net9.0 -c Release -m:1` | Green Linux net9.0 `[REPO]` |
 | Tool chain | OdyTools, OdyPatch, OdyPatch.UI, KotorCLI, ConvertKotorGame | Green net9.0 `[REPO]` |
 | OdyPatch NuGet pack | `./helper_scripts/build-nuget.sh` | Green net9.0 Linux; CI `nuget-pack-smoke` (help + validate smoke, plans 051/053/055) `[REPO]` |
@@ -360,17 +360,16 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Field-value arc (open PR stack, plans 412–416)
+## Field-value arc (merged Day 3, plan 467)
 
-| PR | Plan | Scope | CI |
-|----|------|-------|-----|
-| [#81](https://github.com/th3w1zard1/Andastra/pull/81) | **412** | `FieldValueReferenceHelper` + UTP/UTD Tag/ResRef wiring | Green `[REPO]` |
-| [#82](https://github.com/th3w1zard1/Andastra/pull/82) | **413** | UTM/UTS/UTW wiring | Green `[REPO]` |
-| [#83](https://github.com/th3w1zard1/Andastra/pull/83) | **414** | UTI/UTE/UTT wiring | Green `[REPO]` |
-| [#84](https://github.com/th3w1zard1/Andastra/pull/84) | **415** | UTC wiring (supersedes **#78**) | Green `[REPO]` |
-| [#85](https://github.com/th3w1zard1/Andastra/pull/85) | **416** | GFF string/ResRef wiring (supersedes **#72**) | Green `[REPO]` |
+Bulk-landed via plan **465** Day 3 integration at **10** FieldValueReferenceHelper tests. `AppendFieldValueFindReferencesMenuItem` wired on UTC, UTP, UTD, UTM, UTS, UTW, UTI, UTE, UTT; GFF uses `AttachFieldValueFindReferencesMenu`. Supersedes **#78**, **#81**–**#85**. `[REPO]`
 
-**Merge order:** **#81** → **#82** → **#83** → **#84** → **#85** (rebase after each). Close **#72** and **#78** as superseded. Full stack lands helper + **10** FieldValueReferenceHelper tests + build-ladder Step **3d**. `[REPO]`
+## Field-value arc (superseded open PRs)
+
+| PR | Plan | Status |
+|----|------|--------|
+| [#78](https://github.com/th3w1zard1/Andastra/pull/78) | **409** | Superseded by **467** |
+| [#81](https://github.com/th3w1zard1/Andastra/pull/81)–[**#85**](https://github.com/th3w1zard1/Andastra/pull/85) | **412**–**416** | Superseded by **467** |
 
 ## NCS CONSTI stack simulation arc (merged Day 1, plans 421–463)
 

@@ -26,6 +26,27 @@ namespace OdyTools.Utils
             }
 
             var contextMenu = new ContextMenu();
+            valueEdit.ContextMenu = contextMenu;
+            AppendFieldValueFindReferencesMenuItem(
+                contextMenu,
+                valueEdit,
+                parent,
+                installation,
+                getFieldNameFilter);
+        }
+
+        public static void AppendFieldValueFindReferencesMenuItem(
+            ContextMenu contextMenu,
+            TextBox valueEdit,
+            Window parent,
+            OdyInstallation installation,
+            Func<string> getFieldNameFilter = null)
+        {
+            if (contextMenu == null || valueEdit == null)
+            {
+                return;
+            }
+
             var findReferencesItem = new MenuItem
             {
                 Header = "Find Field Value References",
@@ -52,7 +73,6 @@ namespace OdyTools.Utils
 
             valueEdit.TextChanged += UpdateEnabled;
             contextMenu.Opened += UpdateEnabled;
-            valueEdit.ContextMenu = contextMenu;
             UpdateEnabled(null, EventArgs.Empty);
         }
 
