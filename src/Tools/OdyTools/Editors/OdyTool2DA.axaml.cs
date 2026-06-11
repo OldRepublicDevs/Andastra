@@ -459,7 +459,15 @@ namespace OdyTools.Editors
                         int rowIdx = TryGetRowIndexFromSource(e.Source);
                         if (rowIdx >= 0)
                         {
-                            SelectRowByIndex(rowIdx);
+                            bool ctrl = (e.KeyModifiers & KeyModifiers.Control) != 0;
+                            if (ctrl)
+                            {
+                                ToggleRowSelection(rowIdx);
+                            }
+                            else
+                            {
+                                SelectRowByIndex(rowIdx);
+                            }
                             e.Handled = true;
                         }
                     }
@@ -1024,6 +1032,28 @@ namespace OdyTools.Editors
             _twodaTable.SelectedItems.Clear();
             _twodaTable.SelectedItems.Add(row);
             _twodaTable.SelectedItem = row;
+            _twodaTable.ScrollIntoView(row, _twodaTable.CurrentColumn);
+            UpdateFormulaBarAndStatus();
+        }
+
+        /// <summary>Ctrl+Click on # column: add or remove row from multi-selection.</summary>
+        public void ToggleRowSelection(int rowIndex)
+        {
+            if (_twodaTable == null || _sourceData.Count == 0) return;
+            if (rowIndex < 0 || rowIndex >= _sourceData.Count) return;
+            _columnSelectionActive = false;
+            ClearColumnHighlight();
+            ClearCellRangeSelection();
+            var row = _sourceData[rowIndex];
+            var nextSelection = _twodaTable.SelectedItems.Cast<object>().ToList();
+            if (nextSelection.Contains(row))
+                nextSelection.Remove(row);
+            else
+                nextSelection.Add(row);
+            _twodaTable.SelectedItem = row;
+            _twodaTable.SelectedItems.Clear();
+            foreach (object item in nextSelection)
+                _twodaTable.SelectedItems.Add(item);
             _twodaTable.ScrollIntoView(row, _twodaTable.CurrentColumn);
             UpdateFormulaBarAndStatus();
         }

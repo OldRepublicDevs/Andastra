@@ -82,6 +82,8 @@ namespace OdyTools.Dialogs
             {
                 ("Shift+Space", "Select Row"),
                 ("Ctrl+Space", "Select Column"),
+                ("Ctrl+Click (#)", "Toggle row in multi-selection"),
+                ("Shift+Click", "Select rectangular cell range"),
                 ("Alt+Up", "Move row up"),
                 ("Alt+Down", "Move row down"),
                 ("Ctrl+Shift+Left", "Move column left"),

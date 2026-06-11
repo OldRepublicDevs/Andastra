@@ -11,7 +11,7 @@ branch: master
 
 ## Executive summary (2026-06-11)
 
-Plan **465** Days **1–8** are **complete** on `master`:
+Plan **465** Days **1–9** landing on `master` (Day 9 PR pending):
 
 | Day | PR | Outcome |
 |-----|-----|---------|
@@ -23,6 +23,7 @@ Plan **465** Days **1–8** are **complete** on `master`:
 | **6** | [#141](https://github.com/th3w1zard1/Andastra/pull/141) | 2DA Shift/Ctrl+Space + Go To Column (plan **470**); **100** `OdyTool2DA_*` tests |
 | **7** | [#142](https://github.com/th3w1zard1/Andastra/pull/142) | 2DA Shift+Click range selection (plan **471**); **103** `OdyTool2DA_*` tests |
 | **8** | [#143](https://github.com/th3w1zard1/Andastra/pull/143) | 2DA paste over selection / anchor paste (plan **472**); **106** `OdyTool2DA_*` tests |
+| **9** | _pending_ | 2DA Ctrl+Click row multi-select (plan **473**); **109** `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
@@ -123,6 +124,19 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 | D8.3 | Insert fallback when no current column | ✅ |
 | D8.4 | OdyTool2DATests: anchor overwrite, range anchor, insert regression | ✅ |
 | D8.5 | PR **#143** → `master` | ✅ @ `7bb42c493` |
+
+---
+
+## Day 9 — 2DA Ctrl+Click row multi-select (plan **473**)
+
+| Step | Action | Done |
+|------|--------|------|
+| D9.1 | Ctrl+Click `#` column toggles row in `SelectedItems` | ✅ |
+| D9.2 | Clear column selection and cell range on toggle | ✅ |
+| D9.3 | Normal `#` click keeps single-row select | ✅ |
+| D9.4 | Keyboard shortcuts dialog update | ✅ |
+| D9.5 | OdyTool2DATests: toggle, clear modes, regression | ✅ |
+| D9.6 | PR → `master` | ⏳ |
 
 ---
 
