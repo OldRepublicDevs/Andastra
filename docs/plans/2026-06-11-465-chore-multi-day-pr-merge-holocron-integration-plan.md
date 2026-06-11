@@ -11,7 +11,7 @@ branch: master
 
 ## Executive summary (2026-06-11)
 
-Plan **465** Days **1–7** are **complete** on `master`:
+Plan **465** Days **1–8** are **complete** on `master`:
 
 | Day | PR | Outcome |
 |-----|-----|---------|
@@ -22,6 +22,8 @@ Plan **465** Days **1–7** are **complete** on `master`:
 | **5** | [#140](https://github.com/th3w1zard1/Andastra/pull/140) | 2DA row selection, dirty status, shortcuts (plan **469**); **97** `OdyTool2DA_*` tests |
 | **6** | [#141](https://github.com/th3w1zard1/Andastra/pull/141) | 2DA Shift/Ctrl+Space + Go To Column (plan **470**); **100** `OdyTool2DA_*` tests |
 | **7** | [#142](https://github.com/th3w1zard1/Andastra/pull/142) | 2DA Shift+Click range selection (plan **471**); **103** `OdyTool2DA_*` tests |
+| **8** | _pending_ | 2DA paste over cell (plan **472**); **106** `OdyTool2DA_*` tests |
+| **8** | TBD | 2DA paste over selection / anchor paste (plan **472**); **106** `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
@@ -113,6 +115,18 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 
 ---
 
+## Day 8 — 2DA paste over selection / anchor paste (plan **472**)
+
+| Step | Action | Done |
+|------|--------|------|
+| D8.1 | `TryGetPasteAnchor` — current cell or range min corner | ✅ |
+| D8.2 | `PasteAnchorOverwrite` — overwrite cells, expand rows/cols at bounds | ✅ |
+| D8.3 | Insert fallback when no current column | ✅ |
+| D8.4 | OdyTool2DATests: anchor overwrite, range anchor, insert regression | ✅ |
+| D8.5 | PR TBD → `master` | ⏳ |
+
+---
+
 ## Day 5+ — Holocron continuation
 
 Per plan **063** deferred items:
@@ -134,3 +148,4 @@ Per plan **063** deferred items:
 | [#140](https://github.com/th3w1zard1/Andastra/pull/140) | `4ceb97899` | 2DA row selection, dirty status, shortcuts (plan **469**) |
 | [#141](https://github.com/th3w1zard1/Andastra/pull/141) | `1abe9337e` | 2DA Shift/Ctrl+Space + Go To Column (plan **470**) |
 | [#142](https://github.com/th3w1zard1/Andastra/pull/142) | `b8131328b` | 2DA Shift+Click range selection (plan **471**) |
+| _pending_ | _pending_ | 2DA paste over cell (plan **472**) |

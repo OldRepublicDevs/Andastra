@@ -1933,6 +1933,21 @@ namespace OdyTools.Editors
                 var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
                 if (lines.Length == 0) return;
 
+                int startRow;
+                int startCol;
+                if (ShouldUseAnchorPaste(lines, out startRow, out startCol))
+                {
+                    var grid = ParseClipboardGrid(lines);
+                    if (grid.Count > 0)
+                    {
+                        PushState();
+                        PasteAnchorOverwrite(startRow, startCol, grid);
+                        SetItemDisplayData(Math.Min(startRow + grid.Count - 1, _sourceData.Count - 1));
+                        UpdateStatusBar();
+                    }
+                    return;
+                }
+
                 int insertIndex = _sourceData.Count;
                 var selectedIndices = _twodaTable?.SelectedItems != null
                     ? _twodaTable.SelectedItems.Cast<ObservableCollection<string>>()
@@ -2016,6 +2031,124 @@ namespace OdyTools.Editors
                 UpdateStatusBar();
             }
             catch { }
+        }
+
+        private bool TryGetPasteAnchor(out int startRow, out int startCol)
+        {
+            startRow = 0;
+            startCol = 0;
+            if (_cellRangeActive && _sourceData.Count > 0)
+            {
+                GetNormalizedRange(out startRow, out int maxRow, out startCol, out int maxCol);
+                return true;
+            }
+            int colIdx = GetCurrentColumnIndex();
+            // Column 0 is the row-label (#) column; focus there implies row selection, not cell anchor.
+            if (colIdx <= 0) return false;
+            var selectedRow = _twodaTable?.SelectedItem as ObservableCollection<string>;
+            if (selectedRow == null) return false;
+            int rowIdx = _sourceData.IndexOf(selectedRow);
+            if (rowIdx < 0) return false;
+            startRow = rowIdx;
+            startCol = colIdx;
+            return true;
+        }
+
+        /// <summary>Anchor overwrite when a cell/range is targeted; full-width row paste keeps insert semantics.</summary>
+        private bool ShouldUseAnchorPaste(string[] lines, out int startRow, out int startCol)
+        {
+            startRow = 0;
+            startCol = 0;
+            if (_columnHeaders.Count == 0 || _sourceData.Count == 0) return false;
+            if (!TryGetPasteAnchor(out startRow, out startCol)) return false;
+
+            var grid = ParseClipboardGrid(lines);
+            if (grid.Count == 0) return false;
+
+            if (_cellRangeActive) return true;
+
+            // Row-label column focus implies row-oriented paste (insert), not cell anchor.
+            if (startCol == 0) return false;
+
+            int fullColCount = GetEffectiveColumnCount();
+            bool allLinesFullWidth = true;
+            for (int i = 0; i < grid.Count; i++)
+            {
+                if (grid[i].Count < fullColCount)
+                {
+                    allLinesFullWidth = false;
+                    break;
+                }
+            }
+            return !allLinesFullWidth;
+        }
+
+        private static List<List<string>> ParseClipboardGrid(string[] lines)
+        {
+            var grid = new List<List<string>>();
+            if (lines.Length == 0) return grid;
+            bool preferCsv = lines[0].Contains(",") && !lines[0].Contains("\t");
+            int maxCols = 0;
+            foreach (var line in lines)
+            {
+                if (string.IsNullOrEmpty(line)) continue;
+                var cells = ParsePasteLine(line, preferCsv);
+                grid.Add(cells);
+                if (cells.Count > maxCols) maxCols = cells.Count;
+            }
+            for (int r = 0; r < grid.Count; r++)
+            {
+                while (grid[r].Count < maxCols) grid[r].Add("");
+            }
+            return grid;
+        }
+
+        private void PasteAnchorOverwrite(int startRow, int startCol, List<List<string>> grid)
+        {
+            int pasteRows = grid.Count;
+            int pasteCols = 0;
+            for (int r = 0; r < grid.Count; r++)
+            {
+                if (grid[r].Count > pasteCols) pasteCols = grid[r].Count;
+            }
+            if (pasteRows == 0 || pasteCols == 0) return;
+
+            int requiredRows = startRow + pasteRows;
+            int requiredCols = startCol + pasteCols;
+            int colCount = GetEffectiveColumnCount();
+            if (requiredCols > colCount)
+            {
+                int newDataCols = requiredCols - colCount;
+                for (int i = 0; i < newDataCols; i++)
+                {
+                    string colName = "Col" + (_columnHeaders.Count + 1);
+                    while (_columnHeaders.Contains(colName)) colName = colName + "_";
+                    _columnHeaders.Add(colName);
+                }
+                RebuildGridColumns();
+                colCount = GetEffectiveColumnCount();
+            }
+            while (_sourceData.Count < requiredRows)
+            {
+                var row = new ObservableCollection<string>();
+                for (int i = 0; i < colCount; i++)
+                {
+                    row.Add("");
+                }
+                _sourceData.Add(row);
+            }
+            for (int r = 0; r < grid.Count; r++)
+            {
+                int targetRow = startRow + r;
+                if (targetRow < 0 || targetRow >= _sourceData.Count) continue;
+                EnsureRowColumnCount(_sourceData[targetRow], colCount);
+                for (int c = 0; c < grid[r].Count; c++)
+                {
+                    int targetCol = startCol + c;
+                    if (targetCol < 0 || targetCol >= _sourceData[targetRow].Count) continue;
+                    _sourceData[targetRow][targetCol] = grid[r][c] ?? "";
+                }
+            }
         }
 
         public void PasteTransposed()
