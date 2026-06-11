@@ -635,6 +635,22 @@ namespace OdyTools.Editors
             if (_substringList != null) _substringList.SelectionChanged += (s, e) => SubstringSelected();
             EditorHelpers.BindClick(_copyBinaryButton, CopyBinaryData);
             EditorHelpers.BindClick(_convertBinaryButton, ShowValueConverterDialog);
+
+            FieldValueReferenceHelper.AttachFieldValueFindReferencesMenu(
+                _textEdit,
+                this,
+                _installation,
+                GetSelectedFieldNameForReferenceSearch);
+            FieldValueReferenceHelper.AttachFieldValueFindReferencesMenu(
+                _lineEdit,
+                this,
+                _installation,
+                GetSelectedFieldNameForReferenceSearch);
+        }
+
+        private string GetSelectedFieldNameForReferenceSearch()
+        {
+            return _selectedNode?.Label;
         }
 
         private void SetupMenuHandlers()

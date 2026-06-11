@@ -47,6 +47,7 @@
     <Compile Include="$(_OdyToolsRoot)\Utils\BackupRotator.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\DialogHelper.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\ReferenceSearchHelper.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Utils\FieldValueReferenceHelper.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\TwoDAMemoryReferenceHelper.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\FileResultsDialog.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\ReferenceSearchOptionsDialog.axaml.cs" />
