@@ -333,7 +333,7 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Check | Command / artifact | Status |
 |-------|-------------------|--------|
 | BioWare + tests | `dotnet build/test` per [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md) | Green `[REPO]` |
-| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**165** post Day 1 land; **163** at plan **463** tip), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**463**, 2026-06-11) |
+| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**167** post Day 2 five-hop relay; **165** post Day 1 land; **163** at plan **463** tip), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**466**, 2026-06-11) |
 | Ref-search Step 3c (ReferenceFinder) | `--filter` ReferenceFinderTests (**97**), ReferenceSearchHelper (**36**), ScriptReferenceHelper (**8**), FindRefsCommand (**21**) | Green `[REPO]` (plans **348**–**353**, 2026-06-03) |
 | Ref-search Step 3d (FieldValue) | `--filter` FieldValueReferenceHelperTests (**10**) | Pending [PR #85](https://github.com/th3w1zard1/Andastra/pull/85) stack **#81**–**#85** (plans **412**–**416**) `[REPO]` |
 | Full solution | `dotnet build Andastra.sln --framework net9.0 -c Release -m:1` | Green Linux net9.0 `[REPO]` |
@@ -374,7 +374,15 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 
 ## NCS CONSTI stack simulation arc (merged Day 1, plans 421–463)
 
-Bulk-landed via plan **465** Day 1 merge at **165** NcsConsti tests (**163** plan **463** + **2** master four-hop mixed relay). Supersedes open PR stack **#89**–**#133**. Identity multihop relay characterization complete through seven-hop second-offset local StrRef relay (plan **463**). `[REPO]`
+Bulk-landed via plan **465** Day 1 merge at **165** NcsConsti tests (**163** plan **463** + **2** master four-hop mixed relay). Day 2 adds five-hop mixed CONST+CPTOPSP relay characterization (+2 → **167**; plan **411**/**466**). Supersedes open PR stack **#89**–**#133** and conflicting **#80**. Identity multihop relay characterization complete through seven-hop second-offset local StrRef relay (plan **463**). `[REPO]`
+
+## PR #135 outcome
+
+| Item | Status |
+|------|--------|
+| Merge | **Merged** to `master` 2026-06-11 @ `6a449a97b` via [PR #135](https://github.com/th3w1zard1/Andastra/pull/135) `[REPO]` |
+| Scope | Plan **465** Day 1: land stack-simulation arc (plans **420**–**463**) onto `master`; **165** NcsConsti tests |
+| CI on merge | All required checks **pass** `[REPO]` |
 
 ## CI hygiene (independent open PRs)
 
@@ -386,11 +394,9 @@ Bulk-landed via plan **465** Day 1 merge at **165** NcsConsti tests (**163** pla
 
 | Plan | Topic |
 |------|-------|
-| **465** | Multi-day PR merge + Holocron integration (Day 1: stack-simulation arc land — **done**) |
-| 417+ | Field-value arc merge stack **#81**–**#86** (open PR **#86**) |
-| 464+ | Post-merge tracker sync v20 after stack-simulation lands |
-| 464+ | Merge relay arc **#77**–**#88** then close superseded stack PRs |
-| 464+ | Merge **#74** (CodeQL) early; KotorDiff installation ref search (**#71**) |
+| **465** | Multi-day PR merge + Holocron integration (Day 1–2: **done**; Day 3: field-value **#81**–**#85**) |
+| **466** | Post-D1 tracker sync v21 (**167** NcsConsti) — **done** |
+| 417+ | Field-value arc merge stack **#81**–**#85** (plan 465 Day 3) |
 | 417+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
 
 ## Repo implications
