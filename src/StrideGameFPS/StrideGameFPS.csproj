@@ -6,6 +6,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
     <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
   </PropertyGroup>
   <PropertyGroup>
     <StrideCompilerSkipBuild>true</StrideCompilerSkipBuild>
@@ -16,8 +17,21 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
     <Compile Remove="Net48Stub.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(OS)' != 'Windows_NT'">
+    <Compile Remove="FPSCamera.cs" />
+    <Compile Remove="FPSGame.cs" />
+    <Compile Remove="PerlinNoise.cs" />
+    <Compile Remove="PlayerController.cs" />
+    <Compile Remove="ProceduralTextureGenerator.cs" />
+    <Compile Remove="Program.cs" />
+    <Compile Remove="TerrainGenerator.cs" />
+    <Compile Remove="TerrainRenderer.cs" />
+    <Compile Remove="VertexTypes.cs" />
+    <Compile Remove="Scenes\**" />
+    <Compile Remove="UI\**" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net9.0-windows'">
     <PackageReference Include="Stride.Engine" Version="4.2.1.2487" />

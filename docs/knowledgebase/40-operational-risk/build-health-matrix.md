@@ -51,7 +51,7 @@ Green on Linux net9.0 after standalone obj isolation (plan 020). CI validates vi
 | Item | Issue |
 |------|-------|
 | `src/MonoGameFPS/` | Referenced in older docs; not in solution; restore unaffected `[REPO]` |
-| `src/StrideGameFPS/` | On disk; not in `Andastra.sln`; non-blocking `[REPO]` |
+| `src/StrideGameFPS/` | On disk; not in `Andastra.sln`; Linux `net9.0` stub restore/build green (plan **434**); full Stride game Windows-only `[REPO]` |
 | `tests/Runtime/Parsing/MDL/MDLAsciiTests.cs` | Orphan — not in test csproj |
 | `tests/Runtime/Graphics/.../VulkanDeviceScratchBufferTests.cs` | Orphan |
 
