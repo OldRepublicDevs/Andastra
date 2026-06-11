@@ -163,6 +163,8 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 419 | [419-test-ncs-consti-six-hop-mixed-const-relay-plan.md](2026-06-05-419-test-ncs-consti-six-hop-mixed-const-relay-plan.md) | NCS CONSTI six-hop mixed CONST+CPTOPSP JSR relay |
 | 421 | [421-feat-ncs-consti-arithmetic-strref-relay-v2-plan.md](2026-06-05-421-feat-ncs-consti-arithmetic-strref-relay-v2-plan.md) | NCS CONSTI arithmetic StrRef relay v2 (MUL/MOD/chained ADD) |
 | 422 | [422-feat-ncs-consti-arithmetic-local-strref-relay-v3-plan.md](2026-06-05-422-feat-ncs-consti-arithmetic-local-strref-relay-v3-plan.md) | NCS CONSTI arithmetic local StrRef relay v3 |
+| 424 | [424-feat-ncs-consti-arithmetic-strref-relay-v4-plan.md](2026-06-05-424-feat-ncs-consti-arithmetic-strref-relay-v4-plan.md) | NCS CONSTI arithmetic StrRef relay v4 (cache + local SUB) |
+| 425 | [425-feat-ncs-consti-arithmetic-strref-relay-v5-plan.md](2026-06-05-425-feat-ncs-consti-arithmetic-strref-relay-v5-plan.md) | NCS CONSTI arithmetic StrRef relay v5 (DIV + local MUL/MOD) |
 
 ## Repo implications
 
