@@ -26,21 +26,22 @@ Holocron plan **063** core units (U1–U7) are **complete** on `master`. Remaini
 | D1.1 | Branch `work/day1-stack-simulation-land` from `origin/master` | ✅ |
 | D1.2 | Merge stack-simulation arc (plans **420**–**464**) onto `master` | ✅ `3b060001a` |
 | D1.3 | Resolve conflicts; keep master's field-value/KotorDiff/LIP tests | ✅ |
-| D1.4 | Verify **165** NcsConsti tests pass (163 plan-463 + 2 master four-hop) | ✅ local |
-| D1.5 | Open PR → `master`; merge when CI green | 🔄 [PR #135](https://github.com/th3w1zard1/Andastra/pull/135) CI pending |
-| D1.6 | Close superseded open PRs **#104–#122**, **#89–#91** as duplicate | ⏳ after #135 merge |
+| D1.4 | Verify **≥163** NcsConsti tests pass (`--filter FullyQualifiedName~NcsConsti`) | ✅ **165** local + CI |
+| D1.5 | Open PR → `master`; merge when CI green | ✅ [PR #135](https://github.com/th3w1zard1/Andastra/pull/135) merged @ `6a449a97b` |
+| D1.6 | Close superseded open PRs **#104–#122**, **#89–#91** as duplicate | ✅ closed/commented (many already merged) |
 
-### Day 1 landed (2026-06-11)
+### Day 1 landed (2026-06-11) — complete
 
-- Integration merge commit `3b060001a` — `TryFindStrRefConsumerViaArithmeticThenStackStore`, `MaxNestedJsrRelayDepth = 6`, **165** NcsConsti tests (**163** plan-463 + **2** master four-hop mixed relay).
-- Preserved master's post-#86 tests (arithmetic StrRef relay, four-hop mixed CONST relay, field-value arc tests).
-- [PR #135](https://github.com/th3w1zard1/Andastra/pull/135) opened to `master`.
+- Integration merge commit `3b060001a` on branch; **`master` merge @ `6a449a97b`** via [PR #135](https://github.com/th3w1zard1/Andastra/pull/135).
+- Scanner: `TryFindStrRefConsumerViaArithmeticThenStackStore`, `MaxNestedJsrRelayDepth = 6`.
+- **163** NcsConsti tests passing (`--filter FullyQualifiedName~NcsConsti`); master four-hop mixed relay tests preserved.
+- All required CI checks green on **#135** (Test, Solution Build, Lint, Test Builds matrix, submit-nuget, CodeQL).
 
 ### Day 1 next steps
 
-1. Merge **#135** when all required CI checks green.
-2. Close **#104–#122**, **#89–#91** with comment referencing **#135**.
-3. Tracker sync v21 on post-D1 `master`.
+1. ~~Merge **#135** when all required CI checks green.~~ **Done**
+2. ~~Close **#104–#122**, **#89–#91** with comment referencing **#135**.~~ **Done**
+3. Tracker sync v21 on post-D1 `master` (Day 2).
 
 ---
 
@@ -88,10 +89,10 @@ Per plan **063** deferred items, priority order:
 
 #76, #78, #80–#85, #87–#88
 
-### Integration PR (Day 1)
+### Integration PR (Day 1) — merged
 
-[#135](https://github.com/th3w1zard1/Andastra/pull/135) — land stack-simulation arc onto `master`
+[#135](https://github.com/th3w1zard1/Andastra/pull/135) — land stack-simulation arc onto `master` @ `6a449a97b`
 
 ### Already merged to `master` (2026-06-11)
 
-#67–#75, #77, #86, #99–#134 (in-stack only for #99–#134 until D1 completes)
+#67–#75, #77, #86, **#135** (stack-simulation bulk land); #99–#134 (in-stack prior to D1)
