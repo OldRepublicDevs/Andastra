@@ -219,6 +219,8 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 469 | [469-feat-twoda-row-selection-status-shortcuts-plan.md](2026-06-11-469-feat-twoda-row-selection-status-shortcuts-plan.md) | 2DA row selection, dirty status, keyboard shortcuts (plan 465 day 5) |
 | 470 | [470-feat-twoda-selection-shortcuts-goto-column-plan.md](2026-06-11-470-feat-twoda-selection-shortcuts-goto-column-plan.md) | 2DA Shift/Ctrl+Space selection + go to column (plan 465 day 6) |
 | 471 | [471-feat-twoda-shift-click-range-selection-plan.md](2026-06-11-471-feat-twoda-shift-click-range-selection-plan.md) | 2DA Shift+Click rectangular range selection (plan 465 day 7) |
+| 472 | [472-feat-twoda-paste-over-selection-plan.md](2026-06-11-472-feat-twoda-paste-over-selection-plan.md) | 2DA paste over current cell / range anchor (plan 465 day 8) |
+| 472 | [472-feat-twoda-paste-over-selection-plan.md](2026-06-11-472-feat-twoda-paste-over-selection-plan.md) | 2DA paste over selection / anchor paste (plan 465 day 8) |
 
 ## Repo implications
 
