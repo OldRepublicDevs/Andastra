@@ -61,6 +61,7 @@ namespace OdyTools.Dialogs
                 ("Ctrl+F", "Find"),
                 ("Ctrl+H", "Replace"),
                 ("Ctrl+G", "Go to Row"),
+                ("Ctrl+Shift+G", "Go to Column"),
                 ("Shift+Delete", "Remove Rows"),
             });
 
@@ -79,6 +80,8 @@ namespace OdyTools.Dialogs
 
             AddShortcutCategory("Rows & Columns", new[]
             {
+                ("Shift+Space", "Select Row"),
+                ("Ctrl+Space", "Select Column"),
                 ("Alt+Up", "Move row up"),
                 ("Alt+Down", "Move row down"),
                 ("Ctrl+Shift+Left", "Move column left"),
