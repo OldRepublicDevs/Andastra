@@ -1,6 +1,6 @@
 ---
 title: "feat: 2DA Ctrl+Click row multi-select"
-status: active
+status: complete
 origin: docs/plans/2026-06-11-465-chore-multi-day-pr-merge-holocron-integration-plan.md
 ---
 
@@ -29,4 +29,4 @@ Target: **109** `OdyTool2DA_*` tests (106 prior + 3 new).
 
 | PR | Merge | Tests |
 |----|-------|-------|
-| _pending_ | _pending_ | _pending_ |
+| [#144](https://github.com/th3w1zard1/Andastra/pull/144) | `15321b9e5` | **109** `OdyTool2DA_*` |
