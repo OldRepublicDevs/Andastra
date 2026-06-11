@@ -11,7 +11,7 @@ branch: master
 
 ## Executive summary (2026-06-11)
 
-Plan **465** Days **1–6** are **complete** on `master`:
+Plan **465** Days **1–7** are **complete** on `master`:
 
 | Day | PR | Outcome |
 |-----|-----|---------|
@@ -21,7 +21,7 @@ Plan **465** Days **1–6** are **complete** on `master`:
 | **4** | [#138](https://github.com/th3w1zard1/Andastra/pull/138) | Tracker closure + verification (plan **468**); **#76** closed |
 | **5** | [#140](https://github.com/th3w1zard1/Andastra/pull/140) | 2DA row selection, dirty status, shortcuts (plan **469**); **97** `OdyTool2DA_*` tests |
 | **6** | [#141](https://github.com/th3w1zard1/Andastra/pull/141) | 2DA Shift/Ctrl+Space + Go To Column (plan **470**); **100** `OdyTool2DA_*` tests |
-| **7** | _pending_ | 2DA Shift+Click range selection (plan **471**); **103** `OdyTool2DA_*` tests |
+| **7** | [#142](https://github.com/th3w1zard1/Andastra/pull/142) | 2DA Shift+Click range selection (plan **471**); **103** `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
@@ -109,7 +109,7 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 | D7.3 | `CopySelection()` TSV block when range active | ✅ |
 | D7.4 | Status bar range coords when >1 cell | ✅ |
 | D7.5 | OdyTool2DATests: rectangle, block copy, column clear | ✅ |
-| D7.6 | PR → `master` | _pending_ |
+| D7.6 | PR **#142** → `master` | ✅ @ `b8131328b` |
 
 ---
 
@@ -133,4 +133,4 @@ Per plan **063** deferred items:
 | [#137](https://github.com/th3w1zard1/Andastra/pull/137) | `374118902` | Field-value UT wiring |
 | [#140](https://github.com/th3w1zard1/Andastra/pull/140) | `4ceb97899` | 2DA row selection, dirty status, shortcuts (plan **469**) |
 | [#141](https://github.com/th3w1zard1/Andastra/pull/141) | `1abe9337e` | 2DA Shift/Ctrl+Space + Go To Column (plan **470**) |
-| _pending_ | _pending_ | 2DA Shift+Click range selection (plan **471**) |
+| [#142](https://github.com/th3w1zard1/Andastra/pull/142) | `b8131328b` | 2DA Shift+Click range selection (plan **471**) |
