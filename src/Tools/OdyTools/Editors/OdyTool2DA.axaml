@@ -167,6 +167,7 @@
                 <Separator />
                 <MenuItem Header="Select _All" Name="actionSelectAll" HotKey="Ctrl+A" />
                 <MenuItem Header="Select _Column" Name="actionSelectColumn" />
+                <MenuItem Header="Select _Row" Name="actionSelectRow" />
             </MenuItem>
             <MenuItem Name="menuTools" Header="_Tools">
                 <MenuItem Header="Toggle _Filter" Name="actionToggleFilter" />
@@ -227,6 +228,9 @@
                     <MenuItem Header="Row label" Name="actionRowHeaderLabel" />
                 </MenuItem>
             </MenuItem>
+            <MenuItem Name="menuHelp" Header="_Help">
+                <MenuItem Header="_Keyboard Shortcuts..." Name="actionKeyboardShortcuts" />
+            </MenuItem>
             <MenuItem Header="_Language" Name="menuLanguage">
                 <MenuItem Header="English" Name="actionLangEnglish" />
                 <MenuItem Header="Français" Name="actionLangFrench" />
@@ -269,6 +273,7 @@
                                 <TextBlock Name="sidebarLabelSelection" Text="SELECTION" FontSize="9" FontWeight="SemiBold" Foreground="#202124" Margin="0,0,0,1" />
                                 <Button Name="tbSelectAll" Classes="sidebarCmd" Content="Select All" HorizontalAlignment="Stretch" ToolTip.Tip="Ctrl+A" />
                                 <Button Name="tbSelectColumn" Classes="sidebarCmd" Content="Select Column" HorizontalAlignment="Stretch" ToolTip.Tip="Select current column" />
+                                <Button Name="tbSelectRow" Classes="sidebarCmd" Content="Select Row" HorizontalAlignment="Stretch" ToolTip.Tip="Select current row" />
                                 <Button Name="tbFillDown" Classes="sidebarCmd" Content="Fill Down" HorizontalAlignment="Stretch" ToolTip.Tip="Ctrl+D" />
                                 <Button Name="tbGoToRow" Classes="sidebarCmd" Content="Go to Row…" HorizontalAlignment="Stretch" ToolTip.Tip="Ctrl+G" />
                             </StackPanel>

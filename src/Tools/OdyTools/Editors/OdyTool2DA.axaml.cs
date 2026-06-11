@@ -433,7 +433,7 @@ namespace OdyTools.Editors
             if (header != null)
             {
                 int colIdx = TryGetColumnIndexFromHeader(header);
-                if (colIdx >= 0 && colIdx < _twodaTable.Columns.Count)
+                if (colIdx > 0 && colIdx < _twodaTable.Columns.Count)
                 {
                     _columnSelectionActive = true;
                     SelectColumnByIndex(colIdx);
@@ -442,12 +442,24 @@ namespace OdyTools.Editors
             }
             else
             {
-                // Click on a cell: leave column selection mode and clear column highlight
                 var cell = TryFindDataGridCell(e.Source);
-                if (cell != null && _columnSelectionActive)
+                if (cell != null)
                 {
-                    _columnSelectionActive = false;
-                    ClearColumnHighlight();
+                    int colIdx = TryGetColumnIndexFromCell(cell);
+                    if (colIdx == 0)
+                    {
+                        int rowIdx = TryGetRowIndexFromSource(e.Source);
+                        if (rowIdx >= 0)
+                        {
+                            SelectRowByIndex(rowIdx);
+                            e.Handled = true;
+                        }
+                    }
+                    else if (_columnSelectionActive)
+                    {
+                        _columnSelectionActive = false;
+                        ClearColumnHighlight();
+                    }
                 }
             }
 
@@ -836,6 +848,36 @@ namespace OdyTools.Editors
             Avalonia.Threading.Dispatcher.UIThread.Post(ApplyColumnHighlight, Avalonia.Threading.DispatcherPriority.Background);
         }
 
+        /// <summary>Selects the current row only (single-row selection).</summary>
+        public void SelectCurrentRow()
+        {
+            if (_twodaTable == null || _sourceData.Count == 0) return;
+            int rowIdx = GetPrimarySelectedRowIndex();
+            if (rowIdx < 0) rowIdx = 0;
+            SelectRowByIndex(rowIdx);
+        }
+
+        /// <summary>Selects a single row by index and clears column selection mode.</summary>
+        public void SelectRowByIndex(int rowIndex)
+        {
+            if (_twodaTable == null || _sourceData.Count == 0) return;
+            if (rowIndex < 0 || rowIndex >= _sourceData.Count) return;
+            _columnSelectionActive = false;
+            ClearColumnHighlight();
+            var row = _sourceData[rowIndex];
+            _twodaTable.SelectedItems.Clear();
+            _twodaTable.SelectedItems.Add(row);
+            _twodaTable.SelectedItem = row;
+            _twodaTable.ScrollIntoView(row, _twodaTable.CurrentColumn);
+            UpdateFormulaBarAndStatus();
+        }
+
+        public void ShowKeyboardShortcutsDialog()
+        {
+            var dialog = new Dialogs.TwoDAKeyboardShortcutsDialog();
+            dialog.ShowDialog(this);
+        }
+
         private void SetupMenuHandlers()
         {
             // actionNew, actionOpen, actionSave, actionRevert, actionExit wired by base Editor (actionSaveAs->RunSaveAsAsync(null))
@@ -871,6 +913,8 @@ namespace OdyTools.Editors
             Bind(ShowGoToRowDialog, "actionGoToRow", "tbGoToRow");
             Bind(SelectAllRows, "actionSelectAll", "tbSelectAll");
             Bind(SelectCurrentColumn, "actionSelectColumn", "tbSelectColumn");
+            Bind(SelectCurrentRow, "actionSelectRow", "tbSelectRow");
+            Bind(ShowKeyboardShortcutsDialog, "actionKeyboardShortcuts");
             Bind(ToggleFilter, "actionToggleFilter");
             Bind(ToggleSidebar, "actionToggleSidebar");
             Bind(InsertRow, "actionInsertRow", "tbInsertRowSidebar", "ctxInsertRow");
@@ -946,6 +990,7 @@ namespace OdyTools.Editors
                 SetHeader("menuTools", "Tools");
                 SetHeader("menuView", "View");
                 SetHeader("menuLanguage", "Language");
+                SetHeader("menuHelp", "Help");
 
                 SetHeader("actionNew", "New");
                 SetHeader("actionOpen", "Open");
@@ -967,6 +1012,8 @@ namespace OdyTools.Editors
                 SetHeader("actionGoToRow", "Go to Row...");
                 SetHeader("actionSelectAll", "Select All");
                 SetHeader("actionSelectColumn", "Select Column");
+                SetHeader("actionSelectRow", "Select Row");
+                SetHeader("actionKeyboardShortcuts", "Keyboard Shortcuts...");
                 SetHeader("actionToggleFilter", "Toggle Filter");
                 SetHeader("actionToggleSidebar", "Toggle Sidebar");
                 SetHeader("actionInsertRow", "Insert Row");
@@ -1043,6 +1090,7 @@ namespace OdyTools.Editors
 
                 SetSidebarBtn("tbSelectAll", "Select All", "Select All");
                 SetSidebarBtn("tbSelectColumn", "Select Column", "Select current column");
+                SetSidebarBtn("tbSelectRow", "Select Row", "Select current row");
                 SetSidebarBtn("tbFillDown", "Fill Down", "Fill Down");
                 SetSidebarBtn("tbGoToRow", "Go to Row…", "Go to Row...");
                 SetSidebarBtn("tbInsertRowSidebar", "Insert Row", "Insert row");
@@ -1255,15 +1303,33 @@ namespace OdyTools.Editors
                     int rows = _sourceData?.Count ?? 0;
                     int cols = 1 + (_columnHeaders?.Count ?? 0);
                     string baseText = Localization.Trf("Ready | {0} rows × {1} columns", rows, cols);
+                    if (IsDirty)
+                    {
+                        baseText += " | " + Localization.Tr("Modified");
+                    }
                     int selCount = _twodaTable?.SelectedItems?.Count ?? 0;
                     if (selCount > 1)
                     {
                         baseText += " | " + Localization.Trf("{0} rows selected", selCount);
                     }
-                    if (_filteredData?.View?.Filter != null)
+                    if (_isColumnFilterActive)
+                    {
+                        int totalRows = _allRowsBeforeFilter?.Count ?? rows;
+                        int hiddenRows = totalRows - rows;
+                        if (hiddenRows > 0)
+                        {
+                            baseText += " | " + Localization.Trf("Hidden: {0}", hiddenRows);
+                        }
+                    }
+                    else if (_filteredData?.View?.Filter != null)
                     {
                         int visibleRows = _filteredData.View.Cast<object>().Count();
+                        int hiddenRows = rows - visibleRows;
                         baseText += " | " + Localization.Trf("Visible: {0}", visibleRows);
+                        if (hiddenRows > 0)
+                        {
+                            baseText += " | " + Localization.Trf("Hidden: {0}", hiddenRows);
+                        }
                     }
                     if (!_isSidebarVisible)
                     {
@@ -1287,10 +1353,21 @@ namespace OdyTools.Editors
                     int rows = _sourceData?.Count ?? 0;
                     int cols = 1 + (_columnHeaders?.Count ?? 0);
                     string stats = Localization.Trf("{0} rows × {1} columns", rows, cols);
-                    if (_filteredData?.View?.Filter != null)
+                    if (_isColumnFilterActive)
+                    {
+                        int total = _allRowsBeforeFilter?.Count ?? rows;
+                        int hidden = total - rows;
+                        stats = hidden > 0
+                            ? Localization.Trf("{0} of {1} rows ({2} hidden)", rows, total, hidden)
+                            : Localization.Trf("{0} of {1} rows", rows, total);
+                    }
+                    else if (_filteredData?.View?.Filter != null)
                     {
                         int visible = _filteredData.View.Cast<object>().Count();
-                        stats = Localization.Trf("{0} of {1} rows", visible, rows);
+                        int hidden = rows - visible;
+                        stats = hidden > 0
+                            ? Localization.Trf("{0} of {1} rows ({2} hidden)", visible, rows, hidden)
+                            : Localization.Trf("{0} of {1} rows", visible, rows);
                     }
                     _sidebarStatsText.Text = stats;
                 }
