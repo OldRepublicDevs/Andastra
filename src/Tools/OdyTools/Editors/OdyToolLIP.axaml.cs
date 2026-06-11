@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using BioWare.Resource.Formats.LIP;
 using BioWare.Common;
 using OdyTools.Data;
@@ -39,6 +40,9 @@ namespace OdyTools.Editors
         private Button _stopPreviewButton;
         private string _audioFilePath;
         private NAudioMediaPlayer _previewPlayer;
+        private TextBlock _previewLabel;
+        private DispatcherTimer _previewTimer;
+        private bool _playbackSyncInProgress;
         private readonly List<byte[]> _undoStack = new List<byte[]>();
         private readonly List<byte[]> _redoStack = new List<byte[]>();
         private bool _undoRedoInProgress;
@@ -56,6 +60,12 @@ namespace OdyTools.Editors
             _lip = null;
             _duration = 0.0f;
             _previewPlayer = new NAudioMediaPlayer();
+            _previewPlayer.PlaybackStopped += OnPreviewPlaybackStopped;
+            _previewTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(16),
+            };
+            _previewTimer.Tick += OnPreviewTimerTick;
             InitializeComponent();
             SetupSignals();
             SetupMenuHandlers();
@@ -114,7 +124,7 @@ namespace OdyTools.Editors
             var root = new Grid
             {
                 Margin = new Avalonia.Thickness(8),
-                RowDefinitions = new RowDefinitions("Auto,Auto,*,Auto"),
+                RowDefinitions = new RowDefinitions("Auto,Auto,Auto,*,Auto"),
                 ColumnDefinitions = new ColumnDefinitions("*"),
             };
 
@@ -147,6 +157,26 @@ namespace OdyTools.Editors
             Grid.SetRow(audioRow, 0);
             root.Children.Add(audioRow);
 
+            var previewRow = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Avalonia.Thickness(0, 0, 0, 8),
+            };
+            previewRow.Children.Add(new TextBlock
+            {
+                Text = "Preview:",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Avalonia.Thickness(0, 0, 8, 0),
+            });
+            _previewLabel = new TextBlock
+            {
+                Text = "None",
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            previewRow.Children.Add(_previewLabel);
+            Grid.SetRow(previewRow, 1);
+            root.Children.Add(previewRow);
+
             var durationRow = new Grid
             {
                 ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"),
@@ -169,12 +199,12 @@ namespace OdyTools.Editors
             _durationSpin.ValueChanged += OnDurationSpinChanged;
             Grid.SetColumn(_durationSpin, 1);
             durationRow.Children.Add(_durationSpin);
-            Grid.SetRow(durationRow, 1);
+            Grid.SetRow(durationRow, 2);
             root.Children.Add(durationRow);
 
             _keyframeList = new ListBox { MinHeight = 180 };
             _keyframeList.SelectionChanged += OnKeyframeSelectionChanged;
-            Grid.SetRow(_keyframeList, 2);
+            Grid.SetRow(_keyframeList, 3);
             root.Children.Add(_keyframeList);
 
             var editRow = new Grid
@@ -245,7 +275,7 @@ namespace OdyTools.Editors
             var editPanel = new StackPanel();
             editPanel.Children.Add(editRow);
             editPanel.Children.Add(buttonRow);
-            Grid.SetRow(editPanel, 3);
+            Grid.SetRow(editPanel, 4);
             root.Children.Add(editPanel);
 
             return root;
@@ -261,7 +291,7 @@ namespace OdyTools.Editors
                 throw new FileNotFoundException("Audio file not found.", wavPath);
             }
 
-            _previewPlayer?.Stop();
+            StopPreview();
 
             float duration = LipBatchProcessor.GetWavDurationSeconds(wavPath);
             _audioFilePath = wavPath;
@@ -338,11 +368,138 @@ namespace OdyTools.Editors
             {
                 _previewPlayer.Play();
             }
+
+            StartPreviewTimer();
         }
 
         private void StopPreview()
         {
             _previewPlayer?.Stop();
+            StopPreviewTimer();
+            ResetPreviewDisplay();
+        }
+
+        private void StartPreviewTimer()
+        {
+            if (_previewTimer != null && !_previewTimer.IsEnabled)
+            {
+                _previewTimer.Start();
+            }
+        }
+
+        private void StopPreviewTimer()
+        {
+            if (_previewTimer != null && _previewTimer.IsEnabled)
+            {
+                _previewTimer.Stop();
+            }
+        }
+
+        private void OnPreviewPlaybackStopped(object sender, EventArgs e)
+        {
+            StopPreviewTimer();
+            ResetPreviewDisplay();
+        }
+
+        private void OnPreviewTimerTick(object sender, EventArgs e)
+        {
+            UpdatePlaybackSync();
+        }
+
+        private void UpdatePlaybackSync()
+        {
+            if (_previewPlayer == null || _lip == null)
+            {
+                return;
+            }
+
+            float currentTime = (float)_previewPlayer.Position.TotalSeconds;
+            LIPShape? shape = GetShapeAtPlaybackTime(_lip, currentTime);
+            if (_previewLabel != null)
+            {
+                _previewLabel.Text = shape.HasValue ? shape.Value.ToString() : "None";
+            }
+
+            int keyframeIndex = GetKeyframeIndexAtTime(_lip, currentTime);
+            if (_keyframeList == null)
+            {
+                return;
+            }
+
+            if (keyframeIndex >= 0 && keyframeIndex < _keyframeList.Items.Count)
+            {
+                if (_keyframeList.SelectedIndex != keyframeIndex)
+                {
+                    _playbackSyncInProgress = true;
+                    try
+                    {
+                        _keyframeList.SelectedIndex = keyframeIndex;
+                    }
+                    finally
+                    {
+                        _playbackSyncInProgress = false;
+                    }
+                }
+            }
+            else if (_keyframeList.SelectedIndex >= 0)
+            {
+                _playbackSyncInProgress = true;
+                try
+                {
+                    _keyframeList.SelectedIndex = -1;
+                }
+                finally
+                {
+                    _playbackSyncInProgress = false;
+                }
+            }
+        }
+
+        private void ResetPreviewDisplay()
+        {
+            if (_previewLabel != null)
+            {
+                _previewLabel.Text = "None";
+            }
+        }
+
+        /// <summary>
+        /// Holocron parity: last keyframe at or before playback time.
+        /// </summary>
+        public static int GetKeyframeIndexAtTime(LIP lip, float time)
+        {
+            if (lip == null || lip.Frames == null || lip.Frames.Count == 0)
+            {
+                return -1;
+            }
+
+            int bestIndex = -1;
+            float bestTime = float.MinValue;
+            for (int i = 0; i < lip.Frames.Count; i++)
+            {
+                LIPKeyFrame frame = lip.Frames[i];
+                if (frame.Time <= time && frame.Time >= bestTime)
+                {
+                    bestTime = frame.Time;
+                    bestIndex = i;
+                }
+            }
+
+            return bestIndex;
+        }
+
+        /// <summary>
+        /// Holocron parity: discrete shape at playback time (not engine interpolation).
+        /// </summary>
+        public static LIPShape? GetShapeAtPlaybackTime(LIP lip, float time)
+        {
+            int index = GetKeyframeIndexAtTime(lip, time);
+            if (index < 0)
+            {
+                return null;
+            }
+
+            return lip.Frames[index].Shape;
         }
 
         private static string FormatKeyframeLabel(LIPKeyFrame frame)
@@ -412,7 +569,7 @@ namespace OdyTools.Editors
 
         private void OnKeyframeSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (_uiSyncInProgress || _keyframeList == null || _lip == null)
+            if (_uiSyncInProgress || _playbackSyncInProgress || _keyframeList == null || _lip == null)
             {
                 return;
             }
@@ -508,8 +665,10 @@ namespace OdyTools.Editors
             KeyDown += OnWindowKeyDown;
             Closed += (s, e) =>
             {
+                StopPreviewTimer();
                 if (_previewPlayer != null)
                 {
+                    _previewPlayer.PlaybackStopped -= OnPreviewPlaybackStopped;
                     _previewPlayer.Dispose();
                     _previewPlayer = null;
                 }
@@ -724,7 +883,9 @@ namespace OdyTools.Editors
             if (e.Key == Key.Z && (e.KeyModifiers & KeyModifiers.Control) != 0) { Undo(); e.Handled = true; return; }
             if (e.Key == Key.Y && (e.KeyModifiers & KeyModifiers.Control) != 0) { Redo(); e.Handled = true; return; }
             if (e.Key == Key.F && (e.KeyModifiers & KeyModifiers.Control) != 0) { ShowFindDialog(); e.Handled = true; return; }
-            if (e.Key == Key.F3) { FindNextMatch(); e.Handled = true; }
+            if (e.Key == Key.F3) { FindNextMatch(); e.Handled = true; return; }
+            if (e.Key == Key.Space) { PlayPreview(); e.Handled = true; return; }
+            if (e.Key == Key.Escape) { StopPreview(); e.Handled = true; }
         }
 
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
