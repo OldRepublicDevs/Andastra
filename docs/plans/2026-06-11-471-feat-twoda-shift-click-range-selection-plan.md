@@ -39,4 +39,4 @@ Target: **103+** `OdyTool2DA_*` tests (100 prior + 3 new).
 
 | PR | Merge | Tests |
 |----|-------|-------|
-| _pending_ | _pending_ | _pending_ |
+| [#142](https://github.com/th3w1zard1/Andastra/pull/142) | `b8131328b` | **103** `OdyTool2DA_*` |
