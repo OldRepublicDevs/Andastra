@@ -351,8 +351,18 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 | Test Builds matrix | net48-win, net9.0 linux/osx/win |
 | dotnet-desktop | Windows BioWare + full tool stack |
 
+## PR #73 outcome (pending)
+
+| Item | Status |
+|------|--------|
+| Merge | **Pending** — plan **407** `[REPO]` |
+| Scope | Remove redundant **CodeQL Advanced** workflow (`.github/workflows/codeql.yml`) so GitHub **default CodeQL setup** is sole scanner; fixes SARIF upload error *advanced configurations cannot be processed when default setup is enabled* |
+| Plans | **407** |
+| Manual follow-up | To restore advanced CodeQL: disable default setup in **Settings → Code security → Code scanning**, then re-add workflow with all matrix languages at `build-mode: none` (no c-cpp autobuild on ubuntu) |
+
 ## Known remaining gaps (non-blocking)
 
+- `code/snyk` quota failures on some runs — documented as non-blocking since PR #12 `[REPO]`
 - OdyPatch mod-install UX unverified without K1/TSL install — [odypatch-installer-ux.md](../30-product-ux/odypatch-installer-ux.md) `[OPEN]`
 - `30-product-ux/` deep content deferred — stub layer only (plan 038) `[REPO]`
 - AGPLv3 vs OdyPatch LGPL packaging policy — [license-and-compliance.md](../40-operational-risk/license-and-compliance.md) caveat C12 `[OPEN]`
