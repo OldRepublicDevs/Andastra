@@ -19,6 +19,7 @@ Plan **465** Days **1–4** are **complete** on `master`:
 | **2** | [#136](https://github.com/th3w1zard1/Andastra/pull/136) | Five-hop mixed CONST relay — **167** NcsConsti tests |
 | **3** | [#137](https://github.com/th3w1zard1/Andastra/pull/137) | Field-value UT editor wiring — **10** FieldValueReferenceHelper tests |
 | **4** | [#138](https://github.com/th3w1zard1/Andastra/pull/138) | Tracker closure + verification (plan **468**); **#76** closed |
+| **5** | [#140](https://github.com/th3w1zard1/Andastra/pull/140) | 2DA row selection, dirty status, shortcuts (plan **469**); **97** `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
@@ -81,6 +82,7 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 | D5.3 | Status bar hidden row count when filter active | ✅ |
 | D5.4 | Help → Keyboard Shortcuts dialog | ✅ |
 | D5.5 | OdyTool2DATests for row select, dirty status, shortcuts smoke | ✅ |
+| D5.6 | PR **#140** → `master` | ✅ @ `4ceb97899` |
 
 ---
 
@@ -102,3 +104,4 @@ Per plan **063** deferred items:
 | [#135](https://github.com/th3w1zard1/Andastra/pull/135) | `6a449a97b` | Stack-simulation arc |
 | [#136](https://github.com/th3w1zard1/Andastra/pull/136) | `b4421c112` | Five-hop mixed relay |
 | [#137](https://github.com/th3w1zard1/Andastra/pull/137) | `374118902` | Field-value UT wiring |
+| [#140](https://github.com/th3w1zard1/Andastra/pull/140) | `4ceb97899` | 2DA row selection, dirty status, shortcuts (plan **469**) |
