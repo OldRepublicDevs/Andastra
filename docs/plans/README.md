@@ -166,30 +166,52 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 410 | [410-feat-ncs-consti-five-hop-multi-arg-jsr-relay-plan.md](2026-06-05-410-feat-ncs-consti-five-hop-multi-arg-jsr-relay-plan.md) | NCS CONSTI five-hop multi-arg nested JSR relay |
 | 418 | [418-test-ncs-consti-six-hop-multi-arg-jsr-relay-plan.md](2026-06-05-418-test-ncs-consti-six-hop-multi-arg-jsr-relay-plan.md) | NCS CONSTI six-hop multi-arg nested JSR relay |
 | 419 | [419-test-ncs-consti-six-hop-mixed-const-relay-plan.md](2026-06-05-419-test-ncs-consti-six-hop-mixed-const-relay-plan.md) | NCS CONSTI six-hop mixed CONST+CPTOPSP JSR relay |
+| 420 | [420-chore-ncs-consti-arc-tracker-sync-plan.md](2026-06-05-420-chore-ncs-consti-arc-tracker-sync-plan.md) | NCS CONSTI arc closure tracker sync |
 | 421 | [421-feat-ncs-consti-arithmetic-strref-relay-v2-plan.md](2026-06-05-421-feat-ncs-consti-arithmetic-strref-relay-v2-plan.md) | NCS CONSTI arithmetic StrRef relay v2 (MUL/MOD/chained ADD) |
 | 422 | [422-feat-ncs-consti-arithmetic-local-strref-relay-v3-plan.md](2026-06-05-422-feat-ncs-consti-arithmetic-local-strref-relay-v3-plan.md) | NCS CONSTI arithmetic local StrRef relay v3 |
+| 423 | [423-chore-stack-simulation-arc-tracker-sync-plan.md](2026-06-05-423-chore-stack-simulation-arc-tracker-sync-plan.md) | Stack simulation arc tracker sync |
 | 424 | [424-feat-ncs-consti-arithmetic-strref-relay-v4-plan.md](2026-06-05-424-feat-ncs-consti-arithmetic-strref-relay-v4-plan.md) | NCS CONSTI arithmetic StrRef relay v4 (cache + local SUB) |
 | 425 | [425-feat-ncs-consti-arithmetic-strref-relay-v5-plan.md](2026-06-05-425-feat-ncs-consti-arithmetic-strref-relay-v5-plan.md) | NCS CONSTI arithmetic StrRef relay v5 (DIV + local MUL/MOD) |
+| 426 | [426-chore-stack-simulation-arc-tracker-sync-v2-plan.md](2026-06-05-426-chore-stack-simulation-arc-tracker-sync-v2-plan.md) | Stack simulation arc tracker sync v2 (#93–#94) |
 | 427 | [427-feat-ncs-consti-arithmetic-local-strref-relay-v6-plan.md](2026-06-05-427-feat-ncs-consti-arithmetic-local-strref-relay-v6-plan.md) | NCS CONSTI arithmetic local StrRef relay v6 (local DIV + chained ADD) |
+| 428 | [428-chore-stack-simulation-arc-tracker-sync-v3-plan.md](2026-06-05-428-chore-stack-simulation-arc-tracker-sync-v3-plan.md) | Stack simulation arc tracker sync v3 (#95–#96) |
 | 429 | [429-feat-ncs-consti-arithmetic-multihop-local-strref-relay-plan.md](2026-06-05-429-feat-ncs-consti-arithmetic-multihop-local-strref-relay-plan.md) | NCS CONSTI arithmetic multihop local StrRef relay |
 | 430 | [430-feat-ncs-consti-arithmetic-first-multihop-local-strref-relay-plan.md](2026-06-05-430-feat-ncs-consti-arithmetic-first-multihop-local-strref-relay-plan.md) | NCS CONSTI arithmetic-first multihop local StrRef relay |
+| 431 | [431-chore-stack-simulation-arc-tracker-sync-v4-plan.md](2026-06-05-431-chore-stack-simulation-arc-tracker-sync-v4-plan.md) | Stack simulation arc tracker sync v4 (#97–#99) |
 | 432 | [432-feat-ncs-consti-combined-arithmetic-multihop-local-strref-relay-plan.md](2026-06-05-432-feat-ncs-consti-combined-arithmetic-multihop-local-strref-relay-plan.md) | NCS CONSTI combined arithmetic multihop local StrRef relay |
+| 433 | [433-chore-stack-simulation-arc-tracker-sync-v5-plan.md](2026-06-05-433-chore-stack-simulation-arc-tracker-sync-v5-plan.md) | Stack simulation arc tracker sync v5 (#100–#101) |
 | 434 | [434-feat-stridegamefps-linux-tfm-fix-plan.md](2026-05-24-434-feat-stridegamefps-linux-tfm-fix-plan.md) | StrideGameFPS Linux net9.0 TFM for NuGet CI restore |
 | 435 | [435-feat-ncs-consti-second-hop-arithmetic-local-strref-relay-plan.md](2026-06-10-435-feat-ncs-consti-second-hop-arithmetic-local-strref-relay-plan.md) | NCS CONSTI second-hop non-zero local ADD StrRef relay |
+| 436 | [436-chore-stack-simulation-arc-tracker-sync-v6-plan.md](2026-06-10-436-chore-stack-simulation-arc-tracker-sync-v6-plan.md) | Stack simulation arc tracker sync v6 (#102–#104, #103 CI) |
 | 437 | [437-feat-ncs-consti-double-hop-arithmetic-local-strref-relay-plan.md](2026-06-10-437-feat-ncs-consti-double-hop-arithmetic-local-strref-relay-plan.md) | NCS CONSTI double-hop non-zero local ADD StrRef relay |
+| 438 | [438-chore-stack-simulation-arc-tracker-sync-v7-plan.md](2026-06-10-438-chore-stack-simulation-arc-tracker-sync-v7-plan.md) | Stack simulation arc tracker sync v7 (#104–#106) |
 | 439 | [439-feat-ncs-consti-triple-multihop-double-arithmetic-local-strref-relay-plan.md](2026-06-10-439-feat-ncs-consti-triple-multihop-double-arithmetic-local-strref-relay-plan.md) | NCS CONSTI triple multihop double arithmetic StrRef relay |
+| 440 | [440-chore-stack-simulation-arc-tracker-sync-v8-plan.md](2026-06-10-440-chore-stack-simulation-arc-tracker-sync-v8-plan.md) | Stack simulation arc tracker sync v8 (#106–#108) |
 | 441 | [441-feat-ncs-consti-triple-multihop-combined-arithmetic-local-strref-relay-plan.md](2026-06-10-441-feat-ncs-consti-triple-multihop-combined-arithmetic-local-strref-relay-plan.md) | NCS CONSTI triple multihop combined arithmetic StrRef relay |
+| 442 | [442-chore-stack-simulation-arc-tracker-sync-v9-plan.md](2026-06-10-442-chore-stack-simulation-arc-tracker-sync-v9-plan.md) | Stack simulation arc tracker sync v9 (#108–#110) |
 | 443 | [443-feat-ncs-consti-four-hop-identity-double-arithmetic-local-strref-relay-plan.md](2026-06-10-443-feat-ncs-consti-four-hop-identity-double-arithmetic-local-strref-relay-plan.md) | NCS CONSTI four-hop identity double arithmetic StrRef relay |
+| 444 | [444-chore-stack-simulation-arc-tracker-sync-v10-plan.md](2026-06-10-444-chore-stack-simulation-arc-tracker-sync-v10-plan.md) | Stack simulation arc tracker sync v10 (#110–#112) |
 | 445 | [445-feat-ncs-consti-four-hop-identity-combined-arithmetic-local-strref-relay-plan.md](2026-06-10-445-feat-ncs-consti-four-hop-identity-combined-arithmetic-local-strref-relay-plan.md) | NCS CONSTI four-hop identity combined arithmetic StrRef relay |
+| 446 | [446-chore-stack-simulation-arc-tracker-sync-v11-plan.md](2026-06-10-446-chore-stack-simulation-arc-tracker-sync-v11-plan.md) | Stack simulation arc tracker sync v11 (#112–#114) |
 | 447 | [447-feat-ncs-consti-four-hop-identity-second-offset-local-strref-relay-plan.md](2026-06-10-447-feat-ncs-consti-four-hop-identity-second-offset-local-strref-relay-plan.md) | NCS CONSTI four-hop identity second-offset StrRef relay |
+| 448 | [448-chore-stack-simulation-arc-tracker-sync-v12-plan.md](2026-06-10-448-chore-stack-simulation-arc-tracker-sync-v12-plan.md) | Stack simulation arc tracker sync v12 (#114–#116) |
 | 449 | [449-feat-ncs-consti-five-hop-identity-second-offset-local-strref-relay-plan.md](2026-06-10-449-feat-ncs-consti-five-hop-identity-second-offset-local-strref-relay-plan.md) | NCS CONSTI five-hop identity second-offset StrRef relay |
+| 450 | [450-chore-stack-simulation-arc-tracker-sync-v13-plan.md](2026-06-10-450-chore-stack-simulation-arc-tracker-sync-v13-plan.md) | Stack simulation arc tracker sync v13 (#116–#119) |
 | 451 | [451-feat-ncs-consti-five-hop-identity-combined-arithmetic-local-strref-relay-plan.md](2026-06-10-451-feat-ncs-consti-five-hop-identity-combined-arithmetic-local-strref-relay-plan.md) | NCS CONSTI five-hop identity combined arithmetic StrRef relay |
+| 452 | [452-chore-stack-simulation-arc-tracker-sync-v14-plan.md](2026-06-10-452-chore-stack-simulation-arc-tracker-sync-v14-plan.md) | Stack simulation arc tracker sync v14 (#119–#121) |
 | 453 | [453-feat-ncs-consti-five-hop-identity-double-arithmetic-local-strref-relay-plan.md](2026-06-10-453-feat-ncs-consti-five-hop-identity-double-arithmetic-local-strref-relay-plan.md) | NCS CONSTI five-hop identity double arithmetic StrRef relay |
+| 454 | [454-chore-stack-simulation-arc-tracker-sync-v15-plan.md](2026-06-10-454-chore-stack-simulation-arc-tracker-sync-v15-plan.md) | Stack simulation arc tracker sync v15 |
 | 455 | [455-feat-ncs-consti-six-hop-identity-double-arithmetic-local-strref-relay-plan.md](2026-06-10-455-feat-ncs-consti-six-hop-identity-double-arithmetic-local-strref-relay-plan.md) | NCS CONSTI six-hop identity double arithmetic StrRef relay |
+| 456 | [456-chore-stack-simulation-arc-tracker-sync-v16-plan.md](2026-06-10-456-chore-stack-simulation-arc-tracker-sync-v16-plan.md) | Stack simulation arc tracker sync v16 |
 | 457 | [457-feat-ncs-consti-six-hop-identity-second-offset-local-strref-relay-plan.md](2026-06-10-457-feat-ncs-consti-six-hop-identity-second-offset-local-strref-relay-plan.md) | NCS CONSTI six-hop identity second-offset StrRef relay |
+| 458 | [458-chore-stack-simulation-arc-tracker-sync-v17-plan.md](2026-06-10-458-chore-stack-simulation-arc-tracker-sync-v17-plan.md) | Stack simulation arc tracker sync v17 |
 | 459 | [459-feat-ncs-consti-six-hop-identity-combined-arithmetic-local-strref-relay-plan.md](2026-06-10-459-feat-ncs-consti-six-hop-identity-combined-arithmetic-local-strref-relay-plan.md) | NCS CONSTI six-hop identity combined arithmetic StrRef relay |
+| 460 | [460-chore-stack-simulation-arc-tracker-sync-v18-plan.md](2026-06-10-460-chore-stack-simulation-arc-tracker-sync-v18-plan.md) | Stack simulation arc tracker sync v18 |
 | 461 | [461-feat-ncs-consti-seven-hop-identity-double-arithmetic-local-strref-relay-plan.md](2026-06-10-461-feat-ncs-consti-seven-hop-identity-double-arithmetic-local-strref-relay-plan.md) | NCS CONSTI seven-hop identity double arithmetic StrRef relay |
+| 462 | [462-chore-stack-simulation-arc-tracker-sync-v19-plan.md](2026-06-10-462-chore-stack-simulation-arc-tracker-sync-v19-plan.md) | Stack simulation arc tracker sync v19 |
 | 463 | [463-feat-ncs-consti-seven-hop-identity-second-offset-local-strref-relay-plan.md](2026-06-10-463-feat-ncs-consti-seven-hop-identity-second-offset-local-strref-relay-plan.md) | NCS CONSTI seven-hop identity second-offset StrRef relay |
+| 464 | [464-chore-stack-simulation-arc-tracker-sync-v20-plan.md](2026-06-10-464-chore-stack-simulation-arc-tracker-sync-v20-plan.md) | Stack simulation arc tracker sync v20 |
+| 465 | [465-chore-multi-day-pr-merge-holocron-integration-plan.md](2026-06-11-465-chore-multi-day-pr-merge-holocron-integration-plan.md) | Multi-day PR merge + Holocron integration |
 
 ## Repo implications
 
