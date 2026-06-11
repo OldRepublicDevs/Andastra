@@ -1,6 +1,6 @@
 ---
 title: "feat: 2DA paste over current cell (anchor paste)"
-status: active
+status: complete
 origin: docs/plans/2026-06-11-465-chore-multi-day-pr-merge-holocron-integration-plan.md
 ---
 
@@ -37,4 +37,4 @@ Target: **106+** `OdyTool2DA_*` tests (103 prior + 3 anchor + 1 row-label regres
 
 | PR | Merge | Tests |
 |----|-------|-------|
-| _pending_ | _pending_ | _pending_ |
+| [#143](https://github.com/th3w1zard1/Andastra/pull/143) | `7bb42c493` | **106** `OdyTool2DA_*` |
