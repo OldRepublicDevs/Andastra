@@ -2222,5 +2222,94 @@ namespace OdyTools.Tests
             }
         }
 
+        [AvaloniaTest]
+        public async Task OdyTool2DA_PasteSelection_AtCurrentCell_OverwritesCells()
+        {
+            byte[] data = CreateTestTwoDABytes(3);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                SetSelection(editor, 0);
+                SetCurrentColumn(editor, 2); // R0 C2 = name column
+                int rowCountBefore = GetSourceData(editor).Count;
+                Assert.That(rowCountBefore, Is.EqualTo(3));
+
+                await (editor as Window)?.Clipboard?.SetTextAsync("A\tB\nC\tD");
+                editor.PasteSelection();
+
+                var result = BuildAndParse(editor);
+                Assert.That(result.GetHeight(), Is.EqualTo(rowCountBefore), "Anchor paste must not insert rows");
+                Assert.That(GetSourceData(editor).Count, Is.EqualTo(rowCountBefore));
+                Assert.That(result.GetCellString(0, "name"), Is.EqualTo("A"));
+                Assert.That(result.GetCellString(0, "value"), Is.EqualTo("B"));
+                Assert.That(result.GetCellString(1, "name"), Is.EqualTo("C"));
+                Assert.That(result.GetCellString(1, "value"), Is.EqualTo("D"));
+                Assert.That(result.GetCellString(0, "race"), Is.EqualTo("PMBTest"), "Cells outside paste block unchanged");
+                Assert.That(result.GetCellString(2, "name"), Is.EqualTo("Row2"), "Rows below paste block unchanged");
+                Assert.That(GetStatusText(editor), Does.Contain("Modified"));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public async Task OdyTool2DA_PasteSelection_WithActiveRange_AnchorsAtRangeCorner()
+        {
+            byte[] data = CreateTestTwoDABytes(5);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.SelectCellRange(1, 2, 2, 3); // min corner R1 C2 (name)
+                int rowCountBefore = GetSourceData(editor).Count;
+                Assert.That(rowCountBefore, Is.EqualTo(5));
+
+                await (editor as Window)?.Clipboard?.SetTextAsync("X\tY\nZ\tW");
+                editor.PasteSelection();
+
+                var result = BuildAndParse(editor);
+                Assert.That(result.GetHeight(), Is.EqualTo(rowCountBefore), "Range-anchored paste must not insert rows");
+                Assert.That(result.GetCellString(1, "name"), Is.EqualTo("X"));
+                Assert.That(result.GetCellString(1, "value"), Is.EqualTo("Y"));
+                Assert.That(result.GetCellString(2, "name"), Is.EqualTo("Z"));
+                Assert.That(result.GetCellString(2, "value"), Is.EqualTo("W"));
+                Assert.That(result.GetCellString(0, "name"), Is.EqualTo("PMBTest"), "Rows above range unchanged");
+                Assert.That(result.GetCellString(3, "name"), Is.EqualTo("Row3"), "Rows below range unchanged");
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public async Task OdyTool2DA_PasteSelection_NoCurrentColumn_InsertsRows()
+        {
+            byte[] data = CreateTestTwoDABytes(3);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                SetSelection(editor, 1);
+                Assert.That(GetCurrentColumnIndex(editor), Is.EqualTo(0), "Row-only selection defaults to # column");
+
+                await (editor as Window)?.Clipboard?.SetTextAsync("9\t9\tAlpha\t999");
+                editor.PasteSelection();
+
+                var result = BuildAndParse(editor);
+                Assert.That(result.GetHeight(), Is.EqualTo(4), "Row-only selection still inserts a row");
+                Assert.That(GetSourceData(editor).Count, Is.EqualTo(4));
+                Assert.That(result.GetCellString(1, "name"), Is.EqualTo("Alpha"));
+                Assert.That(result.GetCellString(1, "value"), Is.EqualTo("999"));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
     }
 }
