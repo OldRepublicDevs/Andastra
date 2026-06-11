@@ -72,6 +72,18 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 
 ---
 
+## Day 5 — 2DA spreadsheet UX slice (plan **469**)
+
+| Step | Action | Done |
+|------|--------|------|
+| D5.1 | Select Row (menu, sidebar, `#` column click) | ✅ |
+| D5.2 | Status bar `Modified` when dirty | ✅ |
+| D5.3 | Status bar hidden row count when filter active | ✅ |
+| D5.4 | Help → Keyboard Shortcuts dialog | ✅ |
+| D5.5 | OdyTool2DATests for row select, dirty status, shortcuts smoke | ✅ |
+
+---
+
 ## Day 5+ — Holocron continuation
 
 Per plan **063** deferred items:
