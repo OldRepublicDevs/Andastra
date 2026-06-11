@@ -183,6 +183,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 457 | [457-feat-ncs-consti-six-hop-identity-second-offset-local-strref-relay-plan.md](2026-06-10-457-feat-ncs-consti-six-hop-identity-second-offset-local-strref-relay-plan.md) | NCS CONSTI six-hop identity second-offset StrRef relay |
 | 459 | [459-feat-ncs-consti-six-hop-identity-combined-arithmetic-local-strref-relay-plan.md](2026-06-10-459-feat-ncs-consti-six-hop-identity-combined-arithmetic-local-strref-relay-plan.md) | NCS CONSTI six-hop identity combined arithmetic StrRef relay |
 | 461 | [461-feat-ncs-consti-seven-hop-identity-double-arithmetic-local-strref-relay-plan.md](2026-06-10-461-feat-ncs-consti-seven-hop-identity-double-arithmetic-local-strref-relay-plan.md) | NCS CONSTI seven-hop identity double arithmetic StrRef relay |
+| 463 | [463-feat-ncs-consti-seven-hop-identity-second-offset-local-strref-relay-plan.md](2026-06-10-463-feat-ncs-consti-seven-hop-identity-second-offset-local-strref-relay-plan.md) | NCS CONSTI seven-hop identity second-offset StrRef relay |
 
 ## Repo implications
 
