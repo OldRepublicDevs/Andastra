@@ -25,7 +25,10 @@
     <Compile Include="$(_OdyToolsRoot)\Widgets\Settings\InstallationsWidget.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Common\Localization.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\LipBatchProcessor.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Utils\LipHeadPreviewHelper.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\LipBatchProcessorDialog.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Widgets\ModelRenderer.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Widgets\MdlToDrawableConverter.cs" />
   </ItemGroup>
   <ItemGroup>
     <AvaloniaXaml Remove="**\*.axaml" />

@@ -7,6 +7,7 @@ using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.LIP;
 using OdyTools.Editors;
+using OdyTools.Utils;
 using NUnit.Framework;
 
 namespace OdyTools.Tests
@@ -137,6 +138,49 @@ namespace OdyTools.Tests
             Assert.That(OdyToolLIP.GetShapeAtPlaybackTime(lip, 1.2f), Is.EqualTo(LIPShape.AH));
             Assert.That(OdyToolLIP.GetShapeAtPlaybackTime(lip, 2.6f), Is.EqualTo(LIPShape.OH));
             Assert.That(OdyToolLIP.GetShapeAtPlaybackTime(lip, 0.1f), Is.Null);
+        }
+
+        [Test]
+        public void LipHeadPreviewHelper_GetMouthStateLabel_ReturnsEmptyForNullShape()
+        {
+            Assert.That(LipHeadPreviewHelper.GetMouthStateLabel(null), Is.EqualTo(string.Empty));
+            Assert.That(LipHeadPreviewHelper.GetMouthStateLabel(LIPShape.AH), Is.EqualTo("Mouth: AH"));
+        }
+
+        [Test]
+        public void LipHeadPreviewHelper_TryPopulateAppearanceCombo_ReturnsFalseWithoutInstallation()
+        {
+            var combo = new Avalonia.Controls.ComboBox();
+            Assert.That(LipHeadPreviewHelper.TryPopulateAppearanceCombo(null, combo), Is.False);
+            Assert.That(combo.Items.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void LipHeadPreviewHelper_FormatPlaybackOverlay_AppendsMouthHint()
+        {
+            Assert.That(
+                LipHeadPreviewHelper.FormatPlaybackOverlay("Model: head_01", LIPShape.EE),
+                Is.EqualTo("Model: head_01 | Mouth: EE"));
+            Assert.That(
+                LipHeadPreviewHelper.FormatPlaybackOverlay(string.Empty, LIPShape.OH),
+                Is.EqualTo("Mouth: OH"));
+            Assert.That(
+                LipHeadPreviewHelper.FormatPlaybackOverlay("Model: head_01", null),
+                Is.EqualTo("Model: head_01"));
+        }
+
+        [Test]
+        public void LipHeadPreviewHelper_TryLoadHeadModel_ReturnsFalseWithoutInstallation()
+        {
+            byte[] mdl;
+            byte[] mdx;
+            string modelName;
+            Assert.That(
+                LipHeadPreviewHelper.TryLoadHeadModel(null, 0, out mdl, out mdx, out modelName),
+                Is.False);
+            Assert.That(mdl, Is.Null);
+            Assert.That(mdx, Is.Null);
+            Assert.That(modelName, Is.Null);
         }
 
         private static string CreateTempWav(float durationSeconds, int sampleRate = 44100)
