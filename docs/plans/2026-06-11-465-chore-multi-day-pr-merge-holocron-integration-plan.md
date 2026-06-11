@@ -26,7 +26,7 @@ Holocron plan **063** core units (U1–U7) are **complete** on `master`. Remaini
 | D1.1 | Branch `work/day1-stack-simulation-land` from `origin/master` | ✅ |
 | D1.2 | Merge stack-simulation arc (plans **420**–**464**) onto `master` | ✅ `3b060001a` |
 | D1.3 | Resolve conflicts; keep master's field-value/KotorDiff/LIP tests | ✅ |
-| D1.4 | Verify **163** NcsConsti tests pass | ✅ local + CI Test job |
+| D1.4 | Verify **165** NcsConsti tests pass (163 plan-463 + 2 master four-hop) | ✅ local |
 | D1.5 | Open PR → `master`; merge when CI green | 🔄 [PR #135](https://github.com/th3w1zard1/Andastra/pull/135) CI pending |
 | D1.6 | Close superseded open PRs **#104–#122**, **#89–#91** as duplicate | ⏳ after #135 merge |
 
