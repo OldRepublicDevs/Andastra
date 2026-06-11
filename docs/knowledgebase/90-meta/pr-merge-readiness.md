@@ -333,7 +333,7 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Check | Command / artifact | Status |
 |-------|-------------------|--------|
 | BioWare + tests | `dotnet build/test` per [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md) | Green `[REPO]` |
-| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**163**), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**463**, 2026-06-11) |
+| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**165** post Day 1 land; **163** at plan **463** tip), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**463**, 2026-06-11) |
 | Ref-search Step 3c (ReferenceFinder) | `--filter` ReferenceFinderTests (**97**), ReferenceSearchHelper (**36**), ScriptReferenceHelper (**8**), FindRefsCommand (**21**) | Green `[REPO]` (plans **348**–**353**, 2026-06-03) |
 | Ref-search Step 3d (FieldValue) | `--filter` FieldValueReferenceHelperTests (**10**) | Pending [PR #85](https://github.com/th3w1zard1/Andastra/pull/85) stack **#81**–**#85** (plans **412**–**416**) `[REPO]` |
 | Full solution | `dotnet build Andastra.sln --framework net9.0 -c Release -m:1` | Green Linux net9.0 `[REPO]` |
@@ -374,7 +374,7 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 
 ## NCS CONSTI stack simulation arc (merged Day 1, plans 421–463)
 
-Bulk-landed via plan **465** Day 1 merge at **163** NcsConsti tests. Supersedes open PR stack **#89**–**#133**. Identity multihop relay characterization complete through seven-hop second-offset local StrRef relay (plan **463**). `[REPO]`
+Bulk-landed via plan **465** Day 1 merge at **165** NcsConsti tests (**163** plan **463** + **2** master four-hop mixed relay). Supersedes open PR stack **#89**–**#133**. Identity multihop relay characterization complete through seven-hop second-offset local StrRef relay (plan **463**). `[REPO]`
 
 ## CI hygiene (independent open PRs)
 
