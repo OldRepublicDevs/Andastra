@@ -163,7 +163,33 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 407 | [407-fix-codeql-advanced-default-setup-conflict-plan.md](2026-06-05-407-fix-codeql-advanced-default-setup-conflict-plan.md) | Remove CodeQL Advanced workflow; default setup authoritative |
 | 408 | [408-chore-complete-plan375-closure-plan.md](2026-06-05-408-chore-complete-plan375-closure-plan.md) | Complete plan 375 closure and refresh next slices |
 | 409 | [409-feat-ncs-consti-arithmetic-strref-relay-plan.md](2026-06-05-409-feat-ncs-consti-arithmetic-strref-relay-plan.md) | NCS CONSTI arithmetic StrRef relay v1 |
+| 410 | [410-feat-ncs-consti-five-hop-multi-arg-jsr-relay-plan.md](2026-06-05-410-feat-ncs-consti-five-hop-multi-arg-jsr-relay-plan.md) | NCS CONSTI five-hop multi-arg nested JSR relay |
+| 418 | [418-test-ncs-consti-six-hop-multi-arg-jsr-relay-plan.md](2026-06-05-418-test-ncs-consti-six-hop-multi-arg-jsr-relay-plan.md) | NCS CONSTI six-hop multi-arg nested JSR relay |
+| 419 | [419-test-ncs-consti-six-hop-mixed-const-relay-plan.md](2026-06-05-419-test-ncs-consti-six-hop-mixed-const-relay-plan.md) | NCS CONSTI six-hop mixed CONST+CPTOPSP JSR relay |
+| 421 | [421-feat-ncs-consti-arithmetic-strref-relay-v2-plan.md](2026-06-05-421-feat-ncs-consti-arithmetic-strref-relay-v2-plan.md) | NCS CONSTI arithmetic StrRef relay v2 (MUL/MOD/chained ADD) |
+| 422 | [422-feat-ncs-consti-arithmetic-local-strref-relay-v3-plan.md](2026-06-05-422-feat-ncs-consti-arithmetic-local-strref-relay-v3-plan.md) | NCS CONSTI arithmetic local StrRef relay v3 |
+| 424 | [424-feat-ncs-consti-arithmetic-strref-relay-v4-plan.md](2026-06-05-424-feat-ncs-consti-arithmetic-strref-relay-v4-plan.md) | NCS CONSTI arithmetic StrRef relay v4 (cache + local SUB) |
+| 425 | [425-feat-ncs-consti-arithmetic-strref-relay-v5-plan.md](2026-06-05-425-feat-ncs-consti-arithmetic-strref-relay-v5-plan.md) | NCS CONSTI arithmetic StrRef relay v5 (DIV + local MUL/MOD) |
+| 427 | [427-feat-ncs-consti-arithmetic-local-strref-relay-v6-plan.md](2026-06-05-427-feat-ncs-consti-arithmetic-local-strref-relay-v6-plan.md) | NCS CONSTI arithmetic local StrRef relay v6 (local DIV + chained ADD) |
+| 429 | [429-feat-ncs-consti-arithmetic-multihop-local-strref-relay-plan.md](2026-06-05-429-feat-ncs-consti-arithmetic-multihop-local-strref-relay-plan.md) | NCS CONSTI arithmetic multihop local StrRef relay |
+| 430 | [430-feat-ncs-consti-arithmetic-first-multihop-local-strref-relay-plan.md](2026-06-05-430-feat-ncs-consti-arithmetic-first-multihop-local-strref-relay-plan.md) | NCS CONSTI arithmetic-first multihop local StrRef relay |
+| 432 | [432-feat-ncs-consti-combined-arithmetic-multihop-local-strref-relay-plan.md](2026-06-05-432-feat-ncs-consti-combined-arithmetic-multihop-local-strref-relay-plan.md) | NCS CONSTI combined arithmetic multihop local StrRef relay |
 | 434 | [434-feat-stridegamefps-linux-tfm-fix-plan.md](2026-05-24-434-feat-stridegamefps-linux-tfm-fix-plan.md) | StrideGameFPS Linux net9.0 TFM for NuGet CI restore |
+| 435 | [435-feat-ncs-consti-second-hop-arithmetic-local-strref-relay-plan.md](2026-06-10-435-feat-ncs-consti-second-hop-arithmetic-local-strref-relay-plan.md) | NCS CONSTI second-hop non-zero local ADD StrRef relay |
+| 437 | [437-feat-ncs-consti-double-hop-arithmetic-local-strref-relay-plan.md](2026-06-10-437-feat-ncs-consti-double-hop-arithmetic-local-strref-relay-plan.md) | NCS CONSTI double-hop non-zero local ADD StrRef relay |
+| 439 | [439-feat-ncs-consti-triple-multihop-double-arithmetic-local-strref-relay-plan.md](2026-06-10-439-feat-ncs-consti-triple-multihop-double-arithmetic-local-strref-relay-plan.md) | NCS CONSTI triple multihop double arithmetic StrRef relay |
+| 441 | [441-feat-ncs-consti-triple-multihop-combined-arithmetic-local-strref-relay-plan.md](2026-06-10-441-feat-ncs-consti-triple-multihop-combined-arithmetic-local-strref-relay-plan.md) | NCS CONSTI triple multihop combined arithmetic StrRef relay |
+| 443 | [443-feat-ncs-consti-four-hop-identity-double-arithmetic-local-strref-relay-plan.md](2026-06-10-443-feat-ncs-consti-four-hop-identity-double-arithmetic-local-strref-relay-plan.md) | NCS CONSTI four-hop identity double arithmetic StrRef relay |
+| 445 | [445-feat-ncs-consti-four-hop-identity-combined-arithmetic-local-strref-relay-plan.md](2026-06-10-445-feat-ncs-consti-four-hop-identity-combined-arithmetic-local-strref-relay-plan.md) | NCS CONSTI four-hop identity combined arithmetic StrRef relay |
+| 447 | [447-feat-ncs-consti-four-hop-identity-second-offset-local-strref-relay-plan.md](2026-06-10-447-feat-ncs-consti-four-hop-identity-second-offset-local-strref-relay-plan.md) | NCS CONSTI four-hop identity second-offset StrRef relay |
+| 449 | [449-feat-ncs-consti-five-hop-identity-second-offset-local-strref-relay-plan.md](2026-06-10-449-feat-ncs-consti-five-hop-identity-second-offset-local-strref-relay-plan.md) | NCS CONSTI five-hop identity second-offset StrRef relay |
+| 451 | [451-feat-ncs-consti-five-hop-identity-combined-arithmetic-local-strref-relay-plan.md](2026-06-10-451-feat-ncs-consti-five-hop-identity-combined-arithmetic-local-strref-relay-plan.md) | NCS CONSTI five-hop identity combined arithmetic StrRef relay |
+| 453 | [453-feat-ncs-consti-five-hop-identity-double-arithmetic-local-strref-relay-plan.md](2026-06-10-453-feat-ncs-consti-five-hop-identity-double-arithmetic-local-strref-relay-plan.md) | NCS CONSTI five-hop identity double arithmetic StrRef relay |
+| 455 | [455-feat-ncs-consti-six-hop-identity-double-arithmetic-local-strref-relay-plan.md](2026-06-10-455-feat-ncs-consti-six-hop-identity-double-arithmetic-local-strref-relay-plan.md) | NCS CONSTI six-hop identity double arithmetic StrRef relay |
+| 457 | [457-feat-ncs-consti-six-hop-identity-second-offset-local-strref-relay-plan.md](2026-06-10-457-feat-ncs-consti-six-hop-identity-second-offset-local-strref-relay-plan.md) | NCS CONSTI six-hop identity second-offset StrRef relay |
+| 459 | [459-feat-ncs-consti-six-hop-identity-combined-arithmetic-local-strref-relay-plan.md](2026-06-10-459-feat-ncs-consti-six-hop-identity-combined-arithmetic-local-strref-relay-plan.md) | NCS CONSTI six-hop identity combined arithmetic StrRef relay |
+| 461 | [461-feat-ncs-consti-seven-hop-identity-double-arithmetic-local-strref-relay-plan.md](2026-06-10-461-feat-ncs-consti-seven-hop-identity-double-arithmetic-local-strref-relay-plan.md) | NCS CONSTI seven-hop identity double arithmetic StrRef relay |
+| 463 | [463-feat-ncs-consti-seven-hop-identity-second-offset-local-strref-relay-plan.md](2026-06-10-463-feat-ncs-consti-seven-hop-identity-second-offset-local-strref-relay-plan.md) | NCS CONSTI seven-hop identity second-offset StrRef relay |
 
 ## Repo implications
 

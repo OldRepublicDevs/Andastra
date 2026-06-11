@@ -471,6 +471,1290 @@ namespace BioWare.Tests
         }
 
         [Test]
+        public void GetConstiUsageContext_ArithmeticMulStrRefLiteral_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { ActionSpeakStringByStrRef(" + targetStrRef + " * 1); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_ArithmeticMulStrRefLiteral_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { ActionSpeakStringByStrRef(" + targetStrRef + " * 1); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-arith-mul-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_ArithmeticModStrRefLiteral_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { ActionSpeakStringByStrRef(" + targetStrRef + " % 1000000); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_ArithmeticModStrRefLiteral_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { ActionSpeakStringByStrRef(" + targetStrRef + " % 1000000); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-arith-mod-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_ArithmeticDivStrRefLiteral_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { ActionSpeakStringByStrRef(" + targetStrRef + " / 1); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_ArithmeticDivStrRefLiteral_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { ActionSpeakStringByStrRef(" + targetStrRef + " / 1); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-arith-div-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_ChainedArithmeticAddStrRefLiteral_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int offset = 100;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { ActionSpeakStringByStrRef(" + targetStrRef + " + " + offset + " + 0); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_ChainedArithmeticAddStrRefLiteral_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int offset = 100;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { ActionSpeakStringByStrRef(" + targetStrRef + " + " + offset + " + 0); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-arith-chain-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_ArithmeticLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int offset = 100;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + offset + "; ActionSpeakStringByStrRef(n); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_ArithmeticLocalStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int offset = 100;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + offset + "; ActionSpeakStringByStrRef(n); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-arith-local-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_ArithmeticLocalSubStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " - 1; ActionSpeakStringByStrRef(n); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_ArithmeticLocalSubStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " - 1; ActionSpeakStringByStrRef(n); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-arith-local-sub-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_ArithmeticLocalMulStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " * 1; ActionSpeakStringByStrRef(n); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_ArithmeticLocalMulStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " * 1; ActionSpeakStringByStrRef(n); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-arith-local-mul-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_ArithmeticLocalModStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " % 1000000; ActionSpeakStringByStrRef(n); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_ArithmeticLocalModStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " % 1000000; ActionSpeakStringByStrRef(n); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-arith-local-mod-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_ArithmeticLocalDivStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " / 1; ActionSpeakStringByStrRef(n); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_ArithmeticLocalDivStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " / 1; ActionSpeakStringByStrRef(n); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-arith-local-div-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_ArithmeticLocalChainedAddStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int offset = 100;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + offset + " + 0; ActionSpeakStringByStrRef(n); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_ArithmeticLocalChainedAddStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int offset = 100;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + offset + " + 0; ActionSpeakStringByStrRef(n); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-arith-local-chain-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_ArithmeticMultiHopLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + "; int m = n + 0; ActionSpeakStringByStrRef(m); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_ArithmeticMultiHopLocalStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + "; int m = n + 0; ActionSpeakStringByStrRef(m); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-arith-multihop-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_ArithmeticFirstMultiHopLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int offset = 100;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + offset + "; int m = n; ActionSpeakStringByStrRef(m); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_ArithmeticFirstMultiHopLocalStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int offset = 100;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + offset + "; int m = n; ActionSpeakStringByStrRef(m); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-arith-first-multihop-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_CombinedArithmeticMultiHopLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int offset = 100;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + offset + "; int m = n + 0; ActionSpeakStringByStrRef(m); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_CombinedArithmeticMultiHopLocalStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int offset = 100;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + offset + "; int m = n + 0; ActionSpeakStringByStrRef(m); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-combined-arith-multihop-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_SecondHopArithmeticLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int offset = 100;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + "; int m = n + " + offset + "; ActionSpeakStringByStrRef(m); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_SecondHopArithmeticLocalStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int offset = 100;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + "; int m = n + " + offset + "; ActionSpeakStringByStrRef(m); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-second-hop-arith-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_DoubleHopArithmeticLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int firstOffset = 100;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + firstOffset + "; int m = n + " + secondOffset + "; ActionSpeakStringByStrRef(m); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_DoubleHopArithmeticLocalStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int firstOffset = 100;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + firstOffset + "; int m = n + " + secondOffset + "; ActionSpeakStringByStrRef(m); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-double-hop-arith-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_TripleMultihopDoubleArithmeticLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int firstOffset = 100;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + firstOffset + "; int m = n + " + secondOffset + "; int p = m; ActionSpeakStringByStrRef(p); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_TripleMultihopDoubleArithmeticLocalStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int firstOffset = 100;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + firstOffset + "; int m = n + " + secondOffset + "; int p = m; ActionSpeakStringByStrRef(p); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-triple-multihop-double-arith-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_TripleMultihopCombinedArithmeticLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int firstOffset = 100;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + firstOffset + "; int m = n + 0; int p = m; ActionSpeakStringByStrRef(p); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_TripleMultihopCombinedArithmeticLocalStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int firstOffset = 100;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + firstOffset + "; int m = n + 0; int p = m; ActionSpeakStringByStrRef(p); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-triple-multihop-combined-arith-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_FourHopIdentityDoubleArithmeticLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int firstOffset = 100;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + firstOffset + "; int m = n + " + secondOffset + "; int p = m; int q = p; ActionSpeakStringByStrRef(q); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_FourHopIdentityDoubleArithmeticLocalStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int firstOffset = 100;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + firstOffset + "; int m = n + " + secondOffset + "; int p = m; int q = p; ActionSpeakStringByStrRef(q); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-four-hop-identity-double-arith-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_FourHopIdentityCombinedArithmeticLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int firstOffset = 100;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + firstOffset + "; int m = n + 0; int p = m; int q = p; ActionSpeakStringByStrRef(q); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_FourHopIdentityCombinedArithmeticLocalStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int firstOffset = 100;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + firstOffset + "; int m = n + 0; int p = m; int q = p; ActionSpeakStringByStrRef(q); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-four-hop-identity-combined-arith-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_FourHopIdentitySecondOffsetLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + "; int m = n + " + secondOffset + "; int p = m; int q = p; ActionSpeakStringByStrRef(q); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_FourHopIdentitySecondOffsetLocalStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + "; int m = n + " + secondOffset + "; int p = m; int q = p; ActionSpeakStringByStrRef(q); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-four-hop-identity-second-offset-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_FiveHopIdentitySecondOffsetLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + "; int m = n + " + secondOffset + "; int p = m; int q = p; int r = q; ActionSpeakStringByStrRef(r); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_FiveHopIdentitySecondOffsetLocalStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + "; int m = n + " + secondOffset + "; int p = m; int q = p; int r = q; ActionSpeakStringByStrRef(r); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-five-hop-identity-second-offset-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_FiveHopIdentityCombinedArithmeticLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int firstOffset = 100;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + firstOffset + "; int m = n + 0; int p = m; int q = p; int r = q; ActionSpeakStringByStrRef(r); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_FiveHopIdentityCombinedArithmeticLocalStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int firstOffset = 100;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + firstOffset + "; int m = n + 0; int p = m; int q = p; int r = q; ActionSpeakStringByStrRef(r); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-five-hop-identity-combined-arith-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_SixHopIdentityCombinedArithmeticLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int firstOffset = 100;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + firstOffset + "; int m = n + 0; int p = m; int q = p; int r = q; int s = r; ActionSpeakStringByStrRef(s); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_SixHopIdentityCombinedArithmeticLocalStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int firstOffset = 100;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + firstOffset + "; int m = n + 0; int p = m; int q = p; int r = q; int s = r; ActionSpeakStringByStrRef(s); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-six-hop-identity-combined-arith-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_FiveHopIdentityDoubleArithmeticLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int firstOffset = 100;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + firstOffset + "; int m = n + " + secondOffset + "; int p = m; int q = p; int r = q; ActionSpeakStringByStrRef(r); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_FiveHopIdentityDoubleArithmeticLocalStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int firstOffset = 100;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + firstOffset + "; int m = n + " + secondOffset + "; int p = m; int q = p; int r = q; ActionSpeakStringByStrRef(r); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-five-hop-identity-double-arith-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_SixHopIdentityDoubleArithmeticLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int firstOffset = 100;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + firstOffset + "; int m = n + " + secondOffset + "; int p = m; int q = p; int r = q; int s = r; ActionSpeakStringByStrRef(s); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_SixHopIdentityDoubleArithmeticLocalStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int firstOffset = 100;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + firstOffset + "; int m = n + " + secondOffset + "; int p = m; int q = p; int r = q; int s = r; ActionSpeakStringByStrRef(s); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-six-hop-identity-double-arith-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_SevenHopIdentityDoubleArithmeticLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int firstOffset = 100;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + firstOffset + "; int m = n + " + secondOffset + "; int p = m; int q = p; int r = q; int s = r; int t = s; ActionSpeakStringByStrRef(t); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_SevenHopIdentityDoubleArithmeticLocalStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int firstOffset = 100;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + " + " + firstOffset + "; int m = n + " + secondOffset + "; int p = m; int q = p; int r = q; int s = r; int t = s; ActionSpeakStringByStrRef(t); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-seven-hop-identity-double-arith-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_SixHopIdentitySecondOffsetLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + "; int m = n + " + secondOffset + "; int p = m; int q = p; int r = q; int s = r; ActionSpeakStringByStrRef(s); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_SixHopIdentitySecondOffsetLocalStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + "; int m = n + " + secondOffset + "; int p = m; int q = p; int r = q; int s = r; ActionSpeakStringByStrRef(s); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-six-hop-identity-second-offset-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_SevenHopIdentitySecondOffsetLocalStrRefViaCptopsp_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + "; int m = n + " + secondOffset + "; int p = m; int q = p; int r = q; int s = r; int t = s; ActionSpeakStringByStrRef(t); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_SevenHopIdentitySecondOffsetLocalStrRefViaCptopsp_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            const int secondOffset = 50;
+            NCS ncs = NCSAuto.CompileNss(
+                "void main() { int n = " + targetStrRef + "; int m = n + " + secondOffset + "; int p = m; int q = p; int r = q; int s = r; int t = s; ActionSpeakStringByStrRef(t); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-seven-hop-identity-second-offset-strref-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
         public void GetConstiUsageContext_BarkStringSecondArg_ReturnsStrRefConsumer()
         {
             const int smallStrRef = 50;
@@ -2275,6 +3559,138 @@ namespace BioWare.Tests
         }
 
         [Test]
+        public void GetConstiUsageContext_FiveHopNestedJsrMultiArgRelayStrRef_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void speak(int a, int s) { ActionSpeakStringByStrRef(s); }\nvoid inner(int a, int s) { speak(a, s); }\nvoid mid(int a, int s) { inner(a, s); }\nvoid relay(int a, int s) { mid(a, s); }\nvoid outer(int a, int s) { relay(a, s); }\nvoid deepest(int a, int s) { outer(a, s); }\nvoid main() { deepest(0, " + targetStrRef + "); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_FiveHopNestedJsrMultiArgRelayStrRef_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void speak(int a, int s) { ActionSpeakStringByStrRef(s); }\nvoid inner(int a, int s) { speak(a, s); }\nvoid mid(int a, int s) { inner(a, s); }\nvoid relay(int a, int s) { mid(a, s); }\nvoid outer(int a, int s) { relay(a, s); }\nvoid deepest(int a, int s) { outer(a, s); }\nvoid main() { deepest(0, " + targetStrRef + "); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-five-hop-multi-jsr-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_SixHopNestedJsrMultiArgRelayStrRef_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void speak(int a, int s) { ActionSpeakStringByStrRef(s); }\nvoid inner(int a, int s) { speak(a, s); }\nvoid mid(int a, int s) { inner(a, s); }\nvoid relay(int a, int s) { mid(a, s); }\nvoid outer(int a, int s) { relay(a, s); }\nvoid deepest(int a, int s) { outer(a, s); }\nvoid root(int a, int s) { deepest(a, s); }\nvoid main() { root(0, " + targetStrRef + "); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_SixHopNestedJsrMultiArgRelayStrRef_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void speak(int a, int s) { ActionSpeakStringByStrRef(s); }\nvoid inner(int a, int s) { speak(a, s); }\nvoid mid(int a, int s) { inner(a, s); }\nvoid relay(int a, int s) { mid(a, s); }\nvoid outer(int a, int s) { relay(a, s); }\nvoid deepest(int a, int s) { outer(a, s); }\nvoid root(int a, int s) { deepest(a, s); }\nvoid main() { root(0, " + targetStrRef + "); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-six-hop-multi-jsr-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
+        public void GetConstiUsageContext_SixHopMixedConstCptopspRelayStrRef_ReturnsStrRefConsumer()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void speak(int a, int s) { ActionSpeakStringByStrRef(s); }\nvoid inner(int a, int s) { speak(0, s); }\nvoid mid(int a, int s) { inner(a, s); }\nvoid relay(int a, int s) { mid(a, s); }\nvoid outer(int a, int s) { relay(a, s); }\nvoid deepest(int a, int s) { outer(a, s); }\nvoid root(int a, int s) { deepest(a, s); }\nvoid main() { root(99, " + targetStrRef + "); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
+            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
+
+            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
+        }
+
+        [Test]
+        public void StrRefReferenceCache_SixHopMixedConstCptopspRelayStrRef_IsIndexed()
+        {
+            const int targetStrRef = 424242;
+            NCS ncs = NCSAuto.CompileNss(
+                "void speak(int a, int s) { ActionSpeakStringByStrRef(s); }\nvoid inner(int a, int s) { speak(0, s); }\nvoid mid(int a, int s) { inner(a, s); }\nvoid relay(int a, int s) { mid(a, s); }\nvoid outer(int a, int s) { relay(a, s); }\nvoid deepest(int a, int s) { outer(a, s); }\nvoid root(int a, int s) { deepest(a, s); }\nvoid main() { root(99, " + targetStrRef + "); }",
+                BioWareGame.K1);
+            byte[] bytes = NCSAuto.BytesNcs(ncs);
+
+            string filepath = Path.Combine(Path.GetTempPath(), "ncs-six-hop-mixed-const-jsr-" + Guid.NewGuid().ToString("N") + ".ncs");
+            File.WriteAllBytes(filepath, bytes);
+
+            try
+            {
+                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
+                var cache = new StrRefReferenceCache(BioWareGame.K1);
+                cache.ScanResource(resource, bytes);
+
+                Assert.That(cache.HasReferences(targetStrRef), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+            }
+        }
+
+        [Test]
         public void GetConstiUsageContext_ThreeHopMixedConstCptopspRelayStrRef_ReturnsStrRefConsumer()
         {
             const int targetStrRef = 424242;
@@ -2299,50 +3715,6 @@ namespace BioWare.Tests
             byte[] bytes = NCSAuto.BytesNcs(ncs);
 
             string filepath = Path.Combine(Path.GetTempPath(), "ncs-three-hop-mixed-const-jsr-" + Guid.NewGuid().ToString("N") + ".ncs");
-            File.WriteAllBytes(filepath, bytes);
-
-            try
-            {
-                var resource = new FileResource("test_script", ResourceType.NCS, bytes.Length, 0, filepath);
-                var cache = new StrRefReferenceCache(BioWareGame.K1);
-                cache.ScanResource(resource, bytes);
-
-                Assert.That(cache.HasReferences(targetStrRef), Is.True);
-            }
-            finally
-            {
-                if (File.Exists(filepath))
-                {
-                    File.Delete(filepath);
-                }
-            }
-        }
-
-        [Test]
-        public void GetConstiUsageContext_FourHopMixedConstCptopspRelayStrRef_ReturnsStrRefConsumer()
-        {
-            const int targetStrRef = 424242;
-            NCS ncs = NCSAuto.CompileNss(
-                "void speak(int a, int s) { ActionSpeakStringByStrRef(s); }\nvoid inner(int a, int s) { speak(0, s); }\nvoid mid(int a, int s) { inner(a, s); }\nvoid relay(int a, int s) { mid(a, s); }\nvoid outer(int a, int s) { relay(a, s); }\nvoid main() { outer(99, " + targetStrRef + "); }",
-                BioWareGame.K1);
-            byte[] bytes = NCSAuto.BytesNcs(ncs);
-
-            List<NcsConstiScanner.ConstiInstruction> instructions = NcsConstiScanner.ExtractConstiInstructions(bytes);
-            NcsConstiScanner.ConstiInstruction match = instructions.Find(i => i.Value == targetStrRef);
-
-            Assert.That(NcsConstiScanner.GetConstiUsageContext(bytes, match), Is.EqualTo(NcsConstiScanner.ConstiUsageContext.StrRefConsumer));
-        }
-
-        [Test]
-        public void StrRefReferenceCache_FourHopMixedConstCptopspRelayStrRef_IsIndexed()
-        {
-            const int targetStrRef = 424242;
-            NCS ncs = NCSAuto.CompileNss(
-                "void speak(int a, int s) { ActionSpeakStringByStrRef(s); }\nvoid inner(int a, int s) { speak(0, s); }\nvoid mid(int a, int s) { inner(a, s); }\nvoid relay(int a, int s) { mid(a, s); }\nvoid outer(int a, int s) { relay(a, s); }\nvoid main() { outer(99, " + targetStrRef + "); }",
-                BioWareGame.K1);
-            byte[] bytes = NCSAuto.BytesNcs(ncs);
-
-            string filepath = Path.Combine(Path.GetTempPath(), "ncs-four-hop-mixed-const-jsr-" + Guid.NewGuid().ToString("N") + ".ncs");
             File.WriteAllBytes(filepath, bytes);
 
             try
