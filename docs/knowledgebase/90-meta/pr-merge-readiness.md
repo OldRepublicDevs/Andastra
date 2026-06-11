@@ -333,7 +333,7 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Check | Command / artifact | Status |
 |-------|-------------------|--------|
 | BioWare + tests | `dotnet build/test` per [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md) | Green `[REPO]` |
-| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**98**), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**375**, 2026-05-24) |
+| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**165** post Day 1 land; **163** at plan **463** tip), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**463**, 2026-06-11) |
 | Ref-search Step 3c (ReferenceFinder) | `--filter` ReferenceFinderTests (**97**), ReferenceSearchHelper (**36**), ScriptReferenceHelper (**8**), FindRefsCommand (**21**) | Green `[REPO]` (plans **348**–**353**, 2026-06-03) |
 | Ref-search Step 3d (FieldValue) | `--filter` FieldValueReferenceHelperTests (**10**) | Pending [PR #85](https://github.com/th3w1zard1/Andastra/pull/85) stack **#81**–**#85** (plans **412**–**416**) `[REPO]` |
 | Full solution | `dotnet build Andastra.sln --framework net9.0 -c Release -m:1` | Green Linux net9.0 `[REPO]` |
@@ -372,15 +372,25 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 
 **Merge order:** **#81** → **#82** → **#83** → **#84** → **#85** (rebase after each). Close **#72** and **#78** as superseded. Full stack lands helper + **10** FieldValueReferenceHelper tests + build-ladder Step **3d**. `[REPO]`
 
-## Suggested next slices (375+)
+## NCS CONSTI stack simulation arc (merged Day 1, plans 421–463)
+
+Bulk-landed via plan **465** Day 1 merge at **165** NcsConsti tests (**163** plan **463** + **2** master four-hop mixed relay). Supersedes open PR stack **#89**–**#133**. Identity multihop relay characterization complete through seven-hop second-offset local StrRef relay (plan **463**). `[REPO]`
+
+## CI hygiene (independent open PRs)
+
+| PR | Plan | Scope | CI |
+|----|------|-------|-----|
+| [#103](https://github.com/th3w1zard1/Andastra/pull/103) | **434** | StrideGameFPS Linux `net9.0` stub — fixes submit-nuget NETSDK1013 | submit-nuget green `[REPO]` |
+
+## Suggested next slices (465+)
 
 | Plan | Topic |
 |------|-------|
-| 417+ | Post-merge tracker sync after field-value stack **#81**–**#85** lands |
-| 417+ | Merge **#74** (CodeQL) early; then NCS relay PRs **#77**–**#80**, **#70** |
-| 417+ | NCS CONSTI six-hop relay / `MaxNestedJsrRelayDepth = 6` after **#79**/**#80** merge |
-| 417+ | KotorDiff installation reference search (**#71**) |
-| 417+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
+| **465** | Multi-day PR merge + Holocron integration (Day 1: stack-simulation arc land — **done**) |
+| 417+ | Field-value arc merge stack **#81**–**#86** (open PR **#86**) |
+| 464+ | Post-merge tracker sync v20 after stack-simulation lands |
+| 464+ | Merge relay arc **#77**–**#88** then close superseded stack PRs |
+| 464+ | Merge **#74** (CodeQL) early; KotorDiff installation ref search (**#71**) |
 | 417+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
 
 ## Repo implications

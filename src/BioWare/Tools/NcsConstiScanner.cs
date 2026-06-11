@@ -184,6 +184,11 @@ namespace BioWare.Tools
                 return ConstiUsageContext.StrRefConsumer;
             }
 
+            if (TryFindStrRefConsumerViaArithmeticThenStackStore(ncsData, instruction))
+            {
+                return ConstiUsageContext.StrRefConsumer;
+            }
+
             if (IsGenericIntegerConsumerOpcode(opcode, qualifier))
             {
                 return ConstiUsageContext.GenericInteger;
@@ -335,6 +340,135 @@ namespace BioWare.Tools
                 }
 
                 break;
+            }
+
+            return false;
+        }
+
+        private static bool TryFindStrRefConsumerViaArithmeticThenStackStore(
+            byte[] ncsData,
+            ConstiInstruction fromInstruction)
+        {
+            int constiOpcodeOffset = fromInstruction.ValueByteOffset - 2;
+            if (constiOpcodeOffset < 0)
+            {
+                return false;
+            }
+
+            int runStart = constiOpcodeOffset;
+            while (runStart > 13)
+            {
+                int previousStart = runStart - 6;
+                if (previousStart < 13 || !IsConstantPushAt(ncsData, previousStart))
+                {
+                    break;
+                }
+
+                int previousSize = GetConstantPushInstructionSizeAt(ncsData, previousStart);
+                if (previousSize <= 0 || previousStart + previousSize != runStart)
+                {
+                    break;
+                }
+
+                runStart = previousStart;
+            }
+
+            List<ActionStackSlot> stackSlots = new List<ActionStackSlot>();
+            int scanOffset = runStart;
+            while (scanOffset + 2 <= ncsData.Length)
+            {
+                byte opcode = ncsData[scanOffset];
+                byte qualifier = ncsData[scanOffset + 1];
+
+                if (opcode == 0x04 && qualifier == 0x03)
+                {
+                    stackSlots.Add(new ActionStackSlot
+                    {
+                        IsIntConst = true,
+                        ValueByteOffset = scanOffset + 2
+                    });
+                    scanOffset += 6;
+                    continue;
+                }
+
+                if (opcode == 0x04 && (qualifier == 0x04 || qualifier == 0x06))
+                {
+                    stackSlots.Add(new ActionStackSlot { IsIntConst = false, ValueByteOffset = -1 });
+                    scanOffset += GetConstantPushInstructionSizeAt(ncsData, scanOffset);
+                    continue;
+                }
+
+                if (opcode == 0x04 && qualifier == 0x05)
+                {
+                    stackSlots.Add(new ActionStackSlot { IsIntConst = false, ValueByteOffset = -1 });
+                    scanOffset += GetConstantPushInstructionSizeAt(ncsData, scanOffset);
+                    continue;
+                }
+
+                if (IsBinaryIntArithmeticOpcode(opcode, qualifier))
+                {
+                    if (stackSlots.Count < 2)
+                    {
+                        return false;
+                    }
+
+                    ActionStackSlot right = stackSlots[stackSlots.Count - 1];
+                    ActionStackSlot left = stackSlots[stackSlots.Count - 2];
+                    stackSlots.RemoveAt(stackSlots.Count - 1);
+                    stackSlots.RemoveAt(stackSlots.Count - 1);
+
+                    int trackedOffset = -1;
+                    bool isIntConst = left.IsIntConst && right.IsIntConst;
+                    if (left.IsIntConst && left.ValueByteOffset == fromInstruction.ValueByteOffset)
+                    {
+                        trackedOffset = fromInstruction.ValueByteOffset;
+                    }
+                    else if (right.IsIntConst && right.ValueByteOffset == fromInstruction.ValueByteOffset)
+                    {
+                        trackedOffset = fromInstruction.ValueByteOffset;
+                    }
+                    else if (isIntConst)
+                    {
+                        trackedOffset = left.ValueByteOffset;
+                    }
+
+                    stackSlots.Add(new ActionStackSlot
+                    {
+                        IsIntConst = isIntConst,
+                        ValueByteOffset = trackedOffset
+                    });
+
+                    int arithmeticSize = GetInstructionSizeAt(ncsData, scanOffset);
+                    if (arithmeticSize <= 0)
+                    {
+                        return false;
+                    }
+
+                    scanOffset += arithmeticSize;
+                    continue;
+                }
+
+                if (IsStackStoreOpcode(opcode))
+                {
+                    if (stackSlots.Count != 1
+                        || !stackSlots[0].IsIntConst
+                        || stackSlots[0].ValueByteOffset != fromInstruction.ValueByteOffset)
+                    {
+                        return false;
+                    }
+
+                    int storeOffset;
+                    int storeSize;
+                    return TryReadStackCopyOperands(ncsData, scanOffset, out storeOffset, out storeSize)
+                        && TryFindStrRefConsumerViaStackReload(
+                            ncsData,
+                            fromInstruction,
+                            scanOffset,
+                            storeOffset,
+                            storeSize);
+                }
+
+                return false;
             }
 
             return false;
@@ -1066,7 +1200,7 @@ namespace BioWare.Tools
         }
 
         private const int SubroutineStrRefEntryScanLimitBytes = 128;
-        private const int MaxNestedJsrRelayDepth = 4;
+        private const int MaxNestedJsrRelayDepth = 6;
         private const int NestedJsrRelayForwardScanLimitBytes = 32;
 
         private static bool TryFindStrRefConsumerViaJsrCall(byte[] ncsData, ConstiInstruction instruction)
