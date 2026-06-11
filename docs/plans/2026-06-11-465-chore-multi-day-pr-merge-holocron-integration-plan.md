@@ -20,6 +20,7 @@ Plan **465** Days **1–4** are **complete** on `master`:
 | **3** | [#137](https://github.com/th3w1zard1/Andastra/pull/137) | Field-value UT editor wiring — **10** FieldValueReferenceHelper tests |
 | **4** | [#138](https://github.com/th3w1zard1/Andastra/pull/138) | Tracker closure + verification (plan **468**); **#76** closed |
 | **5** | [#140](https://github.com/th3w1zard1/Andastra/pull/140) | 2DA row selection, dirty status, shortcuts (plan **469**); **97** `OdyTool2DA_*` tests |
+| **6** | TBD | 2DA selection shortcuts + go to column (plan **470**); TBD `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
@@ -83,6 +84,18 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 | D5.4 | Help → Keyboard Shortcuts dialog | ✅ |
 | D5.5 | OdyTool2DATests for row select, dirty status, shortcuts smoke | ✅ |
 | D5.6 | PR **#140** → `master` | ✅ @ `4ceb97899` |
+
+---
+
+## Day 6 — 2DA selection shortcuts + go to column (plan **470**)
+
+| Step | Action | Done |
+|------|--------|------|
+| D6.1 | Shift+Space → Select Row; Ctrl+Space → Select Column | ✅ |
+| D6.2 | Go To Column menu/sidebar + dialog (name or index) | ✅ |
+| D6.3 | Keyboard shortcuts dialog updates | ✅ |
+| D6.4 | OdyTool2DATests for shortcuts + go to column | ✅ |
+| D6.5 | PR → `master` | pending |
 
 ---
 

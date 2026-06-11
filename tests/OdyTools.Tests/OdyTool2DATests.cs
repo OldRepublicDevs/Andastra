@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Headless.NUnit;
+using Avalonia.Input;
 using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.GFF;
@@ -2070,6 +2071,76 @@ namespace OdyTools.Tests
             try
             {
                 Assert.DoesNotThrow(() => editor.ShowKeyboardShortcutsDialog());
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        private static int GetCurrentColumnIndex(OdyTool2DA editor)
+        {
+            var grid = GetDataGrid(editor);
+            if (grid?.CurrentColumn == null) return -1;
+            return grid.Columns.IndexOf(grid.CurrentColumn);
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_ShiftSpace_SelectsCurrentRow()
+        {
+            byte[] data = CreateTestTwoDABytes(5);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                SetSelection(editor, 0, 1, 2);
+                SetCurrentColumn(editor, 2);
+                Assert.That(editor.TryHandleSelectionShortcut(Key.Space, KeyModifiers.Shift), Is.True);
+                var grid = GetDataGrid(editor);
+                Assert.That(grid.SelectedItems.Count, Is.EqualTo(1));
+                Assert.That(grid.SelectedItem, Is.EqualTo(GetSourceData(editor)[0]));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_CtrlSpace_SelectsCurrentColumn()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                SetSelection(editor, 0);
+                SetCurrentColumn(editor, 3);
+                Assert.That(editor.TryHandleSelectionShortcut(Key.Space, KeyModifiers.Control), Is.True);
+                var grid = GetDataGrid(editor);
+                Assert.That(grid.SelectedItems.Count, Is.EqualTo(4));
+                Assert.That(GetCurrentColumnIndex(editor), Is.EqualTo(3));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_GoToColumn_NavigatesToNamedColumn()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                SetSelection(editor, 0);
+                SetCurrentColumn(editor, 1);
+                editor.GoToColumnByInput("race");
+                var headers = GetColumnHeaders(editor);
+                int expectedGridCol = headers.IndexOf("race") + 1;
+                Assert.That(GetCurrentColumnIndex(editor), Is.EqualTo(expectedGridCol));
             }
             finally
             {

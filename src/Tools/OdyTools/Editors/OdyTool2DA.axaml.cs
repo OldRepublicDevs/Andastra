@@ -704,6 +704,12 @@ namespace OdyTools.Editors
             bool shift = (mod & KeyModifiers.Shift) != 0;
             bool alt = (mod & KeyModifiers.Alt) != 0;
 
+            if (TryHandleSelectionShortcut(e.Key, mod))
+            {
+                e.Handled = true;
+                return;
+            }
+
             if (ctrl)
             {
                 if (e.Key == Key.N) { _ = TryNewAsync(); e.Handled = true; }
@@ -718,6 +724,7 @@ namespace OdyTools.Editors
                 else if (e.Key == Key.Y) { Redo(); e.Handled = true; }
                 else if (e.Key == Key.F) { ShowFindDialog(); e.Handled = true; }
                 else if (e.Key == Key.H) { ShowReplaceDialog(); e.Handled = true; }
+                else if (shift && e.Key == Key.G) { ShowGoToColumnDialog(); e.Handled = true; }
                 else if (e.Key == Key.G) { ShowGoToRowDialog(); e.Handled = true; }
                 else if (e.Key == Key.D) { FillDown(); e.Handled = true; }
                 else if (e.Key == Key.L) { _filterEdit?.Focus(); e.Handled = true; }
@@ -857,6 +864,39 @@ namespace OdyTools.Editors
             SelectRowByIndex(rowIdx);
         }
 
+        /// <summary>Handles Shift+Space (row) and Ctrl+Space (column) selection shortcuts. Skips when editing a cell.</summary>
+        public bool TryHandleSelectionShortcut(Key key, KeyModifiers modifiers)
+        {
+            if (IsGridCellEditing()) return false;
+            bool ctrl = (modifiers & KeyModifiers.Control) != 0;
+            bool shift = (modifiers & KeyModifiers.Shift) != 0;
+            if (shift && !ctrl && key == Key.Space)
+            {
+                SelectCurrentRow();
+                return true;
+            }
+            if (ctrl && !shift && key == Key.Space)
+            {
+                SelectCurrentColumn();
+                return true;
+            }
+            return false;
+        }
+
+        private bool IsGridCellEditing()
+        {
+            if (_twodaTable == null) return false;
+            var focused = TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() as Control;
+            if (focused == null || !(focused is TextBox)) return false;
+            var parent = focused.GetVisualParent();
+            while (parent != null)
+            {
+                if (parent == _twodaTable) return true;
+                parent = parent.GetVisualParent();
+            }
+            return false;
+        }
+
         /// <summary>Selects a single row by index and clears column selection mode.</summary>
         public void SelectRowByIndex(int rowIndex)
         {
@@ -911,6 +951,7 @@ namespace OdyTools.Editors
             Bind(ShowFindDialog, "actionFind");
             Bind(ShowReplaceDialog, "actionReplace");
             Bind(ShowGoToRowDialog, "actionGoToRow", "tbGoToRow");
+            Bind(ShowGoToColumnDialog, "actionGoToColumn", "tbGoToColumn");
             Bind(SelectAllRows, "actionSelectAll", "tbSelectAll");
             Bind(SelectCurrentColumn, "actionSelectColumn", "tbSelectColumn");
             Bind(SelectCurrentRow, "actionSelectRow", "tbSelectRow");
@@ -1010,6 +1051,7 @@ namespace OdyTools.Editors
                 SetHeader("actionFind", "Find");
                 SetHeader("actionReplace", "Replace");
                 SetHeader("actionGoToRow", "Go to Row...");
+                SetHeader("actionGoToColumn", "Go to Column...");
                 SetHeader("actionSelectAll", "Select All");
                 SetHeader("actionSelectColumn", "Select Column");
                 SetHeader("actionSelectRow", "Select Row");
@@ -1093,6 +1135,7 @@ namespace OdyTools.Editors
                 SetSidebarBtn("tbSelectRow", "Select Row", "Select current row");
                 SetSidebarBtn("tbFillDown", "Fill Down", "Fill Down");
                 SetSidebarBtn("tbGoToRow", "Go to Row…", "Go to Row...");
+                SetSidebarBtn("tbGoToColumn", "Go to Column…", "Go to Column...");
                 SetSidebarBtn("tbInsertRowSidebar", "Insert Row", "Insert row");
                 SetSidebarBtn("tbInsertRowAbove", "Insert Above", "Insert row above selection");
                 SetSidebarBtn("tbInsertRowBelow", "Insert Below", "Insert row below selection");
@@ -2498,6 +2541,84 @@ namespace OdyTools.Editors
                 _twodaTable.ScrollIntoView(targetRow, null);
                 UpdateFormulaBarAndStatus();
             }
+        }
+
+        /// <summary>Resolves a column name or 0-based data column index to a grid column index, or -1.</summary>
+        public int ResolveGoToColumnGridIndex(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return -1;
+            string trimmed = input.Trim();
+            if (int.TryParse(trimmed, out int dataColIdx))
+            {
+                int gridIdx = dataColIdx + 1;
+                if (gridIdx >= 1 && gridIdx < GetEffectiveColumnCount())
+                    return gridIdx;
+                return -1;
+            }
+            for (int i = 0; i < _columnHeaders.Count; i++)
+            {
+                if (string.Equals(_columnHeaders[i], trimmed, StringComparison.OrdinalIgnoreCase))
+                    return i + 1;
+            }
+            return -1;
+        }
+
+        /// <summary>Navigates to the given grid column index on the current row and focuses it.</summary>
+        public void GoToColumn(int gridColumnIndex)
+        {
+            if (_twodaTable == null || _sourceData.Count == 0) return;
+            if (gridColumnIndex < 0 || gridColumnIndex >= GetEffectiveColumnCount()) return;
+            int rowIdx = GetPrimarySelectedRowIndex();
+            if (rowIdx < 0) rowIdx = 0;
+            NavigateToCell(rowIdx, gridColumnIndex);
+        }
+
+        /// <summary>Navigates to a column by name or 0-based data column index.</summary>
+        public void GoToColumnByInput(string input)
+        {
+            int gridIdx = ResolveGoToColumnGridIndex(input);
+            if (gridIdx >= 0)
+                GoToColumn(gridIdx);
+        }
+
+        private void ShowGoToColumnDialog()
+        {
+            string columnHint = _columnHeaders.Count > 0
+                ? string.Join(", ", _columnHeaders)
+                : "0";
+            var dialog = new Window
+            {
+                Title = Localization.Tr("Go to Column"),
+                Width = 320,
+                Height = 140,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+            var panel = new StackPanel { Margin = new Avalonia.Thickness(12) };
+            var label = new TextBlock { Text = Localization.Tr("Column name or index (0-based):") };
+            var textBox = new TextBox { Watermark = columnHint };
+            var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Avalonia.Thickness(0, 8, 0, 0) };
+            var ok = new Button { Content = Localization.Tr("OK"), Margin = new Avalonia.Thickness(0, 0, 8, 0) };
+            var cancel = new Button { Content = Localization.Tr("Cancel") };
+            panel.Children.Add(label);
+            panel.Children.Add(textBox);
+            buttons.Children.Add(ok);
+            buttons.Children.Add(cancel);
+            panel.Children.Add(buttons);
+            dialog.Content = panel;
+            string goToColumnInput = null;
+            ok.Click += (s, e) =>
+            {
+                string text = textBox.Text?.Trim() ?? "";
+                if (!string.IsNullOrEmpty(text) && ResolveGoToColumnGridIndex(text) >= 0)
+                {
+                    goToColumnInput = text;
+                    dialog.Close();
+                }
+            };
+            cancel.Click += (s, e) => dialog.Close();
+            _ = dialog.ShowDialog(this as Window);
+            if (goToColumnInput != null)
+                GoToColumnByInput(goToColumnInput);
         }
 
         private string _renameColumnResult = null;
