@@ -21,6 +21,7 @@ Plan **465** Days **1–6** are **complete** on `master`:
 | **4** | [#138](https://github.com/th3w1zard1/Andastra/pull/138) | Tracker closure + verification (plan **468**); **#76** closed |
 | **5** | [#140](https://github.com/th3w1zard1/Andastra/pull/140) | 2DA row selection, dirty status, shortcuts (plan **469**); **97** `OdyTool2DA_*` tests |
 | **6** | [#141](https://github.com/th3w1zard1/Andastra/pull/141) | 2DA Shift/Ctrl+Space + Go To Column (plan **470**); **100** `OdyTool2DA_*` tests |
+| **7** | _pending_ | 2DA Shift+Click range selection (plan **471**); **103** `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
@@ -96,6 +97,19 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 | D6.3 | Keyboard shortcuts dialog updates | ✅ |
 | D6.4 | OdyTool2DATests for shortcuts + go to column | ✅ |
 | D6.5 | PR **#141** → `master` | ✅ @ `1abe9337e` |
+
+---
+
+## Day 7 — 2DA Shift+Click rectangular range selection (plan **471**)
+
+| Step | Action | Done |
+|------|--------|------|
+| D7.1 | Range anchor + Shift+Click in `OnGridPointerPressed` | ✅ |
+| D7.2 | `ApplyRangeHighlight()` / `ClearRangeHighlight()` visual feedback | ✅ |
+| D7.3 | `CopySelection()` TSV block when range active | ✅ |
+| D7.4 | Status bar range coords when >1 cell | ✅ |
+| D7.5 | OdyTool2DATests: rectangle, block copy, column clear | ✅ |
+| D7.6 | PR → `master` | _pending_ |
 
 ---
 
