@@ -19,7 +19,7 @@ Plan **465** Days **1–4** are **complete** on `master`:
 | **2** | [#136](https://github.com/th3w1zard1/Andastra/pull/136) | Five-hop mixed CONST relay — **167** NcsConsti tests |
 | **3** | [#137](https://github.com/th3w1zard1/Andastra/pull/137) | Field-value UT editor wiring — **10** FieldValueReferenceHelper tests |
 | **4** | [#138](https://github.com/th3w1zard1/Andastra/pull/138) | Tracker closure + verification (plan **468**); **#76** closed |
-| **5** | [#140](https://github.com/th3w1zard1/Andastra/pull/140) | 2DA row selection, dirty status, shortcuts (plan **469**); **97** `OdyTool2DA_*` tests |
+| **6** | [#141](https://github.com/th3w1zard1/Andastra/pull/141) | 2DA Shift/Ctrl+Space + Go To Column (plan **470**); **100** `OdyTool2DA_*` tests |
 | **6** | TBD | 2DA selection shortcuts + go to column (plan **470**); TBD `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
@@ -95,7 +95,7 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 | D6.2 | Go To Column menu/sidebar + dialog (name or index) | ✅ |
 | D6.3 | Keyboard shortcuts dialog updates | ✅ |
 | D6.4 | OdyTool2DATests for shortcuts + go to column | ✅ |
-| D6.5 | PR → `master` | pending |
+| D6.5 | PR **#141** → `master` | ✅ @ `1abe9337e` |
 
 ---
 
@@ -118,3 +118,4 @@ Per plan **063** deferred items:
 | [#136](https://github.com/th3w1zard1/Andastra/pull/136) | `b4421c112` | Five-hop mixed relay |
 | [#137](https://github.com/th3w1zard1/Andastra/pull/137) | `374118902` | Field-value UT wiring |
 | [#140](https://github.com/th3w1zard1/Andastra/pull/140) | `4ceb97899` | 2DA row selection, dirty status, shortcuts (plan **469**) |
+| [#141](https://github.com/th3w1zard1/Andastra/pull/141) | `1abe9337e` | 2DA Shift/Ctrl+Space + Go To Column (plan **470**) |
