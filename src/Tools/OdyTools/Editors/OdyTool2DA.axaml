@@ -164,6 +164,7 @@
                 <MenuItem Header="_Replace..." Name="actionReplace" HotKey="Ctrl+H" />
                 <Separator />
                 <MenuItem Header="Go _to Row..." Name="actionGoToRow" HotKey="Ctrl+G" />
+                <MenuItem Header="Go to _Column..." Name="actionGoToColumn" HotKey="Ctrl+Shift+G" />
                 <Separator />
                 <MenuItem Header="Select _All" Name="actionSelectAll" HotKey="Ctrl+A" />
                 <MenuItem Header="Select _Column" Name="actionSelectColumn" />
@@ -276,6 +277,7 @@
                                 <Button Name="tbSelectRow" Classes="sidebarCmd" Content="Select Row" HorizontalAlignment="Stretch" ToolTip.Tip="Select current row" />
                                 <Button Name="tbFillDown" Classes="sidebarCmd" Content="Fill Down" HorizontalAlignment="Stretch" ToolTip.Tip="Ctrl+D" />
                                 <Button Name="tbGoToRow" Classes="sidebarCmd" Content="Go to Row…" HorizontalAlignment="Stretch" ToolTip.Tip="Ctrl+G" />
+                                <Button Name="tbGoToColumn" Classes="sidebarCmd" Content="Go to Column…" HorizontalAlignment="Stretch" ToolTip.Tip="Ctrl+Shift+G" />
                             </StackPanel>
                         </Border>
 
