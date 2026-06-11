@@ -97,6 +97,90 @@ namespace KotorDiff.Diff
             return NcsConstiScanner.ExtractConstiOffsetsForValue(ncsData, targetValue);
         }
 
+        /// <summary>
+        /// Collect installation resources that reference a StrRef via BioWare reference search.
+        /// </summary>
+        public static HashSet<FileResource> CollectInstallationStrRefResources(
+            Installation installation,
+            int strref,
+            StrRefReferenceCache cache = null,
+            Action<string> logFunc = null)
+        {
+            var foundResources = new HashSet<FileResource>();
+            if (installation == null)
+            {
+                return foundResources;
+            }
+
+            List<StrRefSearchResult> results = ReferenceCacheHelpers.FindStrRefReferences(
+                installation,
+                strref,
+                cache,
+                logFunc);
+
+            foreach (StrRefSearchResult result in results)
+            {
+                if (result != null && result.Resource != null)
+                {
+                    foundResources.Add(result.Resource);
+                }
+            }
+
+            return foundResources;
+        }
+
+        /// <summary>
+        /// Collect GFF resources from an installation (override, chitin, modules).
+        /// </summary>
+        public static List<FileResource> CollectInstallationGffResources(Installation installation)
+        {
+            var gffResources = new List<FileResource>();
+            if (installation == null)
+            {
+                return gffResources;
+            }
+
+            Dictionary<ResourceIdentifier, List<FileResource>> index =
+                BioWare.TSLPatcher.Diff.Resolution.BuildResourceIndex(installation);
+            foreach (List<FileResource> resources in index.Values)
+            {
+                foreach (FileResource resource in resources)
+                {
+                    if (resource != null && resource.ResType != null && resource.ResType.IsGff())
+                    {
+                        gffResources.Add(resource);
+                    }
+                }
+            }
+
+            return gffResources;
+        }
+
+        /// <summary>
+        /// Build old StrRef index to STRREF memory token mappings from TLK modifiers.
+        /// Mirrors DiffAnalyzerFactory / incremental writer strref_mappings semantics.
+        /// </summary>
+        public static Dictionary<int, int> BuildStrrefMappingsFromTlkMod(ModificationsTLK tlkMod)
+        {
+            var mappings = new Dictionary<int, int>();
+            if (tlkMod == null || tlkMod.Modifiers == null || tlkMod.Modifiers.Count == 0)
+            {
+                return mappings;
+            }
+
+            foreach (ModifyTLK modifier in tlkMod.Modifiers)
+            {
+                if (modifier == null)
+                {
+                    continue;
+                }
+
+                mappings[modifier.ModIndex] = modifier.TokenId;
+            }
+
+            return mappings;
+        }
+
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:1002-1331
         // Original: def analyze_tlk_strref_references(...): ...
         public static void AnalyzeTlkStrrefReferences(
@@ -107,6 +191,7 @@ namespace KotorDiff.Diff
             List<Modifications2DA> twodaModifications,
             List<ModificationsSSF> ssfModifications,
             List<ModificationsNCS> ncsModifications,
+            StrRefReferenceCache strrefCache = null,
             Action<string> logFunc = null)
         {
             if (logFunc == null)
@@ -204,14 +289,13 @@ namespace KotorDiff.Diff
 
                         if (isInstallation && installation != null)
                         {
-                            // For installations, use folder-based search which works for all cases
-                            // Installation.Resource() method can be used for specific lookups when needed
-                            // Reference cache can be used for optimization when available
-                            logFunc($"TODO: STUB - Installation-based search not yet implemented, using folder search");
-                            isInstallation = false;
+                            foundResources = CollectInstallationStrRefResources(
+                                installation,
+                                oldStrref,
+                                strrefCache,
+                                logFunc);
                         }
-
-                        if (!isInstallation)
+                        else
                         {
                             // Search all relevant files in folder
                             var allFiles = Directory.GetFiles(installationOrFolderPath, "*", SearchOption.AllDirectories);
@@ -775,13 +859,9 @@ namespace KotorDiff.Diff
                 List<FileResource> allResources = new List<FileResource>();
                 if (isInstallation && installation != null)
                 {
-                    // Search all resources in the installation using folder-based search
-                    // Installation.Resource() method provides specific lookups when needed
-                    // Folder search works correctly for all GFF resources
-                    isInstallation = false;
+                    allResources = CollectInstallationGffResources(installation);
                 }
-
-                if (!isInstallation)
+                else
                 {
                     // Search all files in folder
                     var allFiles = Directory.GetFiles(installationOrFolderPath, "*", SearchOption.AllDirectories);

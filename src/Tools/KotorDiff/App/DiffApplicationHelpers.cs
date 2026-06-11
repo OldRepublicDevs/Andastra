@@ -715,16 +715,39 @@ namespace KotorDiff.AppCore
 
             // Determine base data path from first path if it's a directory
             DirectoryInfo baseDataPath = null;
+            StrRefReferenceCache batchStrrefCache = null;
             if (paths != null && paths.Count > 0)
             {
                 object firstPath = paths[0];
-                if (firstPath is string pathStr && Directory.Exists(pathStr))
+                if (firstPath is Installation installationPath)
+                {
+                    baseDataPath = new DirectoryInfo(installationPath.Path);
+                    batchStrrefCache = ReferenceCacheHelpers.BuildStrRefReferenceCache(
+                        installationPath,
+                        (string msg) => LogOutput(msg));
+                }
+                else if (firstPath is string pathStr && Directory.Exists(pathStr))
                 {
                     baseDataPath = new DirectoryInfo(pathStr);
                 }
                 else if (firstPath is DirectoryInfo dirInfo)
                 {
                     baseDataPath = dirInfo;
+                }
+            }
+
+            if (batchStrrefCache == null && baseDataPath != null)
+            {
+                try
+                {
+                    var installation = new Installation(baseDataPath.FullName);
+                    batchStrrefCache = ReferenceCacheHelpers.BuildStrRefReferenceCache(
+                        installation,
+                        (string msg) => LogOutput(msg));
+                }
+                catch (Exception)
+                {
+                    // Not a game installation; folder search proceeds without cache.
                 }
             }
 
@@ -740,9 +763,8 @@ namespace KotorDiff.AppCore
                 {
                     try
                     {
-                        // Build the tuple expected by AnalyzeTlkStrrefReferences signature
-                        // TODO:  Here we do not have strref_mappings directly, so pass empty mapping for now
-                        var strrefMappings = new Dictionary<int, int>();
+                        Dictionary<int, int> strrefMappings =
+                            ReferenceAnalyzers.BuildStrrefMappingsFromTlkMod(tlkMod);
                         var tlkModTuple = Tuple.Create(tlkMod, strrefMappings);
 
                         ReferenceAnalyzers.AnalyzeTlkStrrefReferences(
@@ -753,6 +775,7 @@ namespace KotorDiff.AppCore
                             modifications.Twoda,
                             modifications.Ssf,
                             modifications.Ncs,
+                            batchStrrefCache,
                             (string msg) => LogOutput(msg));
                     }
                     catch (Exception e)
