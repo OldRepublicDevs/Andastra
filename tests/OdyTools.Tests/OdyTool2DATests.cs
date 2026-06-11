@@ -2286,6 +2286,78 @@ namespace OdyTools.Tests
         }
 
         [AvaloniaTest]
+        public void OdyTool2DA_CtrlClickRow_TogglesMultiSelect()
+        {
+            byte[] data = CreateTestTwoDABytes(5);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.SelectRowByIndex(0);
+                var grid = GetDataGrid(editor);
+                Assert.That(grid.SelectedItems.Count, Is.EqualTo(1));
+
+                editor.ToggleRowSelection(2);
+                Assert.That(grid.SelectedItems.Count, Is.EqualTo(2));
+
+                editor.ToggleRowSelection(2);
+                Assert.That(grid.SelectedItems.Count, Is.EqualTo(1));
+                Assert.That(grid.SelectedItem, Is.EqualTo(GetSourceData(editor)[0]));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_CtrlClickRow_ClearsColumnAndRangeSelection()
+        {
+            byte[] data = CreateTestTwoDABytes(5);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                SetSelection(editor, 0);
+                SetCurrentColumn(editor, 2);
+                editor.SelectCurrentColumn();
+                Assert.That(GetColumnSelectionActive(editor), Is.True);
+
+                editor.SelectCellRange(0, 1, 2, 3);
+                Assert.That(editor.IsCellRangeActive, Is.True);
+
+                editor.ToggleRowSelection(4);
+                Assert.That(GetColumnSelectionActive(editor), Is.False);
+                Assert.That(editor.IsCellRangeActive, Is.False);
+                Assert.That(GetDataGrid(editor).SelectedItems.Count, Is.EqualTo(4));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_HashColumnClick_WithoutCtrl_SingleSelects()
+        {
+            byte[] data = CreateTestTwoDABytes(5);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                SetSelection(editor, 0, 1, 2);
+                editor.SelectRowByIndex(3);
+                var grid = GetDataGrid(editor);
+                Assert.That(grid.SelectedItems.Count, Is.EqualTo(1));
+                Assert.That(grid.SelectedItem, Is.EqualTo(GetSourceData(editor)[3]));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
         public async Task OdyTool2DA_PasteSelection_NoCurrentColumn_InsertsRows()
         {
             byte[] data = CreateTestTwoDABytes(3);
