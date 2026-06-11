@@ -11,7 +11,7 @@ branch: feat/plan-463-ncs-consti-seven-hop-identity-second-offset-local-strref-r
 
 ## Summary
 
-Plan **457** covers six-hop identity second-offset (`n = CONST; m = n + k2; p = m; q = p; r = q; s = r`). This slice adds a seventh identity hop: `int t = s; ActionSpeakStringByStrRef(t)`. Test-only.
+Plan **457** covers six-hop identity second-offset (`n = CONST; m = n + k2; p = m; q = p; r = q; s = r; ActionSpeakStringByStrRef(s)`). This slice adds a seventh identity hop: `int t = s; ActionSpeakStringByStrRef(t)`. Test-only.
 
 ## Requirements
 
