@@ -34,7 +34,7 @@ Holocron plan **063** core units (U1–U7) are **complete** on `master`. Remaini
 
 - Integration merge commit `3b060001a` on branch; **`master` merge @ `6a449a97b`** via [PR #135](https://github.com/th3w1zard1/Andastra/pull/135).
 - Scanner: `TryFindStrRefConsumerViaArithmeticThenStackStore`, `MaxNestedJsrRelayDepth = 6`.
-- **163** NcsConsti tests passing (`--filter FullyQualifiedName~NcsConsti`); master four-hop mixed relay tests preserved.
+- **165** NcsConsti tests passing (`--filter FullyQualifiedName~NcsConsti`); **163** plan-463 + **2** master four-hop mixed relay preserved.
 - All required CI checks green on **#135** (Test, Solution Build, Lint, Test Builds matrix, submit-nuget, CodeQL).
 
 ### Day 1 next steps
