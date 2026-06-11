@@ -22,3 +22,9 @@ Plan **465** Day 5 first code slice per `docs/twoda_editor_ux_and_feature_comple
 dotnet build src/Tools/OdyTools/OdyTools.csproj --framework net9.0
 dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filter FullyQualifiedName~OdyTool2DA_
 ```
+
+## Landed
+
+| PR | Merge | Tests |
+|----|-------|-------|
+| [#140](https://github.com/th3w1zard1/Andastra/pull/140) | `4ceb97899` | **97** `OdyTool2DA_*` |
