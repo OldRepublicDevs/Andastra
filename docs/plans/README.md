@@ -217,6 +217,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 467 | [467-feat-fieldvalue-ut-editor-wiring-plan.md](2026-06-11-467-feat-fieldvalue-ut-editor-wiring-plan.md) | Field-value find-refs on UT editors (plans 412–416) |
 | 468 | [468-chore-post-d3-tracker-closure-plan.md](2026-06-11-468-chore-post-d3-tracker-closure-plan.md) | Post-D3 tracker closure (plan 465 days 1–3) |
 | 469 | [469-feat-twoda-row-selection-status-shortcuts-plan.md](2026-06-11-469-feat-twoda-row-selection-status-shortcuts-plan.md) | 2DA row selection, dirty status, keyboard shortcuts (plan 465 day 5) |
+| 470 | [470-feat-twoda-selection-shortcuts-goto-column-plan.md](2026-06-11-470-feat-twoda-selection-shortcuts-goto-column-plan.md) | 2DA Shift/Ctrl+Space selection + go to column (plan 465 day 6) |
 
 ## Repo implications
 
