@@ -333,8 +333,9 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Check | Command / artifact | Status |
 |-------|-------------------|--------|
 | BioWare + tests | `dotnet build/test` per [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md) | Green `[REPO]` |
-| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**101**), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**409**, 2026-06-05) |
+| Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**98**), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**375**, 2026-05-24) |
 | Ref-search Step 3c (ReferenceFinder) | `--filter` ReferenceFinderTests (**97**), ReferenceSearchHelper (**36**), ScriptReferenceHelper (**8**), FindRefsCommand (**21**) | Green `[REPO]` (plans **348**–**353**, 2026-06-03) |
+| Ref-search Step 3d (FieldValue) | `--filter` FieldValueReferenceHelperTests (**10**) | Pending [PR #85](https://github.com/th3w1zard1/Andastra/pull/85) stack **#81**–**#85** (plans **412**–**416**) `[REPO]` |
 | Full solution | `dotnet build Andastra.sln --framework net9.0 -c Release -m:1` | Green Linux net9.0 `[REPO]` |
 | Tool chain | OdyTools, OdyPatch, OdyPatch.UI, KotorCLI, ConvertKotorGame | Green net9.0 `[REPO]` |
 | OdyPatch NuGet pack | `./helper_scripts/build-nuget.sh` | Green net9.0 Linux; CI `nuget-pack-smoke` (help + validate smoke, plans 051/053/055) `[REPO]` |
@@ -359,20 +360,28 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (409+)
+## Field-value arc (open PR stack, plans 412–416)
+
+| PR | Plan | Scope | CI |
+|----|------|-------|-----|
+| [#81](https://github.com/th3w1zard1/Andastra/pull/81) | **412** | `FieldValueReferenceHelper` + UTP/UTD Tag/ResRef wiring | Green `[REPO]` |
+| [#82](https://github.com/th3w1zard1/Andastra/pull/82) | **413** | UTM/UTS/UTW wiring | Green `[REPO]` |
+| [#83](https://github.com/th3w1zard1/Andastra/pull/83) | **414** | UTI/UTE/UTT wiring | Green `[REPO]` |
+| [#84](https://github.com/th3w1zard1/Andastra/pull/84) | **415** | UTC wiring (supersedes **#78**) | Green `[REPO]` |
+| [#85](https://github.com/th3w1zard1/Andastra/pull/85) | **416** | GFF string/ResRef wiring (supersedes **#72**) | Green `[REPO]` |
+
+**Merge order:** **#81** → **#82** → **#83** → **#84** → **#85** (rebase after each). Close **#72** and **#78** as superseded. Full stack lands helper + **10** FieldValueReferenceHelper tests + build-ladder Step **3d**. `[REPO]`
+
+## Suggested next slices (375+)
 
 | Plan | Topic |
 |------|-------|
-| 378–380 | OdyTool LIP audio preview, playback sync, 3D head preview (open PR **#67**–**#69**) |
-| 383 | Four-hop mixed CONST+CPTOPSP nested JSR relay (open PR **#70**) |
-| 383+ | KotorDiff installation ref search + StrRef batch cache (open PR **#71**) |
-| 406+ | OdyTools FieldValueReferenceHelper + GFF wiring (open PR **#72**) |
-| 386 | PR #65–#66 post-merge tracker sync (open PR **#73**) |
-| 407 | Remove CodeQL Advanced workflow conflict (open PR **#74**) |
-| 408 | Complete plan **375** closure + refresh next slices (open PR **#75**) |
-| 409 | NCS CONSTI arithmetic StrRef relay v1 (stack simulation slice) |
-| 410+ | Full CONSTI stack simulation beyond arithmetic relay (CPTOPSP/CFG) per plan **063** |
-| 410+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 417+ | Post-merge tracker sync after field-value stack **#81**–**#85** lands |
+| 417+ | Merge **#74** (CodeQL) early; then NCS relay PRs **#77**–**#80**, **#70** |
+| 417+ | NCS CONSTI six-hop relay / `MaxNestedJsrRelayDepth = 6` after **#79**/**#80** merge |
+| 417+ | KotorDiff installation reference search (**#71**) |
+| 417+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
+| 417+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
 
 ## Repo implications
 
