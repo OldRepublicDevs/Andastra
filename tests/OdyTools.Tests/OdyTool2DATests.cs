@@ -2069,11 +2069,7 @@ namespace OdyTools.Tests
             var editor = CreateEditor();
             try
             {
-                var method = typeof(OdyTool2DA).GetMethod(
-                    "ShowKeyboardShortcutsDialog",
-                    BindingFlags.NonPublic | BindingFlags.Instance);
-                Assert.That(method, Is.Not.Null);
-                Assert.DoesNotThrow(() => method.Invoke(editor, null));
+                Assert.DoesNotThrow(() => editor.ShowKeyboardShortcutsDialog());
             }
             finally
             {
