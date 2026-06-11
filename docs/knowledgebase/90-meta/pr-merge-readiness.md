@@ -328,24 +328,6 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Plans | **374**–**375** (feature **374** + tracker sync **375**); bounded relay arc complete — full stack simulation remains deferred per plan **063** |
 | CI on merge | Solution Build, Test, Lint **pass**; duplicate CodeQL + `code/snyk` quota documented as non-blocking `[REPO]` |
 
-## PR #65 outcome
-
-| Item | Status |
-|------|--------|
-| Merge | **Merged** to `master` 2026-06-04 @ `3f6538e11` via [PR #65](https://github.com/th3w1zard1/Andastra/pull/65) `[REPO]` |
-| Scope | OdyTool LIP batch WAV processor (plan **376**): `LipBatchProcessor` + `LipBatchProcessorDialog` + menu wiring; **5** LipBatchProcessor tests |
-| Plans | **376** (feature); tracker sync **386** |
-| CI on merge | Solution Build, Test, Lint **pass**; duplicate CodeQL + `code/snyk` quota documented as non-blocking `[REPO]` |
-
-## PR #66 outcome
-
-| Item | Status |
-|------|--------|
-| Merge | **Merged** to `master` 2026-06-04 @ `3b2ff6553` via [PR #66](https://github.com/th3w1zard1/Andastra/pull/66) `[REPO]` |
-| Scope | OdyTool LIP keyframe editor UI (plan **377**): duration field, keyframe list, add/update/delete with undo; **2** OdyToolLIP tests |
-| Plans | **377** (feature); tracker sync **386**; audio preview (**378**), playback sync (**379**), 3D head preview (**380**) in flight via PR **#67**–**#69** |
-| CI on merge | Solution Build, Test, Lint **pass**; duplicate CodeQL + `code/snyk` quota documented as non-blocking `[REPO]` |
-
 ## Local validation (green path)
 
 | Check | Command / artifact | Status |
@@ -356,7 +338,6 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | Full solution | `dotnet build Andastra.sln --framework net9.0 -c Release -m:1` | Green Linux net9.0 `[REPO]` |
 | Tool chain | OdyTools, OdyPatch, OdyPatch.UI, KotorCLI, ConvertKotorGame | Green net9.0 `[REPO]` |
 | OdyPatch NuGet pack | `./helper_scripts/build-nuget.sh` | Green net9.0 Linux; CI `nuget-pack-smoke` (help + validate smoke, plans 051/053/055) `[REPO]` |
-| StrideGameFPS orphan csproj | `dotnet restore/build src/StrideGameFPS/StrideGameFPS.csproj --framework net9.0` | Linux `net9.0` stub green (plan **434**); fixes NETSDK1013 when submit-nuget restores discovered csproj files `[REPO]` |
 
 ## CI expectations (post-merge)
 
@@ -366,38 +347,29 @@ Re-check `gh pr checks` on PRs touching build/CI. Baseline contract from PR #2:
 |-----|-------|
 | CI — Test / Lint | BioWare + Andastra.Tests + OdyPatch.Tests ladder (plan 297) |
 | CI — Solution Build (net9.0) | `-m:1` serialization (plan 031) |
-| CI — NuGet Pack Smoke | `nuget-pack-smoke` — pack + CLI `--help` + `--validate` fixture (plans 051/053/055); submit-nuget `find` restore requires orphan csproj TFMs — StrideGameFPS Linux stub (plan **434**) |
+| CI — NuGet Pack Smoke | `nuget-pack-smoke` — pack + CLI `--help` + `--validate` fixture (plans 051/053/055) |
 | Test Builds matrix | net48-win, net9.0 linux/osx/win |
 | dotnet-desktop | Windows BioWare + full tool stack |
 
-## PR #73 outcome (pending)
-
-| Item | Status |
-|------|--------|
-| Merge | **Pending** — plan **407** `[REPO]` |
-| Scope | Remove redundant **CodeQL Advanced** workflow (`.github/workflows/codeql.yml`) so GitHub **default CodeQL setup** is sole scanner; fixes SARIF upload error *advanced configurations cannot be processed when default setup is enabled* |
-| Plans | **407** |
-| Manual follow-up | To restore advanced CodeQL: disable default setup in **Settings → Code security → Code scanning**, then re-add workflow with all matrix languages at `build-mode: none` (no c-cpp autobuild on ubuntu) |
-
 ## Known remaining gaps (non-blocking)
 
-- `code/snyk` quota failures on some runs — documented as non-blocking since PR #12 `[REPO]`
 - OdyPatch mod-install UX unverified without K1/TSL install — [odypatch-installer-ux.md](../30-product-ux/odypatch-installer-ux.md) `[OPEN]`
 - `30-product-ux/` deep content deferred — stub layer only (plan 038) `[REPO]`
 - AGPLv3 vs OdyPatch LGPL packaging policy — [license-and-compliance.md](../40-operational-risk/license-and-compliance.md) caveat C12 `[OPEN]`
 - NuGet pack validated in CI via `nuget-pack-smoke` (plan 051); publish still manual `[REPO]`
 - Vendor PyKotor wiki under `vendor/` — reference only `[REPO]`
 
-## Suggested next slices (386+)
+## Suggested next slices (408+)
 
 | Plan | Topic |
 |------|-------|
 | 378–380 | OdyTool LIP audio preview, playback sync, 3D head preview (PR **#67**–**#69**) |
+| 383 | Four-hop mixed CONST+CPTOPSP nested JSR relay (PR **#70**) |
 | 383+ | KotorDiff installation ref search + StrRef batch cache (PR **#71**) |
 | 406+ | OdyTools FieldValueReferenceHelper + GFF wiring (PR **#72**) |
-| 386+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
-| 386+ | Four-hop mixed CONST+CPTOPSP nested JSR relay (PR **#70**) |
-| 386+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
+| 407 | Remove CodeQL Advanced workflow conflict (PR **#74**) |
+| 408+ | Full CONSTI stack simulation for exotic control-flow per plan **063** |
+| 408+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
 
 ## Repo implications
 

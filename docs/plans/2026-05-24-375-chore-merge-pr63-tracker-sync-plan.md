@@ -1,7 +1,8 @@
 ---
 title: "chore: merge pr63 post-merge tracker sync"
 type: chore
-status: active
+status: complete
+completed: 2026-06-05
 date: 2026-05-24
 origin: docs/plans/2026-05-24-374-feat-ncs-consti-four-hop-multi-arg-jsr-relay-plan.md
 branch: docs/plan-375-merge-pr63-tracker-sync
