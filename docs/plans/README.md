@@ -164,6 +164,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 408 | [408-chore-complete-plan375-closure-plan.md](2026-06-05-408-chore-complete-plan375-closure-plan.md) | Complete plan 375 closure and refresh next slices |
 | 409 | [409-feat-ncs-consti-arithmetic-strref-relay-plan.md](2026-06-05-409-feat-ncs-consti-arithmetic-strref-relay-plan.md) | NCS CONSTI arithmetic StrRef relay v1 |
 | 410 | [410-feat-ncs-consti-five-hop-multi-arg-jsr-relay-plan.md](2026-06-05-410-feat-ncs-consti-five-hop-multi-arg-jsr-relay-plan.md) | NCS CONSTI five-hop multi-arg nested JSR relay |
+| 411 | [411-test-ncs-consti-five-hop-mixed-const-relay-plan.md](2026-06-05-411-test-ncs-consti-five-hop-mixed-const-relay-plan.md) | NCS CONSTI five-hop mixed CONST+CPTOPSP relay |
 | 418 | [418-test-ncs-consti-six-hop-multi-arg-jsr-relay-plan.md](2026-06-05-418-test-ncs-consti-six-hop-multi-arg-jsr-relay-plan.md) | NCS CONSTI six-hop multi-arg nested JSR relay |
 | 419 | [419-test-ncs-consti-six-hop-mixed-const-relay-plan.md](2026-06-05-419-test-ncs-consti-six-hop-mixed-const-relay-plan.md) | NCS CONSTI six-hop mixed CONST+CPTOPSP JSR relay |
 | 420 | [420-chore-ncs-consti-arc-tracker-sync-plan.md](2026-06-05-420-chore-ncs-consti-arc-tracker-sync-plan.md) | NCS CONSTI arc closure tracker sync |
@@ -212,6 +213,8 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 463 | [463-feat-ncs-consti-seven-hop-identity-second-offset-local-strref-relay-plan.md](2026-06-10-463-feat-ncs-consti-seven-hop-identity-second-offset-local-strref-relay-plan.md) | NCS CONSTI seven-hop identity second-offset StrRef relay |
 | 464 | [464-chore-stack-simulation-arc-tracker-sync-v20-plan.md](2026-06-10-464-chore-stack-simulation-arc-tracker-sync-v20-plan.md) | Stack simulation arc tracker sync v20 |
 | 465 | [465-chore-multi-day-pr-merge-holocron-integration-plan.md](2026-06-11-465-chore-multi-day-pr-merge-holocron-integration-plan.md) | Multi-day PR merge + Holocron integration |
+| 466 | [466-chore-post-d1-tracker-sync-v21-plan.md](2026-06-11-466-chore-post-d1-tracker-sync-v21-plan.md) | Post-D1 tracker sync v21 (165→167 NcsConsti) |
+| 466 | [466-chore-post-d1-tracker-sync-v21-plan.md](2026-06-10-466-chore-post-d1-tracker-sync-v21-plan.md) | Post-D1 tracker sync v21 (165→167 NcsConsti) |
 
 ## Repo implications
 
