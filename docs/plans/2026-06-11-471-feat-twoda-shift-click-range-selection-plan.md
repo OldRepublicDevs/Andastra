@@ -1,6 +1,6 @@
 ---
 title: "feat: 2DA Shift+Click rectangular range selection"
-status: active
+status: complete
 origin: docs/plans/2026-06-11-465-chore-multi-day-pr-merge-holocron-integration-plan.md
 ---
 
