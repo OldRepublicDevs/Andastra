@@ -79,7 +79,13 @@ namespace OdyTools.Editors
         private bool _rowDragActive;
         private Avalonia.Point _rowDragStartPoint;
         private bool _columnSelectionActive;
+        private bool _cellRangeActive;
+        private int _rangeAnchorRow = -1;
+        private int _rangeAnchorCol = -1;
+        private int _rangeEndRow = -1;
+        private int _rangeEndCol = -1;
         private static readonly IBrush ColumnHighlightBrush = new SolidColorBrush(Avalonia.Media.Color.Parse("#E3F2FD"));
+        private static readonly IBrush RangeHighlightBrush = new SolidColorBrush(Avalonia.Media.Color.Parse("#FFF9C4"));
         private readonly Dictionary<int, ColumnValidationMode> _columnValidationRules = new Dictionary<int, ColumnValidationMode>();
 
         // Column filter state
@@ -296,6 +302,7 @@ namespace OdyTools.Editors
                 _columnSelectionActive = false;
                 ClearColumnHighlight();
             }
+            ClearCellRangeSelection();
             UpdateFormulaBarAndStatus();
             UpdateInsertRowVisibility();
         }
@@ -435,6 +442,7 @@ namespace OdyTools.Editors
                 int colIdx = TryGetColumnIndexFromHeader(header);
                 if (colIdx > 0 && colIdx < _twodaTable.Columns.Count)
                 {
+                    ClearCellRangeSelection();
                     _columnSelectionActive = true;
                     SelectColumnByIndex(colIdx);
                     Avalonia.Threading.Dispatcher.UIThread.Post(ApplyColumnHighlight, Avalonia.Threading.DispatcherPriority.Background);
@@ -455,10 +463,27 @@ namespace OdyTools.Editors
                             e.Handled = true;
                         }
                     }
-                    else if (_columnSelectionActive)
+                    else
                     {
-                        _columnSelectionActive = false;
-                        ClearColumnHighlight();
+                        int rowIdx = TryGetRowIndexFromSource(e.Source);
+                        if (rowIdx >= 0)
+                        {
+                            bool shift = (e.KeyModifiers & KeyModifiers.Shift) != 0;
+                            if (shift && _rangeAnchorRow >= 0 && _rangeAnchorCol >= 0)
+                            {
+                                SelectCellRange(_rangeAnchorRow, _rangeAnchorCol, rowIdx, colIdx);
+                            }
+                            else
+                            {
+                                SetCellRangeAnchor(rowIdx, colIdx);
+                                if (_columnSelectionActive)
+                                {
+                                    _columnSelectionActive = false;
+                                    ClearColumnHighlight();
+                                }
+                                ClearRangeHighlight();
+                            }
+                        }
                     }
                 }
             }
@@ -525,9 +550,98 @@ namespace OdyTools.Editors
         {
             if (_twodaTable == null || _sourceData.Count == 0) return;
             if (columnIndex < 0 || columnIndex >= _twodaTable.Columns.Count) return;
+            ClearCellRangeSelection();
             SelectAllRows();
             _twodaTable.CurrentColumn = _twodaTable.Columns[columnIndex];
             UpdateFormulaBarAndStatus();
+        }
+
+        /// <summary>True when a multi-cell rectangular range is active (Shift+click range).</summary>
+        public bool IsCellRangeActive => _cellRangeActive;
+
+        private void GetNormalizedRange(out int minRow, out int maxRow, out int minCol, out int maxCol)
+        {
+            minRow = Math.Min(_rangeAnchorRow, _rangeEndRow);
+            maxRow = Math.Max(_rangeAnchorRow, _rangeEndRow);
+            minCol = Math.Min(_rangeAnchorCol, _rangeEndCol);
+            maxCol = Math.Max(_rangeAnchorCol, _rangeEndCol);
+        }
+
+        private void SetCellRangeAnchor(int rowIndex, int colIndex)
+        {
+            _rangeAnchorRow = rowIndex;
+            _rangeAnchorCol = colIndex;
+            _rangeEndRow = rowIndex;
+            _rangeEndCol = colIndex;
+            _cellRangeActive = false;
+        }
+
+        private void ClearCellRangeSelection()
+        {
+            _cellRangeActive = false;
+            _rangeAnchorRow = -1;
+            _rangeAnchorCol = -1;
+            _rangeEndRow = -1;
+            _rangeEndCol = -1;
+            ClearRangeHighlight();
+        }
+
+        private void ClearRangeHighlight()
+        {
+            if (_twodaTable == null) return;
+            foreach (var cell in _twodaTable.GetVisualDescendants().OfType<DataGridCell>())
+                cell.Background = Brushes.Transparent;
+        }
+
+        /// <summary>Selects an inclusive rectangular cell range and highlights it.</summary>
+        public void SelectCellRange(int row1, int col1, int row2, int col2)
+        {
+            if (_twodaTable == null || _sourceData.Count == 0) return;
+            int maxCol = Math.Max(0, GetEffectiveColumnCount() - 1);
+            row1 = Math.Max(0, Math.Min(row1, _sourceData.Count - 1));
+            row2 = Math.Max(0, Math.Min(row2, _sourceData.Count - 1));
+            col1 = Math.Max(0, Math.Min(col1, maxCol));
+            col2 = Math.Max(0, Math.Min(col2, maxCol));
+
+            _columnSelectionActive = false;
+            _rangeAnchorRow = row1;
+            _rangeAnchorCol = col1;
+            _rangeEndRow = row2;
+            _rangeEndCol = col2;
+            _cellRangeActive = row1 != row2 || col1 != col2;
+
+            GetNormalizedRange(out int minRow, out int maxRow, out int minCol, out int maxColNorm);
+            _twodaTable.SelectedItems.Clear();
+            for (int r = minRow; r <= maxRow; r++)
+                _twodaTable.SelectedItems.Add(_sourceData[r]);
+            _twodaTable.SelectedItem = _sourceData[minRow];
+            NavigateToCell(minRow, minCol);
+            ClearColumnHighlight();
+            if (_cellRangeActive)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(ApplyRangeHighlight, Avalonia.Threading.DispatcherPriority.Background);
+            }
+            UpdateFormulaBarAndStatus();
+        }
+
+        private void ApplyRangeHighlight()
+        {
+            if (_twodaTable == null || !_cellRangeActive) return;
+            GetNormalizedRange(out int minRow, out int maxRow, out int minCol, out int maxCol);
+            foreach (var rowControl in _twodaTable.GetVisualDescendants().OfType<DataGridRow>())
+            {
+                var model = rowControl.DataContext as ObservableCollection<string>;
+                if (model == null) continue;
+                int rowIdx = _sourceData.IndexOf(model);
+                foreach (var cell in rowControl.GetVisualDescendants().OfType<DataGridCell>())
+                {
+                    int colIdx = TryGetColumnIndexFromCell(cell);
+                    if (rowIdx >= minRow && rowIdx <= maxRow && colIdx >= minCol && colIdx <= maxCol)
+                        cell.Background = RangeHighlightBrush;
+                    else
+                        cell.Background = Brushes.Transparent;
+                }
+            }
         }
 
         private void ApplyColumnHighlight()
@@ -848,6 +962,7 @@ namespace OdyTools.Editors
             int maxDataColIndex = Math.Max(0, _columnHeaders.Count);
             if (_twodaTable.Columns.Count == 0) return;
             if (colIdx > maxDataColIndex) colIdx = maxDataColIndex;
+            ClearCellRangeSelection();
             _columnSelectionActive = true;
             SelectAllRows();
             _twodaTable.CurrentColumn = _twodaTable.Columns[colIdx];
@@ -904,6 +1019,7 @@ namespace OdyTools.Editors
             if (rowIndex < 0 || rowIndex >= _sourceData.Count) return;
             _columnSelectionActive = false;
             ClearColumnHighlight();
+            ClearCellRangeSelection();
             var row = _sourceData[rowIndex];
             _twodaTable.SelectedItems.Clear();
             _twodaTable.SelectedItems.Add(row);
@@ -1302,6 +1418,9 @@ namespace OdyTools.Editors
                 _undoStack.Clear();
                 _redoStack.Clear();
                 _twodaTable?.Columns.Clear();
+                ClearCellRangeSelection();
+                _columnSelectionActive = false;
+                ClearColumnHighlight();
                 RebuildGridColumns();
                 UpdateStatusBar();
                 UpdateFindRowReferencesVisibility();
@@ -1314,6 +1433,9 @@ namespace OdyTools.Editors
             _undoStack.Clear();
             _redoStack.Clear();
             _twodaTable?.Columns.Clear();
+            ClearCellRangeSelection();
+            _columnSelectionActive = false;
+            ClearColumnHighlight();
 
             _columnHeaders.AddRange(twoda.GetHeaders());
             RebuildGridColumns();
@@ -1387,6 +1509,15 @@ namespace OdyTools.Editors
                         {
                             string colName = (colIdx >= 1 && colIdx - 1 < _columnHeaders.Count) ? _columnHeaders[colIdx - 1] : ("col" + colIdx);
                             baseText += " | " + Localization.Trf("Cell: R{0}, {1}", rowIdx, colName);
+                        }
+                    }
+                    if (_cellRangeActive)
+                    {
+                        GetNormalizedRange(out int minRow, out int maxRow, out int minCol, out int maxCol);
+                        int cellCount = (maxRow - minRow + 1) * (maxCol - minCol + 1);
+                        if (cellCount > 1)
+                        {
+                            baseText += " | " + Localization.Trf("Range: R{0}–R{1}, C{2}–C{3}", minRow, maxRow, minCol, maxCol);
                         }
                     }
                     _statusText.Text = baseText;
@@ -1529,6 +1660,9 @@ namespace OdyTools.Editors
             // Pre-existing empty table: one data column and one row so the user can click and type immediately.
             _columnHeaders.Add("Column1");
             _sourceData.Add(new ObservableCollection<string> { "", "" }); // row label + one cell
+            ClearCellRangeSelection();
+            _columnSelectionActive = false;
+            ClearColumnHighlight();
             RebuildGridColumns();
             if (_twodaTable != null && _sourceData.Count > 0)
             {
@@ -1726,6 +1860,31 @@ namespace OdyTools.Editors
         {
             try
             {
+                if (_cellRangeActive && _sourceData != null && _sourceData.Count > 0)
+                {
+                    GetNormalizedRange(out int minRow, out int maxRow, out int minCol, out int maxCol);
+                    var rangeLines = new List<string>();
+                    for (int r = minRow; r <= maxRow; r++)
+                    {
+                        if (r < 0 || r >= _sourceData.Count) continue;
+                        var row = _sourceData[r];
+                        var cells = new List<string>();
+                        for (int c = minCol; c <= maxCol; c++)
+                        {
+                            string val = (c >= 0 && c < row.Count) ? (row[c] ?? "") : "";
+                            cells.Add(EscapeTsv(val));
+                        }
+                        rangeLines.Add(string.Join("\t", cells));
+                    }
+                    var rangeText = string.Join("\n", rangeLines);
+                    var rangeClipboard = (this as Window)?.Clipboard;
+                    if (rangeClipboard != null)
+                    {
+                        _ = rangeClipboard.SetTextAsync(rangeText);
+                    }
+                    return;
+                }
+
                 var selected = _twodaTable?.SelectedItems?.Cast<ObservableCollection<string>>().ToList();
                 if (selected == null || selected.Count == 0) return;
 
