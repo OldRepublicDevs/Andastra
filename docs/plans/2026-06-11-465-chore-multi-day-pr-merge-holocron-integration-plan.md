@@ -11,17 +11,18 @@ branch: master
 
 ## Executive summary (2026-06-11)
 
-Plan **465** Days **1–3** are **complete** on `master`:
+Plan **465** Days **1–4** are **complete** on `master`:
 
 | Day | PR | Outcome |
 |-----|-----|---------|
 | **1** | [#135](https://github.com/th3w1zard1/Andastra/pull/135) | Stack-simulation arc landed — **165** NcsConsti tests |
 | **2** | [#136](https://github.com/th3w1zard1/Andastra/pull/136) | Five-hop mixed CONST relay — **167** NcsConsti tests |
 | **3** | [#137](https://github.com/th3w1zard1/Andastra/pull/137) | Field-value UT editor wiring — **10** FieldValueReferenceHelper tests |
+| **4** | [#138](https://github.com/th3w1zard1/Andastra/pull/138) | Tracker closure + verification (plan **468**); **#76** closed |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
-**Open PRs:** only stale **#76** (docs tracker prep from pre-D1 `master`; close via plan **468**).
+**Open PRs:** none from the pre-integration backlog.
 
 ---
 
@@ -44,7 +45,7 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 |------|--------|------|
 | D2.1 | Six-hop relay (**#87**/**#88**) on `master` | ✅ |
 | D2.2 | Five-hop mixed relay (plan **411**, **#136**) | ✅ **167** NcsConsti |
-| D2.3 | Close **#76** or rebase | ⏳ plan **468** |
+| D2.3 | Close **#76** or rebase | ✅ via **#138** |
 | D2.4 | Tracker sync v21 (plan **466**) | ✅ |
 
 ---
@@ -67,7 +68,7 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 | D4.1 | Confirm KotorDiff `CollectInstallationStrRefResources` / `CollectInstallationGffResources` on `master` | ✅ |
 | D4.2 | Confirm `BuildStrrefMappingsFromTlkMod` wired in batch path | ✅ |
 | D4.3 | Run KotorDiff + FieldValue + NcsConsti test filters | ✅ |
-| D4.4 | Close **#76**; update this plan + KB tracker | 🔄 |
+| D4.4 | Close **#76**; update this plan + KB tracker | ✅ via **#138** |
 
 ---
 
