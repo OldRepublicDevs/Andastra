@@ -188,6 +188,8 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 456 | [456-chore-stack-simulation-arc-tracker-sync-v16-plan.md](2026-06-10-456-chore-stack-simulation-arc-tracker-sync-v16-plan.md) | Stack simulation arc tracker sync v16 |
 | 457 | [457-feat-ncs-consti-six-hop-identity-second-offset-local-strref-relay-plan.md](2026-06-10-457-feat-ncs-consti-six-hop-identity-second-offset-local-strref-relay-plan.md) | NCS CONSTI six-hop identity second-offset StrRef relay |
 | 458 | [458-chore-stack-simulation-arc-tracker-sync-v17-plan.md](2026-06-10-458-chore-stack-simulation-arc-tracker-sync-v17-plan.md) | Stack simulation arc tracker sync v17 |
+| 459 | [459-feat-ncs-consti-six-hop-identity-combined-arithmetic-local-strref-relay-plan.md](2026-06-10-459-feat-ncs-consti-six-hop-identity-combined-arithmetic-local-strref-relay-plan.md) | NCS CONSTI six-hop identity combined arithmetic StrRef relay |
+| 460 | [460-chore-stack-simulation-arc-tracker-sync-v18-plan.md](2026-06-10-460-chore-stack-simulation-arc-tracker-sync-v18-plan.md) | Stack simulation arc tracker sync v18 |
 
 ## Repo implications
 
