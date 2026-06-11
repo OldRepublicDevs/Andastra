@@ -47,14 +47,14 @@ Holocron plan **063** core units (U1–U7) are **complete** on `master`. Remaini
 
 ## Day 2 — Relay arc + stack base cleanup
 
-| Step | Action |
-|------|--------|
-| D2.1 | Rebase **#87–#88** (six-hop relay) onto post-D1 `master`; merge if not already included |
-| D2.2 | Rebase **#80** (five-hop mixed relay) if not in D1 merge |
-| D2.3 | Close **#76** tracker prep or rebase onto `master` |
-| D2.4 | Tracker sync v21 on `master` through landed stack |
+| Step | Action | Done |
+|------|--------|------|
+| D2.1 | Rebase **#87–#88** (six-hop relay) onto post-D1 `master`; merge if not already included | ✅ already merged — six-hop tests on `master` |
+| D2.2 | Cherry-pick five-hop mixed relay tests from **#80** / plan **411** (scanner unchanged; `MaxNestedJsrRelayDepth = 6` on `master`) | ✅ **167** NcsConsti tests |
+| D2.3 | Close **#76** tracker prep or rebase onto `master` | ⏳ |
+| D2.4 | Tracker sync v21 on `master` through landed stack (plan **466**) | ✅ |
 
-**Blockers for Day 2:** D1 PR **#135** must merge first; verify whether six-hop relay tests (**#87**/**#88**) are already covered by the **163**-test integration (likely partial — `MaxNestedJsrRelayDepth = 6` landed but dedicated relay PRs may add more).
+**Day 2 notes:** Do **not** merge old `origin/feat/plan-411-five-hop-mixed-const-relay` wholesale — it removes stack-simulation code vs `master`. Cherry-pick only the two FiveHopMixedConstCptopsp tests; close **#80** after new PR merges.
 
 ---
 
