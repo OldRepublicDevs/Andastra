@@ -335,7 +335,7 @@ Full index: [docs/plans/README.md](../../plans/README.md)
 | BioWare + tests | `dotnet build/test` per [build-and-test-ladder.md](../50-execution/build-and-test-ladder.md) | Green `[REPO]` |
 | Ref-search Step 3b (NCS CONSTI / StrRef) | `--filter` NcsConsti (**167** post Day 2; **165** post Day 1), FindStrRefCommand (**18**), InstallationRefSearch CLI (**12**), StrRefReferenceHelper (**10**) | Green `[REPO]` (plans **348**–**466**, 2026-06-11) |
 | Ref-search Step 3c (ReferenceFinder) | `--filter` ReferenceFinderTests (**97**), ReferenceSearchHelper (**36**), ScriptReferenceHelper (**8**), FindRefsCommand (**21**) | Green `[REPO]` (plans **348**–**353**, 2026-06-03) |
-| Ref-search Step 3d (FieldValue) | `--filter` FieldValueReferenceHelper (**10** post plan **467**) | Green pending plan **467** PR merge `[REPO]` |
+| Ref-search Step 3d (FieldValue) | `--filter` FieldValueReferenceHelper (**10** post plan **467** / **#137**) | Green `[REPO]` |
 | Full solution | `dotnet build Andastra.sln --framework net9.0 -c Release -m:1` | Green Linux net9.0 `[REPO]` |
 | Tool chain | OdyTools, OdyPatch, OdyPatch.UI, KotorCLI, ConvertKotorGame | Green net9.0 `[REPO]` |
 | OdyPatch NuGet pack | `./helper_scripts/build-nuget.sh` | Green net9.0 Linux; CI `nuget-pack-smoke` (help + validate smoke, plans 051/053/055) `[REPO]` |
@@ -393,9 +393,10 @@ Bulk-landed via plan **465** Day 1 merge at **165** NcsConsti tests (**163** pla
 
 | Plan | Topic |
 |------|-------|
-| **465** | Multi-day PR merge + Holocron integration (Day 1–2: **done**; Day 3: field-value **#81**–**#85**) |
-| **466** | Post-D1 tracker sync v21 (**167** NcsConsti) — **done** |
-| 417+ | Field-value arc merge stack **#81**–**#85** (plan 465 Day 3) |
+| **465** | Multi-day PR merge — Days **1–3 done**; Day 5+: 2DA spreadsheet UX, Module Designer 3D |
+| **467** | Field-value UT wiring — **merged** [#137](https://github.com/th3w1zard1/Andastra/pull/137) |
+| **468** | Post-D3 tracker closure — close **#76**, verify KotorDiff helpers |
+| 417+ | 2DA spreadsheet UX per `docs/twoda_editor_ux_and_feature_completion.md` |
 | 417+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
 
 ## Repo implications
