@@ -216,6 +216,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 466 | [466-chore-post-d1-tracker-sync-v21-plan.md](2026-06-10-466-chore-post-d1-tracker-sync-v21-plan.md) | Post-D1 tracker sync v21 (165→167 NcsConsti) |
 | 467 | [467-feat-fieldvalue-ut-editor-wiring-plan.md](2026-06-11-467-feat-fieldvalue-ut-editor-wiring-plan.md) | Field-value find-refs on UT editors (plans 412–416) |
 | 468 | [468-chore-post-d3-tracker-closure-plan.md](2026-06-11-468-chore-post-d3-tracker-closure-plan.md) | Post-D3 tracker closure (plan 465 days 1–3) |
+| 469 | [469-feat-twoda-row-selection-status-shortcuts-plan.md](2026-06-11-469-feat-twoda-row-selection-status-shortcuts-plan.md) | 2DA row selection, dirty status, keyboard shortcuts (plan 465 day 5) |
 
 ## Repo implications
 

@@ -15,6 +15,7 @@ using BioWare.Resource.Formats.TwoDA;
 using BioWare.Tools;
 using OdyTools.Data;
 using OdyTools.Editors;
+using OdyTools.Dialogs;
 using OdyTools.Utils;
 using NUnit.Framework;
 
@@ -2018,6 +2019,57 @@ namespace OdyTools.Tests
                 Assert.That(method, Is.Not.Null);
                 int rowIndex = (int)method.Invoke(editor, null);
                 Assert.That(rowIndex, Is.EqualTo(1));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_SelectCurrentRow_SelectsSingleRow()
+        {
+            byte[] data = CreateTestTwoDABytes(5);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                SetSelection(editor, 0, 1, 2);
+                editor.SelectCurrentRow();
+                var grid = GetDataGrid(editor);
+                Assert.That(grid.SelectedItems.Count, Is.EqualTo(1));
+                Assert.That(grid.SelectedItem, Is.EqualTo(GetSourceData(editor)[0]));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_UpdateStatusBar_ShowsModifiedWhenDirty()
+        {
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, CreateTestTwoDABytes(3));
+                Assert.That(GetStatusText(editor), Does.Not.Contain("Modified"));
+                editor.InsertRow();
+                Assert.That(GetStatusText(editor), Does.Contain("Modified"));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_ShowKeyboardShortcutsDialog_OpensWithoutException()
+        {
+            var editor = CreateEditor();
+            try
+            {
+                Assert.DoesNotThrow(() => editor.ShowKeyboardShortcutsDialog());
             }
             finally
             {
