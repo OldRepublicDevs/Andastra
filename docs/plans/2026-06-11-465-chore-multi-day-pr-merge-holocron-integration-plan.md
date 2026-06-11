@@ -32,7 +32,7 @@ Holocron plan **063** core units (U1–U7) are **complete** on `master`. Remaini
 
 ### Day 1 landed (2026-06-11)
 
-- Integration merge commit `3b060001a` — `TryFindStrRefConsumerViaArithmeticThenStackStore`, `MaxNestedJsrRelayDepth = 6`, **163** NcsConsti tests.
+- Integration merge commit `3b060001a` — `TryFindStrRefConsumerViaArithmeticThenStackStore`, `MaxNestedJsrRelayDepth = 6`, **165** NcsConsti tests (**163** plan-463 + **2** master four-hop mixed relay).
 - Preserved master's post-#86 tests (arithmetic StrRef relay, four-hop mixed CONST relay, field-value arc tests).
 - [PR #135](https://github.com/th3w1zard1/Andastra/pull/135) opened to `master`.
 
