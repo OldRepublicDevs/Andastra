@@ -159,6 +159,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 377 | [377-feat-odytool-lip-keyframe-editor-ui-plan.md](2026-05-24-377-feat-odytool-lip-keyframe-editor-ui-plan.md) | OdyTool LIP keyframe editor UI |
 | 420 | [420-chore-ncs-consti-arc-tracker-sync-plan.md](2026-06-05-420-chore-ncs-consti-arc-tracker-sync-plan.md) | NCS CONSTI arc closure tracker sync |
 | 423 | [423-chore-stack-simulation-arc-tracker-sync-plan.md](2026-06-05-423-chore-stack-simulation-arc-tracker-sync-plan.md) | Stack simulation arc tracker sync |
+| 426 | [426-chore-stack-simulation-arc-tracker-sync-v2-plan.md](2026-06-05-426-chore-stack-simulation-arc-tracker-sync-v2-plan.md) | Stack simulation arc tracker sync v2 (#93–#94) |
 
 ## Repo implications
 
