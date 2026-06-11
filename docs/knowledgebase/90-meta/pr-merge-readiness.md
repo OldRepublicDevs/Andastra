@@ -394,11 +394,9 @@ Bulk-landed via plan **465** Day 1 merge at **165** NcsConsti tests (**163** pla
 
 | Plan | Topic |
 |------|-------|
-| **465** | Multi-day PR merge + Holocron integration (Day 1: **done**; Day 2: five-hop relay — in progress) |
-| **466** | Post-D1 tracker sync v21 (**165**→**167** NcsConsti) |
-| 417+ | Field-value arc merge stack **#81**–**#86** (open PR **#86**) |
-| 464+ | Merge relay arc **#77**–**#88** (**#87**/**#88** merged; **#80** superseded by v2 PR) |
-| 464+ | Merge **#74** (CodeQL) early; KotorDiff installation ref search (**#71**) |
+| **465** | Multi-day PR merge + Holocron integration (Day 1–2: **done**; Day 3: field-value **#81**–**#85**) |
+| **466** | Post-D1 tracker sync v21 (**167** NcsConsti) — **done** |
+| 417+ | Field-value arc merge stack **#81**–**#85** (plan 465 Day 3) |
 | 417+ | Module Designer depth, 2DA spreadsheet UX, OdyPatch E2E install runbook execution |
 
 ## Repo implications
