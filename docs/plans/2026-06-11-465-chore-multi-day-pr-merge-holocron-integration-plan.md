@@ -11,7 +11,7 @@ branch: master
 
 ## Executive summary (2026-06-11)
 
-Plan **465** Days **1–11** landing on `master` (Day 11 PR pending):
+Plan **465** Days **1–11** landed on `master`:
 
 | Day | PR | Outcome |
 |-----|-----|---------|
@@ -25,7 +25,7 @@ Plan **465** Days **1–11** landing on `master` (Day 11 PR pending):
 | **8** | [#143](https://github.com/th3w1zard1/Andastra/pull/143) | 2DA paste over selection / anchor paste (plan **472**); **106** `OdyTool2DA_*` tests |
 | **9** | [#144](https://github.com/th3w1zard1/Andastra/pull/144) | 2DA Ctrl+Click row multi-select (plan **473**); **109** `OdyTool2DA_*` tests |
 | **10** | [#145](https://github.com/th3w1zard1/Andastra/pull/145) | 2DA Fill Down within range (plan **474**); **112** `OdyTool2DA_*` tests |
-| **11** | _pending_ | 2DA in-cell edit tests (plan **475**); **115** `OdyTool2DA_*` tests |
+| **11** | [#146](https://github.com/th3w1zard1/Andastra/pull/146) | 2DA in-cell edit tests (plan **475**); **115** `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
@@ -164,7 +164,7 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 | D11.2 | F2 handler delegates to `BeginCellEdit()` | ✅ |
 | D11.3 | Selection shortcuts skip during cell edit | ✅ |
 | D11.4 | OdyTool2DATests: BeginCellEdit, F2, shortcut guard | ✅ |
-| D11.5 | PR _pending_ → `master` | ⏳ |
+| D11.5 | PR **#146** → `master` | ✅ @ `d35191412` |
 
 ## Day 5+ — Holocron continuation
 
@@ -190,3 +190,4 @@ Per plan **063** deferred items:
 | [#143](https://github.com/th3w1zard1/Andastra/pull/143) | `7bb42c493` | 2DA paste over selection / anchor paste (plan **472**) |
 | [#144](https://github.com/th3w1zard1/Andastra/pull/144) | `15321b9e5` | 2DA Ctrl+Click row multi-select (plan **473**) |
 | [#145](https://github.com/th3w1zard1/Andastra/pull/145) | `c6e7f6083` | 2DA Fill Down within active cell range (plan **474**) |
+| [#146](https://github.com/th3w1zard1/Andastra/pull/146) | `d35191412` | 2DA in-cell editing test coverage (plan **475**) |
