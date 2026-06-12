@@ -1,6 +1,6 @@
 ---
 title: "feat: 2DA find next match test coverage"
-status: active
+status: complete
 origin: docs/plans/2026-06-11-465-chore-multi-day-pr-merge-holocron-integration-plan.md
 ---
 
@@ -27,4 +27,4 @@ Target: **122** `OdyTool2DA_*` tests (118 prior + 4 new).
 
 | PR | Merge | Tests |
 |----|-------|-------|
-| _pending_ | _pending_ | _pending_ |
+| [#148](https://github.com/th3w1zard1/Andastra/pull/148) | `dcd707e45` | **122** `OdyTool2DA_*` |

@@ -225,6 +225,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 475 | [475-feat-twoda-incell-edit-tests-plan.md](2026-06-11-475-feat-twoda-incell-edit-tests-plan.md) | 2DA in-cell editing test coverage (plan 465 day 11) |
 | 476 | [476-feat-twoda-header-select-tests-plan.md](2026-06-11-476-feat-twoda-header-select-tests-plan.md) | 2DA column/row header selection tests (plan 465 day 12) |
 | 477 | [477-feat-twoda-find-next-tests-plan.md](2026-06-11-477-feat-twoda-find-next-tests-plan.md) | 2DA Find Next match test coverage (plan 465 day 13) |
+| 478 | [478-feat-twoda-replace-all-tests-plan.md](2026-06-11-478-feat-twoda-replace-all-tests-plan.md) | 2DA Replace All test coverage (plan 465 day 14) |
 
 ## Repo implications
 
