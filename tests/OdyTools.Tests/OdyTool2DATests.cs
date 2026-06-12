@@ -2620,5 +2620,80 @@ namespace OdyTools.Tests
             }
         }
 
+        [AvaloniaTest]
+        public void OdyTool2DA_SelectColumnByIndex_SelectsAllRowsAndColumnMode()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                SetSelection(editor, 0);
+                SetCurrentColumn(editor, 3);
+                editor.SelectColumnByIndex(3);
+
+                Assert.That(GetCurrentColumnIndex(editor), Is.EqualTo(3));
+                Assert.That(GetColumnSelectionActive(editor), Is.True);
+                Assert.That(editor.IsCellRangeActive, Is.False);
+                Assert.That(editor.TryHandleSelectionShortcut(Key.Space, KeyModifiers.Shift), Is.True);
+                Assert.That(GetDataGrid(editor).SelectedItems.Count, Is.EqualTo(1),
+                    "Column mode uses all-row select; Shift+Space narrows to current row");
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_SelectColumnByIndex_ClearsActiveCellRange()
+        {
+            byte[] data = CreateTestTwoDABytes(5);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.SelectCellRange(0, 2, 2, 3);
+                Assert.That(editor.IsCellRangeActive, Is.True);
+                SetSelection(editor, 0);
+                SetCurrentColumn(editor, 2);
+
+                editor.SelectColumnByIndex(2);
+
+                Assert.That(editor.IsCellRangeActive, Is.False);
+                Assert.That(GetColumnSelectionActive(editor), Is.True);
+                Assert.That(GetCurrentColumnIndex(editor), Is.EqualTo(2));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_SelectRowByIndex_ClearsColumnSelection()
+        {
+            byte[] data = CreateTestTwoDABytes(5);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                SetSelection(editor, 0);
+                SetCurrentColumn(editor, 2);
+                editor.SelectColumnByIndex(2);
+                Assert.That(GetColumnSelectionActive(editor), Is.True);
+
+                editor.SelectRowByIndex(1);
+                Assert.That(GetColumnSelectionActive(editor), Is.False);
+                var grid = GetDataGrid(editor);
+                Assert.That(grid.SelectedItems.Count, Is.EqualTo(1));
+                Assert.That(grid.SelectedItem, Is.EqualTo(GetSourceData(editor)[1]));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
     }
 }
