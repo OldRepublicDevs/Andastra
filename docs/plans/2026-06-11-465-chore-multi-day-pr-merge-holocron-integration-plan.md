@@ -11,7 +11,7 @@ branch: master
 
 ## Executive summary (2026-06-11)
 
-Plan **465** Days **1–9** are **complete** on `master`:
+Plan **465** Days **1–10** landing on `master` (Day 10 PR pending):
 
 | Day | PR | Outcome |
 |-----|-----|---------|
@@ -24,6 +24,7 @@ Plan **465** Days **1–9** are **complete** on `master`:
 | **7** | [#142](https://github.com/th3w1zard1/Andastra/pull/142) | 2DA Shift+Click range selection (plan **471**); **103** `OdyTool2DA_*` tests |
 | **8** | [#143](https://github.com/th3w1zard1/Andastra/pull/143) | 2DA paste over selection / anchor paste (plan **472**); **106** `OdyTool2DA_*` tests |
 | **9** | [#144](https://github.com/th3w1zard1/Andastra/pull/144) | 2DA Ctrl+Click row multi-select (plan **473**); **109** `OdyTool2DA_*` tests |
+| **10** | _pending_ | 2DA Fill Down within range (plan **474**); **112** `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
