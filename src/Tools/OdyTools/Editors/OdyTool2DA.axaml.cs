@@ -865,7 +865,7 @@ namespace OdyTools.Editors
                 }
             }
             else if (e.Key == Key.F9) { ToggleSidebar(); e.Handled = true; }
-            else if (e.Key == Key.F2) { _twodaTable?.BeginEdit(); e.Handled = true; }
+            else if (e.Key == Key.F2) { BeginCellEdit(); e.Handled = true; }
             else if (e.Key == Key.F3) { FindNextMatch(); e.Handled = true; }
             else if (e.Key == Key.Escape)
             {
@@ -985,6 +985,18 @@ namespace OdyTools.Editors
             int rowIdx = GetPrimarySelectedRowIndex();
             if (rowIdx < 0) rowIdx = 0;
             SelectRowByIndex(rowIdx);
+        }
+
+        /// <summary>Begins in-cell editing on the focused DataGrid cell (F2 / double-click).</summary>
+        public void BeginCellEdit()
+        {
+            _twodaTable?.BeginEdit();
+        }
+
+        /// <summary>Returns true when a TextBox inside the DataGrid has keyboard focus (in-cell edit mode).</summary>
+        public bool IsCellEditing()
+        {
+            return IsGridCellEditing();
         }
 
         /// <summary>Handles Shift+Space (row) and Ctrl+Space (column) selection shortcuts. Skips when editing a cell.</summary>
