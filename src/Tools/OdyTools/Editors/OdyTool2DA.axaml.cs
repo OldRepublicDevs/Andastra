@@ -2674,6 +2674,22 @@ namespace OdyTools.Editors
             _lastFindCol = -1;
         }
 
+        /// <summary>Configures find/replace text and options (for Replace / Replace All).</summary>
+        public void ConfigureReplace(string findText, string replaceText, bool matchCase = false)
+        {
+            _findText = findText ?? "";
+            _replaceText = replaceText ?? "";
+            _findMatchCase = matchCase;
+            _lastFindRow = -1;
+            _lastFindCol = -1;
+        }
+
+        /// <summary>Replaces all occurrences of the configured find text in the grid.</summary>
+        public void TryReplaceAll()
+        {
+            ReplaceAll();
+        }
+
         /// <summary>Finds the next cell containing the configured find text; returns false when none.</summary>
         public bool TryFindNextMatch()
         {
