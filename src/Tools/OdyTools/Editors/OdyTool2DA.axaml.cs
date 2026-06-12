@@ -2690,6 +2690,12 @@ namespace OdyTools.Editors
             ReplaceAll();
         }
 
+        /// <summary>Replaces the first match at the current find position (or finds next if stale).</summary>
+        public void TryReplaceOne()
+        {
+            ReplaceOne();
+        }
+
         /// <summary>Finds the next cell containing the configured find text; returns false when none.</summary>
         public bool TryFindNextMatch()
         {

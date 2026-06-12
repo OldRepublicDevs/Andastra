@@ -2856,5 +2856,81 @@ namespace OdyTools.Tests
             }
         }
 
+        [AvaloniaTest]
+        public void OdyTool2DA_TryReplaceOne_ReplacesCurrentFindMatchOnly()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                var source = GetSourceData(editor);
+                editor.ConfigureReplace("PMBTest", "Replaced");
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+
+                editor.TryReplaceOne();
+
+                Assert.That(source[0][2], Is.EqualTo("Replaced"));
+                Assert.That(source[0][4], Is.EqualTo("PMBTest"), "Other matching cells unchanged");
+                var result = BuildAndParse(editor);
+                Assert.That(result.GetCellString(0, "name"), Is.EqualTo("Replaced"));
+                Assert.That(result.GetCellString(0, "race"), Is.EqualTo("PMBTest"));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryReplaceOne_MatchCase_RespectsCaseFlag()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                var source = GetSourceData(editor);
+                string nameBefore = source[0][2];
+
+                editor.ConfigureReplace("pmbtest", "X", matchCase: true);
+                Assert.That(editor.TryFindNextMatch(), Is.False);
+                editor.TryReplaceOne();
+                Assert.That(source[0][2], Is.EqualTo(nameBefore));
+
+                editor.ConfigureReplace("pmbtest", "X", matchCase: false);
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                editor.TryReplaceOne();
+                Assert.That(source[0][2], Is.EqualTo("X"));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryReplaceOne_EmptyFind_LeavesDataUnchanged()
+        {
+            byte[] data = CreateTestTwoDABytes(3);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.ConfigureFind("PMBTest");
+                editor.TryFindNextMatch();
+                var before = BuildAndParse(editor);
+                editor.ConfigureReplace("", "Anything");
+                editor.TryReplaceOne();
+                var after = BuildAndParse(editor);
+                Assert.That(after.GetCellString(0, "name"), Is.EqualTo(before.GetCellString(0, "name")));
+                Assert.That(after.GetCellString(0, "race"), Is.EqualTo(before.GetCellString(0, "race")));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
     }
 }
