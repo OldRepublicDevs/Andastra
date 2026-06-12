@@ -866,7 +866,7 @@ namespace OdyTools.Editors
             }
             else if (e.Key == Key.F9) { ToggleSidebar(); e.Handled = true; }
             else if (e.Key == Key.F2) { BeginCellEdit(); e.Handled = true; }
-            else if (e.Key == Key.F3) { FindNextMatch(); e.Handled = true; }
+            else if (e.Key == Key.F3) { TryFindNextMatch(); e.Handled = true; }
             else if (e.Key == Key.Escape)
             {
                 // Escape: clear filter if focused, otherwise return focus to grid
@@ -2664,6 +2664,33 @@ namespace OdyTools.Editors
         }
 
         private StringComparison FindComparison => _findMatchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+
+        /// <summary>Configures find text/options and resets the search cursor (for F3 / Find Next).</summary>
+        public void ConfigureFind(string text, bool matchCase = false)
+        {
+            _findText = text ?? "";
+            _findMatchCase = matchCase;
+            _lastFindRow = -1;
+            _lastFindCol = -1;
+        }
+
+        /// <summary>Finds the next cell containing the configured find text; returns false when none.</summary>
+        public bool TryFindNextMatch()
+        {
+            return FindNextMatch();
+        }
+
+        /// <summary>Row index of the last find hit, or -1.</summary>
+        public int GetLastFindRowIndex()
+        {
+            return _lastFindRow;
+        }
+
+        /// <summary>Column index of the last find hit, or -1.</summary>
+        public int GetLastFindColumnIndex()
+        {
+            return _lastFindCol;
+        }
 
         private bool FindNextMatch()
         {
