@@ -11,7 +11,7 @@ branch: master
 
 ## Executive summary (2026-06-11)
 
-Plan **465** Days **1–10** landing on `master` (Day 10 PR pending):
+Plan **465** Days **1–10** landed on `master`:
 
 | Day | PR | Outcome |
 |-----|-----|---------|
@@ -24,7 +24,7 @@ Plan **465** Days **1–10** landing on `master` (Day 10 PR pending):
 | **7** | [#142](https://github.com/th3w1zard1/Andastra/pull/142) | 2DA Shift+Click range selection (plan **471**); **103** `OdyTool2DA_*` tests |
 | **8** | [#143](https://github.com/th3w1zard1/Andastra/pull/143) | 2DA paste over selection / anchor paste (plan **472**); **106** `OdyTool2DA_*` tests |
 | **9** | [#144](https://github.com/th3w1zard1/Andastra/pull/144) | 2DA Ctrl+Click row multi-select (plan **473**); **109** `OdyTool2DA_*` tests |
-| **10** | _pending_ | 2DA Fill Down within range (plan **474**); **112** `OdyTool2DA_*` tests |
+| **10** | [#145](https://github.com/th3w1zard1/Andastra/pull/145) | 2DA Fill Down within range (plan **474**); **112** `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
@@ -141,6 +141,18 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 
 ---
 
+
+
+## Day 10 — 2DA Fill Down within active cell range (plan **474**)
+
+| Step | Action | Done |
+|------|--------|------|
+| D10.1 | When `_cellRangeActive`, copy each column's top-row cell down through the range | ✅ |
+| D10.2 | Legacy Fill Down unchanged for row/column selection without active range | ✅ |
+| D10.3 | Single-row range is a no-op | ✅ |
+| D10.4 | OdyTool2DATests: multi-column fill, single-column fill, single-cell no-op | ✅ |
+| D10.5 | PR **#145** → `master` | ✅ @ `c6e7f6083` |
+
 ## Day 5+ — Holocron continuation
 
 Per plan **063** deferred items:
@@ -164,3 +176,4 @@ Per plan **063** deferred items:
 | [#142](https://github.com/th3w1zard1/Andastra/pull/142) | `b8131328b` | 2DA Shift+Click range selection (plan **471**) |
 | [#143](https://github.com/th3w1zard1/Andastra/pull/143) | `7bb42c493` | 2DA paste over selection / anchor paste (plan **472**) |
 | [#144](https://github.com/th3w1zard1/Andastra/pull/144) | `15321b9e5` | 2DA Ctrl+Click row multi-select (plan **473**) |
+| [#145](https://github.com/th3w1zard1/Andastra/pull/145) | `c6e7f6083` | 2DA Fill Down within active cell range (plan **474**) |
