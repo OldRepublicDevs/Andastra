@@ -2695,5 +2695,94 @@ namespace OdyTools.Tests
             }
         }
 
+        private static int GetSelectedRowIndex(OdyTool2DA editor)
+        {
+            var grid = GetDataGrid(editor);
+            var source = GetSourceData(editor);
+            var selected = grid?.SelectedItem as ObservableCollection<string>;
+            if (selected == null || source == null) return -1;
+            return source.IndexOf(selected);
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryFindNextMatch_FindsFirstOccurrence()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.ConfigureFind("PMBTest");
+
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(0));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(2));
+                Assert.That(GetSelectedRowIndex(editor), Is.EqualTo(0));
+                Assert.That(GetCurrentColumnIndex(editor), Is.EqualTo(2));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryFindNextMatch_AdvancesToNextCell()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.ConfigureFind("PMBTest");
+
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(0));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(4));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryFindNextMatch_MatchCase_RespectsCaseFlag()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.ConfigureFind("pmbtest", matchCase: true);
+                Assert.That(editor.TryFindNextMatch(), Is.False);
+
+                editor.ConfigureFind("pmbtest", matchCase: false);
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryFindNextMatch_EmptyQuery_ReturnsFalse()
+        {
+            byte[] data = CreateTestTwoDABytes(3);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.ConfigureFind("");
+                Assert.That(editor.TryFindNextMatch(), Is.False);
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
     }
 }

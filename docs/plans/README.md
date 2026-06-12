@@ -224,6 +224,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 474 | [474-feat-twoda-fill-down-range-plan.md](2026-06-11-474-feat-twoda-fill-down-range-plan.md) | 2DA Fill Down within active cell range (plan 465 day 10) |
 | 475 | [475-feat-twoda-incell-edit-tests-plan.md](2026-06-11-475-feat-twoda-incell-edit-tests-plan.md) | 2DA in-cell editing test coverage (plan 465 day 11) |
 | 476 | [476-feat-twoda-header-select-tests-plan.md](2026-06-11-476-feat-twoda-header-select-tests-plan.md) | 2DA column/row header selection tests (plan 465 day 12) |
+| 477 | [477-feat-twoda-find-next-tests-plan.md](2026-06-11-477-feat-twoda-find-next-tests-plan.md) | 2DA Find Next match test coverage (plan 465 day 13) |
 
 ## Repo implications
 
