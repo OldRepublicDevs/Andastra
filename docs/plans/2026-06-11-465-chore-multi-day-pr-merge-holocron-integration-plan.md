@@ -11,7 +11,7 @@ branch: master
 
 ## Executive summary (2026-06-11)
 
-Plan **465** Days **1–14** landing on `master` (Day 14 PR pending):
+Plan **465** Days **1–14** landed on `master`:
 
 | Day | PR | Outcome |
 |-----|-----|---------|
@@ -28,7 +28,7 @@ Plan **465** Days **1–14** landing on `master` (Day 14 PR pending):
 | **11** | [#146](https://github.com/th3w1zard1/Andastra/pull/146) | 2DA in-cell edit tests (plan **475**); **115** `OdyTool2DA_*` tests |
 | **12** | [#147](https://github.com/th3w1zard1/Andastra/pull/147) | 2DA header column/row select tests (plan **476**); **118** `OdyTool2DA_*` tests |
 | **13** | [#148](https://github.com/th3w1zard1/Andastra/pull/148) | 2DA Find Next tests (plan **477**); **122** `OdyTool2DA_*` tests |
-| **14** | _pending_ | 2DA Replace All tests (plan **478**); **125** `OdyTool2DA_*` tests |
+| **14** | [#149](https://github.com/th3w1zard1/Andastra/pull/149) | 2DA Replace All tests (plan **478**); **125** `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
@@ -200,7 +200,7 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 | D14.1 | `ConfigureReplace()` / `TryReplaceAll()` public hooks | ✅ |
 | D14.2 | Replace all across grid; case flag; empty find no-op | ✅ |
 | D14.3 | OdyTool2DATests: replace all, case, empty find | ✅ |
-| D14.4 | PR _pending_ → `master` | ⏳ |
+| D14.4 | PR **#149** → `master` | ✅ @ `88dc572e4` |
 
 ## Day 5+ — Holocron continuation
 
@@ -229,3 +229,4 @@ Per plan **063** deferred items:
 | [#146](https://github.com/th3w1zard1/Andastra/pull/146) | `d35191412` | 2DA in-cell editing test coverage (plan **475**) |
 | [#147](https://github.com/th3w1zard1/Andastra/pull/147) | `a8759fb25` | 2DA header column/row selection tests (plan **476**) |
 | [#148](https://github.com/th3w1zard1/Andastra/pull/148) | `dcd707e45` | 2DA find next test coverage (plan **477**) |
+| [#149](https://github.com/th3w1zard1/Andastra/pull/149) | `88dc572e4` | 2DA replace all test coverage (plan **478**) |
