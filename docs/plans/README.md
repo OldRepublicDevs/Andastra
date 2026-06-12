@@ -222,6 +222,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 472 | [472-feat-twoda-paste-over-selection-plan.md](2026-06-11-472-feat-twoda-paste-over-selection-plan.md) | 2DA paste over selection / anchor paste (plan 465 day 8) |
 | 473 | [473-feat-twoda-ctrl-click-row-multiselect-plan.md](2026-06-11-473-feat-twoda-ctrl-click-row-multiselect-plan.md) | 2DA Ctrl+Click row multi-select (plan 465 day 9) |
 | 474 | [474-feat-twoda-fill-down-range-plan.md](2026-06-11-474-feat-twoda-fill-down-range-plan.md) | 2DA Fill Down within active cell range (plan 465 day 10) |
+| 475 | [475-feat-twoda-incell-edit-tests-plan.md](2026-06-11-475-feat-twoda-incell-edit-tests-plan.md) | 2DA in-cell editing test coverage (plan 465 day 11) |
 
 ## Repo implications
 
