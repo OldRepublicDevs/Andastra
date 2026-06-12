@@ -1,6 +1,6 @@
 ---
 title: "feat: 2DA Fill Down within active cell range"
-status: active
+status: complete
 origin: docs/plans/2026-06-11-465-chore-multi-day-pr-merge-holocron-integration-plan.md
 ---
 
@@ -27,4 +27,4 @@ Target: **112** `OdyTool2DA_*` tests (109 prior + 3 new).
 
 | PR | Merge | Tests |
 |----|-------|-------|
-| _pending_ | _pending_ | _pending_ |
+| [#145](https://github.com/th3w1zard1/Andastra/pull/145) | `c6e7f6083` | **112** `OdyTool2DA_*` |
