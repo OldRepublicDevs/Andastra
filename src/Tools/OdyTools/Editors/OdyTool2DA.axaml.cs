@@ -2784,6 +2784,27 @@ namespace OdyTools.Editors
 
         public void FillDown()
         {
+            if (_cellRangeActive && _sourceData != null && _sourceData.Count > 0)
+            {
+                GetNormalizedRange(out int minRow, out int maxRow, out int minCol, out int maxCol);
+                if (minRow >= maxRow) return;
+                PushState();
+                for (int c = minCol; c <= maxCol; c++)
+                {
+                    if (minRow < 0 || minRow >= _sourceData.Count) continue;
+                    EnsureRowColumnCount(_sourceData[minRow], c + 1);
+                    string fillValue = c < _sourceData[minRow].Count ? (_sourceData[minRow][c] ?? "") : "";
+                    for (int r = minRow + 1; r <= maxRow; r++)
+                    {
+                        if (r < 0 || r >= _sourceData.Count) continue;
+                        EnsureRowColumnCount(_sourceData[r], c + 1);
+                        _sourceData[r][c] = fillValue;
+                    }
+                }
+                UpdateStatusBar();
+                return;
+            }
+
             var selected = _twodaTable?.SelectedItems?.Cast<ObservableCollection<string>>().ToList();
             if (selected == null || selected.Count == 0) return;
             int colIdx = GetCurrentColumnIndex();
