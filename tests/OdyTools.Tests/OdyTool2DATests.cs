@@ -2383,5 +2383,91 @@ namespace OdyTools.Tests
             }
         }
 
+        [AvaloniaTest]
+        public void OdyTool2DA_FillDown_WithActiveRange_FillsEachColumnFromTopRow()
+        {
+            byte[] data = CreateTestTwoDABytes(5);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                var source = GetSourceData(editor);
+                source[0][2] = "TopName";
+                source[0][3] = "TopVal";
+                source[1][2] = "MidName";
+                source[1][3] = "MidVal";
+                source[2][2] = "BotName";
+                source[2][3] = "BotVal";
+
+                editor.SelectCellRange(0, 2, 2, 3);
+                editor.FillDown();
+
+                var result = BuildAndParse(editor);
+                Assert.That(result.GetCellString(0, "name"), Is.EqualTo("TopName"));
+                Assert.That(result.GetCellString(1, "name"), Is.EqualTo("TopName"));
+                Assert.That(result.GetCellString(2, "name"), Is.EqualTo("TopName"));
+                Assert.That(result.GetCellString(0, "value"), Is.EqualTo("TopVal"));
+                Assert.That(result.GetCellString(1, "value"), Is.EqualTo("TopVal"));
+                Assert.That(result.GetCellString(2, "value"), Is.EqualTo("TopVal"));
+                Assert.That(result.GetCellString(3, "name"), Is.EqualTo("Row3"), "Rows outside range unchanged");
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_FillDown_WithActiveRange_SingleRow_NoChange()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                var source = GetSourceData(editor);
+                string beforeName = source[1][2];
+                string beforeVal = source[1][3];
+
+                editor.SelectCellRange(1, 2, 1, 2);
+                Assert.That(editor.IsCellRangeActive, Is.False);
+                editor.FillDown();
+
+                Assert.That(source[1][2], Is.EqualTo(beforeName));
+                Assert.That(source[1][3], Is.EqualTo(beforeVal));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_FillDown_WithActiveRange_SingleColumn_FillsDownOnly()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                var source = GetSourceData(editor);
+                source[0][3] = "Seed";
+                source[1][3] = "X";
+                source[2][3] = "Y";
+
+                editor.SelectCellRange(0, 3, 2, 3);
+                editor.FillDown();
+
+                Assert.That(source[0][3], Is.EqualTo("Seed"));
+                Assert.That(source[1][3], Is.EqualTo("Seed"));
+                Assert.That(source[2][3], Is.EqualTo("Seed"));
+                Assert.That(source[1][2], Is.Not.EqualTo("Seed"), "Other columns unchanged");
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
     }
 }
