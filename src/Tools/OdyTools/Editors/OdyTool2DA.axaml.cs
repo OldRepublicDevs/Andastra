@@ -442,10 +442,7 @@ namespace OdyTools.Editors
                 int colIdx = TryGetColumnIndexFromHeader(header);
                 if (colIdx > 0 && colIdx < _twodaTable.Columns.Count)
                 {
-                    ClearCellRangeSelection();
-                    _columnSelectionActive = true;
                     SelectColumnByIndex(colIdx);
-                    Avalonia.Threading.Dispatcher.UIThread.Post(ApplyColumnHighlight, Avalonia.Threading.DispatcherPriority.Background);
                 }
             }
             else
@@ -554,14 +551,17 @@ namespace OdyTools.Editors
             return -1;
         }
 
-        private void SelectColumnByIndex(int columnIndex)
+        /// <summary>Selects all rows and focuses a grid column (column header click path).</summary>
+        public void SelectColumnByIndex(int columnIndex)
         {
             if (_twodaTable == null || _sourceData.Count == 0) return;
             if (columnIndex < 0 || columnIndex >= _twodaTable.Columns.Count) return;
             ClearCellRangeSelection();
+            _columnSelectionActive = true;
             SelectAllRows();
             _twodaTable.CurrentColumn = _twodaTable.Columns[columnIndex];
             UpdateFormulaBarAndStatus();
+            Avalonia.Threading.Dispatcher.UIThread.Post(ApplyColumnHighlight, Avalonia.Threading.DispatcherPriority.Background);
         }
 
         /// <summary>True when a multi-cell rectangular range is active (Shift+click range).</summary>
@@ -970,12 +970,7 @@ namespace OdyTools.Editors
             int maxDataColIndex = Math.Max(0, _columnHeaders.Count);
             if (_twodaTable.Columns.Count == 0) return;
             if (colIdx > maxDataColIndex) colIdx = maxDataColIndex;
-            ClearCellRangeSelection();
-            _columnSelectionActive = true;
-            SelectAllRows();
-            _twodaTable.CurrentColumn = _twodaTable.Columns[colIdx];
-            UpdateFormulaBarAndStatus();
-            Avalonia.Threading.Dispatcher.UIThread.Post(ApplyColumnHighlight, Avalonia.Threading.DispatcherPriority.Background);
+            SelectColumnByIndex(colIdx);
         }
 
         /// <summary>Selects the current row only (single-row selection).</summary>
