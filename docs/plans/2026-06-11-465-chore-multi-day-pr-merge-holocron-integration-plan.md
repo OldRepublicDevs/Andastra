@@ -11,7 +11,7 @@ branch: master
 
 ## Executive summary (2026-06-11)
 
-Plan **465** Days **1–12** landing on `master` (Day 12 PR pending):
+Plan **465** Days **1–12** landed on `master`:
 
 | Day | PR | Outcome |
 |-----|-----|---------|
@@ -26,7 +26,7 @@ Plan **465** Days **1–12** landing on `master` (Day 12 PR pending):
 | **9** | [#144](https://github.com/th3w1zard1/Andastra/pull/144) | 2DA Ctrl+Click row multi-select (plan **473**); **109** `OdyTool2DA_*` tests |
 | **10** | [#145](https://github.com/th3w1zard1/Andastra/pull/145) | 2DA Fill Down within range (plan **474**); **112** `OdyTool2DA_*` tests |
 | **11** | [#146](https://github.com/th3w1zard1/Andastra/pull/146) | 2DA in-cell edit tests (plan **475**); **115** `OdyTool2DA_*` tests |
-| **12** | _pending_ | 2DA header column/row select tests (plan **476**); **118** `OdyTool2DA_*` tests |
+| **12** | [#147](https://github.com/th3w1zard1/Andastra/pull/147) | 2DA header column/row select tests (plan **476**); **118** `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
@@ -176,7 +176,7 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 | D12.1 | `SelectColumnByIndex()` public for column header path | ✅ |
 | D12.2 | Column select clears cell range; row select clears column mode | ✅ |
 | D12.3 | OdyTool2DATests: column all-rows, range clear, row clears column | ✅ |
-| D12.4 | PR _pending_ → `master` | ⏳ |
+| D12.4 | PR **#147** → `master` | ✅ @ `a8759fb25` |
 
 ## Day 5+ — Holocron continuation
 
@@ -203,3 +203,4 @@ Per plan **063** deferred items:
 | [#144](https://github.com/th3w1zard1/Andastra/pull/144) | `15321b9e5` | 2DA Ctrl+Click row multi-select (plan **473**) |
 | [#145](https://github.com/th3w1zard1/Andastra/pull/145) | `c6e7f6083` | 2DA Fill Down within active cell range (plan **474**) |
 | [#146](https://github.com/th3w1zard1/Andastra/pull/146) | `d35191412` | 2DA in-cell editing test coverage (plan **475**) |
+| [#147](https://github.com/th3w1zard1/Andastra/pull/147) | `a8759fb25` | 2DA header column/row selection tests (plan **476**) |
