@@ -1,6 +1,6 @@
 ---
 title: "feat: 2DA in-cell editing test coverage"
-status: active
+status: complete
 origin: docs/plans/2026-06-11-465-chore-multi-day-pr-merge-holocron-integration-plan.md
 ---
 
@@ -28,4 +28,4 @@ Target: **115** `OdyTool2DA_*` tests (112 prior + 3 new).
 
 | PR | Merge | Tests |
 |----|-------|-------|
-| _pending_ | _pending_ | _pending_ |
+| [#146](https://github.com/th3w1zard1/Andastra/pull/146) | `d35191412` | **115** `OdyTool2DA_*` |
