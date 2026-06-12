@@ -11,7 +11,7 @@ branch: master
 
 ## Executive summary (2026-06-11)
 
-Plan **465** Days **1–13** landed on `master`:
+Plan **465** Days **1–14** landing on `master` (Day 14 PR pending):
 
 | Day | PR | Outcome |
 |-----|-----|---------|
@@ -28,6 +28,7 @@ Plan **465** Days **1–13** landed on `master`:
 | **11** | [#146](https://github.com/th3w1zard1/Andastra/pull/146) | 2DA in-cell edit tests (plan **475**); **115** `OdyTool2DA_*` tests |
 | **12** | [#147](https://github.com/th3w1zard1/Andastra/pull/147) | 2DA header column/row select tests (plan **476**); **118** `OdyTool2DA_*` tests |
 | **13** | [#148](https://github.com/th3w1zard1/Andastra/pull/148) | 2DA Find Next tests (plan **477**); **122** `OdyTool2DA_*` tests |
+| **14** | _pending_ | 2DA Replace All tests (plan **478**); **125** `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
@@ -189,6 +190,17 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 | D13.2 | F3 delegates to `TryFindNextMatch()` | ✅ |
 | D13.3 | OdyTool2DATests: first hit, advance, case flag, empty query | ✅ |
 | D13.4 | PR **#148** → `master` | ✅ @ `dcd707e45` |
+
+---
+
+## Day 14 — 2DA Replace All test coverage (plan **478**)
+
+| Step | Action | Done |
+|------|--------|------|
+| D14.1 | `ConfigureReplace()` / `TryReplaceAll()` public hooks | ✅ |
+| D14.2 | Replace all across grid; case flag; empty find no-op | ✅ |
+| D14.3 | OdyTool2DATests: replace all, case, empty find | ✅ |
+| D14.4 | PR _pending_ → `master` | ⏳ |
 
 ## Day 5+ — Holocron continuation
 
