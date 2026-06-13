@@ -32,7 +32,7 @@ Plan **465** Days **1–18** landed on `master`:
 | **15** | [#150](https://github.com/th3w1zard1/Andastra/pull/150) | 2DA Replace One tests (plan **479**); **128** `OdyTool2DA_*` tests |
 | **16** | [#151](https://github.com/th3w1zard1/Andastra/pull/151) | 2DA Replace One edge-case tests (plan **480**); **130** `OdyTool2DA_*` tests |
 | **17** | [#152](https://github.com/th3w1zard1/Andastra/pull/152) | 2DA Insert Multiple Rows tests (plan **481**); **133** `OdyTool2DA_*` tests |
-| **18** | TBD | 2DA Find in column tests (plan **482**); **137** `OdyTool2DA_*` tests |
+| **18** | [#154](https://github.com/th3w1zard1/Andastra/pull/154) | 2DA Find in column tests (plan **482**); **137** `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
@@ -237,10 +237,10 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 
 | Step | Action | Done |
 |------|--------|------|
-| D18.1 | `_findColumnIndex`; extend `ConfigureFind(..., columnIndex = -1)` | |
-| D18.2 | Column-scoped `FindNextMatch()` (rows only in target column) | |
-| D18.3 | All-columns default unchanged (`columnIndex == -1`) | |
-| D18.4 | OdyTool2DATests (4 tests); PR → `master` | |
+| D18.1 | `_findColumnIndex`; extend `ConfigureFind(..., columnIndex = -1)` | ✅ |
+| D18.2 | Column-scoped `FindNextMatch()` (rows only in target column) | ✅ |
+| D18.3 | All-columns default unchanged (`columnIndex == -1`) | ✅ |
+| D18.4 | OdyTool2DATests (4 tests); PR → `master` | ✅ @ `bdb030edc` |
 
 ## Day 5+ — Holocron continuation
 
@@ -273,3 +273,4 @@ Per plan **063** deferred items:
 | [#150](https://github.com/th3w1zard1/Andastra/pull/150) | `f294aab9b` | 2DA replace one test coverage (plan **479**) |
 | [#151](https://github.com/th3w1zard1/Andastra/pull/151) | `258752666` | 2DA replace one edge-case tests (plan **480**) |
 | [#152](https://github.com/th3w1zard1/Andastra/pull/152) | `0622bf2eb` | 2DA insert multiple rows test coverage (plan **481**) |
+| [#154](https://github.com/th3w1zard1/Andastra/pull/154) | `bdb030edc` | 2DA find in column test coverage (plan **482**) |
