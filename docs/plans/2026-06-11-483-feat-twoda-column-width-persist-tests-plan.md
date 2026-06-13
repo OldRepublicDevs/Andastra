@@ -1,6 +1,6 @@
 ---
 title: "feat: 2DA column width persist test coverage"
-status: active
+status: complete
 origin: docs/plans/2026-06-11-465-chore-multi-day-pr-merge-holocron-integration-plan.md
 ---
 
