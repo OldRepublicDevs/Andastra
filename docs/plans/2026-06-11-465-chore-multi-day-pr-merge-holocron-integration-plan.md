@@ -34,7 +34,7 @@ Plan **465** Days **1–20** landed on `master`:
 | **17** | [#152](https://github.com/th3w1zard1/Andastra/pull/152) | 2DA Insert Multiple Rows tests (plan **481**); **133** `OdyTool2DA_*` tests |
 | **18** | [#154](https://github.com/th3w1zard1/Andastra/pull/154) | 2DA Find in column tests (plan **482**); **137** `OdyTool2DA_*` tests |
 | **19** | [#155](https://github.com/th3w1zard1/Andastra/pull/155) | 2DA Column width persist tests (plan **483**); **141** `OdyTool2DA_*` tests |
-| **20** | TBD | 2DA Regex find tests (plan **484**); **145** `OdyTool2DA_*` tests |
+| **20** | [#156](https://github.com/th3w1zard1/Andastra/pull/156) | 2DA Regex find tests (plan **484**); **145** `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
