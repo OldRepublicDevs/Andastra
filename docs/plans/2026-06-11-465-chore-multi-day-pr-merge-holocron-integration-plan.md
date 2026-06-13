@@ -30,7 +30,7 @@ Plan **465** Days **1–16** landed on `master`:
 | **13** | [#148](https://github.com/th3w1zard1/Andastra/pull/148) | 2DA Find Next tests (plan **477**); **122** `OdyTool2DA_*` tests |
 | **14** | [#149](https://github.com/th3w1zard1/Andastra/pull/149) | 2DA Replace All tests (plan **478**); **125** `OdyTool2DA_*` tests |
 | **15** | [#150](https://github.com/th3w1zard1/Andastra/pull/150) | 2DA Replace One tests (plan **479**); **128** `OdyTool2DA_*` tests |
-| **16** | TBD | 2DA Replace One edge-case tests (plan **480**); **130** `OdyTool2DA_*` tests |
+| **16** | [#151](https://github.com/th3w1zard1/Andastra/pull/151) | 2DA Replace One edge-case tests (plan **480**); **130** `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
@@ -217,10 +217,10 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 
 | Step | Action | Done |
 |------|--------|------|
-| D16.1 | Invalid cursor no-op test (`ConfigureReplace` only) | ☐ |
-| D16.2 | Stale cursor test (mutate cell, replace advances find) | ☐ |
-| D16.3 | Cursor assertions in existing replace-one test; plan **479** hygiene | ☐ |
-| D16.4 | PR → `master` | ☐ |
+| D16.1 | Invalid cursor no-op test (`ConfigureReplace` only) | ✅ |
+| D16.2 | Stale cursor test (mutate cell, replace advances find) | ✅ |
+| D16.3 | Cursor assertions in existing replace-one test; plan **479** hygiene | ✅ |
+| D16.4 | PR **#151** → `master` | ✅ @ `258752666` |
 
 ## Day 5+ — Holocron continuation
 
@@ -251,3 +251,4 @@ Per plan **063** deferred items:
 | [#148](https://github.com/th3w1zard1/Andastra/pull/148) | `dcd707e45` | 2DA find next test coverage (plan **477**) |
 | [#149](https://github.com/th3w1zard1/Andastra/pull/149) | `88dc572e4` | 2DA replace all test coverage (plan **478**) |
 | [#150](https://github.com/th3w1zard1/Andastra/pull/150) | `f294aab9b` | 2DA replace one test coverage (plan **479**) |
+| [#151](https://github.com/th3w1zard1/Andastra/pull/151) | `258752666` | 2DA replace one edge-case tests (plan **480**) |
