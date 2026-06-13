@@ -1943,6 +1943,86 @@ namespace OdyTools.Tests
         }
 
         [AvaloniaTest]
+        public void OdyTool2DA_TrySetColumnWidth_AppliesAndReadsBack()
+        {
+            byte[] data = CreateTestTwoDABytes(3);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.TrySetColumnWidth(2, 200);
+
+                Assert.That(editor.GetColumnPixelWidth(2), Is.EqualTo(200).Within(0.1));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TrySetColumnWidth_SurvivesRebuildGridColumns()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.TrySetColumnWidth(2, 175);
+                editor.TryRebuildGridColumns();
+
+                Assert.That(editor.GetColumnPixelWidth(2), Is.EqualTo(175).Within(0.1));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_ColumnWidth_DefaultWhenNotPersisted()
+        {
+            byte[] data = CreateTestTwoDABytes(3);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+
+                Assert.That(editor.GetColumnPixelWidth(2), Is.EqualTo(120).Within(0.1));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_RenameColumn_MigratesPersistedWidth()
+        {
+            var twoDA = new TwoDA(new List<string> { "label", "name", "value" });
+            twoDA.AddRow("0", new Dictionary<string, object> { ["label"] = "0", ["name"] = "A", ["value"] = "1" });
+            byte[] data = TwoDAAuto.Bytes2DA(twoDA);
+
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("rename.2da", "rename", ResourceType.TwoDA, data);
+                editor.TrySetColumnWidth(2, 180);
+                editor.RenameColumnByIndex(1, "renamed_name");
+                editor.TryRebuildGridColumns();
+
+                var headers = GetColumnHeaders(editor);
+                int renamedGridIndex = headers.IndexOf("renamed_name") + 1;
+                Assert.That(renamedGridIndex, Is.GreaterThan(0));
+                Assert.That(editor.GetColumnPixelWidth(renamedGridIndex), Is.EqualTo(180).Within(0.1));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
         public void OdyTool2DA_Build_SuppliesTwoDAForRowReferenceCollect()
         {
             const int targetRow = 1;
