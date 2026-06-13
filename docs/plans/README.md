@@ -232,6 +232,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 482 | [482-feat-twoda-find-in-column-tests-plan.md](2026-06-11-482-feat-twoda-find-in-column-tests-plan.md) | 2DA Find in column test coverage (plan 465 day 18) |
 | 483 | [483-feat-twoda-column-width-persist-tests-plan.md](2026-06-11-483-feat-twoda-column-width-persist-tests-plan.md) | 2DA Column width persist test coverage (plan 465 day 19) |
 | 484 | [484-feat-twoda-regex-find-tests-plan.md](2026-06-11-484-feat-twoda-regex-find-tests-plan.md) | 2DA Regex find test coverage (plan 465 day 20) |
+| 485 | [485-feat-twoda-navigate-to-cell-tests-plan.md](2026-06-11-485-feat-twoda-navigate-to-cell-tests-plan.md) | 2DA NavigateToCell test coverage (plan 465 day 21) |
 
 ## Repo implications
 
