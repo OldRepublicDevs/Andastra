@@ -72,6 +72,7 @@ namespace OdyTools.Editors
         private string _findText = "";
         private string _replaceText = "";
         private bool _findMatchCase;
+        private int _findColumnIndex = -1;
         private int _lastFindRow = -1;
         private int _lastFindCol = -1;
         private int _rowDragStartIndex = -1;
@@ -2672,11 +2673,12 @@ namespace OdyTools.Editors
 
         private StringComparison FindComparison => _findMatchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
 
-        /// <summary>Configures find text/options and resets the search cursor (for F3 / Find Next).</summary>
-        public void ConfigureFind(string text, bool matchCase = false)
+        /// <summary>Configures find text/options and resets the search cursor (for F3 / Find Next). columnIndex -1 searches all columns; &gt;= 1 limits search to that grid column.</summary>
+        public void ConfigureFind(string text, bool matchCase = false, int columnIndex = -1)
         {
             _findText = text ?? "";
             _findMatchCase = matchCase;
+            _findColumnIndex = columnIndex;
             _lastFindRow = -1;
             _lastFindCol = -1;
         }
@@ -2687,6 +2689,7 @@ namespace OdyTools.Editors
             _findText = findText ?? "";
             _replaceText = replaceText ?? "";
             _findMatchCase = matchCase;
+            _findColumnIndex = -1;
             _lastFindRow = -1;
             _lastFindCol = -1;
         }
@@ -2724,6 +2727,10 @@ namespace OdyTools.Editors
         private bool FindNextMatch()
         {
             if (string.IsNullOrEmpty(_findText)) return false;
+            if (_findColumnIndex >= 1)
+            {
+                return FindNextMatchInColumn(_findColumnIndex);
+            }
             int startRow = _lastFindRow;
             int startCol = _lastFindCol + 1;
             for (int r = 0; r < _sourceData.Count; r++)
@@ -2740,6 +2747,27 @@ namespace OdyTools.Editors
                         SelectAndScrollToCell(r, c);
                         return true;
                     }
+                }
+            }
+            _lastFindRow = -1;
+            _lastFindCol = -1;
+            return false;
+        }
+
+        private bool FindNextMatchInColumn(int columnIndex)
+        {
+            int startRow = _lastFindRow < 0 ? 0 : _lastFindRow + 1;
+            for (int r = startRow; r < _sourceData.Count; r++)
+            {
+                var row = _sourceData[r];
+                if (columnIndex >= row.Count) continue;
+                string cell = row[columnIndex] ?? "";
+                if (cell.IndexOf(_findText, FindComparison) >= 0)
+                {
+                    _lastFindRow = r;
+                    _lastFindCol = columnIndex;
+                    SelectAndScrollToCell(r, columnIndex);
+                    return true;
                 }
             }
             _lastFindRow = -1;
