@@ -1,6 +1,6 @@
 ---
 title: "feat: 2DA replace one edge-case test coverage"
-status: active
+status: complete
 origin: docs/plans/2026-06-11-465-chore-multi-day-pr-merge-holocron-integration-plan.md
 ---
 
@@ -91,4 +91,4 @@ Target: **130** `OdyTool2DA_*` tests (128 prior + 2 new).
 
 | PR | Merge | Tests |
 |----|-------|-------|
-| TBD | TBD | TBD |
+| [#151](https://github.com/th3w1zard1/Andastra/pull/151) | `258752666` | **130** `OdyTool2DA_*` |
