@@ -2954,6 +2954,85 @@ namespace OdyTools.Tests
         }
 
         [AvaloniaTest]
+        public void OdyTool2DA_TryFindNextMatch_Regex_FindsPatternMatch()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.ConfigureFind(@"P\w+Test", useRegex: true);
+
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(0));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(2));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryFindNextMatch_Regex_InvalidPattern_ReturnsFalse()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.ConfigureFind("[unclosed", useRegex: true);
+
+                Assert.That(editor.TryFindNextMatch(), Is.False);
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryFindNextMatch_Regex_MatchCase_RespectsCaseFlag()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.ConfigureFind(@"p\w+test", matchCase: true, useRegex: true);
+                Assert.That(editor.TryFindNextMatch(), Is.False);
+
+                editor.ConfigureFind(@"p\w+test", matchCase: false, useRegex: true);
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(2));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryFindNextMatch_LiteralDefault_UnchangedWhenUseRegexFalse()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.ConfigureFind(@"P\w+Test", useRegex: false);
+
+                Assert.That(editor.TryFindNextMatch(), Is.False, "Literal mode treats backslashes literally");
+                editor.ConfigureFind("PMBTest");
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
         public void OdyTool2DA_TryReplaceAll_ReplacesAllOccurrences()
         {
             byte[] data = CreateTestTwoDABytes(4);

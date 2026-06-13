@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Data;
@@ -72,6 +73,7 @@ namespace OdyTools.Editors
         private string _findText = "";
         private string _replaceText = "";
         private bool _findMatchCase;
+        private bool _findUseRegex;
         private int _findColumnIndex = -1;
         private int _lastFindRow = -1;
         private int _lastFindCol = -1;
@@ -2728,12 +2730,36 @@ namespace OdyTools.Editors
 
         private StringComparison FindComparison => _findMatchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
 
-        /// <summary>Configures find text/options and resets the search cursor (for F3 / Find Next). columnIndex -1 searches all columns; &gt;= 1 limits search to that grid column.</summary>
-        public void ConfigureFind(string text, bool matchCase = false, int columnIndex = -1)
+        private bool CellMatchesFind(string cell)
+        {
+            string value = cell ?? "";
+            if (string.IsNullOrEmpty(_findText)) return false;
+            if (!_findUseRegex)
+            {
+                return value.IndexOf(_findText, FindComparison) >= 0;
+            }
+            try
+            {
+                RegexOptions options = RegexOptions.CultureInvariant;
+                if (!_findMatchCase)
+                {
+                    options |= RegexOptions.IgnoreCase;
+                }
+                return Regex.IsMatch(value, _findText, options);
+            }
+            catch (ArgumentException)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>Configures find text/options and resets the search cursor (for F3 / Find Next). columnIndex -1 searches all columns; &gt;= 1 limits search to that grid column; useRegex enables regex matching.</summary>
+        public void ConfigureFind(string text, bool matchCase = false, int columnIndex = -1, bool useRegex = false)
         {
             _findText = text ?? "";
             _findMatchCase = matchCase;
             _findColumnIndex = columnIndex;
+            _findUseRegex = useRegex;
             _lastFindRow = -1;
             _lastFindCol = -1;
         }
@@ -2745,6 +2771,7 @@ namespace OdyTools.Editors
             _replaceText = replaceText ?? "";
             _findMatchCase = matchCase;
             _findColumnIndex = -1;
+            _findUseRegex = false;
             _lastFindRow = -1;
             _lastFindCol = -1;
         }
@@ -2795,7 +2822,7 @@ namespace OdyTools.Editors
                 for (int c = colStart; c < row.Count; c++)
                 {
                     string cell = row[c] ?? "";
-                    if (cell.IndexOf(_findText, FindComparison) >= 0)
+                    if (CellMatchesFind(cell))
                     {
                         _lastFindRow = r;
                         _lastFindCol = c;
@@ -2817,7 +2844,7 @@ namespace OdyTools.Editors
                 var row = _sourceData[r];
                 if (columnIndex >= row.Count) continue;
                 string cell = row[columnIndex] ?? "";
-                if (cell.IndexOf(_findText, FindComparison) >= 0)
+                if (CellMatchesFind(cell))
                 {
                     _lastFindRow = r;
                     _lastFindCol = columnIndex;
