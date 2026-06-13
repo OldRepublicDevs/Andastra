@@ -11,7 +11,7 @@ branch: master
 
 ## Executive summary (2026-06-11)
 
-Plan **465** Days **1–17** landed on `master`:
+Plan **465** Days **1–18** landed on `master`:
 
 | Day | PR | Outcome |
 |-----|-----|---------|
@@ -32,6 +32,7 @@ Plan **465** Days **1–17** landed on `master`:
 | **15** | [#150](https://github.com/th3w1zard1/Andastra/pull/150) | 2DA Replace One tests (plan **479**); **128** `OdyTool2DA_*` tests |
 | **16** | [#151](https://github.com/th3w1zard1/Andastra/pull/151) | 2DA Replace One edge-case tests (plan **480**); **130** `OdyTool2DA_*` tests |
 | **17** | [#152](https://github.com/th3w1zard1/Andastra/pull/152) | 2DA Insert Multiple Rows tests (plan **481**); **133** `OdyTool2DA_*` tests |
+| **18** | TBD | 2DA Find in column tests (plan **482**); **137** `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
@@ -231,6 +232,15 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 | D17.2 | No selection → append N rows at end | ✅ |
 | D17.3 | Selection → insert N rows after `selectedIndices.Max() + 1` | ✅ |
 | D17.4 | `count <= 0` no-op; OdyTool2DATests (3 tests); PR → `master` | ✅ @ `0622bf2eb` |
+
+## Day 18 — 2DA Find in column test coverage (plan **482**)
+
+| Step | Action | Done |
+|------|--------|------|
+| D18.1 | `_findColumnIndex`; extend `ConfigureFind(..., columnIndex = -1)` | |
+| D18.2 | Column-scoped `FindNextMatch()` (rows only in target column) | |
+| D18.3 | All-columns default unchanged (`columnIndex == -1`) | |
+| D18.4 | OdyTool2DATests (4 tests); PR → `master` | |
 
 ## Day 5+ — Holocron continuation
 

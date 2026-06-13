@@ -229,6 +229,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 479 | [479-feat-twoda-replace-one-tests-plan.md](2026-06-11-479-feat-twoda-replace-one-tests-plan.md) | 2DA Replace One test coverage (plan 465 day 15) |
 | 480 | [480-feat-twoda-replace-one-edge-tests-plan.md](2026-06-11-480-feat-twoda-replace-one-edge-tests-plan.md) | 2DA Replace One edge-case tests (plan 465 day 16) |
 | 481 | [481-feat-twoda-insert-multiple-rows-tests-plan.md](2026-06-11-481-feat-twoda-insert-multiple-rows-tests-plan.md) | 2DA Insert Multiple Rows test coverage (plan 465 day 17) |
+| 482 | [482-feat-twoda-find-in-column-tests-plan.md](2026-06-11-482-feat-twoda-find-in-column-tests-plan.md) | 2DA Find in column test coverage (plan 465 day 18) |
 
 ## Repo implications
 
