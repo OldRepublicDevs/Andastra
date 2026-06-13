@@ -11,7 +11,7 @@ branch: master
 
 ## Executive summary (2026-06-11)
 
-Plan **465** Days **1–20** landed on `master`:
+Plan **465** Days **1–21** landed on `master`:
 
 | Day | PR | Outcome |
 |-----|-----|---------|
@@ -35,6 +35,7 @@ Plan **465** Days **1–20** landed on `master`:
 | **18** | [#154](https://github.com/th3w1zard1/Andastra/pull/154) | 2DA Find in column tests (plan **482**); **137** `OdyTool2DA_*` tests |
 | **19** | [#155](https://github.com/th3w1zard1/Andastra/pull/155) | 2DA Column width persist tests (plan **483**); **141** `OdyTool2DA_*` tests |
 | **20** | [#156](https://github.com/th3w1zard1/Andastra/pull/156) | 2DA Regex find tests (plan **484**); **145** `OdyTool2DA_*` tests |
+| **21** | TBD | 2DA NavigateToCell tests (plan **485**); **149** `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
@@ -257,10 +258,19 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 
 | Step | Action | Done |
 |------|--------|------|
-| D20.1 | `_findUseRegex`; extend `ConfigureFind(..., useRegex = false)` | |
-| D20.2 | `CellMatchesFind` helper; invalid regex no-op | |
-| D20.3 | Literal find default unchanged | |
-| D20.4 | OdyTool2DATests (4 tests); PR → `master` | |
+| D20.1 | `_findUseRegex`; extend `ConfigureFind(..., useRegex = false)` | ✅ |
+| D20.2 | `CellMatchesFind` helper; invalid regex no-op | ✅ |
+| D20.3 | Literal find default unchanged | ✅ |
+| D20.4 | OdyTool2DATests (4 tests); PR → `master` | ✅ @ `7196863e9` |
+
+## Day 21 — 2DA NavigateToCell test coverage (plan **485**)
+
+| Step | Action | Done |
+|------|--------|------|
+| D21.1 | Make `NavigateToCell(int rowIdx, int colIdx)` public | |
+| D21.2 | OdyTool2DATests: first data cell, last data cell | |
+| D21.3 | OdyTool2DATests: out-of-range clamp; numeric Go To column index | |
+| D21.4 | PR → `master` | |
 
 ## Day 5+ — Holocron continuation
 
@@ -295,3 +305,4 @@ Per plan **063** deferred items:
 | [#152](https://github.com/th3w1zard1/Andastra/pull/152) | `0622bf2eb` | 2DA insert multiple rows test coverage (plan **481**) |
 | [#154](https://github.com/th3w1zard1/Andastra/pull/154) | `bdb030edc` | 2DA find in column test coverage (plan **482**) |
 | [#155](https://github.com/th3w1zard1/Andastra/pull/155) | `91891aced` | 2DA column width persist test coverage (plan **483**) |
+| [#156](https://github.com/th3w1zard1/Andastra/pull/156) | `7196863e9` | 2DA regex find test coverage (plan **484**) |
