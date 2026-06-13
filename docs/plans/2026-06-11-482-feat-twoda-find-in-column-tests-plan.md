@@ -1,6 +1,6 @@
 ---
 title: "feat: 2DA find in column test coverage"
-status: active
+status: complete
 origin: docs/plans/2026-06-11-465-chore-multi-day-pr-merge-holocron-integration-plan.md
 ---
 
@@ -75,4 +75,4 @@ Target: **137** `OdyTool2DA_*` tests (133 prior + 4 new).
 
 | PR | Merge | Tests |
 |----|-------|-------|
-| TBD | TBD | TBD |
+| [#154](https://github.com/th3w1zard1/Andastra/pull/154) | `bdb030edc` | **137** `OdyTool2DA_*` |
