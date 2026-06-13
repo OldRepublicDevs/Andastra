@@ -11,7 +11,7 @@ branch: master
 
 ## Executive summary (2026-06-11)
 
-Plan **465** Days **1–18** landed on `master`:
+Plan **465** Days **1–19** landed on `master`:
 
 | Day | PR | Outcome |
 |-----|-----|---------|
@@ -33,6 +33,7 @@ Plan **465** Days **1–18** landed on `master`:
 | **16** | [#151](https://github.com/th3w1zard1/Andastra/pull/151) | 2DA Replace One edge-case tests (plan **480**); **130** `OdyTool2DA_*` tests |
 | **17** | [#152](https://github.com/th3w1zard1/Andastra/pull/152) | 2DA Insert Multiple Rows tests (plan **481**); **133** `OdyTool2DA_*` tests |
 | **18** | [#154](https://github.com/th3w1zard1/Andastra/pull/154) | 2DA Find in column tests (plan **482**); **137** `OdyTool2DA_*` tests |
+| **19** | TBD | 2DA Column width persist tests (plan **483**); **141** `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
@@ -241,6 +242,15 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 | D18.2 | Column-scoped `FindNextMatch()` (rows only in target column) | ✅ |
 | D18.3 | All-columns default unchanged (`columnIndex == -1`) | ✅ |
 | D18.4 | OdyTool2DATests (4 tests); PR → `master` | ✅ @ `bdb030edc` |
+
+## Day 19 — 2DA Column width persist test coverage (plan **483**)
+
+| Step | Action | Done |
+|------|--------|------|
+| D19.1 | `_persistedColumnWidths`; `TrySetColumnWidth` / `GetColumnPixelWidth` hooks | |
+| D19.2 | `RebuildGridColumns()` restores persisted widths | |
+| D19.3 | `RenameColumnByIndex` migrates width key; `AutoFitAllColumns` persists | |
+| D19.4 | OdyTool2DATests (3–4 tests); PR → `master` | |
 
 ## Day 5+ — Holocron continuation
 
