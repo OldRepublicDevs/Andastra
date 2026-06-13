@@ -31,7 +31,7 @@ Plan **465** Days **1–17** landed on `master`:
 | **14** | [#149](https://github.com/th3w1zard1/Andastra/pull/149) | 2DA Replace All tests (plan **478**); **125** `OdyTool2DA_*` tests |
 | **15** | [#150](https://github.com/th3w1zard1/Andastra/pull/150) | 2DA Replace One tests (plan **479**); **128** `OdyTool2DA_*` tests |
 | **16** | [#151](https://github.com/th3w1zard1/Andastra/pull/151) | 2DA Replace One edge-case tests (plan **480**); **130** `OdyTool2DA_*` tests |
-| **17** | TBD | 2DA Insert Multiple Rows tests (plan **481**); **133** `OdyTool2DA_*` tests |
+| **17** | [#152](https://github.com/th3w1zard1/Andastra/pull/152) | 2DA Insert Multiple Rows tests (plan **481**); **133** `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
@@ -227,10 +227,10 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 
 | Step | Action | Done |
 |------|--------|------|
-| D17.1 | `TryInsertMultipleRows(int count)` public hook; `InsertMultipleRows()` delegates after dialog | |
-| D17.2 | No selection → append N rows at end | |
-| D17.3 | Selection → insert N rows after `selectedIndices.Max() + 1` | |
-| D17.4 | `count <= 0` no-op; OdyTool2DATests (3 tests); PR → `master` | |
+| D17.1 | `TryInsertMultipleRows(int count)` public hook; `InsertMultipleRows()` delegates after dialog | ✅ |
+| D17.2 | No selection → append N rows at end | ✅ |
+| D17.3 | Selection → insert N rows after `selectedIndices.Max() + 1` | ✅ |
+| D17.4 | `count <= 0` no-op; OdyTool2DATests (3 tests); PR → `master` | ✅ @ `0622bf2eb` |
 
 ## Day 5+ — Holocron continuation
 
@@ -262,3 +262,4 @@ Per plan **063** deferred items:
 | [#149](https://github.com/th3w1zard1/Andastra/pull/149) | `88dc572e4` | 2DA replace all test coverage (plan **478**) |
 | [#150](https://github.com/th3w1zard1/Andastra/pull/150) | `f294aab9b` | 2DA replace one test coverage (plan **479**) |
 | [#151](https://github.com/th3w1zard1/Andastra/pull/151) | `258752666` | 2DA replace one edge-case tests (plan **480**) |
+| [#152](https://github.com/th3w1zard1/Andastra/pull/152) | `0622bf2eb` | 2DA insert multiple rows test coverage (plan **481**) |
