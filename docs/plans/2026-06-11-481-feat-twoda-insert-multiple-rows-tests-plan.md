@@ -1,6 +1,6 @@
 ---
 title: "feat: 2DA insert multiple rows test coverage"
-status: active
+status: complete
 origin: docs/plans/2026-06-11-465-chore-multi-day-pr-merge-holocron-integration-plan.md
 ---
 
@@ -78,3 +78,9 @@ dotnet test tests/OdyTools.Tests/OdyTools.Tests.csproj --framework net9.0 --filt
 ```
 
 Target: **133** `OdyTool2DA_*` tests (130 prior + 3 new).
+
+## Landed
+
+| PR | Merge | Tests |
+|----|-------|-------|
+| [#152](https://github.com/th3w1zard1/Andastra/pull/152) | `0622bf2eb` | **133** `OdyTool2DA_*` |
