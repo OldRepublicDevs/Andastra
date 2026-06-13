@@ -11,7 +11,7 @@ branch: master
 
 ## Executive summary (2026-06-11)
 
-Plan **465** Days **1–16** landed on `master`:
+Plan **465** Days **1–17** landed on `master`:
 
 | Day | PR | Outcome |
 |-----|-----|---------|
@@ -31,6 +31,7 @@ Plan **465** Days **1–16** landed on `master`:
 | **14** | [#149](https://github.com/th3w1zard1/Andastra/pull/149) | 2DA Replace All tests (plan **478**); **125** `OdyTool2DA_*` tests |
 | **15** | [#150](https://github.com/th3w1zard1/Andastra/pull/150) | 2DA Replace One tests (plan **479**); **128** `OdyTool2DA_*` tests |
 | **16** | [#151](https://github.com/th3w1zard1/Andastra/pull/151) | 2DA Replace One edge-case tests (plan **480**); **130** `OdyTool2DA_*` tests |
+| **17** | TBD | 2DA Insert Multiple Rows tests (plan **481**); **133** `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
@@ -221,6 +222,15 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 | D16.2 | Stale cursor test (mutate cell, replace advances find) | ✅ |
 | D16.3 | Cursor assertions in existing replace-one test; plan **479** hygiene | ✅ |
 | D16.4 | PR **#151** → `master` | ✅ @ `258752666` |
+
+## Day 17 — 2DA Insert Multiple Rows test coverage (plan **481**)
+
+| Step | Action | Done |
+|------|--------|------|
+| D17.1 | `TryInsertMultipleRows(int count)` public hook; `InsertMultipleRows()` delegates after dialog | |
+| D17.2 | No selection → append N rows at end | |
+| D17.3 | Selection → insert N rows after `selectedIndices.Max() + 1` | |
+| D17.4 | `count <= 0` no-op; OdyTool2DATests (3 tests); PR → `master` | |
 
 ## Day 5+ — Holocron continuation
 
