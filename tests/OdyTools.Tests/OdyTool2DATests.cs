@@ -2785,6 +2785,95 @@ namespace OdyTools.Tests
         }
 
         [AvaloniaTest]
+        public void OdyTool2DA_TryFindNextMatch_InColumn_SkipsOtherColumns()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.ConfigureFind("PMBTest", columnIndex: 2);
+
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(0));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(2));
+                Assert.That(editor.TryFindNextMatch(), Is.False, "Column-scoped find must not advance to race column");
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryFindNextMatch_InColumn_WrapsWithinRows()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.ConfigureFind("10", columnIndex: 3);
+
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(0));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(3));
+
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(1));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(3));
+
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(2));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(3));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryFindNextMatch_InColumn_NoMatch_ReturnsFalse()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.ConfigureFind("ZZZNOMATCH", columnIndex: 2);
+                Assert.That(editor.TryFindNextMatch(), Is.False);
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryFindNextMatch_AllColumnsDefault_Unchanged()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.ConfigureFind("PMBTest");
+
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(2));
+
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(0));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(4));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
         public void OdyTool2DA_TryReplaceAll_ReplacesAllOccurrences()
         {
             byte[] data = CreateTestTwoDABytes(4);
