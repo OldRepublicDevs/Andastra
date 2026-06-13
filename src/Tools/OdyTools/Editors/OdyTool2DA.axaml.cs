@@ -88,6 +88,7 @@ namespace OdyTools.Editors
         private static readonly IBrush ColumnHighlightBrush = new SolidColorBrush(Avalonia.Media.Color.Parse("#E3F2FD"));
         private static readonly IBrush RangeHighlightBrush = new SolidColorBrush(Avalonia.Media.Color.Parse("#FFF9C4"));
         private readonly Dictionary<int, ColumnValidationMode> _columnValidationRules = new Dictionary<int, ColumnValidationMode>();
+        private readonly Dictionary<string, double> _persistedColumnWidths = new Dictionary<string, double>(StringComparer.Ordinal);
 
         // Column filter state
         private int _filterColumnIndex = -1;
@@ -1340,7 +1341,7 @@ namespace OdyTools.Editors
                 Binding = new Binding("[0]"),
                 IsReadOnly = false,
                 MinWidth = 40,
-                Width = new DataGridLength(RowLabelColumnWidth, DataGridLengthUnitType.Pixel)
+                Width = new DataGridLength(GetPersistedColumnWidth("#", RowLabelColumnWidth), DataGridLengthUnitType.Pixel)
             });
             for (int i = 0; i < _columnHeaders.Count; i++)
             {
@@ -1348,15 +1349,64 @@ namespace OdyTools.Editors
                 if (_hiddenColumnIndices.Contains(i)) continue;
 
                 int index = i + 1;
+                string header = _columnHeaders[i];
                 _twodaTable.Columns.Add(new DataGridTextColumn
                 {
-                    Header = _columnHeaders[i],
+                    Header = header,
                     Binding = new Binding($"[{index}]"),
                     IsReadOnly = false,
                     MinWidth = MinColumnWidth,
-                    Width = new DataGridLength(DefaultColumnWidth, DataGridLengthUnitType.Pixel)
+                    Width = new DataGridLength(GetPersistedColumnWidth(header, DefaultColumnWidth), DataGridLengthUnitType.Pixel)
                 });
             }
+        }
+
+        private double GetPersistedColumnWidth(string headerKey, double defaultWidth)
+        {
+            if (!string.IsNullOrEmpty(headerKey) && _persistedColumnWidths.TryGetValue(headerKey, out double width))
+            {
+                return Math.Max(MinColumnWidth, Math.Min(500, width));
+            }
+            return defaultWidth;
+        }
+
+        private void PersistColumnWidth(string headerKey, double width)
+        {
+            if (string.IsNullOrEmpty(headerKey)) return;
+            _persistedColumnWidths[headerKey] = Math.Max(MinColumnWidth, Math.Min(500, width));
+        }
+
+        private static string GetGridColumnHeaderKey(DataGridColumn column)
+        {
+            return column?.Header?.ToString() ?? "";
+        }
+
+        /// <summary>Sets a grid column width in pixels and persists it for rebuilds (headless tests / resize persist).</summary>
+        public void TrySetColumnWidth(int gridColumnIndex, double width)
+        {
+            if (_twodaTable == null || gridColumnIndex < 0 || gridColumnIndex >= _twodaTable.Columns.Count) return;
+            var column = _twodaTable.Columns[gridColumnIndex];
+            double clamped = Math.Max(MinColumnWidth, Math.Min(500, width));
+            column.Width = new DataGridLength(clamped, DataGridLengthUnitType.Pixel);
+            PersistColumnWidth(GetGridColumnHeaderKey(column), clamped);
+        }
+
+        /// <summary>Returns the pixel width of a grid column, or -1 when unavailable.</summary>
+        public double GetColumnPixelWidth(int gridColumnIndex)
+        {
+            if (_twodaTable == null || gridColumnIndex < 0 || gridColumnIndex >= _twodaTable.Columns.Count) return -1;
+            var length = _twodaTable.Columns[gridColumnIndex].Width;
+            if (length.UnitType == DataGridLengthUnitType.Pixel)
+            {
+                return length.Value;
+            }
+            return length.DisplayValue;
+        }
+
+        /// <summary>Rebuilds grid columns (exposed for headless tests).</summary>
+        public void TryRebuildGridColumns()
+        {
+            RebuildGridColumns();
         }
 
         /// <summary>Adds a new column with a default name without showing a dialog.</summary>
@@ -1377,7 +1427,7 @@ namespace OdyTools.Editors
                     Binding = new Binding($"[{idx}]"),
                     IsReadOnly = false,
                     MinWidth = MinColumnWidth,
-                    Width = new DataGridLength(DefaultColumnWidth, DataGridLengthUnitType.Pixel)
+                    Width = new DataGridLength(GetPersistedColumnWidth(name, DefaultColumnWidth), DataGridLengthUnitType.Pixel)
                 });
             }
             foreach (var row in _sourceData)
@@ -1398,6 +1448,11 @@ namespace OdyTools.Editors
             if (name == current) return;
             PushState();
             _columnHeaders[colIndex] = name;
+            if (_persistedColumnWidths.TryGetValue(current, out double persistedWidth))
+            {
+                _persistedColumnWidths.Remove(current);
+                _persistedColumnWidths[name] = persistedWidth;
+            }
             if (_twodaTable != null && colIndex + 1 < _twodaTable.Columns.Count)
             {
                 _twodaTable.Columns[colIndex + 1].Header = name;
@@ -3199,7 +3254,7 @@ namespace OdyTools.Editors
                     Binding = new Binding($"[{idx}]"),
                     IsReadOnly = false,
                     MinWidth = MinColumnWidth,
-                    Width = new DataGridLength(DefaultColumnWidth, DataGridLengthUnitType.Pixel)
+                    Width = new DataGridLength(GetPersistedColumnWidth(columnName, DefaultColumnWidth), DataGridLengthUnitType.Pixel)
                 });
             }
             foreach (var row in _sourceData)
@@ -3854,6 +3909,7 @@ namespace OdyTools.Editors
                     // Cap at reasonable maximum
                     maxWidth = Math.Min(maxWidth, 500);
                     column.Width = new DataGridLength(maxWidth);
+                    PersistColumnWidth(GetGridColumnHeaderKey(column), maxWidth);
                 }
             }
 
