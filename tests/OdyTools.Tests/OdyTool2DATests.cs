@@ -2867,6 +2867,8 @@ namespace OdyTools.Tests
                 var source = GetSourceData(editor);
                 editor.ConfigureReplace("PMBTest", "Replaced");
                 Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(0));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(2));
 
                 editor.TryReplaceOne();
 
@@ -2925,6 +2927,61 @@ namespace OdyTools.Tests
                 var after = BuildAndParse(editor);
                 Assert.That(after.GetCellString(0, "name"), Is.EqualTo(before.GetCellString(0, "name")));
                 Assert.That(after.GetCellString(0, "race"), Is.EqualTo(before.GetCellString(0, "race")));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryReplaceOne_InvalidCursor_LeavesDataUnchanged()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                var before = BuildAndParse(editor);
+                editor.ConfigureReplace("PMBTest", "Replaced");
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(-1));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(-1));
+
+                editor.TryReplaceOne();
+
+                var after = BuildAndParse(editor);
+                Assert.That(after.GetCellString(0, "name"), Is.EqualTo(before.GetCellString(0, "name")));
+                Assert.That(after.GetCellString(0, "race"), Is.EqualTo(before.GetCellString(0, "race")));
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(-1));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(-1));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryReplaceOne_StaleCursor_AdvancesFindWithoutMutating()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                var source = GetSourceData(editor);
+                editor.ConfigureReplace("PMBTest", "Replaced");
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(0));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(2));
+
+                source[0][2] = "P_HK47";
+                editor.TryReplaceOne();
+
+                Assert.That(source[0][2], Is.EqualTo("P_HK47"), "Stale cell must not be replaced");
+                Assert.That(source[0][4], Is.EqualTo("PMBTest"), "Other cells unchanged");
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(0));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(4), "Find cursor advances to next match");
             }
             finally
             {

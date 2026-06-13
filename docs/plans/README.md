@@ -227,6 +227,7 @@ Naming: `docs/plans/2026-05-23-NNN-<slug>-plan.md`
 | 477 | [477-feat-twoda-find-next-tests-plan.md](2026-06-11-477-feat-twoda-find-next-tests-plan.md) | 2DA Find Next match test coverage (plan 465 day 13) |
 | 478 | [478-feat-twoda-replace-all-tests-plan.md](2026-06-11-478-feat-twoda-replace-all-tests-plan.md) | 2DA Replace All test coverage (plan 465 day 14) |
 | 479 | [479-feat-twoda-replace-one-tests-plan.md](2026-06-11-479-feat-twoda-replace-one-tests-plan.md) | 2DA Replace One test coverage (plan 465 day 15) |
+| 480 | [480-feat-twoda-replace-one-edge-tests-plan.md](2026-06-11-480-feat-twoda-replace-one-edge-tests-plan.md) | 2DA Replace One edge-case tests (plan 465 day 16) |
 
 ## Repo implications
 

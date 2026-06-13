@@ -2674,7 +2674,7 @@ namespace OdyTools.Editors
             _lastFindCol = -1;
         }
 
-        /// <summary>Configures find/replace text and options (for Replace / Replace All).</summary>
+        /// <summary>Configures find/replace text and options (for Replace / Replace All). Resets the find cursor — call <see cref="TryFindNextMatch"/> before replace-one.</summary>
         public void ConfigureReplace(string findText, string replaceText, bool matchCase = false)
         {
             _findText = findText ?? "";
