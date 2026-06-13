@@ -2401,6 +2401,13 @@ namespace OdyTools.Editors
             _ = dialog.ShowDialog(this);
 
             if (_insertRowsResult <= 0) return;
+            TryInsertMultipleRows(_insertRowsResult);
+        }
+
+        /// <summary>Inserts <paramref name="count"/> blank rows after the highest selected row, or at end when none selected.</summary>
+        public void TryInsertMultipleRows(int count)
+        {
+            if (count <= 0) return;
             PushState();
             int insertIndex = _sourceData.Count;
             var selectedIndices = _twodaTable?.SelectedItems != null
@@ -2413,7 +2420,7 @@ namespace OdyTools.Editors
             }
 
             int colCount = GetEffectiveColumnCount();
-            for (int i = 0; i < _insertRowsResult; i++)
+            for (int i = 0; i < count; i++)
             {
                 var newRow = new ObservableCollection<string>();
                 for (int c = 0; c < colCount; c++) newRow.Add("");
