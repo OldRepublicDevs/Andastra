@@ -3017,16 +3017,16 @@ namespace OdyTools.Tests
             byte[] data = CreateTestTwoDABytes(4);
             var editor = CreateEditor();
             editor.Load("test.2da", "test", ResourceType.TwoDA, data);
-            SetSelection(editor, 1);
+            SetSelection(editor, 0, 2);
 
             editor.TryInsertMultipleRows(2);
             var result = BuildAndParse(editor);
 
             Assert.That(result.GetHeight(), Is.EqualTo(6));
-            Assert.That(result.GetCellString(1, "name"), Is.EqualTo("P_HK47"));
-            Assert.That(result.GetCellString(2, "name"), Is.EqualTo(""));
+            Assert.That(result.GetCellString(0, "name"), Is.EqualTo("PMBTest"));
+            Assert.That(result.GetCellString(2, "name"), Is.EqualTo("Row2"));
             Assert.That(result.GetCellString(3, "name"), Is.EqualTo(""));
-            Assert.That(result.GetCellString(4, "name"), Is.EqualTo("Row2"));
+            Assert.That(result.GetCellString(4, "name"), Is.EqualTo(""));
             Assert.That(result.GetCellString(5, "name"), Is.EqualTo("Row3"));
             Assert.That(GetSourceData(editor).Count, Is.EqualTo(6));
             editor.Close();
@@ -3048,6 +3048,8 @@ namespace OdyTools.Tests
             Assert.That(after.GetCellString(0, "name"), Is.EqualTo("PMBTest"));
             Assert.That(after.GetCellString(1, "name"), Is.EqualTo("P_HK47"));
             Assert.That(GetSourceData(editor).Count, Is.EqualTo(4));
+            InvokeUndo(editor);
+            Assert.That(BuildAndParse(editor).GetHeight(), Is.EqualTo(4), "Zero/negative insert must not push undo state");
             editor.Close();
         }
 
