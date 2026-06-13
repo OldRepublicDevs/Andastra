@@ -227,9 +227,9 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 
 | Step | Action | Done |
 |------|--------|------|
-| D17.1 | `TryInsertMultipleRows(int count)` public hook; `InsertMultipleRows()` delegates after dialog | |
-| D17.2 | No selection → append N rows at end | |
-| D17.3 | Selection → insert N rows after `selectedIndices.Max() + 1` | |
+| D17.1 | `TryInsertMultipleRows(int count)` public hook; `InsertMultipleRows()` delegates after dialog | ✅ |
+| D17.2 | No selection → append N rows at end | ✅ |
+| D17.3 | Selection → insert N rows after `selectedIndices.Max() + 1` | ✅ |
 | D17.4 | `count <= 0` no-op; OdyTool2DATests (3 tests); PR → `master` | |
 
 ## Day 5+ — Holocron continuation
