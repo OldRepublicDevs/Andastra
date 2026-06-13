@@ -11,7 +11,7 @@ branch: master
 
 ## Executive summary (2026-06-11)
 
-Plan **465** Days **1–15** landed on `master`:
+Plan **465** Days **1–16** landed on `master`:
 
 | Day | PR | Outcome |
 |-----|-----|---------|
@@ -30,6 +30,7 @@ Plan **465** Days **1–15** landed on `master`:
 | **13** | [#148](https://github.com/th3w1zard1/Andastra/pull/148) | 2DA Find Next tests (plan **477**); **122** `OdyTool2DA_*` tests |
 | **14** | [#149](https://github.com/th3w1zard1/Andastra/pull/149) | 2DA Replace All tests (plan **478**); **125** `OdyTool2DA_*` tests |
 | **15** | [#150](https://github.com/th3w1zard1/Andastra/pull/150) | 2DA Replace One tests (plan **479**); **128** `OdyTool2DA_*` tests |
+| **16** | TBD | 2DA Replace One edge-case tests (plan **480**); **130** `OdyTool2DA_*` tests |
 
 Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff installation reference search (plans **001**/**002**) is **already on `master`** — no `TODO: STUB` in `ReferenceAnalyzers.cs`.
 
@@ -211,6 +212,15 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 | D15.2 | Replace one at find cursor; case flag; empty find no-op | ✅ |
 | D15.3 | OdyTool2DATests: replace one, case, empty find | ✅ |
 | D15.4 | PR **#150** → `master` | ✅ @ `f294aab9b` |
+
+## Day 16 — 2DA Replace One edge-case test coverage (plan **480**)
+
+| Step | Action | Done |
+|------|--------|------|
+| D16.1 | Invalid cursor no-op test (`ConfigureReplace` only) | ☐ |
+| D16.2 | Stale cursor test (mutate cell, replace advances find) | ☐ |
+| D16.3 | Cursor assertions in existing replace-one test; plan **479** hygiene | ☐ |
+| D16.4 | PR → `master` | ☐ |
 
 ## Day 5+ — Holocron continuation
 
