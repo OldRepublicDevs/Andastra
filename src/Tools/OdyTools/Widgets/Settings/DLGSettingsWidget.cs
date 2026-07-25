@@ -2,6 +2,7 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using OdyTools.Data;
+using OdyTools.Editors;
 using OdyTools.Editors.DLG;
 
 namespace OdyTools.Widgets.Settings
@@ -68,12 +69,14 @@ namespace OdyTools.Widgets.Settings
 
         private void SetupUI()
         {
-            _tlkPathEdit = this.FindControl<TextBox>("tlkPathEdit");
-            _femaleTlkPathEdit = this.FindControl<TextBox>("femaleTlkPathEdit");
-            _override2DADirEdit = this.FindControl<TextBox>("override2DADirEdit");
-            if (_tlkPathEdit == null) _tlkPathEdit = new TextBox();
-            if (_femaleTlkPathEdit == null) _femaleTlkPathEdit = new TextBox();
-            if (_override2DADirEdit == null) _override2DADirEdit = new TextBox();
+            _tlkPathEdit = EditorHelpers.FindControlSafe<TextBox>(this, "tlkPathEdit") ?? _tlkPathEdit;
+            _femaleTlkPathEdit = EditorHelpers.FindControlSafe<TextBox>(this, "femaleTlkPathEdit") ?? _femaleTlkPathEdit;
+            _override2DADirEdit = EditorHelpers.FindControlSafe<TextBox>(this, "override2DADirEdit") ?? _override2DADirEdit;
+
+            if (_tlkPathEdit == null || _femaleTlkPathEdit == null || _override2DADirEdit == null)
+            {
+                SetupProgrammaticUI();
+            }
         }
 
         private void SetupValues()

@@ -12,6 +12,7 @@ using BioWare.Resource.Formats.GFF.Generics;
 using NUnit.Framework;
 using IndoorMapIo = BioWare.Tools.IndoorMapIo;
 using OdyTools.Data;
+using OdyTools.Blender;
 using OdyTools.Windows;
 using DataKit = OdyTools.Data.Kit;
 
@@ -121,6 +122,119 @@ namespace OdyTools.Tests
                         Assert.That(ok, Is.True);
                         Assert.That(reloaded.Map.ModuleId, Is.EqualTo("save01"));
                         Assert.That(reloaded.Map.Rooms.Count, Is.EqualTo(1));
+                    }
+                    finally
+                    {
+                        if (File.Exists(tempPath))
+                        {
+                            File.Delete(tempPath);
+                        }
+                    }
+                }, CancellationToken.None);
+            }
+        }
+
+        [Test, Timeout(60000)]
+        public async Task OpenInBlenderAction_EnablesAfterSaveAndUsesIndoorPath()
+        {
+            using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+            {
+                await session.Dispatch(() =>
+                {
+                    DataKit kit = CreateTestKit();
+                    var window = new IndoorBuilderWindow(null, null);
+                    window.SetKitsForTesting(new List<DataKit> { kit });
+
+                    Assert.That(window.Ui.ActionOpenInBlender, Is.Not.Null);
+                    Assert.That(window.Ui.ActionOpenInBlenderEnabled, Is.False);
+                    Assert.That(window.Ui.BlenderStatusText, Does.Contain("Save or open"));
+
+                    window.Map.ModuleId = "blend01";
+                    window.Map.Rooms.Add(new IndoorMapRoom(kit.Components[0], Vector3.Zero, 0f));
+
+                    string tempPath = Path.Combine(Path.GetTempPath(), "indoor_blender_" + Guid.NewGuid().ToString("N") + ".indoor");
+                    try
+                    {
+                        window.SaveMapToPath(tempPath);
+
+                        bool launched = false;
+                        string launchedPath = null;
+                        window.SetBlenderServicesForTests(
+                            _ =>
+                            {
+                                var info = new BlenderInfo
+                                {
+                                    Executable = "/usr/bin/blender",
+                                    Version = (4, 2, 0),
+                                    IsValid = true,
+                                    HasKotorblender = true
+                                };
+                                info.UpdateVersionString();
+                                return info;
+                            },
+                            (info, port, installationPath, modulePath, blendFile, background) =>
+                            {
+                                launched = true;
+                                launchedPath = modulePath;
+                                return System.Diagnostics.Process.GetCurrentProcess();
+                            });
+
+                        Assert.That(window.Ui.ActionOpenInBlenderEnabled, Is.True);
+                        Assert.That(window.TryLaunchBlenderForCurrentMap(), Is.True);
+                        Assert.That(launched, Is.True);
+                        Assert.That(launchedPath, Is.EqualTo(tempPath));
+                        Assert.That(window.Ui.BlenderStatusText, Does.Contain("Launched Blender"));
+                    }
+                    finally
+                    {
+                        if (File.Exists(tempPath))
+                        {
+                            File.Delete(tempPath);
+                        }
+                    }
+                }, CancellationToken.None);
+            }
+        }
+
+        [Test, Timeout(60000)]
+        public async Task OpenInBlenderAction_ReportsMissingKotorblenderWithoutLaunching()
+        {
+            using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+            {
+                await session.Dispatch(() =>
+                {
+                    DataKit kit = CreateTestKit();
+                    var window = new IndoorBuilderWindow(null, null);
+                    window.SetKitsForTesting(new List<DataKit> { kit });
+                    window.Map.ModuleId = "blend02";
+                    window.Map.Rooms.Add(new IndoorMapRoom(kit.Components[0], Vector3.Zero, 0f));
+
+                    string tempPath = Path.Combine(Path.GetTempPath(), "indoor_blender_missing_" + Guid.NewGuid().ToString("N") + ".indoor");
+                    try
+                    {
+                        window.SaveMapToPath(tempPath);
+                        window.SetBlenderServicesForTests(
+                            _ =>
+                            {
+                                var info = new BlenderInfo
+                                {
+                                    Executable = "/usr/bin/blender",
+                                    Version = (4, 2, 0),
+                                    IsValid = true,
+                                    HasKotorblender = false,
+                                    Error = "Blender 4.2.0 found but kotorblender add-on is not installed."
+                                };
+                                info.UpdateVersionString();
+                                return info;
+                            },
+                            (info, port, installationPath, modulePath, blendFile, background) =>
+                            {
+                                Assert.Fail("Blender should not launch without kotorblender.");
+                                return null;
+                            });
+
+                        Assert.That(window.TryLaunchBlenderForCurrentMap(), Is.False);
+                        Assert.That(window.Ui.BlenderStatusText, Does.Contain("kotorblender"));
                     }
                     finally
                     {

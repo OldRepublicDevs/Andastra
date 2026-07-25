@@ -970,6 +970,85 @@ namespace OdyTools.Data
             _mod.SetData(modelname, ResourceType.WOK, BWMAuto.BytesBwm(bwm));
         }
 
+        internal ERF BuildWalkmeshArchiveForTesting()
+        {
+            _mod = new ERF(ERFType.MOD);
+
+            for (int i = 0; i < Rooms.Count; i++)
+            {
+                string modelname = $"{ModuleId}_room{i}";
+                AddBwmResource(modelname, ProcessBwm(Rooms[i]));
+            }
+
+            return _mod;
+        }
+
+        internal ERF BuildModuleMetadataArchiveForTesting()
+        {
+            _mod = new ERF(ERFType.MOD);
+            _lyt = new LYT();
+            _vis = new VIS();
+            _are = new ARE();
+            _ifo = new IFO();
+            _git = new GIT();
+            _roomNames = new Dictionary<IndoorMapRoom, string>();
+
+            AddRooms();
+            for (int i = 0; i < Rooms.Count; i++)
+            {
+                IndoorMapRoom room = Rooms[i];
+                string modelname = $"{ModuleId}_room{i}";
+                _roomNames[room] = modelname;
+                _lyt.Rooms.Add(new LYTRoom(new ResRef(modelname), room.Position));
+                AddBwmResource(modelname, ProcessBwm(room));
+            }
+
+            SetAreaAttributes(CreateBoundsOnlyMinimapData());
+            SetIfoAttributes();
+            AddFinalizedModuleResources();
+            return _mod;
+        }
+
+        private MinimapData CreateBoundsOnlyMinimapData()
+        {
+            var min = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+            var max = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+
+            foreach (var room in Rooms)
+            {
+                BWM bwm = BuildWalkmeshForRoom(room, Rooms);
+                foreach (var vertex in bwm.Vertices())
+                {
+                    min.X = Math.Min(min.X, vertex.X);
+                    min.Y = Math.Min(min.Y, vertex.Y);
+                    min.Z = Math.Min(min.Z, vertex.Z);
+                    max.X = Math.Max(max.X, vertex.X);
+                    max.Y = Math.Max(max.Y, vertex.Y);
+                    max.Z = Math.Max(max.Z, vertex.Z);
+                }
+            }
+
+            if (min.X == float.MaxValue)
+            {
+                min = new Vector3(-5, -5, 0);
+                max = new Vector3(5, 5, 0);
+            }
+            else
+            {
+                min.X -= 5;
+                min.Y -= 5;
+                max.X += 5;
+                max.Y += 5;
+            }
+
+            return new MinimapData(
+                null,
+                new Vector2(0, 0),
+                new Vector2(1, 1),
+                new Vector2(max.X, min.Y),
+                new Vector2(min.X, max.Y));
+        }
+
         /// <summary>
         /// Handles door insertion, UTD creation, and door padding for all room connections.
         /// </summary>
@@ -1823,6 +1902,12 @@ namespace OdyTools.Data
         /// <param name="outputPath">File system path where the MOD file should be written</param>
         private void FinalizeModuleData(string outputPath)
         {
+            AddFinalizedModuleResources();
+            ERFAuto.WriteErf(_mod, outputPath, ResourceType.MOD);
+        }
+
+        private void AddFinalizedModuleResources()
+        {
             _mod.SetData(ModuleId, ResourceType.LYT, LYTAuto.BytesLyt(_lyt));
             _mod.SetData(ModuleId, ResourceType.VIS, VISAuto.BytesVis(_vis));
             _mod.SetData(ModuleId, ResourceType.ARE, AREHelpers.BytesAre(_are));
@@ -1832,7 +1917,6 @@ namespace OdyTools.Data
             _mod.SetData("module", ResourceType.IFO, GFFAuto.BytesGff(ifoGff, IFO.BinaryType));
 
             IndoorMapIo.EmbedIndoorJson(_mod, Write());
-            ERFAuto.WriteErf(_mod, outputPath, ResourceType.MOD);
         }
 
         /// <summary>
@@ -3060,4 +3144,3 @@ namespace OdyTools.Data
         }
     }
 }
-

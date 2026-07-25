@@ -16,8 +16,12 @@ namespace OdyTools.Editors.LYT
     public class LYTGraphicsScene : Canvas
     {
         private readonly List<LYTGraphicsItem> _items = new List<LYTGraphicsItem>();
+        private readonly LYTGridOverlay _gridOverlay;
+        private LYTGraphicsItem _selectedItem;
         private double _zoomLevel = 1.0;
         private Vector2 _panOffset = Vector2.Zero;
+        private bool _showGrid = true;
+        private double _gridSize = 100.0;
 
         /// <summary>
         /// Gets or sets the zoom level for the scene (1.0 = 100%).
@@ -28,6 +32,8 @@ namespace OdyTools.Editors.LYT
             set
             {
                 _zoomLevel = Math.Max(0.1, Math.Min(10.0, value));
+                UpdateItemPositions();
+                _gridOverlay.InvalidateVisual();
                 InvalidateVisual();
             }
         }
@@ -41,14 +47,53 @@ namespace OdyTools.Editors.LYT
             set
             {
                 _panOffset = value;
+                UpdateItemPositions();
+                _gridOverlay.InvalidateVisual();
                 InvalidateVisual();
             }
         }
+
+        public bool ShowGrid
+        {
+            get { return _showGrid; }
+            set
+            {
+                _showGrid = value;
+                _gridOverlay.InvalidateVisual();
+                InvalidateVisual();
+            }
+        }
+
+        public double GridSize
+        {
+            get { return _gridSize; }
+            set
+            {
+                _gridSize = Math.Max(10.0, Math.Min(1000.0, value));
+                _gridOverlay.InvalidateVisual();
+                InvalidateVisual();
+            }
+        }
+
+        public event EventHandler<object> LayoutElementSelected;
 
         public LYTGraphicsScene()
         {
             Background = Brushes.Black;
             ClipToBounds = true;
+            _gridOverlay = new LYTGridOverlay(this)
+            {
+                IsHitTestVisible = false
+            };
+            Canvas.SetLeft(_gridOverlay, 0);
+            Canvas.SetTop(_gridOverlay, 0);
+            Children.Add(_gridOverlay);
+            SizeChanged += (s, e) =>
+            {
+                _gridOverlay.Width = Bounds.Width;
+                _gridOverlay.Height = Bounds.Height;
+                _gridOverlay.InvalidateVisual();
+            };
         }
 
         /// <summary>
@@ -56,8 +101,13 @@ namespace OdyTools.Editors.LYT
         /// </summary>
         public void Clear()
         {
+            foreach (var item in _items)
+            {
+                item.PointerPressed -= OnItemPointerPressed;
+                Children.Remove(item);
+            }
             _items.Clear();
-            Children.Clear();
+            _selectedItem = null;
             InvalidateVisual();
         }
 
@@ -71,6 +121,7 @@ namespace OdyTools.Editors.LYT
                 return;
             }
 
+            item.PointerPressed += OnItemPointerPressed;
             _items.Add(item);
             Children.Add(item);
             InvalidateVisual();
@@ -86,9 +137,39 @@ namespace OdyTools.Editors.LYT
                 return;
             }
 
+            item.PointerPressed -= OnItemPointerPressed;
             _items.Remove(item);
             Children.Remove(item);
             InvalidateVisual();
+        }
+
+        public void SelectElement(object layoutElement)
+        {
+            _selectedItem = null;
+            foreach (var item in _items)
+            {
+                bool selected = ReferenceEquals(item.LayoutElement, layoutElement);
+                item.IsSelected = selected;
+                if (selected)
+                {
+                    _selectedItem = item;
+                }
+            }
+
+            InvalidateVisual();
+        }
+
+        private void OnItemPointerPressed(object sender, Avalonia.Input.PointerPressedEventArgs e)
+        {
+            var item = sender as LYTGraphicsItem;
+            if (item == null)
+            {
+                return;
+            }
+
+            SelectElement(item.LayoutElement);
+            LayoutElementSelected?.Invoke(this, item.LayoutElement);
+            e.Handled = true;
         }
 
         /// <summary>
@@ -111,6 +192,60 @@ namespace OdyTools.Editors.LYT
             float worldY = ((float)screenPos.Y / (float)_zoomLevel) - _panOffset.Y;
             return new Vector3(worldX, worldY, 0);
         }
+
+        private void UpdateItemPositions()
+        {
+            foreach (var item in _items)
+            {
+                item.RefreshPosition();
+            }
+        }
+
+        private sealed class LYTGridOverlay : Control
+        {
+            private readonly LYTGraphicsScene _scene;
+
+            public LYTGridOverlay(LYTGraphicsScene scene)
+            {
+                _scene = scene;
+            }
+
+            public override void Render(DrawingContext context)
+            {
+                base.Render(context);
+                if (!_scene._showGrid)
+                {
+                    return;
+                }
+
+                var bounds = Bounds;
+                if (bounds.Width <= 0 || bounds.Height <= 0)
+                {
+                    return;
+                }
+
+                double spacing = Math.Max(8.0, _scene._gridSize * _scene._zoomLevel);
+                var minorPen = new Pen(new SolidColorBrush(Color.FromRgb(34, 38, 46)), 1);
+                var majorPen = new Pen(new SolidColorBrush(Color.FromRgb(54, 64, 78)), 1);
+
+                double offsetX = (_scene._panOffset.X * _scene._zoomLevel) % spacing;
+                double offsetY = (_scene._panOffset.Y * _scene._zoomLevel) % spacing;
+                if (offsetX < 0) offsetX += spacing;
+                if (offsetY < 0) offsetY += spacing;
+
+                int index = 0;
+                for (double x = offsetX; x < bounds.Width; x += spacing, index++)
+                {
+                    context.DrawLine(index % 5 == 0 ? majorPen : minorPen, new Point(x, 0), new Point(x, bounds.Height));
+                }
+
+                index = 0;
+                for (double y = offsetY; y < bounds.Height; y += spacing, index++)
+                {
+                    context.DrawLine(index % 5 == 0 ? majorPen : minorPen, new Point(0, y), new Point(bounds.Width, y));
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -120,6 +255,7 @@ namespace OdyTools.Editors.LYT
     {
         protected LYTGraphicsScene _scene;
         protected Vector3 _worldPosition;
+        private bool _isSelected;
 
         /// <summary>
         /// Gets or sets the world position of this item.
@@ -134,10 +270,28 @@ namespace OdyTools.Editors.LYT
             }
         }
 
-        protected LYTGraphicsItem(LYTGraphicsScene scene, Vector3 worldPosition)
+        public object LayoutElement { get; }
+
+        public bool IsSelected
+        {
+            get { return _isSelected; }
+            set
+            {
+                if (_isSelected == value)
+                {
+                    return;
+                }
+
+                _isSelected = value;
+                InvalidateVisual();
+            }
+        }
+
+        protected LYTGraphicsItem(LYTGraphicsScene scene, Vector3 worldPosition, object layoutElement)
         {
             _scene = scene;
             _worldPosition = worldPosition;
+            LayoutElement = layoutElement;
             UpdatePosition();
         }
 
@@ -154,6 +308,11 @@ namespace OdyTools.Editors.LYT
             }
         }
 
+        internal void RefreshPosition()
+        {
+            UpdatePosition();
+        }
+
         /// <summary>
         /// Renders the graphics item.
         /// </summary>
@@ -167,6 +326,11 @@ namespace OdyTools.Editors.LYT
         /// Renders the specific graphics item (implemented by subclasses).
         /// </summary>
         protected abstract void RenderItem(DrawingContext context);
+
+        protected Pen SelectionPen(double thickness = 3.0)
+        {
+            return new Pen(new SolidColorBrush(Colors.DeepSkyBlue), thickness);
+        }
     }
 
     /// <summary>
@@ -178,7 +342,7 @@ namespace OdyTools.Editors.LYT
         private const double RoomSize = 50.0; // Default room size in screen pixels
 
         public RoomItem(LYTGraphicsScene scene, LYTRoom room)
-            : base(scene, room != null ? room.Position : Vector3.Zero)
+            : base(scene, room != null ? room.Position : Vector3.Zero, room)
         {
             _room = room;
             Width = RoomSize;
@@ -195,7 +359,7 @@ namespace OdyTools.Editors.LYT
             // Draw room as a rectangle
             var rect = new Rect(0, 0, RoomSize, RoomSize);
             var brush = new SolidColorBrush(Colors.Blue);
-            var pen = new Pen(new SolidColorBrush(Colors.LightBlue), 2.0);
+            var pen = IsSelected ? SelectionPen() : new Pen(new SolidColorBrush(Colors.LightBlue), 2.0);
 
             context.DrawRectangle(brush, pen, rect);
 
@@ -224,7 +388,7 @@ namespace OdyTools.Editors.LYT
         private const double TrackSize = 20.0; // Default track size in screen pixels
 
         public TrackItem(LYTGraphicsScene scene, LYTTrack track)
-            : base(scene, track != null ? track.Position : Vector3.Zero)
+            : base(scene, track != null ? track.Position : Vector3.Zero, track)
         {
             _track = track;
             Width = TrackSize;
@@ -241,7 +405,7 @@ namespace OdyTools.Editors.LYT
             // Draw track as a circle
             var ellipse = new EllipseGeometry(new Rect(0, 0, TrackSize, TrackSize));
             var brush = new SolidColorBrush(Colors.Green);
-            var pen = new Pen(new SolidColorBrush(Colors.LightGreen), 2.0);
+            var pen = IsSelected ? SelectionPen() : new Pen(new SolidColorBrush(Colors.LightGreen), 2.0);
 
             context.DrawGeometry(brush, pen, ellipse);
         }
@@ -256,7 +420,7 @@ namespace OdyTools.Editors.LYT
         private const double ObstacleSize = 30.0; // Default obstacle size in screen pixels
 
         public ObstacleItem(LYTGraphicsScene scene, LYTObstacle obstacle)
-            : base(scene, obstacle != null ? obstacle.Position : Vector3.Zero)
+            : base(scene, obstacle != null ? obstacle.Position : Vector3.Zero, obstacle)
         {
             _obstacle = obstacle;
             Width = ObstacleSize;
@@ -273,7 +437,7 @@ namespace OdyTools.Editors.LYT
             // Draw obstacle as a rectangle with X pattern
             var rect = new Rect(0, 0, ObstacleSize, ObstacleSize);
             var brush = new SolidColorBrush(Colors.Red);
-            var pen = new Pen(new SolidColorBrush(Colors.DarkRed), 2.0);
+            var pen = IsSelected ? SelectionPen() : new Pen(new SolidColorBrush(Colors.DarkRed), 2.0);
 
             context.DrawRectangle(brush, pen, rect);
 
@@ -293,7 +457,7 @@ namespace OdyTools.Editors.LYT
         private const double DoorHookSize = 15.0; // Default door hook size in screen pixels
 
         public DoorHookItem(LYTGraphicsScene scene, LYTDoorHook doorHook)
-            : base(scene, doorHook != null ? doorHook.Position : Vector3.Zero)
+            : base(scene, doorHook != null ? doorHook.Position : Vector3.Zero, doorHook)
         {
             _doorHook = doorHook;
             Width = DoorHookSize;
@@ -320,10 +484,9 @@ namespace OdyTools.Editors.LYT
             diamond.Figures.Add(figure);
 
             var brush = new SolidColorBrush(Colors.Orange);
-            var pen = new Pen(new SolidColorBrush(Colors.Yellow), 2.0);
+            var pen = IsSelected ? SelectionPen() : new Pen(new SolidColorBrush(Colors.Yellow), 2.0);
 
             context.DrawGeometry(brush, pen, diamond);
         }
     }
 }
-

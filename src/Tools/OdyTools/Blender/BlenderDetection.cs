@@ -73,9 +73,7 @@ namespace OdyTools.Blender
                     continue;
                 }
 
-                if (version.Value.Major < MinVersionMajor ||
-                    (version.Value.Major == MinVersionMajor && version.Value.Minor < MinVersionMinor) ||
-                    (version.Value.Major == MinVersionMajor && version.Value.Minor == MinVersionMinor && version.Value.Patch < MinVersionPatch))
+                if (!IsSupportedVersion(version.Value))
                 {
                     continue;
                 }
@@ -169,7 +167,7 @@ namespace OdyTools.Blender
                     if (version.HasValue)
                     {
                         var v = version.Value;
-                        if (v.Major >= MinVersionMajor && (v.Major > MinVersionMajor || v.Minor >= MinVersionMinor))
+                        if (IsSupportedVersion(v))
                         {
                             var (addonsPath, extensionsPath) = GetBlenderConfigPaths(v);
                             var info = new BlenderInfo
@@ -198,7 +196,46 @@ namespace OdyTools.Blender
         /// </summary>
         public static BlenderInfo DetectBlender(string customPath = null)
         {
-            var info = FindBlenderExecutable(customPath);
+            return DetectBlender(FindBlenderExecutable, customPath);
+        }
+
+        public static bool IsBlenderAvailable(string customPath = null)
+        {
+            return IsBlenderAvailable(DetectBlender, customPath);
+        }
+
+        internal static bool IsBlenderAvailable(Func<string, BlenderInfo> detectBlender, string customPath = null)
+        {
+            var info = detectBlender(customPath);
+            return info != null && info.IsValid && info.HasKotorblender;
+        }
+
+        public static Process LaunchBlenderWithIpc(
+            BlenderInfo blenderInfo,
+            int ipcPort = 7531,
+            string installationPath = null,
+            string modulePath = null,
+            string blendFile = null,
+            bool background = false)
+        {
+            if (blenderInfo == null || !blenderInfo.IsValid || string.IsNullOrEmpty(blenderInfo.Executable))
+            {
+                return null;
+            }
+
+            try
+            {
+                return Process.Start(CreateBlenderIpcStartInfo(blenderInfo, ipcPort, installationPath, modulePath, blendFile, background));
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        internal static BlenderInfo DetectBlender(Func<string, BlenderInfo> findBlenderExecutable, string customPath = null)
+        {
+            var info = findBlenderExecutable(customPath);
 
             if (info == null)
             {
@@ -217,6 +254,140 @@ namespace OdyTools.Blender
             }
 
             return info;
+        }
+
+        internal static ProcessStartInfo CreateBlenderIpcStartInfo(
+            BlenderInfo blenderInfo,
+            int ipcPort,
+            string installationPath = null,
+            string modulePath = null,
+            string blendFile = null,
+            bool background = false)
+        {
+            if (blenderInfo == null)
+            {
+                throw new ArgumentNullException(nameof(blenderInfo));
+            }
+
+            var script = GenerateIpcStartupScript(ipcPort, installationPath, modulePath, background);
+            var args = new List<string>();
+
+            if (background)
+            {
+                args.Add("--background");
+            }
+
+            if (!string.IsNullOrEmpty(blendFile))
+            {
+                args.Add(blendFile);
+            }
+
+            args.Add("--python-expr");
+            args.Add(script);
+
+            return new ProcessStartInfo
+            {
+                FileName = blenderInfo.Executable,
+                Arguments = string.Join(" ", args.Select(QuoteCommandLineArgument)),
+                UseShellExecute = false,
+                CreateNoWindow = false
+            };
+        }
+
+        internal static string GenerateIpcStartupScript(
+            int ipcPort,
+            string installationPath = null,
+            string modulePath = null,
+            bool background = false)
+        {
+            return $@"
+import sys
+import traceback
+
+def _odytools_enable_kotor_addon():
+    module_names = ['bl_ext.user_default.io_scene_kotor', 'io_scene_kotor']
+    try:
+        import bpy
+        import addon_utils
+        for module_name in module_names:
+            try:
+                bpy.ops.preferences.addon_enable(module=module_name)
+                print('[OdyTools.NET] Enabled Blender add-on ' + module_name + ' via bpy.ops.preferences.addon_enable')
+                return module_name
+            except Exception:
+                pass
+            try:
+                addon_utils.enable(module_name, default_set=True, persistent=True)
+                print('[OdyTools.NET] Enabled Blender add-on ' + module_name + ' via addon_utils.enable')
+                return module_name
+            except Exception:
+                pass
+    except Exception as exc:
+        print('[OdyTools.NET] Failed while enabling kotorblender add-on: ' + str(exc))
+        traceback.print_exc()
+    print('[OdyTools.NET] Failed to enable io_scene_kotor add-on using known module names')
+    return None
+
+try:
+    module_path = {PythonStringOrNone(modulePath)}
+    enabled_module = _odytools_enable_kotor_addon()
+    if enabled_module:
+        import importlib
+        bridge_module = importlib.import_module(enabled_module + '.ipc')
+        server = bridge_module.start_ipc_server(port={ipcPort}, installation_path={PythonStringOrNone(installationPath)})
+        try:
+            sync_module = importlib.import_module(enabled_module + '.ipc.sync')
+            sync_module.start_scene_monitor(server)
+        except Exception as monitor_exc:
+            print('[OdyTools.NET] Failed to start Blender scene monitor: ' + str(monitor_exc))
+            traceback.print_exc()
+        print('[OdyTools.NET] IPC server started on port {ipcPort}')
+        if {PythonBool(background)}:
+            import time
+            while getattr(server, '_running', False):
+                try:
+                    server._process_requests()
+                    if getattr(server, '_monitor_running', False):
+                        server._monitor_scene()
+                except Exception as loop_exc:
+                    print('[OdyTools.NET] Background IPC loop error: ' + str(loop_exc))
+                    traceback.print_exc()
+                    break
+                time.sleep(0.05)
+    else:
+        print('[OdyTools.NET] IPC server was not started because the add-on could not be enabled.')
+except ImportError as exc:
+    print('[OdyTools.NET] Warning: Could not start IPC server: ' + str(exc))
+    print('[OdyTools.NET] kotorblender IPC module not found. Make sure kotorblender is properly installed.')
+except Exception as exc:
+    print('[OdyTools.NET] Error starting IPC server: ' + str(exc))
+    traceback.print_exc()
+";
+        }
+
+        private static string PythonBool(bool value)
+        {
+            return value ? "True" : "False";
+        }
+
+        private static string PythonStringOrNone(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return "None";
+            }
+
+            return "'" + value.Replace("\\", "\\\\").Replace("'", "\\'") + "'";
+        }
+
+        private static string QuoteCommandLineArgument(string argument)
+        {
+            if (string.IsNullOrEmpty(argument))
+            {
+                return "\"\"";
+            }
+
+            return "\"" + argument.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
         }
 
         /// <summary>
@@ -511,7 +682,19 @@ namespace OdyTools.Blender
                         return null;
                     }
 
-                    process.WaitForExit(10000); // 10 second timeout
+                    if (!process.WaitForExit(10000))
+                    {
+                        try
+                        {
+                            process.Kill();
+                        }
+                        catch
+                        {
+                            // Best effort only; failed version probes should not block editor startup.
+                        }
+
+                        return null;
+                    }
 
                     string output = process.StandardOutput.ReadToEnd();
                     if (string.IsNullOrEmpty(output))
@@ -519,15 +702,7 @@ namespace OdyTools.Blender
                         output = process.StandardError.ReadToEnd();
                     }
 
-                    // Parse version from output like "Blender 4.2.0"
-                    var match = Regex.Match(output, @"Blender\s+(\d+)\.(\d+)\.(\d+)");
-                    if (match.Success)
-                    {
-                        int major = int.Parse(match.Groups[1].Value);
-                        int minor = int.Parse(match.Groups[2].Value);
-                        int patch = int.Parse(match.Groups[3].Value);
-                        return (major, minor, patch);
-                    }
+                    return ParseBlenderVersion(output);
                 }
             }
             catch
@@ -536,6 +711,34 @@ namespace OdyTools.Blender
             }
 
             return null;
+        }
+
+        internal static (int Major, int Minor, int Patch)? ParseBlenderVersion(string output)
+        {
+            if (string.IsNullOrEmpty(output))
+            {
+                return null;
+            }
+
+            var match = Regex.Match(output, @"Blender\s+(\d+)\.(\d+)\.(\d+)");
+            if (!match.Success)
+            {
+                return null;
+            }
+
+            int major = int.Parse(match.Groups[1].Value);
+            int minor = int.Parse(match.Groups[2].Value);
+            int patch = int.Parse(match.Groups[3].Value);
+            return (major, minor, patch);
+        }
+
+        internal static bool IsSupportedVersion((int Major, int Minor, int Patch) version)
+        {
+            return version.Major > MinVersionMajor ||
+                   (version.Major == MinVersionMajor && version.Minor > MinVersionMinor) ||
+                   (version.Major == MinVersionMajor &&
+                    version.Minor == MinVersionMinor &&
+                    version.Patch >= MinVersionPatch);
         }
 
         /// <summary>
@@ -578,7 +781,7 @@ namespace OdyTools.Blender
         /// <summary>
         /// Check if kotorblender is installed and get its version.
         /// </summary>
-        private static bool CheckKotorblenderInstalled(BlenderInfo info)
+        internal static bool CheckKotorblenderInstalled(BlenderInfo info)
         {
             string kotorblenderPath = info.KotorblenderPath;
             if (string.IsNullOrEmpty(kotorblenderPath))
@@ -613,4 +816,3 @@ namespace OdyTools.Blender
         }
     }
 }
-

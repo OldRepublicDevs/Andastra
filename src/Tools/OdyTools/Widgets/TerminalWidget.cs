@@ -9,6 +9,7 @@ using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Threading;
+using OdyTools.Editors;
 
 namespace OdyTools.Widgets
 {
@@ -68,6 +69,7 @@ namespace OdyTools.Widgets
 
             _terminalOutput = new TextBox
             {
+                Name = "terminalOutput",
                 IsReadOnly = false,
                 AcceptsReturn = true,
                 AcceptsTab = false,
@@ -94,22 +96,14 @@ namespace OdyTools.Widgets
                 return;
             }
 
-            // Find controls from XAML (may fail if not in visual tree)
-            try
-            {
-                _terminalOutput = this.FindControl<TextBox>("terminalOutput");
-            }
-            catch (InvalidOperationException)
-            {
-                // Not in a visual tree (e.g., in unit tests) - will create programmatically
-                _terminalOutput = null;
-            }
+            _terminalOutput = EditorHelpers.FindControlSafe<TextBox>(this, "terminalOutput");
 
             // If not found in XAML, create programmatically
             if (_terminalOutput == null)
             {
                 _terminalOutput = new TextBox
                 {
+                    Name = "terminalOutput",
                     IsReadOnly = false,
                     AcceptsReturn = true,
                     AcceptsTab = false,

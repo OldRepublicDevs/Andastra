@@ -39,8 +39,8 @@ namespace OdyTools.Editors
         public OdyToolWAV() : this(null, null) { }
         public OdyToolWAV(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolWAV", "audio",
-                new[] { ResourceType.WAV, ResourceType.MP3 },
-                new[] { ResourceType.WAV, ResourceType.MP3 },
+                new[] { ResourceType.WAV, ResourceType.MP3, ResourceType.OGG, ResourceType.WMA, ResourceType.WMV, ResourceType.XMV, ResourceType.FLAC, ResourceType.BMU },
+                new[] { ResourceType.WAV, ResourceType.MP3, ResourceType.OGG, ResourceType.WMA, ResourceType.WMV, ResourceType.XMV, ResourceType.FLAC, ResourceType.BMU },
                 installation)
         {
             InitializeComponent();
@@ -64,10 +64,10 @@ namespace OdyTools.Editors
 
             if (xamlLoaded)
             {
-                _mediaPlayerWidget = this.FindControl<MediaPlayerWidget>("mediaPlayerWidget");
-                _formatLabel = this.FindControl<TextBlock>("formatLabel");
-                _sizeLabel = this.FindControl<TextBlock>("sizeLabel");
-                _pathLabel = this.FindControl<TextBlock>("pathLabel");
+                _mediaPlayerWidget = EditorHelpers.FindControlSafe<MediaPlayerWidget>(this, "mediaPlayerWidget");
+                _formatLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "formatLabel");
+                _sizeLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "sizeLabel");
+                _pathLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "pathLabel");
             }
 
             if (_mediaPlayerWidget == null)
@@ -151,6 +151,7 @@ namespace OdyTools.Editors
             if (data.Length >= 4 && data[0] == (byte)'L' && data[1] == (byte)'A' && data[2] == (byte)'M' && data[3] == (byte)'E') return ".mp3";
             if (data.Length >= 4 && data[0] == (byte)'R' && data[1] == (byte)'I' && data[2] == (byte)'F' && data[3] == (byte)'F') return ".wav";
             if (data.Length >= 4 && data[0] == (byte)'O' && data[1] == (byte)'g' && data[2] == (byte)'g' && data[3] == (byte)'S') return ".ogg";
+            if (data.Length >= 4 && data[0] == 0x30 && data[1] == 0x26 && data[2] == 0xB2 && data[3] == 0x75) return ".wma";
             if (data.Length >= 4 && data[0] == (byte)'f' && data[1] == (byte)'L' && data[2] == (byte)'a' && data[3] == (byte)'C') return ".flac";
             return ".wav";
         }
@@ -163,7 +164,11 @@ namespace OdyTools.Editors
                 case ".wav": return "WAV (RIFF)";
                 case ".mp3": return "MP3";
                 case ".ogg": return "OGG Vorbis";
+                case ".wma": return "Windows Media Audio";
+                case ".wmv": return "Windows Media Video";
+                case ".xmv": return "Xbox Media Video";
                 case ".flac": return "FLAC";
+                case ".bmu": return "BMU (obfuscated MP3)";
                 default: return "Unknown";
             }
         }
@@ -173,9 +178,11 @@ namespace OdyTools.Editors
             base.Load(filepath, resref, restype, data);
             var dataBytes = data ?? Array.Empty<byte>();
             _audioData = dataBytes;
-            _detectedFormat = GetFormatName(DetectAudioFormat(dataBytes));
+            _detectedFormat = restype == ResourceType.BMU || restype == ResourceType.WMV || restype == ResourceType.XMV
+                ? GetFormatName("." + restype.Extension)
+                : GetFormatName(DetectAudioFormat(dataBytes));
 
-            EnsureTempFile();
+            EnsureTempFile(_restype);
             if (!string.IsNullOrEmpty(_tempFile))
             {
                 _mediaPlayer.SetSource(_tempFile);
@@ -191,11 +198,11 @@ namespace OdyTools.Editors
             UpdateInfoLabels();
         }
 
-        private void EnsureTempFile()
+        private void EnsureTempFile(ResourceType restype = null)
         {
             CleanupTempFile();
             if (_audioData == null || _audioData.Length == 0) return;
-            var ext = DetectAudioFormat(_audioData);
+            var ext = GetPlaybackExtension(_audioData, restype);
             try
             {
                 _tempFile = Path.Combine(Path.GetTempPath(), "OdyTools_" + Guid.NewGuid().ToString("N") + ext);
@@ -255,6 +262,23 @@ namespace OdyTools.Editors
             _tempFile = null;
         }
 
+        public static string GetPlaybackExtension(byte[] data, ResourceType restype)
+        {
+            if (restype == ResourceType.BMU ||
+                restype == ResourceType.WMV ||
+                restype == ResourceType.XMV ||
+                restype == ResourceType.WMA ||
+                restype == ResourceType.FLAC ||
+                restype == ResourceType.OGG ||
+                restype == ResourceType.MP3 ||
+                restype == ResourceType.WAV)
+            {
+                return "." + restype.Extension;
+            }
+
+            return DetectAudioFormat(data);
+        }
+
         public override void SaveAs()
         {
             _ = RunSaveAsAsync();
@@ -269,7 +293,16 @@ namespace OdyTools.Editors
             {
                 Title = "Save As",
                 SuggestedFileName = suggestedName + ".wav",
-                FileTypeChoices = new[] { new FilePickerFileType("WAV") { Patterns = new[] { "*.wav" } }, new FilePickerFileType("All files") { Patterns = new[] { "*.*" } } }
+                FileTypeChoices = new[]
+                {
+                    new FilePickerFileType("WAV") { Patterns = new[] { "*.wav" } },
+                    new FilePickerFileType("MP3") { Patterns = new[] { "*.mp3" } },
+                    new FilePickerFileType("OGG Vorbis") { Patterns = new[] { "*.ogg" } },
+                    new FilePickerFileType("WMA/WMV/XMV") { Patterns = new[] { "*.wma", "*.wmv", "*.xmv" } },
+                    new FilePickerFileType("FLAC") { Patterns = new[] { "*.flac" } },
+                    new FilePickerFileType("BMU") { Patterns = new[] { "*.bmu" } },
+                    new FilePickerFileType("All files") { Patterns = new[] { "*.*" } }
+                }
             };
             var file = await storage.SaveFilePickerAsync(options);
             if (file == null) return;

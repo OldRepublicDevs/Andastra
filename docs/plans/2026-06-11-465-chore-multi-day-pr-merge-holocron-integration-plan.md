@@ -11,7 +11,7 @@ branch: master
 
 ## Executive summary (2026-06-11)
 
-Plan **465** Days **1–21** landed on `master`:
+Plan **465** Days **1–20** landed on `master`; Day **21** in progress:
 
 | Day | PR | Outcome |
 |-----|-----|---------|
@@ -267,9 +267,9 @@ Holocron plan **063** core units (U1–U7) remain **complete**. KotorDiff instal
 
 | Step | Action | Done |
 |------|--------|------|
-| D21.1 | Make `NavigateToCell(int rowIdx, int colIdx)` public | |
-| D21.2 | OdyTool2DATests: first data cell, last data cell | |
-| D21.3 | OdyTool2DATests: out-of-range clamp; numeric Go To column index | |
+| D21.1 | Make `NavigateToCell(int rowIdx, int colIdx)` public | ✅ |
+| D21.2 | OdyTool2DATests: first data cell, last data cell | ✅ |
+| D21.3 | OdyTool2DATests: out-of-range clamp; numeric Go To column index | ✅ |
 | D21.4 | PR → `master` | |
 
 ## Day 5+ — Holocron continuation

@@ -71,9 +71,15 @@ namespace BioWare.Resource.Formats.GFF
                 }
             }
 
-            // Create GFF with default DLG content type
-            var gff = new GFF(GFFContent.DLG);
-            gff.Header.FileType = "DLG ";
+            GFFContent content = GFFContent.GFF;
+            var typeAttr = gff3Element.Attribute("type");
+            if (typeAttr != null && GFFContentExtensions.IsValidGFFContent(typeAttr.Value))
+            {
+                content = GFFContentExtensions.FromFourCC(typeAttr.Value);
+            }
+
+            var gff = new GFF(content);
+            gff.Header.FileType = content.ToFourCC();
             gff.Header.FileVersion = "V3.2";
 
             // Parse the root struct
@@ -111,6 +117,9 @@ namespace BioWare.Resource.Formats.GFF
                 case "uint8":
                 case "byte":
                     return byte.Parse(element.Value);
+                case "int8":
+                case "sint8":
+                    return sbyte.Parse(element.Value);
                 case "sint32":
                 case "int32":
                     return int.Parse(element.Value);
@@ -121,19 +130,32 @@ namespace BioWare.Resource.Formats.GFF
                     return short.Parse(element.Value);
                 case "uint16":
                     return ushort.Parse(element.Value);
+                case "uint64":
+                    return ulong.Parse(element.Value);
+                case "int64":
+                case "sint64":
+                    return long.Parse(element.Value);
                 case "float":
                 case "single":
                     return float.Parse(element.Value, CultureInfo.InvariantCulture);
+                case "double":
+                    return double.Parse(element.Value, CultureInfo.InvariantCulture);
                 case "exostring":
                     return element.Value;
                 case "resref":
                     return new ResRef(element.Value ?? string.Empty);
                 case "locstring":
                     return ParseLocString(element);
+                case "binary":
+                    return Convert.FromBase64String(element.Value ?? string.Empty);
                 case "list":
                     return ParseList(element);
                 case "struct":
                     return ParseStruct(element, int.Parse(element.Attribute("id")?.Value ?? "0"));
+                case "vector3":
+                    return ParseVector3(element);
+                case "vector4":
+                    return ParseVector4(element);
                 default:
                     throw new XmlException($"Unknown field type: {fieldType}");
             }
@@ -188,6 +210,28 @@ namespace BioWare.Resource.Formats.GFF
             return gffList;
         }
 
+        private static Vector3 ParseVector3(XElement vectorElement)
+        {
+            return new Vector3(
+                ParseVectorComponent(vectorElement, "x"),
+                ParseVectorComponent(vectorElement, "y"),
+                ParseVectorComponent(vectorElement, "z"));
+        }
+
+        private static Vector4 ParseVector4(XElement vectorElement)
+        {
+            return new Vector4(
+                ParseVectorComponent(vectorElement, "x"),
+                ParseVectorComponent(vectorElement, "y"),
+                ParseVectorComponent(vectorElement, "z"),
+                ParseVectorComponent(vectorElement, "w"));
+        }
+
+        private static float ParseVectorComponent(XElement vectorElement, string attributeName)
+        {
+            return float.Parse(vectorElement.Attribute(attributeName)?.Value ?? "0", CultureInfo.InvariantCulture);
+        }
+
         private GFFFieldType GetGFFFieldType(string xmlType)
         {
             switch (xmlType)
@@ -195,6 +239,9 @@ namespace BioWare.Resource.Formats.GFF
                 case "uint8":
                 case "byte":
                     return GFFFieldType.UInt8;
+                case "int8":
+                case "sint8":
+                    return GFFFieldType.Int8;
                 case "sint32":
                 case "int32":
                     return GFFFieldType.Int32;
@@ -205,19 +252,32 @@ namespace BioWare.Resource.Formats.GFF
                     return GFFFieldType.Int16;
                 case "uint16":
                     return GFFFieldType.UInt16;
+                case "uint64":
+                    return GFFFieldType.UInt64;
+                case "int64":
+                case "sint64":
+                    return GFFFieldType.Int64;
                 case "float":
                 case "single":
                     return GFFFieldType.Single;
+                case "double":
+                    return GFFFieldType.Double;
                 case "exostring":
                     return GFFFieldType.String;
                 case "resref":
                     return GFFFieldType.ResRef;
                 case "locstring":
                     return GFFFieldType.LocalizedString;
+                case "binary":
+                    return GFFFieldType.Binary;
                 case "list":
                     return GFFFieldType.List;
                 case "struct":
                     return GFFFieldType.Struct;
+                case "vector3":
+                    return GFFFieldType.Vector3;
+                case "vector4":
+                    return GFFFieldType.Vector4;
                 default:
                     throw new XmlException($"Unknown XML field type: {xmlType}");
             }

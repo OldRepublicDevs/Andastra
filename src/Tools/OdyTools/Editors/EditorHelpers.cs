@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.LogicalTree;
+using Avalonia.VisualTree;
 using OdyTools.Common;
 
 namespace OdyTools.Editors
@@ -28,13 +30,121 @@ namespace OdyTools.Editors
         /// <returns>The found control of type T, or null if not found or an error occurred.</returns>
         public static T FindControlSafe<T>(Control control, string name) where T : Control
         {
+            T nameScopeControl = null;
             try
             {
-                return control.FindControl<T>(name);
+                nameScopeControl = FindInNameScope<T>(control, name);
+            }
+            catch
+            {
+                // Some controls can be queried before Avalonia has attached a name scope.
+                // Fall back to walking the logical/visual tree below.
+            }
+
+            if (nameScopeControl != null)
+            {
+                return nameScopeControl;
+            }
+
+            try
+            {
+                return FindNamedDescendant<T>(control, name);
             }
             catch
             {
                 return null;
+            }
+        }
+
+        private static T FindInNameScope<T>(Control root, string name) where T : Control
+        {
+            if (root == null || string.IsNullOrEmpty(name))
+            {
+                return null;
+            }
+
+            var nameScope = NameScope.GetNameScope(root);
+            if (nameScope == null)
+            {
+                return null;
+            }
+
+            return nameScope.Find(name) as T;
+        }
+
+        private static T FindNamedDescendant<T>(Control root, string name) where T : Control
+        {
+            if (root == null || string.IsNullOrEmpty(name))
+            {
+                return null;
+            }
+
+            var visited = new HashSet<Control>();
+            var stack = new Stack<Control>();
+            stack.Push(root);
+
+            while (stack.Count > 0)
+            {
+                var current = stack.Pop();
+                if (current == null || !visited.Add(current))
+                {
+                    continue;
+                }
+
+                if (current is T match && match.Name == name)
+                {
+                    return match;
+                }
+
+                PushLogicalChildren(current, stack);
+                PushVisualChildren(current, stack);
+                PushContentChild(current, stack);
+            }
+
+            return null;
+        }
+
+        private static void PushLogicalChildren(Control root, Stack<Control> stack)
+        {
+            try
+            {
+                foreach (var child in root.GetLogicalChildren())
+                {
+                    if (child is Control control)
+                    {
+                        stack.Push(control);
+                    }
+                }
+            }
+            catch
+            {
+                // Logical children can be unavailable while detached.
+            }
+        }
+
+        private static void PushVisualChildren(Control root, Stack<Control> stack)
+        {
+            try
+            {
+                foreach (var child in root.GetVisualChildren())
+                {
+                    if (child is Control control)
+                    {
+                        stack.Push(control);
+                    }
+                }
+            }
+            catch
+            {
+                // Visual children can be unavailable while detached.
+            }
+        }
+
+        private static void PushContentChild(Control root, Stack<Control> stack)
+        {
+            if (root is ContentControl contentControl && contentControl.Content is Control content)
+            {
+                stack.Push(content);
             }
         }
 

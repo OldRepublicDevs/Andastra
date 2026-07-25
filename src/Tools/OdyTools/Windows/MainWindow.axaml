@@ -12,56 +12,61 @@
     <Menu Name="menuBar" DockPanel.Dock="Top">
       <MenuItem Header="_File">
         <MenuItem Header="_New">
+          <MenuItem Name="actionNew2DA" Header="_2DA Table" />
+          <MenuItem Name="actionNewARE" Header="_Area" />
+          <MenuItem Name="actionNewBWM" Header="_Walkmesh" />
           <MenuItem
             Name="actionNewDLG"
-            Header="_Dialog"
-            IsEnabled="False" />
+            Header="_Dialog" />
+          <MenuItem Name="actionNewERF" Header="_ERF / MOD / RIM" />
+          <MenuItem Name="actionNewFAC" Header="_Faction" />
+          <MenuItem Name="actionNewGFF" Header="_GFF" />
+          <MenuItem Name="actionNewGIT" Header="G_IT" />
+          <MenuItem Name="actionNewGUI" Header="_GUI" />
+          <MenuItem Name="actionNewIFO" Header="_Module Info" />
+          <MenuItem Name="actionNewJRL" Header="_Journal" />
+          <MenuItem Name="actionNewLIP" Header="_LIP Sync" />
+          <MenuItem Name="actionNewLTR" Header="L_TR" />
+          <MenuItem Name="actionNewLYT" Header="_Layout" />
+          <MenuItem Name="actionNewMDL" Header="_Model" />
           <MenuItem
             Name="actionNewNSS"
-            Header="_Script"
-            IsEnabled="False" />
+            Header="_Script" />
+          <MenuItem Name="actionNewPTH" Header="_Path" />
+          <MenuItem Name="actionNewSAV" Header="_Save Game" />
+          <MenuItem Name="actionNewSSF" Header="Sound _Set" />
+          <MenuItem Name="actionNewTLK" Header="_Talk Table" />
+          <MenuItem Name="actionNewTPC" Header="_Texture" />
+          <MenuItem Name="actionNewTXT" Header="Te_xt" />
+          <Separator />
           <MenuItem
             Name="actionNewUTC"
-            Header="_Creature"
-            IsEnabled="False" />
+            Header="_Creature" />
           <MenuItem
             Name="actionNewUTP"
-            Header="_Placeable"
-            IsEnabled="False" />
+            Header="_Placeable" />
           <MenuItem
             Name="actionNewUTD"
-            Header="_Door"
-            IsEnabled="False" />
+            Header="_Door" />
           <MenuItem
             Name="actionNewUTI"
-            Header="_Item"
-            IsEnabled="False" />
+            Header="_Item" />
           <MenuItem
             Name="actionNewUTS"
-            Header="_Sound"
-            IsEnabled="False" />
+            Header="_Sound" />
           <MenuItem
             Name="actionNewUTT"
-            Header="_Trigger"
-            IsEnabled="False" />
+            Header="_Trigger" />
           <MenuItem
             Name="actionNewUTM"
-            Header="_Merchant"
-            IsEnabled="False" />
+            Header="_Merchant" />
           <MenuItem
             Name="actionNewUTW"
-            Header="_Waypoint"
-            IsEnabled="False" />
+            Header="_Waypoint" />
           <MenuItem
             Name="actionNewUTE"
-            Header="_Encounter"
-            IsEnabled="False" />
-          <MenuItem Name="actionNewTLK" Header="_TalkTable" />
-          <Separator />
-          <MenuItem Name="actionNewGFF" Header="_GFF" />
-          <MenuItem Name="actionNewERF" Header="_ERF" />
-          <MenuItem Name="actionNewTXT" Header="_TXT" />
-          <MenuItem Name="actionNewSSF" Header="_SSF" />
+            Header="_Encounter" />
+          <MenuItem Name="actionNewWAV" Header="_Audio" />
         </MenuItem>
         <MenuItem Name="openAction" Header="_Open" />
         <MenuItem Name="menuRecentFiles" Header="_Recent Files" />
@@ -213,8 +218,16 @@
                     HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Stretch">
             <StackPanel Margin="5" Spacing="5">
-              <CheckBox Name="tpcDecompileCheckbox" Content="Decompile" />
+              <CheckBox Name="tpcDecompileCheckbox" Content="Decompile" IsChecked="True" />
               <CheckBox Name="tpcTxiCheckbox" Content="Extract TXI" />
+            </StackPanel>
+          </Expander>
+
+          <Expander Header="NCS" IsExpanded="True"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch">
+            <StackPanel Margin="5" Spacing="5">
+              <CheckBox Name="ncsDecompileCheckbox" Content="Decompile to NSS" IsChecked="True" />
             </StackPanel>
           </Expander>
 
@@ -224,9 +237,7 @@
             <StackPanel Margin="5" Spacing="5">
               <CheckBox
                 Name="mdlDecompileCheckbox"
-                Content="Decompile"
-                IsEnabled="False"
-                ToolTip.Tip="Decompile feature is not available." />
+                Content="Decompile to ASCII" />
               <CheckBox Name="mdlTexturesCheckbox" Content="Extract Textures" />
             </StackPanel>
           </Expander>

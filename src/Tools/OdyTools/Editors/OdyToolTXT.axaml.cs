@@ -444,15 +444,93 @@ namespace OdyTools.Editors
 
         private void SetupProgrammaticUI()
         {
+            _zoomLabel = new TextBlock
+            {
+                Name = "zoomLabel",
+                Text = "100%",
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                FontSize = 12,
+                Margin = new Avalonia.Thickness(8, 0, 0, 0)
+            };
+
             _textEdit = new TextBox
             {
+                Name = "TextEdit",
                 AcceptsReturn = true,
                 AcceptsTab = true,
                 TextWrapping = TextWrapping.NoWrap,
                 FontFamily = _fontFamily,
-                FontSize = _currentFontSize
+                FontSize = _currentFontSize,
+                MinHeight = 200,
+                Padding = new Avalonia.Thickness(12, 8),
+                BorderThickness = new Avalonia.Thickness(0)
             };
-            Content = _textEdit;
+
+            _statusLnCol = new TextBlock { Name = "statusLnCol", Text = "Ln 1, Col 1", FontSize = 12, Margin = new Avalonia.Thickness(0, 0, 24, 0) };
+            _statusChars = new TextBlock { Name = "statusChars", Text = "0 characters", FontSize = 12, Margin = new Avalonia.Thickness(0, 0, 24, 0) };
+            _statusLines = new TextBlock { Name = "statusLines", Text = "1 line", FontSize = 12, Margin = new Avalonia.Thickness(0, 0, 24, 0) };
+            _statusEncoding = new TextBlock { Name = "statusEncoding", Text = "UTF-8", FontSize = 12, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right };
+            _statusBar = new Border
+            {
+                Name = "statusBar",
+                Padding = new Avalonia.Thickness(12, 6),
+                BorderThickness = new Avalonia.Thickness(0, 1, 0, 0)
+            };
+
+            var statusGrid = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("Auto,Auto,Auto,*")
+            };
+            statusGrid.Children.Add(_statusLnCol);
+            Grid.SetColumn(_statusChars, 1);
+            statusGrid.Children.Add(_statusChars);
+            Grid.SetColumn(_statusLines, 2);
+            statusGrid.Children.Add(_statusLines);
+            Grid.SetColumn(_statusEncoding, 3);
+            statusGrid.Children.Add(_statusEncoding);
+            _statusBar.Child = statusGrid;
+
+            _actionWordWrap = new MenuItem { Name = "actionWordWrap", Header = "Word _Wrap", ToggleType = MenuItemToggleType.CheckBox };
+            _actionStatusBar = new MenuItem { Name = "actionStatusBar", Header = "_Status Bar", ToggleType = MenuItemToggleType.CheckBox, IsChecked = true };
+
+            var menu = new Menu
+            {
+                Name = "menuBar",
+                Items =
+                {
+                    new MenuItem
+                    {
+                        Header = "_Format",
+                        Items = { _actionWordWrap }
+                    },
+                    new MenuItem
+                    {
+                        Header = "_View",
+                        Items = { _actionStatusBar }
+                    }
+                }
+            };
+
+            var toolbar = new Border
+            {
+                Padding = new Avalonia.Thickness(8, 6),
+                Child = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Spacing = 6,
+                    Children = { _zoomLabel }
+                }
+            };
+
+            var root = new DockPanel();
+            DockPanel.SetDock(menu, Dock.Top);
+            root.Children.Add(menu);
+            DockPanel.SetDock(toolbar, Dock.Top);
+            root.Children.Add(toolbar);
+            DockPanel.SetDock(_statusBar, Dock.Bottom);
+            root.Children.Add(_statusBar);
+            root.Children.Add(_textEdit);
+            Content = root;
         }
 
         private static ResourceType[] GetSupportedTypes()
@@ -462,6 +540,24 @@ namespace OdyTools.Editors
                 .Select(f => (ResourceType)f.GetValue(null))
                 .Where(rt => rt != null && rt.Contents == "plaintext")
                 .ToArray();
+        }
+
+        protected override bool TryResolveReadIdentity(string path, out ResourceType restype, out string resname)
+        {
+            if (base.TryResolveReadIdentity(path, out restype, out resname))
+            {
+                return true;
+            }
+
+            string extension = Path.GetExtension(path).TrimStart('.').ToLowerInvariant();
+            if (extension == "cfg" || extension == "log" || extension == "2da_bak")
+            {
+                restype = ResourceType.TXT;
+                resname = Path.GetFileNameWithoutExtension(path);
+                return true;
+            }
+
+            return false;
         }
 
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
@@ -760,20 +856,12 @@ namespace OdyTools.Editors
         {
             if (_textEdit == null || string.IsNullOrEmpty(_findText)) return false;
             string text = _textEdit.Text ?? "";
-            var comp = _findMatchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-            int start = _lastFindStart;
-            int idx = text.IndexOf(_findText, start, comp);
-            if (idx < 0) { _lastFindStart = 0; idx = text.IndexOf(_findText, 0, comp); }
-            while (idx >= 0 && !MatchesWholeWord(text, idx, _findText.Length))
-            {
-                idx = text.IndexOf(_findText, idx + 1, comp);
-                if (idx < 0) { _lastFindStart = 0; idx = text.IndexOf(_findText, 0, comp); }
-            }
+            int idx = FindNextIndex(text, Math.Min(_lastFindStart, text.Length));
             if (idx < 0) return false;
             _lastFindStart = idx + _findText.Length;
             _textEdit.SelectionStart = idx;
             _textEdit.SelectionEnd = idx + _findText.Length;
-            _textEdit.Focus();
+            FocusTextEditorIfInteractive();
             UpdateStatusBar();
             return true;
         }
@@ -801,24 +889,27 @@ namespace OdyTools.Editors
             _lastFindStart = idx;
             _textEdit.SelectionStart = idx;
             _textEdit.SelectionEnd = idx + _findText.Length;
-            _textEdit.Focus();
+            FocusTextEditorIfInteractive();
             UpdateStatusBar();
             return true;
+        }
+
+        private void FocusTextEditorIfInteractive()
+        {
+            var lifetimeName = Application.Current?.ApplicationLifetime?.GetType().Name ?? string.Empty;
+            if (lifetimeName.IndexOf("Headless", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return;
+            }
+
+            _textEdit?.Focus();
         }
 
         private void ReplaceOne()
         {
             if (_textEdit == null || string.IsNullOrEmpty(_findText)) return;
             string text = _textEdit.Text ?? "";
-            int start = _textEdit.SelectionStart;
-            var comp = _findMatchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-            int idx = text.IndexOf(_findText, start, comp);
-            if (idx < 0) { _lastFindStart = 0; idx = text.IndexOf(_findText, 0, comp); }
-            while (idx >= 0 && !MatchesWholeWord(text, idx, _findText.Length))
-            {
-                idx = text.IndexOf(_findText, idx + 1, comp);
-                if (idx < 0) { _lastFindStart = 0; idx = text.IndexOf(_findText, 0, comp); }
-            }
+            int idx = FindNextIndex(text, Math.Min(_textEdit.SelectionStart, text.Length));
             if (idx < 0) return;
             PushState();
             _textEdit.Text = text.Remove(idx, _findText.Length).Insert(idx, _replaceText ?? "");
@@ -826,6 +917,32 @@ namespace OdyTools.Editors
             _textEdit.SelectionEnd = idx + (_replaceText ?? "").Length;
             _lastFindStart = idx + (_replaceText ?? "").Length;
             UpdateStatusBar();
+        }
+
+        private int FindNextIndex(string text, int start)
+        {
+            if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(_findText)) return -1;
+            var comp = _findMatchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+            start = Math.Max(0, Math.Min(start, text.Length));
+            int idx = FindNextIndexInRange(text, start, comp);
+            if (idx >= 0) return idx;
+            if (start == 0) return -1;
+            _lastFindStart = 0;
+            return FindNextIndexInRange(text, 0, comp);
+        }
+
+        private int FindNextIndexInRange(string text, int start, StringComparison comp)
+        {
+            int idx = text.IndexOf(_findText, start, comp);
+            while (idx >= 0)
+            {
+                if (MatchesWholeWord(text, idx, _findText.Length))
+                {
+                    return idx;
+                }
+                idx = text.IndexOf(_findText, idx + 1, comp);
+            }
+            return -1;
         }
 
         private void ReplaceAll()
@@ -842,11 +959,13 @@ namespace OdyTools.Editors
         {
             if (string.IsNullOrEmpty(find)) return text;
             var comparison = matchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-            int pos = 0;
+            int searchStart = 0;
+            int appendStart = 0;
+            bool replacedAny = false;
             var sb = new StringBuilder();
-            while (pos < text.Length)
+            while (searchStart < text.Length)
             {
-                int idx = text.IndexOf(find, pos, comparison);
+                int idx = text.IndexOf(find, searchStart, comparison);
                 if (idx < 0) break;
                 if (wholeWord)
                 {
@@ -854,16 +973,18 @@ namespace OdyTools.Editors
                     char after = idx + find.Length < text.Length ? text[idx + find.Length] : ' ';
                     if (char.IsLetterOrDigit(before) || char.IsLetterOrDigit(after))
                     {
-                        pos = idx + 1;
+                        searchStart = idx + 1;
                         continue;
                     }
                 }
-                sb.Append(text, pos, idx - pos);
+                sb.Append(text, appendStart, idx - appendStart);
                 sb.Append(replace);
-                pos = idx + find.Length;
+                searchStart = idx + find.Length;
+                appendStart = searchStart;
+                replacedAny = true;
             }
-            if (pos == 0) return text;
-            sb.Append(text, pos, text.Length - pos);
+            if (!replacedAny) return text;
+            sb.Append(text, appendStart, text.Length - appendStart);
             return sb.ToString();
         }
 
@@ -907,5 +1028,61 @@ namespace OdyTools.Editors
         {
             return DecodeBytesWithFallbacks(data, out _, out _);
         }
+
+        internal string TextForTest => _textEdit?.Text ?? string.Empty;
+        internal int SelectionStartForTest => _textEdit?.SelectionStart ?? 0;
+        internal int SelectionEndForTest => _textEdit?.SelectionEnd ?? 0;
+        internal string StatusLineColumnForTest => _statusLnCol?.Text ?? string.Empty;
+        internal string StatusCharactersForTest => _statusChars?.Text ?? string.Empty;
+        internal string StatusLinesForTest => _statusLines?.Text ?? string.Empty;
+        internal string ZoomLabelForTest => _zoomLabel?.Text ?? string.Empty;
+        internal bool WordWrapForTest => _wordWrap;
+        internal bool StatusBarVisibleForTest => _statusBarVisible;
+        internal double FontSizeForTest => _currentFontSize;
+
+        internal void SetTextForTest(string text)
+        {
+            if (_textEdit == null) return;
+            _textEdit.Text = text ?? string.Empty;
+            UpdateStatusBar();
+        }
+
+        internal void SetSelectionForTest(int start, int end)
+        {
+            if (_textEdit == null) return;
+            int length = (_textEdit.Text ?? string.Empty).Length;
+            _textEdit.SelectionStart = Math.Max(0, Math.Min(start, length));
+            _textEdit.SelectionEnd = Math.Max(0, Math.Min(end, length));
+            UpdateStatusBar();
+        }
+
+        internal void ConfigureFindForTest(string find, string replace = "", bool matchCase = false, bool wholeWord = false)
+        {
+            _findText = find ?? string.Empty;
+            _replaceText = replace ?? string.Empty;
+            _findMatchCase = matchCase;
+            _findWholeWord = wholeWord;
+            _lastFindStart = 0;
+        }
+
+        internal bool FindNextForTest() => FindNextMatch();
+
+        internal bool FindPreviousForTest() => FindPreviousMatch();
+
+        internal void ReplaceOneForTest() => ReplaceOne();
+
+        internal void ReplaceAllForTest()
+        {
+            PushState();
+            ReplaceAll();
+        }
+
+        internal void ZoomInForTest() => ZoomIn();
+
+        internal void ZoomOutForTest() => ZoomOut();
+
+        internal void ZoomResetForTest() => ZoomReset();
+
+        internal void ToggleStatusBarForTest() => ToggleStatusBar();
     }
 }

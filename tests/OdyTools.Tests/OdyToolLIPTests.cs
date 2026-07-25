@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Headless;
+using Avalonia.Input;
 using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.LIP;
@@ -31,6 +32,21 @@ namespace OdyTools.Tests
                     Assert.That(data, Is.Not.Null.And.Length.GreaterThan(0));
                     LIP loaded = LIPAuto.ReadLip(data);
                     Assert.That(loaded, Is.Not.Null);
+                }, CancellationToken.None);
+            }
+        }
+
+        [Test]
+        public async Task OdyToolLIP_Constructor_BuildsProgrammaticSurfaceWithoutInstallation()
+        {
+            using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+            {
+                await session.Dispatch(() =>
+                {
+                    var editor = new OdyToolLIP(null, null);
+
+                    Assert.That(editor.HasProgrammaticEditorSurfaceForTest, Is.True);
+                    Assert.That(editor.Build().Item1, Is.Not.Null.And.Length.GreaterThan(0));
                 }, CancellationToken.None);
             }
         }
@@ -70,7 +86,84 @@ namespace OdyTools.Tests
                         var editor = new OdyToolLIP(null, null);
                         editor.LoadAudioFile(wavPath);
                         Assert.That(editor.AudioFilePath, Is.EqualTo(wavPath));
+                        Assert.That(editor.AudioPathBoxTextForTest, Is.EqualTo(wavPath));
                         Assert.That(editor.Duration, Is.EqualTo(3.5f).Within(0.01f));
+                        Assert.That((double)(editor.DurationSpinValueForTest ?? 0m), Is.EqualTo(3.5d).Within(0.01d));
+                        Assert.That(editor.PlayPreviewButtonEnabledForTest, Is.True);
+                        Assert.That(editor.StopPreviewButtonEnabledForTest, Is.True);
+                        Assert.That(editor.IsDirty, Is.True);
+                    }, CancellationToken.None);
+                }
+            }
+            finally
+            {
+                if (File.Exists(wavPath))
+                {
+                    File.Delete(wavPath);
+                }
+            }
+        }
+
+        [Test]
+        public async Task OdyToolLIP_New_ClearsLoadedAudioPreviewState()
+        {
+            string wavPath = CreateTempWav(1.25f);
+            try
+            {
+                using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+                {
+                    await session.Dispatch(() =>
+                    {
+                        var editor = new OdyToolLIP(null, null);
+                        editor.LoadAudioFile(wavPath);
+                        Assert.That(editor.AudioFilePath, Is.EqualTo(wavPath));
+
+                        editor.New();
+
+                        Assert.That(editor.AudioFilePath, Is.Null);
+                        Assert.That(editor.AudioPathBoxTextForTest, Is.EqualTo(string.Empty));
+                        Assert.That(editor.PlayPreviewButtonEnabledForTest, Is.False);
+                        Assert.That(editor.StopPreviewButtonEnabledForTest, Is.False);
+                        Assert.That(editor.PreviewLabelTextForTest, Is.EqualTo("None"));
+                        Assert.That(editor.Duration, Is.EqualTo(0.0f));
+                        Assert.That(editor.IsDirty, Is.False);
+                    }, CancellationToken.None);
+                }
+            }
+            finally
+            {
+                if (File.Exists(wavPath))
+                {
+                    File.Delete(wavPath);
+                }
+            }
+        }
+
+        [Test]
+        public async Task OdyToolLIP_Load_ClearsLoadedAudioPreviewState()
+        {
+            string wavPath = CreateTempWav(1.5f);
+            try
+            {
+                using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+                {
+                    await session.Dispatch(() =>
+                    {
+                        var editor = new OdyToolLIP(null, null);
+                        editor.LoadAudioFile(wavPath);
+                        Assert.That(editor.AudioFilePath, Is.EqualTo(wavPath));
+
+                        var lip = new LIP();
+                        lip.Length = 4.0f;
+                        byte[] data = LIPAuto.BytesLip(lip);
+                        editor.Load("loaded.lip", "loaded", ResourceType.LIP, data);
+
+                        Assert.That(editor.AudioFilePath, Is.Null);
+                        Assert.That(editor.AudioPathBoxTextForTest, Is.EqualTo(string.Empty));
+                        Assert.That(editor.PlayPreviewButtonEnabledForTest, Is.False);
+                        Assert.That(editor.StopPreviewButtonEnabledForTest, Is.False);
+                        Assert.That(editor.Duration, Is.EqualTo(4.0f).Within(0.001f));
+                        Assert.That(editor.IsDirty, Is.False);
                     }, CancellationToken.None);
                 }
             }
@@ -138,6 +231,160 @@ namespace OdyTools.Tests
             Assert.That(OdyToolLIP.GetShapeAtPlaybackTime(lip, 1.2f), Is.EqualTo(LIPShape.AH));
             Assert.That(OdyToolLIP.GetShapeAtPlaybackTime(lip, 2.6f), Is.EqualTo(LIPShape.OH));
             Assert.That(OdyToolLIP.GetShapeAtPlaybackTime(lip, 0.1f), Is.Null);
+        }
+
+        [Test]
+        public async Task OdyToolLIP_ScrubPreview_UpdatesShapeSelectionAndDoesNotDirtyDocument()
+        {
+            using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+            {
+                await session.Dispatch(() =>
+                {
+                    var lip = new LIP();
+                    lip.Length = 5.0f;
+                    lip.Add(1.0f, LIPShape.AH);
+                    lip.Add(2.5f, LIPShape.OH);
+                    byte[] data = LIPAuto.BytesLip(lip);
+
+                    var editor = new OdyToolLIP(null, null);
+                    editor.Load("scrub.lip", "scrub", ResourceType.LIP, data);
+                    Assert.That(editor.IsDirty, Is.False);
+                    Assert.That(editor.ScrubSliderMaximumForTest, Is.EqualTo(5.0d).Within(0.001d));
+                    Assert.That(editor.ScrubSliderEnabledForTest, Is.True);
+
+                    editor.SeekPreviewForTest(2.6f);
+
+                    Assert.That(editor.PreviewLabelTextForTest, Is.EqualTo("OH"));
+                    Assert.That(editor.SelectedKeyframeIndexForTest, Is.EqualTo(1));
+                    Assert.That(editor.ScrubSliderValueForTest, Is.EqualTo(2.6d).Within(0.001d));
+                    Assert.That(editor.ScrubTimeLabelTextForTest, Is.EqualTo("2.600s / 5.000s"));
+                    Assert.That(editor.IsDirty, Is.False);
+
+                    editor.SeekPreviewForTest(99.0f);
+                    Assert.That(editor.ScrubSliderValueForTest, Is.EqualTo(5.0d).Within(0.001d));
+                    Assert.That(editor.ScrubTimeLabelTextForTest, Is.EqualTo("5.000s / 5.000s"));
+                }, CancellationToken.None);
+            }
+        }
+
+        [Test]
+        public async Task OdyToolLIP_New_ResetsScrubPreviewState()
+        {
+            using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+            {
+                await session.Dispatch(() =>
+                {
+                    var lip = new LIP();
+                    lip.Length = 3.0f;
+                    lip.Add(1.0f, LIPShape.AH);
+
+                    var editor = new OdyToolLIP(null, null);
+                    editor.Load("scrub.lip", "scrub", ResourceType.LIP, LIPAuto.BytesLip(lip));
+                    editor.SeekPreviewForTest(1.0f);
+
+                    editor.New();
+
+                    Assert.That(editor.ScrubSliderValueForTest, Is.EqualTo(0.0d));
+                    Assert.That(editor.ScrubSliderMaximumForTest, Is.EqualTo(0.0d));
+                    Assert.That(editor.ScrubSliderEnabledForTest, Is.False);
+                    Assert.That(editor.ScrubTimeLabelTextForTest, Is.EqualTo("0.000s / 0.000s"));
+                    Assert.That(editor.PreviewLabelTextForTest, Is.EqualTo("None"));
+                    Assert.That(editor.SelectedKeyframeIndexForTest, Is.EqualTo(-1));
+                    Assert.That(editor.IsDirty, Is.False);
+                }, CancellationToken.None);
+            }
+        }
+
+        [Test]
+        public async Task OdyToolLIP_EscapeShortcut_StopsPreviewAndResetsLabel()
+        {
+            using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+            {
+                await session.Dispatch(() =>
+                {
+                    var editor = new OdyToolLIP(null, null);
+                    editor.SetPreviewLabelTextForTest("AH");
+
+                    Assert.That(editor.TryHandlePlaybackShortcutForTest(Key.Escape, KeyModifiers.None), Is.True);
+                    Assert.That(editor.PreviewLabelTextForTest, Is.EqualTo("None"));
+                    Assert.That(editor.TryHandlePlaybackShortcutForTest(Key.Escape, KeyModifiers.Control), Is.False);
+                }, CancellationToken.None);
+            }
+        }
+
+        [Test]
+        public async Task OdyToolLIP_FindNext_SelectsMatchingKeyframesAndWrapsLikeHolocron()
+        {
+            using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+            {
+                int firstIndex = -1;
+                decimal? firstTime = null;
+                LIPShape? firstShape = null;
+                int secondIndex = -1;
+                int wrappedIndex = -1;
+
+                await session.Dispatch(() =>
+                {
+                    var lip = new LIP();
+                    lip.Length = 4.0f;
+                    lip.Add(1.0f, LIPShape.AH);
+                    lip.Add(2.5f, LIPShape.OH);
+                    byte[] data = LIPAuto.BytesLip(lip);
+
+                    var editor = new OdyToolLIP(null, null);
+                    editor.Load("find.lip", "find", ResourceType.LIP, data);
+                    editor.SetFindQueryForTest("H");
+
+                    Assert.That(editor.FindNextForTest(), Is.True);
+                    firstIndex = editor.SelectedKeyframeIndexForTest;
+                    firstTime = editor.TimeSpinValueForTest;
+                    firstShape = editor.ShapeComboSelectedShapeForTest;
+
+                    Assert.That(editor.FindNextForTest(), Is.True);
+                    secondIndex = editor.SelectedKeyframeIndexForTest;
+
+                    Assert.That(editor.FindNextForTest(), Is.True);
+                    wrappedIndex = editor.SelectedKeyframeIndexForTest;
+                }, CancellationToken.None);
+
+                Assert.That(firstIndex, Is.EqualTo(0));
+                Assert.That(firstTime, Is.EqualTo(1.0m));
+                Assert.That(firstShape, Is.EqualTo(LIPShape.AH));
+                Assert.That(secondIndex, Is.EqualTo(1));
+                Assert.That(wrappedIndex, Is.EqualTo(0));
+            }
+        }
+
+        [Test]
+        public async Task OdyToolLIP_FindNext_MatchCaseSkipsCaseMismatch()
+        {
+            using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+            {
+                bool lowerCaseMatched = true;
+                bool exactCaseMatched = false;
+                int selectedIndex = -1;
+
+                await session.Dispatch(() =>
+                {
+                    var lip = new LIP();
+                    lip.Length = 2.0f;
+                    lip.Add(1.0f, LIPShape.AH);
+
+                    var editor = new OdyToolLIP(null, null);
+                    editor.Load("find.lip", "find", ResourceType.LIP, LIPAuto.BytesLip(lip));
+
+                    editor.SetFindQueryForTest("ah", matchCase: true);
+                    lowerCaseMatched = editor.FindNextForTest();
+
+                    editor.SetFindQueryForTest("AH", matchCase: true);
+                    exactCaseMatched = editor.FindNextForTest();
+                    selectedIndex = editor.SelectedKeyframeIndexForTest;
+                }, CancellationToken.None);
+
+                Assert.That(lowerCaseMatched, Is.False);
+                Assert.That(exactCaseMatched, Is.True);
+                Assert.That(selectedIndex, Is.EqualTo(0));
+            }
         }
 
         [Test]

@@ -1,5 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:w="clr-namespace:OdyTools.Widgets"
+        xmlns:widgets="clr-namespace:OdyTools.Widgets.Edit"
         x:Class="OdyTools.Editors.OdyToolUTE"
         Title="OdyToolUTE"
         MinWidth="700" MinHeight="500"
@@ -10,5 +12,130 @@
       <Setter Property="Background" Value="#F3F5F9" />
     </Style>
   </Window.Styles>
-  <ContentControl x:Name="contentRoot"/>
+
+  <DockPanel LastChildFill="True">
+    <Menu DockPanel.Dock="Top" Name="menuBar">
+      <MenuItem Header="_File">
+        <MenuItem Header="_New" Name="actionNew"/>
+        <MenuItem Header="_Open" Name="actionOpen"/>
+        <MenuItem Header="_Save" Name="actionSave"/>
+        <MenuItem Header="Save _As" Name="actionSaveAs"/>
+        <Separator/>
+        <MenuItem Header="_Revert" Name="actionRevert"/>
+        <Separator/>
+        <MenuItem Header="E_xit" Name="actionExit"/>
+      </MenuItem>
+      <MenuItem Header="_Help" Name="menuHelp"/>
+    </Menu>
+
+    <TabControl Name="editorSurface" Margin="10">
+      <TabItem Header="Basic">
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*" ColumnSpacing="10" RowSpacing="8" Margin="8">
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="Name" VerticalAlignment="Center"/>
+          <Grid Grid.Row="0" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <w:LocalizedStringEdit Name="nameEdit"/>
+            <Button Name="nameEditBtn" Grid.Column="1" Content="Edit"/>
+          </Grid>
+
+          <TextBlock Grid.Row="1" Grid.Column="0" Text="Tag" VerticalAlignment="Center"/>
+          <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <TextBox Name="tagEdit"/>
+            <Button Name="tagGenerateButton" Grid.Column="1" Content="Use ResRef"/>
+          </Grid>
+
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Template ResRef" VerticalAlignment="Center"/>
+          <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <TextBox Name="resrefEdit" MaxLength="16"/>
+            <Button Name="resrefGenerateButton" Grid.Column="1" Content="Use file name"/>
+          </Grid>
+
+          <TextBlock Grid.Row="3" Grid.Column="0" Text="Difficulty" VerticalAlignment="Center"/>
+          <widgets:ComboBox2DA Name="difficultySelect" Grid.Row="3" Grid.Column="1"/>
+
+          <TextBlock Grid.Row="4" Grid.Column="0" Text="Min Creatures" VerticalAlignment="Center"/>
+          <NumericUpDown Name="minCreatureSpin" Grid.Row="4" Grid.Column="1" Minimum="0" Maximum="32767"/>
+
+          <TextBlock Grid.Row="5" Grid.Column="0" Text="Max Creatures" VerticalAlignment="Center"/>
+          <NumericUpDown Name="maxCreatureSpin" Grid.Row="5" Grid.Column="1" Minimum="0" Maximum="32767"/>
+
+          <TextBlock Grid.Row="6" Grid.Column="0" Text="Spawn" VerticalAlignment="Center"/>
+          <ComboBox Name="spawnSelect" Grid.Row="6" Grid.Column="1">
+            <ComboBoxItem Content="Single Shot"/>
+            <ComboBoxItem Content="Continuous"/>
+          </ComboBox>
+        </Grid>
+      </TabItem>
+
+      <TabItem Header="Advanced">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*" ColumnSpacing="10" RowSpacing="8" Margin="8">
+            <CheckBox Name="activeCheckbox" Grid.Row="0" Grid.Column="1" Content="Active"/>
+            <CheckBox Name="playerOnlyCheckbox" Grid.Row="1" Grid.Column="1" Content="Player Triggered Only"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Faction" VerticalAlignment="Center"/>
+            <widgets:ComboBox2DA Name="factionSelect" Grid.Row="2" Grid.Column="1"/>
+
+            <CheckBox Name="respawnsCheckbox" Grid.Row="3" Grid.Column="1" Content="Respawns"/>
+            <CheckBox Name="infiniteRespawnCheckbox" Grid.Row="4" Grid.Column="1" Content="Infinite Respawns"/>
+
+            <TextBlock Grid.Row="5" Grid.Column="0" Text="Respawn Time (s)" VerticalAlignment="Center"/>
+            <NumericUpDown Name="respawnTimeSpin" Grid.Row="5" Grid.Column="1" Minimum="0" Maximum="2147483647"/>
+
+            <TextBlock Grid.Row="6" Grid.Column="0" Text="Number of Respawns" VerticalAlignment="Center"/>
+            <NumericUpDown Name="respawnCountSpin" Grid.Row="6" Grid.Column="1" Minimum="-1" Maximum="32767"/>
+          </Grid>
+        </ScrollViewer>
+      </TabItem>
+
+      <TabItem Header="Creatures">
+        <Grid RowDefinitions="*,Auto" RowSpacing="8" Margin="8">
+          <DataGrid Name="creatureTable"
+                    AutoGenerateColumns="False"
+                    GridLinesVisibility="All"
+                    IsReadOnly="False"
+                    SelectionMode="Single">
+            <DataGrid.Columns>
+              <DataGridCheckBoxColumn Header="SingleSpawn" Binding="{ReflectionBinding SingleSpawn}"/>
+              <DataGridTextColumn Header="CR" Binding="{ReflectionBinding CR}"/>
+              <DataGridTextColumn Header="Appearance" Binding="{ReflectionBinding Appearance}"/>
+              <DataGridTextColumn Header="ResRef" Binding="{ReflectionBinding ResRef}"/>
+            </DataGrid.Columns>
+          </DataGrid>
+          <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Name="removeCreatureButton" Content="Remove"/>
+            <Button Name="addCreatureButton" Content="Add"/>
+          </StackPanel>
+        </Grid>
+      </TabItem>
+
+      <TabItem Header="Scripts">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="8" Margin="8">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="OnEnter" VerticalAlignment="Center"/>
+            <ComboBox Name="onEnterSelect" Grid.Row="0" Grid.Column="1" IsEditable="True"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="OnExit" VerticalAlignment="Center"/>
+            <ComboBox Name="onExitSelect" Grid.Row="1" Grid.Column="1" IsEditable="True"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="OnExhausted" VerticalAlignment="Center"/>
+            <ComboBox Name="onExhaustedEdit" Grid.Row="2" Grid.Column="1" IsEditable="True"/>
+
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="OnHeartbeat" VerticalAlignment="Center"/>
+            <ComboBox Name="onHeartbeatSelect" Grid.Row="3" Grid.Column="1" IsEditable="True"/>
+
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="OnUserDefined" VerticalAlignment="Center"/>
+            <ComboBox Name="onUserDefinedSelect" Grid.Row="4" Grid.Column="1" IsEditable="True"/>
+          </Grid>
+        </ScrollViewer>
+      </TabItem>
+
+      <TabItem Header="Comments">
+        <TextBox Name="commentsEdit" Margin="8" AcceptsReturn="True" AcceptsTab="True" TextWrapping="Wrap"/>
+      </TabItem>
+    </TabControl>
+
+    <Border DockPanel.Dock="Bottom" Padding="12,8" Background="#E8EAED" BorderBrush="#DADCE0" BorderThickness="0,1,0,0">
+      <TextBlock Name="statusText" Text="Encounter" Foreground="#202124" FontSize="12"/>
+    </Border>
+  </DockPanel>
 </Window>

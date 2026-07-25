@@ -140,6 +140,7 @@
         <Menu DockPanel.Dock="Top">
             <MenuItem Name="menuFile" Header="_File">
                 <MenuItem Header="_New" Name="actionNew" />
+                <MenuItem Header="New _10x5 Grid" Name="actionNew10x5Grid" />
                 <MenuItem Header="_Open" Name="actionOpen" />
                 <MenuItem Header="_Save" Name="actionSave" HotKey="Ctrl+S" />
                 <MenuItem Header="Save _As" Name="actionSaveAs" />
@@ -158,12 +159,13 @@
                 <MenuItem Header="_Copy" Name="actionCopy" HotKey="Ctrl+C" />
                 <MenuItem Header="_Paste" Name="actionPaste" HotKey="Ctrl+V" />
                 <MenuItem Header="Paste _Transposed" Name="actionPasteTransposed" />
+                <MenuItem Header="Paste by _Header" Name="actionPasteByHeader" />
                 <MenuItem Header="_Clear Cell" Name="actionClearCell" />
                 <Separator />
                 <MenuItem Header="_Find..." Name="actionFind" HotKey="Ctrl+F" />
                 <MenuItem Header="_Replace..." Name="actionReplace" HotKey="Ctrl+H" />
                 <Separator />
-                <MenuItem Header="Go _to Row..." Name="actionGoToRow" HotKey="Ctrl+G" />
+                <MenuItem Header="Go _to Cell..." Name="actionGoToRow" HotKey="Ctrl+G" />
                 <MenuItem Header="Go to _Column..." Name="actionGoToColumn" HotKey="Ctrl+Shift+G" />
                 <Separator />
                 <MenuItem Header="Select _All" Name="actionSelectAll" HotKey="Ctrl+A" />
@@ -276,7 +278,7 @@
                                 <Button Name="tbSelectColumn" Classes="sidebarCmd" Content="Select Column" HorizontalAlignment="Stretch" ToolTip.Tip="Select current column" />
                                 <Button Name="tbSelectRow" Classes="sidebarCmd" Content="Select Row" HorizontalAlignment="Stretch" ToolTip.Tip="Select current row" />
                                 <Button Name="tbFillDown" Classes="sidebarCmd" Content="Fill Down" HorizontalAlignment="Stretch" ToolTip.Tip="Ctrl+D" />
-                                <Button Name="tbGoToRow" Classes="sidebarCmd" Content="Go to Row…" HorizontalAlignment="Stretch" ToolTip.Tip="Ctrl+G" />
+                                <Button Name="tbGoToRow" Classes="sidebarCmd" Content="Go to Cell…" HorizontalAlignment="Stretch" ToolTip.Tip="Ctrl+G" />
                                 <Button Name="tbGoToColumn" Classes="sidebarCmd" Content="Go to Column…" HorizontalAlignment="Stretch" ToolTip.Tip="Ctrl+Shift+G" />
                             </StackPanel>
                         </Border>
@@ -342,6 +344,7 @@
                                 <MenuItem Header="_Copy" Name="ctxCopy" />
                                 <MenuItem Header="_Paste" Name="ctxPaste" />
                                 <MenuItem Header="Paste _Transposed" Name="ctxPasteTransposed" />
+                                <MenuItem Header="Paste by _Header" Name="ctxPasteByHeader" />
                                 <MenuItem Header="_Clear Cell" Name="ctxClearCell" />
                                 <Separator />
                                 <MenuItem Header="Find _References..." Name="ctxFindRowReferences" />

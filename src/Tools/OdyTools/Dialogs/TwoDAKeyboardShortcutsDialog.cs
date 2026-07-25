@@ -59,8 +59,9 @@ namespace OdyTools.Dialogs
                 ("Ctrl+A", "Select All"),
                 ("Ctrl+D", "Fill Down"),
                 ("Ctrl+F", "Find"),
+                ("Ctrl+Shift+F", "Highlight all find matches"),
                 ("Ctrl+H", "Replace"),
-                ("Ctrl+G", "Go to Row"),
+                ("Ctrl+G", "Go to Cell"),
                 ("Ctrl+Shift+G", "Go to Column"),
                 ("Shift+Delete", "Remove Rows"),
             });
@@ -69,6 +70,7 @@ namespace OdyTools.Dialogs
             {
                 ("F2", "Edit cell"),
                 ("F3", "Find next"),
+                ("Shift+F3", "Find previous"),
                 ("Home", "First cell in row"),
                 ("End", "Last cell in row"),
                 ("Ctrl+Home", "Jump to first row"),

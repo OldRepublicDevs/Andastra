@@ -30,10 +30,10 @@ namespace BioWare.Resource.Formats.GFF.Generics
             foreach (var pointStruct in pointsList)
             {
                 // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x004e3650 line 66, k1_win_gog_swkotor.exe:0x00508400 line 66)
-                int connections = pointStruct.Acquire<int>("Conections", 0);
+                int connections = (int)pointStruct.Acquire<uint>("Conections", 0);
 
                 // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x004e3650 line 69, k1_win_gog_swkotor.exe:0x00508400 line 69)
-                int firstConnection = pointStruct.Acquire<int>("First_Conection", 0);
+                int firstConnection = (int)pointStruct.Acquire<uint>("First_Conection", 0);
 
                 // Engine default: 0.0 (k2_win_gog_aspyr_swkotor2.exe:0x004e3650 line 60, k1_win_gog_swkotor.exe:0x00508400 line 60)
                 float x = pointStruct.Acquire<float>("X", 0.0f);
@@ -51,7 +51,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
                         continue;
                     }
                     // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x004e3650 line 89, k1_win_gog_swkotor.exe:0x00508400 line 89)
-                    int target = connectionStruct.Acquire<int>("Destination", 0);
+                    int target = (int)connectionStruct.Acquire<uint>("Destination", 0);
                     pth.Connect(sourceIndex, target);
                 }
             }

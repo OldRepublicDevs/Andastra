@@ -34,6 +34,11 @@
             <MenuItem Header="_Edit">
                 <MenuItem Header="_Copy" Name="actionCopy" />
                 <MenuItem Header="_Paste" Name="actionPaste" />
+                <Separator />
+                <MenuItem Header="Rotate _Left" Name="actionRotateLeft" />
+                <MenuItem Header="Rotate _Right" Name="actionRotateRight" />
+                <MenuItem Header="Flip _Horizontal" Name="actionFlipHorizontal" />
+                <MenuItem Header="Flip _Vertical" Name="actionFlipVertical" />
             </MenuItem>
             <MenuItem Header="_Tools">
                 <MenuItem Header="_Decompile" Name="actionDecompile" />
@@ -42,21 +47,77 @@
         </Menu>
 
         <!-- Main Content -->
-        <Grid RowDefinitions="*,Auto">
+        <Grid RowDefinitions="*,Auto" ColumnDefinitions="*,280">
             <!-- Texture Scroll Area -->
-            <ScrollViewer Name="textureScrollArea" Grid.Row="0">
-                <Grid>
-                    <Image Name="textureLabel" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <ScrollViewer Name="textureScrollArea" Grid.Row="0" Grid.Column="0">
+                <Grid Background="#12161C">
+                    <TextBlock Name="previewMessage"
+                               Text="No texture loaded"
+                               Foreground="#AAB2C0"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                    <Image Name="textureLabel"
+                           Stretch="Uniform"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
                 </Grid>
             </ScrollViewer>
 
+            <Border Grid.Row="0" Grid.Column="1" BorderBrush="#D7DBE6" BorderThickness="1,0,0,0" Background="#F8FAFD" Padding="10">
+                <Grid RowDefinitions="Auto,Auto,*,Auto,160">
+                    <TextBlock Text="Properties" FontWeight="Bold" Margin="0,0,0,8" />
+                    <Grid Grid.Row="1" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="0,0,0,14">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Dimensions:" Margin="0,0,10,6" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Name="dimensionsValue" Text="-" Margin="0,0,0,6" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Format:" Margin="0,0,10,6" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Name="formatValue" Text="-" Margin="0,0,0,6" />
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Layers:" Margin="0,0,10,6" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Name="layersValue" Text="-" Margin="0,0,0,6" />
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Mipmaps:" Margin="0,0,10,6" />
+                        <TextBlock Grid.Row="3" Grid.Column="1" Name="mipmapsValue" Text="-" Margin="0,0,0,6" />
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Compressed:" Margin="0,0,10,6" />
+                        <TextBlock Grid.Row="4" Grid.Column="1" Name="compressedValue" Text="-" Margin="0,0,0,6" />
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Animated:" Margin="0,0,10,6" />
+                        <TextBlock Grid.Row="5" Grid.Column="1" Name="animatedValue" Text="-" Margin="0,0,0,6" />
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Cube map:" Margin="0,0,10,6" />
+                        <TextBlock Grid.Row="6" Grid.Column="1" Name="cubeMapValue" Text="-" Margin="0,0,0,6" />
+                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Alpha test:" Margin="0,0,10,0" />
+                        <TextBlock Grid.Row="7" Grid.Column="1" Name="alphaValue" Text="-" Margin="0,0,0,6" />
+                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Alpha edit:" Margin="0,0,10,0" />
+                        <NumericUpDown Grid.Row="8" Grid.Column="1"
+                                       Name="alphaTestBox"
+                                       Minimum="0"
+                                       Maximum="1"
+                                       Increment="0.01"
+                                       FormatString="0.##"
+                                       Value="1"
+                                       ToolTip.Tip="Alpha test threshold written to the TPC header." />
+                    </Grid>
+
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+                        <TextBlock Text="Mipmap:" VerticalAlignment="Center" />
+                        <NumericUpDown Name="mipmapBox" Minimum="0" Maximum="0" Width="80" Value="0" />
+                    </StackPanel>
+
+                    <Grid Grid.Row="4" RowDefinitions="Auto,*">
+                        <TextBlock Text="TXI" FontWeight="Bold" Margin="0,0,0,6" />
+                        <TextBox Grid.Row="1"
+                                 Name="txiEdit"
+                                 FontFamily="Consolas"
+                                 AcceptsReturn="True"
+                                 TextWrapping="NoWrap" />
+                    </Grid>
+                </Grid>
+            </Border>
+
             <!-- Controls Widget -->
-            <Grid Name="controlsWidget" Grid.Row="1" RowDefinitions="Auto" MaxHeight="60" Margin="5">
+            <Grid Name="controlsWidget" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" RowDefinitions="Auto" MaxHeight="60" Margin="5">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <TextBlock Text="Zoom:" VerticalAlignment="Center" Margin="0,0,5,0" />
                     <Button Name="zoomOutButton" Content="−" Width="30" />
                     <Slider Name="zoomSlider" Minimum="10" Maximum="500" Value="100" Width="200" Margin="5,0" />
                     <Button Name="zoomInButton" Content="+" Width="30" />
+                    <TextBlock Name="zoomPercentLabel" Text="100%" VerticalAlignment="Center" MinWidth="48" />
                 </StackPanel>
             </Grid>
         </Grid>

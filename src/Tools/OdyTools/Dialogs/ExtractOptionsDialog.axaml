@@ -21,7 +21,7 @@
                   HorizontalAlignment="Stretch"
                   HorizontalContentAlignment="Stretch">
             <StackPanel Spacing="5" Margin="5">
-                <CheckBox Name="mdlDecompileCheckbox" Content="Decompile" IsEnabled="False" ToolTip.Tip="Decompile feature is not available." />
+                <CheckBox Name="mdlDecompileCheckbox" Content="Decompile to ASCII" />
                 <CheckBox Name="mdlTexturesCheckbox" Content="Extract Textures" />
             </StackPanel>
         </Expander>

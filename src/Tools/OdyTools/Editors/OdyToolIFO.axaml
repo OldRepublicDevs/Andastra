@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:w="clr-namespace:OdyTools.Widgets"
         x:Class="OdyTools.Editors.OdyToolIFO"
         Title="OdyToolIFO"
         MinWidth="640" MinHeight="480"
@@ -99,21 +100,18 @@
                             <TextBlock Classes="sectionTitle" Text="Basic Information"/>
                             <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="6" ColumnSpacing="8">
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Module Name:" VerticalAlignment="Center" Foreground="#202124"/>
-                                <Grid Grid.Row="0" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="6">
-                                    <TextBox Name="NameEdit" Grid.Column="0" IsReadOnly="True"/>
-                                    <Button Name="NameEditBtn" Grid.Column="1" Classes="command" Content="Edit Name"/>
-                                </Grid>
+                                <w:LocalizedStringEdit Name="NameEdit" Grid.Row="0" Grid.Column="1"/>
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Tag:" VerticalAlignment="Center" Foreground="#202124"/>
-                                <TextBox Name="TagEdit" Grid.Row="1" Grid.Column="1"/>
+                                <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                    <TextBox Name="TagEdit" Grid.Column="0"/>
+                                    <Button Name="TagGenerateButton" Grid.Column="1" Classes="command" Content="Generate"/>
+                                </Grid>
                                 <TextBlock Grid.Row="2" Grid.Column="0" Text="VO ID:" VerticalAlignment="Center" Foreground="#202124"/>
                                 <TextBox Name="VoIdEdit" Grid.Row="2" Grid.Column="1"/>
                                 <TextBlock Grid.Row="3" Grid.Column="0" Text="Hak:" VerticalAlignment="Center" Foreground="#202124"/>
                                 <TextBox Name="HakEdit" Grid.Row="3" Grid.Column="1"/>
                                 <TextBlock Grid.Row="4" Grid.Column="0" Text="Description:" VerticalAlignment="Center" Foreground="#202124"/>
-                                <Grid Grid.Row="4" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="6">
-                                    <TextBox Name="DescEdit" Grid.Column="0" IsReadOnly="True" AcceptsReturn="True" MinHeight="36"/>
-                                    <Button Name="DescEditBtn" Grid.Column="1" Classes="command" Content="Edit Description"/>
-                                </Grid>
+                                <w:LocalizedStringEdit Name="DescEdit" Grid.Row="4" Grid.Column="1"/>
                             </Grid>
                         </StackPanel>
                     </Border>
@@ -131,7 +129,7 @@
                                 <TextBlock Grid.Row="3" Grid.Column="0" Text="Entry Z:" VerticalAlignment="Center" Foreground="#202124"/>
                                 <NumericUpDown Name="EntryZSpin" Grid.Row="3" Grid.Column="1" Minimum="-99999" Maximum="99999" Increment="0.1"/>
                                 <TextBlock Grid.Row="4" Grid.Column="0" Text="Entry Direction:" VerticalAlignment="Center" Foreground="#202124"/>
-                                <NumericUpDown Name="EntryDirSpin" Grid.Row="4" Grid.Column="1" Minimum="-3.14159" Maximum="3.14159" Increment="0.01" FormatString="0.0000"/>
+                                <NumericUpDown Name="EntryDirSpin" Grid.Row="4" Grid.Column="1" Minimum="0" Maximum="360" Increment="1" FormatString="0.##"/>
                             </Grid>
                         </StackPanel>
                     </Border>

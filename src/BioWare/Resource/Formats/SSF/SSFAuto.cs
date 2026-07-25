@@ -94,7 +94,7 @@ namespace BioWare.Resource.Formats.SSF
         /// Reads SSF data using the appropriate reader for the detected format.
         /// Consolidates repeated source dispatch logic.
         /// </summary>
-        private static SSF ReadSsfFromSource(object source, int offset, int size, ResourceType format)
+        private static SSF ReadSsfFromSource(object source, int offset, int? size, ResourceType format)
         {
             if (format == ResourceType.SSF)
             {
@@ -111,7 +111,7 @@ namespace BioWare.Resource.Formats.SSF
 
             if (format == ResourceType.SSF_XML)
             {
-                var reader = new SSFXMLReader(source, offset, size);
+                var reader = new SSFXMLReader(source, offset, size ?? 0);
                 return reader.Load();
             }
 
@@ -133,8 +133,7 @@ namespace BioWare.Resource.Formats.SSF
                 throw new ArgumentException("Failed to determine the format of the SSF file.");
             }
 
-            int sizeValue = size ?? 0;
-            return ReadSsfFromSource(source, offset, sizeValue, format);
+            return ReadSsfFromSource(source, offset, size, format);
         }
 
         /// <summary>
@@ -201,4 +200,3 @@ namespace BioWare.Resource.Formats.SSF
         }
     }
 }
-

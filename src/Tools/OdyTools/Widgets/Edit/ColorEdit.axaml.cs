@@ -6,6 +6,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using BioWare.Common;
 using OdyTools.Dialogs;
+using OdyTools.Editors;
 using KotorColor = BioWare.Common.Color;
 
 namespace OdyTools.Widgets.Edit
@@ -17,6 +18,7 @@ namespace OdyTools.Widgets.Edit
         private Button _editButton;
         private NumericUpDown _colorSpin;
         private Border _colorLabel;
+        private bool _eventsAttached;
 
         // Public parameterless constructor for XAML
         public ColorEdit() : this(null)
@@ -53,15 +55,16 @@ namespace OdyTools.Widgets.Edit
         private void SetupProgrammaticUI()
         {
             var panel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5 };
-            _colorLabel = new Border { Width = 16, Height = 16, Background = new SolidColorBrush(Avalonia.Media.Color.FromRgb(255, 255, 255)) };
-            _colorSpin = new NumericUpDown { Minimum = 0, Maximum = 0xFFFFFFFF, Width = 100 };
-            _editButton = new Button { Content = "Edit" };
+            _colorLabel = new Border { Name = "colorLabel", Width = 16, Height = 16, Background = new SolidColorBrush(Avalonia.Media.Color.FromRgb(255, 255, 255)) };
+            _colorSpin = new NumericUpDown { Name = "colorSpin", Minimum = 0, Maximum = 0xFFFFFFFF, Width = 100 };
+            _editButton = new Button { Name = "editButton", Content = "Edit" };
             _editButton.Click += (s, e) => OpenColorDialog();
             _colorSpin.ValueChanged += (s, e) => OnColorChange((int)(_colorSpin.Value ?? 0));
             panel.Children.Add(_colorLabel);
             panel.Children.Add(_colorSpin);
             panel.Children.Add(_editButton);
             Content = panel;
+            _eventsAttached = true;
         }
 
         private void SetupUI()
@@ -72,19 +75,20 @@ namespace OdyTools.Widgets.Edit
                 return;
             }
 
-            // Use try-catch to handle cases where XAML controls might not be available (e.g., in tests)
-            try
-            {
-                // Find controls from XAML
-                _editButton = this.FindControl<Button>("editButton");
-                _colorSpin = this.FindControl<NumericUpDown>("colorSpin");
-                _colorLabel = this.FindControl<Border>("colorLabel");
-            }
-            catch
+            _editButton = EditorHelpers.FindControlSafe<Button>(this, "editButton");
+            _colorSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "colorSpin");
+            _colorLabel = EditorHelpers.FindControlSafe<Border>(this, "colorLabel");
+
+            if (_editButton == null || _colorSpin == null || _colorLabel == null)
             {
                 // XAML controls not available - create programmatic UI for tests
                 SetupProgrammaticUI();
                 return; // SetupProgrammaticUI already connects events
+            }
+
+            if (_eventsAttached)
+            {
+                return;
             }
 
             if (_editButton != null)
@@ -95,6 +99,7 @@ namespace OdyTools.Widgets.Edit
             {
                 _colorSpin.ValueChanged += (s, e) => OnColorChange((int)(_colorSpin.Value ?? 0));
             }
+            _eventsAttached = true;
         }
 
         private async void OpenColorDialog()

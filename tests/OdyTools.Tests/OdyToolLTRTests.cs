@@ -85,5 +85,136 @@ namespace OdyTools.Tests
                 }, CancellationToken.None);
             }
         }
+
+        [Test]
+        public async Task OdyToolLTR_GridEdits_UpdateCorrectProbabilityTables()
+        {
+            using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+            {
+                await session.Dispatch(() =>
+                {
+                    var editor = new OdyToolLTR(null, null);
+                    editor.New();
+
+                    editor.SetQuickModeForTest(0);
+                    editor.SelectDoublePreviousForTest("b");
+                    editor.EditDoubleRowForTest("c", 0.12f, 0.34f, 0.56f);
+
+                    editor.SelectTriplePreviousForTest("x", "y");
+                    editor.EditTripleRowForTest("z", 0.21f, 0.43f, 0.65f);
+
+                    var result = LTRAuto.ReadLtr(editor.Build().Item1);
+
+                    Assert.That(result.GetDoublesStart("b", "c"), Is.EqualTo(0.12f).Within(0.0001f));
+                    Assert.That(result.GetDoublesMiddle("b", "c"), Is.EqualTo(0.34f).Within(0.0001f));
+                    Assert.That(result.GetDoublesEnd("b", "c"), Is.EqualTo(0.56f).Within(0.0001f));
+                    Assert.That(result.GetTriplesStart("x", "y", "z"), Is.EqualTo(0.21f).Within(0.0001f));
+                    Assert.That(result.GetTriplesMiddle("x", "y", "z"), Is.EqualTo(0.43f).Within(0.0001f));
+                    Assert.That(result.GetTriplesEnd("x", "y", "z"), Is.EqualTo(0.65f).Within(0.0001f));
+
+                    Assert.That(result.GetSinglesStart("c"), Is.EqualTo(0f).Within(0.0001f));
+                    Assert.That(result.GetSinglesMiddle("c"), Is.EqualTo(0f).Within(0.0001f));
+                    Assert.That(result.GetSinglesEnd("c"), Is.EqualTo(0f).Within(0.0001f));
+                    Assert.That(result.GetSinglesStart("z"), Is.EqualTo(0f).Within(0.0001f));
+                    Assert.That(result.GetSinglesMiddle("z"), Is.EqualTo(0f).Within(0.0001f));
+                    Assert.That(result.GetSinglesEnd("z"), Is.EqualTo(0f).Within(0.0001f));
+                }, CancellationToken.None);
+            }
+        }
+
+        [Test]
+        public async Task OdyToolLTR_QuickEdit_UpdatesSelectedModeAndMarksDirty()
+        {
+            using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+            {
+                await session.Dispatch(() =>
+                {
+                    var editor = new OdyToolLTR(null, null);
+                    try
+                    {
+                        editor.New();
+
+                        editor.SelectDoublePreviousForTest("b");
+                        editor.SetQuickEditForTest(1, "c", 0.12f, 0.34f, 0.56f);
+                        editor.ApplyQuickEditForTest();
+
+                        Assert.That(editor.IsDirty, Is.True);
+                        var result = LTRAuto.ReadLtr(editor.Build().Item1);
+                        Assert.That(result.GetDoublesStart("b", "c"), Is.EqualTo(0.12f).Within(0.0001f));
+                        Assert.That(result.GetDoublesMiddle("b", "c"), Is.EqualTo(0.34f).Within(0.0001f));
+                        Assert.That(result.GetDoublesEnd("b", "c"), Is.EqualTo(0.56f).Within(0.0001f));
+                        Assert.That(editor.StatusTextForTest, Does.Contain("Mode: Doubles"));
+                    }
+                    finally
+                    {
+                        editor.Close();
+                    }
+                }, CancellationToken.None);
+            }
+        }
+
+        [Test]
+        public async Task OdyToolLTR_DistributionToolsAndGenerator_OperateOnVisibleRows()
+        {
+            using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+            {
+                await session.Dispatch(() =>
+                {
+                    var editor = new OdyToolLTR(null, null);
+                    try
+                    {
+                        editor.New();
+
+                        editor.SetQuickModeForTest(0);
+                        editor.SetUniformVisibleDistributionForTest();
+                        var uniform = LTRAuto.ReadLtr(editor.Build().Item1);
+                        float expected = 1f / LTR.NumCharacters;
+                        Assert.That(uniform.GetSinglesStart("a"), Is.EqualTo(expected).Within(0.0001f));
+                        Assert.That(uniform.GetSinglesMiddle("z"), Is.EqualTo(expected).Within(0.0001f));
+                        Assert.That(uniform.GetSinglesEnd("-"), Is.EqualTo(expected).Within(0.0001f));
+
+                        editor.SelectSingleRowForTest("a");
+                        Assert.That(editor.ContextTextForTest, Does.Contain("a"));
+
+                        editor.GenerateNameSamplesForTest(5);
+                        Assert.That(editor.GeneratedNamesForTest, Is.Empty);
+                        Assert.That(editor.StatusTextForTest, Does.Contain("Name generation failed"));
+
+                        var valid = CreateGeneratableLtr();
+                        editor.Load("valid.ltr", "valid", ResourceType.LTR, LTRAuto.BytesLtr(valid));
+                        editor.GenerateNameSamplesForTest(5);
+                        Assert.That(editor.GeneratedNamesForTest, Has.Count.EqualTo(5));
+                        Assert.That(editor.GeneratedNamesForTest, Is.All.Not.Null);
+
+                        editor.ClearGeneratedNamesForTest();
+                        Assert.That(editor.GeneratedNamesForTest, Is.Empty);
+                    }
+                    finally
+                    {
+                        editor.Close();
+                    }
+                }, CancellationToken.None);
+            }
+        }
+
+        private static LTR CreateGeneratableLtr()
+        {
+            var ltr = new LTR();
+            ltr.SetSinglesStart("a", 1f);
+            foreach (char c in LTR.CharacterSet)
+            {
+                string previous = c.ToString();
+                ltr.SetDoublesStart(previous, "a", 1f);
+                foreach (char c2 in LTR.CharacterSet)
+                {
+                    string previous2 = c2.ToString();
+                    ltr.SetTriplesStart(previous, previous2, "a", 1f);
+                    ltr.SetTriplesMiddle(previous, previous2, "a", 1f);
+                    ltr.SetTriplesEnd(previous, previous2, "a", 1f);
+                }
+            }
+
+            return ltr;
+        }
     }
 }

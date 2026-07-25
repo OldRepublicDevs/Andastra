@@ -35,7 +35,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
                 quest.PlotIndex = categoryStruct.Acquire("PlotIndex", 0);
 
                 // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x00600dd0 line 165, k1_win_gog_swkotor.exe:0x005c5a40 line 165)
-                int priorityValue = categoryStruct.Acquire("Priority", 0);
+                uint priorityValue = categoryStruct.Acquire("Priority", 0u);
                 quest.Priority = (JRLQuestPriority)priorityValue;
 
                 // Engine default: "" (k2_win_gog_aspyr_swkotor2.exe:0x00600dd0 line 138, k1_win_gog_swkotor.exe:0x005c5a40 line 138)
@@ -127,4 +127,3 @@ namespace BioWare.Resource.Formats.GFF.Generics
         }
     }
 }
-

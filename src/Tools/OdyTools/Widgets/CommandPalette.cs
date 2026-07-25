@@ -4,6 +4,7 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
+using OdyTools.Editors;
 
 namespace OdyTools.Widgets
 {
@@ -56,6 +57,7 @@ namespace OdyTools.Widgets
 
             _searchEdit = new TextBox
             {
+                Name = "searchEdit",
                 Watermark = "Type to search commands...",
                 Margin = new Avalonia.Thickness(8)
             };
@@ -68,7 +70,7 @@ namespace OdyTools.Widgets
                 }
             };
 
-            _commandList = new ListBox();
+            _commandList = new ListBox { Name = "commandList" };
             _commandList.DoubleTapped += (s, e) => OnItemDoubleClicked();
             _commandList.KeyDown += (s, e) =>
             {
@@ -80,6 +82,7 @@ namespace OdyTools.Widgets
 
             _statusLabel = new TextBlock
             {
+                Name = "statusLabel",
                 Text = "",
                 Margin = new Avalonia.Thickness(4, 8, 4, 8)
             };
@@ -101,9 +104,9 @@ namespace OdyTools.Widgets
             // Find controls from XAML (may fail if not in visual tree)
             try
             {
-                _searchEdit = this.FindControl<TextBox>("searchEdit");
-                _commandList = this.FindControl<ListBox>("commandList");
-                _statusLabel = this.FindControl<TextBlock>("statusLabel");
+                _searchEdit = EditorHelpers.FindControlSafe<TextBox>(this, "searchEdit");
+                _commandList = EditorHelpers.FindControlSafe<ListBox>(this, "commandList");
+                _statusLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "statusLabel");
             }
             catch (InvalidOperationException)
             {
@@ -118,18 +121,20 @@ namespace OdyTools.Widgets
             {
                 _searchEdit = new TextBox
                 {
+                    Name = "searchEdit",
                     Watermark = "Type to search commands...",
                     Margin = new Avalonia.Thickness(8)
                 };
             }
             if (_commandList == null)
             {
-                _commandList = new ListBox();
+                _commandList = new ListBox { Name = "commandList" };
             }
             if (_statusLabel == null)
             {
                 _statusLabel = new TextBlock
                 {
+                    Name = "statusLabel",
                     Text = "",
                     Margin = new Avalonia.Thickness(4, 8, 4, 8)
                 };

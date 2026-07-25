@@ -65,6 +65,14 @@ namespace OdyTools.Editors
         private string _replaceText = "";
         private bool _findMatchCase;
         private int _lastFindIndex = -1;
+        private bool _entryEditDirty;
+
+        internal bool TextEditorEnabledForTest => _textEdit?.IsEnabled == true;
+        internal bool SoundEditorEnabledForTest => _soundEdit?.IsEnabled == true;
+        internal string SelectedEntryTextForTest => _selectedEntry?.Text ?? "";
+        internal string SelectedEntrySoundForTest => _selectedEntry?.Sound ?? "";
+        internal bool SearchBoxVisibleForTest => _searchBox?.IsVisible == true;
+        internal bool JumpBoxVisibleForTest => _jumpBox?.IsVisible == true;
 
         public OdyToolTLK() : this(null, null) { }
         public OdyToolTLK(Window parent = null, OdyInstallation installation = null)
@@ -213,19 +221,19 @@ namespace OdyTools.Editors
             try
             {
                 // Try to find controls from XAML if available
-                _talkTable = this.FindControl<DataGrid>("talkTable");
-                _textEdit = this.FindControl<TextBox>("textEdit");
-                _soundEdit = this.FindControl<TextBox>("soundEdit");
-                _searchEdit = this.FindControl<TextBox>("searchEdit");
-                _searchButton = this.FindControl<Button>("searchButton");
-                _jumpSpinbox = this.FindControl<NumericUpDown>("jumpSpinbox");
-                _jumpButton = this.FindControl<Button>("jumpButton");
-                var searchBoxBorder = this.FindControl<Border>("searchBox");
+                _talkTable = EditorHelpers.FindControlSafe<DataGrid>(this, "talkTable");
+                _textEdit = EditorHelpers.FindControlSafe<TextBox>(this, "textEdit");
+                _soundEdit = EditorHelpers.FindControlSafe<TextBox>(this, "soundEdit");
+                _searchEdit = EditorHelpers.FindControlSafe<TextBox>(this, "searchEdit");
+                _searchButton = EditorHelpers.FindControlSafe<Button>(this, "searchButton");
+                _jumpSpinbox = EditorHelpers.FindControlSafe<NumericUpDown>(this, "jumpSpinbox");
+                _jumpButton = EditorHelpers.FindControlSafe<Button>(this, "jumpButton");
+                var searchBoxBorder = EditorHelpers.FindControlSafe<Border>(this, "searchBox");
                 if (searchBoxBorder != null)
                 {
                     _searchBox = searchBoxBorder;
                 }
-                var jumpBoxBorder = this.FindControl<Border>("jumpBox");
+                var jumpBoxBorder = EditorHelpers.FindControlSafe<Border>(this, "jumpBox");
                 if (jumpBoxBorder != null)
                 {
                     _jumpBox = jumpBoxBorder;
@@ -416,9 +424,11 @@ namespace OdyTools.Editors
             if (_selectedEntry == null) return;
             string text = _textEdit?.Text ?? "";
             string sound = _soundEdit?.Text ?? "";
-            if (text == _selectedEntry.Text && sound == _selectedEntry.Sound) return;
-            PushState();
-            UpdateEntry();
+            if (text != _selectedEntry.Text || sound != _selectedEntry.Sound)
+            {
+                UpdateEntry();
+            }
+            _entryEditDirty = false;
         }
 
         private void PushState()
@@ -501,7 +511,7 @@ namespace OdyTools.Editors
             try
             {
                 if (_statusText == null)
-                    _statusText = this.FindControl<TextBlock>("statusText");
+                    _statusText = EditorHelpers.FindControlSafe<TextBlock>(this, "statusText");
                 if (_statusText != null)
                 {
                     int n = _sourceEntries?.Count ?? 0;
@@ -612,12 +622,51 @@ namespace OdyTools.Editors
                 return;
             }
 
-            var entry = _sourceEntries[sourceRow];
-            if (entry != null)
+            JumpToSourceEntry(sourceRow);
+        }
+
+        private bool IsEntryVisible(TLKEntryViewModel entry)
+        {
+            if (entry == null)
             {
-                _talkTable.SelectedItem = entry;
+                return false;
+            }
+
+            var view = _filteredEntries?.View;
+            return view == null || view.Cast<object>().Contains(entry);
+        }
+
+        private bool JumpToSourceEntry(int sourceRow)
+        {
+            if (_talkTable == null || sourceRow < 0 || sourceRow >= _sourceEntries.Count)
+            {
+                return false;
+            }
+
+            var entry = _sourceEntries[sourceRow];
+            if (!IsEntryVisible(entry))
+            {
+                return false;
+            }
+
+            SelectEntry(entry);
+            return true;
+        }
+
+        private void SelectEntry(TLKEntryViewModel entry)
+        {
+            if (_talkTable == null || entry == null)
+            {
+                return;
+            }
+
+            _talkTable.SelectedItem = entry;
+            if (VisualRoot != null && IsVisible && _talkTable.IsEffectivelyVisible)
+            {
                 _talkTable.ScrollIntoView(entry, null);
             }
+            SelectionChanged();
+            UpdateStatusBar();
         }
 
         public void ChangeLanguage(Language language)
@@ -653,11 +702,11 @@ namespace OdyTools.Editors
                     catch { }
                 }
                 bool isAutoDetect = hasRevert && fileLanguage.HasValue && _language == fileLanguage.Value;
-                var autoItem = this.FindControl<MenuItem>("actionLangAutoDetect");
+                var autoItem = EditorHelpers.FindControlSafe<MenuItem>(this, "actionLangAutoDetect");
                 if (autoItem != null) autoItem.IsChecked = isAutoDetect;
                 foreach (var item in LanguageMenuItems)
                 {
-                    var menuItem = this.FindControl<MenuItem>(item.menuItemName);
+                    var menuItem = EditorHelpers.FindControlSafe<MenuItem>(this, item.menuItemName);
                     if (menuItem != null) menuItem.IsChecked = _language == item.language;
                 }
             }
@@ -867,6 +916,7 @@ namespace OdyTools.Editors
             }
 
             _selectedEntry = _talkTable.SelectedItem as TLKEntryViewModel;
+            _entryEditDirty = false;
 
             if (_selectedEntry == null)
             {
@@ -900,14 +950,49 @@ namespace OdyTools.Editors
                 return;
             }
 
+            string nextText = _textEdit?.Text ?? "";
+            string nextSound = _soundEdit?.Text ?? "";
+            bool changed = nextText != (_selectedEntry.Text ?? "") || nextSound != (_selectedEntry.Sound ?? "");
+            if (changed && !_undoRedoInProgress && !_entryEditDirty)
+            {
+                PushState();
+                _entryEditDirty = true;
+            }
+
             if (_textEdit != null)
             {
-                _selectedEntry.Text = _textEdit.Text;
+                _selectedEntry.Text = nextText;
             }
             if (_soundEdit != null)
             {
-                _selectedEntry.Sound = _soundEdit.Text;
+                _selectedEntry.Sound = nextSound;
             }
+        }
+
+        internal bool SelectEntryForTest(int index)
+        {
+            if (index < 0 || index >= _sourceEntries.Count || _talkTable == null)
+            {
+                return false;
+            }
+
+            _talkTable.SelectedItem = _sourceEntries[index];
+            SelectionChanged();
+            UpdateStatusBar();
+            return true;
+        }
+
+        internal bool EditSelectedEntryForTest(string text, string sound)
+        {
+            if (_selectedEntry == null || _textEdit == null || _soundEdit == null)
+            {
+                return false;
+            }
+
+            _textEdit.Text = text ?? "";
+            _soundEdit.Text = sound ?? "";
+            CommitEntryEdits();
+            return true;
         }
 
         private void ShowFindDialog()
@@ -955,10 +1040,7 @@ namespace OdyTools.Editors
                 if ((e.Text ?? "").IndexOf(_findText, comp) >= 0 || (e.Sound ?? "").IndexOf(_findText, comp) >= 0)
                 {
                     _lastFindIndex = i;
-                    _talkTable.SelectedItem = e;
-                    _talkTable.ScrollIntoView(e, null);
-                    SelectionChanged();
-                    UpdateStatusBar();
+                    SelectEntry(e);
                     return true;
                 }
             }
@@ -968,10 +1050,7 @@ namespace OdyTools.Editors
                 if ((e.Text ?? "").IndexOf(_findText, comp) >= 0 || (e.Sound ?? "").IndexOf(_findText, comp) >= 0)
                 {
                     _lastFindIndex = i;
-                    _talkTable.SelectedItem = e;
-                    _talkTable.ScrollIntoView(e, null);
-                    SelectionChanged();
-                    UpdateStatusBar();
+                    SelectEntry(e);
                     return true;
                 }
             }
@@ -1120,10 +1199,7 @@ namespace OdyTools.Editors
                 if (idx >= 0 && idx < _sourceEntries.Count)
                 {
                     var entry = _sourceEntries[idx];
-                    _talkTable.SelectedItem = entry;
-                    _talkTable.ScrollIntoView(entry, null);
-                    SelectionChanged();
-                    UpdateStatusBar();
+                    JumpToSourceEntry(idx);
                 }
                 dialog.Close();
             };
@@ -1144,5 +1220,10 @@ namespace OdyTools.Editors
         }
 
         public Language Language => _language;
+
+        internal bool JumpToEntryForTest(int index)
+        {
+            return JumpToSourceEntry(index);
+        }
     }
 }

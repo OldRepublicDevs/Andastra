@@ -96,15 +96,33 @@ namespace OdyTools.Editors
         private ComboBox _onUserDefinedSelect;
         private List<string> _relevantScriptResnames;
 
+        internal bool HasStructuredEditorSurface =>
+            _nameEdit != null &&
+            _tagEdit != null &&
+            _tagGenerateButton != null &&
+            _cameraStyleSelect != null &&
+            _envmapEdit != null &&
+            _disableTransitCheck != null &&
+            _unescapableCheck != null &&
+            _alphaTestSpin != null &&
+            _mapAxisSelect != null &&
+            _mapZoomSpin != null &&
+            _fogEnabledCheck != null &&
+            _windPowerSelect != null &&
+            _onEnterSelect != null &&
+            _onExitSelect != null &&
+            _onHeartbeatSelect != null &&
+            _onUserDefinedSelect != null &&
+            _commentsEdit != null;
+
         public OdyToolARE() : this(null, null) { }
         public OdyToolARE(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolARE", "none",
-                new[] { ResourceType.ARE },
-                new[] { ResourceType.ARE },
+                new[] { ResourceType.ARE, ResourceType.ARE_XML },
+                new[] { ResourceType.ARE, ResourceType.ARE_XML },
                 installation)
         {
             InitializeComponent();
-            SetupUI();
             MinWidth = 400;
             MinHeight = 600;
             AddHelpAction(); // Auto-detects "GFF-ARE.md" for ARE
@@ -575,7 +593,7 @@ namespace OdyTools.Editors
             }
 
             // ARE is a GFF-based format
-            var gff = GFF.FromBytes(data);
+            var gff = GFFAuto.ReadGff(data, fileFormat: restype);
             // Store original GFF to preserve unmodified fields (like Rooms list)
             _originalGff = gff;
             _are = AREHelpers.ConstructAre(gff);
@@ -931,7 +949,7 @@ namespace OdyTools.Editors
             // Matching Python: are.default_envmap = ResRef(self.ui.envmapEdit.text()) (line 286)
             if (_envmapEdit != null)
             {
-                are.DefaultEnvMap = new ResRef(_envmapEdit.Text ?? "");
+                are.DefaultEnvMap = ResRefFromText(_envmapEdit.Text);
             }
             // Matching Python: are.disable_transit = self.ui.disableTransitCheck.isChecked() (line 288)
             if (_disableTransitCheck != null)
@@ -1049,7 +1067,7 @@ namespace OdyTools.Editors
             // Terrain section
             if (_grassTextureEdit != null)
             {
-                are.GrassTexture = new ResRef(_grassTextureEdit.Text ?? "");
+                are.GrassTexture = ResRefFromText(_grassTextureEdit.Text);
             }
             if (_grassDiffuseEdit != null)
             {
@@ -1201,21 +1219,21 @@ namespace OdyTools.Editors
             }
 
             // Scripts section - matching Python lines 350-354
-            if (_onEnterSelect != null && !string.IsNullOrEmpty(_onEnterSelect.Text))
+            if (_onEnterSelect != null)
             {
-                are.OnEnter = new ResRef(_onEnterSelect.Text);
+                are.OnEnter = ResRefFromText(_onEnterSelect.Text);
             }
-            if (_onExitSelect != null && !string.IsNullOrEmpty(_onExitSelect.Text))
+            if (_onExitSelect != null)
             {
-                are.OnExit = new ResRef(_onExitSelect.Text);
+                are.OnExit = ResRefFromText(_onExitSelect.Text);
             }
-            if (_onHeartbeatSelect != null && !string.IsNullOrEmpty(_onHeartbeatSelect.Text))
+            if (_onHeartbeatSelect != null)
             {
-                are.OnHeartbeat = new ResRef(_onHeartbeatSelect.Text);
+                are.OnHeartbeat = ResRefFromText(_onHeartbeatSelect.Text);
             }
-            if (_onUserDefinedSelect != null && !string.IsNullOrEmpty(_onUserDefinedSelect.Text))
+            if (_onUserDefinedSelect != null)
             {
-                are.OnUserDefined = new ResRef(_onUserDefinedSelect.Text);
+                are.OnUserDefined = ResRefFromText(_onUserDefinedSelect.Text);
             }
 
             // Comments - matching Python line 357
@@ -1393,8 +1411,15 @@ namespace OdyTools.Editors
                 }
             }
 
-            byte[] data = GFFAuto.BytesGff(gff, ResourceType.ARE);
+            ResourceType outputType = _restype == ResourceType.ARE_XML ? ResourceType.ARE_XML : ResourceType.ARE;
+            byte[] data = GFFAuto.BytesGff(gff, outputType);
             return Tuple.Create(data, new byte[0]);
+        }
+
+        private static ResRef ResRefFromText(string text)
+        {
+            string value = (text ?? string.Empty).Trim();
+            return !string.IsNullOrEmpty(value) ? new ResRef(value) : ResRef.FromBlank();
         }
 
         public override void New()
@@ -1714,6 +1739,11 @@ namespace OdyTools.Editors
             // The _installation field is set here, which the context menu handlers use when opening scripts.
         }
 
+        protected override void OnInstallationChanged()
+        {
+            SetupInstallation(_installation);
+        }
+
         // Create context menu for script ComboBox controls
         private void SetupScriptComboBoxContextMenu(ComboBox comboBox, string scriptTypeName)
         {
@@ -1868,7 +1898,13 @@ namespace OdyTools.Editors
                 // Show the editor - user will set the resref when saving
                 OdyTools.Editors.WindowUtils.AddWindow(nssEditor, show: true);
 #else
-                _ = DialogHelper.ShowAsync("Not available", "Creating a new script is not available in the standalone ARE editor. Use the full OdyTools or the NSS editor standalone.", ButtonEnum.Ok, IconType.Info);
+                OdyTools.Editors.WindowUtils.OpenResourceEditor(
+                    null,
+                    scriptName,
+                    ResourceType.NSS,
+                    Array.Empty<byte>(),
+                    _installation,
+                    this);
 #endif
                 // Update the combo box with the suggested script name
                 comboBox.Text = scriptName;
@@ -1902,7 +1938,6 @@ namespace OdyTools.Editors
                     null);
 
                 var nssIdentifier = new ResourceIdentifier(scriptName, ResourceType.NSS);
-#if !ARE_STANDALONE
                 if (locations.Count > 0 && locations.ContainsKey(nssIdentifier) &&
                     locations[nssIdentifier].Count > 0)
                 {
@@ -1941,17 +1976,19 @@ namespace OdyTools.Editors
                     else
                     {
                         // Show "not found" message
-                        _ = DialogHelper.ShowAsync("Resource Not Found", $"Script '{scriptName}' not found in installation.\n\nSearched for:\n- {scriptName}.nss\n- {scriptName}.ncs", ButtonEnum.Ok, IconType.Info);
+                        _ = DialogHelper.ShowAsync("Resource Not Found", ScriptLocationMissingMessage(scriptName), ButtonEnum.Ok, IconType.Info);
                     }
                 }
-#else
-                _ = DialogHelper.ShowAsync("Not available", "Viewing script location is not available in the standalone ARE editor. Use the full OdyTools.", ButtonEnum.Ok, IconType.Info);
-#endif
             }
             catch (Exception ex)
             {
                 System.Console.WriteLine($"Error viewing script location '{scriptName}': {ex.Message}");
             }
+        }
+
+        internal static string ScriptLocationMissingMessage(string scriptName)
+        {
+            return $"Script '{scriptName}' not found in installation.\n\nSearched for:\n- {scriptName}.nss\n- {scriptName}.ncs";
         }
     }
 }

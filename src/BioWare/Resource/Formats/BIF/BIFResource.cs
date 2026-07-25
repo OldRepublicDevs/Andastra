@@ -31,6 +31,7 @@ namespace BioWare.Resource.Formats.BIF
 
         // BZF-specific: Size of compressed data
         private int _packedSize; // Size of compressed data (BZF only)
+        private int? _declaredSize;
 
         public int Offset
         {
@@ -47,7 +48,7 @@ namespace BioWare.Resource.Formats.BIF
         public ResRef ResRef { get; set; }
         public ResourceType ResType { get; set; }
         public byte[] Data { get; set; }
-        public int Size => Data?.Length ?? 0;
+        public int Size => Data != null && Data.Length > 0 ? Data.Length : _declaredSize ?? 0;
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bif/bif_data.py:138-161
         // Original: def __init__(self, resref: ResRef, restype: ResourceType, data: bytes, resname_key_index: int = 0, size: int | None = None):
@@ -56,6 +57,7 @@ namespace BioWare.Resource.Formats.BIF
             ResRef = resref ?? throw new ArgumentNullException(nameof(resref));
             ResType = restype ?? throw new ArgumentNullException(nameof(restype));
             Data = data ?? new byte[0];
+            _declaredSize = size;
             ResnameKeyIndex = resnameKeyIndex;
             _offset = 0;
             _packedSize = 0;

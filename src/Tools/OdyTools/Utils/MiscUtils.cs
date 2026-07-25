@@ -240,8 +240,6 @@ namespace OdyTools.Utils
             { Key.RightAlt, "ALT" },
             { Key.LWin, "META" },
             { Key.RWin, "META" },
-            { Key.LeftAlt, "ALT" },
-            { Key.RightAlt, "ALT" },
             { Key.CapsLock, "CAPSLOCK" },
             { Key.NumLock, "NUMLOCK" },
             { Key.Scroll, "SCROLLLOCK" }

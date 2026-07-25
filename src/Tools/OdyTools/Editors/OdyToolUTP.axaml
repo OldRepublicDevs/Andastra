@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:w="clr-namespace:OdyTools.Widgets"
         x:Class="OdyTools.Editors.OdyToolUTP"
         Title="OdyToolUTP"
         MinWidth="700" MinHeight="500"
@@ -38,8 +39,7 @@
         <Expander Header="Basic" IsExpanded="True">
           <StackPanel Spacing="6">
             <TextBlock Text="Name:"/>
-            <TextBox Name="nameEdit" IsReadOnly="True"/>
-            <Button Name="nameEditBtn" Content="Edit Name"/>
+            <w:LocalizedStringEdit Name="nameEdit"/>
             <TextBlock Text="Tag:"/>
             <StackPanel Orientation="Horizontal" Spacing="8">
               <TextBox Name="tagEdit"/>
@@ -129,6 +129,8 @@
             <ComboBox Name="oninventoryEdit" IsEditable="True"/>
             <TextBlock Text="OnMelee:"/>
             <ComboBox Name="onmeleeEdit" IsEditable="True"/>
+            <TextBlock Text="OnSpellCastAt:"/>
+            <ComboBox Name="onpowerEdit" IsEditable="True"/>
             <TextBlock Text="OnOpen:"/>
             <ComboBox Name="onopenEdit" IsEditable="True"/>
             <TextBlock Text="OnLock:"/>

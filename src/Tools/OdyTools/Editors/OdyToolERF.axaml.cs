@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -13,16 +14,22 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using BioWare;
+using BioWare.Resource.Formats.BIF;
 using BioWare.Resource.Formats.ERF;
+using BioWare.Resource.Formats.MDL;
+using BioWare.Resource.Formats.NCS;
 using BioWare.Resource.Formats.RIM;
+using BioWare.Resource.Formats.TPC;
 using BioWare.Common;
 using BioWare.Resource;
 using OdyTools.Common;
 using OdyTools.Data;
+using OdyTools.Dialogs;
 using OdyTools.Utils;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using IconType = MsBox.Avalonia.Enums.Icon;
+using BIFResource = BioWare.Resource.Formats.BIF.BIFResource;
 using ERFResource = BioWare.Resource.Formats.ERF.ERFResource;
 using RIMResource = BioWare.Resource.Formats.RIM.RIMResource;
 
@@ -88,8 +95,8 @@ namespace OdyTools.Editors
         public OdyToolERF() : this(null, null) { }
         public OdyToolERF(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolERF", "none",
-                new[] { ResourceType.RIM, ResourceType.ERF, ResourceType.MOD, ResourceType.SAV, ResourceType.BIF },
-                new[] { ResourceType.RIM, ResourceType.ERF, ResourceType.MOD, ResourceType.SAV, ResourceType.BIF },
+                new[] { ResourceType.RIM, ResourceType.ERF, ResourceType.MOD, ResourceType.SAV, ResourceType.HAK, ResourceType.BIF },
+                new[] { ResourceType.RIM, ResourceType.ERF, ResourceType.MOD, ResourceType.SAV, ResourceType.HAK, ResourceType.BIF },
                 installation)
         {
             _sourceResources = new ObservableCollection<ERFResourceViewModel>();
@@ -106,6 +113,57 @@ namespace OdyTools.Editors
             New();
             MinWidth = MinEditorWidth;
             MinHeight = MinEditorHeight;
+        }
+
+        internal int ResourceCountForTest => _sourceResources.Count;
+        internal IReadOnlyList<ERFResourceViewModel> ResourceRowsForTest => _sourceResources.ToList();
+        internal Button ExtractButtonForTest => _extractButton;
+        internal Button OpenButtonForTest => _openButton;
+        internal Button RemoveButtonForTest => _unloadButton;
+        internal Button RefreshButtonForTest => _refreshButton;
+
+        internal void AddResourceFilePathsForTest(params string[] filePaths)
+        {
+            AddResourcesFromPaths(filePaths?.ToList());
+        }
+
+        internal void SelectResourceIndicesForTest(params int[] indices)
+        {
+            if (_tableView?.SelectedItems == null || indices == null)
+            {
+                return;
+            }
+
+            _tableView.SelectedItems.Clear();
+            _tableView.SelectedItem = null;
+            foreach (int index in indices)
+            {
+                if (index >= 0 && index < _sourceResources.Count)
+                {
+                    _tableView.SelectedItems.Add(_sourceResources[index]);
+                }
+            }
+            if (indices.Length == 1 && indices[0] >= 0 && indices[0] < _sourceResources.Count)
+            {
+                _tableView.SelectedItem = _sourceResources[indices[0]];
+            }
+            OnSelectionChanged();
+        }
+
+        internal void RemoveSelectedForTest()
+        {
+            RemoveSelected();
+        }
+
+        internal void UndoForTest()
+        {
+            Undo();
+        }
+
+        internal bool RenameSelectedForTest(string newResRef, out string error)
+        {
+            var selected = GetSelectedViewModels();
+            return TryRenameSelected(selected.Count == 1 ? selected[0] : null, newResRef, out error);
         }
 
         private bool _xamlLoaded = false;
@@ -204,6 +262,7 @@ namespace OdyTools.Editors
             _statusText = new TextBlock { Text = Localization.Trf("{0} resources", 0), Margin = new Avalonia.Thickness(4, 2) };
             mainPanel.Children.Add(_statusText);
             Content = mainPanel;
+            UpdateActionButtonStates();
             RefreshLocalizedStrings();
         }
 
@@ -395,7 +454,8 @@ namespace OdyTools.Editors
                     new FilePickerFileType("ERF") { Patterns = new[] { "*.erf" } },
                     new FilePickerFileType("MOD") { Patterns = new[] { "*.mod" } },
                     new FilePickerFileType("RIM") { Patterns = new[] { "*.rim" } },
-                    new FilePickerFileType("SAV") { Patterns = new[] { "*.sav" } }
+                    new FilePickerFileType("SAV") { Patterns = new[] { "*.sav" } },
+                    new FilePickerFileType("HAK") { Patterns = new[] { "*.hak" } }
                 }
             };
             var file = await storageProvider.SaveFilePickerAsync(options);
@@ -407,6 +467,7 @@ namespace OdyTools.Editors
             if (pathExt == "mod") _restype = ResourceType.MOD;
             else if (pathExt == "rim") _restype = ResourceType.RIM;
             else if (pathExt == "sav") _restype = ResourceType.SAV;
+            else if (pathExt == "hak") _restype = ResourceType.HAK;
             else _restype = ResourceType.ERF;
             RefreshWindowTitle();
             Save();
@@ -551,12 +612,13 @@ namespace OdyTools.Editors
                         Size = HumanReadableSize(resource.Data.Length),
                         Offset = $"0x{offset:X}",
                         ErfResource = null,
-                        RimResource = resource
+                        RimResource = resource,
+                        BifResource = null
                     });
                     offset += resource.Data.Length;
                 }
             }
-            else if (restype == ResourceType.ERF || restype == ResourceType.MOD || restype == ResourceType.SAV)
+            else if (restype == ResourceType.ERF || restype == ResourceType.MOD || restype == ResourceType.SAV || restype == ResourceType.HAK)
             {
                 var erf = ERFAuto.ReadErf(data);
                 int offset = 0;
@@ -569,13 +631,33 @@ namespace OdyTools.Editors
                         Size = HumanReadableSize(resource.Data.Length),
                         Offset = $"0x{offset:X}",
                         ErfResource = resource,
-                        RimResource = null
+                        RimResource = null,
+                        BifResource = null
                     });
                     offset += resource.Data.Length;
                 }
             }
-            if (_refreshButton != null)
-                _refreshButton.IsEnabled = _sourceResources.Count > 0;
+            else if (restype == ResourceType.BIF)
+            {
+                var bif = new BIFBinaryReader(data).Load();
+                foreach (var resource in bif)
+                {
+                    string resref = string.IsNullOrWhiteSpace(resource.ResRef.ToString())
+                        ? "id_" + resource.ResnameKeyIndex
+                        : resource.ResRef.ToString();
+                    _sourceResources.Add(new ERFResourceViewModel
+                    {
+                        ResRef = resref,
+                        Type = resource.ResType.Extension.ToUpper(),
+                        Size = HumanReadableSize(resource.Data.Length),
+                        Offset = $"0x{resource.Offset:X}",
+                        ErfResource = null,
+                        RimResource = null,
+                        BifResource = resource
+                    });
+                }
+            }
+            UpdateActionButtonStates();
         }
 
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
@@ -597,9 +679,9 @@ namespace OdyTools.Editors
 
         private void LoadCore(string filepath, string resref, ResourceType restype, byte[] data)
         {
-            if (restype != ResourceType.RIM && restype != ResourceType.ERF && restype != ResourceType.MOD && restype != ResourceType.SAV)
+            if (restype != ResourceType.RIM && restype != ResourceType.ERF && restype != ResourceType.MOD && restype != ResourceType.SAV && restype != ResourceType.HAK && restype != ResourceType.BIF)
             {
-                _ = DialogHelper.ShowWindowAsync(this, Localization.Tr("Unable to load file"), Localization.Tr("The file specified is not a MOD/ERF type file."), ButtonEnum.Ok, IconType.Error);
+                _ = DialogHelper.ShowWindowAsync(this, Localization.Tr("Unable to load file"), Localization.Tr("The file specified is not a supported archive type."), ButtonEnum.Ok, IconType.Error);
                 return;
             }
             _hasChanges = false;
@@ -632,11 +714,13 @@ namespace OdyTools.Editors
                         rim.SetData(viewModel.RimResource.ResRef.ToString(), viewModel.RimResource.ResType, viewModel.RimResource.Data);
                     else if (viewModel.ErfResource != null)
                         rim.SetData(viewModel.ErfResource.ResRef.ToString(), viewModel.ErfResource.ResType, viewModel.ErfResource.Data);
+                    else if (viewModel.BifResource != null)
+                        rim.SetData(viewModel.BifResource.ResRef.ToString(), viewModel.BifResource.ResType, viewModel.BifResource.Data);
                 }
                 byte[] data = RIMAuto.BytesRim(rim);
                 return Tuple.Create(data, new byte[0]);
             }
-            else if (restype == ResourceType.ERF || restype == ResourceType.MOD || restype == ResourceType.SAV)
+            else if (restype == ResourceType.ERF || restype == ResourceType.MOD || restype == ResourceType.SAV || restype == ResourceType.HAK)
             {
                 ERFType erfType = ERFTypeExtensions.FromExtension(restype.Extension);
                 var erf = new ERF(erfType);
@@ -650,8 +734,33 @@ namespace OdyTools.Editors
                         erf.SetData(viewModel.ErfResource.ResRef.ToString(), viewModel.ErfResource.ResType, viewModel.ErfResource.Data);
                     else if (viewModel.RimResource != null)
                         erf.SetData(viewModel.RimResource.ResRef.ToString(), viewModel.RimResource.ResType, viewModel.RimResource.Data);
+                    else if (viewModel.BifResource != null)
+                        erf.SetData(viewModel.BifResource.ResRef.ToString(), viewModel.BifResource.ResType, viewModel.BifResource.Data);
                 }
                 byte[] data = ERFAuto.BytesErf(erf, restype);
+                return Tuple.Create(data, new byte[0]);
+            }
+            else if (restype == ResourceType.BIF)
+            {
+                var bif = new BIF(BIFType.BIF);
+                int nextId = 0;
+                foreach (var viewModel in _sourceResources)
+                {
+                    if (viewModel.BifResource != null)
+                    {
+                        bif.SetData(viewModel.BifResource.ResRef, viewModel.BifResource.ResType, viewModel.BifResource.Data, viewModel.BifResource.ResnameKeyIndex);
+                        nextId = Math.Max(nextId, viewModel.BifResource.ResnameKeyIndex + 1);
+                    }
+                    else if (viewModel.ErfResource != null)
+                    {
+                        bif.SetData(viewModel.ErfResource.ResRef, viewModel.ErfResource.ResType, viewModel.ErfResource.Data, nextId++);
+                    }
+                    else if (viewModel.RimResource != null)
+                    {
+                        bif.SetData(viewModel.RimResource.ResRef, viewModel.RimResource.ResType, viewModel.RimResource.Data, nextId++);
+                    }
+                }
+                byte[] data = new BIFBinaryWriter(bif).Write();
                 return Tuple.Create(data, new byte[0]);
             }
             else
@@ -669,8 +778,7 @@ namespace OdyTools.Editors
             base.New();
             _restype = ResourceType.ERF;
             _sourceResources.Clear();
-            if (_refreshButton != null)
-                _refreshButton.IsEnabled = false;
+            UpdateActionButtonStates();
             UpdateStatusBar();
         }
 
@@ -710,20 +818,42 @@ namespace OdyTools.Editors
             string folderPath = folders[0].Path.LocalPath;
             if (string.IsNullOrWhiteSpace(folderPath)) return;
 
+            var extractOptions = await PromptExtractOptionsAsync(selected);
+            if (extractOptions == null)
+            {
+                return;
+            }
+
             int successCount = 0;
             var failed = new List<string>();
             foreach (var vm in selected)
             {
                 string resref = vm.ResRef ?? "resource";
-                string ext = (vm.Type ?? "bin").ToLowerInvariant();
-                byte[] data = GetResourceData(vm);
-                if (data == null) { failed.Add($"{resref}.{ext}"); continue; }
+                var restype = GetResourceType(vm);
+                string ext = restype?.Extension ?? (vm.Type ?? "bin").ToLowerInvariant();
                 try
                 {
-                    string fileName = $"{resref}.{ext}";
-                    string filePath = Path.Combine(folderPath, fileName);
-                    File.WriteAllBytes(filePath, data);
-                    successCount++;
+                    var extractedFiles = ExtractResourceFilesForSave(
+                        vm,
+                        selected,
+                        extractOptions.TpcDecompile,
+                        extractOptions.TpcExtractTxi,
+                        extractOptions.NcsDecompile,
+                        extractOptions.MdlExtractTextures,
+                        Path.Combine(folderPath, $"{resref}.{ext}"),
+                        extractOptions.MdlDecompile);
+
+                    if (extractedFiles.Count == 0)
+                    {
+                        failed.Add($"{resref}.{ext}");
+                        continue;
+                    }
+
+                    foreach (var extracted in extractedFiles)
+                    {
+                        File.WriteAllBytes(extracted.Path, extracted.Data);
+                        successCount++;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -740,11 +870,290 @@ namespace OdyTools.Editors
             await DialogHelper.ShowWindowAsync(this, Localization.Tr("Extract"), message, ButtonEnum.Ok, resultIcon);
         }
 
+        private async Task<ArchiveExtractOptions> PromptExtractOptionsAsync(IReadOnlyList<ERFResourceViewModel> selected)
+        {
+            var options = ArchiveExtractOptions.Default;
+            if (!selected.Any(IsConvertibleForExtractOptions))
+            {
+                return options;
+            }
+
+            var dialog = new ExtractOptionsDialog(this)
+            {
+                TpcDecompile = options.TpcDecompile,
+                TpcExtractTxi = options.TpcExtractTxi,
+                MdlDecompile = options.MdlDecompile,
+                MdlExtractTextures = options.MdlExtractTextures
+            };
+
+            await dialog.ShowDialog(this);
+            if (dialog.Result != true)
+            {
+                return null;
+            }
+
+            return new ArchiveExtractOptions
+            {
+                TpcDecompile = dialog.TpcDecompile,
+                TpcExtractTxi = dialog.TpcExtractTxi,
+                NcsDecompile = options.NcsDecompile,
+                MdlExtractTextures = dialog.MdlExtractTextures,
+                MdlDecompile = dialog.MdlDecompile
+            };
+        }
+
+        private static bool IsConvertibleForExtractOptions(ERFResourceViewModel vm)
+        {
+            var restype = GetResourceType(vm);
+            return restype == ResourceType.TPC
+                || restype == ResourceType.NCS
+                || restype == ResourceType.MDL
+                || restype == ResourceType.MDL_ASCII;
+        }
+
+        internal static List<(string Path, byte[] Data)> ExtractResourceFilesForSave(
+            ERFResourceViewModel vm,
+            IReadOnlyList<ERFResourceViewModel> archiveResources,
+            bool decompileTpc,
+            bool extractTxi,
+            bool decompileNcs,
+            bool extractMdlTextures,
+            string savePath,
+            bool decompileMdl = false)
+        {
+            if (vm == null)
+            {
+                throw new ArgumentNullException(nameof(vm));
+            }
+
+            var data = GetResourceData(vm);
+            if (data == null)
+            {
+                return new List<(string Path, byte[] Data)>();
+            }
+
+            var restype = GetResourceType(vm);
+            var extension = ResourceFileExtension(restype);
+            var results = new List<(string Path, byte[] Data)>();
+
+            if (restype == ResourceType.TPC)
+            {
+                try
+                {
+                    var tpc = TPCAuto.ReadTpc(data);
+                    results.Add(decompileTpc
+                        ? (Path.ChangeExtension(savePath, ".tga"), TPCAuto.BytesTpc(tpc, ResourceType.TGA))
+                        : (ChangeResourceExtension(savePath, extension), data));
+
+                    var txiText = ResolveArchiveTxiText(vm.ResRef, tpc, archiveResources);
+                    if (extractTxi && !string.IsNullOrWhiteSpace(txiText))
+                    {
+                        results.Add((Path.ChangeExtension(savePath, ".txi"), Encoding.ASCII.GetBytes(txiText)));
+                    }
+
+                    return results;
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine($"Failed to decompile archive TPC {vm.ResRef}: {ex.Message}");
+                    results.Add((ChangeResourceExtension(savePath, extension), data));
+                    return results;
+                }
+            }
+
+            if (restype == ResourceType.NCS && decompileNcs)
+            {
+                try
+                {
+                    var source = ScriptDecompiler.HtDecompileScript(data, null, false);
+                    results.Add((Path.ChangeExtension(savePath, ".nss"), Encoding.UTF8.GetBytes(source ?? string.Empty)));
+                    return results;
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine($"Failed to decompile archive NCS {vm.ResRef}: {ex.Message}");
+                    var diagnostic = "// Decompile failed: " + ex.Message + Environment.NewLine;
+                    results.Add((Path.ChangeExtension(savePath, ".nss"), Encoding.UTF8.GetBytes(diagnostic)));
+                    return results;
+                }
+            }
+
+            if ((restype == ResourceType.MDL || restype == ResourceType.MDL_ASCII) && (decompileMdl || extractMdlTextures))
+            {
+                if (decompileMdl)
+                {
+                    results.Add((ChangeResourceExtension(savePath, ".mdl.ascii"), DecompileArchiveMdl(vm, data, archiveResources)));
+                }
+                else
+                {
+                    results.Add((ChangeResourceExtension(savePath, extension), data));
+                }
+
+                AddArchiveModelTextures(results, vm, data, archiveResources, savePath);
+                return results;
+            }
+
+            results.Add((ChangeResourceExtension(savePath, extension), data));
+            return results;
+        }
+
+        private static void AddArchiveModelTextures(
+            List<(string Path, byte[] Data)> results,
+            ERFResourceViewModel vm,
+            byte[] data,
+            IReadOnlyList<ERFResourceViewModel> archiveResources,
+            string savePath)
+        {
+            try
+            {
+                var restype = GetResourceType(vm);
+                var mdl = restype == ResourceType.MDL_ASCII
+                    ? MDLAuto.ReadMdl(data, fileFormat: ResourceType.MDL_ASCII)
+                    : MDLAuto.ReadMdl(data, sourceExt: ResolveArchiveResourceData(archiveResources, vm.ResRef, ResourceType.MDX), fileFormat: ResourceType.MDL);
+
+                var textureNames = mdl.AllTextures()
+                    .Concat(mdl.AllLightmaps())
+                    .Where(name => !string.IsNullOrWhiteSpace(name))
+                    .Where(name => !string.Equals(name, "NULL", StringComparison.OrdinalIgnoreCase))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(name => name, StringComparer.OrdinalIgnoreCase);
+
+                var directory = Path.GetDirectoryName(savePath);
+                foreach (var textureName in textureNames)
+                {
+                    var texture = ResolveArchiveResource(archiveResources, textureName, ResourceType.TPC)
+                        ?? ResolveArchiveResource(archiveResources, textureName, ResourceType.TGA);
+                    var textureData = GetResourceData(texture);
+                    var textureType = GetResourceType(texture);
+                    if (textureData == null || textureData.Length == 0 || textureType == null || textureType.IsInvalid)
+                    {
+                        continue;
+                    }
+
+                    var filename = textureName + "." + textureType.Extension;
+                    var texturePath = string.IsNullOrWhiteSpace(directory)
+                        ? filename
+                        : Path.Combine(directory, filename);
+                    results.Add((texturePath, textureData));
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Failed to extract archive MDL textures for {vm.ResRef}: {ex.Message}");
+            }
+        }
+
+        private static byte[] DecompileArchiveMdl(
+            ERFResourceViewModel vm,
+            byte[] data,
+            IReadOnlyList<ERFResourceViewModel> archiveResources)
+        {
+            var restype = GetResourceType(vm);
+            if (restype == ResourceType.MDL_ASCII)
+            {
+                return data;
+            }
+
+            var mdl = MDLAuto.ReadMdl(data, sourceExt: ResolveArchiveResourceData(archiveResources, vm.ResRef, ResourceType.MDX), fileFormat: ResourceType.MDL);
+            return MDLAuto.BytesMdl(mdl, ResourceType.MDL_ASCII);
+        }
+
+        private static string ResolveArchiveTxiText(string resref, TPC tpc, IReadOnlyList<ERFResourceViewModel> archiveResources)
+        {
+            if (!string.IsNullOrWhiteSpace(tpc?.Txi))
+            {
+                return tpc.Txi;
+            }
+
+            var txiData = ResolveArchiveResourceData(archiveResources, resref, ResourceType.TXI);
+            return txiData == null || txiData.Length == 0
+                ? string.Empty
+                : Encoding.ASCII.GetString(txiData);
+        }
+
+        private static byte[] ResolveArchiveResourceData(IReadOnlyList<ERFResourceViewModel> archiveResources, string resref, ResourceType restype)
+        {
+            return GetResourceData(ResolveArchiveResource(archiveResources, resref, restype));
+        }
+
+        private static ERFResourceViewModel ResolveArchiveResource(IReadOnlyList<ERFResourceViewModel> archiveResources, string resref, ResourceType restype)
+        {
+            if (archiveResources == null || string.IsNullOrWhiteSpace(resref) || restype == null)
+            {
+                return null;
+            }
+
+            return archiveResources.FirstOrDefault(candidate =>
+                string.Equals(candidate?.ResRef, resref, StringComparison.OrdinalIgnoreCase)
+                && GetResourceType(candidate) == restype);
+        }
+
+        private static string ChangeResourceExtension(string path, string extension)
+        {
+            if (string.IsNullOrWhiteSpace(extension))
+            {
+                return path;
+            }
+
+            if (!extension.StartsWith(".", StringComparison.Ordinal))
+            {
+                extension = "." + extension;
+            }
+
+            return path.EndsWith(extension, StringComparison.OrdinalIgnoreCase)
+                ? path
+                : Path.ChangeExtension(path, extension);
+        }
+
+        private static string ResourceFileExtension(ResourceType resourceType)
+        {
+            var extension = resourceType?.Extension ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(extension) || extension.StartsWith(".", StringComparison.Ordinal))
+            {
+                return extension;
+            }
+
+            return "." + extension;
+        }
+
         private static byte[] GetResourceData(ERFResourceViewModel vm)
         {
+            if (vm == null) return null;
             if (vm.ErfResource != null) return vm.ErfResource.Data;
             if (vm.RimResource != null) return vm.RimResource.Data;
+            if (vm.BifResource != null) return vm.BifResource.Data;
             return null;
+        }
+
+        private static ResourceType GetResourceType(ERFResourceViewModel vm)
+        {
+            if (vm == null)
+            {
+                return ResourceType.INVALID;
+            }
+
+            if (vm.ErfResource != null) return vm.ErfResource.ResType;
+            if (vm.RimResource != null) return vm.RimResource.ResType;
+            if (vm.BifResource != null) return vm.BifResource.ResType;
+            return ResourceType.FromExtension("." + (vm.Type ?? "bin").ToLowerInvariant());
+        }
+
+        private sealed class ArchiveExtractOptions
+        {
+            public bool TpcDecompile { get; set; }
+            public bool TpcExtractTxi { get; set; }
+            public bool NcsDecompile { get; set; }
+            public bool MdlExtractTextures { get; set; }
+            public bool MdlDecompile { get; set; }
+
+            public static ArchiveExtractOptions Default => new ArchiveExtractOptions
+            {
+                TpcDecompile = true,
+                TpcExtractTxi = false,
+                NcsDecompile = true,
+                MdlExtractTextures = false,
+                MdlDecompile = false
+            };
         }
 
         private async Task RunAddFilesAsync()
@@ -836,6 +1245,7 @@ namespace OdyTools.Editors
             bool isRim = restype == ResourceType.RIM;
             int added = 0;
             var errors = new List<string>();
+            PushState();
             foreach (string filepath in filePaths)
             {
                 try
@@ -852,7 +1262,8 @@ namespace OdyTools.Editors
                         Size = HumanReadableSize(data.Length),
                         Offset = "—",
                         ErfResource = isRim ? null : new ERFResource(new ResRef(resname), resType, data),
-                        RimResource = isRim ? new RIMResource(new ResRef(resname), resType, data) : null
+                        RimResource = isRim ? new RIMResource(new ResRef(resname), resType, data) : null,
+                        BifResource = null
                     };
                     _sourceResources.Add(vm);
                     added++;
@@ -864,11 +1275,14 @@ namespace OdyTools.Editors
             }
             if (added > 0)
             {
-                PushState();
                 _hasChanges = true;
                 MarkDocumentDirty();
-                if (_refreshButton != null) _refreshButton.IsEnabled = true;
+                UpdateActionButtonStates();
                 UpdateStatusBar();
+            }
+            else if (_undoStack.Count > 0)
+            {
+                _undoStack.RemoveAt(_undoStack.Count - 1);
             }
             if (errors.Count > 0)
             {
@@ -901,13 +1315,24 @@ namespace OdyTools.Editors
 
         private void OnSelectionChanged()
         {
+            UpdateActionButtonStates();
+        }
+
+        private void UpdateActionButtonStates()
+        {
             int count = _tableView?.SelectedItems?.Count ?? 0;
             bool hasSelection = count > 0;
             bool singleSelection = count == 1;
             if (_extractButton != null) _extractButton.IsEnabled = hasSelection;
             if (_openButton != null) _openButton.IsEnabled = hasSelection;
             if (_unloadButton != null) _unloadButton.IsEnabled = hasSelection;
+            if (_refreshButton != null) _refreshButton.IsEnabled = CanRefreshArchive();
             if (_ctxRename != null) _ctxRename.IsEnabled = singleSelection;
+        }
+
+        private bool CanRefreshArchive()
+        {
+            return _sourceResources.Count > 0 || !string.IsNullOrEmpty(_filepath);
         }
 
         private List<ERFResourceViewModel> GetSelectedViewModels()
@@ -936,7 +1361,8 @@ namespace OdyTools.Editors
                     new FilePickerFileType(Localization.Tr("MOD")) { Patterns = new[] { "*.mod" } },
                     new FilePickerFileType(Localization.Tr("RIM")) { Patterns = new[] { "*.rim" } },
                     new FilePickerFileType(Localization.Tr("SAV")) { Patterns = new[] { "*.sav" } },
-                    new FilePickerFileType(Localization.Tr("All supported")) { Patterns = new[] { "*.erf", "*.mod", "*.rim", "*.sav" } }
+                    new FilePickerFileType("HAK") { Patterns = new[] { "*.hak" } },
+                    new FilePickerFileType(Localization.Tr("All supported")) { Patterns = new[] { "*.erf", "*.mod", "*.rim", "*.sav", "*.hak" } }
                 }
             };
             var files = await storageProvider.OpenFilePickerAsync(options);
@@ -952,6 +1378,7 @@ namespace OdyTools.Editors
                 if (pathExt == "mod") restype = ResourceType.MOD;
                 else if (pathExt == "rim") restype = ResourceType.RIM;
                 else if (pathExt == "sav") restype = ResourceType.SAV;
+                else if (pathExt == "hak") restype = ResourceType.HAK;
                 else restype = ResourceType.ERF;
                 Load(path, resname, restype, data);
             }
@@ -1042,23 +1469,76 @@ namespace OdyTools.Editors
             if (!accepted) return;
 
             string newName = (input.Text ?? "").Trim();
-            if (!ResRef.IsValid(newName)) return;
+            if (!TryRenameSelected(vm, newName, out string error) && !string.IsNullOrEmpty(error))
+            {
+                await DialogHelper.ShowWindowAsync(this, Localization.Tr("Rename failed"), error, ButtonEnum.Ok, IconType.Warning);
+            }
+        }
+
+        private bool TryRenameSelected(ERFResourceViewModel vm, string newResRef, out string error)
+        {
+            error = null;
+            if (vm == null)
+            {
+                error = Localization.Tr("Select exactly one resource to rename.");
+                return false;
+            }
+
+            string newName = (newResRef ?? "").Trim();
+            if (!ResRef.IsValid(newName))
+            {
+                error = Localization.Tr("ResRefs must be ASCII, max 16 characters, and not contain <>:\"/\\|?*.");
+                return false;
+            }
+
+            ResourceType type = GetResourceType(vm);
+            if (type == null || type.IsInvalid)
+            {
+                error = Localization.Tr("Cannot rename resource with unknown type.");
+                return false;
+            }
+
+            if (string.Equals(vm.ResRef, newName, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            bool duplicate = _sourceResources.Any(resource =>
+                !ReferenceEquals(resource, vm) &&
+                string.Equals(resource.ResRef, newName, StringComparison.OrdinalIgnoreCase) &&
+                Equals(GetResourceType(resource), type));
+            if (duplicate)
+            {
+                error = Localization.Trf("The archive already contains {0}.{1}.", newName, type.Extension);
+                return false;
+            }
 
             PushState();
             _hasChanges = true;
             MarkDocumentDirty();
+            SetResourceResRef(vm, newName);
+            _filteredResources?.View?.Refresh();
+            UpdateStatusBar();
+            return true;
+        }
+
+        private static void SetResourceResRef(ERFResourceViewModel vm, string newName)
+        {
             var newRef = new ResRef(newName);
             if (vm.ErfResource != null)
             {
                 vm.ErfResource.ResRef = newRef;
-                vm.ResRef = newName;
             }
             else if (vm.RimResource != null)
             {
                 vm.RimResource.ResRef = newRef;
-                vm.ResRef = newName;
             }
-            UpdateStatusBar();
+            else if (vm.BifResource != null)
+            {
+                vm.BifResource.ResRef = newRef;
+            }
+
+            vm.ResRef = newName;
         }
     }
 
@@ -1071,5 +1551,6 @@ namespace OdyTools.Editors
         public string Offset { get; set; }
         public ERFResource ErfResource { get; set; }
         public RIMResource RimResource { get; set; }
+        public BIFResource BifResource { get; set; }
     }
 }

@@ -41,9 +41,12 @@ namespace OdyTools.Editors
         private CheckBox _isNoteCheckbox;
         private CheckBox _noteEnabledCheckbox;
         private LocalizedStringEdit _noteEdit;
+        private Button _noteChangeButton;
 
         // UI Controls - Comments
         private TextBox _commentsEdit;
+
+        internal bool HasStructuredEditorSurface => _nameEdit != null && _tagEdit != null && _resrefEdit != null && _isNoteCheckbox != null && _noteEnabledCheckbox != null && _noteEdit != null && _noteChangeButton != null && _commentsEdit != null;
 
         public OdyToolUTW() : this(null, null) { }
         public OdyToolUTW(Window parent = null, OdyInstallation installation = null)
@@ -119,6 +122,7 @@ namespace OdyTools.Editors
                 _isNoteCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "isNoteCheckbox");
                 _noteEnabledCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "noteEnabledCheckbox");
                 _noteEdit = EditorHelpers.FindControlSafe<LocalizedStringEdit>(this, "noteEdit");
+                _noteChangeButton = EditorHelpers.FindControlSafe<Button>(this, "noteChangeButton");
                 _commentsEdit = EditorHelpers.FindControlSafe<TextBox>(this, "commentsEdit");
                 _statusText = EditorHelpers.FindControlSafe<TextBlock>(this, "statusText");
                 _waypointSummary = EditorHelpers.FindControlSafe<TextBlock>(this, "waypointSummary");
@@ -140,6 +144,11 @@ namespace OdyTools.Editors
 
         private void AttachReferenceSearchMenus()
         {
+            if (_tagEdit == null || _resrefEdit == null)
+            {
+                return;
+            }
+
             ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
             FieldValueReferenceHelper.AppendFieldValueFindReferencesMenuItem(
                 _tagEdit.ContextMenu,
@@ -160,6 +169,7 @@ namespace OdyTools.Editors
         {
             EditorHelpers.BindClick(_tagGenerateButton, GenerateTag);
             EditorHelpers.BindClick(_resrefGenerateButton, GenerateResref);
+            EditorHelpers.BindClick(_noteChangeButton, ChangeNote);
 
             // Add checkbox change handlers to properly bind to UTW properties
             // This eliminates the need for workarounds in headless testing
@@ -183,8 +193,14 @@ namespace OdyTools.Editors
 
         private void SetupInstallation(OdyInstallation installation)
         {
+            _installation = installation;
             _nameEdit?.SetInstallation(installation);
             _noteEdit?.SetInstallation(installation);
+        }
+
+        protected override void OnInstallationChanged()
+        {
+            SetupInstallation(_installation);
         }
 
         private void SetupProgrammaticUI()
@@ -243,11 +259,14 @@ namespace OdyTools.Editors
             // Map Note
             var noteLabel = new TextBlock { Text = "Map Note:" };
             _noteEdit = new LocalizedStringEdit();
+            _noteChangeButton = new Button { Content = "..." };
+            EditorHelpers.BindClick(_noteChangeButton, ChangeNote);
 
             advancedPanel.Children.Add(_isNoteCheckbox);
             advancedPanel.Children.Add(_noteEnabledCheckbox);
             advancedPanel.Children.Add(noteLabel);
             advancedPanel.Children.Add(_noteEdit);
+            advancedPanel.Children.Add(_noteChangeButton);
 
             advancedTab.Content = advancedPanel;
             tabControl.Items.Add(advancedTab);
@@ -532,7 +551,7 @@ namespace OdyTools.Editors
             // Matching Python: utw.resref = ResRef(self.ui.resrefEdit.text())
             if (_resrefEdit != null)
             {
-                utw.ResRef = new ResRef(_resrefEdit.Text ?? "");
+                utw.ResRef = ResRefFromText(_resrefEdit.Text);
             }
 
             // Matching Python: utw.has_map_note = self.ui.isNoteCheckbox.isChecked()
@@ -562,6 +581,12 @@ namespace OdyTools.Editors
             // Matching Python: gff: GFF = dismantle_utw(utw); write_gff(gff, data)
             byte[] data = UTWAuto.BytesUtw(utw);
             return Tuple.Create(data, new byte[0]);
+        }
+
+        private static ResRef ResRefFromText(string text)
+        {
+            string value = (text ?? string.Empty).Trim();
+            return !string.IsNullOrEmpty(value) ? new ResRef(value) : ResRef.FromBlank();
         }
 
         // Matching Python: deepcopy(self._utw)
@@ -607,6 +632,18 @@ namespace OdyTools.Editors
 
         // Note: Name change is handled by LocalizedStringEdit's edit button
 
+        private void ChangeNote()
+        {
+            if (_installation == null || _noteEdit == null) return;
+            var dialog = new OdyTools.Dialogs.LocalizedStringDialog(this, _installation, _noteEdit.GetLocString());
+            if (dialog.ShowDialog())
+            {
+                _utw.MapNote = dialog.LocString;
+                _noteEdit.SetLocString(_utw.MapNote);
+                MarkDocumentDirty();
+            }
+        }
+
 
         private void GenerateTag()
         {
@@ -618,6 +655,7 @@ namespace OdyTools.Editors
             {
                 _tagEdit.Text = _resrefEdit.Text;
             }
+            MarkDocumentDirty();
         }
 
         private void GenerateResref()
@@ -633,6 +671,7 @@ namespace OdyTools.Editors
                     _resrefEdit.Text = "m00xx_way_000";
                 }
             }
+            MarkDocumentDirty();
         }
 
         public override void SaveAs()
@@ -649,6 +688,7 @@ namespace OdyTools.Editors
         public CheckBox IsNoteCheckbox => _isNoteCheckbox;
         public CheckBox NoteEnabledCheckbox => _noteEnabledCheckbox;
         public LocalizedStringEdit NoteEdit => _noteEdit;
+        public Button NoteChangeButton => _noteChangeButton;
         public TextBox CommentsEdit => _commentsEdit;
         public UTW Utw => _utw;
     }

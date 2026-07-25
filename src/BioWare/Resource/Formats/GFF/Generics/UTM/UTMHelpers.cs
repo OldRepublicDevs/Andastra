@@ -73,10 +73,10 @@ namespace BioWare.Resource.Formats.GFF.Generics.UTM
                 item.ResRef = itemStruct.Acquire<ResRef>("InventoryRes", ResRef.FromBlank());
                 // Matching PyKotor implementation: item.infinite = bool(item_struct.acquire("Infinite", 0))
                 // Engine default: 0 [CNWSStore::LoadStore] @ (K1: 0x005c7180, TSL: 0x00571310, NWN:EE: 0x1404fbbf0) line 113
-                item.Infinite = itemStruct.Acquire<int>("Infinite", 0) != 0 ? 1 : 0;
+                item.Infinite = itemStruct.GetUInt8("Infinite") != 0 ? 1 : 0;
                 // Matching PyKotor implementation: item.droppable = bool(item_struct.acquire("Dropable", 0))
                 // Note: Dropable is NOT read by the engine for UTM items [CNWSStore::LoadStore] @ (K1: 0x005c7180, TSL: 0x00571310, NWN:EE: 0x1404fbbf0)
-                item.Droppable = itemStruct.Acquire<int>("Dropable", 0) != 0 ? 1 : 0;
+                item.Droppable = itemStruct.GetUInt8("Dropable") != 0 ? 1 : 0;
                 utm.Items.Add(item);
             }
 
@@ -172,4 +172,3 @@ namespace BioWare.Resource.Formats.GFF.Generics.UTM
         }
     }
 }
-

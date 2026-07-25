@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Headless.NUnit;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using BioWare.Common;
@@ -199,6 +200,30 @@ namespace OdyTools.Tests
             Assert.That(loaded.GetHeaders().Count, Is.EqualTo(1));
             Assert.That(loaded.GetHeaders()[0], Is.EqualTo("Column1"));
             Assert.That(data, Is.Not.Null.And.Length.GreaterThan(0));
+            Assert.That(editor.FilepathPublic, Is.Null);
+            editor.Close();
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_NewTemplateGrid_BuildsEditableTenByFiveTwoDA()
+        {
+            var editor = CreateEditor();
+            var menuItem = editor.FindControl<MenuItem>("actionNew10x5Grid");
+            Assert.That(menuItem, Is.Not.Null);
+            Assert.That(menuItem.Header?.ToString(), Does.Contain("10x5"));
+
+            menuItem.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            Dispatcher.UIThread.RunJobs();
+
+            var data = editor.Build().Item1;
+            var loaded = TwoDAAuto.Read2DA(data);
+
+            Assert.That(loaded.GetHeight(), Is.EqualTo(10));
+            Assert.That(loaded.GetHeaders(), Is.EqualTo(new[] { "Column1", "Column2", "Column3", "Column4", "Column5" }));
+            Assert.That(loaded.GetLabel(0), Is.EqualTo("0"));
+            Assert.That(loaded.GetLabel(9), Is.EqualTo("9"));
+            Assert.That(loaded.GetCellString(0, "Column1"), Is.EqualTo(""));
+            Assert.That(loaded.GetCellString(9, "Column5"), Is.EqualTo(""));
             Assert.That(editor.FilepathPublic, Is.Null);
             editor.Close();
         }
@@ -1894,6 +1919,13 @@ namespace OdyTools.Tests
 
             Assert.That(grid.Columns.Count, Is.EqualTo(4), "Should have 4 grid columns after hiding one");
 
+            var built = BuildAndParse(editor);
+            Assert.That(built.GetHeaders(), Does.Contain("col1"), "Hidden columns should remain in saved output.");
+            Assert.That(built.GetHeaders().Count, Is.EqualTo(4), "Column visibility is view state, not destructive table state.");
+            Assert.That(built.GetCellString(0, "col1"), Is.EqualTo("A"));
+            Assert.That(built.GetCellString(0, "col2"), Is.EqualTo("B"));
+            Assert.That(built.GetCellString(0, "col3"), Is.EqualTo("C"));
+
             editor.Close();
         }
 
@@ -2204,6 +2236,15 @@ namespace OdyTools.Tests
             mi.Invoke(editor, new object[] { editor, args });
         }
 
+        private static bool RaiseEditorKeyDownHandled(OdyTool2DA editor, Key key, KeyModifiers modifiers = KeyModifiers.None)
+        {
+            var mi = typeof(OdyTool2DA).GetMethod("OnWindowKeyDown", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.That(mi, Is.Not.Null, "OnWindowKeyDown handler must exist for keyboard shortcut tests");
+            var args = CreateKeyEventArgs(key, modifiers);
+            mi.Invoke(editor, new object[] { editor, args });
+            return args.Handled;
+        }
+
         private static bool TryEnterCellEditMode(OdyTool2DA editor)
         {
             var grid = GetDataGrid(editor);
@@ -2276,6 +2317,74 @@ namespace OdyTools.Tests
                 var headers = GetColumnHeaders(editor);
                 int expectedGridCol = headers.IndexOf("race") + 1;
                 Assert.That(GetCurrentColumnIndex(editor), Is.EqualTo(expectedGridCol));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_GoToCell_RowOnlyInput_PreservesCurrentColumn()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                SetSelection(editor, 0);
+                SetCurrentColumn(editor, 3);
+                editor.GoToCellByInput("2");
+
+                var grid = GetDataGrid(editor);
+                var source = GetSourceData(editor);
+                Assert.That(grid.SelectedItem, Is.EqualTo(source[2]));
+                Assert.That(GetCurrentColumnIndex(editor), Is.EqualTo(3));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_GoToCell_RowAndColumnName_NavigatesToCell()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                SetSelection(editor, 0);
+                SetCurrentColumn(editor, 1);
+                editor.GoToCellByInput("R2, race");
+
+                var grid = GetDataGrid(editor);
+                var source = GetSourceData(editor);
+                int expectedGridCol = GetColumnHeaders(editor).IndexOf("race") + 1;
+                Assert.That(grid.SelectedItem, Is.EqualTo(source[2]));
+                Assert.That(GetCurrentColumnIndex(editor), Is.EqualTo(expectedGridCol));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryResolveGoToCellInput_NumericColumnIndex_UsesDataColumnIndex()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+
+                Assert.That(editor.TryResolveGoToCellInput("1, 2", out int rowIndex, out int gridColumnIndex), Is.True);
+                Assert.That(rowIndex, Is.EqualTo(1));
+                Assert.That(gridColumnIndex, Is.EqualTo(3));
+                Assert.That(editor.TryResolveGoToCellInput("999, race", out _, out _), Is.False);
+                Assert.That(editor.TryResolveGoToCellInput("2, missing_column", out _, out _), Is.False);
             }
             finally
             {
@@ -2726,6 +2835,125 @@ namespace OdyTools.Tests
         }
 
         [AvaloniaTest]
+        public async Task OdyTool2DA_PasteByHeader_UpdatesMatchingColumnsInClipboardOrder()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                SetSelection(editor, 1);
+                SetCurrentColumn(editor, 2);
+
+                await (editor as Window)?.Clipboard?.SetTextAsync("race\tname\tunknown\nAlien\tAlpha\tIgnored\nDroid\tBeta\tIgnored2");
+                editor.PasteByHeader();
+
+                var result = BuildAndParse(editor);
+                Assert.That(result.GetCellString(1, "race"), Is.EqualTo("Alien"));
+                Assert.That(result.GetCellString(1, "name"), Is.EqualTo("Alpha"));
+                Assert.That(result.GetCellString(1, "value"), Is.EqualTo("101"), "Unmentioned columns remain unchanged");
+                Assert.That(result.GetCellString(2, "race"), Is.EqualTo("Droid"));
+                Assert.That(result.GetCellString(2, "name"), Is.EqualTo("Beta"));
+                Assert.That(GetStatusText(editor), Does.Contain("Modified"));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public async Task OdyTool2DA_PasteByHeader_WithLabelHeader_UpdatesRowLabelsOnlyWhenNamed()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.SelectCellRange(2, 2, 3, 3);
+
+                await (editor as Window)?.Clipboard?.SetTextAsync("label\tvalue\ncustom_2\t900\ncustom_3\t901");
+                editor.PasteByHeader();
+
+                var source = GetSourceData(editor);
+                var result = BuildAndParse(editor);
+                Assert.That(source[2][0], Is.EqualTo("custom_2"));
+                Assert.That(source[3][0], Is.EqualTo("custom_3"));
+                Assert.That(result.GetCellString(2, "value"), Is.EqualTo("900"));
+                Assert.That(result.GetCellString(3, "value"), Is.EqualTo("901"));
+                Assert.That(result.GetCellString(2, "name"), Is.EqualTo("Row2"), "Columns absent from the clipboard remain unchanged");
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_ValidateData_ResRefRule_FlagsInvalidReferences()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                var source = GetSourceData(editor);
+                source[0][2] = "valid_resref";
+                source[1][2] = "toolong_resref_name";
+                source[2][2] = "bad-name";
+                source[3][2] = "";
+
+                editor.SetColumnValidationRule(2, ColumnValidationMode.ResRef);
+                var issues = editor.ValidateData();
+
+                Assert.That(issues.Count, Is.EqualTo(3));
+                Assert.That(issues, Has.Some.Contains("Row 1"));
+                Assert.That(issues, Has.Some.Contains("Row 2"));
+                Assert.That(issues, Has.Some.Contains("Row 3"));
+                Assert.That(editor.FormatValidationReport(issues), Does.Contain("Found 3 issue"));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [TestCase("abc_123", true)]
+        [TestCase("sixteen_chars_ok", true)]
+        [TestCase("toolong_resref_name", false)]
+        [TestCase("bad-name", false)]
+        [TestCase("", false)]
+        [TestCase("   ", false)]
+        public void OdyTool2DA_IsValidResRef_UsesKotorResRefShape(string value, bool expected)
+        {
+            Assert.That(OdyTool2DA.IsValidResRef(value), Is.EqualTo(expected));
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_ValidateData_NumericRule_StillAllowsBlankCells()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                var source = GetSourceData(editor);
+                source[1][3] = "";
+                source[2][3] = "not_number";
+
+                editor.SetColumnValidationRule(3, ColumnValidationMode.Numeric);
+                var issues = editor.ValidateData();
+
+                Assert.That(issues.Count, Is.EqualTo(1));
+                Assert.That(issues[0], Does.Contain("Row 2"));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
         public void OdyTool2DA_SelectColumnByIndex_ClearsActiveCellRange()
         {
             byte[] data = CreateTestTwoDABytes(5);
@@ -2865,6 +3093,33 @@ namespace OdyTools.Tests
         }
 
         [AvaloniaTest]
+        public void OdyTool2DA_TryFindNextMatch_WholeCell_SkipsPartialMatches()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                var source = GetSourceData(editor);
+                source[1][2] = "Before PMBTest After";
+
+                editor.ConfigureFind("PMBTest", wholeCell: true);
+
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(0));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(2));
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(0));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(4));
+                Assert.That(editor.TryFindNextMatch(), Is.False, "Whole-cell mode must skip substring matches.");
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
         public void OdyTool2DA_TryFindNextMatch_InColumn_SkipsOtherColumns()
         {
             byte[] data = CreateTestTwoDABytes(4);
@@ -2878,6 +3133,30 @@ namespace OdyTools.Tests
                 Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(0));
                 Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(2));
                 Assert.That(editor.TryFindNextMatch(), Is.False, "Column-scoped find must not advance to race column");
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryFindNextMatch_RowLabelScope_SearchesOnlyLabels()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                var source = GetSourceData(editor);
+                source[2][2] = "1";
+
+                editor.ConfigureFind("1", columnIndex: 0, wholeCell: true);
+
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(1));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(0));
+                Assert.That(editor.TryFindNextMatch(), Is.False, "Row-label search must not match data cells.");
             }
             finally
             {
@@ -2954,6 +3233,141 @@ namespace OdyTools.Tests
         }
 
         [AvaloniaTest]
+        public void OdyTool2DA_TryFindPreviousMatch_MovesBackwardFromCurrentHit()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.ConfigureFind("PMBTest");
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(4));
+
+                Assert.That(editor.TryFindPreviousMatch(), Is.True);
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(0));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(2));
+                Assert.That(GetSelectedRowIndex(editor), Is.EqualTo(0));
+                Assert.That(GetCurrentColumnIndex(editor), Is.EqualTo(2));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_ShiftF3_RoutesToFindPreviousMatch()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.ConfigureFind("PMBTest");
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(4));
+
+                Assert.That(RaiseEditorKeyDownHandled(editor, Key.F3, KeyModifiers.Shift), Is.True);
+
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(0));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(2));
+                Assert.That(GetCurrentColumnIndex(editor), Is.EqualTo(2));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryFindPreviousMatch_InColumn_StaysWithinColumn()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.ConfigureFind("10", columnIndex: 3);
+
+                Assert.That(editor.TryFindPreviousMatch(), Is.True);
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(3));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(3));
+
+                Assert.That(editor.TryFindPreviousMatch(), Is.True);
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(2));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(3));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_HighlightAllFindMatches_AllColumns_RecordsEveryMatch()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.ConfigureFind("PMBTest");
+
+                Assert.That(editor.HighlightAllFindMatches(), Is.EqualTo(2));
+                Assert.That(editor.GetHighlightedFindMatches(), Is.EquivalentTo(new[] { (0, 2), (0, 4) }));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_CtrlShiftF_RoutesToHighlightAllFindMatches()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                editor.ConfigureFind("PMBTest");
+
+                Assert.That(editor.GetHighlightedFindMatches(), Is.Empty);
+                Assert.That(RaiseEditorKeyDownHandled(editor, Key.F, KeyModifiers.Control | KeyModifiers.Shift), Is.True);
+
+                Assert.That(editor.GetHighlightedFindMatches(), Is.EquivalentTo(new[] { (0, 2), (0, 4) }));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_HighlightAllFindMatches_RowLabelScope_RecordsOnlyLabels()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                var source = GetSourceData(editor);
+                source[2][2] = "1";
+                editor.ConfigureFind("1", columnIndex: 0, wholeCell: true);
+
+                Assert.That(editor.HighlightAllFindMatches(), Is.EqualTo(1));
+                Assert.That(editor.GetHighlightedFindMatches(), Is.EquivalentTo(new[] { (1, 0) }));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
         public void OdyTool2DA_TryFindNextMatch_Regex_FindsPatternMatch()
         {
             byte[] data = CreateTestTwoDABytes(4);
@@ -2966,6 +3380,32 @@ namespace OdyTools.Tests
                 Assert.That(editor.TryFindNextMatch(), Is.True);
                 Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(0));
                 Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(2));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryFindNextMatch_RegexWholeCell_SkipsPartialPatternMatches()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                var source = GetSourceData(editor);
+                source[1][2] = "Before PMBTest After";
+                editor.ConfigureFind(@"P\w+Test", useRegex: true, wholeCell: true);
+
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(0));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(2));
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+                Assert.That(editor.GetLastFindRowIndex(), Is.EqualTo(0));
+                Assert.That(editor.GetLastFindColumnIndex(), Is.EqualTo(4));
+                Assert.That(editor.TryFindNextMatch(), Is.False);
             }
             finally
             {
@@ -3084,6 +3524,78 @@ namespace OdyTools.Tests
         }
 
         [AvaloniaTest]
+        public void OdyTool2DA_TryReplaceAll_WholeCell_ReplacesOnlyFullCellMatches()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                var source = GetSourceData(editor);
+                source[1][2] = "Before PMBTest After";
+                editor.ConfigureReplace("PMBTest", "WholeOnly", wholeCell: true);
+
+                editor.TryReplaceAll();
+
+                Assert.That(source[0][2], Is.EqualTo("WholeOnly"));
+                Assert.That(source[0][4], Is.EqualTo("WholeOnly"));
+                Assert.That(source[1][2], Is.EqualTo("Before PMBTest After"), "Whole-cell replace must not alter substring matches.");
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryReplaceAll_Regex_ReplacesPatternMatches()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                var source = GetSourceData(editor);
+                editor.ConfigureReplace(@"P\w+Test", "RegexHit", useRegex: true);
+
+                editor.TryReplaceAll();
+
+                Assert.That(source[0][2], Is.EqualTo("RegexHit"));
+                Assert.That(source[0][4], Is.EqualTo("RegexHit"));
+                Assert.That(source[1][2], Is.EqualTo("P_HK47"), "Non-matching cells unchanged");
+                Assert.That(BuildAndParse(editor).GetCellString(0, "race"), Is.EqualTo("RegexHit"));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryReplaceAllInSelection_UsesActiveCellRangeOnly()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                var source = GetSourceData(editor);
+                editor.SelectCellRange(0, 2, 1, 2);
+                editor.ConfigureReplace("PMBTest", "RangeOnly");
+
+                editor.TryReplaceAllInSelection();
+
+                Assert.That(source[0][2], Is.EqualTo("RangeOnly"));
+                Assert.That(source[0][4], Is.EqualTo("PMBTest"), "Matching cell outside active range unchanged");
+                Assert.That(source[1][2], Is.EqualTo("P_HK47"));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
         public void OdyTool2DA_TryReplaceAll_EmptyFind_LeavesDataUnchanged()
         {
             byte[] data = CreateTestTwoDABytes(3);
@@ -3097,6 +3609,30 @@ namespace OdyTools.Tests
                 var after = BuildAndParse(editor);
                 Assert.That(after.GetCellString(0, "name"), Is.EqualTo(before.GetCellString(0, "name")));
                 Assert.That(after.GetCellString(1, "race"), Is.EqualTo(before.GetCellString(1, "race")));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryReplaceAll_NoMatches_DoesNotConsumeUndo()
+        {
+            byte[] data = CreateTestTwoDABytes(3);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                var before = BuildAndParse(editor);
+                editor.ConfigureReplace("DefinitelyMissing", "Anything");
+
+                editor.TryReplaceAll();
+                InvokeUndo(editor);
+
+                var after = BuildAndParse(editor);
+                Assert.That(after.GetCellString(0, "name"), Is.EqualTo(before.GetCellString(0, "name")));
+                Assert.That(after.GetCellString(0, "race"), Is.EqualTo(before.GetCellString(0, "race")));
             }
             finally
             {
@@ -3125,6 +3661,29 @@ namespace OdyTools.Tests
                 var result = BuildAndParse(editor);
                 Assert.That(result.GetCellString(0, "name"), Is.EqualTo("Replaced"));
                 Assert.That(result.GetCellString(0, "race"), Is.EqualTo("PMBTest"));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_TryReplaceOne_Regex_ReplacesCurrentPatternMatchOnly()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                var source = GetSourceData(editor);
+                editor.ConfigureReplace(@"P\w+Test", "RegexOne", useRegex: true);
+                Assert.That(editor.TryFindNextMatch(), Is.True);
+
+                editor.TryReplaceOne();
+
+                Assert.That(source[0][2], Is.EqualTo("RegexOne"));
+                Assert.That(source[0][4], Is.EqualTo("PMBTest"), "Other matching cells unchanged");
             }
             finally
             {
@@ -3297,6 +3856,100 @@ namespace OdyTools.Tests
             Assert.That(after.GetCellString(1, "name"), Is.EqualTo("P_HK47"));
             Assert.That(GetSourceData(editor).Count, Is.EqualTo(4));
             editor.Close();
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_NavigateToCell_FirstDataCell_SelectsRow0Col1()
+        {
+            byte[] data = CreateTestTwoDABytes(5);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                SetSelection(editor, 3);
+                SetCurrentColumn(editor, 4);
+                editor.NavigateToCell(0, 1);
+                PumpUi();
+                var grid = GetDataGrid(editor);
+                var source = GetSourceData(editor);
+                Assert.That(grid.SelectedItem, Is.EqualTo(source[0]));
+                Assert.That(GetCurrentColumnIndex(editor), Is.EqualTo(1));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_NavigateToCell_LastDataCell_SelectsLastRowAndCol()
+        {
+            byte[] data = CreateTestTwoDABytes(5);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                PumpUi();
+                var source = GetSourceData(editor);
+                var grid = GetDataGrid(editor);
+                int lastRow = source.Count - 1;
+                int lastCol = grid.Columns.Count - 1;
+                SetSelection(editor, 0);
+                SetCurrentColumn(editor, 1);
+                editor.NavigateToCell(lastRow, lastCol);
+                PumpUi();
+                Assert.That(grid.SelectedItem, Is.EqualTo(source[lastRow]));
+                Assert.That(GetCurrentColumnIndex(editor), Is.EqualTo(lastCol));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_NavigateToCell_OutOfRange_ClampsSafely()
+        {
+            byte[] data = CreateTestTwoDABytes(5);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                var source = GetSourceData(editor);
+                int lastRow = source.Count - 1;
+                int lastCol = GetColumnHeaders(editor).Count;
+                SetSelection(editor, 2);
+                SetCurrentColumn(editor, 3);
+                editor.NavigateToCell(-10, -5);
+                PumpUi();
+                var grid = GetDataGrid(editor);
+                Assert.That(grid.SelectedItem, Is.EqualTo(source[0]));
+                Assert.That(GetCurrentColumnIndex(editor), Is.EqualTo(0));
+                editor.NavigateToCell(999, 999);
+                PumpUi();
+                Assert.That(grid.SelectedItem, Is.EqualTo(source[lastRow]));
+                Assert.That(GetCurrentColumnIndex(editor), Is.EqualTo(lastCol));
+            }
+            finally
+            {
+                editor.Close();
+            }
+        }
+
+        [AvaloniaTest]
+        public void OdyTool2DA_ResolveGoToColumnGridIndex_NumericIndex_ReturnsGridIndex()
+        {
+            byte[] data = CreateTestTwoDABytes(4);
+            var editor = CreateEditor();
+            try
+            {
+                editor.Load("test.2da", "test", ResourceType.TwoDA, data);
+                Assert.That(editor.ResolveGoToColumnGridIndex("2"), Is.EqualTo(3));
+            }
+            finally
+            {
+                editor.Close();
+            }
         }
 
     }

@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using BioWare.Common;
+using BioWare.Resource.Formats.GFF;
 using BioWare.Resource.Formats.GFF.Generics;
 using OdyTools.Data;
 
@@ -25,6 +27,8 @@ namespace OdyTools.Editors
         private TextBox _factionNameEdit;
         private NumericUpDown _parentIdSpin;
         private CheckBox _globalEffectCheck;
+        private NumericUpDown _reputationFactionId1Spin;
+        private NumericUpDown _reputationFactionId2Spin;
         private NumericUpDown _reputationValueSpin;
         private Button _addFactionButton;
         private Button _removeFactionButton;
@@ -37,12 +41,37 @@ namespace OdyTools.Editors
 
         public FAC Fac => _fac;
 
+        internal bool HasStructuredEditorSurface =>
+            _factionList != null &&
+            _reputationList != null &&
+            _factionNameEdit != null &&
+            _parentIdSpin != null &&
+            _globalEffectCheck != null &&
+            _reputationFactionId1Spin != null &&
+            _reputationFactionId2Spin != null &&
+            _reputationValueSpin != null &&
+            _addFactionButton != null &&
+            _removeFactionButton != null &&
+            _addReputationButton != null &&
+            _removeReputationButton != null;
+
+        internal ListBox FactionListForTest => _factionList;
+        internal ListBox ReputationListForTest => _reputationList;
+        internal TextBox FactionNameEditForTest => _factionNameEdit;
+        internal NumericUpDown ParentIdSpinForTest => _parentIdSpin;
+        internal CheckBox GlobalEffectCheckForTest => _globalEffectCheck;
+        internal NumericUpDown ReputationFactionId1SpinForTest => _reputationFactionId1Spin;
+        internal NumericUpDown ReputationFactionId2SpinForTest => _reputationFactionId2Spin;
+        internal NumericUpDown ReputationValueSpinForTest => _reputationValueSpin;
+        internal ContextMenu FactionListContextMenuForTest => _factionList?.ContextMenu;
+        internal ContextMenu ReputationListContextMenuForTest => _reputationList?.ContextMenu;
+
         public OdyToolFAC() : this(null, null) { }
 
         public OdyToolFAC(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolFAC", "faction",
-                new[] { ResourceType.FAC },
-                new[] { ResourceType.FAC },
+                new[] { ResourceType.FAC, ResourceType.FAC_XML },
+                new[] { ResourceType.FAC, ResourceType.FAC_XML },
                 installation)
         {
             _fac = new FAC();
@@ -69,6 +98,8 @@ namespace OdyTools.Editors
             _factionNameEdit = EditorHelpers.FindControlSafe<TextBox>(this, "factionNameEdit");
             _parentIdSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "parentIdSpin");
             _globalEffectCheck = EditorHelpers.FindControlSafe<CheckBox>(this, "globalEffectCheck");
+            _reputationFactionId1Spin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "reputationFactionId1Spin");
+            _reputationFactionId2Spin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "reputationFactionId2Spin");
             _reputationValueSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "reputationValueSpin");
             _addFactionButton = EditorHelpers.FindControlSafe<Button>(this, "addFactionButton");
             _removeFactionButton = EditorHelpers.FindControlSafe<Button>(this, "removeFactionButton");
@@ -145,10 +176,14 @@ namespace OdyTools.Editors
             if (_factionList != null)
             {
                 _factionList.SelectionChanged += OnFactionSelectionChanged;
+                _factionList.KeyDown += OnFactionListKeyDown;
+                _factionList.ContextMenu = BuildFactionContextMenu();
             }
             if (_reputationList != null)
             {
                 _reputationList.SelectionChanged += OnReputationSelectionChanged;
+                _reputationList.KeyDown += OnReputationListKeyDown;
+                _reputationList.ContextMenu = BuildReputationContextMenu();
             }
             if (_factionNameEdit != null)
             {
@@ -165,6 +200,14 @@ namespace OdyTools.Editors
             if (_reputationValueSpin != null)
             {
                 _reputationValueSpin.ValueChanged += (s, e) => ApplyReputationEdits();
+            }
+            if (_reputationFactionId1Spin != null)
+            {
+                _reputationFactionId1Spin.ValueChanged += (s, e) => ApplyReputationEdits();
+            }
+            if (_reputationFactionId2Spin != null)
+            {
+                _reputationFactionId2Spin.ValueChanged += (s, e) => ApplyReputationEdits();
             }
             if (_addFactionButton != null)
             {
@@ -184,10 +227,59 @@ namespace OdyTools.Editors
             }
         }
 
+        private ContextMenu BuildFactionContextMenu()
+        {
+            var menu = new ContextMenu();
+            var remove = new MenuItem { Name = "ctxRemoveFaction", Header = "Remove Faction" };
+            remove.Click += OnRemoveFaction;
+            var add = new MenuItem { Name = "ctxAddFaction", Header = "Add Faction" };
+            add.Click += OnAddFaction;
+            menu.Items.Add(remove);
+            menu.Items.Add(add);
+            menu.Opened += (s, e) => remove.IsEnabled = _factionList != null && _factionList.SelectedIndex >= 0;
+            return menu;
+        }
+
+        private ContextMenu BuildReputationContextMenu()
+        {
+            var menu = new ContextMenu();
+            var remove = new MenuItem { Name = "ctxRemoveReputation", Header = "Remove Reputation" };
+            remove.Click += OnRemoveReputation;
+            var add = new MenuItem { Name = "ctxAddReputation", Header = "Add Reputation" };
+            add.Click += OnAddReputation;
+            menu.Items.Add(remove);
+            menu.Items.Add(add);
+            menu.Opened += (s, e) => remove.IsEnabled = _reputationList != null && _reputationList.SelectedIndex >= 0;
+            return menu;
+        }
+
+        private void OnFactionListKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Delete)
+            {
+                return;
+            }
+
+            OnRemoveFaction(sender, new RoutedEventArgs());
+            e.Handled = true;
+        }
+
+        private void OnReputationListKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Delete)
+            {
+                return;
+            }
+
+            OnRemoveReputation(sender, new RoutedEventArgs());
+            e.Handled = true;
+        }
+
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
-            _fac = FACHelpers.ReadFac(data);
+            var gff = GFFAuto.ReadGff(data, fileFormat: restype);
+            _fac = FACHelpers.ConstructFac(gff);
             RefreshLists();
             ClearSelectionDetails();
             UpdateStatus();
@@ -198,7 +290,8 @@ namespace OdyTools.Editors
             ApplyFactionEdits();
             ApplyReputationEdits();
             FAC built = CloneFac(_fac);
-            byte[] data = FACHelpers.BytesFac(built, ResourceType.FAC);
+            ResourceType outputType = _restype == ResourceType.FAC_XML ? ResourceType.FAC_XML : ResourceType.FAC;
+            byte[] data = FACHelpers.BytesFac(built, outputType);
             return Tuple.Create(data, new byte[0]);
         }
 
@@ -333,6 +426,14 @@ namespace OdyTools.Editors
             {
                 _reputationValueSpin.Value = 100;
             }
+            if (_reputationFactionId1Spin != null)
+            {
+                _reputationFactionId1Spin.Value = 0;
+            }
+            if (_reputationFactionId2Spin != null)
+            {
+                _reputationFactionId2Spin.Value = 0;
+            }
             _uiSyncInProgress = false;
         }
 
@@ -378,6 +479,14 @@ namespace OdyTools.Editors
             }
             FACReputation rep = _fac.Reputations[index];
             _uiSyncInProgress = true;
+            if (_reputationFactionId1Spin != null)
+            {
+                _reputationFactionId1Spin.Value = rep.FactionId1;
+            }
+            if (_reputationFactionId2Spin != null)
+            {
+                _reputationFactionId2Spin.Value = rep.FactionId2;
+            }
             if (_reputationValueSpin != null)
             {
                 _reputationValueSpin.Value = rep.Reputation;
@@ -431,6 +540,14 @@ namespace OdyTools.Editors
             }
             PushUndo();
             FACReputation rep = _fac.Reputations[index];
+            if (_reputationFactionId1Spin != null)
+            {
+                rep.FactionId1 = ClampFactionId((int)(_reputationFactionId1Spin.Value ?? rep.FactionId1));
+            }
+            if (_reputationFactionId2Spin != null)
+            {
+                rep.FactionId2 = ClampFactionId((int)(_reputationFactionId2Spin.Value ?? rep.FactionId2));
+            }
             if (_reputationValueSpin != null)
             {
                 rep.Reputation = (int)(_reputationValueSpin.Value ?? 100);
@@ -518,6 +635,22 @@ namespace OdyTools.Editors
             {
                 _statusText.Text = string.Format("Factions: {0}, Reputations: {1}", _fac.Factions.Count, _fac.Reputations.Count);
             }
+        }
+
+        private int ClampFactionId(int value)
+        {
+            if (_fac == null || _fac.Factions.Count == 0)
+            {
+                return 0;
+            }
+
+            if (value < 0)
+            {
+                return 0;
+            }
+
+            int max = _fac.Factions.Count - 1;
+            return value > max ? max : value;
         }
     }
 }

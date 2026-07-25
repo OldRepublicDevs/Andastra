@@ -172,26 +172,7 @@ namespace OdyTools.Editors
 
         private static ResourceType[] GetSupportedTypes()
         {
-            return new[]
-            {
-                ResourceType.ARE,
-                ResourceType.DLG,
-                ResourceType.GFF_XML,
-                ResourceType.GFF,
-                ResourceType.GIT,
-                ResourceType.IFO,
-                ResourceType.JRL,
-                ResourceType.PTH,
-                ResourceType.UTC,
-                ResourceType.UTD,
-                ResourceType.UTE,
-                ResourceType.UTI,
-                ResourceType.UTM,
-                ResourceType.UTP,
-                ResourceType.UTS,
-                ResourceType.UTT,
-                ResourceType.UTW
-            };
+            return ResourceType.GetAllGffTypes();
         }
 
         private void InitializeComponent()
@@ -449,17 +430,17 @@ namespace OdyTools.Editors
 
             try
             {
-                _treeView = this.FindControl<TreeView>("treeView");
-                var fieldBoxBorder = this.FindControl<Border>("fieldBox");
+                _treeView = EditorHelpers.FindControlSafe<TreeView>(this, "treeView");
+                var fieldBoxBorder = EditorHelpers.FindControlSafe<Border>(this, "fieldBox");
                 if (fieldBoxBorder != null)
                 {
                     _fieldBoxBorder = fieldBoxBorder;
                     if (fieldBoxBorder.Child is Panel fieldBoxPanel)
                         _fieldBox = fieldBoxPanel;
                 }
-                _typeCombo = this.FindControl<ComboBox>("typeCombo");
-                _labelEdit = this.FindControl<TextBox>("labelEdit");
-                _pagesControl = this.FindControl<ContentControl>("pages");
+                _typeCombo = EditorHelpers.FindControlSafe<ComboBox>(this, "typeCombo");
+                _labelEdit = EditorHelpers.FindControlSafe<TextBox>(this, "labelEdit");
+                _pagesControl = EditorHelpers.FindControlSafe<ContentControl>(this, "pages");
                 if (_typeCombo != null && _typeCombo.ItemsSource == null)
                 {
                     _typeCombo.ItemsSource = Enum.GetValues(typeof(GFFFieldType)).Cast<GFFFieldType>().Select(t => t.ToString()).ToList();
@@ -468,9 +449,9 @@ namespace OdyTools.Editors
                 {
                     CreateTypePages();
                 }
-                _statusText = this.FindControl<TextBlock>("statusText");
-                _zoomCombo = this.FindControl<ComboBox>("zoomCombo");
-                _mainGrid = this.FindControl<Grid>("mainGrid");
+                _statusText = EditorHelpers.FindControlSafe<TextBlock>(this, "statusText");
+                _zoomCombo = EditorHelpers.FindControlSafe<ComboBox>(this, "zoomCombo");
+                _mainGrid = EditorHelpers.FindControlSafe<Grid>(this, "mainGrid");
                 if (_zoomCombo != null)
                 {
                     _zoomCombo.ItemsSource = TreeZoomFactors.Select(z => $"{(int)(z * 100)}%").ToList();
@@ -700,13 +681,13 @@ namespace OdyTools.Editors
         private void RefreshLocalizedStrings()
         {
             EditorHelpers.SetLocalizedMenuHeaders(this, MenuLocalizationItems, prependUnderscore: false);
-            var propertiesHeader = this.FindControl<TextBlock>("propertiesHeader");
+            var propertiesHeader = EditorHelpers.FindControlSafe<TextBlock>(this, "propertiesHeader");
             if (propertiesHeader != null) propertiesHeader.Text = Localization.Tr("Properties");
-            var labelLabel = this.FindControl<TextBlock>("labelLabel");
+            var labelLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "labelLabel");
             if (labelLabel != null) labelLabel.Text = Localization.Tr("Label:");
-            var typeLabel = this.FindControl<TextBlock>("typeLabel");
+            var typeLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "typeLabel");
             if (typeLabel != null) typeLabel.Text = Localization.Tr("Type:");
-            var zoomLabel = this.FindControl<TextBlock>("zoomLabel");
+            var zoomLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "zoomLabel");
             if (zoomLabel != null) zoomLabel.Text = Localization.Tr("Zoom:");
             if (_statusText != null) UpdateStatusBar();
         }
@@ -1147,7 +1128,7 @@ namespace OdyTools.Editors
             }
             try
             {
-                _gff = GFF.FromBytes(data);
+                _gff = GFFAuto.ReadGff(data, fileFormat: restype ?? ResourceType.GFF);
                 LoadGff(_gff);
             }
             catch (Exception ex)
@@ -1238,6 +1219,7 @@ namespace OdyTools.Editors
 
         private void BuildStruct(GFFTreeNodeViewModel item, GFFStruct gffStruct)
         {
+            ClearStructFields(gffStruct);
             foreach (var child in item.Children)
             {
                 string label = child.Label ?? "";
@@ -1320,6 +1302,19 @@ namespace OdyTools.Editors
                     gffStruct.SetList(label, newList);
                     BuildList(child, newList);
                 }
+            }
+        }
+
+        private static void ClearStructFields(GFFStruct gffStruct)
+        {
+            if (gffStruct == null)
+            {
+                return;
+            }
+
+            foreach (string label in gffStruct.FieldNames().ToList())
+            {
+                gffStruct.Remove(label);
             }
         }
 
@@ -1567,7 +1562,7 @@ namespace OdyTools.Editors
             }
             else if (_selectedNode.FieldType == GFFFieldType.ResRef && _lineEdit != null)
             {
-                if ((_selectedNode.Value as ResRef)?.ToString() != (_lineEdit.Text ?? "")) return true;
+                if ((_selectedNode.Value as ResRef)?.ToString() != ResRefFromEditableText(_lineEdit.Text).ToString()) return true;
             }
             else if (_selectedNode.FieldType == GFFFieldType.String && _textEdit != null)
             {
@@ -1627,7 +1622,9 @@ namespace OdyTools.Editors
             {
                 if (_lineEdit != null)
                 {
-                    _selectedNode.Value = new ResRef(_lineEdit.Text);
+                    var value = ResRefFromEditableText(_lineEdit.Text);
+                    _selectedNode.Value = value;
+                    _lineEdit.Text = value.ToString();
                 }
             }
             else if (_selectedNode.FieldType == GFFFieldType.String)
@@ -2116,6 +2113,46 @@ namespace OdyTools.Editors
             }
         }
 
+        internal int RootFieldCountForTests => GetRootNode()?.Children?.Count ?? 0;
+
+        internal void SelectRootChildForTests(string label)
+        {
+            var root = GetRootNode();
+            var node = root?.Children?.FirstOrDefault(child => string.Equals(child.Label, label, StringComparison.OrdinalIgnoreCase));
+            if (node == null)
+            {
+                return;
+            }
+
+            _treeView.SelectedItem = node;
+            _selectedNode = node;
+            LoadItem(node);
+        }
+
+        internal void RemoveSelectedNodeForTests()
+        {
+            RemoveSelectedNodes();
+        }
+
+        internal void EditSelectedResRefForTests(string value)
+        {
+            if (_selectedNode?.FieldType != GFFFieldType.ResRef || _lineEdit == null)
+            {
+                return;
+            }
+
+            _lineEdit.Text = value;
+            UpdateData();
+        }
+
+        internal static ResRef ResRefFromEditableText(string text)
+        {
+            string value = text?.Trim() ?? string.Empty;
+            return string.IsNullOrEmpty(value) || !ResRef.IsValid(value)
+                ? ResRef.FromBlank()
+                : new ResRef(value);
+        }
+
         private void MoveNodeUp()
         {
             var node = GetSelectedNodeFromTree();
@@ -2523,7 +2560,7 @@ namespace OdyTools.Editors
             try
             {
                 if (_statusText == null)
-                    _statusText = this.FindControl<TextBlock>("statusText");
+                    _statusText = EditorHelpers.FindControlSafe<TextBlock>(this, "statusText");
                 if (_statusText == null) return;
                 var root = _treeView?.ItemsSource as IEnumerable<GFFTreeNodeViewModel>;
                 var rootNode = root?.FirstOrDefault();

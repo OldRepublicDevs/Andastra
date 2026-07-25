@@ -18,6 +18,8 @@
     <Compile Include="$(_OdyToolsRoot)\Data\Settings.cs" />
     <Compile Include="$(_OdyToolsRoot)\Data\IEditorInstallationSettings.cs" />
     <Compile Include="$(_OdyToolsRoot)\Data\GlobalSettings.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Blender\BlenderDetection.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Blender\BlenderInfo.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\PathUtils.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\EditorHelpDialog.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\InlineEditorHelp.cs" />

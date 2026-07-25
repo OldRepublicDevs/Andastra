@@ -53,6 +53,7 @@ namespace BioWare.Resource.Formats.ERF
             switch (ext)
             {
                 case "erf":
+                case "hak":
                     return ERFType.ERF;
                 case "mod":
                     return ERFType.MOD;
@@ -64,4 +65,3 @@ namespace BioWare.Resource.Formats.ERF
         }
     }
 }
-

@@ -14,6 +14,7 @@ using BioWare.Resource.Formats.GFF.Generics;
 using OdyTools.Data;
 using OdyTools.Dialogs;
 using OdyTools.Utils;
+using OdyTools.Widgets;
 
 namespace OdyTools.Editors
 {
@@ -37,6 +38,8 @@ namespace OdyTools.Editors
         private bool _undoRedoInProgress;
         private string _findText = "";
         private bool _findMatchCase;
+        private int _findCursorIndex = -1;
+        private string _lastFindFieldKey = "";
 
         // Public property to access IFO for testing (matching Python's self.ifo)
         public IFO Ifo => _ifo;
@@ -44,14 +47,35 @@ namespace OdyTools.Editors
         // Public properties for testing: use generated name references (TagEdit, VoIdEdit, etc. from AXAML).
         // ScriptFields is not a named control in XAML.
         public Dictionary<string, ComboBox> ScriptFields => _scriptFields;
+        internal LocalizedStringEdit NameEditForTest => _nameEdit;
+        internal LocalizedStringEdit DescEditForTest => _descEdit;
+        internal TextBox TagEditForTest => _tagEdit;
+        internal Button TagGenerateButtonForTest => _tagGenerateButton;
+        internal TextBox VoIdEditForTest => _voIdEdit;
+        internal TextBox HakEditForTest => _hakEdit;
+        internal TextBox EntryResrefEditForTest => _entryResrefEdit;
+        internal NumericUpDown EntryXSpinForTest => _entryXSpin;
+        internal NumericUpDown EntryYSpinForTest => _entryYSpin;
+        internal NumericUpDown EntryZSpinForTest => _entryZSpin;
+        internal NumericUpDown EntryDirSpinForTest => _entryDirSpin;
+        internal NumericUpDown DawnHourSpinForTest => _dawnHourSpin;
+        internal NumericUpDown DuskHourSpinForTest => _duskHourSpin;
+        internal NumericUpDown TimeScaleSpinForTest => _timeScaleSpin;
+        internal NumericUpDown StartMonthSpinForTest => _startMonthSpin;
+        internal NumericUpDown StartDaySpinForTest => _startDaySpin;
+        internal NumericUpDown StartHourSpinForTest => _startHourSpin;
+        internal NumericUpDown StartYearSpinForTest => _startYearSpin;
+        internal NumericUpDown XpScaleSpinForTest => _xpScaleSpin;
+        internal string LastFindFieldKeyForTest => _lastFindFieldKey;
 
         // UI Controls - Basic Info
-        private TextBox _nameEdit;
+        private LocalizedStringEdit _nameEdit;
         private Button _nameEditBtn;
         private TextBox _tagEdit;
+        private Button _tagGenerateButton;
         private TextBox _voIdEdit;
         private TextBox _hakEdit;
-        private TextBox _descEdit;
+        private LocalizedStringEdit _descEdit;
         private Button _descEditBtn;
 
         // UI Controls - Entry Point
@@ -74,11 +98,33 @@ namespace OdyTools.Editors
         // UI Controls - Scripts (editable combos with prefilled script resnames)
         private Dictionary<string, ComboBox> _scriptFields;
 
+        internal bool HasStructuredEditorSurface =>
+            _nameEdit != null &&
+            _tagEdit != null &&
+            _voIdEdit != null &&
+            _hakEdit != null &&
+            _descEdit != null &&
+            _entryResrefEdit != null &&
+            _entryXSpin != null &&
+            _entryYSpin != null &&
+            _entryZSpin != null &&
+            _entryDirSpin != null &&
+            _dawnHourSpin != null &&
+            _duskHourSpin != null &&
+            _timeScaleSpin != null &&
+            _startMonthSpin != null &&
+            _startDaySpin != null &&
+            _startHourSpin != null &&
+            _startYearSpin != null &&
+            _xpScaleSpin != null &&
+            _scriptFields != null &&
+            ScriptNames.All(_scriptFields.ContainsKey);
+
         public OdyToolIFO() : this(null, null) { }
         public OdyToolIFO(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolIFO", "ifo",
-                new[] { ResourceType.IFO },
-                new[] { ResourceType.IFO },
+                new[] { ResourceType.IFO, ResourceType.IFO_XML },
+                new[] { ResourceType.IFO, ResourceType.IFO_XML },
                 installation)
         {
             InitializeComponent();
@@ -120,19 +166,19 @@ namespace OdyTools.Editors
 
             // Module Name
             var nameLabel = new TextBlock { Text = "Module Name:" };
-            _nameEdit = new TextBox { IsReadOnly = true };
-            _nameEditBtn = new Button { Content = "Edit Name" };
-            _nameEditBtn.Click += (s, e) => EditName();
+            _nameEdit = new LocalizedStringEdit();
             basicPanel.Children.Add(nameLabel);
             basicPanel.Children.Add(_nameEdit);
-            basicPanel.Children.Add(_nameEditBtn);
 
             // Tag
             var tagLabel = new TextBlock { Text = "Tag:" };
             _tagEdit = new TextBox();
             _tagEdit.TextChanged += (s, e) => OnValueChanged();
+            _tagGenerateButton = new Button { Content = "Generate" };
+            _tagGenerateButton.Click += (s, e) => GenerateTag();
             basicPanel.Children.Add(tagLabel);
             basicPanel.Children.Add(_tagEdit);
+            basicPanel.Children.Add(_tagGenerateButton);
 
             AttachReferenceSearchMenus();
 
@@ -152,12 +198,9 @@ namespace OdyTools.Editors
 
             // Description
             var descLabel = new TextBlock { Text = "Description:" };
-            _descEdit = new TextBox { IsReadOnly = true, AcceptsReturn = true };
-            _descEditBtn = new Button { Content = "Edit Description" };
-            _descEditBtn.Click += (s, e) => EditDescription();
+            _descEdit = new LocalizedStringEdit();
             basicPanel.Children.Add(descLabel);
             basicPanel.Children.Add(_descEdit);
-            basicPanel.Children.Add(_descEditBtn);
 
             basicGroup.Content = basicPanel;
             mainPanel.Children.Add(basicGroup);
@@ -191,7 +234,7 @@ namespace OdyTools.Editors
             entryPanel.Children.Add(_entryZSpin);
 
             var entryDirLabel = new TextBlock { Text = "Entry Direction:" };
-            _entryDirSpin = new NumericUpDown { Minimum = -3.14159m, Maximum = 3.14159m, Increment = 0.01m };
+            _entryDirSpin = new NumericUpDown { Minimum = 0, Maximum = 360, Increment = 1 };
             _entryDirSpin.ValueChanged += (s, e) => OnValueChanged();
             entryPanel.Children.Add(entryDirLabel);
             entryPanel.Children.Add(_entryDirSpin);
@@ -301,6 +344,11 @@ namespace OdyTools.Editors
 
         private void AttachReferenceSearchMenus()
         {
+            if (_tagEdit == null)
+            {
+                return;
+            }
+
             ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
         }
 
@@ -474,7 +522,7 @@ namespace OdyTools.Editors
                 ("actionUndo", Undo),
                 ("actionRedo", Redo),
                 ("actionFind", ShowFindDialog),
-                ("actionFindNext", FindNextMatch),
+                ("actionFindNext", () => FindNextMatch()),
             });
         }
 
@@ -531,7 +579,7 @@ namespace OdyTools.Editors
             {
                 try
                 {
-                    var gff = GFF.FromBytes(data);
+                    var gff = GFFAuto.ReadGff(data, fileFormat: _restype ?? ResourceType.IFO);
                     _ifo = IFOHelpers.ConstructIfo(gff);
                 }
                 catch
@@ -610,18 +658,77 @@ namespace OdyTools.Editors
             dialog.ShowDialog(this);
         }
 
-        private void FindNextMatch()
+        private bool FindNextMatch()
         {
-            if (string.IsNullOrEmpty(_findText)) return;
+            if (string.IsNullOrEmpty(_findText))
+            {
+                _lastFindFieldKey = "";
+                return false;
+            }
+
+            var fields = BuildFindFields();
+            if (fields.Count == 0)
+            {
+                _lastFindFieldKey = "";
+                return false;
+            }
+
             string t = _findMatchCase ? _findText : _findText.ToLowerInvariant();
             bool Match(string value) => value != null && (_findMatchCase ? value : value.ToLowerInvariant()).Contains(t);
-            if (Match(_tagEdit?.Text) && _tagEdit != null) { _tagEdit.Focus(); return; }
-            if (Match(_voIdEdit?.Text) && _voIdEdit != null) { _voIdEdit.Focus(); return; }
-            if (Match(_hakEdit?.Text) && _hakEdit != null) { _hakEdit.Focus(); return; }
-            if (Match(_entryResrefEdit?.Text) && _entryResrefEdit != null) { _entryResrefEdit.Focus(); return; }
+
+            int start = Math.Max(-1, Math.Min(_findCursorIndex, fields.Count - 1));
+            for (int offset = 1; offset <= fields.Count; offset++)
+            {
+                int index = (start + offset) % fields.Count;
+                var field = fields[index];
+                if (!Match(field.value))
+                {
+                    continue;
+                }
+
+                _findCursorIndex = index;
+                _lastFindFieldKey = field.key;
+                field.control?.Focus();
+                return true;
+            }
+
+            _lastFindFieldKey = "";
+            return false;
+        }
+
+        private List<(string key, Control control, string value)> BuildFindFields()
+        {
+            var fields = new List<(string key, Control control, string value)>();
+            if (_tagEdit != null) fields.Add(("tag", _tagEdit, _tagEdit.Text));
+            if (_voIdEdit != null) fields.Add(("vo_id", _voIdEdit, _voIdEdit.Text));
+            if (_hakEdit != null) fields.Add(("hak", _hakEdit, _hakEdit.Text));
+            if (_entryResrefEdit != null) fields.Add(("entry_resref", _entryResrefEdit, _entryResrefEdit.Text));
             if (_scriptFields != null)
+            {
                 foreach (var kv in _scriptFields)
-                    if (Match(kv.Value?.Text)) { kv.Value.Focus(); return; }
+                {
+                    if (kv.Value != null) fields.Add((kv.Key, kv.Value, kv.Value.Text));
+                }
+            }
+
+            return fields;
+        }
+
+        internal void SetFindQueryForTest(string text, bool matchCase = false)
+        {
+            if (!string.Equals(_findText, text ?? "", StringComparison.Ordinal) || _findMatchCase != matchCase)
+            {
+                _findCursorIndex = -1;
+                _lastFindFieldKey = "";
+            }
+
+            _findText = text ?? "";
+            _findMatchCase = matchCase;
+        }
+
+        internal bool FindNextForTest()
+        {
+            return FindNextMatch();
         }
 
         private void OnWindowKeyDown(object sender, KeyEventArgs e)
@@ -636,12 +743,13 @@ namespace OdyTools.Editors
         private void SetupUI()
         {
             // Try to find controls from XAML if available (only if not already set by programmatic UI)
-            if (_nameEdit == null) _nameEdit = EditorHelpers.FindControlSafe<TextBox>(this, "NameEdit");
+            if (_nameEdit == null) _nameEdit = EditorHelpers.FindControlSafe<LocalizedStringEdit>(this, "NameEdit");
             if (_nameEditBtn == null) _nameEditBtn = EditorHelpers.FindControlSafe<Button>(this, "NameEditBtn");
             if (_tagEdit == null) _tagEdit = EditorHelpers.FindControlSafe<TextBox>(this, "TagEdit");
+            if (_tagGenerateButton == null) _tagGenerateButton = EditorHelpers.FindControlSafe<Button>(this, "TagGenerateButton");
             if (_voIdEdit == null) _voIdEdit = EditorHelpers.FindControlSafe<TextBox>(this, "VoIdEdit");
             if (_hakEdit == null) _hakEdit = EditorHelpers.FindControlSafe<TextBox>(this, "HakEdit");
-            if (_descEdit == null) _descEdit = EditorHelpers.FindControlSafe<TextBox>(this, "DescEdit");
+            if (_descEdit == null) _descEdit = EditorHelpers.FindControlSafe<LocalizedStringEdit>(this, "DescEdit");
             if (_descEditBtn == null) _descEditBtn = EditorHelpers.FindControlSafe<Button>(this, "DescEditBtn");
             if (_entryResrefEdit == null) _entryResrefEdit = EditorHelpers.FindControlSafe<TextBox>(this, "EntryResrefEdit");
             if (_entryXSpin == null) _entryXSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "EntryXSpin");
@@ -666,10 +774,18 @@ namespace OdyTools.Editors
             }
             var findBtn = EditorHelpers.FindControlSafe<Button>(this, "findButton");
             if (findBtn != null) findBtn.Click += (s, e) => ShowFindDialog();
+            if (_tagGenerateButton != null) _tagGenerateButton.Click += (s, e) => GenerateTag();
             AttachCommitHandlers();
             AttachReferenceSearchMenus();
+            SetupLocalizedStringEditors();
             Opened += (s, e) => { UpdateStatusBar(); _tagEdit?.Focus(); };
             KeyDown += OnWindowKeyDown;
+        }
+
+        private void SetupLocalizedStringEditors()
+        {
+            _nameEdit?.SetInstallation(_installation);
+            _descEdit?.SetInstallation(_installation);
         }
 
         private void EditName()
@@ -681,10 +797,71 @@ namespace OdyTools.Editors
             var dialog = new LocalizedStringDialog(this, _installation, _ifo.ModName);
             if (dialog.ShowDialog())
             {
-                _ifo.ModName = dialog.LocString;
-                _ifo.Name = _ifo.ModName; // Alias
+                _nameEdit?.SetLocString(dialog.LocString);
                 UpdateUIFromIFO();
             }
+        }
+
+        private void GenerateTag()
+        {
+            if (_ifo == null || _tagEdit == null)
+            {
+                return;
+            }
+
+            string source = GetModuleNameTextForTag();
+            if (string.IsNullOrWhiteSpace(source))
+            {
+                source = _resname;
+            }
+
+            if (string.IsNullOrWhiteSpace(source))
+            {
+                return;
+            }
+
+            string tag = SanitizeGeneratedTag(source);
+            if (string.IsNullOrEmpty(tag))
+            {
+                return;
+            }
+
+            _tagEdit.Text = tag;
+            OnValueChanged();
+            MarkDocumentDirty();
+        }
+
+        private string GetModuleNameTextForTag()
+        {
+            var locstring = _nameEdit?.GetLocString();
+            if (locstring == null)
+            {
+                return "";
+            }
+
+            string name = locstring.Get(Language.English, Gender.Male) ?? locstring.Get(Language.English, Gender.Male, true);
+            if (string.IsNullOrWhiteSpace(name) && locstring.StringRef != -1 && _installation != null)
+            {
+                name = _installation.String(locstring) ?? "";
+            }
+
+            return name ?? "";
+        }
+
+        private static string SanitizeGeneratedTag(string source)
+        {
+            var chars = new List<char>();
+            foreach (char c in source)
+            {
+                if (chars.Count >= 32)
+                {
+                    break;
+                }
+
+                chars.Add(char.IsLetterOrDigit(c) ? char.ToLowerInvariant(c) : '_');
+            }
+
+            return new string(chars.ToArray()).Trim('_');
         }
 
         private void EditDescription()
@@ -696,7 +873,7 @@ namespace OdyTools.Editors
             var dialog = new LocalizedStringDialog(this, _installation, _ifo.Description);
             if (dialog.ShowDialog())
             {
-                _ifo.Description = dialog.LocString;
+                _descEdit?.SetLocString(dialog.LocString);
                 UpdateUIFromIFO();
             }
         }
@@ -722,8 +899,10 @@ namespace OdyTools.Editors
                 return Tuple.Create(new byte[0], new byte[0]);
             }
 
+            ReadUIIntoIfo();
             var gff = IFOHelpers.DismantleIfo(_ifo);
-            byte[] data = GFFAuto.BytesGff(gff, ResourceType.IFO);
+            ResourceType outputType = _restype == ResourceType.IFO_XML ? ResourceType.IFO_XML : ResourceType.IFO;
+            byte[] data = GFFAuto.BytesGff(gff, outputType);
             return Tuple.Create(data, new byte[0]);
         }
 
@@ -745,43 +924,18 @@ namespace OdyTools.Editors
             }
 
             // Basic Info
-            if (_nameEdit != null)
-            {
-                // Get localized string from installation if available
-                if (_installation != null)
-                {
-                    string nameText = _installation.String(_ifo.ModName) ?? "";
-                    _nameEdit.Text = nameText;
-                }
-                else
-                {
-                    // Fallback to string representation if no installation
-                    _nameEdit.Text = _ifo.ModName?.ToString() ?? "";
-                }
-            }
+            _nameEdit?.SetLocString(_ifo.ModName);
             if (_tagEdit != null) _tagEdit.Text = _ifo.Tag ?? "";
             if (_voIdEdit != null) _voIdEdit.Text = _ifo.VoId ?? "";
             if (_hakEdit != null) _hakEdit.Text = _ifo.Hak ?? "";
-            if (_descEdit != null)
-            {
-                if (_installation != null)
-                {
-                    string descText = _installation.String(_ifo.Description) ?? "";
-                    _descEdit.Text = descText;
-                }
-                else
-                {
-                    // Fallback to string representation if no installation
-                    _descEdit.Text = _ifo.Description?.ToString() ?? "";
-                }
-            }
+            _descEdit?.SetLocString(_ifo.Description);
 
             // Entry Point
             if (_entryResrefEdit != null) _entryResrefEdit.Text = _ifo.ResRef.ToString();
             if (_entryXSpin != null) _entryXSpin.Value = (decimal)_ifo.EntryX;
             if (_entryYSpin != null) _entryYSpin.Value = (decimal)_ifo.EntryY;
             if (_entryZSpin != null) _entryZSpin.Value = (decimal)_ifo.EntryZ;
-            if (_entryDirSpin != null) _entryDirSpin.Value = (decimal)_ifo.EntryDirection;
+            if (_entryDirSpin != null) _entryDirSpin.Value = (decimal)RadiansToDegrees(_ifo.EntryDirection);
 
             // Time Settings
             if (_dawnHourSpin != null) _dawnHourSpin.Value = _ifo.DawnHour;
@@ -836,17 +990,30 @@ namespace OdyTools.Editors
                 return;
             }
 
+            ReadUIIntoIfo();
+        }
+
+        private void ReadUIIntoIfo()
+        {
+            if (_ifo == null)
+            {
+                return;
+            }
+
             // Basic Info
+            _ifo.ModName = _nameEdit?.GetLocString() ?? _ifo.ModName ?? LocalizedString.FromInvalid();
+            _ifo.Name = _ifo.ModName; // Alias
             if (_tagEdit != null) _ifo.Tag = _tagEdit.Text ?? "";
             if (_voIdEdit != null) _ifo.VoId = _voIdEdit.Text ?? "";
             if (_hakEdit != null) _ifo.Hak = _hakEdit.Text ?? "";
+            _ifo.Description = _descEdit?.GetLocString() ?? _ifo.Description ?? LocalizedString.FromInvalid();
 
             // Entry Point
             if (_entryResrefEdit != null)
             {
                 try
                 {
-                    _ifo.ResRef = new ResRef(_entryResrefEdit.Text ?? "");
+                    _ifo.ResRef = ResRefFromText(_entryResrefEdit.Text);
                     _ifo.EntryArea = _ifo.ResRef; // Alias
                 }
                 catch
@@ -862,7 +1029,7 @@ namespace OdyTools.Editors
                 _ifo.EntryZ = (float)_entryZSpin.Value.Value;
             if (_entryDirSpin != null && _entryDirSpin.Value.HasValue)
             {
-                _ifo.EntryDirection = (float)_entryDirSpin.Value.Value;
+                _ifo.EntryDirection = (float)DegreesToRadians((double)_entryDirSpin.Value.Value);
                 // Update direction components from angle
                 _ifo.EntryDirectionX = (float)System.Math.Cos(_ifo.EntryDirection);
                 _ifo.EntryDirectionY = (float)System.Math.Sin(_ifo.EntryDirection);
@@ -891,70 +1058,92 @@ namespace OdyTools.Editors
             {
                 if (_scriptFields.ContainsKey("on_heartbeat") && _scriptFields["on_heartbeat"] != null)
                 {
-                    try { _ifo.OnHeartbeat = new ResRef(_scriptFields["on_heartbeat"].Text ?? ""); } catch { }
+                    _ifo.OnHeartbeat = ResRefFromText(_scriptFields["on_heartbeat"].Text);
                 }
                 if (_scriptFields.ContainsKey("on_load") && _scriptFields["on_load"] != null)
                 {
-                    try { _ifo.OnLoad = new ResRef(_scriptFields["on_load"].Text ?? ""); } catch { }
+                    _ifo.OnLoad = ResRefFromText(_scriptFields["on_load"].Text);
                 }
                 if (_scriptFields.ContainsKey("on_start") && _scriptFields["on_start"] != null)
                 {
-                    try { _ifo.OnStart = new ResRef(_scriptFields["on_start"].Text ?? ""); } catch { }
+                    _ifo.OnStart = ResRefFromText(_scriptFields["on_start"].Text);
                 }
                 if (_scriptFields.ContainsKey("on_enter") && _scriptFields["on_enter"] != null)
                 {
-                    try { _ifo.OnClientEnter = new ResRef(_scriptFields["on_enter"].Text ?? ""); } catch { }
+                    _ifo.OnClientEnter = ResRefFromText(_scriptFields["on_enter"].Text);
                 }
                 if (_scriptFields.ContainsKey("on_leave") && _scriptFields["on_leave"] != null)
                 {
-                    try { _ifo.OnClientLeave = new ResRef(_scriptFields["on_leave"].Text ?? ""); } catch { }
+                    _ifo.OnClientLeave = ResRefFromText(_scriptFields["on_leave"].Text);
                 }
                 if (_scriptFields.ContainsKey("on_activate_item") && _scriptFields["on_activate_item"] != null)
                 {
-                    try { _ifo.OnActivateItem = new ResRef(_scriptFields["on_activate_item"].Text ?? ""); } catch { }
+                    _ifo.OnActivateItem = ResRefFromText(_scriptFields["on_activate_item"].Text);
                 }
                 if (_scriptFields.ContainsKey("on_acquire_item") && _scriptFields["on_acquire_item"] != null)
                 {
-                    try { _ifo.OnAcquireItem = new ResRef(_scriptFields["on_acquire_item"].Text ?? ""); } catch { }
+                    _ifo.OnAcquireItem = ResRefFromText(_scriptFields["on_acquire_item"].Text);
                 }
                 if (_scriptFields.ContainsKey("on_user_defined") && _scriptFields["on_user_defined"] != null)
                 {
-                    try { _ifo.OnUserDefined = new ResRef(_scriptFields["on_user_defined"].Text ?? ""); } catch { }
+                    _ifo.OnUserDefined = ResRefFromText(_scriptFields["on_user_defined"].Text);
                 }
                 if (_scriptFields.ContainsKey("on_unacquire_item") && _scriptFields["on_unacquire_item"] != null)
                 {
-                    try { _ifo.OnUnacquireItem = new ResRef(_scriptFields["on_unacquire_item"].Text ?? ""); } catch { }
+                    _ifo.OnUnacquireItem = ResRefFromText(_scriptFields["on_unacquire_item"].Text);
                 }
                 if (_scriptFields.ContainsKey("on_player_death") && _scriptFields["on_player_death"] != null)
                 {
-                    try { _ifo.OnPlayerDeath = new ResRef(_scriptFields["on_player_death"].Text ?? ""); } catch { }
+                    _ifo.OnPlayerDeath = ResRefFromText(_scriptFields["on_player_death"].Text);
                 }
                 if (_scriptFields.ContainsKey("on_player_dying") && _scriptFields["on_player_dying"] != null)
                 {
-                    try { _ifo.OnPlayerDying = new ResRef(_scriptFields["on_player_dying"].Text ?? ""); } catch { }
+                    _ifo.OnPlayerDying = ResRefFromText(_scriptFields["on_player_dying"].Text);
                 }
                 if (_scriptFields.ContainsKey("on_player_levelup") && _scriptFields["on_player_levelup"] != null)
                 {
-                    try { _ifo.OnPlayerLevelUp = new ResRef(_scriptFields["on_player_levelup"].Text ?? ""); } catch { }
+                    _ifo.OnPlayerLevelUp = ResRefFromText(_scriptFields["on_player_levelup"].Text);
                 }
                 if (_scriptFields.ContainsKey("on_player_respawn") && _scriptFields["on_player_respawn"] != null)
                 {
-                    try { _ifo.OnPlayerRespawn = new ResRef(_scriptFields["on_player_respawn"].Text ?? ""); } catch { }
+                    _ifo.OnPlayerRespawn = ResRefFromText(_scriptFields["on_player_respawn"].Text);
                 }
                 if (_scriptFields.ContainsKey("on_player_rest") && _scriptFields["on_player_rest"] != null)
                 {
-                    try { _ifo.OnPlayerRest = new ResRef(_scriptFields["on_player_rest"].Text ?? ""); } catch { }
+                    _ifo.OnPlayerRest = ResRefFromText(_scriptFields["on_player_rest"].Text);
                 }
                 if (_scriptFields.ContainsKey("start_movie") && _scriptFields["start_movie"] != null)
                 {
-                    try { _ifo.StartMovie = new ResRef(_scriptFields["start_movie"].Text ?? ""); } catch { }
+                    _ifo.StartMovie = ResRefFromText(_scriptFields["start_movie"].Text);
                 }
             }
+        }
+
+        private static ResRef ResRefFromText(string text)
+        {
+            string value = (text ?? string.Empty).Trim();
+            return !string.IsNullOrEmpty(value) ? new ResRef(value) : ResRef.FromBlank();
         }
 
         public override void SaveAs()
         {
             _ = RunSaveAsAsync();
+        }
+
+        private static double RadiansToDegrees(double radians)
+        {
+            double degrees = radians * 180.0 / System.Math.PI;
+            if (degrees < 0)
+            {
+                degrees += 360.0;
+            }
+
+            return degrees % 360.0;
+        }
+
+        private static double DegreesToRadians(double degrees)
+        {
+            return degrees * System.Math.PI / 180.0;
         }
     }
 }

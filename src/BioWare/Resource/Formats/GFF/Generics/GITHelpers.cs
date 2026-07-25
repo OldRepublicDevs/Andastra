@@ -72,6 +72,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
                 camera.Position = cameraStruct.Acquire<Vector3>("Position", new Vector3());
                 // Engine default: 0.0
                 camera.Pitch = cameraStruct.Acquire<float>("Pitch", 0.0f);
+                camera.ResRef = cameraStruct.Acquire("TemplateResRef", ResRef.FromBlank());
                 git.Cameras.Add(camera);
             }
 
@@ -217,6 +218,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
                         z: placeableStruct.Acquire("Z", 0.0f)
                     ),
                     Bearing = placeableStruct.Acquire("Bearing", 0.0f),
+                    Tag = placeableStruct.Acquire("Tag", string.Empty),
                     TweakColor = placeableStruct.Acquire("UseTweakColor", 0) != 0 ? BioWare.Common.Color.FromBgrInteger(placeableStruct.Acquire("TweakColor", 0)) : null,
                 };
                 git.Placeables.Add(placeable);
@@ -235,6 +237,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
                         y: soundStruct.Acquire("YPosition", 0.0f),
                         z: soundStruct.Acquire("ZPosition", 0.0f)
                     ),
+                    Tag = soundStruct.Acquire("Tag", string.Empty),
                 };
                 git.Sounds.Add(sound);
             }
@@ -391,6 +394,10 @@ namespace BioWare.Resource.Formats.GFF.Generics
                 cameraStruct.SetVector4("Orientation", camera.Orientation);
                 cameraStruct.SetVector3("Position", camera.Position);
                 cameraStruct.SetSingle("Pitch", camera.Pitch);
+                if (camera.ResRef != null && !string.IsNullOrEmpty(camera.ResRef.ToString()))
+                {
+                    cameraStruct.SetResRef("TemplateResRef", camera.ResRef);
+                }
             }
 
             // Write creature list
@@ -494,6 +501,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
                 {
                     placeableStruct.SetResRef("TemplateResRef", placeable.ResRef);
                 }
+                placeableStruct.SetString("Tag", placeable.Tag ?? string.Empty);
                 placeableStruct.SetSingle("X", placeable.Position.X);
                 placeableStruct.SetSingle("Y", placeable.Position.Y);
                 placeableStruct.SetSingle("Z", placeable.Position.Z);
@@ -516,6 +524,7 @@ namespace BioWare.Resource.Formats.GFF.Generics
                 {
                     soundStruct.SetResRef("TemplateResRef", sound.ResRef);
                 }
+                soundStruct.SetString("Tag", sound.Tag ?? string.Empty);
                 soundStruct.SetSingle("XPosition", sound.Position.X);
                 soundStruct.SetSingle("YPosition", sound.Position.Y);
                 soundStruct.SetSingle("ZPosition", sound.Position.Z);

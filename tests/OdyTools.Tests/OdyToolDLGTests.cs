@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Controls.Documents;
+using Avalonia.Media;
 using Avalonia.Headless;
 using BioWare.Common;
 using BioWare.Resource;
@@ -21,6 +25,24 @@ namespace OdyTools.Tests
     /// </summary>
     public class OdyToolDLGTests
     {
+        private static string VendorTestFile(string relativePath)
+        {
+            var directory = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
+            while (directory != null)
+            {
+                string candidate = Path.Combine(directory.FullName, "vendor", "tests", "test_files", relativePath);
+                if (File.Exists(candidate))
+                {
+                    return candidate;
+                }
+
+                directory = directory.Parent;
+            }
+
+            Assert.Fail("Could not locate vendor test file: " + relativePath);
+            return null;
+        }
+
         /// <summary>
         /// Builds a DLG with multiple entries/replies and starters, matching vendor create_complex_tree structure.
         /// </summary>
@@ -64,6 +86,76 @@ namespace OdyTools.Tests
 
             UpdateListIndex(dlg.Starters, null);
             return dlg;
+        }
+
+        private static string LinkSignature(DLG dlg, DLGLink link)
+        {
+            string nodeType = link.Node is DLGEntry ? "E" : link.Node is DLGReply ? "R" : "N";
+            int nodeIndex = link.Node is DLGEntry entry
+                ? dlg.EntryList.IndexOf(entry)
+                : link.Node is DLGReply reply
+                    ? dlg.ReplyList.IndexOf(reply)
+                    : -1;
+            return string.Join("|",
+                nodeType,
+                nodeIndex.ToString(CultureInfo.InvariantCulture),
+                link.ListIndex.ToString(CultureInfo.InvariantCulture),
+                link.Active1.ToString(),
+                link.Active2.ToString(),
+                link.Logic ? "1" : "0",
+                link.Active1Not ? "1" : "0",
+                link.Active2Not ? "1" : "0",
+                link.Comment ?? string.Empty,
+                link.IsChild ? "1" : "0");
+        }
+
+        private static string NodeSignature(DLG dlg, DLGNode node)
+        {
+            string linkList = string.Join(";", (node.Links ?? new List<DLGLink>()).Select(link => LinkSignature(dlg, link)));
+            return string.Join("|",
+                node.GetType().Name,
+                node.ListIndex.ToString(CultureInfo.InvariantCulture),
+                node.Comment ?? string.Empty,
+                node is DLGEntry entry ? entry.Speaker ?? string.Empty : string.Empty,
+                node.Listener ?? string.Empty,
+                node.Text?.StringRef.ToString(CultureInfo.InvariantCulture) ?? "-1",
+                node.Script1.ToString(),
+                node.Script2.ToString(),
+                node.Sound.ToString(),
+                node.VoResRef.ToString(),
+                node.CameraAngle.ToString(CultureInfo.InvariantCulture),
+                node.Delay.ToString(CultureInfo.InvariantCulture),
+                node.Quest ?? string.Empty,
+                node.QuestEntry.HasValue ? node.QuestEntry.Value.ToString(CultureInfo.InvariantCulture) : "null",
+                node.Animations?.Count.ToString(CultureInfo.InvariantCulture) ?? "0",
+                linkList);
+        }
+
+        private static void AssertDlgStructureEquivalent(DLG actual, DLG expected)
+        {
+            Assert.That(actual.Starters.Count, Is.EqualTo(expected.Starters.Count), "Starter count");
+            Assert.That(actual.EntryList.Count, Is.EqualTo(expected.EntryList.Count), "Entry count");
+            Assert.That(actual.ReplyList.Count, Is.EqualTo(expected.ReplyList.Count), "Reply count");
+            Assert.That(actual.Stunts.Count, Is.EqualTo(expected.Stunts.Count), "Stunt count");
+            Assert.That(actual.ConversationType, Is.EqualTo(expected.ConversationType));
+            Assert.That(actual.ComputerType, Is.EqualTo(expected.ComputerType));
+            Assert.That(actual.Skippable, Is.EqualTo(expected.Skippable));
+            Assert.That(actual.AnimatedCut, Is.EqualTo(expected.AnimatedCut));
+            Assert.That(actual.OldHitCheck, Is.EqualTo(expected.OldHitCheck));
+            Assert.That(actual.UnequipHands, Is.EqualTo(expected.UnequipHands));
+            Assert.That(actual.UnequipItems, Is.EqualTo(expected.UnequipItems));
+            Assert.That(actual.VoId, Is.EqualTo(expected.VoId));
+            Assert.That(actual.OnAbort.ToString(), Is.EqualTo(expected.OnAbort.ToString()));
+            Assert.That(actual.OnEnd.ToString(), Is.EqualTo(expected.OnEnd.ToString()));
+            Assert.That(actual.AmbientTrack.ToString(), Is.EqualTo(expected.AmbientTrack.ToString()));
+            Assert.That(actual.CameraModel.ToString(), Is.EqualTo(expected.CameraModel.ToString()));
+
+            Assert.That(actual.Starters.Select(link => LinkSignature(actual, link)).ToArray(),
+                Is.EqualTo(expected.Starters.Select(link => LinkSignature(expected, link)).ToArray()));
+            Assert.That(actual.EntryList.Select(entry => NodeSignature(actual, entry)).ToArray(),
+                Is.EqualTo(expected.EntryList.Select(entry => NodeSignature(expected, entry)).ToArray()));
+            Assert.That(actual.ReplyList.Select(reply => NodeSignature(actual, reply)).ToArray(),
+                Is.EqualTo(expected.ReplyList.Select(reply => NodeSignature(expected, reply)).ToArray()));
         }
 
         private static void UpdateListIndex(List<DLGLink> links, HashSet<DLGNode> seenNodes)
@@ -155,6 +247,26 @@ namespace OdyTools.Tests
                     Assert.That(built, Is.Not.Null.And.Length.GreaterThan(0));
                     GFF loaded = GFF.FromBytes(built);
                     Assert.That(loaded.Root, Is.Not.Null);
+                }, CancellationToken.None);
+            }
+        }
+
+        [Test]
+        public async Task OdyToolDLG_LoadVendorDlg_BuildPreservesDialogGraph()
+        {
+            byte[] data = File.ReadAllBytes(VendorTestFile("test.dlg"));
+            DLG original = DLGHelper.ReadDlg(data, 0, -1, ResourceType.DLG);
+
+            using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+            {
+                await session.Dispatch(() =>
+                {
+                    var editor = new OdyToolDLG(null, null);
+                    editor.Load("test.dlg", "test", ResourceType.DLG, data);
+
+                    DLG rebuilt = DLGHelper.ReadDlg(editor.Build().Item1, 0, -1, ResourceType.DLG);
+
+                    AssertDlgStructureEquivalent(rebuilt, original);
                 }, CancellationToken.None);
             }
         }
@@ -582,6 +694,83 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public async Task OdyToolDLG_FileGlobalControls_LoadAndBuildRoundtrip()
+        {
+            using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+            {
+                await session.Dispatch(() =>
+                {
+                    var loaded = new DLG
+                    {
+                        ConversationType = DLGConversationType.Type4,
+                        ComputerType = DLGComputerType.Ancient,
+                        DelayEntry = 111,
+                        DelayReply = 222,
+                        VoId = "loaded_vo",
+                        OnAbort = ResRef.FromString("loaded_abort"),
+                        OnEnd = ResRef.FromString("loaded_end"),
+                        AmbientTrack = ResRef.FromString("loaded_ambient"),
+                        CameraModel = ResRef.FromString("loaded_cam"),
+                        Skippable = true,
+                        AnimatedCut = 1,
+                        OldHitCheck = true,
+                        UnequipHands = true,
+                        UnequipItems = true
+                    };
+                    loaded.Starters.Add(new DLGLink(new DLGEntry { Comment = "root" }, 0));
+
+                    var editor = new OdyToolDLG(null, null);
+                    editor.LoadDLG(loaded);
+                    Assert.That(editor.ConversationSelect.SelectedIndex, Is.EqualTo((int)DLGConversationType.Type4));
+                    Assert.That(editor.ComputerSelect.SelectedIndex, Is.EqualTo((int)DLGComputerType.Ancient));
+                    Assert.That(editor.EntryDelaySpin.Value, Is.EqualTo(111));
+                    Assert.That(editor.ReplyDelaySpin.Value, Is.EqualTo(222));
+                    Assert.That(editor.VoIdEdit.Text, Is.EqualTo("loaded_vo"));
+                    Assert.That(editor.OnAbortCombo.Text, Is.EqualTo("loaded_abort"));
+                    Assert.That(editor.OnEndEdit.Text, Is.EqualTo("loaded_end"));
+                    Assert.That(editor.AmbientTrackCombo.Text, Is.EqualTo("loaded_ambient"));
+                    Assert.That(editor.CameraModelSelect.Text, Is.EqualTo("loaded_cam"));
+                    Assert.That(editor.SkippableCheckbox.IsChecked, Is.True);
+                    Assert.That(editor.AnimatedCutCheckbox.IsChecked, Is.True);
+                    Assert.That(editor.OldHitCheckbox.IsChecked, Is.True);
+                    Assert.That(editor.UnequipHandsCheckbox.IsChecked, Is.True);
+                    Assert.That(editor.UnequipAllCheckbox.IsChecked, Is.True);
+
+                    editor.ConversationSelect.SelectedIndex = (int)DLGConversationType.Type5;
+                    editor.ComputerSelect.SelectedIndex = (int)DLGComputerType.Modern;
+                    editor.EntryDelaySpin.Value = 333;
+                    editor.ReplyDelaySpin.Value = 444;
+                    editor.VoIdEdit.Text = "edited_vo";
+                    editor.OnAbortCombo.Text = "edited_abort";
+                    editor.OnEndEdit.Text = "edited_end";
+                    editor.AmbientTrackCombo.Text = "edited_ambient";
+                    editor.CameraModelSelect.Text = "edited_cam";
+                    editor.SkippableCheckbox.IsChecked = false;
+                    editor.AnimatedCutCheckbox.IsChecked = false;
+                    editor.OldHitCheckbox.IsChecked = false;
+                    editor.UnequipHandsCheckbox.IsChecked = false;
+                    editor.UnequipAllCheckbox.IsChecked = false;
+
+                    var saved = DLGHelper.ReadDlg(editor.Build().Item1, 0, -1, ResourceType.DLG);
+                    Assert.That(saved.ConversationType, Is.EqualTo(DLGConversationType.Type5));
+                    Assert.That(saved.ComputerType, Is.EqualTo(DLGComputerType.Modern));
+                    Assert.That(saved.DelayEntry, Is.EqualTo(333));
+                    Assert.That(saved.DelayReply, Is.EqualTo(444));
+                    Assert.That(saved.VoId, Is.EqualTo("edited_vo"));
+                    Assert.That(saved.OnAbort.ToString(), Is.EqualTo("edited_abort"));
+                    Assert.That(saved.OnEnd.ToString(), Is.EqualTo("edited_end"));
+                    Assert.That(saved.AmbientTrack.ToString(), Is.EqualTo("edited_ambient"));
+                    Assert.That(saved.CameraModel.ToString(), Is.EqualTo("edited_cam"));
+                    Assert.That(saved.Skippable, Is.False);
+                    Assert.That(saved.AnimatedCut, Is.EqualTo(0));
+                    Assert.That(saved.OldHitCheck, Is.False);
+                    Assert.That(saved.UnequipHands, Is.False);
+                    Assert.That(saved.UnequipItems, Is.False);
+                }, CancellationToken.None);
+            }
+        }
+
+        [Test]
         public async Task OdyToolDLG_StuntList_AddStunt_BuildRoundtrips()
         {
             using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
@@ -809,6 +998,27 @@ namespace OdyTools.Tests
                     editor.Close();
                 }, CancellationToken.None);
             }
+        }
+
+        [Test]
+        public void OdyToolDLG_FormattedTreeHeader_PreservesBoldAndColorRuns()
+        {
+            var header = OdyToolDLG.BuildFormattedTreeHeaderForTest("<b>Entry</b>: <span style='color:#0277BD'>Hello</span>");
+
+            Assert.That(header.Inlines.Count, Is.EqualTo(3));
+            var first = header.Inlines[0] as Run;
+            var second = header.Inlines[1] as Run;
+            var third = header.Inlines[2] as Run;
+
+            Assert.That(first, Is.Not.Null);
+            Assert.That(first.Text, Is.EqualTo("Entry"));
+            Assert.That(first.FontWeight, Is.EqualTo(FontWeight.Bold));
+            Assert.That(second, Is.Not.Null);
+            Assert.That(second.Text, Is.EqualTo(": "));
+            Assert.That(third, Is.Not.Null);
+            Assert.That(third.Text, Is.EqualTo("Hello"));
+            Assert.That(third.Foreground, Is.InstanceOf<SolidColorBrush>());
+            Assert.That(((SolidColorBrush)third.Foreground).Color, Is.EqualTo(Avalonia.Media.Color.Parse("#0277BD")));
         }
 
         [Test]
@@ -1534,6 +1744,86 @@ namespace OdyTools.Tests
                     Assert.That(dlg.VoId, Is.EqualTo("vo_custom_01"));
                 }, CancellationToken.None);
             }
+        }
+
+        [Test]
+        public async Task OdyToolDLG_EditablePanelFields_CommitBeforeFocusLoss()
+        {
+            using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+            {
+                await session.Dispatch(() =>
+                {
+                    var editor = new OdyToolDLG(null, null);
+                    editor.New();
+                    editor.Model.AddRootNode();
+                    var rootItem = editor.Model.Item(0, 0);
+                    Assert.That(rootItem?.Link?.Node, Is.InstanceOf<DLGEntry>());
+
+                    editor.DialogTree.SelectedItem = rootItem;
+                    editor.Condition1ResrefEdit.Text = "c_live";
+                    editor.Script1ResrefEdit.Text = "k_live";
+                    editor.SoundComboBox.Text = "snd_live";
+                    editor.VoiceComboBox.Text = "vo_live";
+                    editor.SpeakerEdit.Text = "speaker_live";
+                    editor.ListenerEdit.Text = "listener_live";
+                    editor.QuestEdit.Text = "quest_live";
+
+                    var dlg = DLGHelper.ReadDlg(editor.Build().Item1, 0, -1, ResourceType.DLG);
+                    var link = dlg.Starters[0];
+                    var node = link.Node as DLGEntry;
+                    Assert.That(node, Is.Not.Null);
+                    Assert.That(link.Active1.ToString(), Is.EqualTo("c_live"));
+                    Assert.That(node.Script1.ToString(), Is.EqualTo("k_live"));
+                    Assert.That(node.Sound.ToString(), Is.EqualTo("snd_live"));
+                    Assert.That(node.VoResRef.ToString(), Is.EqualTo("vo_live"));
+                    Assert.That(node.Speaker, Is.EqualTo("speaker_live"));
+                    Assert.That(node.Listener, Is.EqualTo("listener_live"));
+                    Assert.That(node.Quest, Is.EqualTo("quest_live"));
+                }, CancellationToken.None);
+            }
+        }
+
+        [Test]
+        public async Task OdyToolDLG_EditablePanelResRefs_TrimAndClearBlankValues()
+        {
+            using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+            {
+                await session.Dispatch(() =>
+                {
+                    var editor = new OdyToolDLG(null, null);
+                    editor.New();
+                    editor.Model.AddRootNode();
+                    var rootItem = editor.Model.Item(0, 0);
+                    Assert.That(rootItem?.Link?.Node, Is.InstanceOf<DLGEntry>());
+
+                    editor.DialogTree.SelectedItem = rootItem;
+                    editor.Condition1ResrefEdit.Text = " c_one ";
+                    editor.Condition2ResrefEdit.Text = " ";
+                    editor.Script1ResrefEdit.Text = " k_one ";
+                    editor.Script2ResrefEdit.Text = " ";
+                    editor.SoundComboBox.Text = " snd_one ";
+                    editor.VoiceComboBox.Text = " ";
+
+                    var dlg = DLGHelper.ReadDlg(editor.Build().Item1, 0, -1, ResourceType.DLG);
+                    var link = dlg.Starters[0];
+                    var node = link.Node as DLGEntry;
+                    Assert.That(node, Is.Not.Null);
+                    Assert.That(link.Active1.ToString(), Is.EqualTo("c_one"));
+                    Assert.That(link.Active2.IsBlank(), Is.True);
+                    Assert.That(node.Script1.ToString(), Is.EqualTo("k_one"));
+                    Assert.That(node.Script2.IsBlank(), Is.True);
+                    Assert.That(node.Sound.ToString(), Is.EqualTo("snd_one"));
+                    Assert.That(node.VoResRef.IsBlank(), Is.True);
+                }, CancellationToken.None);
+            }
+        }
+
+        [Test]
+        public void OdyToolDLG_EditableResRefHelper_ClearsInvalidValues()
+        {
+            Assert.That(OdyToolDLG.ResRefFromEditableText("voice*bad").IsBlank(), Is.True);
+            Assert.That(OdyToolDLG.ResRefFromEditableText(" more_than_16_chars ").IsBlank(), Is.True);
+            Assert.That(OdyToolDLG.ResRefFromEditableText(" valid_ref ").ToString(), Is.EqualTo("valid_ref"));
         }
 
         [Test]

@@ -7,6 +7,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using JetBrains.Annotations;
+using OdyTools.Editors;
 
 namespace OdyTools.Widgets
 {
@@ -94,13 +95,13 @@ namespace OdyTools.Widgets
         private void SetupControls()
         {
             // Find controls from XAML
-            _playPauseButton = this.FindControl<Button>("playPauseButton");
-            _stopButton = this.FindControl<Button>("stopButton");
-            _timeSlider = this.FindControl<Slider>("timeSlider");
-            _timeLabel = this.FindControl<TextBlock>("timeLabel");
-            _muteButton = this.FindControl<Button>("muteButton");
-            _volumeSlider = this.FindControl<Slider>("volumeSlider");
-            _speedButton = this.FindControl<Button>("speedButton");
+            _playPauseButton = FindControlSafe<Button>("playPauseButton");
+            _stopButton = FindControlSafe<Button>("stopButton");
+            _timeSlider = FindControlSafe<Slider>("timeSlider");
+            _timeLabel = FindControlSafe<TextBlock>("timeLabel");
+            _muteButton = FindControlSafe<Button>("muteButton");
+            _volumeSlider = FindControlSafe<Slider>("volumeSlider");
+            _speedButton = FindControlSafe<Button>("speedButton");
 
             if (_playPauseButton != null)
             {
@@ -131,6 +132,11 @@ namespace OdyTools.Widgets
             }
         }
 
+        private T FindControlSafe<T>(string name) where T : Control
+        {
+            return EditorHelpers.FindControlSafe<T>(this, name);
+        }
+
         private void SetupProgrammaticUI()
         {
             // Fallback programmatic UI if XAML is not available
@@ -150,6 +156,7 @@ namespace OdyTools.Widgets
 
             _playPauseButton = new Button
             {
+                Name = "playPauseButton",
                 Content = "▶",
                 Width = 40,
                 Height = 40,
@@ -159,6 +166,7 @@ namespace OdyTools.Widgets
 
             _stopButton = new Button
             {
+                Name = "stopButton",
                 Content = "■",
                 Width = 36,
                 Height = 36,
@@ -169,6 +177,7 @@ namespace OdyTools.Widgets
 
             _timeSlider = new Slider
             {
+                Name = "timeSlider",
                 Minimum = 0,
                 Maximum = 100,
                 Value = 0,
@@ -178,6 +187,7 @@ namespace OdyTools.Widgets
 
             _timeLabel = new TextBlock
             {
+                Name = "timeLabel",
                 Text = "00:00 / 00:00",
                 MinWidth = 100,
                 HorizontalAlignment = HorizontalAlignment.Center,
@@ -187,6 +197,7 @@ namespace OdyTools.Widgets
 
             _muteButton = new Button
             {
+                Name = "muteButton",
                 Content = "🔊",
                 Width = 32,
                 Height = 32,
@@ -196,6 +207,7 @@ namespace OdyTools.Widgets
 
             _volumeSlider = new Slider
             {
+                Name = "volumeSlider",
                 Minimum = 0,
                 Maximum = 100,
                 Value = 75,
@@ -205,6 +217,7 @@ namespace OdyTools.Widgets
 
             _speedButton = new Button
             {
+                Name = "speedButton",
                 Content = "1.0x",
                 Width = 50,
                 Height = 28,

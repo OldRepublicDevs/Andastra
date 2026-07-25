@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Avalonia.Controls;
@@ -100,6 +101,34 @@ namespace OdyTools.Editors
         }
 
         [CanBeNull]
+        public static Tuple<string, Window> OpenFilePath(
+            string filepath,
+            OdyInstallation installation = null,
+            Window parentWindow = null,
+            bool? gffSpecialized = null)
+        {
+            if (string.IsNullOrWhiteSpace(filepath) || !File.Exists(filepath))
+            {
+                return null;
+            }
+
+            var restype = ResourceType.FromExtension(Path.GetExtension(filepath));
+            if (restype == null || restype.IsInvalid)
+            {
+                return null;
+            }
+
+            return OpenResourceEditor(
+                filepath,
+                Path.GetFileNameWithoutExtension(filepath),
+                restype,
+                File.ReadAllBytes(filepath),
+                installation,
+                parentWindow,
+                gffSpecialized);
+        }
+
+        [CanBeNull]
         public static Tuple<string, Window> OpenResourceEditor(
             string filepath = null,
             string resname = null,
@@ -123,6 +152,17 @@ namespace OdyTools.Editors
 
             Editor editor = null;
             var targetType = restype.TargetType();
+            var existingEditor = FindOpenEditor(filepath, resname, restype);
+            if (existingEditor != null)
+            {
+                if (!existingEditor.IsVisible)
+                {
+                    existingEditor.Show();
+                }
+
+                existingEditor.Activate();
+                return Tuple.Create(filepath, (Window)existingEditor);
+            }
 
 #if ARE_STANDALONE
             if (targetType == ResourceType.ARE)
@@ -137,7 +177,7 @@ namespace OdyTools.Editors
             if (targetType == ResourceType.DLG)
                 editor = new OdyTools.Editors.DLG.OdyToolDLG(parentWindow, installation);
 #elif ERF_STANDALONE
-            if (restype == ResourceType.ERF || restype == ResourceType.MOD || restype == ResourceType.RIM || restype == ResourceType.BIF)
+            if (restype == ResourceType.ERF || restype == ResourceType.MOD || restype == ResourceType.RIM || restype == ResourceType.BIF || restype == ResourceType.HAK)
                 editor = new OdyToolERF(parentWindow, installation);
             else if (targetType.Contents == "gff")
                 editor = new OdyToolGFF(parentWindow, installation);
@@ -269,7 +309,14 @@ namespace OdyTools.Editors
             }
             else if (targetType == ResourceType.GUI)
             {
-                editor = new OdyToolGUI(parentWindow, installation);
+                if (installation == null || !gffSpecialized.Value)
+                {
+                    editor = new OdyToolGFF(parentWindow, installation);
+                }
+                else
+                {
+                    editor = new OdyToolGUI(parentWindow, installation);
+                }
             }
             else if (restype == ResourceType.NSS || restype == ResourceType.NCS)
             {
@@ -326,7 +373,14 @@ namespace OdyTools.Editors
             }
             else if (targetType == ResourceType.IFO)
             {
-                editor = new OdyToolIFO(parentWindow, installation);
+                if (installation == null || !gffSpecialized.Value)
+                {
+                    editor = new OdyToolGFF(parentWindow, installation);
+                }
+                else
+                {
+                    editor = new OdyToolIFO(parentWindow, installation);
+                }
             }
             else if (targetType == ResourceType.UTS)
             {
@@ -407,7 +461,14 @@ namespace OdyTools.Editors
             }
             else if (targetType == ResourceType.FAC)
             {
-                editor = new OdyToolFAC(parentWindow, installation);
+                if (installation == null || !gffSpecialized.Value)
+                {
+                    editor = new OdyToolGFF(parentWindow, installation);
+                }
+                else
+                {
+                    editor = new OdyToolFAC(parentWindow, installation);
+                }
             }
             else if (targetType == ResourceType.ARE)
             {
@@ -451,7 +512,8 @@ namespace OdyTools.Editors
                 editor = new OdyToolSAV(parentWindow, installation);
             }
             else if (restype == ResourceType.ERF || restype == ResourceType.MOD ||
-                     restype == ResourceType.RIM || restype == ResourceType.BIF)
+                     restype == ResourceType.RIM || restype == ResourceType.BIF ||
+                     restype == ResourceType.HAK)
             {
                 editor = new OdyToolERF(parentWindow, installation);
             }
@@ -475,6 +537,12 @@ namespace OdyTools.Editors
 
             if (editor == null)
             {
+#if ARE_STANDALONE || AUDIO_STANDALONE || BWM_STANDALONE || DLG_STANDALONE || ERF_STANDALONE || FAC_STANDALONE || GFF_STANDALONE || GUI_STANDALONE || GIT_STANDALONE || IFO_STANDALONE || JRL_STANDALONE || LIP_STANDALONE || LTR_STANDALONE || LYT_STANDALONE || MDL_STANDALONE || NSS_STANDALONE || PTH_STANDALONE || SAV_STANDALONE || SSF_STANDALONE || TPC_STANDALONE || TLK_STANDALONE || TXT_STANDALONE || TWODA_STANDALONE || UTC_STANDALONE || UTD_STANDALONE || UTE_STANDALONE || UTI_STANDALONE || UTM_STANDALONE || UTP_STANDALONE || UTS_STANDALONE || UTT_STANDALONE || UTW_STANDALONE
+                if (TryLaunchSiblingStandaloneEditor(filepath, resname, restype, data))
+                {
+                    return Tuple.Create(filepath, (Window)null);
+                }
+#endif
                 // Note: C# string.Format uses positional placeholders {0}, {1}, etc., so we convert the Python named placeholder {format} to {0}
                 string message = string.Format("The selected file format '{0}' is not yet supported.", restype?.ToString() ?? "unknown");
                 _ = DialogHelper.ShowAsync("Failed to open file", message, ButtonEnum.Ok, IconType.Error);
@@ -552,5 +620,280 @@ namespace OdyTools.Editors
         {
             return ToolsetWindows.FirstOrDefault(w => w.IsVisible);
         }
+
+        private static Editor FindOpenEditor(string filepath, string resname, ResourceType restype)
+        {
+            if (string.IsNullOrWhiteSpace(filepath)
+                || string.IsNullOrWhiteSpace(resname)
+                || restype == null
+                || restype.IsInvalid)
+            {
+                return null;
+            }
+
+            string normalizedPath;
+            try
+            {
+                normalizedPath = Path.GetFullPath(filepath);
+            }
+            catch
+            {
+                normalizedPath = filepath;
+            }
+
+            foreach (var editor in ToolsetWindows.OfType<Editor>())
+            {
+                if (editor.ResourceType == null || editor.ResourceType != restype)
+                {
+                    continue;
+                }
+
+                if (!string.Equals(editor.ResourceName?.Trim(), resname.Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                var editorPath = editor.FilepathPublic;
+                if (string.IsNullOrWhiteSpace(editorPath))
+                {
+                    continue;
+                }
+
+                string normalizedEditorPath;
+                try
+                {
+                    normalizedEditorPath = Path.GetFullPath(editorPath);
+                }
+                catch
+                {
+                    normalizedEditorPath = editorPath;
+                }
+
+                if (string.Equals(normalizedEditorPath, normalizedPath, StringComparison.Ordinal))
+                {
+                    return editor;
+                }
+            }
+
+            return null;
+        }
+
+#if ARE_STANDALONE || AUDIO_STANDALONE || BWM_STANDALONE || DLG_STANDALONE || ERF_STANDALONE || FAC_STANDALONE || GFF_STANDALONE || GUI_STANDALONE || GIT_STANDALONE || IFO_STANDALONE || JRL_STANDALONE || LIP_STANDALONE || LTR_STANDALONE || LYT_STANDALONE || MDL_STANDALONE || NSS_STANDALONE || PTH_STANDALONE || SAV_STANDALONE || SSF_STANDALONE || TPC_STANDALONE || TLK_STANDALONE || TXT_STANDALONE || TWODA_STANDALONE || UTC_STANDALONE || UTD_STANDALONE || UTE_STANDALONE || UTI_STANDALONE || UTM_STANDALONE || UTP_STANDALONE || UTS_STANDALONE || UTT_STANDALONE || UTW_STANDALONE
+        private static bool TryLaunchSiblingStandaloneEditor(string filepath, string resname, ResourceType restype, byte[] data)
+        {
+            if (restype == null || restype.IsInvalid)
+            {
+                return false;
+            }
+
+            var executableName = StandaloneEditorRouting.GetStandaloneExecutableName(restype);
+            if (string.IsNullOrWhiteSpace(executableName))
+            {
+                return false;
+            }
+
+            var executablePath = FindSiblingStandaloneExecutable(executableName);
+            if (string.IsNullOrWhiteSpace(executablePath))
+            {
+                return false;
+            }
+
+            var launchPath = ResolveStandaloneLaunchPath(filepath, resname, restype, data);
+            if (string.IsNullOrWhiteSpace(launchPath))
+            {
+                return false;
+            }
+
+            try
+            {
+                Process.Start(CreateStandaloneProcessStartInfo(executablePath, launchPath));
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to launch sibling standalone editor '{executableName}': {ex.Message}");
+                return false;
+            }
+        }
+
+        private static string ResolveStandaloneLaunchPath(string filepath, string resname, ResourceType restype, byte[] data)
+        {
+            if (IsStandaloneLaunchPath(filepath, restype))
+            {
+                return filepath;
+            }
+
+            if (data == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                var tempDirectory = Path.Combine(Path.GetTempPath(), "OdyToolsStandaloneResources");
+                Directory.CreateDirectory(tempDirectory);
+                var safeResname = SanitizeFileName(string.IsNullOrWhiteSpace(resname) ? "resource" : resname);
+                var extension = string.IsNullOrWhiteSpace(restype.Extension) ? "bin" : restype.Extension.TrimStart('.');
+                var path = Path.Combine(tempDirectory, $"{safeResname}-{Guid.NewGuid():N}.{extension}");
+                File.WriteAllBytes(path, data);
+                return path;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to materialize standalone resource data: {ex.Message}");
+                return null;
+            }
+        }
+
+        private static bool IsStandaloneLaunchPath(string filepath, ResourceType restype)
+        {
+            if (string.IsNullOrWhiteSpace(filepath) || !File.Exists(filepath))
+            {
+                return false;
+            }
+
+            var extension = Path.GetExtension(filepath);
+            if (string.IsNullOrWhiteSpace(extension))
+            {
+                return false;
+            }
+
+            var pathType = ResourceType.FromExtension(extension);
+            if (pathType == null || pathType.IsInvalid)
+            {
+                return false;
+            }
+
+            return pathType == restype || pathType.TargetType() == restype.TargetType();
+        }
+
+        private static string SanitizeFileName(string value)
+        {
+            var invalid = Path.GetInvalidFileNameChars();
+            var chars = value.Select(ch => invalid.Contains(ch) ? '_' : ch).ToArray();
+            var sanitized = new string(chars).Trim();
+            return string.IsNullOrWhiteSpace(sanitized) ? "resource" : sanitized;
+        }
+
+        private static ProcessStartInfo CreateStandaloneProcessStartInfo(string executablePath, string filepath)
+        {
+            var workingDirectory = Path.GetDirectoryName(executablePath) ?? AppContext.BaseDirectory;
+            if (string.Equals(Path.GetExtension(executablePath), ".dll", StringComparison.OrdinalIgnoreCase))
+            {
+                return new ProcessStartInfo
+                {
+                    FileName = "dotnet",
+                    Arguments = QuoteArgument(executablePath) + " --open " + QuoteArgument(filepath),
+                    WorkingDirectory = workingDirectory,
+                    UseShellExecute = false
+                };
+            }
+
+            return new ProcessStartInfo
+            {
+                FileName = executablePath,
+                Arguments = "--open " + QuoteArgument(filepath),
+                WorkingDirectory = workingDirectory,
+                UseShellExecute = false
+            };
+        }
+
+        private static string FindSiblingStandaloneExecutable(string executableName)
+        {
+            var baseDirectory = AppContext.BaseDirectory;
+            var candidates = new[]
+            {
+                Path.Combine(baseDirectory, executableName),
+                Path.Combine(baseDirectory, executableName + ".exe"),
+                Path.Combine(baseDirectory, executableName + ".dll")
+            };
+
+            foreach (var candidate in candidates)
+            {
+                if (File.Exists(candidate))
+                {
+                    return candidate;
+                }
+            }
+
+            var siblingProjectOutput = FindSiblingProjectOutputExecutable(executableName, baseDirectory);
+            if (!string.IsNullOrWhiteSpace(siblingProjectOutput))
+            {
+                return siblingProjectOutput;
+            }
+
+            var directory = new DirectoryInfo(baseDirectory);
+            for (int depth = 0; directory != null && depth < 6; depth++, directory = directory.Parent)
+            {
+                try
+                {
+                    var match = directory.EnumerateFiles(executableName, SearchOption.AllDirectories).FirstOrDefault()
+                        ?? directory.EnumerateFiles(executableName + ".exe", SearchOption.AllDirectories).FirstOrDefault()
+                        ?? directory.EnumerateFiles(executableName + ".dll", SearchOption.AllDirectories).FirstOrDefault();
+                    if (match != null)
+                    {
+                        return match.FullName;
+                    }
+                }
+                catch
+                {
+                    // Keep walking upward; inaccessible folders should not block the normal unsupported-format message.
+                }
+            }
+
+            return null;
+        }
+
+        private static string FindSiblingProjectOutputExecutable(string executableName, string baseDirectory)
+        {
+            var directory = new DirectoryInfo(baseDirectory);
+            while (directory != null)
+            {
+                if (string.Equals(directory.Name, "bin", StringComparison.OrdinalIgnoreCase))
+                {
+                    var relativeOutput = GetPathAfterBin(baseDirectory, directory.FullName);
+                    if (!string.IsNullOrEmpty(relativeOutput))
+                    {
+                        var siblingBase = Path.Combine(directory.FullName, executableName, relativeOutput);
+                        var candidates = new[]
+                        {
+                            Path.Combine(siblingBase, executableName),
+                            Path.Combine(siblingBase, executableName + ".exe"),
+                            Path.Combine(siblingBase, executableName + ".dll")
+                        };
+
+                        foreach (var candidate in candidates)
+                        {
+                            if (File.Exists(candidate))
+                            {
+                                return candidate;
+                            }
+                        }
+                    }
+                }
+
+                directory = directory.Parent;
+            }
+
+            return null;
+        }
+
+        private static string GetPathAfterBin(string baseDirectory, string binDirectory)
+        {
+            var relative = baseDirectory.Substring(binDirectory.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var parts = relative.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length >= 2 && parts[0].StartsWith("OdyTool", StringComparison.OrdinalIgnoreCase))
+            {
+                return Path.Combine(parts.Skip(1).ToArray());
+            }
+
+            return relative;
+        }
+
+        private static string QuoteArgument(string value)
+        {
+            return "\"" + (value ?? string.Empty).Replace("\"", "\\\"") + "\"";
+        }
+#endif
     }
 }

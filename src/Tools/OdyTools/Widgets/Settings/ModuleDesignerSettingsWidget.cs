@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using OdyTools.Data;
+using OdyTools.Editors;
 using OdyTools.Widgets;
 using OdyTools.Widgets.Edit;
 using BioWare.Common;
@@ -30,6 +31,21 @@ namespace OdyTools.Widgets.Settings
         private Button _controlsFcResetButton;
         private Button _controls2dResetButton;
         private Button _coloursResetButton;
+        private bool _resetEventsAttached;
+
+        internal int RegisteredBindCountForTest => _binds.Count;
+        internal int RegisteredColourCountForTest => _colours.Count;
+        internal bool HasCustomizationSurfaceForTest =>
+            _fovSpin != null
+            && _moveCameraSensitivity3dEdit != null
+            && _flySpeedFcEdit != null
+            && _moveCameraSensitivity2dEdit != null
+            && _controls3dResetButton != null
+            && _controlsFcResetButton != null
+            && _controls2dResetButton != null
+            && _coloursResetButton != null
+            && _binds.Count > 0
+            && _colours.Count > 0;
 
         public ModuleDesignerSettingsWidget()
         {
@@ -64,9 +80,113 @@ namespace OdyTools.Widgets.Settings
         {
             var panel = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(10) };
 
-            _fovSpin = new NumericUpDown { Minimum = 0, Maximum = 180, Value = 60 };
-            panel.Children.Add(new TextBlock { Text = "Field of View:" });
-            panel.Children.Add(_fovSpin);
+            AddSectionHeader(panel, "General");
+            _fovSpin = AddNumeric(panel, "fovSpin", "Field of View", 0, 180, 60);
+
+            AddSectionHeader(panel, "3D Controls");
+            _moveCameraSensitivity3dEdit = AddNumeric(panel, "moveCameraSensitivity3dEdit", "Move Camera Sensitivity", 0, 1000, 1);
+            _rotateCameraSensitivity3dEdit = AddNumeric(panel, "rotateCameraSensitivity3dEdit", "Rotate Camera Sensitivity", 0, 1000, 1);
+            _zoomCameraSensitivity3dEdit = AddNumeric(panel, "zoomCameraSensitivity3dEdit", "Zoom Camera Sensitivity", 0, 1000, 1);
+            _boostedMoveCameraSensitivity3dEdit = AddNumeric(panel, "boostedMoveCameraSensitivity3dEdit", "Boosted Move Camera Sensitivity", 0, 1000, 1);
+            AddBindEditors(panel, new[]
+            {
+                "speedBoostCamera3dBind",
+                "moveCameraXY3dBind",
+                "moveCameraZ3dBind",
+                "moveCameraPlane3dBind",
+                "rotateCamera3dBind",
+                "zoomCamera3dBind",
+                "zoomCameraMM3dBind",
+                "rotateSelected3dBind",
+                "moveSelectedXY3dBind",
+                "moveSelectedZ3dBind",
+                "rotateObject3dBind",
+                "selectObject3dBind",
+                "toggleFreeCam3dBind",
+                "deleteObject3dBind",
+                "moveCameraToSelected3dBind",
+                "moveCameraToCursor3dBind",
+                "moveCameraToEntryPoint3dBind",
+                "rotateCameraLeft3dBind",
+                "rotateCameraRight3dBind",
+                "rotateCameraUp3dBind",
+                "rotateCameraDown3dBind",
+                "moveCameraBackward3dBind",
+                "moveCameraForward3dBind",
+                "moveCameraLeft3dBind",
+                "moveCameraRight3dBind",
+                "moveCameraUp3dBind",
+                "moveCameraDown3dBind",
+                "zoomCameraIn3dBind",
+                "zoomCameraOut3dBind",
+                "duplicateObject3dBind",
+                "resetCameraView3dBind"
+            });
+
+            AddSectionHeader(panel, "Free Camera Controls");
+            _flySpeedFcEdit = AddNumeric(panel, "flySpeedFcEdit", "Fly Camera Speed", 0, 1000, 1);
+            _rotateCameraSensitivityFcEdit = AddNumeric(panel, "rotateCameraSensitivityFcEdit", "Rotate Camera Sensitivity", 0, 1000, 1);
+            _boostedFlyCameraSpeedFCEdit = AddNumeric(panel, "boostedFlyCameraSpeedFCEdit", "Boosted Fly Camera Speed", 0, 1000, 1);
+            AddBindEditors(panel, new[]
+            {
+                "speedBoostCameraFcBind",
+                "moveCameraForwardFcBind",
+                "moveCameraBackwardFcBind",
+                "moveCameraLeftFcBind",
+                "moveCameraRightFcBind",
+                "moveCameraUpFcBind",
+                "moveCameraDownFcBind",
+                "rotateCameraLeftFcBind",
+                "rotateCameraRightFcBind",
+                "rotateCameraUpFcBind",
+                "rotateCameraDownFcBind",
+                "zoomCameraInFcBind",
+                "zoomCameraOutFcBind",
+                "moveCameraToEntryPointFcBind",
+                "moveCameraToCursorFcBind"
+            });
+
+            AddSectionHeader(panel, "2D Controls");
+            _moveCameraSensitivity2dEdit = AddNumeric(panel, "moveCameraSensitivity2dEdit", "Move Camera Sensitivity", 0, 1000, 1);
+            _rotateCameraSensitivity2dEdit = AddNumeric(panel, "rotateCameraSensitivity2dEdit", "Rotate Camera Sensitivity", 0, 1000, 1);
+            _zoomCameraSensitivity2dEdit = AddNumeric(panel, "zoomCameraSensitivity2dEdit", "Zoom Camera Sensitivity", 0, 1000, 1);
+            AddBindEditors(panel, new[]
+            {
+                "moveCamera2dBind",
+                "zoomCamera2dBind",
+                "rotateCamera2dBind",
+                "selectObject2dBind",
+                "moveObject2dBind",
+                "rotateObject2dBind",
+                "deleteObject2dBind",
+                "snapCameraToSelected2dBind",
+                "duplicateObject2dBind"
+            });
+
+            AddSectionHeader(panel, "Walkmesh Colours");
+            AddColourEditors(panel, new[]
+            {
+                "undefinedMaterialColour",
+                "dirtMaterialColour",
+                "obscuringMaterialColour",
+                "grassMaterialColour",
+                "stoneMaterialColour",
+                "woodMaterialColour",
+                "waterMaterialColour",
+                "nonWalkMaterialColour",
+                "transparentMaterialColour",
+                "carpetMaterialColour",
+                "metalMaterialColour",
+                "puddlesMaterialColour",
+                "swampMaterialColour",
+                "mudMaterialColour",
+                "leavesMaterialColour",
+                "doorMaterialColour",
+                "lavaMaterialColour",
+                "bottomlessPitMaterialColour",
+                "deepWaterMaterialColour",
+                "nonWalkGrassMaterialColour"
+            });
 
             _controls3dResetButton = new Button { Content = "Reset 3D Controls" };
             _controls3dResetButton.Click += (s, e) => ResetControls3d();
@@ -83,26 +203,75 @@ namespace OdyTools.Widgets.Settings
             panel.Children.Add(_coloursResetButton);
 
             Content = panel;
+            _resetEventsAttached = true;
+        }
+
+        private static void AddSectionHeader(Panel panel, string text)
+        {
+            panel.Children.Add(new TextBlock
+            {
+                Text = text,
+                FontWeight = Avalonia.Media.FontWeight.SemiBold,
+                Margin = new Avalonia.Thickness(0, 8, 0, 0)
+            });
+        }
+
+        private static NumericUpDown AddNumeric(Panel panel, string name, string label, decimal minimum, decimal maximum, decimal value)
+        {
+            var row = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 8 };
+            row.Children.Add(new TextBlock { Text = label + ":", MinWidth = 220, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center });
+            var spin = new NumericUpDown { Name = name, Minimum = minimum, Maximum = maximum, Value = value };
+            row.Children.Add(spin);
+            panel.Children.Add(row);
+            return spin;
+        }
+
+        private static void AddBindEditors(Panel panel, IEnumerable<string> bindNames)
+        {
+            foreach (var bindName in bindNames)
+            {
+                var row = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 8 };
+                row.Children.Add(new TextBlock { Text = bindName + ":", MinWidth = 220, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center });
+                row.Children.Add(new SetBindWidget { Name = bindName + "Edit" });
+                panel.Children.Add(row);
+            }
+        }
+
+        private static void AddColourEditors(Panel panel, IEnumerable<string> colourNames)
+        {
+            foreach (var colourName in colourNames)
+            {
+                var row = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 8 };
+                row.Children.Add(new TextBlock { Text = colourName + ":", MinWidth = 220, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center });
+                var edit = new ColorEdit { Name = colourName + "Edit", AllowAlpha = true };
+                row.Children.Add(edit);
+                panel.Children.Add(row);
+            }
         }
 
         private void SetupUI()
         {
             // Find controls from XAML
-            _fovSpin = this.FindControl<NumericUpDown>("fovSpin");
-            _moveCameraSensitivity3dEdit = this.FindControl<NumericUpDown>("moveCameraSensitivity3dEdit");
-            _rotateCameraSensitivity3dEdit = this.FindControl<NumericUpDown>("rotateCameraSensitivity3dEdit");
-            _zoomCameraSensitivity3dEdit = this.FindControl<NumericUpDown>("zoomCameraSensitivity3dEdit");
-            _boostedMoveCameraSensitivity3dEdit = this.FindControl<NumericUpDown>("boostedMoveCameraSensitivity3dEdit");
-            _flySpeedFcEdit = this.FindControl<NumericUpDown>("flySpeedFcEdit");
-            _rotateCameraSensitivityFcEdit = this.FindControl<NumericUpDown>("rotateCameraSensitivityFcEdit");
-            _boostedFlyCameraSpeedFCEdit = this.FindControl<NumericUpDown>("boostedFlyCameraSpeedFCEdit");
-            _moveCameraSensitivity2dEdit = this.FindControl<NumericUpDown>("moveCameraSensitivity2dEdit");
-            _rotateCameraSensitivity2dEdit = this.FindControl<NumericUpDown>("rotateCameraSensitivity2dEdit");
-            _zoomCameraSensitivity2dEdit = this.FindControl<NumericUpDown>("zoomCameraSensitivity2dEdit");
-            _controls3dResetButton = this.FindControl<Button>("controls3dResetButton");
-            _controlsFcResetButton = this.FindControl<Button>("controlsFcResetButton");
-            _controls2dResetButton = this.FindControl<Button>("controls2dResetButton");
-            _coloursResetButton = this.FindControl<Button>("coloursResetButton");
+            _fovSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "fovSpin") ?? _fovSpin;
+            _moveCameraSensitivity3dEdit = EditorHelpers.FindControlSafe<NumericUpDown>(this, "moveCameraSensitivity3dEdit") ?? _moveCameraSensitivity3dEdit;
+            _rotateCameraSensitivity3dEdit = EditorHelpers.FindControlSafe<NumericUpDown>(this, "rotateCameraSensitivity3dEdit") ?? _rotateCameraSensitivity3dEdit;
+            _zoomCameraSensitivity3dEdit = EditorHelpers.FindControlSafe<NumericUpDown>(this, "zoomCameraSensitivity3dEdit") ?? _zoomCameraSensitivity3dEdit;
+            _boostedMoveCameraSensitivity3dEdit = EditorHelpers.FindControlSafe<NumericUpDown>(this, "boostedMoveCameraSensitivity3dEdit") ?? _boostedMoveCameraSensitivity3dEdit;
+            _flySpeedFcEdit = EditorHelpers.FindControlSafe<NumericUpDown>(this, "flySpeedFcEdit") ?? _flySpeedFcEdit;
+            _rotateCameraSensitivityFcEdit = EditorHelpers.FindControlSafe<NumericUpDown>(this, "rotateCameraSensitivityFcEdit") ?? _rotateCameraSensitivityFcEdit;
+            _boostedFlyCameraSpeedFCEdit = EditorHelpers.FindControlSafe<NumericUpDown>(this, "boostedFlyCameraSpeedFCEdit") ?? _boostedFlyCameraSpeedFCEdit;
+            _moveCameraSensitivity2dEdit = EditorHelpers.FindControlSafe<NumericUpDown>(this, "moveCameraSensitivity2dEdit") ?? _moveCameraSensitivity2dEdit;
+            _rotateCameraSensitivity2dEdit = EditorHelpers.FindControlSafe<NumericUpDown>(this, "rotateCameraSensitivity2dEdit") ?? _rotateCameraSensitivity2dEdit;
+            _zoomCameraSensitivity2dEdit = EditorHelpers.FindControlSafe<NumericUpDown>(this, "zoomCameraSensitivity2dEdit") ?? _zoomCameraSensitivity2dEdit;
+            _controls3dResetButton = EditorHelpers.FindControlSafe<Button>(this, "controls3dResetButton") ?? _controls3dResetButton;
+            _controlsFcResetButton = EditorHelpers.FindControlSafe<Button>(this, "controlsFcResetButton") ?? _controlsFcResetButton;
+            _controls2dResetButton = EditorHelpers.FindControlSafe<Button>(this, "controls2dResetButton") ?? _controls2dResetButton;
+            _coloursResetButton = EditorHelpers.FindControlSafe<Button>(this, "coloursResetButton") ?? _coloursResetButton;
+
+            if (_resetEventsAttached)
+            {
+                return;
+            }
 
             if (_controls3dResetButton != null)
             {
@@ -120,6 +289,7 @@ namespace OdyTools.Widgets.Settings
             {
                 _coloursResetButton.Click += (s, e) => ResetColours();
             }
+            _resetEventsAttached = true;
         }
 
         private void Load3dBindValues()
@@ -263,7 +433,8 @@ namespace OdyTools.Widgets.Settings
         // Helper method to register a bind widget if it exists in the UI
         private void RegisterBindIfExists(string bindName, SettingsProperty<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>> settingsProperty)
         {
-            var widget = this.FindControl<SetBindWidget>(bindName + "BindEdit");
+            var widget = EditorHelpers.FindControlSafe<SetBindWidget>(this, bindName + "Edit")
+                ?? EditorHelpers.FindControlSafe<SetBindWidget>(this, bindName + "BindEdit");
             if (widget != null)
             {
                 var bind = _settings.GetValue(settingsProperty.Name, settingsProperty.Default);
@@ -279,7 +450,8 @@ namespace OdyTools.Widgets.Settings
         // Helper method to register a colour widget if it exists in the UI
         private void RegisterColourIfExists(string colourName, SettingsProperty<int> settingsProperty)
         {
-            var widget = this.FindControl<ColorEdit>(colourName + "ColourEdit");
+            var widget = EditorHelpers.FindControlSafe<ColorEdit>(this, colourName + "Edit")
+                ?? EditorHelpers.FindControlSafe<ColorEdit>(this, colourName + "ColourEdit");
             if (widget != null)
             {
                 int colorValue = _settings.GetValue(settingsProperty.Name, settingsProperty.Default);

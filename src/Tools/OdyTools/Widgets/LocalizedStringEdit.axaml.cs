@@ -6,6 +6,7 @@ using Avalonia.Markup.Xaml;
 using BioWare;
 using OdyTools.Data;
 using OdyTools.Dialogs;
+using OdyTools.Editors;
 
 namespace OdyTools.Widgets
 {
@@ -36,19 +37,16 @@ namespace OdyTools.Widgets
 
             if (xamlLoaded)
             {
-                try
-                {
-                    _locstringText = this.FindControl<TextBox>("locstringText");
-                    _editButton = this.FindControl<Button>("editButton");
-                }
-                catch
-                {
-                    // Controls not found - create programmatic UI
-                    SetupProgrammaticUI();
-                    return;
-                }
+                _locstringText = EditorHelpers.FindControlSafe<TextBox>(this, "locstringText");
+                _editButton = EditorHelpers.FindControlSafe<Button>(this, "editButton");
             }
             else
+            {
+                SetupProgrammaticUI();
+                return;
+            }
+
+            if (_locstringText == null || _editButton == null)
             {
                 SetupProgrammaticUI();
                 return;
@@ -63,8 +61,8 @@ namespace OdyTools.Widgets
         private void SetupProgrammaticUI()
         {
             // Create UI controls programmatically for test scenarios
-            _locstringText = new TextBox { IsReadOnly = true, Watermark = "Localized String" };
-            _editButton = new Button { Content = "Edit" };
+            _locstringText = new TextBox { Name = "locstringText", IsReadOnly = true, Watermark = "Localized String" };
+            _editButton = new Button { Name = "editButton", Content = "Edit" };
             _editButton.Click += (s, e) => EditLocString();
 
             var panel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5 };
@@ -112,11 +110,6 @@ namespace OdyTools.Widgets
 
         private async void EditLocString()
         {
-            if (_installation == null)
-            {
-                return;
-            }
-
             var parentWindow = TopLevel.GetTopLevel(this) as Window;
             var dialog = new LocalizedStringDialog(parentWindow, _installation, _locstring);
             var result = await dialog.ShowDialog<bool>(parentWindow);
@@ -125,6 +118,11 @@ namespace OdyTools.Widgets
                 _locstring = dialog.LocString;
                 UpdateText();
             }
+        }
+
+        internal bool CanOpenEditorWithoutInstallationForTest()
+        {
+            return _installation == null;
         }
     }
 }

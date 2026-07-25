@@ -5,6 +5,7 @@ using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using OdyTools.Data;
+using OdyTools.Editors;
 using OdyTools.Widgets.Edit;
 
 namespace OdyTools.Widgets.Settings
@@ -13,6 +14,7 @@ namespace OdyTools.Widgets.Settings
     {
         private Button _coloursResetButton;
         private Button _controlsResetButton;
+        private bool _resetEventsAttached;
 
         public GITSettingsWidget()
         {
@@ -91,13 +93,19 @@ namespace OdyTools.Widgets.Settings
             panel.Children.Add(_coloursResetButton);
             panel.Children.Add(_controlsResetButton);
             Content = panel;
+            _resetEventsAttached = true;
         }
 
         private void SetupUI()
         {
             // Find controls from XAML (or keep programmatic ones if FindControl returns null)
-            _coloursResetButton = this.FindControl<Button>("coloursResetButton") ?? _coloursResetButton;
-            _controlsResetButton = this.FindControl<Button>("controlsResetButton") ?? _controlsResetButton;
+            _coloursResetButton = EditorHelpers.FindControlSafe<Button>(this, "coloursResetButton") ?? _coloursResetButton;
+            _controlsResetButton = EditorHelpers.FindControlSafe<Button>(this, "controlsResetButton") ?? _controlsResetButton;
+
+            if (_resetEventsAttached)
+            {
+                return;
+            }
 
             if (_coloursResetButton != null)
             {
@@ -107,6 +115,7 @@ namespace OdyTools.Widgets.Settings
             {
                 _controlsResetButton.Click += (s, e) => ResetControls();
             }
+            _resetEventsAttached = true;
         }
 
         private void SetupColourValues()
@@ -145,12 +154,12 @@ namespace OdyTools.Widgets.Settings
             {
                 // Try camelCase version first (PyKotor UI naming convention)
                 var camelCaseName = char.ToLowerInvariant(colorName[0]) + colorName.Substring(1) + "Edit";
-                var colorEdit = this.FindControl<ColorEdit>(camelCaseName);
+                var colorEdit = EditorHelpers.FindControlSafe<ColorEdit>(this, camelCaseName);
 
                 // If not found, try with exact case
                 if (colorEdit == null)
                 {
-                    colorEdit = this.FindControl<ColorEdit>(colorName + "Edit");
+                    colorEdit = EditorHelpers.FindControlSafe<ColorEdit>(this, colorName + "Edit");
                 }
 
                 if (colorEdit != null)
@@ -247,12 +256,12 @@ namespace OdyTools.Widgets.Settings
             {
                 // Try camelCase version first (PyKotor UI naming convention)
                 var camelCaseName = char.ToLowerInvariant(bindName[0]) + bindName.Substring(1) + "Edit";
-                var bindWidget = this.FindControl<SetBindWidget>(camelCaseName);
+                var bindWidget = EditorHelpers.FindControlSafe<SetBindWidget>(this, camelCaseName);
 
                 // If not found, try with exact case
                 if (bindWidget == null)
                 {
-                    bindWidget = this.FindControl<SetBindWidget>(bindName + "Edit");
+                    bindWidget = EditorHelpers.FindControlSafe<SetBindWidget>(this, bindName + "Edit");
                 }
 
                 if (bindWidget != null)

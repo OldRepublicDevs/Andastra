@@ -415,7 +415,7 @@ namespace BioWare.Extract.SaveData
                 ControlledNpc = Acquire("PT_CONTROLLED_NPC", -1);
                 AiState = Acquire("PT_AISTATE", 0);
                 FollowState = Acquire("PT_FOLLOWSTATE", 0);
-                SoloMode = Acquire("PT_SOLOMODE", 0) != 0;
+                SoloMode = Acquire("PT_SOLOMODE", (byte)0) != 0;
 
                 Members.Clear();
                 if (root.Exists("PT_MEMBERS"))
@@ -428,7 +428,7 @@ namespace BioWare.Extract.SaveData
                         {
                             var entry = new PartyMemberEntry
                             {
-                                IsLeader = s.Acquire("PT_IS_LEADER", 0) != 0,
+                                IsLeader = s.Acquire("PT_IS_LEADER", (byte)0) != 0,
                                 Index = s.Acquire("PT_MEMBER_ID", -1)
                             };
                             Members.Add(entry);
@@ -447,8 +447,8 @@ namespace BioWare.Extract.SaveData
                         {
                             var entry = new AvailableNPCEntry
                             {
-                                NpcAvailable = s.Acquire("PT_NPC_AVAIL", 0) != 0,
-                                NpcSelected = s.Acquire("PT_NPC_SELECT", 0) != 0
+                                NpcAvailable = s.Acquire("PT_NPC_AVAIL", (byte)0) != 0,
+                                NpcSelected = s.Acquire("PT_NPC_SELECT", (byte)0) != 0
                             };
                             AvailableNpcs.Add(entry);
                         }
@@ -494,7 +494,7 @@ namespace BioWare.Extract.SaveData
                 TutorialWindowsShown = Acquire("PT_TUT_WND_SHOWN", Array.Empty<byte>());
 
                 // Cheats
-                CheatUsed = Acquire("PT_CHEAT_USED", 0) != 0;
+                CheatUsed = Acquire("PT_CHEAT_USED", (byte)0) != 0;
 
                 // Economy
                 CostMultiplierList = Acquire("PT_COST_MULT_LIS", new GFFList());

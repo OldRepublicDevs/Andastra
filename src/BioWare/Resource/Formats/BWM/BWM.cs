@@ -500,10 +500,8 @@ namespace BioWare.Resource.Formats.BWM
         public List<BWMEdge> Edges()
         {
             List<BWMFace> walkable = WalkableFaces();
-            // OPTIMIZATION: Compute all adjacencies in batch
             List<Tuple<BWMAdjacency, BWMAdjacency, BWMAdjacency>> adjacencies = _ComputeAllAdjacencies(walkable);
 
-            // Build mapping from walkable face index to overall face index
             Dictionary<int, int> walkableToOverall = new Dictionary<int, int>();
             for (int walkableIdx = 0; walkableIdx < walkable.Count; walkableIdx++)
             {
@@ -511,87 +509,115 @@ namespace BioWare.Resource.Formats.BWM
                 walkableToOverall[walkableIdx] = overallIdx;
             }
 
-            HashSet<int> visited = new HashSet<int>();
-            List<BWMEdge> edges = new List<BWMEdge>();
-            List<int> perimeters = new List<int>();
-
-            for (int i = 0; i < walkable.Count; i++)
+            var candidates = new List<BWMEdge>();
+            for (int walkableIdx = 0; walkableIdx < walkable.Count; walkableIdx++)
             {
-                for (int j = 0; j < 3; j++)
+                int overallFaceIdx = walkableToOverall[walkableIdx];
+                var adj = adjacencies[walkableIdx];
+                for (int edgeIndex = 0; edgeIndex < 3; edgeIndex++)
                 {
-                    int overallFaceIdx = walkableToOverall[i];
-                    int edgeIndex = overallFaceIdx * 3 + j;
-                    var adj = adjacencies[i];
-                    BWMAdjacency adjItem = j == 0 ? adj.Item1 : (j == 1 ? adj.Item2 : adj.Item3);
-                    if (adjItem != null || visited.Contains(edgeIndex))
+                    BWMAdjacency adjItem = edgeIndex == 0 ? adj.Item1 : (edgeIndex == 1 ? adj.Item2 : adj.Item3);
+                    if (adjItem != null)
                     {
                         continue;
                     }
 
-                    int nextFace = overallFaceIdx;
-                    int nextEdge = j;
-                    int perimeterLength = 0;
-                    while (nextFace != -1)
-                    {
-                        int? walkableIdxForFace = null;
-                        foreach (var kvp in walkableToOverall)
-                        {
-                            if (kvp.Value == nextFace)
-                            {
-                                walkableIdxForFace = kvp.Key;
-                                break;
-                            }
-                        }
-                        if (walkableIdxForFace.HasValue)
-                        {
-                            var adjEdge = walkableIdxForFace.Value < adjacencies.Count ? adjacencies[walkableIdxForFace.Value] : null;
-                            if (adjEdge != null)
-                            {
-                                BWMAdjacency adjEdgeItem = nextEdge == 0 ? adjEdge.Item1 : (nextEdge == 1 ? adjEdge.Item2 : adjEdge.Item3);
-                                if (adjEdgeItem != null)
-                                {
-                                    int adjEdgeIndex = _IndexByIdentity(adjEdgeItem.Face) * 3 + adjEdgeItem.Edge;
-                                    nextFace = adjEdgeIndex / 3;
-                                    nextEdge = ((adjEdgeIndex % 3) + 1) % 3;
-                                    continue;
-                                }
-                            }
-                        }
-                        edgeIndex = nextFace * 3 + nextEdge;
-                        if (visited.Contains(edgeIndex))
-                        {
-                            nextFace = -1;
-                            if (edges.Count > 0)
-                            {
-                                edges[edges.Count - 1].Final = true;
-                            }
-                            perimeters.Add(perimeterLength);
-                            continue;
-                        }
-                        int faceId = edgeIndex / 3;
-                        int edgeId = edgeIndex % 3;
-                        int? transition = null;
-                        if (edgeId == 0 && Faces[faceId].Trans1.HasValue)
-                        {
-                            transition = Faces[faceId].Trans1;
-                        }
-                        if (edgeId == 1 && Faces[faceId].Trans2.HasValue)
-                        {
-                            transition = Faces[faceId].Trans2;
-                        }
-                        if (edgeId == 2 && Faces[faceId].Trans3.HasValue)
-                        {
-                            transition = Faces[faceId].Trans3;
-                        }
-                        edges.Add(new BWMEdge(Faces[nextFace], edgeId, transition ?? -1));
-                        perimeterLength++;
-                        visited.Add(edgeIndex);
-                        nextEdge = (edgeIndex + 1) % 3;
-                    }
+                    candidates.Add(new BWMEdge(Faces[overallFaceIdx], edgeIndex, TransitionForEdge(Faces[overallFaceIdx], edgeIndex)));
                 }
             }
 
-            return edges;
+            return OrderPerimeterEdges(candidates);
+
+            int TransitionForEdge(BWMFace face, int edgeIndex)
+            {
+                int? transition = null;
+                if (edgeIndex == 0)
+                {
+                    transition = face.Trans1;
+                }
+                else if (edgeIndex == 1)
+                {
+                    transition = face.Trans2;
+                }
+                else if (edgeIndex == 2)
+                {
+                    transition = face.Trans3;
+                }
+
+                return transition ?? -1;
+            }
+
+            Vector3 EdgeStart(BWMEdge edge)
+            {
+                return edge.Index == 0 ? edge.Face.V1 : (edge.Index == 1 ? edge.Face.V2 : edge.Face.V3);
+            }
+
+            Vector3 EdgeEnd(BWMEdge edge)
+            {
+                return edge.Index == 0 ? edge.Face.V2 : (edge.Index == 1 ? edge.Face.V3 : edge.Face.V1);
+            }
+
+            bool SameVertex(Vector3 left, Vector3 right)
+            {
+                return left.Equals(right);
+            }
+
+            List<BWMEdge> OrderPerimeterEdges(List<BWMEdge> unordered)
+            {
+                var ordered = new List<BWMEdge>();
+                var remaining = new List<BWMEdge>(unordered);
+
+                while (remaining.Count > 0)
+                {
+                    BWMEdge first = remaining[0];
+                    remaining.RemoveAt(0);
+                    ordered.Add(first);
+
+                    Vector3 loopStart = EdgeStart(first);
+                    Vector3 cursor = EdgeEnd(first);
+
+                    while (remaining.Count > 0)
+                    {
+                        int nextIndex = -1;
+                        bool matchedStart = true;
+                        for (int candidateIndex = 0; candidateIndex < remaining.Count; candidateIndex++)
+                        {
+                            BWMEdge candidate = remaining[candidateIndex];
+                            if (SameVertex(EdgeStart(candidate), cursor))
+                            {
+                                nextIndex = candidateIndex;
+                                break;
+                            }
+
+                            if (SameVertex(EdgeEnd(candidate), cursor))
+                            {
+                                nextIndex = candidateIndex;
+                                matchedStart = false;
+                                break;
+                            }
+                        }
+
+                        if (nextIndex == -1)
+                        {
+                            break;
+                        }
+
+                        BWMEdge next = remaining[nextIndex];
+                        remaining.RemoveAt(nextIndex);
+                        ordered.Add(next);
+
+                        cursor = matchedStart ? EdgeEnd(next) : EdgeStart(next);
+                        if (SameVertex(cursor, loopStart))
+                        {
+                            break;
+                        }
+                    }
+
+                    ordered[ordered.Count - 1].Final = true;
+                }
+
+                return ordered;
+            }
         }
 
         /// <summary>
@@ -1751,4 +1777,3 @@ namespace BioWare.Resource.Formats.BWM
         }
     }
 }
-

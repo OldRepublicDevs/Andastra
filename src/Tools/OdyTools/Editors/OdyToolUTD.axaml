@@ -34,113 +34,120 @@
       <MenuItem Header="_Help" Name="menuHelp"/>
     </Menu>
 
-    <ScrollViewer DockPanel.Dock="Top" HorizontalScrollBarVisibility="Disabled">
-      <StackPanel Margin="8" Spacing="4">
-        <!-- Basic -->
-        <Expander Header="Basic" IsExpanded="True">
-          <StackPanel Spacing="6">
-            <TextBlock Text="Name:"/>
-            <w:LocalizedStringEdit Name="nameEdit"/>
-            <TextBlock Text="Tag:"/>
-            <StackPanel Orientation="Horizontal" Spacing="8">
-              <TextBox Name="tagEdit"/>
-              <Button Name="tagGenerateBtn" Content="Generate"/>
-            </StackPanel>
-            <TextBlock Text="ResRef:"/>
-            <StackPanel Orientation="Horizontal" Spacing="8">
-              <TextBox Name="resrefEdit"/>
-              <Button Name="resrefGenerateBtn" Content="Generate"/>
-            </StackPanel>
-            <TextBlock Text="Appearance:"/>
-            <widgets:ComboBox2DA Name="appearanceSelect"/>
-            <TextBlock Text="Conversation:"/>
-            <StackPanel Orientation="Horizontal" Spacing="8">
-              <ComboBox Name="conversationEdit" IsEditable="True"/>
-              <Button Name="conversationModifyBtn" Content="Edit"/>
-            </StackPanel>
-          </StackPanel>
-        </Expander>
+    <Grid Name="editorSurface" ColumnDefinitions="320,*,300" ColumnSpacing="10" Margin="10">
+      <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="10">
+          <TextBlock Text="Door Identity" FontWeight="SemiBold" FontSize="14"/>
+          <TextBlock Text="Name"/>
+          <w:LocalizedStringEdit Name="nameEdit"/>
+          <TextBlock Text="Tag"/>
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <TextBox Name="tagEdit"/>
+            <Button Name="tagGenerateBtn" Grid.Column="1" Content="Use ResRef"/>
+          </Grid>
+          <TextBlock Text="Template ResRef"/>
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <TextBox Name="resrefEdit"/>
+            <Button Name="resrefGenerateBtn" Grid.Column="1" Content="Use file name"/>
+          </Grid>
+          <TextBlock Text="Appearance"/>
+          <widgets:ComboBox2DA Name="appearanceSelect"/>
+          <TextBlock Text="Conversation"/>
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <ComboBox Name="conversationEdit" IsEditable="True"/>
+            <Button Name="conversationModifyBtn" Grid.Column="1" Content="Edit"/>
+          </Grid>
 
-        <!-- Advanced -->
-        <Expander Header="Advanced" IsExpanded="False">
-          <StackPanel Spacing="4">
-            <CheckBox Name="min1HpCheckbox" Content="Min 1 HP"/>
-            <CheckBox Name="plotCheckbox" Content="Plot"/>
-            <CheckBox Name="staticCheckbox" Content="Static"/>
-            <CheckBox Name="notBlastableCheckbox" Content="Not Blastable"/>
-            <TextBlock Text="Faction:"/>
-            <widgets:ComboBox2DA Name="factionSelect"/>
-            <TextBlock Text="Animation State:"/>
-            <NumericUpDown Name="animationStateSpin" Minimum="0" Maximum="255"/>
-            <TextBlock Text="Current HP:"/>
-            <NumericUpDown Name="currentHpSpin" Minimum="0" Maximum="32767"/>
-            <TextBlock Text="Maximum HP:"/>
-            <NumericUpDown Name="maxHpSpin" Minimum="0" Maximum="32767"/>
-            <TextBlock Text="Hardness:"/>
-            <NumericUpDown Name="hardnessSpin" Minimum="0" Maximum="255"/>
-            <TextBlock Text="Fortitude:"/>
-            <NumericUpDown Name="fortitudeSpin" Minimum="0" Maximum="255"/>
-            <TextBlock Text="Reflex:"/>
-            <NumericUpDown Name="reflexSpin" Minimum="0" Maximum="255"/>
-            <TextBlock Text="Willpower:"/>
-            <NumericUpDown Name="willSpin" Minimum="0" Maximum="255"/>
-          </StackPanel>
-        </Expander>
+          <Separator/>
+          <TextBlock Text="Flags" FontWeight="SemiBold"/>
+          <WrapPanel>
+            <CheckBox Name="min1HpCheckbox" Content="Min 1 HP" Margin="0,0,10,6"/>
+            <CheckBox Name="plotCheckbox" Content="Plot" Margin="0,0,10,6"/>
+            <CheckBox Name="staticCheckbox" Content="Static" Margin="0,0,10,6"/>
+            <CheckBox Name="notBlastableCheckbox" Content="Not Blastable" Margin="0,0,10,6"/>
+          </WrapPanel>
 
-        <!-- Lock -->
-        <Expander Header="Lock" IsExpanded="False">
-          <StackPanel Spacing="4">
-            <CheckBox Name="needKeyCheckbox" Content="Key Required"/>
-            <CheckBox Name="removeKeyCheckbox" Content="Auto Remove Key"/>
-            <TextBlock Text="Key Name:"/>
-            <TextBox Name="keyEdit"/>
-            <CheckBox Name="lockedCheckbox" Content="Locked"/>
-            <TextBlock Text="Unlock DC:"/>
-            <NumericUpDown Name="openLockSpin" Minimum="0" Maximum="255"/>
-            <TextBlock Text="Unlock Difficulty:"/>
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Faction" VerticalAlignment="Center"/>
+            <widgets:ComboBox2DA Name="factionSelect" Grid.Row="0" Grid.Column="1"/>
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Animation" VerticalAlignment="Center"/>
+            <NumericUpDown Name="animationStateSpin" Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="255"/>
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Current HP" VerticalAlignment="Center"/>
+            <NumericUpDown Name="currentHpSpin" Grid.Row="2" Grid.Column="1" Minimum="0" Maximum="32767"/>
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Max HP" VerticalAlignment="Center"/>
+            <NumericUpDown Name="maxHpSpin" Grid.Row="3" Grid.Column="1" Minimum="0" Maximum="32767"/>
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Hardness" VerticalAlignment="Center"/>
+            <NumericUpDown Name="hardnessSpin" Grid.Row="4" Grid.Column="1" Minimum="0" Maximum="255"/>
+            <TextBlock Grid.Row="5" Grid.Column="0" Text="Fortitude" VerticalAlignment="Center"/>
+            <NumericUpDown Name="fortitudeSpin" Grid.Row="5" Grid.Column="1" Minimum="0" Maximum="255"/>
+            <TextBlock Grid.Row="6" Grid.Column="0" Text="Reflex / Will" VerticalAlignment="Center"/>
+            <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+              <NumericUpDown Name="reflexSpin" Minimum="0" Maximum="255"/>
+              <NumericUpDown Name="willSpin" Minimum="0" Maximum="255"/>
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </ScrollViewer>
+
+      <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto,Auto" RowSpacing="8">
+        <TextBlock Text="Scripts" FontWeight="SemiBold" FontSize="14"/>
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="OnClick" VerticalAlignment="Center"/>
+            <ComboBox Name="onclickEdit" Grid.Row="0" Grid.Column="1" IsEditable="True"/>
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="OnClosed" VerticalAlignment="Center"/>
+            <ComboBox Name="onclosedEdit" Grid.Row="1" Grid.Column="1" IsEditable="True"/>
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="OnDamaged" VerticalAlignment="Center"/>
+            <ComboBox Name="ondamagedEdit" Grid.Row="2" Grid.Column="1" IsEditable="True"/>
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="OnDeath" VerticalAlignment="Center"/>
+            <ComboBox Name="ondeathEdit" Grid.Row="3" Grid.Column="1" IsEditable="True"/>
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="OnOpenFailed" VerticalAlignment="Center"/>
+            <ComboBox Name="onopenfailedEdit" Grid.Row="4" Grid.Column="1" IsEditable="True"/>
+            <TextBlock Grid.Row="5" Grid.Column="0" Text="OnHeartbeat" VerticalAlignment="Center"/>
+            <ComboBox Name="onheartbeatEdit" Grid.Row="5" Grid.Column="1" IsEditable="True"/>
+            <TextBlock Grid.Row="6" Grid.Column="0" Text="OnMelee" VerticalAlignment="Center"/>
+            <ComboBox Name="onmeleeEdit" Grid.Row="6" Grid.Column="1" IsEditable="True"/>
+            <TextBlock Grid.Row="7" Grid.Column="0" Text="OnOpen" VerticalAlignment="Center"/>
+            <ComboBox Name="onopenEdit" Grid.Row="7" Grid.Column="1" IsEditable="True"/>
+            <TextBlock Grid.Row="8" Grid.Column="0" Text="OnUnlock" VerticalAlignment="Center"/>
+            <ComboBox Name="onunlockEdit" Grid.Row="8" Grid.Column="1" IsEditable="True"/>
+            <TextBlock Grid.Row="9" Grid.Column="0" Text="OnUserDefined" VerticalAlignment="Center"/>
+            <ComboBox Name="onuserdefinedEdit" Grid.Row="9" Grid.Column="1" IsEditable="True"/>
+            <TextBlock Grid.Row="10" Grid.Column="0" Text="OnPower" VerticalAlignment="Center"/>
+            <ComboBox Name="onpowerEdit" Grid.Row="10" Grid.Column="1" IsEditable="True"/>
+          </Grid>
+        </ScrollViewer>
+
+        <TextBlock Grid.Row="2" Text="Lock" FontWeight="SemiBold"/>
+        <Grid Grid.Row="3" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+          <CheckBox Name="needKeyCheckbox" Grid.Row="0" Grid.Column="1" Content="Key Required"/>
+          <CheckBox Name="removeKeyCheckbox" Grid.Row="1" Grid.Column="1" Content="Auto Remove Key"/>
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Key Name" VerticalAlignment="Center"/>
+          <TextBox Name="keyEdit" Grid.Row="2" Grid.Column="1"/>
+          <CheckBox Name="lockedCheckbox" Grid.Row="3" Grid.Column="1" Content="Locked"/>
+          <TextBlock Grid.Row="4" Grid.Column="0" Text="Unlock DC" VerticalAlignment="Center"/>
+          <NumericUpDown Name="openLockSpin" Grid.Row="4" Grid.Column="1" Minimum="0" Maximum="255"/>
+          <TextBlock Grid.Row="5" Grid.Column="0" Text="Difficulty / Mod" VerticalAlignment="Center"/>
+          <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal" Spacing="8">
             <NumericUpDown Name="difficultySpin" Minimum="0" Maximum="255"/>
-            <TextBlock Text="Unlock Difficulty Mod:"/>
             <NumericUpDown Name="difficultyModSpin" Minimum="-128" Maximum="127"/>
           </StackPanel>
-        </Expander>
+        </Grid>
+      </Grid>
 
-        <!-- Scripts -->
-        <Expander Header="Scripts" IsExpanded="False">
-          <StackPanel Spacing="4">
-            <TextBlock Text="OnClick:"/>
-            <ComboBox Name="onclickEdit" IsEditable="True"/>
-            <TextBlock Text="OnClosed:"/>
-            <ComboBox Name="onclosedEdit" IsEditable="True"/>
-            <TextBlock Text="OnDamaged:"/>
-            <ComboBox Name="ondamagedEdit" IsEditable="True"/>
-            <TextBlock Text="OnDeath:"/>
-            <ComboBox Name="ondeathEdit" IsEditable="True"/>
-            <TextBlock Text="OnOpenFailed:"/>
-            <ComboBox Name="onopenfailedEdit" IsEditable="True"/>
-            <TextBlock Text="OnHeartbeat:"/>
-            <ComboBox Name="onheartbeatEdit" IsEditable="True"/>
-            <TextBlock Text="OnMelee:"/>
-            <ComboBox Name="onmeleeEdit" IsEditable="True"/>
-            <TextBlock Text="OnOpen:"/>
-            <ComboBox Name="onopenEdit" IsEditable="True"/>
-            <TextBlock Text="OnUnlock:"/>
-            <ComboBox Name="onunlockEdit" IsEditable="True"/>
-            <TextBlock Text="OnUserDefined:"/>
-            <ComboBox Name="onuserdefinedEdit" IsEditable="True"/>
-            <TextBlock Text="OnPower:"/>
-            <ComboBox Name="onpowerEdit" IsEditable="True"/>
+      <Grid Grid.Column="2" RowDefinitions="Auto,220,Auto,Auto,*,Auto" RowSpacing="8">
+        <TextBlock Text="Model Preview" FontWeight="SemiBold" FontSize="14"/>
+        <w:ModelRenderer Name="previewRenderer" Grid.Row="1"/>
+        <Border Name="modelInfoGroupBox" Grid.Row="2" BorderBrush="#D7DBE6" BorderThickness="1" Padding="8">
+          <StackPanel>
+            <TextBlock Text="Model Info" FontWeight="SemiBold"/>
+            <TextBlock Name="modelInfoLabel" TextWrapping="Wrap"/>
           </StackPanel>
-        </Expander>
-
-        <!-- Comments -->
-        <Expander Header="Comments" IsExpanded="False">
-          <StackPanel Spacing="4">
-            <TextBlock Text="Comment:"/>
-            <TextBox Name="commentsEdit" AcceptsReturn="True" AcceptsTab="True"/>
-          </StackPanel>
-        </Expander>
-      </StackPanel>
-    </ScrollViewer>
+        </Border>
+        <TextBlock Grid.Row="3" Text="Comments" FontWeight="SemiBold"/>
+        <TextBox Name="commentsEdit" Grid.Row="4" AcceptsReturn="True" AcceptsTab="True"/>
+      </Grid>
+    </Grid>
 
     <Border DockPanel.Dock="Bottom" Padding="4,2" Background="#E8EAED">
       <TextBlock Name="statusText" Text="Door"/>

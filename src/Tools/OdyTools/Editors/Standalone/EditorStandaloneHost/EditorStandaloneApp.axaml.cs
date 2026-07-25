@@ -1,10 +1,12 @@
 using System;
+using System.IO;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using OdyTools.Common;
 using OdyTools.Data;
 using OdyTools.Editors;
@@ -37,14 +39,16 @@ namespace OdyTools.Editors.Standalone.EditorStandaloneHost
                     : ThemeVariant.Dark;
 
                 Window mainWindow = null;
+                bool showMainWindow = true;
                 try
                 {
-                    string key = (EditorStandaloneProgram.StartupArgs != null && EditorStandaloneProgram.StartupArgs.Length > 0)
-                        ? (EditorStandaloneProgram.StartupArgs[0] ?? "").Trim().ToLowerInvariant()
-                        : "2da";
+                    string key = ResolveStartupEditorKey();
                     mainWindow = CreateEditor(key);
                     if (mainWindow == null)
                         mainWindow = CreateDefaultEditor();
+                    AttachStandaloneChrome(mainWindow);
+
+                    showMainWindow = !TryDelegateUnsupportedStartupFile(mainWindow);
                 }
                 catch (Exception ex)
                 {
@@ -63,7 +67,7 @@ namespace OdyTools.Editors.Standalone.EditorStandaloneHost
                     };
                 }
 
-                if (mainWindow != null)
+                if (mainWindow != null && showMainWindow)
                 {
                     desktop.MainWindow = mainWindow;
                     desktop.MainWindow.Show();
@@ -73,9 +77,62 @@ namespace OdyTools.Editors.Standalone.EditorStandaloneHost
             base.OnFrameworkInitializationCompleted();
         }
 
+        private static string ResolveStartupEditorKey()
+        {
+            if (!string.IsNullOrWhiteSpace(EditorStandaloneProgram.StartupEditorKey))
+            {
+                return StandaloneEditorRouting.NormalizeEditorKey(EditorStandaloneProgram.StartupEditorKey);
+            }
+
+            return StandaloneEditorRouting.GetEditorKeyFromPath(EditorStandaloneProgram.StartupOpenPath) ?? "2da";
+        }
+
+        private static bool TryDelegateUnsupportedStartupFile(Window mainWindow)
+        {
+            var path = EditorStandaloneProgram.StartupOpenPath;
+            if (!(mainWindow is Editor editor) || string.IsNullOrWhiteSpace(path) || (!File.Exists(path) && !Directory.Exists(path)))
+            {
+                return false;
+            }
+
+            if (editor.CanLoadPath(path))
+            {
+                Dispatcher.UIThread.Post(() => editor.TryLoadStartupPath(path), DispatcherPriority.Loaded);
+                return false;
+            }
+
+            var restype = StandaloneEditorRouting.GetResourceTypeFromPath(path);
+            if (restype == null || restype.IsInvalid)
+            {
+                editor.TryLoadStartupPath(path);
+                return false;
+            }
+
+            try
+            {
+                var resname = Path.GetFileNameWithoutExtension(path);
+                var data = File.ReadAllBytes(path);
+                var result = WindowUtils.OpenResourceEditor(path, resname, restype, data, null, mainWindow, null);
+                return result != null;
+            }
+            catch
+            {
+                editor.TryLoadStartupPath(path);
+                return false;
+            }
+        }
+
+        private static void AttachStandaloneChrome(Window mainWindow)
+        {
+            if (mainWindow is Editor editor)
+            {
+                OdyTools.Editors.Standalone.StandaloneInstallationBar.Attach(editor);
+            }
+        }
+
         private static Window CreateDefaultEditor()
         {
-            OdyInstallation installation = null;
+            OdyInstallation installation = CreateStartupInstallation();
             Window parent = null;
 #if TWODA_STANDALONE
             return new OdyTools.Editors.OdyTool2DA(parent, installation);
@@ -148,7 +205,7 @@ namespace OdyTools.Editors.Standalone.EditorStandaloneHost
 
         private static Window CreateEditor(string key)
         {
-            OdyInstallation installation = null;
+            OdyInstallation installation = CreateStartupInstallation();
             Window parent = null;
 #if TWODA_STANDALONE
             return new OdyTools.Editors.OdyTool2DA(parent, installation);
@@ -217,7 +274,9 @@ namespace OdyTools.Editors.Standalone.EditorStandaloneHost
 #else
             switch (key)
             {
-                case "2da": return new OdyTools.Editors.OdyTool2DA(parent, installation);
+                case "2da":
+                case "twoda":
+                    return new OdyTools.Editors.OdyTool2DA(parent, installation);
                 case "are": return new OdyTools.Editors.OdyToolARE(parent, installation);
                 case "bwm": return new OdyTools.Editors.OdyToolBWM(parent, installation);
                 case "dlg": return new OdyTools.Editors.DLG.OdyToolDLG(parent, installation);
@@ -234,7 +293,9 @@ namespace OdyTools.Editors.Standalone.EditorStandaloneHost
                 case "mdl": return new OdyTools.Editors.OdyToolMDL(parent, installation);
                 case "nss": return new OdyTools.Editors.OdyToolNSS(parent, installation);
                 case "pth": return new OdyTools.Editors.OdyToolPTH(parent, installation);
-                case "sav": return new OdyTools.Editors.OdyToolSAV(parent, installation);
+                case "sav":
+                case "savegame":
+                    return new OdyTools.Editors.OdyToolSAV(parent, installation);
                 case "ssf": return new OdyTools.Editors.OdyToolSSF(parent, installation);
                 case "tlk": return new OdyTools.Editors.OdyToolTLK(parent, installation);
                 case "tpc": return new OdyTools.Editors.OdyToolTPC(parent, installation);
@@ -249,9 +310,34 @@ namespace OdyTools.Editors.Standalone.EditorStandaloneHost
                 case "utt": return new OdyTools.Editors.OdyToolUTT(parent, installation);
                 case "utw": return new OdyTools.Editors.OdyToolUTW(parent, installation);
                 case "wav": return new OdyTools.Editors.OdyToolWAV(parent, installation);
+                case "module-designer": return new OdyTools.Windows.ModuleDesignerWindow(parent, installation);
+                case "indoor-builder": return new OdyTools.Windows.IndoorBuilderWindow(parent, installation);
                 default: return null;
             }
 #endif
+        }
+
+        private static OdyInstallation CreateStartupInstallation()
+        {
+            var gamePath = EditorStandaloneProgram.StartupGamePath;
+            if (string.IsNullOrWhiteSpace(gamePath))
+            {
+                return null;
+            }
+
+            var fullPath = Path.GetFullPath(gamePath);
+            if (!Directory.Exists(fullPath))
+            {
+                throw new DirectoryNotFoundException("Game path does not exist: " + fullPath);
+            }
+
+            var name = Path.GetFileName(fullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                name = fullPath;
+            }
+
+            return new OdyInstallation(fullPath, name, EditorStandaloneProgram.StartupGameIsTsl);
         }
     }
 }

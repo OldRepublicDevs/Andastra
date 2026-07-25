@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
-using Avalonia.VisualTree;
 using Avalonia.Platform.Storage;
 using BioWare.Common;
 using OdyTools.Data;
@@ -56,6 +55,10 @@ namespace OdyTools.Editors
         // Public property for testing
         public string FilepathPublic => _filepath;
 
+        internal string ResourceName => _resname;
+
+        internal ResourceType ResourceType => _restype;
+
         // Expose installation for widgets and derived classes
         internal OdyInstallation Installation => _installation;
         private readonly List<byte[]> _undoStack = new List<byte[]>();
@@ -63,6 +66,8 @@ namespace OdyTools.Editors
 
         /// <summary>True when the document has unsaved changes.</summary>
         public bool IsDirty => _dirty;
+
+        public bool IsSaveGameResource => _isSaveGameResource;
 
         /// <summary>Marks the document as modified (unsaved changes). Call when user edits content.</summary>
         protected void MarkDirty()
@@ -111,6 +116,7 @@ namespace OdyTools.Editors
             _writeSupported = writeSupported ?? new ResourceType[0];
 
             SetupEditorFilters();
+            RefreshWindowTitle();
             Opened += OnEditorOpened;
             Closing += OnEditorClosing;
         }
@@ -233,11 +239,30 @@ namespace OdyTools.Editors
 
         private void OnEditorOpened(object sender, EventArgs e)
         {
+            ApplyGenericInstallationSettingsOnOpen();
             EnsureExitMenuItemWired();
             EnsureFileMenuWithRecentFiles();
             EnsureStandardFileMenuActionsWired();
             EnsureSettingsMenuWired();
+            EnsureHelpActionWired();
             EnsureAutosaveService();
+        }
+
+        private void ApplyGenericInstallationSettingsOnOpen()
+        {
+            if (!string.IsNullOrEmpty(SettingsMenuActionName))
+            {
+                return;
+            }
+
+            if (_installation != null)
+            {
+                RefreshWindowTitle();
+                OnInstallationChanged();
+                return;
+            }
+
+            ApplyInstallationFromSettings(new GenericEditorInstallationSettings(_editorTitle));
         }
 
         private void EnsureAutosaveService()
@@ -322,7 +347,27 @@ namespace OdyTools.Editors
         protected virtual string SettingsMenuActionName => null;
 
         /// <summary>Opens the editor's settings dialog. Override in subclasses that have settings (e.g. DLG).</summary>
-        protected virtual Task ShowSettingsDialogAsync() => Task.CompletedTask;
+        protected virtual async Task ShowSettingsDialogAsync()
+        {
+            var settings = new GenericEditorInstallationSettings(_editorTitle);
+            var dialog = new GenericEditorInstallationSettingsDialog(_editorTitle, settings);
+            await dialog.ShowDialog(this);
+            if (dialog.Result == true)
+            {
+                ApplyInstallationFromSettings(settings);
+            }
+        }
+
+        protected virtual void OnInstallationChanged()
+        {
+        }
+
+        internal void SetStandaloneInstallation(OdyInstallation installation)
+        {
+            _installation = installation;
+            RefreshWindowTitle();
+            OnInstallationChanged();
+        }
 
         /// <summary>
         /// Resolves and sets _installation from IEditorInstallationSettings.
@@ -338,6 +383,7 @@ namespace OdyTools.Editors
             {
                 _installation = null;
                 RefreshWindowTitle();
+                OnInstallationChanged();
                 return;
             }
             string name = settings.SelectedInstallationName("")?.Trim();
@@ -352,6 +398,7 @@ namespace OdyTools.Editors
                 {
                     _installation = null;
                     RefreshWindowTitle();
+                    OnInstallationChanged();
                     return;
                 }
                 var installData = installations[name];
@@ -361,15 +408,18 @@ namespace OdyTools.Editors
                 {
                     _installation = null;
                     RefreshWindowTitle();
+                    OnInstallationChanged();
                     return;
                 }
                 _installation = new OdyInstallation(path, name, tsl);
                 RefreshWindowTitle();
+                OnInstallationChanged();
             }
             catch
             {
                 _installation = null;
                 RefreshWindowTitle();
+                OnInstallationChanged();
             }
         }
 
@@ -377,35 +427,69 @@ namespace OdyTools.Editors
 
         private void EnsureSettingsMenuWired()
         {
-            if (_settingsMenuWired || string.IsNullOrEmpty(SettingsMenuActionName)) return;
+            if (_settingsMenuWired) return;
             _settingsMenuWired = true;
-            WireFileAction(SettingsMenuActionName, () => ShowSettingsDialogAsync());
+
+            if (!string.IsNullOrEmpty(SettingsMenuActionName))
+            {
+                WireFileAction(SettingsMenuActionName, () => ShowSettingsDialogAsync());
+                return;
+            }
+
+            var settingsItem = GetOrCreateGenericSettingsMenuItem();
+            if (settingsItem != null)
+            {
+                settingsItem.Click += (s, e) => _ = ShowSettingsDialogAsync();
+            }
+        }
+
+        private MenuItem GetOrCreateGenericSettingsMenuItem()
+        {
+            var fileMenu = FindFileMenuItem();
+            if (fileMenu == null) return null;
+
+            foreach (var item in fileMenu.Items)
+            {
+                if (item is MenuItem existing && IsSettingsHeader(existing.Header))
+                    return existing;
+            }
+
+            var settingsItem = new MenuItem { Header = "_Settings...", Name = "actionSettings" };
+            int exitIndex = -1;
+            for (int i = 0; i < fileMenu.Items.Count; i++)
+            {
+                if (fileMenu.Items[i] is MenuItem m && IsExitHeader(m.Header))
+                {
+                    exitIndex = i;
+                    break;
+                }
+            }
+
+            if (exitIndex >= 0)
+            {
+                fileMenu.Items.Insert(exitIndex, new Separator());
+                fileMenu.Items.Insert(exitIndex, settingsItem);
+            }
+            else
+            {
+                fileMenu.Items.Add(new Separator());
+                fileMenu.Items.Add(settingsItem);
+            }
+
+            return settingsItem;
+        }
+
+        private static bool IsSettingsHeader(object header)
+        {
+            if (header == null) return false;
+            var s = header.ToString()?.Replace("_", "").Replace(".", "").Trim();
+            return string.Equals(s, "Settings", StringComparison.OrdinalIgnoreCase)
+                || s.EndsWith(" Settings", StringComparison.OrdinalIgnoreCase);
         }
 
         private T FindControlSafe<T>(string name) where T : Control
         {
-            try
-            {
-                var c = this.FindControl<T>(name);
-                if (c != null) return c;
-            }
-            catch { }
-            return FindControlByNameRecurse<T>(this, name);
-        }
-
-        private static T FindControlByNameRecurse<T>(Visual parent, string name) where T : Control
-        {
-            if (parent is Control c && c is T match && string.Equals(c.Name, name, StringComparison.Ordinal))
-                return match;
-            foreach (var child in parent.GetVisualChildren())
-            {
-                if (child is Visual v)
-                {
-                    var found = FindControlByNameRecurse<T>(v, name);
-                    if (found != null) return found;
-                }
-            }
-            return null;
+            return EditorHelpers.FindControlSafe<T>(this, name);
         }
 
         private void EnsureExitMenuItemWired()
@@ -423,10 +507,6 @@ namespace OdyTools.Editors
 
         private void AddExitMenuBar()
         {
-            // Skip if Content already has a visual parent (window is shown, can't re-parent controls)
-            if (Content is Control existing && existing.GetVisualParent() != null)
-                return;
-
             try
             {
                 var exitItem = new MenuItem { Header = "E_xit" };
@@ -438,10 +518,14 @@ namespace OdyTools.Editors
                 var dock = new DockPanel();
                 DockPanel.SetDock(menu, Dock.Top);
                 dock.Children.Add(menu);
-                if (Content is Control ctrl)
+
+                Control ctrl = Content as Control;
+                if (ctrl != null)
                 {
+                    Content = null;
                     dock.Children.Add(ctrl);
                 }
+
                 Content = dock;
             }
             catch
@@ -595,6 +679,13 @@ namespace OdyTools.Editors
             return TryResolveReadIdentity(filepath, out _, out _);
         }
 
+        public virtual bool CanLoadPath(string filepath)
+        {
+            return !string.IsNullOrWhiteSpace(filepath)
+                && File.Exists(filepath)
+                && IsPathSupportedByEditor(filepath);
+        }
+
         protected virtual bool TryResolveReadIdentity(string path, out ResourceType restype, out string resname)
         {
             if (TryResolveResourceTypeFromPath(path, _readSupported, out restype, out resname))
@@ -639,6 +730,16 @@ namespace OdyTools.Editors
                 ShowOpenFailedException(ex);
                 return false;
             }
+        }
+
+        public bool TryLoadStartupPath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path) || (!File.Exists(path) && !Directory.Exists(path)))
+            {
+                return false;
+            }
+
+            return TryLoadPathWithMessages(path);
         }
 
         /// <summary>Opens a recent file in this editor. Called when user selects from Recent Files menu. Override to customize.</summary>
@@ -827,10 +928,36 @@ namespace OdyTools.Editors
             _filepath = filepath;
             _resname = resref;
             _restype = restype;
+            _isSaveGameResource = IsSaveGameResourcePath(filepath);
             _revert = data;
             ClearDirty();
             RefreshWindowTitle();
             AddToRecentFilesWhenLoaded(filepath);
+        }
+
+        public static bool IsSaveGameResourcePath(string filepath)
+        {
+            if (string.IsNullOrWhiteSpace(filepath))
+            {
+                return false;
+            }
+
+            var parts = filepath.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < parts.Length; i++)
+            {
+                var part = parts[i];
+                if (string.Equals(part, "SAVEGAME.sav", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                if (i < parts.Length - 1 && string.Equals(Path.GetExtension(part), ".sav", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>Adds the file to recent files list when Load is called with a valid file path. Override to disable or customize.</summary>
@@ -1188,7 +1315,7 @@ namespace OdyTools.Editors
         /// <summary>When editor has .axaml with ContentControl x:Name="contentRoot", injects content there; otherwise sets Window.Content.</summary>
         protected void SetContentOrInject(object content)
         {
-            var root = this.FindControl<ContentControl>("contentRoot");
+            var root = EditorHelpers.FindControlSafe<ContentControl>(this, "contentRoot");
             if (root != null) root.Content = content; else Content = content;
         }
 
@@ -1256,6 +1383,11 @@ namespace OdyTools.Editors
             }
         }
 
+        private void EnsureHelpActionWired()
+        {
+            AddHelpAction();
+        }
+
         public void ShowHelpDialog(string wikiFilename)
         {
             if (string.IsNullOrEmpty(wikiFilename))
@@ -1289,7 +1421,7 @@ namespace OdyTools.Editors
                 // Check if this menu contains a Help item
                 foreach (var item in menu.Items)
                 {
-                    if (item is MenuItem menuItem && menuItem.Header?.ToString() == "Help")
+                    if (item is MenuItem menuItem && IsHelpHeader(menuItem.Header))
                     {
                         return menuItem;
                     }
@@ -1305,41 +1437,40 @@ namespace OdyTools.Editors
             var mainMenu = FindControls<Menu>(this).FirstOrDefault();
             if (mainMenu == null)
             {
-                // Create a menu bar if it doesn't exist
-                // In Avalonia, menus are typically added to a DockPanel or directly to the window
+                var existingContent = Content as Control;
+
                 mainMenu = new Menu();
-                // Add menu to window - wrap content in DockPanel if needed
-                if (Content is Panel panel)
+
+                var dockPanel = new DockPanel();
+                dockPanel.Children.Add(mainMenu);
+                DockPanel.SetDock(mainMenu, Dock.Top);
+
+                if (existingContent != null)
                 {
-                    var dockPanel = new DockPanel();
-                    dockPanel.Children.Add(mainMenu);
-                    DockPanel.SetDock(mainMenu, Dock.Top);
-                    // Move existing content
-                    var children = panel.Children.ToList();
-                    foreach (var child in children)
-                    {
-                        panel.Children.Remove(child);
-                        dockPanel.Children.Add(child);
-                    }
-                    Content = dockPanel;
+                    Content = null;
+                    dockPanel.Children.Add(existingContent);
                 }
-                else
-                {
-                    var dockPanel = new DockPanel();
-                    dockPanel.Children.Add(mainMenu);
-                    DockPanel.SetDock(mainMenu, Dock.Top);
-                    if (Content != null && Content is Control content)
-                    {
-                        dockPanel.Children.Add(content);
-                    }
-                    Content = dockPanel;
-                }
+
+                Content = dockPanel;
             }
 
             // Create Help menu item
-            var helpMenuItem = new MenuItem { Header = "Help" };
+            var helpMenuItem = new MenuItem { Header = "_Help", Name = "menuHelp" };
             mainMenu.Items.Add(helpMenuItem);
             return helpMenuItem;
+        }
+
+        private static bool IsHelpHeader(object header)
+        {
+            return string.Equals(NormalizeMenuHeader(header), "help", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string NormalizeMenuHeader(object header)
+        {
+            return (header?.ToString() ?? string.Empty)
+                .Replace("_", string.Empty)
+                .Replace(".", string.Empty)
+                .Trim();
         }
 
         // Helper method to find Documentation action in Help menu item
@@ -1385,6 +1516,131 @@ namespace OdyTools.Editors
             }
 
             return results;
+        }
+
+        private sealed class GenericEditorInstallationSettings : Settings, IEditorInstallationSettings
+        {
+            public GenericEditorInstallationSettings(string editorTitle)
+                : base(string.IsNullOrWhiteSpace(editorTitle) ? "Editor" : editorTitle)
+            {
+            }
+
+            public bool UseInstallation(bool defaultValue = true)
+            {
+                return GetValue("UseInstallation", defaultValue);
+            }
+
+            public string SelectedInstallationName(string defaultValue = "")
+            {
+                return GetValue("SelectedInstallationName", defaultValue) ?? defaultValue;
+            }
+
+            public void SetUseInstallation(bool value)
+            {
+                SetValue("UseInstallation", value);
+            }
+
+            public void SetSelectedInstallationName(string value)
+            {
+                SetValue("SelectedInstallationName", value ?? string.Empty);
+            }
+        }
+
+        private sealed class GenericEditorInstallationSettingsDialog : OdyTools.Dialogs.EditorInstallationSettingsDialogBase
+        {
+            private readonly GenericEditorInstallationSettings _settings;
+            private readonly CheckBox _useInstallationCheck;
+            private readonly ComboBox _installationCombo;
+
+            public GenericEditorInstallationSettingsDialog(string editorTitle, GenericEditorInstallationSettings settings)
+            {
+                _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+                Title = string.IsNullOrWhiteSpace(editorTitle) ? "Editor Settings" : editorTitle + " Settings";
+                Width = 560;
+                Height = 320;
+                MinWidth = 480;
+                MinHeight = 260;
+                WindowStartupLocation = WindowStartupLocation.CenterOwner;
+
+                var root = new DockPanel { Margin = new Thickness(14) };
+
+                var buttons = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    Spacing = 8,
+                    Margin = new Thickness(0, 12, 0, 0)
+                };
+                var okButton = new Button { Content = "OK", Width = 88 };
+                var cancelButton = new Button { Content = "Cancel", Width = 88 };
+                buttons.Children.Add(okButton);
+                buttons.Children.Add(cancelButton);
+                DockPanel.SetDock(buttons, Dock.Bottom);
+                root.Children.Add(buttons);
+
+                var panel = new StackPanel { Orientation = Orientation.Vertical, Spacing = 10 };
+                panel.Children.Add(new TextBlock
+                {
+                    Text = "Game installation",
+                    FontWeight = Avalonia.Media.FontWeight.Bold
+                });
+
+                _useInstallationCheck = new CheckBox { Content = "Use a game installation for this editor" };
+                panel.Children.Add(_useInstallationCheck);
+
+                var comboRow = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
+                comboRow.Children.Add(new TextBlock
+                {
+                    Text = "Installation:",
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(0, 0, 8, 0)
+                });
+                _installationCombo = new ComboBox { MinWidth = 300 };
+                Grid.SetColumn(_installationCombo, 1);
+                comboRow.Children.Add(_installationCombo);
+                panel.Children.Add(comboRow);
+
+                panel.Children.Add(new TextBlock
+                {
+                    Text = "Choose an existing installation, auto-detect common paths, or add a new install path.",
+                    TextWrapping = Avalonia.Media.TextWrapping.Wrap
+                });
+
+                root.Children.Add(panel);
+                Content = root;
+
+                InitializeInstallationSection(_installationCombo, okButton, cancelButton);
+                LoadValues();
+            }
+
+            private void LoadValues()
+            {
+                bool useInstallation = _settings.UseInstallation(true);
+                _useInstallationCheck.IsChecked = useInstallation;
+
+                string selectedName = _settings.SelectedInstallationName(string.Empty);
+                if (!useInstallation || string.IsNullOrWhiteSpace(selectedName))
+                {
+                    _installationCombo.SelectedIndex = 0;
+                    return;
+                }
+
+                int index = InstallationNames.FindIndex(n => string.Equals(n, selectedName, StringComparison.OrdinalIgnoreCase));
+                _installationCombo.SelectedIndex = index >= 0 ? index + 1 : 0;
+            }
+
+            protected override void SaveValues()
+            {
+                bool useInstallation = _useInstallationCheck.IsChecked == true;
+                _settings.SetUseInstallation(useInstallation);
+
+                string selectedName = string.Empty;
+                if (useInstallation && _installationCombo.SelectedIndex > 0 && _installationCombo.SelectedIndex <= InstallationNames.Count)
+                {
+                    selectedName = InstallationNames[_installationCombo.SelectedIndex - 1];
+                }
+                _settings.SetSelectedInstallationName(selectedName);
+            }
         }
     }
 }

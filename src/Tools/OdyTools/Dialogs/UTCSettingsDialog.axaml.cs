@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using OdyTools.Data;
+using OdyTools.Editors;
 
 namespace OdyTools.Dialogs
 {
@@ -22,11 +23,11 @@ namespace OdyTools.Dialogs
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
-            var installationCombo = this.FindControl<ComboBox>("installationCombo");
-            _saveUnusedFieldsCheck = this.FindControl<CheckBox>("saveUnusedFieldsCheck");
-            _alwaysSaveK2FieldsCheck = this.FindControl<CheckBox>("alwaysSaveK2FieldsCheck");
-            var okButton = this.FindControl<Button>("okButton");
-            var cancelButton = this.FindControl<Button>("cancelButton");
+            var installationCombo = EditorHelpers.FindControlSafe<ComboBox>(this, "installationCombo");
+            _saveUnusedFieldsCheck = EditorHelpers.FindControlSafe<CheckBox>(this, "saveUnusedFieldsCheck");
+            _alwaysSaveK2FieldsCheck = EditorHelpers.FindControlSafe<CheckBox>(this, "alwaysSaveK2FieldsCheck");
+            var okButton = EditorHelpers.FindControlSafe<Button>(this, "okButton");
+            var cancelButton = EditorHelpers.FindControlSafe<Button>(this, "cancelButton");
 
             InitializeInstallationSection(installationCombo, okButton, cancelButton);
             LoadValues();

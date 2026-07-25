@@ -43,6 +43,7 @@ namespace OdyTools.Editors
         public event EventHandler<PointerWheelEventArgs> SigMouseScrolled;
         public event EventHandler<PointerReleasedEventArgs> SigMouseReleased;
         public event EventHandler<KeyEventArgs> SigKeyPressed;
+        public event EventHandler SelectedNodesMoved;
 
         public PTHRenderArea()
         {
@@ -136,7 +137,10 @@ namespace OdyTools.Editors
                 var selected = PathSelection.All();
                 if (selected.Count > 0)
                 {
-                    MoveSelected(delta.X, delta.Y);
+                    if (MoveSelected(delta.X, delta.Y))
+                    {
+                        SelectedNodesMoved?.Invoke(this, EventArgs.Empty);
+                    }
                 }
                 else
                 {
@@ -303,14 +307,15 @@ namespace OdyTools.Editors
         }
 
         // Move selected nodes by the specified delta
-        private void MoveSelected(float deltaX, float deltaY)
+        private bool MoveSelected(float deltaX, float deltaY)
         {
             var selected = PathSelection.All();
             if (selected.Count == 0)
             {
-                return;
+                return false;
             }
 
+            bool moved = false;
             for (int i = 0; i < selected.Count; i++)
             {
                 var point = selected[i];
@@ -320,10 +325,12 @@ namespace OdyTools.Editors
                     var updated = new Vector2(point.X + deltaX, point.Y + deltaY);
                     _pth.SetPoint(index.Value, updated);
                     selected[i] = updated;
+                    moved = true;
                 }
             }
 
             PathSelection.Select(selected);
+            return moved;
         }
 
         public void SetPth(PTH pth)
@@ -454,6 +461,13 @@ namespace OdyTools.Editors
         }
     }
 
+    internal enum PthCanvasToolMode
+    {
+        Select,
+        AddNode,
+        Connect
+    }
+
     public partial class OdyToolPTH : Editor
     {
         private PTH _pth;
@@ -485,7 +499,16 @@ namespace OdyTools.Editors
         private Button _removeNodeButton;
         private Button _addEdgeButton;
         private Button _removeEdgeButton;
+        private RadioButton _toolSelectButton;
+        private RadioButton _toolAddNodeButton;
+        private RadioButton _toolConnectButton;
+        private PthCanvasToolMode _toolMode = PthCanvasToolMode.Select;
+        private int? _connectSourceIndex;
+        private string _xamlLoadError;
         private bool _syncingSelection;
+        private bool _syncingNodeDetails;
+        private Vector2 _lastMouseWorld = Vector2.Zero;
+        private bool _hasMouseWorld;
 
         public OdyToolPTH() : this(null, null) { }
         public OdyToolPTH(Window parent = null, OdyInstallation installation = null)
@@ -566,13 +589,15 @@ namespace OdyTools.Editors
             {
                 AvaloniaXamlLoader.Load(this);
                 xamlLoaded = true;
-                RenderArea = this.FindControl<PTHRenderArea>("pthRenderArea");
-                LeftLabel = this.FindControl<TextBlock>("leftLabel");
-                CenterLabel = this.FindControl<TextBlock>("centerLabel");
-                RightLabel = this.FindControl<TextBlock>("rightLabel");
+                RenderArea = EditorHelpers.FindControlSafe<PTHRenderArea>(this, "pthRenderArea");
+                LeftLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "leftLabel");
+                CenterLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "centerLabel");
+                RightLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "rightLabel");
+                xamlLoaded = RenderArea != null;
             }
-            catch
+            catch (Exception ex)
             {
+                _xamlLoadError = ex.ToString();
                 // XAML not available - will use programmatic UI
             }
 
@@ -590,14 +615,17 @@ namespace OdyTools.Editors
 
         private void SetupUI()
         {
-            _nodeList = this.FindControl<Avalonia.Controls.ListBox>("nodeList");
-            _nodeIndexBox = this.FindControl<TextBox>("nodeIndexBox");
-            _nodePosX = this.FindControl<NumericUpDown>("nodePosX");
-            _nodePosY = this.FindControl<NumericUpDown>("nodePosY");
-            _addNodeHereButton = this.FindControl<Button>("addNodeHereButton");
-            _removeNodeButton = this.FindControl<Button>("removeNodeButton");
-            _addEdgeButton = this.FindControl<Button>("addEdgeButton");
-            _removeEdgeButton = this.FindControl<Button>("removeEdgeButton");
+            _nodeList = EditorHelpers.FindControlSafe<Avalonia.Controls.ListBox>(this, "nodeList");
+            _nodeIndexBox = EditorHelpers.FindControlSafe<TextBox>(this, "nodeIndexBox");
+            _nodePosX = EditorHelpers.FindControlSafe<NumericUpDown>(this, "nodePosX");
+            _nodePosY = EditorHelpers.FindControlSafe<NumericUpDown>(this, "nodePosY");
+            _addNodeHereButton = EditorHelpers.FindControlSafe<Button>(this, "addNodeHereButton");
+            _removeNodeButton = EditorHelpers.FindControlSafe<Button>(this, "removeNodeButton");
+            _addEdgeButton = EditorHelpers.FindControlSafe<Button>(this, "addEdgeButton");
+            _removeEdgeButton = EditorHelpers.FindControlSafe<Button>(this, "removeEdgeButton");
+            _toolSelectButton = EditorHelpers.FindControlSafe<RadioButton>(this, "toolSelectButton");
+            _toolAddNodeButton = EditorHelpers.FindControlSafe<RadioButton>(this, "toolAddNodeButton");
+            _toolConnectButton = EditorHelpers.FindControlSafe<RadioButton>(this, "toolConnectButton");
 
             if (RenderArea != null)
             {
@@ -605,6 +633,7 @@ namespace OdyTools.Editors
                 RenderArea.SigMousePressed += OnRenderAreaMousePressed;
                 RenderArea.SigKeyPressed += OnRenderAreaKeyPressed;
                 RenderArea.SigMouseScrolled += OnRenderAreaMouseScrolled;
+                RenderArea.SelectedNodesMoved += OnRenderAreaSelectedNodesMoved;
                 SetupContextMenu();
             }
 
@@ -619,8 +648,12 @@ namespace OdyTools.Editors
             if (_removeNodeButton != null) _removeNodeButton.Click += (s, e) => RemoveSelectedNodeFromList();
             if (_addEdgeButton != null) _addEdgeButton.Click += (s, e) => AddEdgeBetweenSelected();
             if (_removeEdgeButton != null) _removeEdgeButton.Click += (s, e) => RemoveEdgeBetweenSelected();
+            if (_toolSelectButton != null) _toolSelectButton.Click += (s, e) => SetToolMode(PthCanvasToolMode.Select, updateButtons: false);
+            if (_toolAddNodeButton != null) _toolAddNodeButton.Click += (s, e) => SetToolMode(PthCanvasToolMode.AddNode, updateButtons: false);
+            if (_toolConnectButton != null) _toolConnectButton.Click += (s, e) => SetToolMode(PthCanvasToolMode.Connect, updateButtons: false);
 
             SetupMenuHandlers();
+            SetToolMode(PthCanvasToolMode.Select, updateButtons: false);
             RebuildNodeList();
             UpdateNodeButtonsState();
         }
@@ -645,8 +678,102 @@ namespace OdyTools.Editors
             }
             else
             {
-                SyncSelectionFromCanvasToTable();
+                var screenPoint = point.Position;
+                var world = RenderArea.ScreenToWorld(screenPoint);
+                HandleCanvasToolClick(world);
             }
+        }
+
+        private void SetToolMode(PthCanvasToolMode mode, bool updateButtons = true)
+        {
+            _toolMode = mode;
+            if (mode != PthCanvasToolMode.Connect)
+            {
+                _connectSourceIndex = null;
+            }
+
+            if (updateButtons)
+            {
+                if (_toolSelectButton != null) _toolSelectButton.IsChecked = mode == PthCanvasToolMode.Select;
+                if (_toolAddNodeButton != null) _toolAddNodeButton.IsChecked = mode == PthCanvasToolMode.AddNode;
+                if (_toolConnectButton != null) _toolConnectButton.IsChecked = mode == PthCanvasToolMode.Connect;
+            }
+            UpdateStatusBar(center: ToolModeStatus(mode));
+        }
+
+        private static string ToolModeStatus(PthCanvasToolMode mode)
+        {
+            switch (mode)
+            {
+                case PthCanvasToolMode.AddNode:
+                    return "Add mode: click canvas to place nodes";
+                case PthCanvasToolMode.Connect:
+                    return "Connect mode: click two nodes to add an edge";
+                default:
+                    return "Select mode";
+            }
+        }
+
+        private void HandleCanvasToolClick(Vector2 world)
+        {
+            UpdateMousePosition(world.X, world.Y);
+            switch (_toolMode)
+            {
+                case PthCanvasToolMode.AddNode:
+                    AddNodeFromCanvas(world);
+                    break;
+                case PthCanvasToolMode.Connect:
+                    ConnectNodeFromCanvas();
+                    break;
+                default:
+                    SelectNodeUnderMouse();
+                    SyncSelectionFromCanvasToTable();
+                    break;
+            }
+        }
+
+        private void AddNodeFromCanvas(Vector2 world)
+        {
+            int index = _pth.Add(world.X, world.Y);
+            RenderArea?.PathSelection.Select(new[] { _pth.GetPoint(index) });
+            RebuildNodeList();
+            SyncSelectionFromCanvasToTable();
+            RenderArea?.InvalidateVisual();
+            MarkDocumentDirty();
+        }
+
+        private void ConnectNodeFromCanvas()
+        {
+            var under = PointsUnderMouse(0.5f);
+            if (under.Count == 0)
+            {
+                _connectSourceIndex = null;
+                SyncSelectionFromCanvasToTable();
+                UpdateStatusBar(center: "Connect mode: click a source node");
+                return;
+            }
+
+            var targetIndex = _pth.Find(under[0]);
+            if (!targetIndex.HasValue)
+            {
+                return;
+            }
+
+            if (!_connectSourceIndex.HasValue || _connectSourceIndex.Value == targetIndex.Value)
+            {
+                _connectSourceIndex = targetIndex.Value;
+                SelectNodeIndicesForTest(targetIndex.Value);
+                UpdateStatusBar(center: $"Connect mode: source node {_connectSourceIndex.Value} selected");
+                return;
+            }
+
+            AddEdge(_connectSourceIndex.Value, targetIndex.Value);
+            SelectNodeIndicesForTest(_connectSourceIndex.Value, targetIndex.Value);
+            _connectSourceIndex = null;
+            RenderArea?.InvalidateVisual();
+            UpdateNodeButtonsState();
+            UpdateStatusBar(center: "Connect mode: edge added");
+            MarkDocumentDirty();
         }
 
         private void OnRenderAreaKeyPressed(object sender, KeyEventArgs e)
@@ -660,9 +787,15 @@ namespace OdyTools.Editors
 
         private void OnRenderAreaMouseScrolled(object sender, PointerWheelEventArgs e)
         {
-            if (RenderArea == null) return;
-            float zoomFactor = e.Delta.Y > 0 ? 1.1f : 0.9f;
-            ZoomCamera(zoomFactor);
+            // PTHRenderArea already applied the zoom before raising this signal.
+            RenderArea?.InvalidateVisual();
+        }
+
+        private void OnRenderAreaSelectedNodesMoved(object sender, EventArgs e)
+        {
+            RebuildNodeList();
+            UpdateDetailFromSelection();
+            MarkDocumentDirty();
         }
 
         private void SetupContextMenu()
@@ -706,6 +839,30 @@ namespace OdyTools.Editors
             MarkDocumentDirty();
         }
 
+        private void AddNodeAtCurrentEditPosition()
+        {
+            Vector2 position;
+            if (_hasMouseWorld)
+            {
+                position = _lastMouseWorld;
+            }
+            else if (_nodePosX != null && _nodePosY != null)
+            {
+                position = new Vector2((float)_nodePosX.Value, (float)_nodePosY.Value);
+            }
+            else
+            {
+                position = _contextMenuWorld;
+            }
+
+            AddNode(position.X, position.Y);
+            RenderArea?.PathSelection.Select(new[] { new Vector2(position.X, position.Y) });
+            RebuildNodeList();
+            SyncSelectionFromCanvasToTable();
+            RenderArea?.InvalidateVisual();
+            MarkDocumentDirty();
+        }
+
         private void RemoveNodeUnderContextMenu()
         {
             var under = PointsUnderMouse(0.5f);
@@ -737,7 +894,7 @@ namespace OdyTools.Editors
             // actionNew, actionOpen, actionSave, actionSaveAs, actionRevert, actionExit wired by base Editor
             EditorHelpers.BindMenuClicks(this, new (string menuItemName, Action handler)[]
             {
-                ("actionAddNode", AddNodeAtLastContextWorld),
+                ("actionAddNode", AddNodeAtCurrentEditPosition),
                 ("actionRemoveNode", DeleteSelectedNode),
                 ("actionAddEdge", AddEdgeBetweenSelected),
                 ("actionRemoveEdge", RemoveEdgeBetweenSelected),
@@ -796,6 +953,27 @@ namespace OdyTools.Editors
             return indices;
         }
 
+        private List<int> GetActiveSelectedNodeIndices()
+        {
+            var indices = GetSelectedNodeIndices();
+            if (indices.Count > 0)
+            {
+                return indices;
+            }
+
+            var selected = RenderArea?.PathSelection.All() ?? new List<Vector2>();
+            foreach (var pt in selected)
+            {
+                var idx = _pth.Find(pt);
+                if (idx.HasValue)
+                {
+                    indices.Add(idx.Value);
+                }
+            }
+
+            return indices;
+        }
+
         private void SetSelectedNodeIndices(List<int> indices)
         {
             if (_nodeList == null || indices == null) return;
@@ -844,11 +1022,13 @@ namespace OdyTools.Editors
         private void UpdateDetailFromSelection()
         {
             var selected = RenderArea?.PathSelection.All() ?? new List<Vector2>();
+            _syncingNodeDetails = true;
             if (selected.Count == 0)
             {
                 if (_nodeIndexBox != null) _nodeIndexBox.Text = "";
                 if (_nodePosX != null) _nodePosX.Value = 0;
                 if (_nodePosY != null) _nodePosY.Value = 0;
+                _syncingNodeDetails = false;
                 return;
             }
             var first = selected[0];
@@ -859,10 +1039,12 @@ namespace OdyTools.Editors
                 if (_nodePosX != null) _nodePosX.Value = (decimal)first.X;
                 if (_nodePosY != null) _nodePosY.Value = (decimal)first.Y;
             }
+            _syncingNodeDetails = false;
         }
 
         private void ApplyNodePositionFromSpinners()
         {
+            if (_syncingNodeDetails) return;
             if (_nodePosX == null || _nodePosY == null) return;
             var selected = RenderArea?.PathSelection.All() ?? new List<Vector2>();
             if (selected.Count != 1) return;
@@ -872,6 +1054,7 @@ namespace OdyTools.Editors
             _pth.SetPoint(idx.Value, (float)_nodePosX.Value, (float)_nodePosY.Value);
             RenderArea.PathSelection.Select(new[] { new Vector2((float)_nodePosX.Value, (float)_nodePosY.Value) });
             RebuildNodeList();
+            RenderArea?.InvalidateVisual();
             MarkDocumentDirty();
         }
 
@@ -905,7 +1088,7 @@ namespace OdyTools.Editors
 
         private void AddEdgeBetweenSelected()
         {
-            var indices = GetSelectedNodeIndices();
+            var indices = GetActiveSelectedNodeIndices();
             if (indices.Count < 2) return;
             int a = indices[0], b = indices[1];
             if (a < 0 || b < 0 || a >= _pth.Count || b >= _pth.Count) return;
@@ -917,7 +1100,7 @@ namespace OdyTools.Editors
 
         private void RemoveEdgeBetweenSelected()
         {
-            var indices = GetSelectedNodeIndices();
+            var indices = GetActiveSelectedNodeIndices();
             if (indices.Count < 2) return;
             int a = indices[0], b = indices[1];
             if (a < 0 || b < 0 || a >= _pth.Count || b >= _pth.Count) return;
@@ -928,7 +1111,7 @@ namespace OdyTools.Editors
 
         private void UpdateNodeButtonsState()
         {
-            var selCount = GetSelectedNodeIndices().Count;
+            var selCount = GetActiveSelectedNodeIndices().Count;
             if (_removeNodeButton != null) _removeNodeButton.IsEnabled = selCount >= 1;
             if (_addEdgeButton != null) _addEdgeButton.IsEnabled = selCount >= 2;
             if (_removeEdgeButton != null) _removeEdgeButton.IsEnabled = selCount >= 2;
@@ -976,8 +1159,10 @@ namespace OdyTools.Editors
             }
 
             // Create bidirectional connections like other path editors
-            _pth.Connect(source, target);
-            _pth.Connect(target, source);
+            if (!_pth.IsConnected(source, target))
+                _pth.Connect(source, target);
+            if (!_pth.IsConnected(target, source))
+                _pth.Connect(target, source);
         }
 
         public void RemoveEdge(int source, int target)
@@ -1004,6 +1189,8 @@ namespace OdyTools.Editors
             {
                 StatusOut.SetMousePosition(position);
             }
+            _lastMouseWorld = position;
+            _hasMouseWorld = true;
             if (RenderArea != null) RenderArea.SetMousePosition(position);
             if (StatusOut != null)
             {
@@ -1072,6 +1259,82 @@ namespace OdyTools.Editors
             }
 
             RenderArea.PathSelection.Select(selected);
+            RebuildNodeList();
+            UpdateDetailFromSelection();
+            RenderArea.InvalidateVisual();
+            MarkDocumentDirty();
+        }
+
+        internal int NodeCount => _pth.Count;
+
+        internal int ConnectionCount => _pth.GetConnections().Count;
+
+        internal Vector2 NodeAt(int index)
+        {
+            return _pth.GetPoint(index);
+        }
+
+        internal List<int> SelectedNodeIndicesForTest()
+        {
+            return GetActiveSelectedNodeIndices();
+        }
+
+        internal string ToolModeForTest => _toolMode.ToString();
+
+        internal bool ToolModeControlsAvailableForTest =>
+            _toolSelectButton != null && _toolAddNodeButton != null && _toolConnectButton != null;
+
+        internal string XamlLoadErrorForTest => _xamlLoadError;
+
+        internal void SetToolModeForTest(string mode)
+        {
+            if (!Enum.TryParse(mode, out PthCanvasToolMode parsed))
+            {
+                throw new ArgumentException("Unknown PTH canvas tool mode: " + mode, nameof(mode));
+            }
+
+            SetToolMode(parsed, updateButtons: false);
+        }
+
+        internal void HandleCanvasToolClickForTest(float x, float y)
+        {
+            HandleCanvasToolClick(new Vector2(x, y));
+        }
+
+        internal void SelectNodeIndicesForTest(params int[] indices)
+        {
+            var points = new List<Vector2>();
+            foreach (var idx in indices ?? Array.Empty<int>())
+            {
+                if (idx >= 0 && idx < _pth.Count)
+                {
+                    points.Add(_pth.GetPoint(idx));
+                }
+            }
+            RenderArea?.PathSelection.Select(points);
+            SyncSelectionFromCanvasToTable();
+            UpdateNodeButtonsState();
+        }
+
+        internal void AddEdgeBetweenSelectedForTest()
+        {
+            AddEdgeBetweenSelected();
+        }
+
+        internal void RemoveEdgeBetweenSelectedForTest()
+        {
+            RemoveEdgeBetweenSelected();
+        }
+
+        internal void SetNodePositionInputsForTest(float x, float y)
+        {
+            if (_nodePosX != null) _nodePosX.Value = (decimal)x;
+            if (_nodePosY != null) _nodePosY.Value = (decimal)y;
+        }
+
+        internal void AddNodeFromEditActionForTest()
+        {
+            AddNodeAtCurrentEditPosition();
         }
 
         public void SelectNodeUnderMouse()

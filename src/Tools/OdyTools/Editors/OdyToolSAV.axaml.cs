@@ -154,6 +154,8 @@ namespace OdyTools.Editors
         private GFF _doorsGff;
         private BioWare.Resource.Formats.ERF.ERF _doorsModuleErf;
         private string _doorsGitResName;
+        private bool _suppressSaveInfoDirty;
+        private bool _suppressPartyTableDirty;
 
         // UI Controls - Advanced
         private ListBox _listAdvancedResources;
@@ -263,7 +265,14 @@ namespace OdyTools.Editors
 
         private void InitializeComponent()
         {
-            AvaloniaXamlLoader.Load(this);
+            try
+            {
+                AvaloniaXamlLoader.Load(this);
+            }
+            catch
+            {
+                SetContentOrInject(new Grid());
+            }
             SetupUI();
             SetupMenuHandlers();
             KeyDown += OnKeyDown;
@@ -420,9 +429,124 @@ namespace OdyTools.Editors
             _tabControl.Items.Add(CreateAreaDoorsTab());
             _tabControl.Items.Add(CreateReputationTab());
             _tabControl.Items.Add(CreateAdvancedTab());
+            WireSaveInfoChangeHandlers();
+            WirePartyTableChangeHandlers();
 
             var scroll = new ScrollViewer { Content = _tabControl, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto };
             SetContentOrInject(scroll);
+        }
+
+        private void WireSaveInfoChangeHandlers()
+        {
+            TextBox[] textBoxes =
+            {
+                _lineEditSaveName,
+                _lineEditAreaName,
+                _lineEditLastModule,
+                _lineEditPCName,
+                _lineEditPortrait0,
+                _lineEditPortrait1,
+                _lineEditPortrait2,
+                _lineEditLive1,
+                _lineEditLive2,
+                _lineEditLive3,
+                _lineEditLive4,
+                _lineEditLive5,
+                _lineEditLive6
+            };
+            foreach (var box in textBoxes)
+            {
+                if (box != null)
+                {
+                    box.TextChanged += (s, e) => OnSaveInfoControlChanged();
+                }
+            }
+
+            NumericUpDown[] spins =
+            {
+                _spinBoxTimePlayed,
+                _spinBoxGameplayHint,
+                _spinBoxStoryHint,
+                _spinBoxLiveContent
+            };
+            foreach (var spin in spins)
+            {
+                if (spin != null)
+                {
+                    spin.ValueChanged += (s, e) => OnSaveInfoControlChanged();
+                }
+            }
+
+            if (_checkBoxCheatUsed != null)
+            {
+                _checkBoxCheatUsed.IsCheckedChanged += (s, e) => OnSaveInfoControlChanged();
+            }
+        }
+
+        private void OnSaveInfoControlChanged()
+        {
+            if (_suppressSaveInfoDirty || _saveInfo == null)
+            {
+                return;
+            }
+
+            UpdateSaveInfoFromUI();
+            MarkDocumentDirty();
+        }
+
+        private void WirePartyTableChangeHandlers()
+        {
+            NumericUpDown[] spins =
+            {
+                _spinBoxGold,
+                _spinBoxXPPool,
+                _spinBoxComponents,
+                _spinBoxChemicals,
+                _spinBoxTimePlayedPT,
+                _spinBoxControlledNPC,
+                _spinBoxAIState,
+                _spinBoxFollowState,
+                _spinBoxLastGUIPanel,
+                _spinBoxJournalSortOrder
+            };
+            foreach (var spin in spins)
+            {
+                if (spin != null)
+                {
+                    spin.ValueChanged += (s, e) => OnPartyTableControlChanged();
+                }
+            }
+
+            if (_checkBoxCheatUsedPT != null)
+            {
+                _checkBoxCheatUsedPT.IsCheckedChanged += (s, e) => OnPartyTableControlChanged();
+            }
+
+            if (_checkBoxSoloMode != null)
+            {
+                _checkBoxSoloMode.IsCheckedChanged += (s, e) => OnPartyTableControlChanged();
+            }
+
+            if (_gridAvailableNPCs != null)
+            {
+                _gridAvailableNPCs.CellEditEnded += (s, e) => OnPartyTableControlChanged();
+            }
+
+            if (_gridInfluence != null)
+            {
+                _gridInfluence.CellEditEnded += (s, e) => OnPartyTableControlChanged();
+            }
+        }
+
+        private void OnPartyTableControlChanged()
+        {
+            if (_suppressPartyTableDirty || _partyTable == null)
+            {
+                return;
+            }
+
+            UpdatePartyTableFromUI();
+            MarkDocumentDirty();
         }
 
         private TabItem CreateSaveInfoTab()
@@ -629,6 +753,7 @@ namespace OdyTools.Editors
         /// </summary>
         private TabItem CreateGlobalVarTab(string header, DataGrid grid, Action onAdd)
         {
+            grid.CellEditEnded += (s, e) => SyncGlobalVarsFromGridAndMarkDirty();
             var addBtn = CreateActionButton(Localization.Tr("Add"), () => onAdd?.Invoke());
             var removeBtn = CreateActionButton(Localization.Tr("Remove"), () => RemoveGlobalVarRow(grid));
             var btnPanel = CreateButtonRow(addBtn, removeBtn);
@@ -668,28 +793,28 @@ namespace OdyTools.Editors
             if (grid == _gridBooleans)
             {
                 var rows = (_gridBooleans.ItemsSource as IEnumerable<GlobalBoolRow>)?.ToList() ?? new List<GlobalBoolRow>();
-                rows.Add(new GlobalBoolRow { Name = "NEW_VAR", Value = false });
+                rows.Add(new GlobalBoolRow { Name = NextGlobalVarName(rows.Select(row => row.Name)), Value = false });
                 _gridBooleans.ItemsSource = rows;
             }
             else if (grid == _gridNumbers)
             {
                 var rows = (_gridNumbers.ItemsSource as IEnumerable<GlobalNumberRow>)?.ToList() ?? new List<GlobalNumberRow>();
-                rows.Add(new GlobalNumberRow { Name = "NEW_VAR", Value = 0 });
+                rows.Add(new GlobalNumberRow { Name = NextGlobalVarName(rows.Select(row => row.Name)), Value = 0 });
                 _gridNumbers.ItemsSource = rows;
             }
             else if (grid == _gridStrings)
             {
                 var rows = (_gridStrings.ItemsSource as IEnumerable<GlobalStringRow>)?.ToList() ?? new List<GlobalStringRow>();
-                rows.Add(new GlobalStringRow { Name = "NEW_VAR", Value = "" });
+                rows.Add(new GlobalStringRow { Name = NextGlobalVarName(rows.Select(row => row.Name)), Value = "" });
                 _gridStrings.ItemsSource = rows;
             }
             else if (grid == _gridLocations)
             {
                 var rows = (_gridLocations.ItemsSource as IEnumerable<GlobalLocationRow>)?.ToList() ?? new List<GlobalLocationRow>();
-                rows.Add(new GlobalLocationRow { Name = "NEW_VAR", X = 0, Y = 0, Z = 0, Orientation = 0 });
+                rows.Add(new GlobalLocationRow { Name = NextGlobalVarName(rows.Select(row => row.Name)), X = 0, Y = 0, Z = 0, Orientation = 0 });
                 _gridLocations.ItemsSource = rows;
             }
-            MarkDocumentDirty();
+            SyncGlobalVarsFromGridAndMarkDirty();
         }
 
         private void RemoveGlobalVarRow(DataGrid grid)
@@ -720,7 +845,34 @@ namespace OdyTools.Editors
                 var rows = (_gridLocations.ItemsSource as IEnumerable<GlobalLocationRow>)?.ToList() ?? new List<GlobalLocationRow>();
                 if (idx < rows.Count) { rows.RemoveAt(idx); _gridLocations.ItemsSource = rows; }
             }
+            SyncGlobalVarsFromGridAndMarkDirty();
+        }
+
+        private void SyncGlobalVarsFromGridAndMarkDirty()
+        {
+            UpdateGlobalVarsFromUI();
             MarkDocumentDirty();
+        }
+
+        private static string NextGlobalVarName(IEnumerable<string> existingNames)
+        {
+            var existing = new HashSet<string>(existingNames.Where(name => !string.IsNullOrWhiteSpace(name)), StringComparer.OrdinalIgnoreCase);
+            const string baseName = "NEW_VAR";
+            if (!existing.Contains(baseName))
+            {
+                return baseName;
+            }
+
+            for (int i = 1; i < 10000; i++)
+            {
+                string candidate = baseName + "_" + i;
+                if (!existing.Contains(candidate))
+                {
+                    return candidate;
+                }
+            }
+
+            return baseName + "_" + Guid.NewGuid().ToString("N").Substring(0, 8);
         }
 
         private TabItem CreateCharactersTab()
@@ -994,6 +1146,42 @@ namespace OdyTools.Editors
             LoadSaveGame(filepath);
         }
 
+        public override bool CanLoadPath(string filepath)
+        {
+            return IsSaveGameFolderPath(filepath) || IsSaveGameSavPath(filepath);
+        }
+
+        protected override bool TryLoadFromPath(string path)
+        {
+            if (!CanLoadPath(path))
+            {
+                return false;
+            }
+
+            Load(path, Path.GetFileNameWithoutExtension(path), ResourceType.SAV, null);
+            return true;
+        }
+
+        protected override bool IsPathSupportedByEditor(string filepath)
+        {
+            return CanLoadPath(filepath);
+        }
+
+        private static bool IsSaveGameFolderPath(string filepath)
+        {
+            return !string.IsNullOrWhiteSpace(filepath)
+                && Directory.Exists(filepath)
+                && Directory.EnumerateFiles(filepath)
+                    .Any(file => string.Equals(Path.GetFileName(file), "SAVEGAME.sav", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static bool IsSaveGameSavPath(string filepath)
+        {
+            return !string.IsNullOrWhiteSpace(filepath)
+                && File.Exists(filepath)
+                && string.Equals(Path.GetFileName(filepath), "SAVEGAME.sav", StringComparison.OrdinalIgnoreCase);
+        }
+
         public override Tuple<byte[], byte[]> Build()
         {
             return Tuple.Create(new byte[0], new byte[0]);
@@ -1103,35 +1291,43 @@ namespace OdyTools.Editors
         private void PopulateSaveInfo()
         {
             if (_saveInfo == null) return;
-            _lineEditSaveName.Text = _saveInfo.SavegameName ?? "";
-            _lineEditAreaName.Text = _saveInfo.AreaName ?? "";
-            _lineEditLastModule.Text = _saveInfo.LastModule ?? "";
-            _spinBoxTimePlayed.Value = _saveInfo.TimePlayed;
-            _lineEditPCName.Text = _saveInfo.PcName ?? "";
-            _lineEditPortrait0.Text = _saveInfo.Portrait0?.ToString() ?? "";
-            _lineEditPortrait1.Text = _saveInfo.Portrait1?.ToString() ?? "";
-            _lineEditPortrait2.Text = _saveInfo.Portrait2?.ToString() ?? "";
-            _checkBoxCheatUsed.IsChecked = _saveInfo.CheatUsed;
-            _spinBoxGameplayHint.Value = _saveInfo.GameplayHint;
-            _spinBoxStoryHint.Value = _saveInfo.StoryHint;
-            _lineEditLive1.Text = _saveInfo.Live1 ?? "";
-            _lineEditLive2.Text = _saveInfo.Live2 ?? "";
-            _lineEditLive3.Text = _saveInfo.Live3 ?? "";
-            _lineEditLive4.Text = _saveInfo.Live4 ?? "";
-            _lineEditLive5.Text = _saveInfo.Live5 ?? "";
-            _lineEditLive6.Text = _saveInfo.Live6 ?? "";
-            _spinBoxLiveContent.Value = _saveInfo.LiveContent;
-            if (_saveInfo.Timestamp.HasValue)
+            _suppressSaveInfoDirty = true;
+            try
             {
-                try
+                _lineEditSaveName.Text = _saveInfo.SavegameName ?? "";
+                _lineEditAreaName.Text = _saveInfo.AreaName ?? "";
+                _lineEditLastModule.Text = _saveInfo.LastModule ?? "";
+                _spinBoxTimePlayed.Value = _saveInfo.TimePlayed;
+                _lineEditPCName.Text = _saveInfo.PcName ?? "";
+                _lineEditPortrait0.Text = _saveInfo.Portrait0?.ToString() ?? "";
+                _lineEditPortrait1.Text = _saveInfo.Portrait1?.ToString() ?? "";
+                _lineEditPortrait2.Text = _saveInfo.Portrait2?.ToString() ?? "";
+                _checkBoxCheatUsed.IsChecked = _saveInfo.CheatUsed;
+                _spinBoxGameplayHint.Value = _saveInfo.GameplayHint;
+                _spinBoxStoryHint.Value = _saveInfo.StoryHint;
+                _lineEditLive1.Text = _saveInfo.Live1 ?? "";
+                _lineEditLive2.Text = _saveInfo.Live2 ?? "";
+                _lineEditLive3.Text = _saveInfo.Live3 ?? "";
+                _lineEditLive4.Text = _saveInfo.Live4 ?? "";
+                _lineEditLive5.Text = _saveInfo.Live5 ?? "";
+                _lineEditLive6.Text = _saveInfo.Live6 ?? "";
+                _spinBoxLiveContent.Value = _saveInfo.LiveContent;
+                if (_saveInfo.Timestamp.HasValue)
                 {
-                    var winEpoch = new DateTime(1601, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-                    var dt = winEpoch.AddTicks((long)_saveInfo.Timestamp.Value);
-                    _lineEditTimestamp.Text = dt.ToString("yyyy-MM-dd HH:mm:ss") + " UTC";
+                    try
+                    {
+                        var winEpoch = new DateTime(1601, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                        var dt = winEpoch.AddTicks((long)_saveInfo.Timestamp.Value);
+                        _lineEditTimestamp.Text = dt.ToString("yyyy-MM-dd HH:mm:ss") + " UTC";
+                    }
+                    catch { _lineEditTimestamp.Text = _saveInfo.Timestamp.ToString(); }
                 }
-                catch { _lineEditTimestamp.Text = _saveInfo.Timestamp.ToString(); }
+                else _lineEditTimestamp.Text = "";
             }
-            else _lineEditTimestamp.Text = "";
+            finally
+            {
+                _suppressSaveInfoDirty = false;
+            }
         }
 
         private void UpdateSaveInfoFromUI()
@@ -1159,25 +1355,33 @@ namespace OdyTools.Editors
 
         private void ClearSaveInfo()
         {
-            _lineEditSaveName.Text = "";
-            _lineEditAreaName.Text = "";
-            _lineEditLastModule.Text = "";
-            _spinBoxTimePlayed.Value = 0;
-            _lineEditPCName.Text = "";
-            _lineEditPortrait0.Text = "";
-            _lineEditPortrait1.Text = "";
-            _lineEditPortrait2.Text = "";
-            _checkBoxCheatUsed.IsChecked = false;
-            _spinBoxGameplayHint.Value = 0;
-            _spinBoxStoryHint.Value = 0;
-            _lineEditTimestamp.Text = "";
-            _lineEditLive1.Text = "";
-            _lineEditLive2.Text = "";
-            _lineEditLive3.Text = "";
-            _lineEditLive4.Text = "";
-            _lineEditLive5.Text = "";
-            _lineEditLive6.Text = "";
-            _spinBoxLiveContent.Value = 0;
+            _suppressSaveInfoDirty = true;
+            try
+            {
+                _lineEditSaveName.Text = "";
+                _lineEditAreaName.Text = "";
+                _lineEditLastModule.Text = "";
+                _spinBoxTimePlayed.Value = 0;
+                _lineEditPCName.Text = "";
+                _lineEditPortrait0.Text = "";
+                _lineEditPortrait1.Text = "";
+                _lineEditPortrait2.Text = "";
+                _checkBoxCheatUsed.IsChecked = false;
+                _spinBoxGameplayHint.Value = 0;
+                _spinBoxStoryHint.Value = 0;
+                _lineEditTimestamp.Text = "";
+                _lineEditLive1.Text = "";
+                _lineEditLive2.Text = "";
+                _lineEditLive3.Text = "";
+                _lineEditLive4.Text = "";
+                _lineEditLive5.Text = "";
+                _lineEditLive6.Text = "";
+                _spinBoxLiveContent.Value = 0;
+            }
+            finally
+            {
+                _suppressSaveInfoDirty = false;
+            }
         }
         #endregion
 
@@ -1221,39 +1425,47 @@ namespace OdyTools.Editors
         private void PopulatePartyTable()
         {
             if (_partyTable == null) return;
-            _spinBoxGold.Value = _partyTable.Gold;
-            _spinBoxXPPool.Value = _partyTable.XpPool;
-            _spinBoxComponents.Value = _partyTable.ItemComponents;
-            _spinBoxChemicals.Value = _partyTable.ItemChemicals;
-            _spinBoxTimePlayedPT.Value = _partyTable.TimePlayed >= 0 ? _partyTable.TimePlayed : 0;
-            _checkBoxCheatUsedPT.IsChecked = _partyTable.CheatUsed;
-            _spinBoxControlledNPC.Value = _partyTable.ControlledNpc;
-            _spinBoxAIState.Value = _partyTable.AiState;
-            _spinBoxFollowState.Value = _partyTable.FollowState;
-            _checkBoxSoloMode.IsChecked = _partyTable.SoloMode;
-            _spinBoxLastGUIPanel.Value = _partyTable.LastGuiPanel;
-            _spinBoxJournalSortOrder.Value = _partyTable.JournalSortOrder;
-
-            _listWidgetPartyMembers.Items.Clear();
-            foreach (var m in _partyTable.Members.OrderBy(x => !x.IsLeader).ThenBy(x => x.Index >= 0 ? x.Index : 999))
+            _suppressPartyTableDirty = true;
+            try
             {
-                var display = GetPartyMemberName(m) + (m.IsLeader ? " [Leader]" : "");
-                _listWidgetPartyMembers.Items.Add(new PartyMemberDisplayItem { Display = display, ToolTip = GetPartyMemberTooltip(m), Member = m });
-            }
+                _spinBoxGold.Value = _partyTable.Gold;
+                _spinBoxXPPool.Value = _partyTable.XpPool;
+                _spinBoxComponents.Value = _partyTable.ItemComponents;
+                _spinBoxChemicals.Value = _partyTable.ItemChemicals;
+                _spinBoxTimePlayedPT.Value = _partyTable.TimePlayed >= 0 ? _partyTable.TimePlayed : 0;
+                _checkBoxCheatUsedPT.IsChecked = _partyTable.CheatUsed;
+                _spinBoxControlledNPC.Value = _partyTable.ControlledNpc;
+                _spinBoxAIState.Value = _partyTable.AiState;
+                _spinBoxFollowState.Value = _partyTable.FollowState;
+                _checkBoxSoloMode.IsChecked = _partyTable.SoloMode;
+                _spinBoxLastGUIPanel.Value = _partyTable.LastGuiPanel;
+                _spinBoxJournalSortOrder.Value = _partyTable.JournalSortOrder;
 
-            var availList = new List<dynamic>();
-            while (_partyTable.AvailableNpcs.Count < 12) _partyTable.AvailableNpcs.Add(new AvailableNPCEntry());
-            for (int i = 0; i < 12; i++)
+                _listWidgetPartyMembers.Items.Clear();
+                foreach (var m in _partyTable.Members.OrderBy(x => !x.IsLeader).ThenBy(x => x.Index >= 0 ? x.Index : 999))
+                {
+                    var display = GetPartyMemberName(m) + (m.IsLeader ? " [Leader]" : "");
+                    _listWidgetPartyMembers.Items.Add(new PartyMemberDisplayItem { Display = display, ToolTip = GetPartyMemberTooltip(m), Member = m });
+                }
+
+                var availList = new List<dynamic>();
+                while (_partyTable.AvailableNpcs.Count < 12) _partyTable.AvailableNpcs.Add(new AvailableNPCEntry());
+                for (int i = 0; i < 12; i++)
+                {
+                    var e = _partyTable.AvailableNpcs[i];
+                    availList.Add(new { Index = i, Available = e.NpcAvailable, Selected = e.NpcSelected });
+                }
+                _gridAvailableNPCs.ItemsSource = availList;
+
+                var infList = new List<dynamic>();
+                for (int i = 0; i < 12; i++)
+                    infList.Add(new { Index = i, Value = i < _partyTable.Influence.Count ? _partyTable.Influence[i].ToString() : "0" });
+                _gridInfluence.ItemsSource = infList;
+            }
+            finally
             {
-                var e = _partyTable.AvailableNpcs[i];
-                availList.Add(new { Index = i, Available = e.NpcAvailable, Selected = e.NpcSelected });
+                _suppressPartyTableDirty = false;
             }
-            _gridAvailableNPCs.ItemsSource = availList;
-
-            var infList = new List<dynamic>();
-            for (int i = 0; i < 12; i++)
-                infList.Add(new { Index = i, Value = i < _partyTable.Influence.Count ? _partyTable.Influence[i].ToString() : "0" });
-            _gridInfluence.ItemsSource = infList;
 
             PopulatePazaakAndMiscSummary();
         }
@@ -2791,6 +3003,131 @@ namespace OdyTools.Editors
         public PartyTable PartyTable => _partyTable;
         public GlobalVars GlobalVars => _globalVars;
         public SaveNestedCapsule NestedCapsule => _nestedCapsule;
+
+        internal void SetSaveInfoForTesting(SaveInfo saveInfo)
+        {
+            _saveInfo = saveInfo;
+            PopulateSaveInfo();
+            ClearDirty();
+        }
+
+        internal void SetPartyTableForTesting(PartyTable partyTable)
+        {
+            _partyTable = partyTable;
+            PopulatePartyTable();
+            ClearDirty();
+        }
+
+        internal void SetGlobalVarsForTesting(GlobalVars globalVars)
+        {
+            _globalVars = globalVars;
+            PopulateGlobalVars();
+            ClearDirty();
+        }
+
+        internal void AddGlobalBoolForTest(string name, bool value)
+        {
+            AddGlobalVarRow(_gridBooleans, "bools");
+            var rows = (_gridBooleans.ItemsSource as IEnumerable<GlobalBoolRow>)?.ToList() ?? new List<GlobalBoolRow>();
+            if (rows.Count == 0) return;
+            rows[rows.Count - 1].Name = name;
+            rows[rows.Count - 1].Value = value;
+            _gridBooleans.ItemsSource = rows;
+            SyncGlobalVarsFromGridAndMarkDirty();
+        }
+
+        internal string AddDefaultGlobalBoolForTest()
+        {
+            AddGlobalVarRow(_gridBooleans, "bools");
+            var rows = (_gridBooleans.ItemsSource as IEnumerable<GlobalBoolRow>)?.ToList() ?? new List<GlobalBoolRow>();
+            return rows.LastOrDefault()?.Name;
+        }
+
+        internal void AddGlobalNumberForTest(string name, int value)
+        {
+            AddGlobalVarRow(_gridNumbers, "numbers");
+            var rows = (_gridNumbers.ItemsSource as IEnumerable<GlobalNumberRow>)?.ToList() ?? new List<GlobalNumberRow>();
+            if (rows.Count == 0) return;
+            rows[rows.Count - 1].Name = name;
+            rows[rows.Count - 1].Value = value;
+            _gridNumbers.ItemsSource = rows;
+            SyncGlobalVarsFromGridAndMarkDirty();
+        }
+
+        internal void AddGlobalStringForTest(string name, string value)
+        {
+            AddGlobalVarRow(_gridStrings, "strings");
+            var rows = (_gridStrings.ItemsSource as IEnumerable<GlobalStringRow>)?.ToList() ?? new List<GlobalStringRow>();
+            if (rows.Count == 0) return;
+            rows[rows.Count - 1].Name = name;
+            rows[rows.Count - 1].Value = value;
+            _gridStrings.ItemsSource = rows;
+            SyncGlobalVarsFromGridAndMarkDirty();
+        }
+
+        internal void AddGlobalLocationForTest(string name, Vector4 value)
+        {
+            AddGlobalVarRow(_gridLocations, "locations");
+            var rows = (_gridLocations.ItemsSource as IEnumerable<GlobalLocationRow>)?.ToList() ?? new List<GlobalLocationRow>();
+            if (rows.Count == 0) return;
+            rows[rows.Count - 1].Name = name;
+            rows[rows.Count - 1].X = value.X;
+            rows[rows.Count - 1].Y = value.Y;
+            rows[rows.Count - 1].Z = value.Z;
+            rows[rows.Count - 1].Orientation = value.W;
+            _gridLocations.ItemsSource = rows;
+            SyncGlobalVarsFromGridAndMarkDirty();
+        }
+
+        internal void RemoveGlobalBoolAtForTest(int index)
+        {
+            _gridBooleans.SelectedIndex = index;
+            RemoveGlobalVarRow(_gridBooleans);
+        }
+
+        internal void RemoveGlobalNumberAtForTest(int index)
+        {
+            _gridNumbers.SelectedIndex = index;
+            RemoveGlobalVarRow(_gridNumbers);
+        }
+
+        internal void RemoveGlobalStringAtForTest(int index)
+        {
+            _gridStrings.SelectedIndex = index;
+            RemoveGlobalVarRow(_gridStrings);
+        }
+
+        internal void RemoveGlobalLocationAtForTest(int index)
+        {
+            _gridLocations.SelectedIndex = index;
+            RemoveGlobalVarRow(_gridLocations);
+        }
+
+
+        internal TextBox SaveNameEditForTest => _lineEditSaveName;
+        internal TextBox AreaNameEditForTest => _lineEditAreaName;
+        internal TextBox LastModuleEditForTest => _lineEditLastModule;
+        internal NumericUpDown TimePlayedSpinForTest => _spinBoxTimePlayed;
+        internal CheckBox CheatUsedCheckForTest => _checkBoxCheatUsed;
+        internal NumericUpDown PartyGoldSpinForTest => _spinBoxGold;
+        internal NumericUpDown PartyXpPoolSpinForTest => _spinBoxXPPool;
+        internal NumericUpDown PartyComponentsSpinForTest => _spinBoxComponents;
+        internal NumericUpDown PartyChemicalsSpinForTest => _spinBoxChemicals;
+        internal CheckBox PartyCheatUsedCheckForTest => _checkBoxCheatUsedPT;
+        internal CheckBox PartySoloModeCheckForTest => _checkBoxSoloMode;
+        internal bool HasProgrammaticEditorSurfaceForTest =>
+            _tabControl != null &&
+            _tabControl.Items.Count >= 10 &&
+            _lineEditSaveName != null &&
+            _lineEditAreaName != null &&
+            _spinBoxTimePlayed != null &&
+            _checkBoxCheatUsed != null &&
+            _spinBoxGold != null &&
+            _gridBooleans != null &&
+            _listWidgetCharacters != null &&
+            _gridInventory != null &&
+            _treeCachedModules != null &&
+            _listAdvancedResources != null;
 
         public override void SaveAs()
         {

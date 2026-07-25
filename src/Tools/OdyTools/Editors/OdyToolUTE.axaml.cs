@@ -2,6 +2,7 @@ using BioWare.Common;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -47,18 +48,58 @@ namespace OdyTools.Editors
     {
         // Data model for creature table rows
         // C# uses DataGrid with bindings, so we need a proper data model
-        private class CreatureRow
+        private class CreatureRow : INotifyPropertyChanged
         {
-            public bool SingleSpawn { get; set; }
-            public float CR { get; set; }
-            public int Appearance { get; set; }
-            public string ResRef { get; set; }
+            private bool _singleSpawn;
+            private float _cr;
+            private int _appearance;
+            private string _resRef;
+
+            public event PropertyChangedEventHandler PropertyChanged;
+            public Action Changed { get; set; }
+
+            public bool SingleSpawn
+            {
+                get => _singleSpawn;
+                set => SetField(ref _singleSpawn, value, nameof(SingleSpawn));
+            }
+
+            public float CR
+            {
+                get => _cr;
+                set => SetField(ref _cr, value, nameof(CR));
+            }
+
+            public int Appearance
+            {
+                get => _appearance;
+                set => SetField(ref _appearance, value, nameof(Appearance));
+            }
+
+            public string ResRef
+            {
+                get => _resRef;
+                set => SetField(ref _resRef, value, nameof(ResRef));
+            }
+
+            private void SetField<T>(ref T field, T value, string propertyName)
+            {
+                if (EqualityComparer<T>.Default.Equals(field, value))
+                {
+                    return;
+                }
+
+                field = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                Changed?.Invoke();
+            }
         }
 
         private UTE _ute;
         private List<string> _relevantCreatureResnames;
         private List<string> _relevantScriptResnames;
         private ObservableCollection<CreatureRow> _creatureRows;
+        internal static ResourceType EncounterCreatureResourceType => ResourceType.UTC;
 
         // UI Controls - Basic
         private LocalizedStringEdit _nameEdit;
@@ -95,12 +136,40 @@ namespace OdyTools.Editors
 
         // UI Controls - Comments
         private TextBox _commentsEdit;
+        private TabControl _editorSurface;
+        private bool _loadingUte;
+        private bool _dirtyTrackingBound;
+        private bool _clearInitialDirtyOnOpen = true;
+
+        internal bool HasStructuredEditorSurface => _editorSurface != null && HasRequiredEditorControls() && _onEnterSelect != null && _commentsEdit != null;
+
+        public LocalizedStringEdit NameEdit => _nameEdit;
+        public TextBox TagEdit => _tagEdit;
+        public TextBox ResrefEdit => _resrefEdit;
+        public ComboBox2DA DifficultySelect => _difficultySelect;
+        public ComboBox SpawnSelect => _spawnSelect;
+        public NumericUpDown MinCreatureSpin => _minCreatureSpin;
+        public NumericUpDown MaxCreatureSpin => _maxCreatureSpin;
+        public CheckBox ActiveCheckbox => _activeCheckbox;
+        public CheckBox PlayerOnlyCheckbox => _playerOnlyCheckbox;
+        public ComboBox2DA FactionSelect => _factionSelect;
+        public CheckBox RespawnsCheckbox => _respawnsCheckbox;
+        public NumericUpDown RespawnTimeSpin => _respawnTimeSpin;
+        public NumericUpDown RespawnCountSpin => _respawnCountSpin;
+        public DataGrid CreatureTable => _creatureTable;
+        public Button RemoveCreatureButton => _removeCreatureButton;
+        public ComboBox OnEnterSelect => _onEnterSelect;
+        public ComboBox OnExitSelect => _onExitSelect;
+        public ComboBox OnExhaustedEdit => _onExhaustedEdit;
+        public ComboBox OnHeartbeatSelect => _onHeartbeatSelect;
+        public ComboBox OnUserDefinedSelect => _onUserDefinedSelect;
+        public TextBox CommentsEdit => _commentsEdit;
 
         public OdyToolUTE() : this(null, null) { }
         public OdyToolUTE(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTE", "encounter",
-                new[] { ResourceType.UTE, ResourceType.BTE },
-                new[] { ResourceType.UTE, ResourceType.BTE },
+                new[] { ResourceType.UTE, ResourceType.BTE, ResourceType.UTE_XML },
+                new[] { ResourceType.UTE, ResourceType.BTE, ResourceType.UTE_XML },
                 installation)
         {
             _installation = installation;
@@ -111,6 +180,7 @@ namespace OdyTools.Editors
 
             InitializeComponent();
             SetupSignals();
+            BindDirtyTracking();
             SetupMenuHandlers();
             AddHelpAction();
             KeyDown += OnWindowKeyDown;
@@ -222,32 +292,39 @@ namespace OdyTools.Editors
                 xamlLoaded = true;
 
                 // Try to find controls from XAML
-                _nameEdit = this.FindControl<LocalizedStringEdit>("nameEdit");
-                _nameEditBtn = this.FindControl<Button>("nameEditBtn");
-                _tagEdit = this.FindControl<TextBox>("tagEdit");
-                _tagGenerateBtn = this.FindControl<Button>("tagGenerateButton");
-                _resrefEdit = this.FindControl<TextBox>("resrefEdit");
-                _resrefGenerateBtn = this.FindControl<Button>("resrefGenerateButton");
-                _difficultySelect = this.FindControl<ComboBox2DA>("difficultySelect");
-                _spawnSelect = this.FindControl<ComboBox>("spawnSelect");
-                _minCreatureSpin = this.FindControl<NumericUpDown>("minCreatureSpin");
-                _maxCreatureSpin = this.FindControl<NumericUpDown>("maxCreatureSpin");
-                _activeCheckbox = this.FindControl<CheckBox>("activeCheckbox");
-                _playerOnlyCheckbox = this.FindControl<CheckBox>("playerOnlyCheckbox");
-                _factionSelect = this.FindControl<ComboBox2DA>("factionSelect");
-                _respawnsCheckbox = this.FindControl<CheckBox>("respawnsCheckbox");
-                _infiniteRespawnCheckbox = this.FindControl<CheckBox>("infiniteRespawnCheckbox");
-                _respawnTimeSpin = this.FindControl<NumericUpDown>("respawnTimeSpin");
-                _respawnCountSpin = this.FindControl<NumericUpDown>("respawnCountSpin");
-                _creatureTable = this.FindControl<DataGrid>("creatureTable");
-                _addCreatureButton = this.FindControl<Button>("addCreatureButton");
-                _removeCreatureButton = this.FindControl<Button>("removeCreatureButton");
-                _onEnterSelect = this.FindControl<ComboBox>("onEnterSelect");
-                _onExitSelect = this.FindControl<ComboBox>("onExitSelect");
-                _onExhaustedEdit = this.FindControl<ComboBox>("onExhaustedEdit");
-                _onHeartbeatSelect = this.FindControl<ComboBox>("onHeartbeatSelect");
-                _onUserDefinedSelect = this.FindControl<ComboBox>("onUserDefinedSelect");
-                _commentsEdit = this.FindControl<TextBox>("commentsEdit");
+                _editorSurface = EditorHelpers.FindControlSafe<TabControl>(this, "editorSurface");
+                _nameEdit = EditorHelpers.FindControlSafe<LocalizedStringEdit>(this, "nameEdit");
+                _nameEditBtn = EditorHelpers.FindControlSafe<Button>(this, "nameEditBtn");
+                _tagEdit = EditorHelpers.FindControlSafe<TextBox>(this, "tagEdit");
+                _tagGenerateBtn = EditorHelpers.FindControlSafe<Button>(this, "tagGenerateButton");
+                _resrefEdit = EditorHelpers.FindControlSafe<TextBox>(this, "resrefEdit");
+                _resrefGenerateBtn = EditorHelpers.FindControlSafe<Button>(this, "resrefGenerateButton");
+                _difficultySelect = EditorHelpers.FindControlSafe<ComboBox2DA>(this, "difficultySelect");
+                _spawnSelect = EditorHelpers.FindControlSafe<ComboBox>(this, "spawnSelect");
+                _minCreatureSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "minCreatureSpin");
+                _maxCreatureSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "maxCreatureSpin");
+                _activeCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "activeCheckbox");
+                _playerOnlyCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "playerOnlyCheckbox");
+                _factionSelect = EditorHelpers.FindControlSafe<ComboBox2DA>(this, "factionSelect");
+                _respawnsCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "respawnsCheckbox");
+                _infiniteRespawnCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "infiniteRespawnCheckbox");
+                _respawnTimeSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "respawnTimeSpin");
+                _respawnCountSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "respawnCountSpin");
+                _creatureTable = EditorHelpers.FindControlSafe<DataGrid>(this, "creatureTable");
+                if (_creatureTable != null)
+                {
+                    _creatureTable.ItemsSource = _creatureRows;
+                }
+                _addCreatureButton = EditorHelpers.FindControlSafe<Button>(this, "addCreatureButton");
+                _removeCreatureButton = EditorHelpers.FindControlSafe<Button>(this, "removeCreatureButton");
+                _onEnterSelect = EditorHelpers.FindControlSafe<ComboBox>(this, "onEnterSelect");
+                _onExitSelect = EditorHelpers.FindControlSafe<ComboBox>(this, "onExitSelect");
+                _onExhaustedEdit = EditorHelpers.FindControlSafe<ComboBox>(this, "onExhaustedEdit");
+                _onHeartbeatSelect = EditorHelpers.FindControlSafe<ComboBox>(this, "onHeartbeatSelect");
+                _onUserDefinedSelect = EditorHelpers.FindControlSafe<ComboBox>(this, "onUserDefinedSelect");
+                _commentsEdit = EditorHelpers.FindControlSafe<TextBox>(this, "commentsEdit");
+
+                xamlLoaded = HasRequiredEditorControls();
             }
             catch
             {
@@ -269,6 +346,11 @@ namespace OdyTools.Editors
 
         private void AttachReferenceSearchMenus()
         {
+            if (_tagEdit == null || _resrefEdit == null)
+            {
+                return;
+            }
+
             ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
             FieldValueReferenceHelper.AppendFieldValueFindReferencesMenuItem(
                 _tagEdit.ContextMenu,
@@ -285,6 +367,15 @@ namespace OdyTools.Editors
                 () => "TemplateResRef");
         }
 
+        private bool HasRequiredEditorControls()
+        {
+            return _tagEdit != null
+                && _resrefEdit != null
+                && _difficultySelect != null
+                && _spawnSelect != null
+                && _creatureTable != null;
+        }
+
         private void SetupSignals()
         {
             EditorHelpers.BindClick(_tagGenerateBtn, GenerateTag);
@@ -294,6 +385,79 @@ namespace OdyTools.Editors
             EditorHelpers.BindClick(_addCreatureButton, () => AddCreature());
             EditorHelpers.BindClick(_removeCreatureButton, RemoveSelectedCreature);
             EditorHelpers.BindClick(_nameEditBtn, ChangeName);
+        }
+
+        private void BindDirtyTracking()
+        {
+            if (_dirtyTrackingBound)
+            {
+                return;
+            }
+
+            _dirtyTrackingBound = true;
+            if (_tagEdit != null) _tagEdit.TextChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_resrefEdit != null) _resrefEdit.TextChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_difficultySelect != null) _difficultySelect.SelectionChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_spawnSelect != null) _spawnSelect.SelectionChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_minCreatureSpin != null) _minCreatureSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_maxCreatureSpin != null) _maxCreatureSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_activeCheckbox != null) _activeCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_playerOnlyCheckbox != null) _playerOnlyCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_factionSelect != null) _factionSelect.SelectionChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_respawnsCheckbox != null) _respawnsCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_infiniteRespawnCheckbox != null) _infiniteRespawnCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_respawnTimeSpin != null) _respawnTimeSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_respawnCountSpin != null) _respawnCountSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            BindComboDirtyTracking(_onEnterSelect);
+            BindComboDirtyTracking(_onExitSelect);
+            BindComboDirtyTracking(_onExhaustedEdit);
+            BindComboDirtyTracking(_onHeartbeatSelect);
+            BindComboDirtyTracking(_onUserDefinedSelect);
+            if (_commentsEdit != null) _commentsEdit.TextChanged += (s, e) => MarkDirtyAfterLoad();
+        }
+
+        private void BindComboDirtyTracking(ComboBox comboBox)
+        {
+            if (comboBox == null)
+            {
+                return;
+            }
+
+            comboBox.SelectionChanged += (s, e) => MarkDirtyAfterLoad();
+            comboBox.PropertyChanged += (s, e) =>
+            {
+                if (e.Property.Name == nameof(ComboBox.Text))
+                {
+                    MarkDirtyAfterLoad();
+                }
+            };
+        }
+
+        private void MarkDirtyAfterLoad()
+        {
+            if (!_loadingUte)
+            {
+                MarkDocumentDirty();
+            }
+        }
+
+        protected override void OnOpened(EventArgs e)
+        {
+            base.OnOpened(e);
+            if (!_clearInitialDirtyOnOpen)
+            {
+                return;
+            }
+
+            ClearDirty();
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (_clearInitialDirtyOnOpen)
+                {
+                    ClearDirty();
+                    _clearInitialDirtyOnOpen = false;
+                }
+            }, Avalonia.Threading.DispatcherPriority.Background);
         }
 
         private void SetupInstallation(OdyInstallation installation)
@@ -343,6 +507,22 @@ namespace OdyTools.Editors
             {
                 _relevantCreatureResnames = new List<string>();
             }
+        }
+
+        protected override void OnInstallationChanged()
+        {
+            if (_installation != null)
+            {
+                SetupInstallation(_installation);
+                return;
+            }
+
+            if (_nameEdit != null)
+            {
+                _nameEdit.SetInstallation(null);
+            }
+
+            _relevantCreatureResnames = new List<string>();
         }
 
         private void SetupProgrammaticUI()
@@ -547,7 +727,7 @@ namespace OdyTools.Editors
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
-            var gff = GFF.FromBytes(data);
+            var gff = GFFAuto.ReadGff(data, fileFormat: restype);
             _ute = UTEHelpers.ConstructUte(gff);
             LoadUTE(_ute);
         }
@@ -555,117 +735,123 @@ namespace OdyTools.Editors
         private void LoadUTE(UTE ute)
         {
             _ute = ute;
+            _loadingUte = true;
+            try
+            {
 
-            // Basic
-            if (_nameEdit != null)
-            {
-                _nameEdit.SetLocString(ute.Name);
-            }
-            if (_tagEdit != null)
-            {
-                _tagEdit.Text = ute.Tag;
-            }
-            if (_resrefEdit != null)
-            {
-                _resrefEdit.Text = ute.ResRef.ToString();
-            }
-            if (_difficultySelect != null)
-            {
-                _difficultySelect.SetSelectedIndex(ute.DifficultyId);
-            }
-            if (_spawnSelect != null)
-            {
-                // single_shot=True => Single Shot => index 0; single_shot=False => Continuous => index 1
-                _spawnSelect.SelectedIndex = ute.SingleShot ? 0 : 1;
-                // Ensure respawn fields are properly enabled/disabled based on spawn mode
-                SetContinuous();
-            }
-            if (_minCreatureSpin != null)
-            {
-                _minCreatureSpin.Value = ute.RecCreatures;
-            }
-            if (_maxCreatureSpin != null)
-            {
-                _maxCreatureSpin.Value = ute.MaxCreatures;
-            }
-
-            // Advanced
-            if (_activeCheckbox != null)
-            {
-                _activeCheckbox.IsChecked = ute.Active;
-            }
-            if (_playerOnlyCheckbox != null)
-            {
-                _playerOnlyCheckbox.IsChecked = ute.PlayerOnly != 0;
-            }
-            if (_factionSelect != null)
-            {
-                _factionSelect.SetSelectedIndex(ute.FactionId);
-            }
-            if (_respawnsCheckbox != null)
-            {
-                _respawnsCheckbox.IsChecked = ute.Reset != 0;
-            }
-            if (_infiniteRespawnCheckbox != null)
-            {
-                _infiniteRespawnCheckbox.IsChecked = ute.Respawns == -1;
-            }
-            if (_respawnTimeSpin != null)
-            {
-                _respawnTimeSpin.Value = ute.ResetTime;
-            }
-            if (_respawnCountSpin != null)
-            {
-                _respawnCountSpin.Value = ute.Respawns;
-            }
-
-            // Creatures
-            if (_creatureTable != null && _creatureRows != null)
-            {
-                _creatureRows.Clear();
-                foreach (var creature in ute.Creatures)
+                // Basic
+                if (_nameEdit != null)
                 {
-                    _creatureRows.Add(new CreatureRow
+                    _nameEdit.SetLocString(ute.Name);
+                }
+                if (_tagEdit != null)
+                {
+                    _tagEdit.Text = ute.Tag;
+                }
+                if (_resrefEdit != null)
+                {
+                    _resrefEdit.Text = ute.ResRef.ToString();
+                }
+                if (_difficultySelect != null)
+                {
+                    _difficultySelect.SetSelectedIndex(ute.DifficultyId);
+                }
+                if (_spawnSelect != null)
+                {
+                    // single_shot=True => Single Shot => index 0; single_shot=False => Continuous => index 1
+                    _spawnSelect.SelectedIndex = ute.SingleShot ? 0 : 1;
+                    // Ensure respawn fields are properly enabled/disabled based on spawn mode
+                    SetContinuous();
+                }
+                if (_minCreatureSpin != null)
+                {
+                    _minCreatureSpin.Value = ute.RecCreatures;
+                }
+                if (_maxCreatureSpin != null)
+                {
+                    _maxCreatureSpin.Value = ute.MaxCreatures;
+                }
+
+                // Advanced
+                if (_activeCheckbox != null)
+                {
+                    _activeCheckbox.IsChecked = ute.Active;
+                }
+                if (_playerOnlyCheckbox != null)
+                {
+                    _playerOnlyCheckbox.IsChecked = ute.PlayerOnly != 0;
+                }
+                if (_factionSelect != null)
+                {
+                    _factionSelect.SetSelectedIndex(ute.FactionId);
+                }
+                if (_respawnsCheckbox != null)
+                {
+                    _respawnsCheckbox.IsChecked = ute.Reset != 0;
+                }
+                if (_infiniteRespawnCheckbox != null)
+                {
+                    _infiniteRespawnCheckbox.IsChecked = ute.Respawns == -1;
+                }
+                if (_respawnTimeSpin != null)
+                {
+                    _respawnTimeSpin.Value = ute.ResetTime;
+                }
+                if (_respawnCountSpin != null)
+                {
+                    _respawnCountSpin.Value = ute.Respawns;
+                }
+
+                // Creatures
+                if (_creatureTable != null && _creatureRows != null)
+                {
+                    _creatureRows.Clear();
+                    foreach (var creature in ute.Creatures)
                     {
-                        SingleSpawn = creature.SingleSpawnBool,
-                        CR = creature.ChallengeRating,
-                        Appearance = creature.AppearanceId,
-                        ResRef = creature.ResRef.ToString()
-                    });
+                        _creatureRows.Add(CreateCreatureRow(
+                            creature.ResRef.ToString(),
+                            creature.AppearanceId,
+                            creature.ChallengeRating,
+                            creature.SingleSpawnBool));
+                    }
+                }
+
+                // Scripts
+                // First, get relevant script resources and populate combo boxes
+                if (_installation != null && !string.IsNullOrEmpty(base._filepath))
+                {
+                    HashSet<FileResource> scriptResources = _installation.GetRelevantResources(ResourceType.NCS, base._filepath);
+                    _relevantScriptResnames = scriptResources
+                        .Select(r => r.ResName.ToLowerInvariant())
+                        .Distinct()
+                        .OrderBy(r => r)
+                        .ToList();
+
+                    // Populate all script combo boxes with relevant script resources (matching Python populate_combo_box)
+                    EditorHelpers.PopulateComboBox(_onEnterSelect, _relevantScriptResnames);
+                    EditorHelpers.PopulateComboBox(_onExitSelect, _relevantScriptResnames);
+                    EditorHelpers.PopulateComboBox(_onExhaustedEdit, _relevantScriptResnames);
+                    EditorHelpers.PopulateComboBox(_onHeartbeatSelect, _relevantScriptResnames);
+                    EditorHelpers.PopulateComboBox(_onUserDefinedSelect, _relevantScriptResnames);
+                }
+
+                // Then set the text values (matching Python set_combo_box_text)
+                // This must be done after populating items to ensure the text is set correctly
+                EditorHelpers.SetComboBoxText(_onEnterSelect, ute.OnEntered.ToString());
+                EditorHelpers.SetComboBoxText(_onExitSelect, ute.OnExit.ToString());
+                EditorHelpers.SetComboBoxText(_onExhaustedEdit, ute.OnExhausted.ToString());
+                EditorHelpers.SetComboBoxText(_onHeartbeatSelect, ute.OnHeartbeat.ToString());
+                EditorHelpers.SetComboBoxText(_onUserDefinedSelect, ute.OnUserDefined.ToString());
+
+                // Comments
+                if (_commentsEdit != null)
+                {
+                    _commentsEdit.Text = ute.Comment;
                 }
             }
-
-            // Scripts
-            // First, get relevant script resources and populate combo boxes
-            if (_installation != null && !string.IsNullOrEmpty(base._filepath))
+            finally
             {
-                HashSet<FileResource> scriptResources = _installation.GetRelevantResources(ResourceType.NCS, base._filepath);
-                _relevantScriptResnames = scriptResources
-                    .Select(r => r.ResName.ToLowerInvariant())
-                    .Distinct()
-                    .OrderBy(r => r)
-                    .ToList();
-
-                // Populate all script combo boxes with relevant script resources (matching Python populate_combo_box)
-                EditorHelpers.PopulateComboBox(_onEnterSelect, _relevantScriptResnames);
-                EditorHelpers.PopulateComboBox(_onExitSelect, _relevantScriptResnames);
-                EditorHelpers.PopulateComboBox(_onExhaustedEdit, _relevantScriptResnames);
-                EditorHelpers.PopulateComboBox(_onHeartbeatSelect, _relevantScriptResnames);
-                EditorHelpers.PopulateComboBox(_onUserDefinedSelect, _relevantScriptResnames);
-            }
-
-            // Then set the text values (matching Python set_combo_box_text)
-            // This must be done after populating items to ensure the text is set correctly
-            EditorHelpers.SetComboBoxText(_onEnterSelect, ute.OnEntered.ToString());
-            EditorHelpers.SetComboBoxText(_onExitSelect, ute.OnExit.ToString());
-            EditorHelpers.SetComboBoxText(_onExhaustedEdit, ute.OnExhausted.ToString());
-            EditorHelpers.SetComboBoxText(_onHeartbeatSelect, ute.OnHeartbeat.ToString());
-            EditorHelpers.SetComboBoxText(_onUserDefinedSelect, ute.OnUserDefined.ToString());
-
-            // Comments
-            if (_commentsEdit != null)
-            {
-                _commentsEdit.Text = ute.Comment;
+                _loadingUte = false;
             }
         }
 
@@ -706,38 +892,17 @@ namespace OdyTools.Editors
                     ute.Creatures.Add(creature);
                 }
             }
-            // If table is empty or not set up, preserve existing creatures from _ute
-            if (ute.Creatures.Count == 0 && _ute != null)
-            {
-                foreach (var creature in _ute.Creatures)
-                {
-                    ute.Creatures.Add(new UTECreature
-                    {
-                        ResRef = creature.ResRef,
-                        Appearance = creature.Appearance,
-                        SingleSpawn = creature.SingleSpawn,
-                        CR = creature.CR,
-                        GuaranteedCount = creature.GuaranteedCount
-                    });
-                }
-            }
-
             // Scripts
-            ute.OnEntered = _onEnterSelect != null && !string.IsNullOrEmpty(_onEnterSelect.Text)
-                ? new ResRef(_onEnterSelect.Text)
-                : ute.OnEntered;
-            ute.OnExit = _onExitSelect != null && !string.IsNullOrEmpty(_onExitSelect.Text)
-                ? new ResRef(_onExitSelect.Text)
-                : ute.OnExit;
-            ute.OnExhausted = _onExhaustedEdit != null && !string.IsNullOrEmpty(_onExhaustedEdit.Text)
-                ? new ResRef(_onExhaustedEdit.Text)
-                : ute.OnExhausted;
-            ute.OnHeartbeat = _onHeartbeatSelect != null && !string.IsNullOrEmpty(_onHeartbeatSelect.Text)
-                ? new ResRef(_onHeartbeatSelect.Text)
-                : ute.OnHeartbeat;
-            ute.OnUserDefined = _onUserDefinedSelect != null && !string.IsNullOrEmpty(_onUserDefinedSelect.Text)
-                ? new ResRef(_onUserDefinedSelect.Text)
-                : ute.OnUserDefined;
+            if (_onEnterSelect != null)
+                ute.OnEntered = ResRefFromText(_onEnterSelect.Text);
+            if (_onExitSelect != null)
+                ute.OnExit = ResRefFromText(_onExitSelect.Text);
+            if (_onExhaustedEdit != null)
+                ute.OnExhausted = ResRefFromText(_onExhaustedEdit.Text);
+            if (_onHeartbeatSelect != null)
+                ute.OnHeartbeat = ResRefFromText(_onHeartbeatSelect.Text);
+            if (_onUserDefinedSelect != null)
+                ute.OnUserDefined = ResRefFromText(_onUserDefinedSelect.Text);
 
             // Comments
             ute.Comment = _commentsEdit?.Text ?? ute.Comment ?? "";
@@ -745,8 +910,21 @@ namespace OdyTools.Editors
             // Build GFF
             var game = _installation?.Game ?? Game.K2;
             var gff = UTEHelpers.DismantleUte(ute, game);
-            byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTE);
+            ResourceType outputType = _restype == ResourceType.UTE_XML
+                ? ResourceType.UTE_XML
+                : (_restype == ResourceType.BTE ? ResourceType.BTE : ResourceType.UTE);
+            if (outputType == ResourceType.BTE)
+            {
+                gff.Content = GFFContent.BTE;
+            }
+            byte[] data = GFFAuto.BytesGff(gff, outputType);
             return Tuple.Create(data, new byte[0]);
+        }
+
+        private static ResRef ResRefFromText(string text)
+        {
+            string value = (text ?? string.Empty).Trim();
+            return !string.IsNullOrEmpty(value) ? new ResRef(value) : ResRef.FromBlank();
         }
 
         private UTE CopyUTE(UTE source)
@@ -908,18 +1086,21 @@ namespace OdyTools.Editors
                 _creatureRows = new ObservableCollection<CreatureRow>();
             }
 
-            // Create a new creature row
-            var creatureRow = new CreatureRow
+            // Add to ObservableCollection (DataGrid is bound to this)
+            _creatureRows.Add(CreateCreatureRow(resname, appearanceId, challenge, single));
+            MarkDocumentDirty();
+        }
+
+        private CreatureRow CreateCreatureRow(string resref, int appearanceId, float challenge, bool single)
+        {
+            return new CreatureRow
             {
                 SingleSpawn = single,
                 CR = challenge,
                 Appearance = appearanceId,
-                ResRef = resname
+                ResRef = resref,
+                Changed = MarkDirtyAfterLoad
             };
-
-            // Add to ObservableCollection (DataGrid is bound to this)
-            _creatureRows.Add(creatureRow);
-            MarkDocumentDirty();
         }
 
         private void RemoveSelectedCreature()
@@ -1132,7 +1313,13 @@ namespace OdyTools.Editors
                 // Show the editor - user will set the resref when saving
                 OdyTools.Editors.WindowUtils.AddWindow(nssEditor, show: true);
 #else
-                _ = DialogHelper.ShowAsync("Standalone Mode", "NSS editor is not available in standalone UTE mode.", MsBox.Avalonia.Enums.ButtonEnum.Ok, IconType.Info);
+                OdyTools.Editors.WindowUtils.OpenResourceEditor(
+                    null,
+                    scriptName,
+                    ResourceType.NSS,
+                    Array.Empty<byte>(),
+                    _installation,
+                    this);
 #endif
                 // Update the combo box with the suggested script name
                 // User can change this before saving
@@ -1270,7 +1457,7 @@ namespace OdyTools.Editors
             };
         }
 
-        // Open the selected creature in the UTP editor
+        // Open the selected creature in the UTC editor
         private void OpenCreatureInEditor()
         {
             if (_creatureTable?.SelectedItem == null || _installation == null)
@@ -1298,8 +1485,8 @@ namespace OdyTools.Editors
 
                 string creatureResRef = resRefValue.ToString().Trim();
 
-                // Find the creature resource (UTP)
-                var resourceResult = _installation.Resource(creatureResRef, ResourceType.UTP, null);
+                // Find the creature resource (UTC)
+                var resourceResult = _installation.Resource(creatureResRef, EncounterCreatureResourceType, null);
 
                 if (resourceResult == null)
                 {
@@ -1307,10 +1494,10 @@ namespace OdyTools.Editors
                     return;
                 }
 
-                // Open the creature in the UTP editor
+                // Open the creature in the UTC editor
                 var fileResource = new FileResource(
                     creatureResRef,
-                    ResourceType.UTP,
+                    EncounterCreatureResourceType,
                     resourceResult.Data.Length,
                     0,
                     resourceResult.FilePath
@@ -1347,14 +1534,20 @@ namespace OdyTools.Editors
                 }
 
 #if !UTE_STANDALONE
-                // Create a new UTP editor
-                var utpEditor = new OdyToolUTP(this, _installation);
-                utpEditor.New();
+                // Create a new UTC editor
+                var utcEditor = new OdyToolUTC(this, _installation);
+                utcEditor.New();
 
                 // Show the editor
-                OdyTools.Editors.WindowUtils.AddWindow(utpEditor, show: true);
+                OdyTools.Editors.WindowUtils.AddWindow(utcEditor, show: true);
 #else
-                _ = DialogHelper.ShowAsync("Standalone Mode", "UTP editor is not available in standalone UTE mode.", MsBox.Avalonia.Enums.ButtonEnum.Ok, IconType.Info);
+                OdyTools.Editors.WindowUtils.OpenResourceEditor(
+                    null,
+                    creatureName,
+                    EncounterCreatureResourceType,
+                    Array.Empty<byte>(),
+                    _installation,
+                    this);
 #endif
                 // Optionally add the new creature to the encounter table
                 // User can manually add it via the Add button after creating
@@ -1394,21 +1587,21 @@ namespace OdyTools.Editors
                 string creatureResRef = resRefValue.ToString().Trim();
 
                 // Find the creature resource location
-                var utpIdentifier = new ResourceIdentifier(creatureResRef, ResourceType.UTP);
+                var creatureIdentifier = new ResourceIdentifier(creatureResRef, EncounterCreatureResourceType);
                 var locations = _installation.Locations(
-                    new List<ResourceIdentifier> { utpIdentifier },
+                    new List<ResourceIdentifier> { creatureIdentifier },
                     null,
                     null);
 
-                if (locations.Count > 0 && locations.ContainsKey(utpIdentifier) &&
-                    locations[utpIdentifier].Count > 0)
+                if (locations.Count > 0 && locations.ContainsKey(creatureIdentifier) &&
+                    locations[creatureIdentifier].Count > 0)
                 {
-                    var foundLocations = locations[utpIdentifier];
+                    var foundLocations = locations[creatureIdentifier];
                     // Show dialog with all found locations
                     var dialog = new ResourceLocationDialog(
                         this,
                         creatureResRef,
-                        ResourceType.UTP,
+                        EncounterCreatureResourceType,
                         foundLocations,
                         _installation);
                     dialog.ShowDialog(this);
@@ -1416,13 +1609,18 @@ namespace OdyTools.Editors
                 else
                 {
                     // Show "not found" message
-                    _ = DialogHelper.ShowAsync("Resource Not Found", $"Creature '{creatureResRef}' not found in installation.\n\nSearched for:\n- {creatureResRef}.utp", ButtonEnum.Ok, IconType.Info);
+                    _ = DialogHelper.ShowAsync("Resource Not Found", EncounterCreatureMissingMessage(creatureResRef), ButtonEnum.Ok, IconType.Info);
                 }
             }
             catch (Exception ex)
             {
                 System.Console.WriteLine($"Error viewing creature location: {ex.Message}");
             }
+        }
+
+        internal static string EncounterCreatureMissingMessage(string creatureResRef)
+        {
+            return $"Creature '{creatureResRef}' not found in installation.\n\nSearched for:\n- {creatureResRef}.{EncounterCreatureResourceType.Extension}";
         }
     }
 }

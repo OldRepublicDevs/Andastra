@@ -97,7 +97,8 @@ namespace BioWare.Resource.Formats.GFF
                 // Write labels (16 bytes each)
                 foreach (string label in _labels)
                 {
-                    byte[] labelBytes = Encoding.ASCII.GetBytes(label.PadRight(16, '\0'));
+                    string fixedLabel = label.Length > 16 ? label.Substring(0, 16) : label;
+                    byte[] labelBytes = Encoding.ASCII.GetBytes(fixedLabel.PadRight(16, '\0'));
                     fileWriter.WriteBytes(labelBytes);
                 }
 

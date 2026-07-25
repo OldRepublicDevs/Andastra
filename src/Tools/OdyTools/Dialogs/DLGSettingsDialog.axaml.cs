@@ -8,6 +8,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using BioWare.Extract;
 using OdyTools.Data;
+using OdyTools.Editors;
 using OdyTools.Editors.DLG;
 
 namespace OdyTools.Dialogs
@@ -37,25 +38,25 @@ namespace OdyTools.Dialogs
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
-            var installationCombo = this.FindControl<ComboBox>("installationCombo");
-            _tlkPathEdit = this.FindControl<TextBox>("tlkPathEdit");
-            _femaleTlkPathEdit = this.FindControl<TextBox>("femaleTlkPathEdit");
-            _override2DADirEdit = this.FindControl<TextBox>("override2DADirEdit");
-            _pathDialogAnimsEdit = this.FindControl<TextBox>("pathDialogAnimsEdit");
-            _pathEmotionsEdit = this.FindControl<TextBox>("pathEmotionsEdit");
-            _pathExpressionsEdit = this.FindControl<TextBox>("pathExpressionsEdit");
-            _pathVideoEffectsEdit = this.FindControl<TextBox>("pathVideoEffectsEdit");
-            _pathPlotEdit = this.FindControl<TextBox>("pathPlotEdit");
-            var okButton = this.FindControl<Button>("okButton");
-            var cancelButton = this.FindControl<Button>("cancelButton");
-            _tlkBrowseBtn = this.FindControl<Button>("tlkBrowseBtn");
-            _femaleTlkBrowseBtn = this.FindControl<Button>("femaleTlkBrowseBtn");
-            _twoDADirBrowseBtn = this.FindControl<Button>("twoDADirBrowseBtn");
+            var installationCombo = EditorHelpers.FindControlSafe<ComboBox>(this, "installationCombo");
+            _tlkPathEdit = EditorHelpers.FindControlSafe<TextBox>(this, "tlkPathEdit");
+            _femaleTlkPathEdit = EditorHelpers.FindControlSafe<TextBox>(this, "femaleTlkPathEdit");
+            _override2DADirEdit = EditorHelpers.FindControlSafe<TextBox>(this, "override2DADirEdit");
+            _pathDialogAnimsEdit = EditorHelpers.FindControlSafe<TextBox>(this, "pathDialogAnimsEdit");
+            _pathEmotionsEdit = EditorHelpers.FindControlSafe<TextBox>(this, "pathEmotionsEdit");
+            _pathExpressionsEdit = EditorHelpers.FindControlSafe<TextBox>(this, "pathExpressionsEdit");
+            _pathVideoEffectsEdit = EditorHelpers.FindControlSafe<TextBox>(this, "pathVideoEffectsEdit");
+            _pathPlotEdit = EditorHelpers.FindControlSafe<TextBox>(this, "pathPlotEdit");
+            var okButton = EditorHelpers.FindControlSafe<Button>(this, "okButton");
+            var cancelButton = EditorHelpers.FindControlSafe<Button>(this, "cancelButton");
+            _tlkBrowseBtn = EditorHelpers.FindControlSafe<Button>(this, "tlkBrowseBtn");
+            _femaleTlkBrowseBtn = EditorHelpers.FindControlSafe<Button>(this, "femaleTlkBrowseBtn");
+            _twoDADirBrowseBtn = EditorHelpers.FindControlSafe<Button>(this, "twoDADirBrowseBtn");
 
             InitializeInstallationSection(installationCombo, okButton, cancelButton);
-            _tlkBrowseBtn.Click += (s, e) => _ = BrowseForFileAsync(_tlkPathEdit, "dialog.tlk");
-            _femaleTlkBrowseBtn.Click += (s, e) => _ = BrowseForFileAsync(_femaleTlkPathEdit, "dialogf.tlk");
-            _twoDADirBrowseBtn.Click += (s, e) => _ = BrowseForFolderAsync(_override2DADirEdit, "Select folder containing 2DA files");
+            if (_tlkBrowseBtn != null) _tlkBrowseBtn.Click += (s, e) => _ = BrowseForFileAsync(_tlkPathEdit, "dialog.tlk");
+            if (_femaleTlkBrowseBtn != null) _femaleTlkBrowseBtn.Click += (s, e) => _ = BrowseForFileAsync(_femaleTlkPathEdit, "dialogf.tlk");
+            if (_twoDADirBrowseBtn != null) _twoDADirBrowseBtn.Click += (s, e) => _ = BrowseForFolderAsync(_override2DADirEdit, "Select folder containing 2DA files");
 
             LoadValues();
             UpdateManualFieldsPlaceholders();

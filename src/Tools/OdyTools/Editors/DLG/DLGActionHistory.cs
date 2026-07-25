@@ -26,6 +26,8 @@ namespace OdyTools.Editors.DLG
         // Check if redo is available
         public bool CanRedo => _redoStack.Count > 0;
 
+        public bool IsApplying { get; private set; }
+
         // Apply a new action and add it to undo stack
         // Clears redo stack when new action is applied (standard undo/redo behavior)
         public void Apply(IDLGAction action)
@@ -39,7 +41,15 @@ namespace OdyTools.Editors.DLG
             _redoStack.Clear();
 
             // Apply the action
-            action.Apply(_editor);
+            IsApplying = true;
+            try
+            {
+                action.Apply(_editor);
+            }
+            finally
+            {
+                IsApplying = false;
+            }
 
             // Add to undo stack
             _undoStack.Push(action);
@@ -59,7 +69,15 @@ namespace OdyTools.Editors.DLG
             var action = _undoStack.Pop();
 
             // Undo the action
-            action.Undo(_editor);
+            IsApplying = true;
+            try
+            {
+                action.Undo(_editor);
+            }
+            finally
+            {
+                IsApplying = false;
+            }
 
             // Add to redo stack
             _redoStack.Push(action);
@@ -79,7 +97,15 @@ namespace OdyTools.Editors.DLG
             var action = _redoStack.Pop();
 
             // Apply the action
-            action.Apply(_editor);
+            IsApplying = true;
+            try
+            {
+                action.Apply(_editor);
+            }
+            finally
+            {
+                IsApplying = false;
+            }
 
             // Add to undo stack
             _undoStack.Push(action);
@@ -102,5 +128,4 @@ namespace OdyTools.Editors.DLG
         public int RedoCount => _redoStack.Count;
     }
 }
-
 

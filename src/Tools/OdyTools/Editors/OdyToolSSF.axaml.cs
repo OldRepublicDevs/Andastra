@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -12,7 +13,9 @@ using Avalonia.Threading;
 using BioWare.Extract;
 using BioWare.Resource.Formats.SSF;
 using BioWare.Common;
+using BioWare.Resource;
 using OdyTools.Data;
+using OdyTools.Dialogs;
 using OdyTools.Widgets;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
@@ -69,9 +72,23 @@ namespace OdyTools.Editors
             SearchLocation.CHITIN
         };
 
+        /// <summary>Holocron SSF row-menu location order: StreamMusic, StreamVoice/StreamWaves, StreamSounds, Override, Modules, RIMs, CHITIN.</summary>
+        private static readonly SearchLocation[] HolocronSoundLocateOrder = new[]
+        {
+            SearchLocation.MUSIC,
+            SearchLocation.VOICE,
+            SearchLocation.SOUND,
+            SearchLocation.OVERRIDE,
+            SearchLocation.MODULES,
+            SearchLocation.RIMS,
+            SearchLocation.CHITIN
+        };
+
         private Dictionary<SSFSound, NumericUpDown> _spinBySound;
         private Dictionary<SSFSound, (TextBox SoundEdit, TextBox TextEdit)> _soundTextPairs;
         private Dictionary<SSFSound, Border> _rowBorderBySound;
+        private Dictionary<SSFSound, Button> _playButtonBySound;
+        private Dictionary<SSFSound, Button> _locateButtonBySound;
         private SSFSound? _selectedSound;
         private TalkTable _talktable;
         private TextBlock _talktableLabel;
@@ -92,16 +109,23 @@ namespace OdyTools.Editors
         private readonly List<byte[]> _undoStack = new List<byte[]>();
         private readonly List<byte[]> _redoStack = new List<byte[]>();
         private bool _undoRedoInProgress;
+        private bool _syncingSoundRows;
         private int _findStrref = -1;
+        private byte[] _lastCommittedState;
 
         public OdyToolSSF() : this(null, null) { }
         public OdyToolSSF(Window parent = null, OdyInstallation installation = null)
-            : base(parent, "OdyToolSSF", "soundset", new[] { ResourceType.SSF }, new[] { ResourceType.SSF }, installation)
+            : base(parent, "OdyToolSSF", "soundset",
+                new[] { ResourceType.SSF, ResourceType.SSF_XML },
+                new[] { ResourceType.SSF, ResourceType.SSF_XML },
+                installation)
         {
             _talktable = installation != null ? new TalkTable(Path.Combine(installation.Path, "dialog.tlk")) : null;
             _soundTextPairs = new Dictionary<SSFSound, (TextBox, TextBox)>();
             _spinBySound = new Dictionary<SSFSound, NumericUpDown>();
             _rowBorderBySound = new Dictionary<SSFSound, Border>();
+            _playButtonBySound = new Dictionary<SSFSound, Button>();
+            _locateButtonBySound = new Dictionary<SSFSound, Button>();
             InitializeComponent();
             SetupUI();
             SetupSignals();
@@ -151,7 +175,7 @@ namespace OdyTools.Editors
             dock.Children.Add(menu);
             DockPanel.SetDock(menu, Dock.Top);
             dock.Children.Add(mainPanel);
-            _statusText = new TextBlock { Text = "27 sounds", Margin = new Thickness(4, 2) };
+            _statusText = new TextBlock { Text = SoundRows.Length + " sounds", Margin = new Thickness(4, 2) };
             dock.Children.Add(_statusText);
             DockPanel.SetDock(_statusText, Dock.Bottom);
             Content = dock;
@@ -159,11 +183,11 @@ namespace OdyTools.Editors
 
         private void SetupUI()
         {
-            _talktableButton = this.FindControl<Button>("talktableButton");
-            _talktableLabel = this.FindControl<TextBlock>("talktableLabel");
-            _statusText = this.FindControl<TextBlock>("statusText");
+            _talktableButton = EditorHelpers.FindControlSafe<Button>(this, "talktableButton");
+            _talktableLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "talktableLabel");
+            _statusText = EditorHelpers.FindControlSafe<TextBlock>(this, "statusText");
             _soundCountLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "soundCountLabel");
-            _soundRowsPanel = this.FindControl<StackPanel>("SoundRowsPanel");
+            _soundRowsPanel = EditorHelpers.FindControlSafe<StackPanel>(this, "SoundRowsPanel");
             _stopPlayButton = EditorHelpers.FindControlSafe<Button>(this, "stopPlayButton");
             _previewCategoryLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "previewCategoryLabel");
             _previewStrrefLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "previewStrrefLabel");
@@ -205,11 +229,14 @@ namespace OdyTools.Editors
             _spinBySound.Clear();
             _soundTextPairs.Clear();
             _rowBorderBySound.Clear();
+            _playButtonBySound.Clear();
+            _locateButtonBySound.Clear();
 
             const string strrefTip = "TLK string reference. -1 = no sound. This value indexes into the talk table (dialog.tlk). The linked WAV in that entry is played in-game.";
             const string previewTip = "Dialogue or label text from the talk table for this string ref (read-only).";
             const string soundTip = "Sound ResRef from the talk table (WAV filename without extension) played in-game for this entry (read-only).";
             const string playTip = "Play the WAV linked in the talk table. Searches Override, StreamVoice/StreamWaves, StreamSounds, and CHITIN. Requires a game installation and dialog.tlk with a valid sound resref.";
+            const string locateTip = "Locate the WAV linked in the talk table. Matches Holocron's per-row sound locator and requires a game installation.";
 
             var soundToRow = new Dictionary<SSFSound, (string DisplayName, string Tooltip)>();
             foreach (var (displayName, sound, tooltip) in SoundRows)
@@ -232,37 +259,50 @@ namespace OdyTools.Editors
                     var previewEdit = new TextBox { IsReadOnly = true, MinWidth = 140, Margin = new Thickness(0, 0, 8, 0) };
                     var soundEdit = new TextBox { IsReadOnly = true, MinWidth = 100, Margin = new Thickness(0, 0, 8, 0) };
                     var playBtn = new Button { Content = "▶ Play", MinWidth = 44, Tag = sound };
+                    var locateBtn = new Button { Content = "Locate…", MinWidth = 70, Tag = sound, IsEnabled = false };
                     playBtn.Classes.Add("play-sound");
 
                     ToolTip.SetTip(spin, strrefTip);
                     ToolTip.SetTip(previewEdit, previewTip);
                     ToolTip.SetTip(soundEdit, soundTip);
                     ToolTip.SetTip(playBtn, playTip);
+                    ToolTip.SetTip(locateBtn, locateTip);
 
                     var label = new TextBlock { Text = displayName, Width = 130, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 8, 0) };
                     ToolTip.SetTip(label, tooltip);
 
                     _spinBySound[sound] = spin;
                     _soundTextPairs[sound] = (soundEdit, previewEdit);
+                    _playButtonBySound[sound] = playBtn;
+                    _locateButtonBySound[sound] = locateBtn;
 
                     var row = new Border { Padding = new Thickness(12, 8) };
                     row.Classes.Add("sound-row");
                     _rowBorderBySound[sound] = row;
-                    var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("130,80,*,110,Auto") };
+                    var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("130,80,*,110,Auto,Auto") };
                     grid.Children.Add(label); Grid.SetColumn(label, 0);
                     grid.Children.Add(spin); Grid.SetColumn(spin, 1);
                     grid.Children.Add(previewEdit); Grid.SetColumn(previewEdit, 2);
                     grid.Children.Add(soundEdit); Grid.SetColumn(soundEdit, 3);
                     grid.Children.Add(playBtn); Grid.SetColumn(playBtn, 4);
+                    grid.Children.Add(locateBtn); Grid.SetColumn(locateBtn, 5);
                     row.Child = grid;
                     panel.Children.Add(row);
 
-                    spin.ValueChanged += (s, e) => UpdateTextBoxes();
-                    EditorHelpers.BindLostFocus(spin, OnSpinCommitted);
+                    spin.ValueChanged += (s, e) =>
+                    {
+                        if (!_syncingSoundRows)
+                        {
+                            PushPreviousState();
+                            UpdateTextBoxes();
+                            CaptureCommittedState();
+                        }
+                    };
                     BindSelect(spin, sound);
                     BindSelect(previewEdit, sound);
                     BindSelect(soundEdit, sound);
                     playBtn.Click += (s, e) => PlaySoundForEntry(sound);
+                    locateBtn.Click += (s, e) => LocateSoundForEntry(sound, locateBtn);
                     row.PointerPressed += (s, e) => SelectRow(sound);
                 }
             }
@@ -385,25 +425,40 @@ namespace OdyTools.Editors
             return (int)(spin.Value ?? -1);
         }
 
-        private void OnSpinCommitted()
-        {
-            if (_undoRedoInProgress) return;
-            PushState();
-        }
-
-        private void PushState()
+        private void PushPreviousState()
         {
             if (_undoRedoInProgress) return;
             try
             {
-                var (data, _) = Build();
-                if (data == null || data.Length == 0) return;
-                _undoStack.Add(data);
+                if (_lastCommittedState == null || _lastCommittedState.Length == 0)
+                {
+                    CaptureCommittedState();
+                }
+
+                if (_lastCommittedState == null || _lastCommittedState.Length == 0)
+                {
+                    return;
+                }
+
+                _undoStack.Add((byte[])_lastCommittedState.Clone());
                 if (_undoStack.Count > UndoMaxLevels) _undoStack.RemoveAt(0);
                 _redoStack.Clear();
                 MarkDocumentDirty();
             }
             catch { }
+        }
+
+        private void CaptureCommittedState()
+        {
+            try
+            {
+                var (data, _) = Build();
+                _lastCommittedState = data == null ? null : (byte[])data.Clone();
+            }
+            catch
+            {
+                _lastCommittedState = null;
+            }
         }
 
         private void Undo()
@@ -469,10 +524,10 @@ namespace OdyTools.Editors
         {
             try
             {
-                string text = "27 sounds";
+                string text = SoundRows.Length + " sounds";
                 if (_talktable != null) text += " | " + Path.GetFileName(_talktable.Path);
                 if (_statusText != null) _statusText.Text = text;
-                if (_soundCountLabel != null) _soundCountLabel.Text = "27 sounds";
+                if (_soundCountLabel != null) _soundCountLabel.Text = SoundRows.Length + " sounds";
             }
             catch { }
         }
@@ -507,6 +562,85 @@ namespace OdyTools.Editors
             if (_previewTextBlock != null) _previewTextBlock.Text = previewText;
             if (_previewResRefLabel != null) _previewResRefLabel.Text = string.IsNullOrEmpty(resrefText) ? "Sound ResRef: —" : "Sound ResRef: " + resrefText;
             if (_previewPlayButton != null) _previewPlayButton.IsEnabled = strref >= 0 && _talktable != null && _installation != null;
+        }
+
+        private void UpdateRowActionState(SSFSound sound)
+        {
+            string resref = GetResolvedSoundResRef(sound);
+            bool enabled = !string.IsNullOrWhiteSpace(resref) && _installation != null;
+            if (_playButtonBySound.TryGetValue(sound, out Button playButton) && playButton != null)
+                playButton.IsEnabled = enabled;
+            if (_locateButtonBySound.TryGetValue(sound, out Button locateButton) && locateButton != null)
+                locateButton.IsEnabled = enabled;
+        }
+
+        private string GetResolvedSoundResRef(SSFSound sound)
+        {
+            if (_soundTextPairs != null && _soundTextPairs.TryGetValue(sound, out var pair))
+                return pair.SoundEdit?.Text?.Trim() ?? "";
+            return "";
+        }
+
+        private void ClearResolvedSoundRows()
+        {
+            foreach (var kv in _soundTextPairs)
+            {
+                if (kv.Value.SoundEdit != null)
+                    kv.Value.SoundEdit.Text = "";
+                if (kv.Value.TextEdit != null)
+                    kv.Value.TextEdit.Text = "";
+                UpdateRowActionState(kv.Key);
+            }
+
+            UpdatePreviewPanel();
+        }
+
+        private void LocateSoundForEntry(SSFSound sound, Control source)
+        {
+            string resname = GetResolvedSoundResRef(sound);
+            if (string.IsNullOrWhiteSpace(resname))
+            {
+                ShowPlayMessage("No sound linked in the talk table for this string ref.");
+                return;
+            }
+            if (_installation == null)
+            {
+                ShowPlayMessage("No game installation loaded. Sound location requires an installation to resolve WAV files.");
+                return;
+            }
+
+            var resources = LocateSoundResources(resname);
+            if (resources.Count == 0)
+            {
+                ShowPlayMessage($"Sound '{resname}' not found (searched StreamMusic, StreamVoice/StreamWaves, StreamSounds, Override, Modules, RIMs, and CHITIN).");
+                return;
+            }
+
+            var dialog = new LoadFromLocationResultDialog(this, resources, _installation)
+            {
+                Title = $"{resname} location(s)"
+            };
+            dialog.Show();
+        }
+
+        private List<FileResource> LocateSoundResources(string resname)
+        {
+            var located = new List<FileResource>();
+            if (_installation == null || string.IsNullOrWhiteSpace(resname))
+                return located;
+
+            foreach (var restype in new[] { ResourceType.WAV, ResourceType.MP3 })
+            {
+                foreach (var loc in _installation.Location(resname.Trim(), restype, HolocronSoundLocateOrder) ?? new List<LocationResult>())
+                {
+                    located.Add(loc.FileResource ?? new FileResource(resname.Trim(), restype, loc.Size, loc.Offset, loc.FilePath));
+                }
+            }
+
+            return located
+                .GroupBy(r => new { Name = r.ResName.ToLowerInvariant(), Type = r.ResType, Path = r.FilePath, r.Offset, r.Size })
+                .Select(g => g.First())
+                .ToList();
         }
 
         private void StopPlayback()
@@ -559,7 +693,9 @@ namespace OdyTools.Editors
             foreach (var kv in _spinBySound)
                 if (kv.Value != null && (int)(kv.Value.Value ?? -1) == target)
                 {
+                    SelectRow(kv.Key);
                     kv.Value.Focus();
+                    UpdateStatusBar();
                     return;
                 }
         }
@@ -663,18 +799,24 @@ namespace OdyTools.Editors
             SSF ssf = data == null || data.Length == 0 ? new SSF() : null;
             if (ssf == null)
             {
-                try { ssf = SSFAuto.ReadSsf(data); }
+                try { ssf = SSFAuto.ReadSsf(data, 0, data.Length, _restype); }
                 catch { ssf = new SSF(); }
             }
             _undoRedoInProgress = true;
+            _syncingSoundRows = true;
             try
             {
                 foreach (var kv in _spinBySound)
                     if (kv.Value != null)
                         kv.Value.Value = ssf.Get(kv.Key) ?? 0;
             }
-            finally { _undoRedoInProgress = false; }
+            finally
+            {
+                _syncingSoundRows = false;
+                _undoRedoInProgress = false;
+            }
             UpdateTextBoxes();
+            CaptureCommittedState();
         }
 
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
@@ -700,15 +842,28 @@ namespace OdyTools.Editors
             base.New();
             _undoStack.Clear();
             _redoStack.Clear();
-            foreach (var spin in _spinBySound.Values)
-                if (spin != null)
-                    spin.Value = 0;
+            _syncingSoundRows = true;
+            try
+            {
+                foreach (var spin in _spinBySound.Values)
+                    if (spin != null)
+                        spin.Value = 0;
+            }
+            finally
+            {
+                _syncingSoundRows = false;
+            }
             UpdateTextBoxes();
+            CaptureCommittedState();
         }
 
         private void UpdateTextBoxes()
         {
-            if (_talktable == null) return;
+            if (_talktable == null)
+            {
+                ClearResolvedSoundRows();
+                return;
+            }
             var stringrefs = new List<int>();
             foreach (var kv in _spinBySound)
             {
@@ -721,9 +876,17 @@ namespace OdyTools.Editors
             {
                 if (kv.Value == null || !kv.Value.Value.HasValue || !_soundTextPairs.TryGetValue(kv.Key, out var pair)) continue;
                 int strref = (int)kv.Value.Value.Value;
-                if (!results.TryGetValue(strref, out var result)) continue;
-                pair.SoundEdit.Text = result.Sound?.ToString() ?? "";
+                if (!results.TryGetValue(strref, out var result))
+                {
+                    pair.SoundEdit.Text = "";
+                    pair.TextEdit.Text = strref >= 0 ? "Bad StrRef" : "";
+                    UpdateRowActionState(kv.Key);
+                    continue;
+                }
+                string soundText = result.Sound?.ToString() ?? "";
+                pair.SoundEdit.Text = string.Equals(soundText.Trim(), "none", StringComparison.OrdinalIgnoreCase) ? "" : soundText;
                 pair.TextEdit.Text = result.Text ?? "";
+                UpdateRowActionState(kv.Key);
             }
             UpdatePreviewPanel();
         }
@@ -757,5 +920,35 @@ namespace OdyTools.Editors
         }
 
         public override void SaveAs() => _ = RunSaveAsAsync();
+
+        internal bool HasStructuredEditorSurface =>
+            _soundRowsPanel != null &&
+            _spinBySound != null &&
+            _spinBySound.Count == SoundRows.Length &&
+            _soundTextPairs != null &&
+            _soundTextPairs.Count == SoundRows.Length &&
+            _playButtonBySound != null &&
+            _playButtonBySound.Count == SoundRows.Length &&
+            _locateButtonBySound != null &&
+            _locateButtonBySound.Count == SoundRows.Length;
+
+        internal NumericUpDown StrrefSpinForTest(SSFSound sound) => _spinBySound[sound];
+        internal TextBox SoundResRefTextForTest(SSFSound sound) => _soundTextPairs[sound].SoundEdit;
+        internal TextBox PreviewTextForTest(SSFSound sound) => _soundTextPairs[sound].TextEdit;
+        internal Button PlayButtonForTest(SSFSound sound) => _playButtonBySound[sound];
+        internal Button LocateButtonForTest(SSFSound sound) => _locateButtonBySound[sound];
+        internal string StatusTextForTest => _statusText?.Text;
+        internal string SoundCountTextForTest => _soundCountLabel?.Text;
+        internal SSFSound? SelectedSoundForTest => _selectedSound;
+        internal SearchLocation[] SoundLocateOrderForTest => (SearchLocation[])HolocronSoundLocateOrder.Clone();
+        internal bool FindStrrefReferencesMenuAvailableForTest =>
+            EditorHelpers.FindControlSafe<MenuItem>(this, "actionFindStrrefInstallation") != null;
+        internal void FindStrrefForTest(int strref)
+        {
+            _findStrref = strref;
+            FindStrrefNext();
+        }
+        internal void UndoForTest() => Undo();
+        internal void RedoForTest() => Redo();
     }
 }

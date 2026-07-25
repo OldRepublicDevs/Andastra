@@ -68,6 +68,9 @@ namespace OdyTools.Editors
 
         // UI Controls - Comments
         private TextBox _commentsEdit;
+        private Grid _editorSurface;
+        private StackPanel _previewPanel;
+        private TextBlock _modelInfoSummary;
 
         public LocalizedStringEdit NameEdit => _nameEdit;
         public LocalizedStringEdit DescEdit => _descEdit;
@@ -158,12 +161,13 @@ namespace OdyTools.Editors
         public Button EditPropertyBtn => _editPropertyBtn;
         public TextBox CommentsEdit => _commentsEdit;
         public Image IconLabel => _iconLabel;
+        internal bool HasStructuredEditorSurface => _editorSurface != null && _previewPanel != null;
 
         public OdyToolUTI() : this(null, null) { }
         public OdyToolUTI(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTI", "item",
-                new[] { ResourceType.UTI },
-                new[] { ResourceType.UTI },
+                new[] { ResourceType.UTI, ResourceType.BTI, ResourceType.UTI_XML },
+                new[] { ResourceType.UTI, ResourceType.BTI, ResourceType.UTI_XML },
                 installation)
         {
             _installation = installation;
@@ -212,29 +216,31 @@ namespace OdyTools.Editors
                 xamlLoaded = true;
 
                 // Try to find controls from XAML
-                _nameEdit = this.FindControl<LocalizedStringEdit>("nameEdit");
-                _descEdit = this.FindControl<LocalizedStringEdit>("descEdit");
-                _tagEdit = this.FindControl<TextBox>("tagEdit");
-                _tagGenerateBtn = this.FindControl<Button>("tagGenerateBtn");
-                _resrefEdit = this.FindControl<TextBox>("resrefEdit");
-                _resrefGenerateBtn = this.FindControl<Button>("resrefGenerateBtn");
-                _baseSelect = this.FindControl<ComboBox>("baseSelect");
-                _costSpin = this.FindControl<NumericUpDown>("costSpin");
-                _additionalCostSpin = this.FindControl<NumericUpDown>("additionalCostSpin");
-                _upgradeSpin = this.FindControl<NumericUpDown>("upgradeSpin");
-                _plotCheckbox = this.FindControl<CheckBox>("plotCheckbox");
-                _chargesSpin = this.FindControl<NumericUpDown>("chargesSpin");
-                _stackSpin = this.FindControl<NumericUpDown>("stackSpin");
-                _modelVarSpin = this.FindControl<NumericUpDown>("modelVarSpin");
-                _bodyVarSpin = this.FindControl<NumericUpDown>("bodyVarSpin");
-                _textureVarSpin = this.FindControl<NumericUpDown>("textureVarSpin");
-                _iconLabel = this.FindControl<Image>("iconLabel");
-                _availablePropertyList = this.FindControl<TreeView>("availablePropertyList");
-                _assignedPropertiesList = this.FindControl<ListBox>("assignedPropertiesList");
-                _addPropertyBtn = this.FindControl<Button>("addPropertyBtn");
-                _removePropertyBtn = this.FindControl<Button>("removePropertyBtn");
-                _editPropertyBtn = this.FindControl<Button>("editPropertyBtn");
-                _commentsEdit = this.FindControl<TextBox>("commentsEdit");
+                _nameEdit = EditorHelpers.FindControlSafe<LocalizedStringEdit>(this, "nameEdit");
+                _descEdit = EditorHelpers.FindControlSafe<LocalizedStringEdit>(this, "descEdit");
+                _tagEdit = EditorHelpers.FindControlSafe<TextBox>(this, "tagEdit");
+                _tagGenerateBtn = EditorHelpers.FindControlSafe<Button>(this, "tagGenerateBtn");
+                _resrefEdit = EditorHelpers.FindControlSafe<TextBox>(this, "resrefEdit");
+                _resrefGenerateBtn = EditorHelpers.FindControlSafe<Button>(this, "resrefGenerateBtn");
+                _baseSelect = EditorHelpers.FindControlSafe<ComboBox>(this, "baseSelect");
+                _costSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "costSpin");
+                _additionalCostSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "additionalCostSpin");
+                _upgradeSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "upgradeSpin");
+                _plotCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "plotCheckbox");
+                _chargesSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "chargesSpin");
+                _stackSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "stackSpin");
+                _modelVarSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "modelVarSpin");
+                _bodyVarSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "bodyVarSpin");
+                _textureVarSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "textureVarSpin");
+                _iconLabel = EditorHelpers.FindControlSafe<Image>(this, "iconLabel");
+                _availablePropertyList = EditorHelpers.FindControlSafe<TreeView>(this, "availablePropertyList");
+                _assignedPropertiesList = EditorHelpers.FindControlSafe<ListBox>(this, "assignedPropertiesList");
+                _addPropertyBtn = EditorHelpers.FindControlSafe<Button>(this, "addPropertyBtn");
+                _removePropertyBtn = EditorHelpers.FindControlSafe<Button>(this, "removePropertyBtn");
+                _editPropertyBtn = EditorHelpers.FindControlSafe<Button>(this, "editPropertyBtn");
+                _commentsEdit = EditorHelpers.FindControlSafe<TextBox>(this, "commentsEdit");
+
+                xamlLoaded = HasRequiredEditorControls();
             }
             catch
             {
@@ -272,6 +278,11 @@ namespace OdyTools.Editors
 
         private void AttachReferenceSearchMenus()
         {
+            if (_tagEdit == null || _resrefEdit == null)
+            {
+                return;
+            }
+
             ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
             FieldValueReferenceHelper.AppendFieldValueFindReferencesMenuItem(
                 _tagEdit.ContextMenu,
@@ -288,125 +299,150 @@ namespace OdyTools.Editors
                 () => "TemplateResRef");
         }
 
+        private bool HasRequiredEditorControls()
+        {
+            return _tagEdit != null
+                && _resrefEdit != null
+                && _baseSelect != null
+                && _availablePropertyList != null
+                && _assignedPropertiesList != null;
+        }
+
         private void SetupProgrammaticUI()
         {
-            var scrollViewer = new ScrollViewer();
-            var mainPanel = new StackPanel { Orientation = Orientation.Vertical };
+            var dock = new DockPanel();
+            var menu = BuildMenu();
+            DockPanel.SetDock(menu, Dock.Top);
+            dock.Children.Add(menu);
 
-            // Basic Group
-            var basicGroup = new Expander { Header = "Basic", IsExpanded = true };
-            var basicPanel = new StackPanel { Orientation = Orientation.Vertical };
+            var toolbar = new Border
+            {
+                Background = Avalonia.Media.Brushes.WhiteSmoke,
+                BorderBrush = Avalonia.Media.Brushes.LightGray,
+                BorderThickness = new Avalonia.Thickness(0, 0, 0, 1),
+                Padding = new Avalonia.Thickness(10, 8)
+            };
+            DockPanel.SetDock(toolbar, Dock.Top);
+            var toolbarGrid = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("Auto,220,Auto,220,*"),
+                ColumnSpacing = 8
+            };
+            toolbarGrid.Children.Add(new TextBlock { Text = "Tag:", VerticalAlignment = VerticalAlignment.Center });
+            _tagEdit = new TextBox { Watermark = "item tag", MaxLength = 64 };
+            Grid.SetColumn(_tagEdit, 1);
+            toolbarGrid.Children.Add(_tagEdit);
+            _tagGenerateBtn = new Button { Content = "Use ResRef" };
+            Grid.SetColumn(_tagGenerateBtn, 2);
+            toolbarGrid.Children.Add(_tagGenerateBtn);
+            _resrefEdit = new TextBox { Watermark = "template resref", MaxLength = 16 };
+            Grid.SetColumn(_resrefEdit, 3);
+            toolbarGrid.Children.Add(_resrefEdit);
+            _resrefGenerateBtn = new Button { Content = "Use file name" };
+            Grid.SetColumn(_resrefGenerateBtn, 4);
+            toolbarGrid.Children.Add(_resrefGenerateBtn);
+            toolbar.Child = toolbarGrid;
+            dock.Children.Add(toolbar);
 
-            // Name
-            var nameLabel = new TextBlock { Text = "Name:" };
+            _statusText = new Avalonia.Controls.TextBlock { Name = "statusText", Text = "Item", Margin = new Avalonia.Thickness(10, 4) };
+            DockPanel.SetDock(_statusText, Dock.Bottom);
+            dock.Children.Add(_statusText);
+
+            _editorSurface = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("320,*,260"),
+                Margin = new Avalonia.Thickness(10),
+                ColumnSpacing = 10
+            };
+
+            var identityPanel = new StackPanel { Spacing = 10 };
+            identityPanel.Children.Add(new TextBlock { Text = "Identity", FontWeight = Avalonia.Media.FontWeight.SemiBold, FontSize = 14 });
+
             _nameEdit = new LocalizedStringEdit();
             if (_installation != null)
             {
                 _nameEdit.SetInstallation(_installation);
             }
-            basicPanel.Children.Add(nameLabel);
-            basicPanel.Children.Add(_nameEdit);
+            identityPanel.Children.Add(new TextBlock { Text = "Name" });
+            identityPanel.Children.Add(_nameEdit);
 
-            // Description
-            var descLabel = new TextBlock { Text = "Description:" };
             _descEdit = new LocalizedStringEdit();
             if (_installation != null)
             {
                 _descEdit.SetInstallation(_installation);
             }
-            basicPanel.Children.Add(descLabel);
-            basicPanel.Children.Add(_descEdit);
-
-            // Tag
-            var tagLabel = new TextBlock { Text = "Tag:" };
-            _tagEdit = new TextBox();
-            _tagGenerateBtn = new Button { Content = "Generate" };
-            EditorHelpers.BindClick(_tagGenerateBtn, GenerateTag);
-            basicPanel.Children.Add(tagLabel);
-            basicPanel.Children.Add(_tagEdit);
-            basicPanel.Children.Add(_tagGenerateBtn);
-
-            // ResRef
-            var resrefLabel = new TextBlock { Text = "ResRef:" };
-            _resrefEdit = new TextBox();
-            _resrefGenerateBtn = new Button { Content = "Generate" };
-            EditorHelpers.BindClick(_resrefGenerateBtn, GenerateResref);
-            basicPanel.Children.Add(resrefLabel);
-            basicPanel.Children.Add(_resrefEdit);
-            basicPanel.Children.Add(_resrefGenerateBtn);
+            identityPanel.Children.Add(new TextBlock { Text = "Description" });
+            identityPanel.Children.Add(_descEdit);
 
             AttachReferenceSearchMenus();
 
-            // Base Item
-            var baseLabel = new TextBlock { Text = "Base Item:" };
             _baseSelect = new ComboBox();
             EditorHelpers.BindSelectionChanged(_baseSelect, UpdateIcon);
-            basicPanel.Children.Add(baseLabel);
-            basicPanel.Children.Add(_baseSelect);
+            identityPanel.Children.Add(new TextBlock { Text = "Base item" });
+            identityPanel.Children.Add(_baseSelect);
 
-            // Icon Label (shows item icon based on base item and variations)
             _iconLabel = new Image
             {
-                Width = 32,
-                Height = 32,
-                Margin = new Avalonia.Thickness(0, 5, 0, 5)
+                Width = 96,
+                Height = 96,
+                Margin = new Avalonia.Thickness(0, 8, 0, 0),
+                HorizontalAlignment = HorizontalAlignment.Left
             };
-            basicPanel.Children.Add(_iconLabel);
+            identityPanel.Children.Add(_iconLabel);
 
-            // Cost
-            var costLabel = new TextBlock { Text = "Cost:" };
             _costSpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue };
-            var additionalCostLabel = new TextBlock { Text = "Additional Cost:" };
             _additionalCostSpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue };
-            var upgradeLabel = new TextBlock { Text = "Upgrade Level:" };
             _upgradeSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
             _plotCheckbox = new CheckBox { Content = "Plot" };
-            var chargesLabel = new TextBlock { Text = "Charges:" };
             _chargesSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
-            var stackLabel = new TextBlock { Text = "Stack Size:" };
             _stackSpin = new NumericUpDown { Minimum = 0, Maximum = 32767 };
 
-            basicPanel.Children.Add(costLabel);
-            basicPanel.Children.Add(_costSpin);
-            basicPanel.Children.Add(additionalCostLabel);
-            basicPanel.Children.Add(_additionalCostSpin);
-            basicPanel.Children.Add(upgradeLabel);
-            basicPanel.Children.Add(_upgradeSpin);
-            basicPanel.Children.Add(_plotCheckbox);
-            basicPanel.Children.Add(chargesLabel);
-            basicPanel.Children.Add(_chargesSpin);
-            basicPanel.Children.Add(stackLabel);
-            basicPanel.Children.Add(_stackSpin);
-
-            // Variations (for armor items)
-            var modelVarLabel = new TextBlock { Text = "Model Variation:" };
             _modelVarSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
             EditorHelpers.BindValueChanged(_modelVarSpin, UpdateIcon);
-            var bodyVarLabel = new TextBlock { Text = "Body Variation:" };
             _bodyVarSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
             EditorHelpers.BindValueChanged(_bodyVarSpin, UpdateIcon);
-            var textureVarLabel = new TextBlock { Text = "Texture Variation:" };
             _textureVarSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
             EditorHelpers.BindValueChanged(_textureVarSpin, UpdateIcon);
 
-            basicPanel.Children.Add(modelVarLabel);
-            basicPanel.Children.Add(_modelVarSpin);
-            basicPanel.Children.Add(bodyVarLabel);
-            basicPanel.Children.Add(_bodyVarSpin);
-            basicPanel.Children.Add(textureVarLabel);
-            basicPanel.Children.Add(_textureVarSpin);
+            var valueGrid = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("Auto,*"),
+                RowDefinitions = new RowDefinitions("Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"),
+                ColumnSpacing = 8,
+                RowSpacing = 6
+            };
+            AddLabeledControl(valueGrid, 0, "Cost", _costSpin);
+            AddLabeledControl(valueGrid, 1, "Additional Cost", _additionalCostSpin);
+            AddLabeledControl(valueGrid, 2, "Upgrade Level", _upgradeSpin);
+            AddLabeledControl(valueGrid, 3, "Charges", _chargesSpin);
+            AddLabeledControl(valueGrid, 4, "Stack Size", _stackSpin);
+            AddLabeledControl(valueGrid, 5, "Model Variation", _modelVarSpin);
+            AddLabeledControl(valueGrid, 6, "Body Variation", _bodyVarSpin);
+            AddLabeledControl(valueGrid, 7, "Texture Variation", _textureVarSpin);
+            Grid.SetRow(_plotCheckbox, 8);
+            Grid.SetColumn(_plotCheckbox, 1);
+            valueGrid.Children.Add(_plotCheckbox);
+            identityPanel.Children.Add(valueGrid);
 
-            basicGroup.Content = basicPanel;
-            mainPanel.Children.Add(basicGroup);
+            var identityScroll = new ScrollViewer { Content = identityPanel };
+            Grid.SetColumn(identityScroll, 0);
+            _editorSurface.Children.Add(identityScroll);
 
-            // Properties Group
-            var propertiesGroup = new Expander { Header = "Properties", IsExpanded = false };
-            var propertiesPanel = new StackPanel { Orientation = Orientation.Vertical };
-
-            var availableLabel = new TextBlock { Text = "Available Properties:" };
+            var propertiesGrid = new Grid
+            {
+                RowDefinitions = new RowDefinitions("Auto,*,Auto,*,Auto"),
+                RowSpacing = 8
+            };
+            propertiesGrid.Children.Add(new TextBlock { Text = "Item Properties", FontWeight = Avalonia.Media.FontWeight.SemiBold, FontSize = 14 });
             _availablePropertyList = new TreeView();
-            var assignedLabel = new TextBlock { Text = "Assigned Properties:" };
+            Grid.SetRow(_availablePropertyList, 1);
+            propertiesGrid.Children.Add(_availablePropertyList);
             _assignedPropertiesList = new ListBox();
+            Grid.SetRow(_assignedPropertiesList, 3);
+            propertiesGrid.Children.Add(_assignedPropertiesList);
+            var assignedLabel = new TextBlock { Text = "Assigned", FontWeight = Avalonia.Media.FontWeight.SemiBold };
+            Grid.SetRow(assignedLabel, 2);
+            propertiesGrid.Children.Add(assignedLabel);
             var propertyButtonsPanel = new StackPanel { Orientation = Orientation.Horizontal };
             _addPropertyBtn = new Button { Content = "Add" };
             EditorHelpers.BindClick(_addPropertyBtn, AddSelectedProperty);
@@ -417,35 +453,36 @@ namespace OdyTools.Editors
             propertyButtonsPanel.Children.Add(_addPropertyBtn);
             propertyButtonsPanel.Children.Add(_removePropertyBtn);
             propertyButtonsPanel.Children.Add(_editPropertyBtn);
+            Grid.SetRow(propertyButtonsPanel, 4);
+            propertiesGrid.Children.Add(propertyButtonsPanel);
+            Grid.SetColumn(propertiesGrid, 1);
+            _editorSurface.Children.Add(propertiesGrid);
 
-            propertiesPanel.Children.Add(availableLabel);
-            propertiesPanel.Children.Add(_availablePropertyList);
-            propertiesPanel.Children.Add(assignedLabel);
-            propertiesPanel.Children.Add(_assignedPropertiesList);
-            propertiesPanel.Children.Add(propertyButtonsPanel);
-            propertiesGroup.Content = propertiesPanel;
-            mainPanel.Children.Add(propertiesGroup);
-
-            // Comments Group
-            var commentsGroup = new Expander { Header = "Comments", IsExpanded = false };
-            var commentsPanel = new StackPanel { Orientation = Orientation.Vertical };
-            var commentsLabel = new TextBlock { Text = "Comment:" };
+            _previewPanel = new StackPanel { Spacing = 10 };
+            _previewPanel.Children.Add(new TextBlock { Text = "Preview", FontWeight = Avalonia.Media.FontWeight.SemiBold, FontSize = 14 });
+            _modelInfoSummary = new TextBlock { Text = "No installation - icon and model metadata unavailable.", TextWrapping = Avalonia.Media.TextWrapping.Wrap };
+            _previewPanel.Children.Add(_modelInfoSummary);
+            _previewPanel.Children.Add(new TextBlock { Text = "Comments", FontWeight = Avalonia.Media.FontWeight.SemiBold });
             _commentsEdit = new TextBox { AcceptsReturn = true, AcceptsTab = true };
-            commentsPanel.Children.Add(commentsLabel);
-            commentsPanel.Children.Add(_commentsEdit);
-            commentsGroup.Content = commentsPanel;
-            mainPanel.Children.Add(commentsGroup);
+            _previewPanel.Children.Add(_commentsEdit);
+            Grid.SetColumn(_previewPanel, 2);
+            _editorSurface.Children.Add(_previewPanel);
 
-            scrollViewer.Content = mainPanel;
-            var dock = new DockPanel();
-            dock.Children.Add(BuildMenu());
-            DockPanel.SetDock(dock.Children[0], Dock.Top);
-            dock.Children.Add(scrollViewer);
-            _statusText = new Avalonia.Controls.TextBlock { Name = "statusText", Text = "Item", Margin = new Avalonia.Thickness(4, 2) };
-            dock.Children.Add(_statusText);
-            DockPanel.SetDock(_statusText, Dock.Bottom);
+            dock.Children.Add(_editorSurface);
             Content = dock;
+            SetupSignals();
             AttachCommitHandlers();
+        }
+
+        private static void AddLabeledControl(Grid grid, int row, string label, Control control)
+        {
+            var text = new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center };
+            Grid.SetRow(text, row);
+            Grid.SetColumn(text, 0);
+            grid.Children.Add(text);
+            Grid.SetRow(control, row);
+            Grid.SetColumn(control, 1);
+            grid.Children.Add(control);
         }
 
         private void SetupUI()
@@ -539,7 +576,7 @@ namespace OdyTools.Editors
             {
                 try
                 {
-                    var gff = GFF.FromBytes(data);
+                    var gff = GFFAuto.ReadGff(data, fileFormat: _restype ?? ResourceType.UTI);
                     _uti = UTIHelpers.ConstructUti(gff);
                     LoadUTI(_uti);
                 }
@@ -663,10 +700,12 @@ namespace OdyTools.Editors
             if (_availablePropertyList != null)
             {
                 _availablePropertyList.DoubleTapped += (s, e) => OnAvailablePropertyListDoubleClicked();
+                _availablePropertyList.SelectionChanged += (s, e) => UpdatePropertyButtonsState();
             }
             if (_assignedPropertiesList != null)
             {
                 _assignedPropertiesList.DoubleTapped += (s, e) => OnAssignedPropertyListDoubleClicked();
+                _assignedPropertiesList.SelectionChanged += (s, e) => UpdatePropertyButtonsState();
             }
 
             // Note: In Avalonia, we handle KeyDown event instead of QShortcut
@@ -678,6 +717,8 @@ namespace OdyTools.Editors
                     e.Handled = true;
                 }
             };
+
+            UpdatePropertyButtonsState();
         }
 
         private void LoadUTI(UTI uti)
@@ -764,6 +805,7 @@ namespace OdyTools.Editors
 
             // Update icon display after loading UTI data
             UpdateIcon();
+            UpdatePropertyButtonsState();
         }
 
         public override Tuple<byte[], byte[]> Build()
@@ -781,9 +823,10 @@ namespace OdyTools.Editors
                 uti.Description = _descEdit.GetLocString();
             }
             uti.Tag = _tagEdit?.Text ?? uti.Tag ?? "";
-            uti.ResRef = _resrefEdit != null && !string.IsNullOrEmpty(_resrefEdit.Text)
-                ? new ResRef(_resrefEdit.Text)
-                : uti.ResRef;
+            if (_resrefEdit != null)
+            {
+                uti.ResRef = ResRefFromText(_resrefEdit.Text);
+            }
             uti.BaseItem = _baseSelect?.SelectedIndex ?? uti.BaseItem;
             uti.Cost = _costSpin?.Value != null ? (int)_costSpin.Value : uti.Cost;
             uti.AddCost = _additionalCostSpin?.Value != null ? (int)_additionalCostSpin.Value : uti.AddCost;
@@ -826,10 +869,22 @@ namespace OdyTools.Editors
             // Build GFF
             Game game = _installation?.Game ?? Game.K2;
             var gff = UTIHelpers.DismantleUti(uti, game);
-            byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTI);
+            ResourceType outputType = _restype == ResourceType.UTI_XML
+                ? ResourceType.UTI_XML
+                : (_restype == ResourceType.BTI ? ResourceType.BTI : ResourceType.UTI);
+            if (outputType == ResourceType.BTI)
+            {
+                gff.Content = GFFContent.BTI;
+            }
+            byte[] data = GFFAuto.BytesGff(gff, outputType);
             return Tuple.Create(data, new byte[0]);
         }
 
+        private static ResRef ResRefFromText(string text)
+        {
+            string value = (text ?? string.Empty).Trim();
+            return !string.IsNullOrEmpty(value) ? new ResRef(value) : ResRef.FromBlank();
+        }
 
         private UTI CopyUTI(UTI source)
         {
@@ -952,6 +1007,7 @@ namespace OdyTools.Editors
             {
                 _tagEdit.Text = _resrefEdit.Text;
             }
+            MarkDocumentDirty();
         }
 
         private void GenerateResref()
@@ -960,6 +1016,7 @@ namespace OdyTools.Editors
             {
                 _resrefEdit.Text = !string.IsNullOrEmpty(base._resname) ? base._resname : "m00xx_itm_000";
             }
+            MarkDocumentDirty();
         }
 
         private async System.Threading.Tasks.Task EditSelectedProperty()
@@ -987,6 +1044,8 @@ namespace OdyTools.Editors
             UTIProperty updatedProperty = dialog.GetUtiProperty();
             selectedItem.Property = updatedProperty;
             selectedItem.Text = PropertySummary(updatedProperty);
+            UpdatePropertyButtonsState();
+            MarkDocumentDirty();
         }
 
         private void AddSelectedProperty()
@@ -1040,7 +1099,10 @@ namespace OdyTools.Editors
             if (_assignedPropertiesList != null)
             {
                 _assignedPropertiesList.Items.Add(listItem);
+                _assignedPropertiesList.SelectedItem = listItem;
+                MarkDocumentDirty();
             }
+            UpdatePropertyButtonsState();
         }
 
         private void RemoveSelectedProperty()
@@ -1048,7 +1110,49 @@ namespace OdyTools.Editors
             if (_assignedPropertiesList?.SelectedItem != null)
             {
                 _assignedPropertiesList.Items.Remove(_assignedPropertiesList.SelectedItem);
+                MarkDocumentDirty();
             }
+            UpdatePropertyButtonsState();
+        }
+
+        private void UpdatePropertyButtonsState()
+        {
+            if (_addPropertyBtn != null)
+            {
+                _addPropertyBtn.IsEnabled = _installation != null && IsSelectedAvailablePropertyLeaf();
+            }
+
+            bool hasAssignedProperty = HasSelectedAssignedProperty();
+            if (_removePropertyBtn != null)
+            {
+                _removePropertyBtn.IsEnabled = hasAssignedProperty;
+            }
+            if (_editPropertyBtn != null)
+            {
+                _editPropertyBtn.IsEnabled = hasAssignedProperty;
+            }
+        }
+
+        private bool IsSelectedAvailablePropertyLeaf()
+        {
+            if (!(_availablePropertyList?.SelectedItem is TreeViewItem selectedItem) ||
+                !(selectedItem.Tag is PropertyTreeItemData))
+            {
+                return false;
+            }
+
+            if (selectedItem.ItemsSource is System.Collections.ICollection collection)
+            {
+                return collection.Count == 0;
+            }
+
+            return selectedItem.ItemsSource == null;
+        }
+
+        private bool HasSelectedAssignedProperty()
+        {
+            return _assignedPropertiesList?.SelectedItem is PropertyListItem selectedItem &&
+                   selectedItem.Property != null;
         }
 
         private string PropertySummary(UTIProperty prop)
@@ -1343,6 +1447,24 @@ namespace OdyTools.Editors
                         _availablePropertyList.Items.Add(item);
                     }
                 }
+            }
+        }
+
+        protected override void OnInstallationChanged()
+        {
+            if (_installation != null)
+            {
+                SetupInstallation(_installation);
+                return;
+            }
+
+            if (_nameEdit != null)
+            {
+                _nameEdit.SetInstallation(null);
+            }
+            if (_descEdit != null)
+            {
+                _descEdit.SetInstallation(null);
             }
         }
 

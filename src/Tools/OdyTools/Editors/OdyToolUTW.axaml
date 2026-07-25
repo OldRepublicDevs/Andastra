@@ -126,8 +126,12 @@
                 ToolTip.Tip="Map note pin is initially visible. Only applies when Is a Map Note is set; scripts can toggle visibility."/>
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto" Margin="0,12,0,0" RowSpacing="0" ColumnSpacing="0">
               <TextBlock Grid.Row="0" Grid.Column="0" Classes="form-label" Text="Map Note:"/>
-              <w:LocalizedStringEdit Name="noteEdit" Grid.Row="0" Grid.Column="1"
-                  ToolTip.Tip="Text shown on the area map when Is a Map Note is set (GFF: MapNote). Use for quest hints or location labels."/>
+              <Grid Grid.Row="0" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <w:LocalizedStringEdit Name="noteEdit"
+                    ToolTip.Tip="Text shown on the area map when Is a Map Note is set (GFF: MapNote). Use for quest hints or location labels."/>
+                <Button Name="noteChangeButton" Grid.Column="1" Classes="generate-btn" Content="..."
+                    ToolTip.Tip="Edit Map Note localized string."/>
+              </Grid>
             </Grid>
           </StackPanel>
         </TabItem>

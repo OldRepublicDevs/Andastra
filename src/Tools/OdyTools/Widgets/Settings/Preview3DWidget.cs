@@ -2,6 +2,7 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using OdyTools.Data;
+using OdyTools.Editors;
 
 namespace OdyTools.Widgets.Settings
 {
@@ -42,8 +43,8 @@ namespace OdyTools.Widgets.Settings
         {
             var panel = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(10) };
 
-            _utcShowByDefault = new CheckBox { Content = "UTC Show By Default" };
-            _backgroundColour = new NumericUpDown { Minimum = 0, Maximum = 0xFFFFFFFF, Value = 0 };
+            _utcShowByDefault = new CheckBox { Name = "utcShowByDefault", Content = "UTC Show By Default" };
+            _backgroundColour = new NumericUpDown { Name = "backgroundColour", Minimum = 0, Maximum = 0xFFFFFFFF, Value = 0 };
 
             panel.Children.Add(_utcShowByDefault);
             panel.Children.Add(new TextBlock { Text = "Background Colour:" });
@@ -55,8 +56,13 @@ namespace OdyTools.Widgets.Settings
         private void SetupUI()
         {
             // Find controls from XAML
-            _utcShowByDefault = this.FindControl<CheckBox>("utcShowByDefault");
-            _backgroundColour = this.FindControl<NumericUpDown>("backgroundColour");
+            _utcShowByDefault = EditorHelpers.FindControlSafe<CheckBox>(this, "utcShowByDefault") ?? _utcShowByDefault;
+            _backgroundColour = EditorHelpers.FindControlSafe<NumericUpDown>(this, "backgroundColour") ?? _backgroundColour;
+
+            if (_utcShowByDefault == null || _backgroundColour == null)
+            {
+                SetupProgrammaticUI();
+            }
         }
 
         private void SetupValues()

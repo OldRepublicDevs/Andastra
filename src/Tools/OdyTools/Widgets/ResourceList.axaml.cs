@@ -18,6 +18,7 @@ using BioWare.Common;
 using BioWare.Resource;
 using OdyTools.Data;
 using OdyTools.Dialogs;
+using OdyTools.Editors;
 
 namespace OdyTools.Widgets
 {
@@ -83,11 +84,16 @@ namespace OdyTools.Widgets
 
             if (xamlLoaded)
             {
-                _sectionCombo = this.FindControl<ComboBox>("sectionCombo");
-                _searchEdit = this.FindControl<TextBox>("searchEdit");
-                _reloadButton = this.FindControl<Button>("reloadButton");
-                _refreshButton = this.FindControl<Button>("refreshButton");
-                _resourceTree = this.FindControl<TreeView>("resourceTree");
+                _sectionCombo = EditorHelpers.FindControlSafe<ComboBox>(this, "sectionCombo");
+                _searchEdit = EditorHelpers.FindControlSafe<TextBox>(this, "searchEdit");
+                _reloadButton = EditorHelpers.FindControlSafe<Button>(this, "reloadButton");
+                _refreshButton = EditorHelpers.FindControlSafe<Button>(this, "refreshButton");
+                _resourceTree = EditorHelpers.FindControlSafe<TreeView>(this, "resourceTree");
+
+                if (_sectionCombo == null || _searchEdit == null || _reloadButton == null || _refreshButton == null || _resourceTree == null)
+                {
+                    SetupProgrammaticUI();
+                }
             }
             else
             {

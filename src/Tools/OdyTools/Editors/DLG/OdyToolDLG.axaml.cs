@@ -206,6 +206,12 @@ namespace OdyTools.Editors.DLG
         private DlgGraphScene _graphScene;
         private bool _isSyncingViewSelection;
         private bool _suppressTreeSelectionHandler;
+        private bool _suppressFilePropertyHandlers;
+        private bool _suppressNodePropertyHandlers;
+        private bool _filePropertiesUiTouched;
+        private string _lastFilePropertiesUiSnapshot;
+        private bool _nodePropertiesUiTouched;
+        private string _lastNodePropertiesUiSnapshot;
         private DLGLink _selectedLink;
         private Dictionary<string, Point> _graphManualPositions = new Dictionary<string, Point>(StringComparer.OrdinalIgnoreCase);
 
@@ -1098,34 +1104,36 @@ namespace OdyTools.Editors.DLG
 
         private void WireNodeUpdateHandlers()
         {
-            void WireCombo(ComboBox c) { if (c != null) c.LostFocus += (s, e) => OnNodeUpdate(); }
-            void WireSpin(NumericUpDown n) { if (n != null) n.ValueChanged += (s, e) => OnNodeUpdate(); }
-            void WireCheck(CheckBox c) { if (c != null) { c.Checked += (s, e) => OnNodeUpdate(); c.Unchecked += (s, e) => OnNodeUpdate(); } }
+            void WireCombo(ComboBox c) { if (c != null) c.LostFocus += (s, e) => OnNodePropertyChanged(); }
+            void WireSpin(NumericUpDown n) { if (n != null) n.ValueChanged += (s, e) => OnNodePropertyChanged(); }
+            void WireCheck(CheckBox c) { if (c != null) { c.Checked += (s, e) => OnNodePropertyChanged(); c.Unchecked += (s, e) => OnNodePropertyChanged(); } }
             WireCombo(_condition1ResrefEdit); WireCombo(_condition2ResrefEdit); WireSpin(_logicSpin);
             WireSpin(_condition1Param1Spin); WireSpin(_condition1Param2Spin); WireSpin(_condition1Param3Spin); WireSpin(_condition1Param4Spin); WireSpin(_condition1Param5Spin);
-            if (_condition1Param6Edit != null) _condition1Param6Edit.LostFocus += (s, e) => OnNodeUpdate();
+            if (_condition1Param6Edit != null) _condition1Param6Edit.LostFocus += (s, e) => OnNodePropertyChanged();
             WireCheck(_condition1NotCheckbox);
             WireSpin(_condition2Param1Spin); WireSpin(_condition2Param2Spin); WireSpin(_condition2Param3Spin); WireSpin(_condition2Param4Spin); WireSpin(_condition2Param5Spin);
-            if (_condition2Param6Edit != null) _condition2Param6Edit.LostFocus += (s, e) => OnNodeUpdate();
+            if (_condition2Param6Edit != null) _condition2Param6Edit.LostFocus += (s, e) => OnNodePropertyChanged();
             WireCheck(_condition2NotCheckbox);
             WireCombo(_script1ResrefEdit); WireCombo(_script2ResrefEdit);
             WireSpin(_script1Param1Spin); WireSpin(_script1Param2Spin); WireSpin(_script1Param3Spin); WireSpin(_script1Param4Spin); WireSpin(_script1Param5Spin);
             WireSpin(_script2Param1Spin); WireSpin(_script2Param2Spin); WireSpin(_script2Param3Spin); WireSpin(_script2Param4Spin); WireSpin(_script2Param5Spin);
-            if (_script1Param6Edit != null) _script1Param6Edit.LostFocus += (s, e) => OnNodeUpdate();
-            if (_script2Param6Edit != null) _script2Param6Edit.LostFocus += (s, e) => OnNodeUpdate();
+            if (_script1Param6Edit != null) _script1Param6Edit.LostFocus += (s, e) => OnNodePropertyChanged();
+            if (_script2Param6Edit != null) _script2Param6Edit.LostFocus += (s, e) => OnNodePropertyChanged();
             WireSpin(_cameraIdSpin); WireSpin(_cameraAnimSpin);
-            if (_cameraAngleSelect != null) _cameraAngleSelect.SelectionChanged += (s, e) => OnNodeUpdate();
-            if (_cameraEffectSelect != null) _cameraEffectSelect.SelectionChanged += (s, e) => OnNodeUpdate();
-            if (_emotionSelect != null) _emotionSelect.SelectionChanged += (s, e) => OnNodeUpdate();
-            if (_expressionSelect != null) _expressionSelect.SelectionChanged += (s, e) => OnNodeUpdate();
+            if (_cameraAngleSelect != null) _cameraAngleSelect.SelectionChanged += (s, e) => OnNodePropertyChanged();
+            if (_cameraEffectSelect != null) _cameraEffectSelect.SelectionChanged += (s, e) => OnNodePropertyChanged();
+            if (_emotionSelect != null) _emotionSelect.SelectionChanged += (s, e) => OnNodePropertyChanged();
+            if (_expressionSelect != null) _expressionSelect.SelectionChanged += (s, e) => OnNodePropertyChanged();
             WireSpin(_nodeIdSpin); WireSpin(_alienRaceNodeSpin); WireSpin(_postProcSpin); WireSpin(_delaySpin); WireSpin(_waitFlagSpin); WireSpin(_fadeTypeSpin);
             WireCheck(_nodeUnskippableCheckbox);
             WireCheck(_soundCheckbox);
-            if (_speakerEdit != null) _speakerEdit.LostFocus += (s, e) => OnNodeUpdate();
-            if (_listenerEdit != null) _listenerEdit.LostFocus += (s, e) => OnNodeUpdate();
-            if (_questEdit != null) _questEdit.LostFocus += (s, e) => OnNodeUpdate();
+            WireCombo(_soundComboBox);
+            WireCombo(_voiceComboBox);
+            if (_speakerEdit != null) _speakerEdit.LostFocus += (s, e) => OnNodePropertyChanged();
+            if (_listenerEdit != null) _listenerEdit.LostFocus += (s, e) => OnNodePropertyChanged();
+            if (_questEdit != null) _questEdit.LostFocus += (s, e) => OnNodePropertyChanged();
             WireSpin(_questEntrySpin);
-            if (_plotIndexCombo != null) _plotIndexCombo.SelectionChanged += (s, e) => OnNodeUpdate();
+            if (_plotIndexCombo != null) _plotIndexCombo.SelectionChanged += (s, e) => OnNodePropertyChanged();
             WireSpin(_plotXpSpin);
         }
 
@@ -1434,7 +1442,9 @@ namespace OdyTools.Editors.DLG
             _conversationSelect = new ComboBox();
             _conversationSelect.Items.Add("Human");
             _conversationSelect.Items.Add("Computer");
-            _conversationSelect.Items.Add("Other");
+            _conversationSelect.Items.Add("Type 3");
+            _conversationSelect.Items.Add("Type 4");
+            _conversationSelect.Items.Add("Type 5");
             _conversationSelect.SelectedIndex = 0;
             _conversationSelect.SelectionChanged += (s, e) => OnFilePropertyChanged();
             var conversationPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal };
@@ -2489,41 +2499,7 @@ namespace OdyTools.Editors.DLG
                 _model.AddStarter(start);
             }
 
-            // Load file-level properties (root DLG fields)
-            if (_voIdEdit != null)
-            {
-                _voIdEdit.Text = dlg.VoId ?? string.Empty;
-            }
-            if (_ambientTrackCombo != null)
-            {
-                string ambientTrackText = dlg.AmbientTrack.ToString();
-                _ambientTrackCombo.Text = ambientTrackText;
-            }
-            if (_cameraModelSelect != null)
-            {
-                _cameraModelSelect.Text = dlg.CameraModel?.ToString() ?? string.Empty;
-            }
-
-            if (_skippableCheckbox != null)
-            {
-                _skippableCheckbox.IsChecked = dlg.Skippable;
-            }
-            if (_animatedCutCheckbox != null)
-            {
-                _animatedCutCheckbox.IsChecked = dlg.AnimatedCut != 0;
-            }
-            if (_oldHitCheckbox != null)
-            {
-                _oldHitCheckbox.IsChecked = dlg.OldHitCheck;
-            }
-            if (_unequipHandsCheckbox != null)
-            {
-                _unequipHandsCheckbox.IsChecked = dlg.UnequipHands;
-            }
-            if (_unequipAllCheckbox != null)
-            {
-                _unequipAllCheckbox.IsChecked = dlg.UnequipItems;
-            }
+            LoadFilePropertiesIntoUi(dlg);
 
             // Clear undo/redo history when loading a dialog
             _actionHistory.Clear();
@@ -2639,15 +2615,22 @@ namespace OdyTools.Editors.DLG
 
         public override Tuple<byte[], byte[]> Build()
         {
-            // Sync file-level properties (root DLG fields) from UI to CoreDlg before writing
-            if (_voIdEdit != null)
+            // Commit any selected node edits before serialization. Editable ComboBox/TextBox fields
+            // may not have lost focus when the user clicks Save or when tests build immediately.
+            if (_nodeLoadedIntoUi
+                && _dialogTree?.SelectedItem != null
+                && (_nodePropertiesUiTouched || !string.Equals(_lastNodePropertiesUiSnapshot, CaptureNodePropertiesUiSnapshot(), StringComparison.Ordinal)))
             {
-                _coreDlg.VoId = _voIdEdit.Text ?? string.Empty;
+                OnNodeUpdate();
             }
-            if (_cameraModelSelect != null)
+
+            // Sync file-level properties (root DLG fields) from UI to CoreDlg before writing
+            // when the user changed controls without moving focus.
+            if (_filePropertiesUiTouched || !string.Equals(_lastFilePropertiesUiSnapshot, CaptureFilePropertiesUiSnapshot(), StringComparison.Ordinal))
             {
-                string cameraText = _cameraModelSelect.Text?.Trim() ?? string.Empty;
-                _coreDlg.CameraModel = ResRef.IsValid(cameraText) ? new ResRef(cameraText) : ResRef.FromBlank();
+                SyncFilePropertiesFromUi(markDirty: false, onlyChangedFromSnapshot: true);
+                _lastFilePropertiesUiSnapshot = CaptureFilePropertiesUiSnapshot();
+                _filePropertiesUiTouched = false;
             }
 
             // Handle CNV format by converting DLG to CNV
@@ -2739,6 +2722,7 @@ namespace OdyTools.Editors.DLG
             base.New();
             _coreDlg = new DLGType();
             _model.ResetModel();
+            LoadFilePropertiesIntoUi(_coreDlg);
             // Clear undo/redo history when creating new dialog
             _actionHistory.Clear();
             UpdateTreeView();
@@ -3353,6 +3337,13 @@ namespace OdyTools.Editors.DLG
         /// </summary>
         public bool CanRedo => _actionHistory.CanRedo;
 
+        internal bool CanRecordModelAction => _actionHistory != null && !_actionHistory.IsApplying;
+
+        internal void ApplyModelAction(IDLGAction action)
+        {
+            _actionHistory.Apply(action);
+        }
+
         /// <summary>
         /// Undoes the last action.
         /// </summary>
@@ -3755,42 +3746,45 @@ namespace OdyTools.Editors.DLG
                 return;
             }
 
-            var link = item.Link;
-            var node = link.Node;
+            _suppressNodePropertyHandlers = true;
+            try
+            {
+                var link = item.Link;
+                var node = link.Node;
 
-            // Load condition1
-            if (_condition1ResrefEdit != null)
-            {
-                _condition1ResrefEdit.Text = link.Active1?.ToString() ?? string.Empty;
-            }
-            if (_condition1Param1Spin != null)
-            {
-                _condition1Param1Spin.Value = link.Active1Param1;
-            }
-            if (_condition1Param2Spin != null)
-            {
-                _condition1Param2Spin.Value = link.Active1Param2;
-            }
-            if (_condition1Param3Spin != null)
-            {
-                _condition1Param3Spin.Value = link.Active1Param3;
-            }
-            if (_condition1Param4Spin != null)
-            {
-                _condition1Param4Spin.Value = link.Active1Param4;
-            }
-            if (_condition1Param5Spin != null)
-            {
-                _condition1Param5Spin.Value = link.Active1Param5;
-            }
-            if (_condition1Param6Edit != null)
-            {
-                _condition1Param6Edit.Text = link.Active1Param6 ?? string.Empty;
-            }
-            if (_condition1NotCheckbox != null)
-            {
-                _condition1NotCheckbox.IsChecked = link.Active1Not;
-            }
+                // Load condition1
+                if (_condition1ResrefEdit != null)
+                {
+                    _condition1ResrefEdit.Text = link.Active1?.ToString() ?? string.Empty;
+                }
+                if (_condition1Param1Spin != null)
+                {
+                    _condition1Param1Spin.Value = link.Active1Param1;
+                }
+                if (_condition1Param2Spin != null)
+                {
+                    _condition1Param2Spin.Value = link.Active1Param2;
+                }
+                if (_condition1Param3Spin != null)
+                {
+                    _condition1Param3Spin.Value = link.Active1Param3;
+                }
+                if (_condition1Param4Spin != null)
+                {
+                    _condition1Param4Spin.Value = link.Active1Param4;
+                }
+                if (_condition1Param5Spin != null)
+                {
+                    _condition1Param5Spin.Value = link.Active1Param5;
+                }
+                if (_condition1Param6Edit != null)
+                {
+                    _condition1Param6Edit.Text = link.Active1Param6 ?? string.Empty;
+                }
+                if (_condition1NotCheckbox != null)
+                {
+                    _condition1NotCheckbox.IsChecked = link.Active1Not;
+                }
 
             // Load condition2
             if (_condition2ResrefEdit != null)
@@ -4030,13 +4024,34 @@ namespace OdyTools.Editors.DLG
                 _voiceComboBox.Text = node.VoResRef?.ToString() ?? string.Empty;
             }
 
-            HandleSoundChecked();
-            UpdateCameraWidgetState();
+                HandleSoundChecked();
+                UpdateCameraWidgetState();
+            }
+            finally
+            {
+                _suppressNodePropertyHandlers = false;
+            }
+
+            _lastNodePropertiesUiSnapshot = CaptureNodePropertiesUiSnapshot();
+            _nodePropertiesUiTouched = false;
         }
 
         /// <summary>
         /// Updates node properties based on UI selections.
         /// </summary>
+        private void OnNodePropertyChanged()
+        {
+            if (_suppressNodePropertyHandlers || !_nodeLoadedIntoUi)
+            {
+                return;
+            }
+
+            _nodePropertiesUiTouched = true;
+            OnNodeUpdate();
+            _lastNodePropertiesUiSnapshot = CaptureNodePropertiesUiSnapshot();
+            _nodePropertiesUiTouched = false;
+        }
+
         public void OnNodeUpdate()
         {
             if (!_nodeLoadedIntoUi)
@@ -4072,8 +4087,7 @@ namespace OdyTools.Editors.DLG
             // Update condition1
             if (_condition1ResrefEdit != null)
             {
-                string text = _condition1ResrefEdit.Text ?? string.Empty;
-                link.Active1 = string.IsNullOrEmpty(text) ? ResRef.FromBlank() : new ResRef(text);
+                link.Active1 = ResRefFromEditableText(_condition1ResrefEdit.Text);
             }
             if (_condition1Param1Spin != null)
             {
@@ -4107,8 +4121,7 @@ namespace OdyTools.Editors.DLG
             // Update condition2
             if (_condition2ResrefEdit != null)
             {
-                string text = _condition2ResrefEdit.Text ?? string.Empty;
-                link.Active2 = string.IsNullOrEmpty(text) ? ResRef.FromBlank() : new ResRef(text);
+                link.Active2 = ResRefFromEditableText(_condition2ResrefEdit.Text);
             }
             if (_condition2Param1Spin != null)
             {
@@ -4182,8 +4195,7 @@ namespace OdyTools.Editors.DLG
             // Update script1 ResRef and params (GFF: Script, ActionParam1-5, ActionParamStrA)
             if (_script1ResrefEdit != null && node != null)
             {
-                string script1Text = _script1ResrefEdit.Text?.Trim() ?? string.Empty;
-                node.Script1 = string.IsNullOrEmpty(script1Text) ? ResRef.FromBlank() : new ResRef(script1Text);
+                node.Script1 = ResRefFromEditableText(_script1ResrefEdit.Text);
             }
             if (_script1Param1Spin != null && node != null)
             {
@@ -4213,8 +4225,7 @@ namespace OdyTools.Editors.DLG
             // Update script2 ResRef and params (GFF: Script2, ActionParam1b-5b, ActionParamStrB)
             if (_script2ResrefEdit != null && node != null)
             {
-                string script2Text = _script2ResrefEdit.Text?.Trim() ?? string.Empty;
-                node.Script2 = string.IsNullOrEmpty(script2Text) ? ResRef.FromBlank() : new ResRef(script2Text);
+                node.Script2 = ResRefFromEditableText(_script2ResrefEdit.Text);
             }
             if (_script2Param1Spin != null && node != null)
             {
@@ -4260,8 +4271,7 @@ namespace OdyTools.Editors.DLG
             // Update sound ResRef in node
             if (_soundComboBox != null && node != null)
             {
-                string soundText = _soundComboBox.Text ?? string.Empty;
-                node.Sound = string.IsNullOrEmpty(soundText) ? ResRef.FromBlank() : new ResRef(soundText);
+                node.Sound = ResRefFromEditableText(_soundComboBox.Text);
             }
 
             if (_soundCheckbox != null && node != null)
@@ -4302,8 +4312,7 @@ namespace OdyTools.Editors.DLG
             // Update voice ResRef in node
             if (_voiceComboBox != null && node != null)
             {
-                string voiceText = _voiceComboBox.Text ?? string.Empty;
-                node.VoResRef = string.IsNullOrEmpty(voiceText) ? ResRef.FromBlank() : new ResRef(voiceText);
+                node.VoResRef = ResRefFromEditableText(_voiceComboBox.Text);
             }
 
             // Update camera properties in node
@@ -4352,6 +4361,8 @@ namespace OdyTools.Editors.DLG
             _selectedLink = item.Link;
             MarkDocumentDirty();
             RefreshAllViews();
+            _lastNodePropertiesUiSnapshot = CaptureNodePropertiesUiSnapshot();
+            _nodePropertiesUiTouched = false;
         }
 
         /// <summary>Vendor: handle_sound_checked. Disables sound button when Exists is not checked.</summary>
@@ -4462,38 +4473,356 @@ namespace OdyTools.Editors.DLG
         /// </summary>
         private void OnFilePropertyChanged()
         {
-            if (_coreDlg == null)
+            if (_coreDlg == null || _suppressFilePropertyHandlers)
             {
                 return;
             }
 
+            _filePropertiesUiTouched = true;
+            if (SyncFilePropertiesFromUi(markDirty: true, onlyChangedFromSnapshot: true))
+            {
+                _lastFilePropertiesUiSnapshot = CaptureFilePropertiesUiSnapshot();
+                _filePropertiesUiTouched = false;
+            }
+        }
+
+        private void LoadFilePropertiesIntoUi(DLGType dlg)
+        {
+            _suppressFilePropertyHandlers = true;
+            try
+            {
+                if (_voIdEdit != null)
+                {
+                    _voIdEdit.Text = dlg.VoId ?? string.Empty;
+                }
+                if (_ambientTrackCombo != null)
+                {
+                    _ambientTrackCombo.Text = dlg.AmbientTrack?.ToString() ?? string.Empty;
+                }
+                if (_onAbortCombo != null)
+                {
+                    _onAbortCombo.Text = dlg.OnAbort?.ToString() ?? string.Empty;
+                }
+                if (_onEndEdit != null)
+                {
+                    _onEndEdit.Text = dlg.OnEnd?.ToString() ?? string.Empty;
+                }
+                if (_cameraModelSelect != null)
+                {
+                    _cameraModelSelect.Text = dlg.CameraModel?.ToString() ?? string.Empty;
+                }
+                if (_conversationSelect != null)
+                {
+                    _conversationSelect.SelectedIndex = ClampComboIndex((int)dlg.ConversationType, _conversationSelect, 0);
+                }
+                if (_computerSelect != null)
+                {
+                    _computerSelect.SelectedIndex = ClampComboIndex((int)dlg.ComputerType, _computerSelect, 0);
+                }
+                if (_entryDelaySpin != null)
+                {
+                    _entryDelaySpin.Value = dlg.DelayEntry;
+                }
+                if (_replyDelaySpin != null)
+                {
+                    _replyDelaySpin.Value = dlg.DelayReply;
+                }
+                if (_skippableCheckbox != null)
+                {
+                    _skippableCheckbox.IsChecked = dlg.Skippable;
+                }
+                if (_animatedCutCheckbox != null)
+                {
+                    _animatedCutCheckbox.IsChecked = dlg.AnimatedCut != 0;
+                }
+                if (_oldHitCheckbox != null)
+                {
+                    _oldHitCheckbox.IsChecked = dlg.OldHitCheck;
+                }
+                if (_unequipHandsCheckbox != null)
+                {
+                    _unequipHandsCheckbox.IsChecked = dlg.UnequipHands;
+                }
+                if (_unequipAllCheckbox != null)
+                {
+                    _unequipAllCheckbox.IsChecked = dlg.UnequipItems;
+                }
+            }
+            finally
+            {
+                _suppressFilePropertyHandlers = false;
+            }
+
+            _lastFilePropertiesUiSnapshot = CaptureFilePropertiesUiSnapshot();
+            _filePropertiesUiTouched = false;
+        }
+
+        private bool SyncFilePropertiesFromUi(bool markDirty, bool onlyChangedFromSnapshot)
+        {
+            if (_coreDlg == null)
+            {
+                return false;
+            }
+
             bool modified = false;
+            string[] snapshotParts = _lastFilePropertiesUiSnapshot?.Split('\u001f') ?? Array.Empty<string>();
+            bool ShouldSync(int index, string current)
+            {
+                return !onlyChangedFromSnapshot
+                    || index >= snapshotParts.Length
+                    || !string.Equals(snapshotParts[index], current ?? string.Empty, StringComparison.Ordinal);
+            }
 
             // Update file-level (root) fields from UI
             if (_voIdEdit != null)
             {
                 string value = _voIdEdit.Text ?? string.Empty;
-                if (!string.Equals(_coreDlg.VoId, value, StringComparison.Ordinal))
+                if (ShouldSync(0, value) && !string.Equals(_coreDlg.VoId, value, StringComparison.Ordinal))
                 {
                     _coreDlg.VoId = value;
                     modified = true;
                 }
             }
+            if (_ambientTrackCombo != null)
+            {
+                string text = _ambientTrackCombo.Text ?? string.Empty;
+                ResRef value = ResRefFromEditableText(_ambientTrackCombo.Text);
+                if (ShouldSync(1, text) && !Equals(_coreDlg.AmbientTrack, value))
+                {
+                    _coreDlg.AmbientTrack = value;
+                    modified = true;
+                }
+            }
+            if (_onAbortCombo != null)
+            {
+                string text = _onAbortCombo.Text ?? string.Empty;
+                ResRef value = ResRefFromEditableText(_onAbortCombo.Text);
+                if (ShouldSync(2, text) && !Equals(_coreDlg.OnAbort, value))
+                {
+                    _coreDlg.OnAbort = value;
+                    modified = true;
+                }
+            }
+            if (_onEndEdit != null)
+            {
+                string text = _onEndEdit.Text ?? string.Empty;
+                ResRef value = ResRefFromEditableText(_onEndEdit.Text);
+                if (ShouldSync(3, text) && !Equals(_coreDlg.OnEnd, value))
+                {
+                    _coreDlg.OnEnd = value;
+                    modified = true;
+                }
+            }
             if (_cameraModelSelect != null)
             {
-                string cameraText = _cameraModelSelect.Text?.Trim() ?? string.Empty;
-                ResRef value = ResRef.IsValid(cameraText) ? new ResRef(cameraText) : ResRef.FromBlank();
-                if (!Equals(_coreDlg.CameraModel, value))
+                string text = _cameraModelSelect.Text ?? string.Empty;
+                ResRef value = ResRefFromEditableText(_cameraModelSelect.Text);
+                if (ShouldSync(4, text) && !Equals(_coreDlg.CameraModel, value))
                 {
                     _coreDlg.CameraModel = value;
                     modified = true;
                 }
             }
+            if (_conversationSelect != null)
+            {
+                string selectedIndex = _conversationSelect.SelectedIndex.ToString();
+                if (_conversationSelect.SelectedIndex >= 0 && ShouldSync(5, selectedIndex))
+                {
+                    var value = (DLGConversationType)ClampEnumIndex(_conversationSelect.SelectedIndex, DLGConversationType.Human, DLGConversationType.Type5);
+                    if (_coreDlg.ConversationType != value)
+                    {
+                        _coreDlg.ConversationType = value;
+                        modified = true;
+                    }
+                }
+            }
+            if (_computerSelect != null)
+            {
+                string selectedIndex = _computerSelect.SelectedIndex.ToString();
+                if (_computerSelect.SelectedIndex >= 0 && ShouldSync(6, selectedIndex))
+                {
+                    var value = (DLGComputerType)ClampEnumIndex(_computerSelect.SelectedIndex, DLGComputerType.Modern, DLGComputerType.Ancient);
+                    if (_coreDlg.ComputerType != value)
+                    {
+                        _coreDlg.ComputerType = value;
+                        modified = true;
+                    }
+                }
+            }
+            if (_entryDelaySpin != null)
+            {
+                int value = (int)(_entryDelaySpin.Value ?? 0);
+                if (ShouldSync(7, _entryDelaySpin.Value?.ToString() ?? string.Empty) && _coreDlg.DelayEntry != value)
+                {
+                    _coreDlg.DelayEntry = value;
+                    modified = true;
+                }
+            }
+            if (_replyDelaySpin != null)
+            {
+                int value = (int)(_replyDelaySpin.Value ?? 0);
+                if (ShouldSync(8, _replyDelaySpin.Value?.ToString() ?? string.Empty) && _coreDlg.DelayReply != value)
+                {
+                    _coreDlg.DelayReply = value;
+                    modified = true;
+                }
+            }
+            if (_skippableCheckbox != null)
+            {
+                bool value = _skippableCheckbox.IsChecked == true;
+                if (ShouldSync(9, _skippableCheckbox.IsChecked?.ToString() ?? string.Empty) && _coreDlg.Skippable != value)
+                {
+                    _coreDlg.Skippable = value;
+                    modified = true;
+                }
+            }
+            if (_animatedCutCheckbox != null)
+            {
+                int value = _animatedCutCheckbox.IsChecked == true ? 1 : 0;
+                if (ShouldSync(10, _animatedCutCheckbox.IsChecked?.ToString() ?? string.Empty) && _coreDlg.AnimatedCut != value)
+                {
+                    _coreDlg.AnimatedCut = value;
+                    modified = true;
+                }
+            }
+            if (_oldHitCheckbox != null)
+            {
+                bool value = _oldHitCheckbox.IsChecked == true;
+                if (ShouldSync(11, _oldHitCheckbox.IsChecked?.ToString() ?? string.Empty) && _coreDlg.OldHitCheck != value)
+                {
+                    _coreDlg.OldHitCheck = value;
+                    modified = true;
+                }
+            }
+            if (_unequipHandsCheckbox != null)
+            {
+                bool value = _unequipHandsCheckbox.IsChecked == true;
+                if (ShouldSync(12, _unequipHandsCheckbox.IsChecked?.ToString() ?? string.Empty) && _coreDlg.UnequipHands != value)
+                {
+                    _coreDlg.UnequipHands = value;
+                    modified = true;
+                }
+            }
+            if (_unequipAllCheckbox != null)
+            {
+                bool value = _unequipAllCheckbox.IsChecked == true;
+                if (ShouldSync(13, _unequipAllCheckbox.IsChecked?.ToString() ?? string.Empty) && _coreDlg.UnequipItems != value)
+                {
+                    _coreDlg.UnequipItems = value;
+                    modified = true;
+                }
+            }
 
-            if (modified)
+            if (modified && markDirty)
             {
                 MarkDocumentDirty();
             }
+
+            return modified;
+        }
+
+        internal static ResRef ResRefFromEditableText(string text)
+        {
+            string value = text?.Trim() ?? string.Empty;
+            return string.IsNullOrEmpty(value) || !ResRef.IsValid(value) ? ResRef.FromBlank() : new ResRef(value);
+        }
+
+        private static int ClampEnumIndex<TEnum>(int index, TEnum min, TEnum max) where TEnum : Enum
+        {
+            int minValue = Convert.ToInt32(min);
+            int maxValue = Convert.ToInt32(max);
+            return Math.Min(Math.Max(index, minValue), maxValue);
+        }
+
+        private static int ClampComboIndex(int index, ComboBox comboBox, int fallback)
+        {
+            if (comboBox == null || comboBox.Items.Count == 0)
+            {
+                return fallback;
+            }
+
+            return Math.Min(Math.Max(index, 0), comboBox.Items.Count - 1);
+        }
+
+        private string CaptureFilePropertiesUiSnapshot()
+        {
+            return string.Join("\u001f", new[]
+            {
+                _voIdEdit?.Text ?? string.Empty,
+                _ambientTrackCombo?.Text ?? string.Empty,
+                _onAbortCombo?.Text ?? string.Empty,
+                _onEndEdit?.Text ?? string.Empty,
+                _cameraModelSelect?.Text ?? string.Empty,
+                (_conversationSelect?.SelectedIndex ?? -1).ToString(),
+                (_computerSelect?.SelectedIndex ?? -1).ToString(),
+                _entryDelaySpin?.Value?.ToString() ?? string.Empty,
+                _replyDelaySpin?.Value?.ToString() ?? string.Empty,
+                _skippableCheckbox?.IsChecked?.ToString() ?? string.Empty,
+                _animatedCutCheckbox?.IsChecked?.ToString() ?? string.Empty,
+                _oldHitCheckbox?.IsChecked?.ToString() ?? string.Empty,
+                _unequipHandsCheckbox?.IsChecked?.ToString() ?? string.Empty,
+                _unequipAllCheckbox?.IsChecked?.ToString() ?? string.Empty
+            });
+        }
+
+        private string CaptureNodePropertiesUiSnapshot()
+        {
+            return string.Join("\u001f", new[]
+            {
+                _condition1ResrefEdit?.Text ?? string.Empty,
+                _condition1Param1Spin?.Value?.ToString() ?? string.Empty,
+                _condition1Param2Spin?.Value?.ToString() ?? string.Empty,
+                _condition1Param3Spin?.Value?.ToString() ?? string.Empty,
+                _condition1Param4Spin?.Value?.ToString() ?? string.Empty,
+                _condition1Param5Spin?.Value?.ToString() ?? string.Empty,
+                _condition1Param6Edit?.Text ?? string.Empty,
+                _condition1NotCheckbox?.IsChecked?.ToString() ?? string.Empty,
+                _condition2ResrefEdit?.Text ?? string.Empty,
+                _condition2Param1Spin?.Value?.ToString() ?? string.Empty,
+                _condition2Param2Spin?.Value?.ToString() ?? string.Empty,
+                _condition2Param3Spin?.Value?.ToString() ?? string.Empty,
+                _condition2Param4Spin?.Value?.ToString() ?? string.Empty,
+                _condition2Param5Spin?.Value?.ToString() ?? string.Empty,
+                _condition2Param6Edit?.Text ?? string.Empty,
+                _condition2NotCheckbox?.IsChecked?.ToString() ?? string.Empty,
+                _logicSpin?.Value?.ToString() ?? string.Empty,
+                _script1ResrefEdit?.Text ?? string.Empty,
+                _script1Param1Spin?.Value?.ToString() ?? string.Empty,
+                _script1Param2Spin?.Value?.ToString() ?? string.Empty,
+                _script1Param3Spin?.Value?.ToString() ?? string.Empty,
+                _script1Param4Spin?.Value?.ToString() ?? string.Empty,
+                _script1Param5Spin?.Value?.ToString() ?? string.Empty,
+                _script1Param6Edit?.Text ?? string.Empty,
+                _script2ResrefEdit?.Text ?? string.Empty,
+                _script2Param1Spin?.Value?.ToString() ?? string.Empty,
+                _script2Param2Spin?.Value?.ToString() ?? string.Empty,
+                _script2Param3Spin?.Value?.ToString() ?? string.Empty,
+                _script2Param4Spin?.Value?.ToString() ?? string.Empty,
+                _script2Param5Spin?.Value?.ToString() ?? string.Empty,
+                _script2Param6Edit?.Text ?? string.Empty,
+                _cameraIdSpin?.Value?.ToString() ?? string.Empty,
+                _cameraAnimSpin?.Value?.ToString() ?? string.Empty,
+                (_cameraAngleSelect?.SelectedIndex ?? -1).ToString(),
+                (_cameraEffectSelect?.SelectedIndex ?? -1).ToString(),
+                (_emotionSelect?.SelectedIndex ?? -1).ToString(),
+                (_expressionSelect?.SelectedIndex ?? -1).ToString(),
+                _nodeIdSpin?.Value?.ToString() ?? string.Empty,
+                _alienRaceNodeSpin?.Value?.ToString() ?? string.Empty,
+                _postProcSpin?.Value?.ToString() ?? string.Empty,
+                _delaySpin?.Value?.ToString() ?? string.Empty,
+                _waitFlagSpin?.Value?.ToString() ?? string.Empty,
+                _fadeTypeSpin?.Value?.ToString() ?? string.Empty,
+                _nodeUnskippableCheckbox?.IsChecked?.ToString() ?? string.Empty,
+                _soundCheckbox?.IsChecked?.ToString() ?? string.Empty,
+                _soundComboBox?.Text ?? string.Empty,
+                _voiceComboBox?.Text ?? string.Empty,
+                _speakerEdit?.Text ?? string.Empty,
+                _listenerEdit?.Text ?? string.Empty,
+                _questEdit?.Text ?? string.Empty,
+                _questEntrySpin?.Value?.ToString() ?? string.Empty,
+                (_plotIndexCombo?.SelectedIndex ?? -1).ToString(),
+                _plotXpSpin?.Value?.ToString() ?? string.Empty
+            });
         }
 
         /// <summary>
@@ -5484,14 +5813,7 @@ namespace OdyTools.Editors.DLG
             TreeViewItem treeItem = FindTreeViewItem(_dialogTree.ItemsSource as System.Collections.IEnumerable, item);
             if (treeItem != null)
             {
-                // Update the header with formatted text
-                // Note: Avalonia TreeViewItem.Header can accept string or object
-                // For HTML formatting, we'll use a TextBlock with Inlines or just set the text
-                // Since Avalonia doesn't natively support HTML in TreeViewItem headers,
-                // we'll strip HTML tags for now and use plain text
-                // In a full implementation, we would use a custom DataTemplate with TextBlock and Inlines
-                string plainText = System.Text.RegularExpressions.Regex.Replace(formattedText, "<.*?>", "");
-                treeItem.Header = plainText;
+                treeItem.Header = BuildFormattedTreeHeader(formattedText);
 
                 // Set tooltip if provided
                 if (!string.IsNullOrEmpty(tooltipText))
@@ -5513,6 +5835,110 @@ namespace OdyTools.Editors.DLG
                 // This can happen if the tree hasn't been built yet or the item was removed
                 UpdateTreeView();
             }
+        }
+
+        private static TextBlock BuildFormattedTreeHeader(string formattedText)
+        {
+            var textBlock = new TextBlock
+            {
+                TextWrapping = TextWrapping.NoWrap,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            if (string.IsNullOrEmpty(formattedText))
+            {
+                return textBlock;
+            }
+
+            bool bold = false;
+            AmColor? foreground = null;
+            var parts = Regex.Split(formattedText, "(<[^>]+>)");
+            foreach (string part in parts)
+            {
+                if (string.IsNullOrEmpty(part))
+                {
+                    continue;
+                }
+
+                if (part.StartsWith("<", StringComparison.Ordinal) && part.EndsWith(">", StringComparison.Ordinal))
+                {
+                    string tag = part.Trim('<', '>', ' ').Trim();
+                    string lowerTag = tag.ToLowerInvariant();
+                    if (lowerTag == "b" || lowerTag == "strong")
+                    {
+                        bold = true;
+                    }
+                    else if (lowerTag == "/b" || lowerTag == "/strong")
+                    {
+                        bold = false;
+                    }
+                    else if (lowerTag.StartsWith("span", StringComparison.Ordinal))
+                    {
+                        var color = ExtractHtmlColor(tag);
+                        if (color.HasValue)
+                        {
+                            foreground = color.Value;
+                        }
+                    }
+                    else if (lowerTag == "/span")
+                    {
+                        foreground = null;
+                    }
+                    else if (lowerTag == "br" || lowerTag == "br/")
+                    {
+                        textBlock.Inlines.Add(new LineBreak());
+                    }
+                    continue;
+                }
+
+                string text = System.Net.WebUtility.HtmlDecode(part);
+                if (string.IsNullOrEmpty(text))
+                {
+                    continue;
+                }
+
+                var run = new Run(text);
+                if (bold)
+                {
+                    run.FontWeight = FontWeight.Bold;
+                }
+                if (foreground.HasValue)
+                {
+                    run.Foreground = new SolidColorBrush(foreground.Value);
+                }
+                textBlock.Inlines.Add(run);
+            }
+
+            return textBlock;
+        }
+
+        private static AmColor? ExtractHtmlColor(string tag)
+        {
+            var match = Regex.Match(tag, @"color\s*:\s*([^;""']+|""[^""]+""|'[^']+')", RegexOptions.IgnoreCase);
+            if (!match.Success)
+            {
+                return null;
+            }
+
+            string value = match.Groups[1].Value.Trim().Trim('"', '\'');
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return null;
+            }
+
+            try
+            {
+                return AmColor.Parse(value);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        internal static TextBlock BuildFormattedTreeHeaderForTest(string formattedText)
+        {
+            return BuildFormattedTreeHeader(formattedText);
         }
 
         /// <summary>

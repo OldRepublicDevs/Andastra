@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using OdyTools.Data;
 using OdyTools.Dialogs;
+using OdyTools.Editors;
 using OdyTools.Utils;
 
 namespace OdyTools.Widgets.Settings
@@ -17,6 +18,7 @@ namespace OdyTools.Widgets.Settings
         private Button _removeButton;
         private GlobalSettings _settings;
         private List<EnvironmentVariable> _environmentVariables;
+        private bool _eventsAttached;
 
         public EnvVarsWidget()
         {
@@ -52,6 +54,7 @@ namespace OdyTools.Widgets.Settings
 
             _tableWidget = new DataGrid
             {
+                Name = "tableWidget",
                 AutoGenerateColumns = false,
                 CanUserReorderColumns = true,
                 CanUserResizeColumns = true,
@@ -60,12 +63,13 @@ namespace OdyTools.Widgets.Settings
             _tableWidget.Columns.Add(new DataGridTextColumn { Header = "Key", Binding = new Avalonia.Data.Binding("Key") });
             _tableWidget.Columns.Add(new DataGridTextColumn { Header = "Value", Binding = new Avalonia.Data.Binding("Value") });
 
-            _addButton = new Button { Content = "Add" };
+            _addButton = new Button { Name = "addButton", Content = "Add" };
             _addButton.Click += (s, e) => AddEnvironmentVariable();
-            _editButton = new Button { Content = "Edit" };
+            _editButton = new Button { Name = "editButton", Content = "Edit" };
             _editButton.Click += (s, e) => EditEnvironmentVariable();
-            _removeButton = new Button { Content = "Remove" };
+            _removeButton = new Button { Name = "removeButton", Content = "Remove" };
             _removeButton.Click += (s, e) => RemoveEnvironmentVariable();
+            _eventsAttached = true;
 
             var buttonPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5 };
             buttonPanel.Children.Add(_addButton);
@@ -80,10 +84,21 @@ namespace OdyTools.Widgets.Settings
         private void SetupUI()
         {
             // Find controls from XAML
-            _tableWidget = this.FindControl<DataGrid>("tableWidget");
-            _addButton = this.FindControl<Button>("addButton");
-            _editButton = this.FindControl<Button>("editButton");
-            _removeButton = this.FindControl<Button>("removeButton");
+            _tableWidget = EditorHelpers.FindControlSafe<DataGrid>(this, "tableWidget") ?? _tableWidget;
+            _addButton = EditorHelpers.FindControlSafe<Button>(this, "addButton") ?? _addButton;
+            _editButton = EditorHelpers.FindControlSafe<Button>(this, "editButton") ?? _editButton;
+            _removeButton = EditorHelpers.FindControlSafe<Button>(this, "removeButton") ?? _removeButton;
+
+            if (_tableWidget == null || _addButton == null || _editButton == null || _removeButton == null)
+            {
+                SetupProgrammaticUI();
+                return;
+            }
+
+            if (_eventsAttached)
+            {
+                return;
+            }
 
             if (_addButton != null)
             {
@@ -97,6 +112,7 @@ namespace OdyTools.Widgets.Settings
             {
                 _removeButton.Click += (s, e) => RemoveEnvironmentVariable();
             }
+            _eventsAttached = true;
         }
 
         private void PopulateEnvironmentVariables()

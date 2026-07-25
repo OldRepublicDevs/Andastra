@@ -55,8 +55,8 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG
                 dlg.AnimatedCut = 0;
             }
             dlg.CameraModel = root.Acquire("CameraModel", ResRef.FromBlank());
-            dlg.ComputerType = (DLGComputerType)root.Acquire("ComputerType", (uint)0);
-            dlg.ConversationType = (DLGConversationType)root.Acquire("ConversationType", (uint)0);
+            dlg.ComputerType = (DLGComputerType)root.Acquire("ComputerType", (byte)0);
+            dlg.ConversationType = (DLGConversationType)root.Acquire("ConversationType", 0);
             dlg.OldHitCheck = root.Acquire("OldHitCheck", (byte)0) != 0;
             dlg.UnequipHands = root.Acquire("UnequipHItem", (byte)0) != 0;
             dlg.UnequipItems = root.Acquire("UnequipItems", (byte)0) != 0;
@@ -211,7 +211,7 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG
 
             if (gffStruct.Exists("QuestEntry"))
             {
-                node.QuestEntry = gffStruct.Acquire("QuestEntry", 0);
+                node.QuestEntry = (int)gffStruct.Acquire("QuestEntry", (uint)0);
             }
             if (gffStruct.Exists("FadeDelay"))
             {
@@ -263,7 +263,7 @@ namespace BioWare.Resource.Formats.GFF.Generics.DLG
         {
             link.Active1 = gffStruct.Acquire("Active", ResRef.FromBlank());
             link.Active2 = gffStruct.Acquire("Active2", ResRef.FromBlank());
-            link.Logic = gffStruct.Acquire("Logic", (byte)0) != 0;
+            link.Logic = gffStruct.Acquire("Logic", 0) != 0;
             link.Active1Not = gffStruct.Acquire("Not", (byte)0) != 0;
             link.Active2Not = gffStruct.Acquire("Not2", (byte)0) != 0;
             link.Active1Param1 = gffStruct.Acquire("Param1", 0);

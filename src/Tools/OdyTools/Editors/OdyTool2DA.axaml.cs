@@ -74,6 +74,8 @@ namespace OdyTools.Editors
         private string _replaceText = "";
         private bool _findMatchCase;
         private bool _findUseRegex;
+        private bool _findWholeCell;
+        private bool _replaceSelectionOnly;
         private int _findColumnIndex = -1;
         private int _lastFindRow = -1;
         private int _lastFindCol = -1;
@@ -89,6 +91,8 @@ namespace OdyTools.Editors
         private int _rangeEndCol = -1;
         private static readonly IBrush ColumnHighlightBrush = new SolidColorBrush(Avalonia.Media.Color.Parse("#E3F2FD"));
         private static readonly IBrush RangeHighlightBrush = new SolidColorBrush(Avalonia.Media.Color.Parse("#FFF9C4"));
+        private static readonly IBrush FindHighlightBrush = new SolidColorBrush(Avalonia.Media.Color.Parse("#C8E6C9"));
+        private readonly List<(int Row, int Column)> _findMatches = new List<(int Row, int Column)>();
         private readonly Dictionary<int, ColumnValidationMode> _columnValidationRules = new Dictionary<int, ColumnValidationMode>();
         private readonly Dictionary<string, double> _persistedColumnWidths = new Dictionary<string, double>(StringComparer.Ordinal);
 
@@ -195,11 +199,11 @@ namespace OdyTools.Editors
                 }
                 try
                 {
-                    var expander = this.FindControl<Expander>("filterBox");
+                    var expander = EditorHelpers.FindControlSafe<Expander>(this, "filterBox");
                     _filterBox = expander?.Content as Panel;
-                    _sidebarStatsText = this.FindControl<TextBlock>("sidebarStatsText");
-                    _sidebarHost = this.FindControl<Border>("sidebarHost");
-                    _filterSection = this.FindControl<Border>("filterSection");
+                    _sidebarStatsText = EditorHelpers.FindControlSafe<TextBlock>(this, "sidebarStatsText");
+                    _sidebarHost = EditorHelpers.FindControlSafe<Border>(this, "sidebarHost");
+                    _filterSection = EditorHelpers.FindControlSafe<Border>(this, "filterSection");
                 }
                 catch { /* No name scope available (headless/programmatic UI) */ }
                 return;
@@ -207,24 +211,24 @@ namespace OdyTools.Editors
 
             try
             {
-                _twodaTable = this.FindControl<DataGrid>("twodaTable");
-                _filterEdit = this.FindControl<TextBox>("filterEdit");
-                var filterBoxExpander = this.FindControl<Expander>("filterBox");
+                _twodaTable = EditorHelpers.FindControlSafe<DataGrid>(this, "twodaTable");
+                _filterEdit = EditorHelpers.FindControlSafe<TextBox>(this, "filterEdit");
+                var filterBoxExpander = EditorHelpers.FindControlSafe<Expander>(this, "filterBox");
                 if (filterBoxExpander != null)
                     _filterBox = filterBoxExpander.Content as Panel;
-                _sidebarStatsText = this.FindControl<TextBlock>("sidebarStatsText");
-                _sidebarHost = this.FindControl<Border>("sidebarHost");
-                _filterSection = this.FindControl<Border>("filterSection");
-                _tbInsertRowSidebar = this.FindControl<Button>("tbInsertRowSidebar");
-                _tbInsertRowAbove = this.FindControl<Button>("tbInsertRowAbove");
-                _tbInsertRowBelow = this.FindControl<Button>("tbInsertRowBelow");
-                _actionInsertRow = this.FindControl<MenuItem>("actionInsertRow");
-                _actionInsertRowAbove = this.FindControl<MenuItem>("actionInsertRowAbove");
-                _actionInsertRowBelow = this.FindControl<MenuItem>("actionInsertRowBelow");
-                _ctxInsertRow = this.FindControl<MenuItem>("ctxInsertRow");
-                _ctxInsertRowAbove = this.FindControl<MenuItem>("ctxInsertRowAbove");
-                _ctxInsertRowBelow = this.FindControl<MenuItem>("ctxInsertRowBelow");
-                _ctxFindRowReferences = this.FindControl<MenuItem>("ctxFindRowReferences");
+                _sidebarStatsText = EditorHelpers.FindControlSafe<TextBlock>(this, "sidebarStatsText");
+                _sidebarHost = EditorHelpers.FindControlSafe<Border>(this, "sidebarHost");
+                _filterSection = EditorHelpers.FindControlSafe<Border>(this, "filterSection");
+                _tbInsertRowSidebar = EditorHelpers.FindControlSafe<Button>(this, "tbInsertRowSidebar");
+                _tbInsertRowAbove = EditorHelpers.FindControlSafe<Button>(this, "tbInsertRowAbove");
+                _tbInsertRowBelow = EditorHelpers.FindControlSafe<Button>(this, "tbInsertRowBelow");
+                _actionInsertRow = EditorHelpers.FindControlSafe<MenuItem>(this, "actionInsertRow");
+                _actionInsertRowAbove = EditorHelpers.FindControlSafe<MenuItem>(this, "actionInsertRowAbove");
+                _actionInsertRowBelow = EditorHelpers.FindControlSafe<MenuItem>(this, "actionInsertRowBelow");
+                _ctxInsertRow = EditorHelpers.FindControlSafe<MenuItem>(this, "ctxInsertRow");
+                _ctxInsertRowAbove = EditorHelpers.FindControlSafe<MenuItem>(this, "ctxInsertRowAbove");
+                _ctxInsertRowBelow = EditorHelpers.FindControlSafe<MenuItem>(this, "ctxInsertRowBelow");
+                _ctxFindRowReferences = EditorHelpers.FindControlSafe<MenuItem>(this, "ctxFindRowReferences");
             }
             catch { }
 
@@ -268,6 +272,7 @@ namespace OdyTools.Editors
 
             // Keyboard shortcuts (work when grid or window has focus)
             KeyDown += OnWindowKeyDown;
+            Closing += (s, e) => CancelGridEditBeforeClose();
 
             // Click outside grid/cell: clear selection
             PointerPressed += OnWindowPointerPressed;
@@ -283,6 +288,20 @@ namespace OdyTools.Editors
                 _twodaTable.PointerReleased += OnGridPointerReleased;
             }
 
+        }
+
+        private void CancelGridEditBeforeClose()
+        {
+            if (_twodaTable == null) return;
+            try
+            {
+                _twodaTable.CancelEdit(DataGridEditingUnit.Cell);
+                _twodaTable.CancelEdit(DataGridEditingUnit.Row);
+            }
+            catch
+            {
+                try { _twodaTable.CancelEdit(); } catch { }
+            }
         }
 
         private void OnWindowPointerPressed(object sender, PointerPressedEventArgs e)
@@ -603,6 +622,7 @@ namespace OdyTools.Editors
             if (_twodaTable == null) return;
             foreach (var cell in _twodaTable.GetVisualDescendants().OfType<DataGridCell>())
                 cell.Background = Brushes.Transparent;
+            _findMatches.Clear();
         }
 
         /// <summary>Selects an inclusive rectangular cell range and highlights it.</summary>
@@ -623,11 +643,8 @@ namespace OdyTools.Editors
             _cellRangeActive = row1 != row2 || col1 != col2;
 
             GetNormalizedRange(out int minRow, out int maxRow, out int minCol, out int maxColNorm);
-            _twodaTable.SelectedItems.Clear();
-            for (int r = minRow; r <= maxRow; r++)
-                _twodaTable.SelectedItems.Add(_sourceData[r]);
-            _twodaTable.SelectedItem = _sourceData[minRow];
-            NavigateToCell(minRow, minCol);
+            SelectRows(Enumerable.Range(minRow, maxRow - minRow + 1).Select(r => _sourceData[r]), _sourceData[minRow]);
+            NavigateToCell(minRow, minCol, updateSelection: false);
             ClearColumnHighlight();
             if (_cellRangeActive)
             {
@@ -848,10 +865,11 @@ namespace OdyTools.Editors
                 else if (e.Key == Key.A) { SelectAllRows(); e.Handled = true; }
                 else if (e.Key == Key.Z) { Undo(); e.Handled = true; }
                 else if (e.Key == Key.Y) { Redo(); e.Handled = true; }
+                else if (shift && e.Key == Key.F) { HighlightAllFindMatches(); e.Handled = true; }
                 else if (e.Key == Key.F) { ShowFindDialog(); e.Handled = true; }
                 else if (e.Key == Key.H) { ShowReplaceDialog(); e.Handled = true; }
                 else if (shift && e.Key == Key.G) { ShowGoToColumnDialog(); e.Handled = true; }
-                else if (e.Key == Key.G) { ShowGoToRowDialog(); e.Handled = true; }
+                else if (e.Key == Key.G) { ShowGoToCellDialog(); e.Handled = true; }
                 else if (e.Key == Key.D) { FillDown(); e.Handled = true; }
                 else if (e.Key == Key.L) { _filterEdit?.Focus(); e.Handled = true; }
                 else if (e.Key == Key.B) { ToggleSidebar(); e.Handled = true; }
@@ -870,6 +888,7 @@ namespace OdyTools.Editors
             }
             else if (e.Key == Key.F9) { ToggleSidebar(); e.Handled = true; }
             else if (e.Key == Key.F2) { BeginCellEdit(); e.Handled = true; }
+            else if (shift && e.Key == Key.F3) { TryFindPreviousMatch(); e.Handled = true; }
             else if (e.Key == Key.F3) { TryFindNextMatch(); e.Handled = true; }
             else if (e.Key == Key.Escape)
             {
@@ -934,22 +953,31 @@ namespace OdyTools.Editors
         }
 
         /// <summary>Navigates to a specific cell by row and column index, updating selection, scroll, and status.</summary>
-        private void NavigateToCell(int rowIdx, int colIdx)
+        public void NavigateToCell(int rowIdx, int colIdx)
+        {
+            NavigateToCell(rowIdx, colIdx, updateSelection: true);
+        }
+
+        private void NavigateToCell(int rowIdx, int colIdx, bool updateSelection)
         {
             if (_twodaTable == null || _sourceData == null || _sourceData.Count == 0) return;
             rowIdx = Math.Max(0, Math.Min(rowIdx, _sourceData.Count - 1));
             int colCount = GetEffectiveColumnCount();
             colIdx = Math.Max(0, Math.Min(colIdx, colCount - 1));
-            _twodaTable.SelectedItem = _sourceData[rowIdx];
+            var row = _sourceData[rowIdx];
             if (colIdx < _twodaTable.Columns.Count)
             {
-                _twodaTable.ScrollIntoView(_sourceData[rowIdx], _twodaTable.Columns[colIdx]);
+                _twodaTable.ScrollIntoView(row, _twodaTable.Columns[colIdx]);
                 if (_twodaTable.CurrentColumn != _twodaTable.Columns[colIdx])
                     _twodaTable.CurrentColumn = _twodaTable.Columns[colIdx];
             }
             else
             {
-                _twodaTable.ScrollIntoView(_sourceData[rowIdx], null);
+                _twodaTable.ScrollIntoView(row, null);
+            }
+            if (updateSelection)
+            {
+                SelectRows(new[] { row }, row);
             }
             UpdateFormulaBarAndStatus();
         }
@@ -989,7 +1017,14 @@ namespace OdyTools.Editors
         /// <summary>Begins in-cell editing on the focused DataGrid cell (F2 / double-click).</summary>
         public void BeginCellEdit()
         {
+            if (IsHeadlessAvaloniaSession()) return;
             _twodaTable?.BeginEdit();
+        }
+
+        private static bool IsHeadlessAvaloniaSession()
+        {
+            var lifetime = Avalonia.Application.Current?.ApplicationLifetime;
+            return lifetime == null || lifetime.GetType().Name.Contains("Headless", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>Returns true when a TextBox inside the DataGrid has keyboard focus (in-cell edit mode).</summary>
@@ -1040,9 +1075,7 @@ namespace OdyTools.Editors
             ClearColumnHighlight();
             ClearCellRangeSelection();
             var row = _sourceData[rowIndex];
-            _twodaTable.SelectedItems.Clear();
-            _twodaTable.SelectedItems.Add(row);
-            _twodaTable.SelectedItem = row;
+            SelectRows(new[] { row }, row);
             _twodaTable.ScrollIntoView(row, _twodaTable.CurrentColumn);
             UpdateFormulaBarAndStatus();
         }
@@ -1061,12 +1094,36 @@ namespace OdyTools.Editors
                 nextSelection.Remove(row);
             else
                 nextSelection.Add(row);
-            _twodaTable.SelectedItem = row;
-            _twodaTable.SelectedItems.Clear();
-            foreach (object item in nextSelection)
-                _twodaTable.SelectedItems.Add(item);
+            SelectRows(nextSelection, nextSelection.Contains(row) ? row : nextSelection.FirstOrDefault());
             _twodaTable.ScrollIntoView(row, _twodaTable.CurrentColumn);
             UpdateFormulaBarAndStatus();
+        }
+
+        private void SelectRows(IEnumerable<object> rows, object primaryRow)
+        {
+            if (_twodaTable == null) return;
+
+            var selectedRows = rows?.Where(row => row != null).Distinct().ToList() ?? new List<object>();
+            _twodaTable.SelectedItems.Clear();
+            _twodaTable.SelectedItem = null;
+            foreach (var selectedRow in selectedRows)
+            {
+                _twodaTable.SelectedItems.Add(selectedRow);
+            }
+
+            if (selectedRows.Count > 1)
+            {
+                return;
+            }
+
+            if (primaryRow != null && selectedRows.Contains(primaryRow))
+            {
+                _twodaTable.SelectedItem = primaryRow;
+            }
+            else if (selectedRows.Count > 0)
+            {
+                _twodaTable.SelectedItem = selectedRows[0];
+            }
         }
 
         public void ShowKeyboardShortcutsDialog()
@@ -1095,6 +1152,7 @@ namespace OdyTools.Editors
                 });
             }
 
+            Bind(() => _ = TryNewTemplateAsync(), "actionNew10x5Grid");
             Bind(() => _ = RunSaveAsAsyncCore(false), "actionSaveAs2DA");
             Bind(() => _ = RunSaveAsAsyncCore(true), "actionSaveAsCSV");
             Bind(Undo, "actionUndo");
@@ -1103,11 +1161,12 @@ namespace OdyTools.Editors
             Bind(CutSelection, "actionCut", "ctxCut");
             Bind(PasteSelection, "actionPaste", "ctxPaste");
             Bind(PasteTransposed, "actionPasteTransposed", "ctxPasteTransposed");
+            Bind(PasteByHeader, "actionPasteByHeader", "ctxPasteByHeader");
             Bind(ClearCell, "actionClearCell", "ctxClearCell");
             Bind(FindReferencesForSelectedRow, "ctxFindRowReferences");
             Bind(ShowFindDialog, "actionFind");
             Bind(ShowReplaceDialog, "actionReplace");
-            Bind(ShowGoToRowDialog, "actionGoToRow", "tbGoToRow");
+            Bind(ShowGoToCellDialog, "actionGoToRow", "tbGoToRow");
             Bind(ShowGoToColumnDialog, "actionGoToColumn", "tbGoToColumn");
             Bind(SelectAllRows, "actionSelectAll", "tbSelectAll");
             Bind(SelectCurrentColumn, "actionSelectColumn", "tbSelectColumn");
@@ -1191,6 +1250,7 @@ namespace OdyTools.Editors
                 SetHeader("menuHelp", "Help");
 
                 SetHeader("actionNew", "New");
+                SetHeader("actionNew10x5Grid", "New 10x5 Grid");
                 SetHeader("actionOpen", "Open");
                 SetHeader("actionSave", "Save");
                 SetHeader("actionSaveAs", "Save As");
@@ -1204,10 +1264,11 @@ namespace OdyTools.Editors
                 SetHeader("actionCopy", "Copy");
                 SetHeader("actionPaste", "Paste");
                 SetHeader("actionPasteTransposed", "Paste Transposed");
+                SetHeader("actionPasteByHeader", "Paste by Header");
                 SetHeader("actionClearCell", "Clear Cell");
                 SetHeader("actionFind", "Find");
                 SetHeader("actionReplace", "Replace");
-                SetHeader("actionGoToRow", "Go to Row...");
+                SetHeader("actionGoToRow", "Go to Cell...");
                 SetHeader("actionGoToColumn", "Go to Column...");
                 SetHeader("actionSelectAll", "Select All");
                 SetHeader("actionSelectColumn", "Select Column");
@@ -1240,6 +1301,7 @@ namespace OdyTools.Editors
                 SetHeader("ctxCopy", "Copy");
                 SetHeader("ctxPaste", "Paste");
                 SetHeader("ctxPasteTransposed", "Paste Transposed");
+                SetHeader("ctxPasteByHeader", "Paste by Header");
                 SetHeader("ctxClearCell", "Clear Cell");
                 SetHeader("ctxInsertRow", "Insert Row");
                 SetHeader("ctxInsertRowAbove", "Insert Row Above");
@@ -1291,7 +1353,7 @@ namespace OdyTools.Editors
                 SetSidebarBtn("tbSelectColumn", "Select Column", "Select current column");
                 SetSidebarBtn("tbSelectRow", "Select Row", "Select current row");
                 SetSidebarBtn("tbFillDown", "Fill Down", "Fill Down");
-                SetSidebarBtn("tbGoToRow", "Go to Row…", "Go to Row...");
+                SetSidebarBtn("tbGoToRow", "Go to Cell…", "Go to Cell...");
                 SetSidebarBtn("tbGoToColumn", "Go to Column…", "Go to Column...");
                 SetSidebarBtn("tbInsertRowSidebar", "Insert Row", "Insert row");
                 SetSidebarBtn("tbInsertRowAbove", "Insert Above", "Insert row above selection");
@@ -1545,6 +1607,7 @@ namespace OdyTools.Editors
                 _sourceData.Add(row);
             }
 
+            _filteredData?.View?.Refresh();
             ResetVerticalHeaders();
             UpdateStatusBar();
             UpdateFindRowReferencesVisibility();
@@ -1556,7 +1619,7 @@ namespace OdyTools.Editors
             {
                 if (_statusText == null)
                 {
-                    _statusText = this.FindControl<Avalonia.Controls.TextBlock>("statusText");
+                    _statusText = EditorHelpers.FindControlSafe<Avalonia.Controls.TextBlock>(this, "statusText");
                 }
                 if (_statusText != null)
                 {
@@ -1644,7 +1707,7 @@ namespace OdyTools.Editors
                 // Show/hide empty-state overlay (no redundant Copy/Paste; grid is the focus)
                 if (_emptyStateOverlay == null)
                 {
-                    _emptyStateOverlay = this.FindControl<Border>("emptyStateOverlay");
+                    _emptyStateOverlay = EditorHelpers.FindControlSafe<Border>(this, "emptyStateOverlay");
                 }
                 if (_emptyStateOverlay != null)
                 {
@@ -1710,6 +1773,16 @@ namespace OdyTools.Editors
                 descriptors.Add((_columnHeaders[entry.sourceIndex - 1], entry.sourceIndex));
             }
 
+            var includedSourceIndices = descriptors.Select(x => x.sourceIndex).ToHashSet();
+            for (int i = 0; i < _columnHeaders.Count; i++)
+            {
+                int sourceIndex = i + 1;
+                if (!includedSourceIndices.Contains(sourceIndex))
+                {
+                    descriptors.Add((_columnHeaders[i], sourceIndex));
+                }
+            }
+
             if (descriptors.Count == 0 && _sourceData.Count > 0 && _sourceData[0].Count > 1)
             {
                 for (int i = 1; i < _sourceData[0].Count; i++)
@@ -1743,7 +1816,20 @@ namespace OdyTools.Editors
         public override void New()
         {
             base.New();
+            CreateNewGrid(1, 1);
+        }
+
+        public void NewTemplateGrid(int rows = 10, int columns = 5)
+        {
+            base.New();
+            CreateNewGrid(rows, columns);
+        }
+
+        private void CreateNewGrid(int rows, int columns)
+        {
             _restype = ResourceType.TwoDA;
+            rows = Math.Max(1, rows);
+            columns = Math.Max(1, columns);
             _sourceData.Clear();
             _columnHeaders.Clear();
 
@@ -1752,9 +1838,21 @@ namespace OdyTools.Editors
             _undoStack.Clear();
             _redoStack.Clear();
 
-            // Pre-existing empty table: one data column and one row so the user can click and type immediately.
-            _columnHeaders.Add("Column1");
-            _sourceData.Add(new ObservableCollection<string> { "", "" }); // row label + one cell
+            // Pre-existing editable table so the user can click and type immediately.
+            for (int col = 1; col <= columns; col++)
+            {
+                _columnHeaders.Add("Column" + col);
+            }
+
+            for (int rowIndex = 0; rowIndex < rows; rowIndex++)
+            {
+                var rowValues = new ObservableCollection<string> { rowIndex.ToString() };
+                for (int col = 0; col < columns; col++)
+                {
+                    rowValues.Add("");
+                }
+                _sourceData.Add(rowValues);
+            }
             ClearCellRangeSelection();
             _columnSelectionActive = false;
             ClearColumnHighlight();
@@ -1765,12 +1863,11 @@ namespace OdyTools.Editors
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
                     if (_twodaTable == null || _sourceData.Count == 0) return;
+                    if (!_sourceData.Contains(row)) return;
                     try
                     {
                         _filteredData.View?.Refresh();
-                        _twodaTable.SelectedItems.Clear();
-                        _twodaTable.SelectedItems.Add(row);
-                        _twodaTable.SelectedItem = row;
+                        SelectRows(new[] { row }, row);
                         if (_twodaTable.Columns.Count > 1)
                         {
                             _twodaTable.CurrentColumn = _twodaTable.Columns[1];
@@ -1802,6 +1899,11 @@ namespace OdyTools.Editors
         private async Task TryNewAsync()
         {
             if (await ConfirmDiscardUnsavedChangesAsync()) New();
+        }
+
+        private async Task TryNewTemplateAsync()
+        {
+            if (await ConfirmDiscardUnsavedChangesAsync()) NewTemplateGrid();
         }
 
         private async Task TryOpenAsync()
@@ -1932,7 +2034,7 @@ namespace OdyTools.Editors
         {
             if (_sidebarHost == null)
             {
-                _sidebarHost = this.FindControl<Border>("sidebarHost");
+                _sidebarHost = EditorHelpers.FindControlSafe<Border>(this, "sidebarHost");
                 if (_sidebarHost == null) return;
             }
             _isSidebarVisible = !_isSidebarVisible;
@@ -2320,6 +2422,115 @@ namespace OdyTools.Editors
             catch { }
         }
 
+        /// <summary>Paste special: use the first clipboard row as headers and overwrite matching columns only.</summary>
+        public void PasteByHeader()
+        {
+            try
+            {
+                var clipboard = (this as Window)?.Clipboard;
+                if (clipboard == null) return;
+                var textTask = clipboard.GetTextAsync();
+                textTask.Wait(2000);
+                string text = textTask.Result;
+                if (string.IsNullOrEmpty(text)) return;
+
+                var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                var grid = ParseClipboardGrid(lines);
+                if (grid.Count < 2) return;
+
+                var columnMap = BuildHeaderPasteColumnMap(grid[0]);
+                if (columnMap.Count == 0) return;
+
+                int startRow = GetPasteStartRow();
+                PushState();
+                int colCount = GetEffectiveColumnCount();
+                int requiredRows = startRow + grid.Count - 1;
+                while (_sourceData.Count < requiredRows)
+                {
+                    var row = new ObservableCollection<string>();
+                    for (int i = 0; i < colCount; i++)
+                    {
+                        row.Add("");
+                    }
+                    _sourceData.Add(row);
+                }
+
+                for (int r = 1; r < grid.Count; r++)
+                {
+                    int targetRow = startRow + r - 1;
+                    if (targetRow < 0 || targetRow >= _sourceData.Count) continue;
+                    EnsureRowColumnCount(_sourceData[targetRow], colCount);
+                    foreach (var map in columnMap)
+                    {
+                        int sourceCol = map.Key;
+                        int targetCol = map.Value;
+                        if (sourceCol >= grid[r].Count || targetCol >= _sourceData[targetRow].Count) continue;
+                        _sourceData[targetRow][targetCol] = grid[r][sourceCol] ?? "";
+                    }
+                }
+
+                SetItemDisplayData(Math.Min(startRow + grid.Count - 2, _sourceData.Count - 1));
+                UpdateStatusBar();
+            }
+            catch { }
+        }
+
+        private int GetPasteStartRow()
+        {
+            if (_cellRangeActive && _sourceData.Count > 0)
+            {
+                GetNormalizedRange(out int minRow, out _, out _, out _);
+                return minRow;
+            }
+
+            var selectedIndices = _twodaTable?.SelectedItems != null
+                ? _twodaTable.SelectedItems.Cast<ObservableCollection<string>>()
+                    .Select(r => _sourceData.IndexOf(r)).Where(i => i >= 0).ToList()
+                : new List<int>();
+            if (selectedIndices.Count > 0)
+            {
+                return selectedIndices.Min();
+            }
+
+            return _sourceData.Count;
+        }
+
+        private Dictionary<int, int> BuildHeaderPasteColumnMap(List<string> clipboardHeaders)
+        {
+            var map = new Dictionary<int, int>();
+            if (clipboardHeaders == null || clipboardHeaders.Count == 0) return map;
+
+            var existingHeaders = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["#"] = 0,
+                ["label"] = 0,
+                ["row"] = 0,
+                ["rowlabel"] = 0,
+                ["row label"] = 0
+            };
+
+            for (int i = 0; i < _columnHeaders.Count; i++)
+            {
+                string header = _columnHeaders[i] ?? "";
+                if (!existingHeaders.ContainsKey(header))
+                {
+                    existingHeaders[header] = i + 1;
+                }
+            }
+
+            for (int sourceCol = 0; sourceCol < clipboardHeaders.Count; sourceCol++)
+            {
+                string header = (clipboardHeaders[sourceCol] ?? "").Trim();
+                if (header.Length == 0) continue;
+                if (existingHeaders.TryGetValue(header, out int targetCol))
+                {
+                    map[sourceCol] = targetCol;
+                }
+            }
+
+            return map;
+        }
+
         private void EnsureRowColumnCount(ObservableCollection<string> row, int colCount)
         {
             while (row.Count < colCount) row.Add("");
@@ -2430,7 +2641,7 @@ namespace OdyTools.Editors
             {
                 Title = Localization.Tr("Insert Multiple Rows"),
                 Width = 320,
-                Height = 140,
+                Height = 180,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
             var panel = new StackPanel { Margin = new Avalonia.Thickness(12) };
@@ -2638,21 +2849,27 @@ namespace OdyTools.Editors
             var dialog = new Window
             {
                 Title = Localization.Tr("Find"),
-                Width = 360,
-                Height = 140,
+                Width = 520,
+                Height = 180,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
             var panel = new StackPanel { Margin = new Avalonia.Thickness(12) };
             var findLabel = new TextBlock { Text = Localization.Tr("Find what:") };
             var findBox = new TextBox { Text = _findText, Watermark = Localization.Tr("Search text") };
             var matchCase = new CheckBox { Content = Localization.Tr("Match case"), IsChecked = _findMatchCase };
+            var wholeCell = new CheckBox { Content = Localization.Tr("Whole cell"), IsChecked = _findWholeCell };
             var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Avalonia.Thickness(0, 8, 0, 0) };
             var findNext = new Button { Content = Localization.Tr("Find Next"), Margin = new Avalonia.Thickness(0, 0, 8, 0) };
+            var findPrevious = new Button { Content = Localization.Tr("Find Previous"), Margin = new Avalonia.Thickness(0, 0, 8, 0) };
+            var highlightAll = new Button { Content = Localization.Tr("Highlight All"), Margin = new Avalonia.Thickness(0, 0, 8, 0) };
             var closeBtn = new Button { Content = Localization.Tr("Close") };
             panel.Children.Add(findLabel);
             panel.Children.Add(findBox);
             panel.Children.Add(matchCase);
+            panel.Children.Add(wholeCell);
             buttons.Children.Add(findNext);
+            buttons.Children.Add(findPrevious);
+            buttons.Children.Add(highlightAll);
             buttons.Children.Add(closeBtn);
             panel.Children.Add(buttons);
             dialog.Content = panel;
@@ -2660,10 +2877,28 @@ namespace OdyTools.Editors
             {
                 _findText = findBox.Text ?? "";
                 _findMatchCase = matchCase.IsChecked == true;
+                _findWholeCell = wholeCell.IsChecked == true;
                 if (FindNextMatch())
                 {
                     dialog.Close();
                 }
+            };
+            findPrevious.Click += (s, e) =>
+            {
+                _findText = findBox.Text ?? "";
+                _findMatchCase = matchCase.IsChecked == true;
+                _findWholeCell = wholeCell.IsChecked == true;
+                if (FindPreviousMatch())
+                {
+                    dialog.Close();
+                }
+            };
+            highlightAll.Click += (s, e) =>
+            {
+                _findText = findBox.Text ?? "";
+                _findMatchCase = matchCase.IsChecked == true;
+                _findWholeCell = wholeCell.IsChecked == true;
+                HighlightAllFindMatches();
             };
             closeBtn.Click += (s, e) => dialog.Close();
             findBox.Focus();
@@ -2676,7 +2911,7 @@ namespace OdyTools.Editors
             {
                 Title = Localization.Tr("Replace"),
                 Width = 360,
-                Height = 200,
+                Height = 245,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
             var panel = new StackPanel { Margin = new Avalonia.Thickness(12) };
@@ -2685,8 +2920,10 @@ namespace OdyTools.Editors
             var replaceLabel = new TextBlock { Text = Localization.Tr("Replace with:") };
             var replaceBox = new TextBox { Text = _replaceText, Watermark = Localization.Tr("Replacement") };
             var matchCase = new CheckBox { Content = Localization.Tr("Match case"), IsChecked = _findMatchCase };
+            var wholeCell = new CheckBox { Content = Localization.Tr("Whole cell"), IsChecked = _findWholeCell };
             var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Avalonia.Thickness(0, 8, 0, 0) };
             var findNextBtn = new Button { Content = Localization.Tr("Find Next"), Margin = new Avalonia.Thickness(0, 0, 8, 0) };
+            var findPreviousBtn = new Button { Content = Localization.Tr("Find Previous"), Margin = new Avalonia.Thickness(0, 0, 8, 0) };
             var replaceBtn = new Button { Content = Localization.Tr("Replace"), Margin = new Avalonia.Thickness(0, 0, 8, 0) };
             var replaceAllBtn = new Button { Content = Localization.Tr("Replace All"), Margin = new Avalonia.Thickness(0, 0, 8, 0) };
             var closeBtn = new Button { Content = Localization.Tr("Close") };
@@ -2695,7 +2932,9 @@ namespace OdyTools.Editors
             panel.Children.Add(replaceLabel);
             panel.Children.Add(replaceBox);
             panel.Children.Add(matchCase);
+            panel.Children.Add(wholeCell);
             buttons.Children.Add(findNextBtn);
+            buttons.Children.Add(findPreviousBtn);
             buttons.Children.Add(replaceBtn);
             buttons.Children.Add(replaceAllBtn);
             buttons.Children.Add(closeBtn);
@@ -2706,13 +2945,23 @@ namespace OdyTools.Editors
                 _findText = findBox.Text ?? "";
                 _replaceText = replaceBox.Text ?? "";
                 _findMatchCase = matchCase.IsChecked == true;
+                _findWholeCell = wholeCell.IsChecked == true;
                 FindNextMatch();
+            };
+            findPreviousBtn.Click += (s, e) =>
+            {
+                _findText = findBox.Text ?? "";
+                _replaceText = replaceBox.Text ?? "";
+                _findMatchCase = matchCase.IsChecked == true;
+                _findWholeCell = wholeCell.IsChecked == true;
+                FindPreviousMatch();
             };
             replaceBtn.Click += (s, e) =>
             {
                 _findText = findBox.Text ?? "";
                 _replaceText = replaceBox.Text ?? "";
                 _findMatchCase = matchCase.IsChecked == true;
+                _findWholeCell = wholeCell.IsChecked == true;
                 ReplaceOne();
             };
             replaceAllBtn.Click += (s, e) =>
@@ -2720,6 +2969,7 @@ namespace OdyTools.Editors
                 _findText = findBox.Text ?? "";
                 _replaceText = replaceBox.Text ?? "";
                 _findMatchCase = matchCase.IsChecked == true;
+                _findWholeCell = wholeCell.IsChecked == true;
                 ReplaceAll();
                 dialog.Close();
             };
@@ -2736,16 +2986,15 @@ namespace OdyTools.Editors
             if (string.IsNullOrEmpty(_findText)) return false;
             if (!_findUseRegex)
             {
-                return value.IndexOf(_findText, FindComparison) >= 0;
+                return _findWholeCell
+                    ? string.Equals(value, _findText, FindComparison)
+                    : value.IndexOf(_findText, FindComparison) >= 0;
             }
             try
             {
-                RegexOptions options = RegexOptions.CultureInvariant;
-                if (!_findMatchCase)
-                {
-                    options |= RegexOptions.IgnoreCase;
-                }
-                return Regex.IsMatch(value, _findText, options);
+                return _findWholeCell
+                    ? Regex.IsMatch(value, $"^(?:{_findText})$", RegexOptionsForFind())
+                    : Regex.IsMatch(value, _findText, RegexOptionsForFind());
             }
             catch (ArgumentException)
             {
@@ -2753,25 +3002,28 @@ namespace OdyTools.Editors
             }
         }
 
-        /// <summary>Configures find text/options and resets the search cursor (for F3 / Find Next). columnIndex -1 searches all columns; &gt;= 1 limits search to that grid column; useRegex enables regex matching.</summary>
-        public void ConfigureFind(string text, bool matchCase = false, int columnIndex = -1, bool useRegex = false)
+        /// <summary>Configures find text/options and resets the search cursor (for F3 / Find Next). columnIndex -1 searches all columns; 0 searches row labels; &gt;= 1 limits search to that grid column; useRegex enables regex matching.</summary>
+        public void ConfigureFind(string text, bool matchCase = false, int columnIndex = -1, bool useRegex = false, bool wholeCell = false)
         {
             _findText = text ?? "";
             _findMatchCase = matchCase;
             _findColumnIndex = columnIndex;
             _findUseRegex = useRegex;
+            _findWholeCell = wholeCell;
             _lastFindRow = -1;
             _lastFindCol = -1;
         }
 
         /// <summary>Configures find/replace text and options (for Replace / Replace All). Resets the find cursor — call <see cref="TryFindNextMatch"/> before replace-one.</summary>
-        public void ConfigureReplace(string findText, string replaceText, bool matchCase = false)
+        public void ConfigureReplace(string findText, string replaceText, bool matchCase = false, bool useRegex = false, bool selectionOnly = false, bool wholeCell = false)
         {
             _findText = findText ?? "";
             _replaceText = replaceText ?? "";
             _findMatchCase = matchCase;
             _findColumnIndex = -1;
-            _findUseRegex = false;
+            _findUseRegex = useRegex;
+            _findWholeCell = wholeCell;
+            _replaceSelectionOnly = selectionOnly;
             _lastFindRow = -1;
             _lastFindCol = -1;
         }
@@ -2780,6 +3032,12 @@ namespace OdyTools.Editors
         public void TryReplaceAll()
         {
             ReplaceAll();
+        }
+
+        /// <summary>Replaces all occurrences in the active cell range or selected rows.</summary>
+        public void TryReplaceAllInSelection()
+        {
+            ReplaceAll(selectionOnly: true);
         }
 
         /// <summary>Replaces the first match at the current find position (or finds next if stale).</summary>
@@ -2792,6 +3050,41 @@ namespace OdyTools.Editors
         public bool TryFindNextMatch()
         {
             return FindNextMatch();
+        }
+
+        /// <summary>Finds the previous cell containing the configured find text; returns false when none.</summary>
+        public bool TryFindPreviousMatch()
+        {
+            return FindPreviousMatch();
+        }
+
+        /// <summary>Highlights every matching cell in the current find scope and returns the match count.</summary>
+        public int HighlightAllFindMatches()
+        {
+            _findMatches.Clear();
+            if (string.IsNullOrEmpty(_findText))
+            {
+                ApplyFindHighlights();
+                return 0;
+            }
+
+            foreach (var target in EnumerateFindTargets())
+            {
+                string cell = _sourceData[target.Row][target.Column] ?? "";
+                if (CellMatchesFind(cell))
+                {
+                    _findMatches.Add(target);
+                }
+            }
+
+            ApplyFindHighlights();
+            UpdateStatusBar();
+            return _findMatches.Count;
+        }
+
+        public IReadOnlyList<(int Row, int Column)> GetHighlightedFindMatches()
+        {
+            return _findMatches.ToList();
         }
 
         /// <summary>Row index of the last find hit, or -1.</summary>
@@ -2809,7 +3102,7 @@ namespace OdyTools.Editors
         private bool FindNextMatch()
         {
             if (string.IsNullOrEmpty(_findText)) return false;
-            if (_findColumnIndex >= 1)
+            if (_findColumnIndex >= 0)
             {
                 return FindNextMatchInColumn(_findColumnIndex);
             }
@@ -2857,6 +3150,102 @@ namespace OdyTools.Editors
             return false;
         }
 
+        private bool FindPreviousMatch()
+        {
+            if (string.IsNullOrEmpty(_findText)) return false;
+            if (_findColumnIndex >= 0)
+            {
+                return FindPreviousMatchInColumn(_findColumnIndex);
+            }
+
+            int startRow = _lastFindRow >= 0 ? _lastFindRow : _sourceData.Count - 1;
+            int startCol = _lastFindCol >= 0 ? _lastFindCol - 1 : int.MaxValue;
+            for (int r = startRow; r >= 0; r--)
+            {
+                var row = _sourceData[r];
+                int colStart = r == startRow ? Math.Min(startCol, row.Count - 1) : row.Count - 1;
+                for (int c = colStart; c >= 0; c--)
+                {
+                    string cell = row[c] ?? "";
+                    if (CellMatchesFind(cell))
+                    {
+                        _lastFindRow = r;
+                        _lastFindCol = c;
+                        SelectAndScrollToCell(r, c);
+                        return true;
+                    }
+                }
+            }
+            _lastFindRow = -1;
+            _lastFindCol = -1;
+            return false;
+        }
+
+        private IEnumerable<(int Row, int Column)> EnumerateFindTargets()
+        {
+            if (_findColumnIndex >= 0)
+            {
+                for (int r = 0; r < _sourceData.Count; r++)
+                {
+                    if (_findColumnIndex < _sourceData[r].Count)
+                    {
+                        yield return (r, _findColumnIndex);
+                    }
+                }
+                yield break;
+            }
+
+            for (int r = 0; r < _sourceData.Count; r++)
+            {
+                var row = _sourceData[r];
+                for (int c = 0; c < row.Count; c++)
+                {
+                    yield return (r, c);
+                }
+            }
+        }
+
+        private void ApplyFindHighlights()
+        {
+            if (_twodaTable == null) return;
+            var matches = new HashSet<(int Row, int Column)>(_findMatches);
+            foreach (var rowControl in _twodaTable.GetVisualDescendants().OfType<DataGridRow>())
+            {
+                var model = rowControl.DataContext as ObservableCollection<string>;
+                if (model == null) continue;
+                int rowIdx = _sourceData.IndexOf(model);
+                foreach (var cell in rowControl.GetVisualDescendants().OfType<DataGridCell>())
+                {
+                    int colIdx = TryGetColumnIndexFromCell(cell);
+                    if (matches.Contains((rowIdx, colIdx)))
+                        cell.Background = FindHighlightBrush;
+                    else if (!_cellRangeActive && !_columnSelectionActive)
+                        cell.Background = Brushes.Transparent;
+                }
+            }
+        }
+
+        private bool FindPreviousMatchInColumn(int columnIndex)
+        {
+            int startRow = _lastFindRow >= 0 ? _lastFindRow - 1 : _sourceData.Count - 1;
+            for (int r = startRow; r >= 0; r--)
+            {
+                var row = _sourceData[r];
+                if (columnIndex >= row.Count) continue;
+                string cell = row[columnIndex] ?? "";
+                if (CellMatchesFind(cell))
+                {
+                    _lastFindRow = r;
+                    _lastFindCol = columnIndex;
+                    SelectAndScrollToCell(r, columnIndex);
+                    return true;
+                }
+            }
+            _lastFindRow = -1;
+            _lastFindCol = -1;
+            return false;
+        }
+
         private void SelectAndScrollToCell(int rowIndex, int colIndex)
         {
             if (rowIndex < 0 || rowIndex >= _sourceData.Count) return;
@@ -2877,37 +3266,153 @@ namespace OdyTools.Editors
             var row = _sourceData[r];
             if (c >= row.Count) return;
             string cell = row[c] ?? "";
-            int idx = cell.IndexOf(_findText, FindComparison);
-            if (idx < 0) { FindNextMatch(); return; }
+            if (!TryReplaceFirstInString(cell, out string result))
+            {
+                FindNextMatch();
+                return;
+            }
+            if (result == cell) return;
             PushState();
-            row[c] = cell.Remove(idx, _findText.Length).Insert(idx, _replaceText ?? "");
+            row[c] = result;
             _lastFindCol = c;
             UpdateFormulaBarAndStatus();
         }
 
-        private void ReplaceAll()
+        private void ReplaceAll(bool selectionOnly = false)
         {
             if (string.IsNullOrEmpty(_findText)) return;
-            PushState();
-            for (int r = 0; r < _sourceData.Count; r++)
+            var replacements = new List<(int Row, int Column, string Value)>();
+            foreach (var target in GetReplaceTargets(selectionOnly || _replaceSelectionOnly))
             {
-                var row = _sourceData[r];
-                for (int c = 0; c < row.Count; c++)
+                string cell = _sourceData[target.Row][target.Column] ?? "";
+                string result = ReplaceAllInString(cell);
+                if (result != cell)
                 {
-                    string cell = row[c] ?? "";
-                    string result = ReplaceAllInString(cell, _findText, _replaceText ?? "", _findMatchCase);
-                    if (result != cell)
-                    {
-                        row[c] = result;
-                    }
+                    replacements.Add((target.Row, target.Column, result));
                 }
+            }
+            if (replacements.Count == 0) return;
+
+            PushState();
+            foreach (var replacement in replacements)
+            {
+                _sourceData[replacement.Row][replacement.Column] = replacement.Value;
             }
             _lastFindRow = -1;
             _lastFindCol = -1;
             UpdateStatusBar();
         }
 
-        private static string ReplaceAllInString(string text, string find, string replace, bool matchCase)
+        private IEnumerable<(int Row, int Column)> GetReplaceTargets(bool selectionOnly)
+        {
+            if (selectionOnly)
+            {
+                if (_cellRangeActive && _sourceData.Count > 0)
+                {
+                    GetNormalizedRange(out int minRow, out int maxRow, out int minCol, out int maxCol);
+                    for (int r = minRow; r <= maxRow; r++)
+                    {
+                        if (r < 0 || r >= _sourceData.Count) continue;
+                        for (int c = minCol; c <= maxCol && c < _sourceData[r].Count; c++)
+                        {
+                            if (c >= 0) yield return (r, c);
+                        }
+                    }
+                    yield break;
+                }
+
+                var selectedRows = _twodaTable?.SelectedItems?.Cast<ObservableCollection<string>>().ToList();
+                if (selectedRows == null || selectedRows.Count == 0)
+                {
+                    yield break;
+                }
+
+                foreach (var row in selectedRows)
+                {
+                    int r = _sourceData.IndexOf(row);
+                    if (r < 0) continue;
+                    for (int c = 0; c < row.Count; c++)
+                    {
+                        yield return (r, c);
+                    }
+                }
+                yield break;
+            }
+
+            for (int r = 0; r < _sourceData.Count; r++)
+            {
+                var row = _sourceData[r];
+                for (int c = 0; c < row.Count; c++)
+                {
+                    yield return (r, c);
+                }
+            }
+        }
+
+        private bool TryReplaceFirstInString(string text, out string result)
+        {
+            result = text ?? "";
+            if (string.IsNullOrEmpty(_findText)) return false;
+            if (_findWholeCell)
+            {
+                if (!CellMatchesFind(result)) return false;
+                result = _replaceText ?? "";
+                return true;
+            }
+            if (_findUseRegex)
+            {
+                try
+                {
+                    var regex = new Regex(_findText, RegexOptionsForFind());
+                    if (!regex.IsMatch(result)) return false;
+                    result = regex.Replace(result, _replaceText ?? "", 1);
+                    return true;
+                }
+                catch (ArgumentException)
+                {
+                    return false;
+                }
+            }
+
+            int idx = result.IndexOf(_findText, FindComparison);
+            if (idx < 0) return false;
+            result = result.Remove(idx, _findText.Length).Insert(idx, _replaceText ?? "");
+            return true;
+        }
+
+        private string ReplaceAllInString(string text)
+        {
+            if (string.IsNullOrEmpty(_findText)) return text;
+            if (_findWholeCell)
+            {
+                return CellMatchesFind(text) ? (_replaceText ?? "") : text;
+            }
+            if (_findUseRegex)
+            {
+                try
+                {
+                    return Regex.Replace(text ?? "", _findText, _replaceText ?? "", RegexOptionsForFind());
+                }
+                catch (ArgumentException)
+                {
+                    return text;
+                }
+            }
+
+            return ReplaceAllLiteralInString(text ?? "", _findText, _replaceText ?? "", _findMatchCase);
+        }
+
+        private RegexOptions RegexOptionsForFind()
+        {
+            RegexOptions options = RegexOptions.CultureInvariant;
+            if (!_findMatchCase)
+            {
+                options |= RegexOptions.IgnoreCase;
+            }
+            return options;
+        }
+
+        private static string ReplaceAllLiteralInString(string text, string find, string replace, bool matchCase)
         {
             if (string.IsNullOrEmpty(find)) return text;
             var comparison = matchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
@@ -3014,21 +3519,23 @@ namespace OdyTools.Editors
             UpdateFormulaBarAndStatus();
         }
 
-        private int _goToRowResult = -1;
         private int _insertRowsResult = 1;
 
-        private void ShowGoToRowDialog()
+        private async void ShowGoToCellDialog()
         {
+            string columnHint = _columnHeaders.Count > 0
+                ? string.Join(", ", _columnHeaders)
+                : "0";
             var dialog = new Window
             {
-                Title = Localization.Tr("Go to Row"),
-                Width = 280,
-                Height = 120,
+                Title = Localization.Tr("Go to Cell"),
+                Width = 360,
+                Height = 145,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
             var panel = new StackPanel { Margin = new Avalonia.Thickness(12) };
-            var label = new TextBlock { Text = Localization.Tr("Row index (0-based):") };
-            var textBox = new TextBox { Watermark = "0" };
+            var label = new TextBlock { Text = Localization.Tr("Row or row + column:") };
+            var textBox = new TextBox { Watermark = $"0 or 0, {columnHint}" };
             var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Avalonia.Thickness(0, 8, 0, 0) };
             var ok = new Button { Content = Localization.Tr("OK"), Margin = new Avalonia.Thickness(0, 0, 8, 0) };
             var cancel = new Button { Content = Localization.Tr("Cancel") };
@@ -3038,25 +3545,68 @@ namespace OdyTools.Editors
             buttons.Children.Add(cancel);
             panel.Children.Add(buttons);
             dialog.Content = panel;
-            _goToRowResult = -1;
+            string goToCellInput = null;
             ok.Click += (s, e) =>
             {
-                if (int.TryParse(textBox.Text?.Trim(), out int n) && n >= 0)
+                if (TryResolveGoToCellInput(textBox.Text, out int rowIndex, out _))
                 {
-                    _goToRowResult = n;
+                    goToCellInput = textBox.Text;
                     dialog.Close();
                 }
             };
             cancel.Click += (s, e) => dialog.Close();
-            _ = dialog.ShowDialog(this as Window);
-            if (_goToRowResult >= 0 && _goToRowResult < _sourceData.Count)
+            await dialog.ShowDialog(this as Window);
+            if (goToCellInput != null)
+                GoToCellByInput(goToCellInput);
+        }
+
+        public bool TryResolveGoToCellInput(string input, out int rowIndex, out int gridColumnIndex)
+        {
+            rowIndex = -1;
+            gridColumnIndex = -1;
+            if (string.IsNullOrWhiteSpace(input) || _sourceData == null || _sourceData.Count == 0)
+                return false;
+
+            string trimmed = input.Trim();
+            string[] parts = trimmed.Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0 || !TryParseGoToRowToken(parts[0], out rowIndex))
+                return false;
+            if (rowIndex < 0 || rowIndex >= _sourceData.Count)
+                return false;
+
+            if (parts.Length == 1)
             {
-                var targetRow = _sourceData[_goToRowResult];
-                _twodaTable.SelectedItems.Clear();
-                _twodaTable.SelectedItems.Add(targetRow);
-                _twodaTable.ScrollIntoView(targetRow, null);
-                UpdateFormulaBarAndStatus();
+                gridColumnIndex = GetCurrentColumnIndex();
+                if (gridColumnIndex < 0)
+                    gridColumnIndex = GetEffectiveColumnCount() > 1 ? 1 : 0;
+                gridColumnIndex = Math.Max(0, Math.Min(gridColumnIndex, GetEffectiveColumnCount() - 1));
+                return true;
             }
+
+            string columnInput = string.Join(" ", parts.Skip(1));
+            gridColumnIndex = ResolveGoToColumnGridIndex(columnInput);
+            return gridColumnIndex >= 0;
+        }
+
+        private static bool TryParseGoToRowToken(string input, out int rowIndex)
+        {
+            rowIndex = -1;
+            if (string.IsNullOrWhiteSpace(input))
+                return false;
+
+            string token = input.Trim();
+            if (token.StartsWith("row", StringComparison.OrdinalIgnoreCase))
+                token = token.Substring(3);
+            else if (token.StartsWith("r", StringComparison.OrdinalIgnoreCase))
+                token = token.Substring(1);
+
+            return int.TryParse(token, out rowIndex);
+        }
+
+        public void GoToCellByInput(string input)
+        {
+            if (TryResolveGoToCellInput(input, out int rowIndex, out int gridColumnIndex))
+                NavigateToCell(rowIndex, gridColumnIndex);
         }
 
         /// <summary>Resolves a column name or 0-based data column index to a grid column index, or -1.</summary>
@@ -3657,7 +4207,7 @@ namespace OdyTools.Editors
                 string newValue = oldValue;
                 if (!string.IsNullOrEmpty(find))
                 {
-                    newValue = ReplaceAllInString(newValue, find, replace, true);
+                    newValue = ReplaceAllLiteralInString(newValue, find, replace, true);
                 }
                 else if (!string.IsNullOrEmpty(replace))
                 {
@@ -4074,7 +4624,7 @@ namespace OdyTools.Editors
             panel.Children.Add(new TextBlock { Text = $"Column: {_columnHeaders[headerIdx]}" });
             var modeBox = new ComboBox
             {
-                ItemsSource = new[] { "None", "Required", "Numeric" },
+                ItemsSource = new[] { "None", "Required", "Numeric", "ResRef" },
                 SelectedIndex = _columnValidationRules.TryGetValue(headerIdx, out var mode) ? (int)mode : 0
             };
             panel.Children.Add(modeBox);
@@ -4105,6 +4655,20 @@ namespace OdyTools.Editors
                 return;
             }
 
+            var issues = ValidateData();
+            string message = FormatValidationReport(issues);
+            await ShowInfoDialog("Validation Report", message);
+        }
+
+        public void SetColumnValidationRule(int gridColumnIndex, ColumnValidationMode mode)
+        {
+            int headerIdx = gridColumnIndex - 1;
+            if (headerIdx < 0 || headerIdx >= _columnHeaders.Count) return;
+            _columnValidationRules[headerIdx] = mode;
+        }
+
+        public IReadOnlyList<string> ValidateData()
+        {
             var issues = new List<string>();
             foreach (var rule in _columnValidationRules)
             {
@@ -4126,6 +4690,10 @@ namespace OdyTools.Editors
                         double parsed;
                         invalid = !string.IsNullOrWhiteSpace(value) && !double.TryParse(value, out parsed);
                     }
+                    else if (mode == ColumnValidationMode.ResRef)
+                    {
+                        invalid = !IsValidResRef(value);
+                    }
                     else
                     {
                         invalid = false;
@@ -4137,10 +4705,31 @@ namespace OdyTools.Editors
                 }
             }
 
-            string message = issues.Count == 0
+            return issues;
+        }
+
+        public string FormatValidationReport(IReadOnlyList<string> issues)
+        {
+            return issues == null || issues.Count == 0
                 ? "Validation passed. No issues found."
                 : $"Found {issues.Count} issue(s):\n\n" + DialogHelper.BuildTruncatedList(issues, 30);
-            await ShowInfoDialog("Validation Report", message);
+        }
+
+        public static bool IsValidResRef(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return false;
+            string trimmed = value.Trim();
+            if (trimmed.Length > 16) return false;
+            for (int i = 0; i < trimmed.Length; i++)
+            {
+                char ch = trimmed[i];
+                bool valid = (ch >= 'A' && ch <= 'Z') ||
+                             (ch >= 'a' && ch <= 'z') ||
+                             (ch >= '0' && ch <= '9') ||
+                             ch == '_';
+                if (!valid) return false;
+            }
+            return true;
         }
 
         public void AutocompleteCurrentCell()
@@ -4193,7 +4782,8 @@ namespace OdyTools.Editors
     {
         None = 0,
         Required = 1,
-        Numeric = 2
+        Numeric = 2,
+        ResRef = 3
     }
 
     public enum VerticalHeaderOption

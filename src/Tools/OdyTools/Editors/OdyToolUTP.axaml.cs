@@ -47,9 +47,12 @@ namespace OdyTools.Editors
         private string _findText = "";
         private bool _findMatchCase;
         private bool _appearancePreviewHooked;
+        private bool _loadingUtp;
+        private bool _dirtyTrackingBound;
+        private bool _clearInitialDirtyOnOpen = true;
 
         // UI Controls - Basic
-        private TextBox _nameEdit;
+        private LocalizedStringEdit _nameEdit;
         private Button _nameEditBtn;
         private TextBox _tagEdit;
         private Button _tagGenerateBtn;
@@ -94,16 +97,28 @@ namespace OdyTools.Editors
         // UI Controls - Comments
         private TextBox _commentsEdit;
 
+        internal bool HasStructuredEditorSurface => _nameEdit != null && _tagEdit != null && _resrefEdit != null && _appearanceSelect != null && _conversationEdit != null && _hasInventoryCheckbox != null && _commentsEdit != null && _scriptFields != null && _scriptFields.ContainsKey("OnPower");
+
+        public LocalizedStringEdit NameEdit => _nameEdit;
         public TextBox TagEdit => _tagEdit;
         public Button TagGenerateBtn => _tagGenerateBtn;
         public TextBox ResrefEdit => _resrefEdit;
         public Button ResrefGenerateBtn => _resrefGenerateBtn;
+        public ComboBox ConversationEdit => _conversationEdit;
+        public CheckBox HasInventoryCheckbox => _hasInventoryCheckbox;
+        public CheckBox PlotCheckbox => _plotCheckbox;
+        public CheckBox StaticCheckbox => _staticCheckbox;
+        public CheckBox LockedCheckbox => _lockedCheckbox;
+        public NumericUpDown OpenLockSpin => _openLockSpin;
+        public TextBox KeyEdit => _keyEdit;
+        public TextBox CommentsEdit => _commentsEdit;
+        public IReadOnlyDictionary<string, ComboBox> ScriptFields => _scriptFields;
 
         public OdyToolUTP() : this(null, null) { }
         public OdyToolUTP(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTP", "placeable",
-                new[] { ResourceType.UTP, ResourceType.BTP },
-                new[] { ResourceType.UTP, ResourceType.BTP },
+                new[] { ResourceType.UTP, ResourceType.BTP, ResourceType.UTP_XML, ResourceType.UTP_JSON },
+                new[] { ResourceType.UTP, ResourceType.BTP, ResourceType.UTP_XML, ResourceType.UTP_JSON },
                 installation)
         {
             _installation = installation;
@@ -112,10 +127,16 @@ namespace OdyTools.Editors
 
             InitializeComponent();
             SetupUI();
+            BindDirtyTracking();
             SetupMenuHandlers();
             MinWidth = MinEditorWidth;
             MinHeight = MinEditorHeight;
-            Opened += (s, e) => { UpdateStatusBar(); _tagEdit?.Focus(); };
+            Opened += (s, e) =>
+            {
+                UpdateStatusBar();
+                _tagEdit?.Focus();
+                ClearInitialDirtyOnOpen();
+            };
             KeyDown += OnWindowKeyDown;
             if (installation != null)
             {
@@ -154,7 +175,7 @@ namespace OdyTools.Editors
             {
                 AvaloniaXamlLoader.Load(this);
                 xamlLoaded = true;
-                _nameEdit = EditorHelpers.FindControlSafe<TextBox>(this, "nameEdit");
+                _nameEdit = EditorHelpers.FindControlSafe<LocalizedStringEdit>(this, "nameEdit");
                 _tagEdit = EditorHelpers.FindControlSafe<TextBox>(this, "tagEdit");
                 _resrefEdit = EditorHelpers.FindControlSafe<TextBox>(this, "resrefEdit");
                 _commentsEdit = EditorHelpers.FindControlSafe<TextBox>(this, "commentsEdit");
@@ -207,7 +228,7 @@ namespace OdyTools.Editors
             _difficultyModSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "difficultyModSpin");
 
             string[] scriptNames = { "OnClosed", "OnDamaged", "OnDeath", "OnEndDialog", "OnOpenFailed",
-                "OnHeartbeat", "OnInventory", "OnMelee", "OnOpen", "OnLock", "OnUnlock", "OnUsed", "OnUserDefined" };
+                "OnHeartbeat", "OnInventory", "OnMelee", "OnPower", "OnOpen", "OnLock", "OnUnlock", "OnUsed", "OnUserDefined" };
             foreach (string scriptName in scriptNames)
             {
                 string controlName = scriptName.ToLowerInvariant() + "Edit";
@@ -235,11 +256,17 @@ namespace OdyTools.Editors
             AttachCommitHandlers();
             if (_installation != null) SetupFileContextMenus();
             AttachReferenceSearchMenus();
+            SetupLocalizedStringEditors();
             _xamlControlsLoaded = true;
         }
 
         private void AttachReferenceSearchMenus()
         {
+            if (_tagEdit == null || _resrefEdit == null)
+            {
+                return;
+            }
+
             ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
             FieldValueReferenceHelper.AppendFieldValueFindReferencesMenuItem(
                 _tagEdit.ContextMenu,
@@ -276,12 +303,10 @@ namespace OdyTools.Editors
 
             // Name
             var nameLabel = new TextBlock { Text = "Name:" };
-            _nameEdit = new TextBox { IsReadOnly = true };
-            _nameEditBtn = new Button { Content = "Edit Name" };
-            _nameEditBtn.Click += (s, e) => EditName();
+            _nameEdit = new LocalizedStringEdit();
+            _nameEdit.SetInstallation(_installation);
             basicPanel.Children.Add(nameLabel);
             basicPanel.Children.Add(_nameEdit);
-            basicPanel.Children.Add(_nameEditBtn);
 
             // Tag
             var tagLabel = new TextBlock { Text = "Tag:" };
@@ -434,7 +459,7 @@ namespace OdyTools.Editors
             var scriptsPanel = new StackPanel { Orientation = Orientation.Vertical };
 
             string[] scriptNames = { "OnClosed", "OnDamaged", "OnDeath", "OnEndDialog", "OnOpenFailed",
-                "OnHeartbeat", "OnInventory", "OnMelee", "OnOpen", "OnLock", "OnUnlock", "OnUsed", "OnUserDefined" };
+                "OnHeartbeat", "OnInventory", "OnMelee", "OnPower", "OnOpen", "OnLock", "OnUnlock", "OnUsed", "OnUserDefined" };
             foreach (string scriptName in scriptNames)
             {
                 var scriptLabel = new TextBlock { Text = scriptName + ":" };
@@ -503,13 +528,100 @@ namespace OdyTools.Editors
                     EditorHelpers.BindLostFocus(kv.Value, OnCommit);
         }
 
+        private void BindDirtyTracking()
+        {
+            if (_dirtyTrackingBound)
+            {
+                return;
+            }
+
+            _dirtyTrackingBound = true;
+            if (_tagEdit != null) _tagEdit.TextChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_resrefEdit != null) _resrefEdit.TextChanged += (s, e) => MarkDirtyAfterLoad();
+            BindComboDirtyTracking(_appearanceSelect);
+            BindComboDirtyTracking(_conversationEdit);
+            if (_hasInventoryCheckbox != null) _hasInventoryCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_partyInteractCheckbox != null) _partyInteractCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_useableCheckbox != null) _useableCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_min1HpCheckbox != null) _min1HpCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_plotCheckbox != null) _plotCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_staticCheckbox != null) _staticCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_notBlastableCheckbox != null) _notBlastableCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            BindComboDirtyTracking(_factionSelect);
+            if (_animationStateSpin != null) _animationStateSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_currentHpSpin != null) _currentHpSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_maxHpSpin != null) _maxHpSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_hardnessSpin != null) _hardnessSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_fortitudeSpin != null) _fortitudeSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_reflexSpin != null) _reflexSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_willSpin != null) _willSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_needKeyCheckbox != null) _needKeyCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_removeKeyCheckbox != null) _removeKeyCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_keyEdit != null) _keyEdit.TextChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_lockedCheckbox != null) _lockedCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_openLockSpin != null) _openLockSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_difficultySpin != null) _difficultySpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_difficultyModSpin != null) _difficultyModSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_scriptFields != null)
+            {
+                foreach (var comboBox in _scriptFields.Values)
+                {
+                    BindComboDirtyTracking(comboBox);
+                }
+            }
+            if (_commentsEdit != null) _commentsEdit.TextChanged += (s, e) => MarkDirtyAfterLoad();
+        }
+
+        private void BindComboDirtyTracking(ComboBox comboBox)
+        {
+            if (comboBox == null)
+            {
+                return;
+            }
+
+            comboBox.SelectionChanged += (s, e) => MarkDirtyAfterLoad();
+            comboBox.PropertyChanged += (s, e) =>
+            {
+                if (e.Property.Name == nameof(ComboBox.Text))
+                {
+                    MarkDirtyAfterLoad();
+                }
+            };
+        }
+
+        private void MarkDirtyAfterLoad()
+        {
+            if (!_loadingUtp)
+            {
+                MarkDocumentDirty();
+            }
+        }
+
+        private void ClearInitialDirtyOnOpen()
+        {
+            if (!_clearInitialDirtyOnOpen)
+            {
+                return;
+            }
+
+            ClearDirty();
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (_clearInitialDirtyOnOpen)
+                {
+                    ClearDirty();
+                    _clearInitialDirtyOnOpen = false;
+                }
+            }, Avalonia.Threading.DispatcherPriority.Background);
+        }
+
         private void SetupMenuHandlers()
         {
             void Bind(string name, Action handler)
             {
                 try
                 {
-                    var item = EditorHelpers.FindControlSafe<MenuItem>(this, name) ?? this.FindControl<MenuItem>(name);
+                    var item = EditorHelpers.FindControlSafe<MenuItem>(this, name);
                     if (item != null) item.Click += (s, e) => handler();
                 }
                 catch { }
@@ -577,7 +689,7 @@ namespace OdyTools.Editors
             {
                 try
                 {
-                    var gff = GFF.FromBytes(data);
+                    var gff = GFFAuto.ReadGff(data, fileFormat: _restype ?? ResourceType.UTP);
                     _utp = UTPHelpers.ConstructUtp(gff);
                     LoadUTP(_utp);
                 }
@@ -689,7 +801,7 @@ namespace OdyTools.Editors
             // This matches PyKotor behavior where UI elements are found by name after XAML loading
 
             // Basic controls (use FindControlSafe: OdyToolUTP may have no XAML / name scope; only assign when found so programmatic UI is not overwritten)
-            var nameEdit = EditorHelpers.FindControlSafe<TextBox>(this, "NameEdit") ?? EditorHelpers.FindControlSafe<TextBox>(this, "nameEdit");
+            var nameEdit = EditorHelpers.FindControlSafe<LocalizedStringEdit>(this, "NameEdit") ?? EditorHelpers.FindControlSafe<LocalizedStringEdit>(this, "nameEdit");
             if (nameEdit != null) _nameEdit = nameEdit;
             var nameEditBtn = EditorHelpers.FindControlSafe<Button>(this, "NameEditBtn") ?? EditorHelpers.FindControlSafe<Button>(this, "nameEditBtn");
             if (nameEditBtn != null) _nameEditBtn = nameEditBtn;
@@ -764,7 +876,7 @@ namespace OdyTools.Editors
 
             // Script controls - find by name pattern
             string[] scriptNames = { "OnClosed", "OnDamaged", "OnDeath", "OnEndDialog", "OnOpenFailed",
-                "OnHeartbeat", "OnInventory", "OnMelee", "OnOpen", "OnLock", "OnUnlock", "OnUsed", "OnUserDefined" };
+                "OnHeartbeat", "OnInventory", "OnMelee", "OnPower", "OnOpen", "OnLock", "OnUnlock", "OnUsed", "OnUserDefined" };
 
             foreach (string scriptName in scriptNames)
             {
@@ -815,6 +927,12 @@ namespace OdyTools.Editors
             {
                 SetupFileContextMenus();
             }
+            SetupLocalizedStringEditors();
+        }
+
+        private void SetupLocalizedStringEditors()
+        {
+            _nameEdit?.SetInstallation(_installation);
         }
 
         private void HookAppearancePreviewEvent()
@@ -831,6 +949,7 @@ namespace OdyTools.Editors
         private void SetupInstallation(OdyInstallation installation)
         {
             _installation = installation;
+            SetupLocalizedStringEditors();
 
             List<string> required = new List<string> { OdyInstallation.TwoDAPlaceables, OdyInstallation.TwoDAFactions };
             installation.HtBatchCache2DA(required);
@@ -879,6 +998,23 @@ namespace OdyTools.Editors
 
             HookAppearancePreviewEvent();
             RefreshPlaceablePreview();
+        }
+
+        protected override void OnInstallationChanged()
+        {
+            if (_installation != null)
+            {
+                SetupInstallation(_installation);
+                PopulateScriptComboBoxes();
+                PopulateConversationComboBox();
+                return;
+            }
+
+            SetupLocalizedStringEditors();
+            if (_previewRenderer != null)
+            {
+                _previewRenderer.Installation = null;
+            }
         }
 
         private void SetupFileContextMenus()
@@ -1054,88 +1190,98 @@ namespace OdyTools.Editors
         private void LoadUTP(UTP utp)
         {
             _utp = utp;
-
-            // Basic
-            if (_nameEdit != null)
+            _loadingUtp = true;
+            try
             {
-                _nameEdit.Text = _installation != null ? _installation.String(utp.Name) : utp.Name.StringRef.ToString();
+
+                // Basic
+                if (_nameEdit != null)
+                {
+                    _nameEdit.SetLocString(utp.Name);
+                }
+                if (_tagEdit != null)
+                {
+                    _tagEdit.Text = utp.Tag;
+                }
+                if (_resrefEdit != null)
+                {
+                    _resrefEdit.Text = utp.ResRef.ToString();
+                }
+                if (_appearanceSelect != null)
+                {
+                    _appearanceSelect.SelectedIndex = utp.AppearanceId;
+                }
+                if (_conversationEdit != null)
+                {
+                    _conversationEdit.Text = utp.Conversation.ToString();
+                }
+
+                // Advanced
+                if (_hasInventoryCheckbox != null) _hasInventoryCheckbox.IsChecked = utp.HasInventory;
+                if (_partyInteractCheckbox != null) _partyInteractCheckbox.IsChecked = utp.PartyInteract;
+                if (_useableCheckbox != null) _useableCheckbox.IsChecked = utp.Useable;
+                if (_min1HpCheckbox != null) _min1HpCheckbox.IsChecked = utp.Min1Hp;
+                if (_plotCheckbox != null) _plotCheckbox.IsChecked = utp.Plot;
+                if (_staticCheckbox != null) _staticCheckbox.IsChecked = utp.Static;
+                if (_notBlastableCheckbox != null) _notBlastableCheckbox.IsChecked = utp.NotBlastable;
+                if (_factionSelect != null) _factionSelect.SelectedIndex = utp.FactionId;
+                if (_animationStateSpin != null) _animationStateSpin.Value = utp.AnimationState;
+                if (_currentHpSpin != null) _currentHpSpin.Value = utp.CurrentHp;
+                if (_maxHpSpin != null) _maxHpSpin.Value = utp.MaximumHp;
+                if (_hardnessSpin != null) _hardnessSpin.Value = utp.Hardness;
+                if (_fortitudeSpin != null) _fortitudeSpin.Value = utp.Fortitude;
+                if (_reflexSpin != null) _reflexSpin.Value = utp.Reflex;
+                if (_willSpin != null) _willSpin.Value = utp.Will;
+
+                // Lock
+                if (_needKeyCheckbox != null) _needKeyCheckbox.IsChecked = utp.KeyRequired;
+                if (_removeKeyCheckbox != null) _removeKeyCheckbox.IsChecked = utp.AutoRemoveKey;
+                if (_keyEdit != null) _keyEdit.Text = utp.KeyName;
+                if (_lockedCheckbox != null) _lockedCheckbox.IsChecked = utp.Locked;
+                if (_openLockSpin != null) _openLockSpin.Value = utp.UnlockDc;
+                if (_difficultySpin != null) _difficultySpin.Value = utp.UnlockDiff;
+                if (_difficultyModSpin != null) _difficultyModSpin.Value = utp.UnlockDiffMod;
+
+                // Set script values from UTP
+                if (_scriptFields.ContainsKey("OnClosed") && _scriptFields["OnClosed"] != null)
+                    _scriptFields["OnClosed"].Text = utp.OnClosed.ToString();
+                if (_scriptFields.ContainsKey("OnDamaged") && _scriptFields["OnDamaged"] != null)
+                    _scriptFields["OnDamaged"].Text = utp.OnDamaged.ToString();
+                if (_scriptFields.ContainsKey("OnDeath") && _scriptFields["OnDeath"] != null)
+                    _scriptFields["OnDeath"].Text = utp.OnDeath.ToString();
+                if (_scriptFields.ContainsKey("OnEndDialog") && _scriptFields["OnEndDialog"] != null)
+                    _scriptFields["OnEndDialog"].Text = utp.OnEndDialog.ToString();
+                if (_scriptFields.ContainsKey("OnOpenFailed") && _scriptFields["OnOpenFailed"] != null)
+                    _scriptFields["OnOpenFailed"].Text = utp.OnOpenFailed.ToString();
+                if (_scriptFields.ContainsKey("OnHeartbeat") && _scriptFields["OnHeartbeat"] != null)
+                    _scriptFields["OnHeartbeat"].Text = utp.OnHeartbeat.ToString();
+                if (_scriptFields.ContainsKey("OnInventory") && _scriptFields["OnInventory"] != null)
+                    _scriptFields["OnInventory"].Text = utp.OnInventory.ToString();
+                if (_scriptFields.ContainsKey("OnMelee") && _scriptFields["OnMelee"] != null)
+                    _scriptFields["OnMelee"].Text = utp.OnMelee.ToString();
+                if (_scriptFields.ContainsKey("OnPower") && _scriptFields["OnPower"] != null)
+                    _scriptFields["OnPower"].Text = utp.OnPower.ToString();
+                if (_scriptFields.ContainsKey("OnOpen") && _scriptFields["OnOpen"] != null)
+                    _scriptFields["OnOpen"].Text = utp.OnOpen.ToString();
+                if (_scriptFields.ContainsKey("OnLock") && _scriptFields["OnLock"] != null)
+                    _scriptFields["OnLock"].Text = utp.OnLock.ToString();
+                if (_scriptFields.ContainsKey("OnUnlock") && _scriptFields["OnUnlock"] != null)
+                    _scriptFields["OnUnlock"].Text = utp.OnUnlock.ToString();
+                if (_scriptFields.ContainsKey("OnUsed") && _scriptFields["OnUsed"] != null)
+                    _scriptFields["OnUsed"].Text = utp.OnUsed.ToString();
+                if (_scriptFields.ContainsKey("OnUserDefined") && _scriptFields["OnUserDefined"] != null)
+                    _scriptFields["OnUserDefined"].Text = utp.OnUserDefined.ToString();
+
+                PopulateScriptComboBoxes();
+                PopulateConversationComboBox();
+
+                // Comments
+                if (_commentsEdit != null) _commentsEdit.Text = utp.Comment;
             }
-            if (_tagEdit != null)
+            finally
             {
-                _tagEdit.Text = utp.Tag;
+                _loadingUtp = false;
             }
-            if (_resrefEdit != null)
-            {
-                _resrefEdit.Text = utp.ResRef.ToString();
-            }
-            if (_appearanceSelect != null)
-            {
-                _appearanceSelect.SelectedIndex = utp.AppearanceId;
-            }
-            if (_conversationEdit != null)
-            {
-                _conversationEdit.Text = utp.Conversation.ToString();
-            }
-
-            // Advanced
-            if (_hasInventoryCheckbox != null) _hasInventoryCheckbox.IsChecked = utp.HasInventory;
-            if (_partyInteractCheckbox != null) _partyInteractCheckbox.IsChecked = utp.PartyInteract;
-            if (_useableCheckbox != null) _useableCheckbox.IsChecked = utp.Useable;
-            if (_min1HpCheckbox != null) _min1HpCheckbox.IsChecked = utp.Min1Hp;
-            if (_plotCheckbox != null) _plotCheckbox.IsChecked = utp.Plot;
-            if (_staticCheckbox != null) _staticCheckbox.IsChecked = utp.Static;
-            if (_notBlastableCheckbox != null) _notBlastableCheckbox.IsChecked = utp.NotBlastable;
-            if (_factionSelect != null) _factionSelect.SelectedIndex = utp.FactionId;
-            if (_animationStateSpin != null) _animationStateSpin.Value = utp.AnimationState;
-            if (_currentHpSpin != null) _currentHpSpin.Value = utp.CurrentHp;
-            if (_maxHpSpin != null) _maxHpSpin.Value = utp.MaximumHp;
-            if (_hardnessSpin != null) _hardnessSpin.Value = utp.Hardness;
-            if (_fortitudeSpin != null) _fortitudeSpin.Value = utp.Fortitude;
-            if (_reflexSpin != null) _reflexSpin.Value = utp.Reflex;
-            if (_willSpin != null) _willSpin.Value = utp.Will;
-
-            // Lock
-            if (_needKeyCheckbox != null) _needKeyCheckbox.IsChecked = utp.KeyRequired;
-            if (_removeKeyCheckbox != null) _removeKeyCheckbox.IsChecked = utp.AutoRemoveKey;
-            if (_keyEdit != null) _keyEdit.Text = utp.KeyName;
-            if (_lockedCheckbox != null) _lockedCheckbox.IsChecked = utp.Locked;
-            if (_openLockSpin != null) _openLockSpin.Value = utp.UnlockDc;
-            if (_difficultySpin != null) _difficultySpin.Value = utp.UnlockDiff;
-            if (_difficultyModSpin != null) _difficultyModSpin.Value = utp.UnlockDiffMod;
-
-            // Set script values from UTP
-            if (_scriptFields.ContainsKey("OnClosed") && _scriptFields["OnClosed"] != null)
-                _scriptFields["OnClosed"].Text = utp.OnClosed.ToString();
-            if (_scriptFields.ContainsKey("OnDamaged") && _scriptFields["OnDamaged"] != null)
-                _scriptFields["OnDamaged"].Text = utp.OnDamaged.ToString();
-            if (_scriptFields.ContainsKey("OnDeath") && _scriptFields["OnDeath"] != null)
-                _scriptFields["OnDeath"].Text = utp.OnDeath.ToString();
-            if (_scriptFields.ContainsKey("OnEndDialog") && _scriptFields["OnEndDialog"] != null)
-                _scriptFields["OnEndDialog"].Text = utp.OnEndDialog.ToString();
-            if (_scriptFields.ContainsKey("OnOpenFailed") && _scriptFields["OnOpenFailed"] != null)
-                _scriptFields["OnOpenFailed"].Text = utp.OnOpenFailed.ToString();
-            if (_scriptFields.ContainsKey("OnHeartbeat") && _scriptFields["OnHeartbeat"] != null)
-                _scriptFields["OnHeartbeat"].Text = utp.OnHeartbeat.ToString();
-            if (_scriptFields.ContainsKey("OnInventory") && _scriptFields["OnInventory"] != null)
-                _scriptFields["OnInventory"].Text = utp.OnInventory.ToString();
-            if (_scriptFields.ContainsKey("OnMelee") && _scriptFields["OnMelee"] != null)
-                _scriptFields["OnMelee"].Text = utp.OnMelee.ToString();
-            if (_scriptFields.ContainsKey("OnOpen") && _scriptFields["OnOpen"] != null)
-                _scriptFields["OnOpen"].Text = utp.OnOpen.ToString();
-            if (_scriptFields.ContainsKey("OnLock") && _scriptFields["OnLock"] != null)
-                _scriptFields["OnLock"].Text = utp.OnLock.ToString();
-            if (_scriptFields.ContainsKey("OnUnlock") && _scriptFields["OnUnlock"] != null)
-                _scriptFields["OnUnlock"].Text = utp.OnUnlock.ToString();
-            if (_scriptFields.ContainsKey("OnUsed") && _scriptFields["OnUsed"] != null)
-                _scriptFields["OnUsed"].Text = utp.OnUsed.ToString();
-            if (_scriptFields.ContainsKey("OnUserDefined") && _scriptFields["OnUserDefined"] != null)
-                _scriptFields["OnUserDefined"].Text = utp.OnUserDefined.ToString();
-
-            PopulateScriptComboBoxes();
-            PopulateConversationComboBox();
-
-            // Comments
-            if (_commentsEdit != null) _commentsEdit.Text = utp.Comment;
 
             RefreshPlaceablePreview();
         }
@@ -1194,11 +1340,7 @@ namespace OdyTools.Editors
             var utp = CopyUtp(_utp);
 
             // Basic - read from UI controls (matching Python which always reads from UI)
-            // Python: utp.name = self.ui.nameEdit.locstring()
-            // In C#, nameEdit is TextBox (read-only), LocalizedString is stored in _utp.Name and updated via EditName()
-            // So we use utp.Name from the copy (which preserves the value set by EditName())
-            // Note: This matches Python behavior where locstring() returns the stored LocalizedString
-            utp.Name = utp.Name ?? LocalizedString.FromInvalid();
+            utp.Name = _nameEdit?.GetLocString() ?? utp.Name ?? LocalizedString.FromInvalid();
             utp.Tag = _tagEdit?.Text ?? "";
             utp.ResRef = new ResRef(_resrefEdit?.Text ?? "");
             utp.AppearanceId = _appearanceSelect?.SelectedIndex ?? 0;
@@ -1232,31 +1374,33 @@ namespace OdyTools.Editors
 
             // Scripts - read from UI controls
             if (_scriptFields.ContainsKey("OnClosed") && _scriptFields["OnClosed"] != null)
-                utp.OnClosed = new ResRef(_scriptFields["OnClosed"].Text);
+                utp.OnClosed = ResRefFromText(_scriptFields["OnClosed"].Text);
             if (_scriptFields.ContainsKey("OnDamaged") && _scriptFields["OnDamaged"] != null)
-                utp.OnDamaged = new ResRef(_scriptFields["OnDamaged"].Text);
+                utp.OnDamaged = ResRefFromText(_scriptFields["OnDamaged"].Text);
             if (_scriptFields.ContainsKey("OnDeath") && _scriptFields["OnDeath"] != null)
-                utp.OnDeath = new ResRef(_scriptFields["OnDeath"].Text);
+                utp.OnDeath = ResRefFromText(_scriptFields["OnDeath"].Text);
             if (_scriptFields.ContainsKey("OnEndDialog") && _scriptFields["OnEndDialog"] != null)
-                utp.OnEndDialog = new ResRef(_scriptFields["OnEndDialog"].Text);
+                utp.OnEndDialog = ResRefFromText(_scriptFields["OnEndDialog"].Text);
             if (_scriptFields.ContainsKey("OnOpenFailed") && _scriptFields["OnOpenFailed"] != null)
-                utp.OnOpenFailed = new ResRef(_scriptFields["OnOpenFailed"].Text);
+                utp.OnOpenFailed = ResRefFromText(_scriptFields["OnOpenFailed"].Text);
             if (_scriptFields.ContainsKey("OnHeartbeat") && _scriptFields["OnHeartbeat"] != null)
-                utp.OnHeartbeat = new ResRef(_scriptFields["OnHeartbeat"].Text);
+                utp.OnHeartbeat = ResRefFromText(_scriptFields["OnHeartbeat"].Text);
             if (_scriptFields.ContainsKey("OnInventory") && _scriptFields["OnInventory"] != null)
-                utp.OnInventory = new ResRef(_scriptFields["OnInventory"].Text);
+                utp.OnInventory = ResRefFromText(_scriptFields["OnInventory"].Text);
             if (_scriptFields.ContainsKey("OnMelee") && _scriptFields["OnMelee"] != null)
-                utp.OnMelee = new ResRef(_scriptFields["OnMelee"].Text);
+                utp.OnMelee = ResRefFromText(_scriptFields["OnMelee"].Text);
+            if (_scriptFields.ContainsKey("OnPower") && _scriptFields["OnPower"] != null)
+                utp.OnPower = ResRefFromText(_scriptFields["OnPower"].Text);
             if (_scriptFields.ContainsKey("OnOpen") && _scriptFields["OnOpen"] != null)
-                utp.OnOpen = new ResRef(_scriptFields["OnOpen"].Text);
+                utp.OnOpen = ResRefFromText(_scriptFields["OnOpen"].Text);
             if (_scriptFields.ContainsKey("OnLock") && _scriptFields["OnLock"] != null)
-                utp.OnLock = new ResRef(_scriptFields["OnLock"].Text);
+                utp.OnLock = ResRefFromText(_scriptFields["OnLock"].Text);
             if (_scriptFields.ContainsKey("OnUnlock") && _scriptFields["OnUnlock"] != null)
-                utp.OnUnlock = new ResRef(_scriptFields["OnUnlock"].Text);
+                utp.OnUnlock = ResRefFromText(_scriptFields["OnUnlock"].Text);
             if (_scriptFields.ContainsKey("OnUsed") && _scriptFields["OnUsed"] != null)
-                utp.OnUsed = new ResRef(_scriptFields["OnUsed"].Text);
+                utp.OnUsed = ResRefFromText(_scriptFields["OnUsed"].Text);
             if (_scriptFields.ContainsKey("OnUserDefined") && _scriptFields["OnUserDefined"] != null)
-                utp.OnUserDefined = new ResRef(_scriptFields["OnUserDefined"].Text);
+                utp.OnUserDefined = ResRefFromText(_scriptFields["OnUserDefined"].Text);
 
             // Comments - read from UI controls
             utp.Comment = _commentsEdit?.Text ?? "";
@@ -1264,8 +1408,21 @@ namespace OdyTools.Editors
             // Matching Python: gff: GFF = dismantle_utp(utp); write_gff(gff, data)
             BioWareGame game = _installation?.Game ?? BioWareGame.K2;
             var gff = UTPHelpers.DismantleUtp(utp, game);
-            byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTP);
+            ResourceType outputType = _restype == ResourceType.UTP_XML || _restype == ResourceType.UTP_JSON
+                ? _restype
+                : (_restype == ResourceType.BTP ? ResourceType.BTP : ResourceType.UTP);
+            if (outputType == ResourceType.BTP)
+            {
+                gff.Content = GFFContent.BTP;
+            }
+            byte[] data = GFFAuto.BytesGff(gff, outputType);
             return Tuple.Create(data, new byte[0]);
+        }
+
+        private static ResRef ResRefFromText(string text)
+        {
+            string value = (text ?? string.Empty).Trim();
+            return !string.IsNullOrEmpty(value) ? new ResRef(value) : new ResRef("");
         }
 
         // Matching Python: deepcopy(self._utp)
@@ -1304,10 +1461,7 @@ namespace OdyTools.Editors
             if (dialog.ShowDialog())
             {
                 _utp.Name = dialog.LocString;
-                if (_nameEdit != null)
-                {
-                    _nameEdit.Text = _installation.String(_utp.Name);
-                }
+                _nameEdit?.SetLocString(_utp.Name);
             }
         }
 
@@ -1321,6 +1475,7 @@ namespace OdyTools.Editors
             {
                 _tagEdit.Text = _resrefEdit.Text;
             }
+            MarkDocumentDirty();
         }
 
         private void GenerateResref()
@@ -1329,6 +1484,7 @@ namespace OdyTools.Editors
             {
                 _resrefEdit.Text = !string.IsNullOrEmpty(base._resname) ? base._resname : "m00xx_plc_000";
             }
+            MarkDocumentDirty();
         }
 
         private void EditConversation()
@@ -1382,12 +1538,27 @@ namespace OdyTools.Editors
 
         private void OpenInventory()
         {
-            if (_installation == null)
+            if (_utp == null)
             {
                 return;
             }
 
+            var inventoryEditor = CreateInventoryDialog(BuildInventoryCapsules());
+
+            if (inventoryEditor.ShowDialog())
+            {
+                ApplyInventoryResult(inventoryEditor.Inventory);
+            }
+        }
+
+        private List<Capsule> BuildInventoryCapsules()
+        {
             var capsules = new List<Capsule>();
+            if (_installation == null)
+            {
+                return capsules;
+            }
+
             try
             {
                 string root = null;
@@ -1428,10 +1599,15 @@ namespace OdyTools.Editors
             {
             }
 
-            var inventoryEditor = new InventoryDialog(
+            return capsules;
+        }
+
+        private InventoryDialog CreateInventoryDialog(List<Capsule> capsules)
+        {
+            return new InventoryDialog(
                 this,
                 _installation,
-                capsules,
+                capsules ?? new List<Capsule>(),
                 new List<string>(), // folders parameter
                 _utp.Inventory ?? new List<InventoryItem>(),
                 new Dictionary<EquipmentSlot, InventoryItem>(), // equipment parameter
@@ -1439,12 +1615,28 @@ namespace OdyTools.Editors
                 hideEquipment: true,
                 isStore: false
             );
+        }
 
-            if (inventoryEditor.ShowDialog())
+        internal InventoryDialog CreateInventoryDialogForTest()
+        {
+            return CreateInventoryDialog(new List<Capsule>());
+        }
+
+        internal bool CanOpenInventoryWithoutInstallationForTest()
+        {
+            return _installation == null && _utp != null && BuildInventoryCapsules().Count == 0;
+        }
+
+        internal void ApplyInventoryResult(List<InventoryItem> inventory)
+        {
+            if (_utp == null)
             {
-                _utp.Inventory = inventoryEditor.Inventory ?? new List<InventoryItem>();
-                UpdateItemCount();
+                return;
             }
+
+            _utp.Inventory = inventory ?? new List<InventoryItem>();
+            UpdateItemCount();
+            MarkDocumentDirty();
         }
 
         public override void SaveAs()

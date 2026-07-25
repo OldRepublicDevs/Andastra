@@ -6,11 +6,16 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using BioWare.Common;
+using BioWare.Resource.Formats.BWM;
 using BioWare.Resource.Formats.LYT;
+using OdyTools.Blender;
 using OdyTools.Data;
 using MDLAuto = BioWare.Resource.Formats.MDL.MDLAuto;
 using ResRef = BioWare.Common.ResRef;
@@ -21,6 +26,7 @@ using TPC = BioWare.Resource.Formats.TPC.TPC;
 using TPCTextureFormat = BioWare.Resource.Formats.TPC.TPCTextureFormat;
 using OdyTools.Widgets;
 using OdyTools.Editors.LYT;
+using MediaColor = Avalonia.Media.Color;
 
 namespace OdyTools.Editors
 {
@@ -33,6 +39,31 @@ namespace OdyTools.Editors
         private ModelBrowser _modelBrowser; // Model browser widget for displaying imported models
         private TextureBrowser _textureBrowser; // Texture browser widget for displaying imported textures
         private LYTGraphicsScene _graphicsScene; // Graphics scene for rendering LYT layout elements
+        private ListBox _roomsList;
+        private ListBox _tracksList;
+        private ListBox _obstaclesList;
+        private ListBox _doorHooksList;
+        private TextBlock _summaryText;
+        private TextBlock _selectionTitleText;
+        private TextBlock _selectionPathText;
+        private TextBlock _statusText;
+        private TextBlock _zoomValueText;
+        private TextBox _nameEdit;
+        private TextBox _doorEdit;
+        private TextBox _xEdit;
+        private TextBox _yEdit;
+        private TextBox _zEdit;
+        private Button _applySelectionButton;
+        private Button _addSelectedModelButton;
+        private MenuItem _openInBlenderMenuItem;
+        private object _selectedLayoutElement;
+        private string _selectedAssetKind;
+        private string _selectedAssetName;
+        private string _blenderStatus = "";
+        private Func<string, BlenderInfo> _detectBlender = BlenderDetection.DetectBlender;
+        private Func<BlenderInfo, int, string, string, string, bool, System.Diagnostics.Process> _launchBlender = BlenderDetection.LaunchBlenderWithIpc;
+        private bool _updatingSelectionUi;
+        private LYTGraphicsScene _wiredGraphicsScene;
 
         public OdyToolLYT() : this(null, null) { }
         public OdyToolLYT(Window parent = null, OdyInstallation installation = null)
@@ -57,8 +88,343 @@ namespace OdyTools.Editors
 
         private void SetupProgrammaticUI()
         {
-            var panel = new StackPanel();
-            SetContentOrInject(panel);
+            var root = new DockPanel
+            {
+                LastChildFill = true,
+                Background = new SolidColorBrush(MediaColor.FromRgb(243, 245, 249))
+            };
+
+            var menu = BuildMenu();
+            DockPanel.SetDock(menu, Dock.Top);
+            root.Children.Add(menu);
+
+            _statusText = new TextBlock
+            {
+                Text = "Ready",
+                Padding = new Thickness(10, 5),
+                Background = new SolidColorBrush(MediaColor.FromRgb(225, 230, 238)),
+                Foreground = new SolidColorBrush(MediaColor.FromRgb(47, 55, 68))
+            };
+            DockPanel.SetDock(_statusText, Dock.Bottom);
+            root.Children.Add(_statusText);
+
+            var mainGrid = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("*,360"),
+                RowDefinitions = new RowDefinitions("*"),
+                Margin = new Thickness(10)
+            };
+            mainGrid.Children.Add(BuildCanvasPanel());
+
+            var sideTabs = BuildSideTabs();
+            Grid.SetColumn(sideTabs, 1);
+            mainGrid.Children.Add(sideTabs);
+
+            root.Children.Add(mainGrid);
+            SetContentOrInject(root);
+        }
+
+        private Menu BuildMenu()
+        {
+            var menu = new Menu();
+
+            var fileMenu = new MenuItem { Header = "_File" };
+            fileMenu.Items.Add(new MenuItem { Header = "_New", Name = "actionNew" });
+            fileMenu.Items.Add(new MenuItem { Header = "_Open", Name = "actionOpen" });
+            fileMenu.Items.Add(new MenuItem { Header = "_Save", Name = "actionSave" });
+            fileMenu.Items.Add(new MenuItem { Header = "Save _As", Name = "actionSaveAs" });
+            fileMenu.Items.Add(new Separator());
+            fileMenu.Items.Add(new MenuItem { Header = "_Revert", Name = "actionRevert" });
+            fileMenu.Items.Add(new Separator());
+            fileMenu.Items.Add(new MenuItem { Header = "E_xit", Name = "actionExit" });
+
+            var editMenu = new MenuItem { Header = "_Edit" };
+            editMenu.Items.Add(new MenuItem { Header = "_Undo", Name = "actionUndo" });
+            editMenu.Items.Add(new MenuItem { Header = "_Redo", Name = "actionRedo" });
+
+            var toolsMenu = new MenuItem { Header = "_Tools" };
+            var importModel = new MenuItem { Header = "Import _Model..." };
+            importModel.Click += (s, e) => ImportModel();
+            var importTexture = new MenuItem { Header = "Import _Texture..." };
+            importTexture.Click += (s, e) => ImportTexture();
+            var generateWalkmesh = new MenuItem { Header = "_Generate Walkmesh" };
+            generateWalkmesh.Click += (s, e) => GenerateWalkmesh();
+            _openInBlenderMenuItem = new MenuItem
+            {
+                Header = "Open in _Blender",
+                Name = "actionOpenInBlender"
+            };
+            ToolTip.SetTip(_openInBlenderMenuItem, "Launch the current LYT in Blender using the kotorblender IPC bridge.");
+            _openInBlenderMenuItem.Click += (s, e) => TryLaunchBlenderForCurrentLayout();
+            toolsMenu.Items.Add(importModel);
+            toolsMenu.Items.Add(importTexture);
+            toolsMenu.Items.Add(new Separator());
+            toolsMenu.Items.Add(generateWalkmesh);
+            toolsMenu.Items.Add(_openInBlenderMenuItem);
+
+            menu.Items.Add(fileMenu);
+            menu.Items.Add(editMenu);
+            menu.Items.Add(toolsMenu);
+            RefreshBlenderActionState();
+            return menu;
+        }
+
+        private Control BuildCanvasPanel()
+        {
+            var dock = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 0, 10, 0) };
+
+            var toolbar = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 8,
+                Margin = new Thickness(0, 0, 0, 8)
+            };
+            toolbar.Children.Add(MakeButton("Add Room", AddRoom));
+            toolbar.Children.Add(MakeButton("Add Track", AddTrack));
+            toolbar.Children.Add(MakeButton("Add Obstacle", AddObstacle));
+            toolbar.Children.Add(MakeButton("Add Door Hook", AddDoorHook));
+            toolbar.Children.Add(MakeButton("Import Model", ImportModel));
+            toolbar.Children.Add(MakeButton("Import Texture", ImportTexture));
+
+            var showGrid = new CheckBox
+            {
+                Content = "Grid",
+                IsChecked = true,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(8, 0, 0, 0)
+            };
+            showGrid.IsCheckedChanged += (s, e) =>
+            {
+                if (_graphicsScene != null)
+                {
+                    _graphicsScene.ShowGrid = showGrid.IsChecked == true;
+                }
+            };
+            toolbar.Children.Add(showGrid);
+
+            toolbar.Children.Add(new TextBlock
+            {
+                Text = "Zoom",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(8, 0, 0, 0)
+            });
+            var zoom = new Slider
+            {
+                Minimum = 10,
+                Maximum = 200,
+                Value = 100,
+                Width = 160,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            _zoomValueText = new TextBlock
+            {
+                Text = "100%",
+                MinWidth = 42,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            zoom.PropertyChanged += (s, e) =>
+            {
+                if (e.Property == Slider.ValueProperty)
+                {
+                    UpdateZoom((int)zoom.Value);
+                    if (_zoomValueText != null)
+                    {
+                        _zoomValueText.Text = $"{(int)zoom.Value}%";
+                    }
+                }
+            };
+            toolbar.Children.Add(zoom);
+            toolbar.Children.Add(_zoomValueText);
+
+            DockPanel.SetDock(toolbar, Dock.Top);
+            dock.Children.Add(toolbar);
+
+            _summaryText = new TextBlock
+            {
+                Text = "Rooms 0 | Tracks 0 | Obstacles 0 | Door hooks 0",
+                Padding = new Thickness(8, 5),
+                Background = new SolidColorBrush(MediaColor.FromRgb(225, 230, 238)),
+                Foreground = new SolidColorBrush(MediaColor.FromRgb(47, 55, 68))
+            };
+            DockPanel.SetDock(_summaryText, Dock.Bottom);
+            dock.Children.Add(_summaryText);
+
+            _graphicsScene = new LYTGraphicsScene
+            {
+                Name = "graphicsScene",
+                MinHeight = 420
+            };
+            WireGraphicsSceneSelection();
+            var canvasBorder = new Border
+            {
+                BorderBrush = new SolidColorBrush(MediaColor.FromRgb(178, 187, 201)),
+                BorderThickness = new Thickness(1),
+                Background = Brushes.Black,
+                Child = _graphicsScene
+            };
+            dock.Children.Add(canvasBorder);
+
+            return dock;
+        }
+
+        private TabControl BuildSideTabs()
+        {
+            _roomsList = MakeElementList();
+            _tracksList = MakeElementList();
+            _obstaclesList = MakeElementList();
+            _doorHooksList = MakeElementList();
+            _roomsList.SelectionChanged += (s, e) => SelectLayoutElement(_roomsList.SelectedItem);
+            _tracksList.SelectionChanged += (s, e) => SelectLayoutElement(_tracksList.SelectedItem);
+            _obstaclesList.SelectionChanged += (s, e) => SelectLayoutElement(_obstaclesList.SelectedItem);
+            _doorHooksList.SelectionChanged += (s, e) => SelectLayoutElement(_doorHooksList.SelectedItem);
+
+            _modelBrowser = new ModelBrowser();
+            _modelBrowser.ModelSelected += OnModelSelected;
+            _modelBrowser.ModelChanged += OnModelChanged;
+
+            _textureBrowser = new TextureBrowser();
+            _textureBrowser.TextureSelected += OnTextureSelected;
+            _textureBrowser.TextureChanged += OnTextureChanged;
+
+            var tabs = new TabControl();
+            tabs.Items.Add(new TabItem { Header = "Layout", Content = BuildLayoutTab() });
+            tabs.Items.Add(new TabItem { Header = "Models", Content = _modelBrowser });
+            tabs.Items.Add(new TabItem { Header = "Textures", Content = _textureBrowser });
+            tabs.Items.Add(new TabItem { Header = "Details", Content = BuildDetailsPanel() });
+            return tabs;
+        }
+
+        private Control BuildLayoutTab()
+        {
+            var panel = new Grid
+            {
+                RowDefinitions = new RowDefinitions("*,*,*,*"),
+                Margin = new Thickness(0)
+            };
+            panel.Children.Add(WrapElementList("Rooms", _roomsList, 0));
+            panel.Children.Add(WrapElementList("Tracks", _tracksList, 1));
+            panel.Children.Add(WrapElementList("Obstacles", _obstaclesList, 2));
+            panel.Children.Add(WrapElementList("Door Hooks", _doorHooksList, 3));
+            return panel;
+        }
+
+        private Control BuildDetailsPanel()
+        {
+            var panel = new StackPanel
+            {
+                Orientation = Orientation.Vertical,
+                Spacing = 8,
+                Margin = new Thickness(8)
+            };
+
+            _selectionTitleText = new TextBlock
+            {
+                Text = "No selection",
+                FontWeight = FontWeight.Bold,
+                FontSize = 15
+            };
+            panel.Children.Add(_selectionTitleText);
+
+            _selectionPathText = new TextBlock
+            {
+                Text = "",
+                TextWrapping = TextWrapping.Wrap,
+                Foreground = new SolidColorBrush(MediaColor.FromRgb(80, 88, 104))
+            };
+            panel.Children.Add(_selectionPathText);
+
+            _nameEdit = MakeTextBox();
+            _doorEdit = MakeTextBox();
+            _xEdit = MakeTextBox();
+            _yEdit = MakeTextBox();
+            _zEdit = MakeTextBox();
+
+            panel.Children.Add(MakeLabeled("Model / Resource", _nameEdit));
+            panel.Children.Add(MakeLabeled("Door", _doorEdit));
+            panel.Children.Add(MakeVectorRow());
+
+            _applySelectionButton = MakeButton("Apply", ApplySelectionEdits);
+            _applySelectionButton.IsEnabled = false;
+            _addSelectedModelButton = MakeButton("Add Model As Room", AddSelectedModelAsRoom);
+            _addSelectedModelButton.IsEnabled = false;
+
+            var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+            buttons.Children.Add(_applySelectionButton);
+            buttons.Children.Add(_addSelectedModelButton);
+            panel.Children.Add(buttons);
+
+            return new ScrollViewer { Content = panel };
+        }
+
+        private StackPanel MakeVectorRow()
+        {
+            var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+            row.Children.Add(MakeLabeled("X", _xEdit, 78));
+            row.Children.Add(MakeLabeled("Y", _yEdit, 78));
+            row.Children.Add(MakeLabeled("Z", _zEdit, 78));
+            return row;
+        }
+
+        private static TextBox MakeTextBox()
+        {
+            return new TextBox
+            {
+                MinWidth = 72,
+                Height = 30
+            };
+        }
+
+        private static Control MakeLabeled(string label, Control control, double width = double.NaN)
+        {
+            var panel = new StackPanel { Orientation = Orientation.Vertical, Spacing = 3 };
+            panel.Children.Add(new TextBlock
+            {
+                Text = label,
+                Foreground = new SolidColorBrush(MediaColor.FromRgb(80, 88, 104))
+            });
+            if (!double.IsNaN(width))
+            {
+                control.Width = width;
+            }
+            panel.Children.Add(control);
+            return panel;
+        }
+
+        private static Button MakeButton(string text, Action action)
+        {
+            var button = new Button
+            {
+                Content = text,
+                Padding = new Thickness(10, 5),
+                MinHeight = 30
+            };
+            button.Click += (s, e) => action();
+            return button;
+        }
+
+        private static ListBox MakeElementList()
+        {
+            return new ListBox
+            {
+                SelectionMode = SelectionMode.Single,
+                MinHeight = 90
+            };
+        }
+
+        private Control WrapElementList(string header, ListBox list, int row)
+        {
+            var panel = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 0, 0, 8) };
+            var label = new TextBlock
+            {
+                Text = header,
+                FontWeight = FontWeight.Bold,
+                Margin = new Thickness(0, 0, 0, 4)
+            };
+            DockPanel.SetDock(label, Dock.Top);
+            panel.Children.Add(label);
+            panel.Children.Add(list);
+            Grid.SetRow(panel, row);
+            return panel;
         }
 
         private void SetupUI()
@@ -80,7 +446,7 @@ namespace OdyTools.Editors
             try
             {
                 // Try to find graphics scene from XAML if available
-                _graphicsScene = this.FindControl<LYTGraphicsScene>("graphicsScene");
+                _graphicsScene = EditorHelpers.FindControlSafe<LYTGraphicsScene>(this, "graphicsScene");
             }
             catch
             {
@@ -92,6 +458,28 @@ namespace OdyTools.Editors
             {
                 _graphicsScene = new LYTGraphicsScene();
             }
+            WireGraphicsSceneSelection();
+        }
+
+        private void WireGraphicsSceneSelection()
+        {
+            if (_graphicsScene == null || ReferenceEquals(_wiredGraphicsScene, _graphicsScene))
+            {
+                return;
+            }
+
+            if (_wiredGraphicsScene != null)
+            {
+                _wiredGraphicsScene.LayoutElementSelected -= OnGraphicsSceneElementSelected;
+            }
+
+            _graphicsScene.LayoutElementSelected += OnGraphicsSceneElementSelected;
+            _wiredGraphicsScene = _graphicsScene;
+        }
+
+        private void OnGraphicsSceneElementSelected(object sender, object element)
+        {
+            SelectLayoutElement(element);
         }
 
         /// <summary>
@@ -102,7 +490,7 @@ namespace OdyTools.Editors
             try
             {
                 // Try to find model browser from XAML if available
-                _modelBrowser = this.FindControl<ModelBrowser>("modelBrowser");
+                _modelBrowser = EditorHelpers.FindControlSafe<ModelBrowser>(this, "modelBrowser");
             }
             catch
             {
@@ -132,7 +520,7 @@ namespace OdyTools.Editors
             try
             {
                 // Try to find texture browser from XAML if available
-                _textureBrowser = this.FindControl<TextureBrowser>("textureBrowser");
+                _textureBrowser = EditorHelpers.FindControlSafe<TextureBrowser>(this, "textureBrowser");
             }
             catch
             {
@@ -164,8 +552,7 @@ namespace OdyTools.Editors
                 return;
             }
 
-            // Model selected - could trigger preview or usage
-            System.Console.WriteLine($"Model selected in browser: {modelName}");
+            SelectImportedAsset("Model", modelName, GetImportedModelPath(modelName));
         }
 
         /// <summary>
@@ -176,7 +563,7 @@ namespace OdyTools.Editors
             // Model changed - update any dependent UI
             if (!string.IsNullOrEmpty(modelName))
             {
-                System.Console.WriteLine($"Model changed in browser: {modelName}");
+                SelectImportedAsset("Model", modelName, GetImportedModelPath(modelName));
             }
         }
 
@@ -190,8 +577,7 @@ namespace OdyTools.Editors
                 return;
             }
 
-            // Texture selected - could trigger preview or usage
-            System.Console.WriteLine($"Texture selected in browser: {textureName}");
+            SelectImportedAsset("Texture", textureName, GetImportedTexturePath(textureName));
         }
 
         /// <summary>
@@ -202,7 +588,7 @@ namespace OdyTools.Editors
             // Texture changed - update any dependent UI
             if (!string.IsNullOrEmpty(textureName))
             {
-                System.Console.WriteLine($"Texture changed in browser: {textureName}");
+                SelectImportedAsset("Texture", textureName, GetImportedTexturePath(textureName));
             }
         }
 
@@ -290,6 +676,157 @@ namespace OdyTools.Editors
             return null;
         }
 
+        internal int RoomCount => _lyt?.Rooms?.Count ?? 0;
+        internal int TrackCount => _lyt?.Tracks?.Count ?? 0;
+        internal int ObstacleCount => _lyt?.Obstacles?.Count ?? 0;
+        internal int DoorHookCount => _lyt?.DoorHooks?.Count ?? 0;
+        internal string SummaryText => _summaryText?.Text ?? "";
+        internal string StatusText => _statusText?.Text ?? "";
+        internal MenuItem OpenInBlenderMenuItem => _openInBlenderMenuItem;
+        internal string BlenderStatusText => _blenderStatus;
+        internal string SelectionTitleText => _selectionTitleText?.Text ?? "";
+        internal bool AddSelectedModelButtonEnabledForTesting => _addSelectedModelButton?.IsEnabled == true;
+        internal string SelectedRoomListTextForTesting => _roomsList?.SelectedItem?.ToString() ?? "";
+        internal bool HasProgrammaticEditorSurfaceForTest =>
+            _graphicsScene != null &&
+            _roomsList != null &&
+            _tracksList != null &&
+            _obstaclesList != null &&
+            _doorHooksList != null &&
+            _modelBrowser != null &&
+            _textureBrowser != null &&
+            _summaryText != null &&
+            _selectionTitleText != null &&
+            _selectionPathText != null &&
+            _nameEdit != null &&
+            _xEdit != null &&
+            _yEdit != null &&
+            _zEdit != null &&
+            _applySelectionButton != null &&
+            _addSelectedModelButton != null;
+
+        internal void SelectRoomForTesting(int index)
+        {
+            if (_lyt?.Rooms == null || index < 0 || index >= _lyt.Rooms.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            _selectedLayoutElement = _lyt.Rooms[index];
+            _selectedAssetKind = null;
+            _selectedAssetName = null;
+            _graphicsScene?.SelectElement(_selectedLayoutElement);
+            PopulateSelectionDetails();
+        }
+
+        internal void SelectTrackForTesting(int index)
+        {
+            if (_lyt?.Tracks == null || index < 0 || index >= _lyt.Tracks.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            _selectedLayoutElement = _lyt.Tracks[index];
+            _selectedAssetKind = null;
+            _selectedAssetName = null;
+            _graphicsScene?.SelectElement(_selectedLayoutElement);
+            PopulateSelectionDetails();
+        }
+
+        internal void SelectObstacleForTesting(int index)
+        {
+            if (_lyt?.Obstacles == null || index < 0 || index >= _lyt.Obstacles.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            _selectedLayoutElement = _lyt.Obstacles[index];
+            _selectedAssetKind = null;
+            _selectedAssetName = null;
+            _graphicsScene?.SelectElement(_selectedLayoutElement);
+            PopulateSelectionDetails();
+        }
+
+        internal void SelectDoorHookForTesting(int index)
+        {
+            if (_lyt?.DoorHooks == null || index < 0 || index >= _lyt.DoorHooks.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            _selectedLayoutElement = _lyt.DoorHooks[index];
+            _selectedAssetKind = null;
+            _selectedAssetName = null;
+            _graphicsScene?.SelectElement(_selectedLayoutElement);
+            PopulateSelectionDetails();
+        }
+
+        internal void SelectRoomInSceneForTesting(int index)
+        {
+            if (_lyt?.Rooms == null || index < 0 || index >= _lyt.Rooms.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            _graphicsScene?.SelectElement(_lyt.Rooms[index]);
+            OnGraphicsSceneElementSelected(_graphicsScene, _lyt.Rooms[index]);
+        }
+
+        internal void SetSelectionEditsForTesting(string name, float x, float y, float z, string door = "")
+        {
+            SetText(_nameEdit, name);
+            SetText(_doorEdit, door);
+            SetText(_xEdit, x.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            SetText(_yEdit, y.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            SetText(_zEdit, z.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+
+        internal void ApplySelectionEditsForTesting()
+        {
+            ApplySelectionEdits();
+        }
+
+        internal void RegisterImportedModelForTesting(string modelName, string path = "")
+        {
+            if (_importedModels == null)
+            {
+                _importedModels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            }
+
+            _importedModels[modelName] = path ?? "";
+            UpdateModelBrowser();
+        }
+
+        internal void SelectImportedModelForTesting(string modelName)
+        {
+            OnModelSelected(_modelBrowser, modelName);
+        }
+
+        internal void AddSelectedModelAsRoomForTesting()
+        {
+            AddSelectedModelAsRoom();
+        }
+
+        internal void SetBlenderServicesForTests(
+            Func<string, BlenderInfo> detectBlender,
+            Func<BlenderInfo, int, string, string, string, bool, System.Diagnostics.Process> launchBlender)
+        {
+            _detectBlender = detectBlender ?? BlenderDetection.DetectBlender;
+            _launchBlender = launchBlender ?? BlenderDetection.LaunchBlenderWithIpc;
+        }
+
+        internal bool IsGridVisibleForTesting
+        {
+            get { return _graphicsScene?.ShowGrid ?? false; }
+            set
+            {
+                if (_graphicsScene != null)
+                {
+                    _graphicsScene.ShowGrid = value;
+                }
+            }
+        }
+
         public void AddObstacle()
         {
             var obstacle = new LYTObstacle(new ResRef("default_obstacle"), new Vector3(0, 0, 0));
@@ -321,7 +858,142 @@ namespace OdyTools.Editors
 
         public void GenerateWalkmesh()
         {
-            // Implement walkmesh generation logic here
+            GenerateWalkmeshFiles(overwriteExisting: false);
+        }
+
+        internal int GenerateWalkmeshFilesForTesting(bool overwriteExisting = false)
+        {
+            return GenerateWalkmeshFiles(overwriteExisting);
+        }
+
+        private int GenerateWalkmeshFiles(bool overwriteExisting)
+        {
+            if (_lyt?.Rooms == null || _lyt.Rooms.Count == 0)
+            {
+                SetStatus("No rooms available for walkmesh generation.");
+                return 0;
+            }
+
+            if (string.IsNullOrEmpty(Filepath))
+            {
+                SetStatus("Save or open a LYT before generating WOK files.");
+                return 0;
+            }
+
+            string directory = Path.GetDirectoryName(Filepath);
+            if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
+            {
+                SetStatus("Cannot generate WOK files because the LYT directory does not exist.");
+                return 0;
+            }
+
+            int generated = 0;
+            int skipped = 0;
+            foreach (var room in _lyt.Rooms)
+            {
+                string roomName = room?.Model?.ToString();
+                if (string.IsNullOrWhiteSpace(roomName) || !ResRef.IsValid(roomName))
+                {
+                    skipped++;
+                    continue;
+                }
+
+                string outputPath = Path.Combine(directory, roomName + ".wok");
+                if (File.Exists(outputPath) && !overwriteExisting)
+                {
+                    skipped++;
+                    continue;
+                }
+
+                var bwm = CreatePlaceholderRoomWalkmesh(room);
+                File.WriteAllBytes(outputPath, BWMAuto.BytesBwm(bwm, ResourceType.WOK));
+                generated++;
+            }
+
+            string skippedText = skipped > 0 ? $" ({skipped} skipped)" : "";
+            SetStatus($"Generated {generated} WOK walkmesh file(s){skippedText}.");
+            return generated;
+        }
+
+        private static BWM CreatePlaceholderRoomWalkmesh(LYTRoom room)
+        {
+            var center = room?.Position ?? Vector3.Zero;
+            const float halfSize = 5f;
+            var v1 = new Vector3(center.X - halfSize, center.Y - halfSize, center.Z);
+            var v2 = new Vector3(center.X + halfSize, center.Y - halfSize, center.Z);
+            var v3 = new Vector3(center.X + halfSize, center.Y + halfSize, center.Z);
+            var v4 = new Vector3(center.X - halfSize, center.Y + halfSize, center.Z);
+
+            var bwm = new BWM
+            {
+                WalkmeshType = BWMType.AreaModel
+            };
+            bwm.Faces.Add(new BWMFace(v1, v2, v3) { Material = SurfaceMaterial.Stone });
+            bwm.Faces.Add(new BWMFace(v1, v3, v4) { Material = SurfaceMaterial.Stone });
+            return bwm;
+        }
+
+        private void SetStatus(string status)
+        {
+            if (_statusText != null)
+            {
+                _statusText.Text = status ?? "";
+            }
+        }
+
+        public bool TryLaunchBlenderForCurrentLayout()
+        {
+            if (string.IsNullOrEmpty(Filepath))
+            {
+                SetBlenderStatus("Save or open a LYT before launching Blender.");
+                RefreshBlenderActionState();
+                return false;
+            }
+
+            var blenderInfo = _detectBlender(null);
+            if (blenderInfo == null || !blenderInfo.IsValid)
+            {
+                SetBlenderStatus(blenderInfo?.Error ?? "No valid Blender installation found.");
+                return false;
+            }
+
+            if (!blenderInfo.HasKotorblender)
+            {
+                SetBlenderStatus(blenderInfo.Error ?? "Blender found, but kotorblender is not installed.");
+                return false;
+            }
+
+            var process = _launchBlender(blenderInfo, 7531, _installation?.Path, Filepath, null, false);
+            if (process == null)
+            {
+                SetBlenderStatus("Failed to launch Blender.");
+                return false;
+            }
+
+            SetBlenderStatus($"Launched Blender for {Path.GetFileName(Filepath)}.");
+            return true;
+        }
+
+        private void RefreshBlenderActionState()
+        {
+            if (_openInBlenderMenuItem != null)
+            {
+                _openInBlenderMenuItem.IsEnabled = !string.IsNullOrEmpty(Filepath);
+            }
+
+            if (string.IsNullOrEmpty(Filepath))
+            {
+                SetBlenderStatus("Open a LYT file to use Blender.");
+            }
+        }
+
+        private void SetBlenderStatus(string status)
+        {
+            _blenderStatus = status ?? "";
+            if (_statusText != null && !string.IsNullOrEmpty(_blenderStatus))
+            {
+                _statusText.Text = $"Blender: {_blenderStatus}";
+            }
         }
 
         public void UpdateZoom(int value)
@@ -433,6 +1105,343 @@ namespace OdyTools.Editors
                         _graphicsScene.AddItem(doorHookItem);
                     }
                 }
+            }
+
+            RefreshElementLists();
+            RefreshSummary();
+        }
+
+        private void RefreshElementLists()
+        {
+            if (_roomsList == null || _tracksList == null || _obstaclesList == null || _doorHooksList == null)
+            {
+                return;
+            }
+
+            _updatingSelectionUi = true;
+            try
+            {
+                _roomsList.ItemsSource = (_lyt.Rooms ?? new List<LYTRoom>())
+                    .Select((room, index) => new LayoutElementListItem(FormatRoom(room, index), room))
+                    .ToList();
+                _tracksList.ItemsSource = (_lyt.Tracks ?? new List<LYTTrack>())
+                    .Select((track, index) => new LayoutElementListItem(FormatTrack(track, index), track))
+                    .ToList();
+                _obstaclesList.ItemsSource = (_lyt.Obstacles ?? new List<LYTObstacle>())
+                    .Select((obstacle, index) => new LayoutElementListItem(FormatObstacle(obstacle, index), obstacle))
+                    .ToList();
+                _doorHooksList.ItemsSource = (_lyt.DoorHooks ?? new List<LYTDoorHook>())
+                    .Select((hook, index) => new LayoutElementListItem(FormatDoorHook(hook, index), hook))
+                    .ToList();
+
+                SyncElementListSelection();
+            }
+            finally
+            {
+                _updatingSelectionUi = false;
+            }
+        }
+
+        private void SyncElementListSelection()
+        {
+            SelectListItemByValue(_roomsList, _selectedLayoutElement is LYTRoom ? _selectedLayoutElement : null);
+            SelectListItemByValue(_tracksList, _selectedLayoutElement is LYTTrack ? _selectedLayoutElement : null);
+            SelectListItemByValue(_obstaclesList, _selectedLayoutElement is LYTObstacle ? _selectedLayoutElement : null);
+            SelectListItemByValue(_doorHooksList, _selectedLayoutElement is LYTDoorHook ? _selectedLayoutElement : null);
+        }
+
+        private static void SelectListItemByValue(ListBox list, object value)
+        {
+            if (list == null)
+            {
+                return;
+            }
+
+            if (value == null)
+            {
+                list.SelectedItem = null;
+                return;
+            }
+
+            if (list.Items != null)
+            {
+                foreach (var item in list.Items)
+                {
+                    var listItem = item as LayoutElementListItem;
+                    if (listItem != null && ReferenceEquals(listItem.Value, value))
+                    {
+                        list.SelectedItem = listItem;
+                        return;
+                    }
+                }
+            }
+
+            list.SelectedItem = null;
+        }
+
+        private void RefreshSummary()
+        {
+            int roomCount = _lyt?.Rooms?.Count ?? 0;
+            int trackCount = _lyt?.Tracks?.Count ?? 0;
+            int obstacleCount = _lyt?.Obstacles?.Count ?? 0;
+            int hookCount = _lyt?.DoorHooks?.Count ?? 0;
+            if (_summaryText != null)
+            {
+                _summaryText.Text = $"Rooms {roomCount} | Tracks {trackCount} | Obstacles {obstacleCount} | Door hooks {hookCount}";
+            }
+            if (_statusText != null)
+            {
+                var layoutStatus = $"Layout ready: {roomCount} rooms, {trackCount} tracks, {obstacleCount} obstacles, {hookCount} door hooks";
+                _statusText.Text = string.IsNullOrEmpty(_blenderStatus)
+                    ? layoutStatus
+                    : $"{layoutStatus} | Blender: {_blenderStatus}";
+            }
+        }
+
+        private void SelectLayoutElement(object item)
+        {
+            if (_updatingSelectionUi)
+            {
+                return;
+            }
+
+            _selectedAssetKind = null;
+            _selectedAssetName = null;
+            _selectedLayoutElement = item is LayoutElementListItem listItem ? listItem.Value : item;
+            _graphicsScene?.SelectElement(_selectedLayoutElement);
+            PopulateSelectionDetails();
+        }
+
+        private void SelectImportedAsset(string kind, string name, string path)
+        {
+            _selectedLayoutElement = null;
+            _selectedAssetKind = kind;
+            _selectedAssetName = name;
+            _graphicsScene?.SelectElement(null);
+            if (_selectionTitleText != null)
+            {
+                _selectionTitleText.Text = $"{kind}: {name}";
+            }
+            if (_selectionPathText != null)
+            {
+                _selectionPathText.Text = string.IsNullOrEmpty(path) ? "No file path recorded." : path;
+            }
+            SetText(_nameEdit, name);
+            SetText(_doorEdit, "");
+            SetText(_xEdit, "");
+            SetText(_yEdit, "");
+            SetText(_zEdit, "");
+            if (_applySelectionButton != null)
+            {
+                _applySelectionButton.IsEnabled = false;
+            }
+            if (_addSelectedModelButton != null)
+            {
+                _addSelectedModelButton.IsEnabled = string.Equals(kind, "Model", StringComparison.OrdinalIgnoreCase);
+            }
+            if (_statusText != null)
+            {
+                _statusText.Text = $"{kind} selected: {name}";
+            }
+        }
+
+        private void PopulateSelectionDetails()
+        {
+            if (_selectedLayoutElement == null)
+            {
+                if (_selectionTitleText != null) _selectionTitleText.Text = "No selection";
+                if (_selectionPathText != null) _selectionPathText.Text = "";
+                SetText(_nameEdit, "");
+                SetText(_doorEdit, "");
+                SetText(_xEdit, "");
+                SetText(_yEdit, "");
+                SetText(_zEdit, "");
+                if (_applySelectionButton != null) _applySelectionButton.IsEnabled = false;
+                if (_addSelectedModelButton != null) _addSelectedModelButton.IsEnabled = false;
+                return;
+            }
+
+            string title;
+            string name;
+            string door = "";
+            Vector3 position;
+
+            switch (_selectedLayoutElement)
+            {
+                case LYTRoom room:
+                    title = "Room";
+                    name = room.Model?.ToString() ?? "";
+                    position = room.Position;
+                    break;
+                case LYTTrack track:
+                    title = "Track";
+                    name = track.Model?.ToString() ?? "";
+                    position = track.Position;
+                    break;
+                case LYTObstacle obstacle:
+                    title = "Obstacle";
+                    name = obstacle.Model?.ToString() ?? "";
+                    position = obstacle.Position;
+                    break;
+                case LYTDoorHook hook:
+                    title = "Door Hook";
+                    name = hook.Room ?? "";
+                    door = hook.Door ?? "";
+                    position = hook.Position;
+                    break;
+                default:
+                    return;
+            }
+
+            if (_selectionTitleText != null) _selectionTitleText.Text = $"{title}: {name}";
+            if (_selectionPathText != null) _selectionPathText.Text = "Edit the selected layout element, then apply.";
+            SetText(_nameEdit, name);
+            SetText(_doorEdit, door);
+            SetText(_xEdit, position.X.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture));
+            SetText(_yEdit, position.Y.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture));
+            SetText(_zEdit, position.Z.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture));
+            if (_applySelectionButton != null) _applySelectionButton.IsEnabled = true;
+            if (_addSelectedModelButton != null) _addSelectedModelButton.IsEnabled = false;
+            if (_statusText != null) _statusText.Text = $"{title} selected";
+        }
+
+        private void ApplySelectionEdits()
+        {
+            if (_selectedLayoutElement == null)
+            {
+                return;
+            }
+
+            string name = _nameEdit?.Text?.Trim() ?? "";
+            string door = _doorEdit?.Text?.Trim() ?? "";
+            var position = new Vector3(
+                ParseFloat(_xEdit?.Text),
+                ParseFloat(_yEdit?.Text),
+                ParseFloat(_zEdit?.Text));
+
+            switch (_selectedLayoutElement)
+            {
+                case LYTRoom room:
+                    room.Model = ResRefFromEditableText(name, "default_room");
+                    room.Position = position;
+                    break;
+                case LYTTrack track:
+                    track.Model = ResRefFromEditableText(name, "default_track");
+                    track.Position = position;
+                    break;
+                case LYTObstacle obstacle:
+                    obstacle.Model = ResRefFromEditableText(name, "default_obstacle");
+                    obstacle.Position = position;
+                    break;
+                case LYTDoorHook hook:
+                    hook.Room = name;
+                    hook.Door = door;
+                    hook.Position = position;
+                    break;
+                default:
+                    return;
+            }
+
+            MarkDocumentDirty();
+            UpdateScene();
+            PopulateSelectionDetails();
+        }
+
+        private void AddSelectedModelAsRoom()
+        {
+            if (!string.Equals(_selectedAssetKind, "Model", StringComparison.OrdinalIgnoreCase) ||
+                string.IsNullOrWhiteSpace(_selectedAssetName))
+            {
+                return;
+            }
+
+            var model = ResRefFromEditableText(_selectedAssetName);
+            if (model.IsBlank())
+            {
+                return;
+            }
+
+            var room = new LYTRoom(model, new Vector3(0, 0, 0));
+            _lyt.Rooms.Add(room);
+            _selectedLayoutElement = room;
+            _selectedAssetKind = null;
+            _selectedAssetName = null;
+            MarkDocumentDirty();
+            UpdateScene();
+            PopulateSelectionDetails();
+        }
+
+        private static float ParseFloat(string text)
+        {
+            return float.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float value)
+                ? value
+                : 0f;
+        }
+
+        internal static ResRef ResRefFromEditableText(string text)
+        {
+            string value = text?.Trim() ?? string.Empty;
+            return string.IsNullOrEmpty(value) || !ResRef.IsValid(value) ? ResRef.FromBlank() : new ResRef(value);
+        }
+
+        private static ResRef ResRefFromEditableText(string text, string fallback)
+        {
+            ResRef value = ResRefFromEditableText(text);
+            return value.IsBlank() ? new ResRef(fallback) : value;
+        }
+
+        private static void SetText(TextBox box, string text)
+        {
+            if (box != null)
+            {
+                box.Text = text ?? "";
+            }
+        }
+
+        private static string FormatRoom(LYTRoom room, int index)
+        {
+            return $"{index + 1}. {room?.Model} ({FormatPosition(room?.Position ?? Vector3.Zero)})";
+        }
+
+        private static string FormatTrack(LYTTrack track, int index)
+        {
+            return $"{index + 1}. {track?.Model} ({FormatPosition(track?.Position ?? Vector3.Zero)})";
+        }
+
+        private static string FormatObstacle(LYTObstacle obstacle, int index)
+        {
+            return $"{index + 1}. {obstacle?.Model} ({FormatPosition(obstacle?.Position ?? Vector3.Zero)})";
+        }
+
+        private static string FormatDoorHook(LYTDoorHook hook, int index)
+        {
+            return $"{index + 1}. {hook?.Room}/{hook?.Door} ({FormatPosition(hook?.Position ?? Vector3.Zero)})";
+        }
+
+        private static string FormatPosition(Vector3 position)
+        {
+            return string.Format(
+                System.Globalization.CultureInfo.InvariantCulture,
+                "{0:0.##}, {1:0.##}, {2:0.##}",
+                position.X,
+                position.Y,
+                position.Z);
+        }
+
+        private sealed class LayoutElementListItem
+        {
+            public LayoutElementListItem(string text, object value)
+            {
+                Text = text;
+                Value = value;
+            }
+
+            public string Text { get; }
+            public object Value { get; }
+
+            public override string ToString()
+            {
+                return Text;
             }
         }
 
@@ -1724,6 +2733,8 @@ namespace OdyTools.Editors
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
+            SetBlenderStatus(string.Empty);
+            RefreshBlenderActionState();
 
             try
             {
@@ -1753,6 +2764,8 @@ namespace OdyTools.Editors
         {
             base.New();
             _lyt = new BioWare.Resource.Formats.LYT.LYT();
+            SetBlenderStatus(string.Empty);
+            RefreshBlenderActionState();
             UpdateScene();
         }
 
@@ -1781,6 +2794,8 @@ namespace OdyTools.Editors
             _restype = ResourceType.FromExtension(ext) ?? ResourceType.LYT;
             _resname = Path.GetFileNameWithoutExtension(path);
             RefreshWindowTitle();
+            SetBlenderStatus(string.Empty);
+            RefreshBlenderActionState();
             Save();
         }
     }

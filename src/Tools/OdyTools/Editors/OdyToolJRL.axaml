@@ -52,6 +52,18 @@
         <MenuItem Header="_Redo" Name="actionRedo"
                   ToolTip.Tip="Redo the last undone change. Shortcut: Ctrl+Y"/>
         <Separator/>
+        <MenuItem Header="_Duplicate" Name="actionDuplicate"
+                  ToolTip.Tip="Duplicate the selected quest or entry."/>
+        <MenuItem Header="Move _Up" Name="actionMoveUp"
+                  ToolTip.Tip="Move the selected quest or entry up."/>
+        <MenuItem Header="Move _Down" Name="actionMoveDown"
+                  ToolTip.Tip="Move the selected quest or entry down."/>
+        <Separator/>
+        <MenuItem Header="Sort Entries by ID (_Ascending)" Name="actionSortEntriesAscending"
+                  ToolTip.Tip="Sort entries of the selected quest by entry ID ascending."/>
+        <MenuItem Header="Sort Entries by ID (D_escending)" Name="actionSortEntriesDescending"
+                  ToolTip.Tip="Sort entries of the selected quest by entry ID descending."/>
+        <Separator/>
         <MenuItem Header="Find..." Name="actionFind"
                   ToolTip.Tip="Search for text in quest names and entry text. Shortcut: Ctrl+F"/>
         <MenuItem Header="Find _Next" Name="actionFindNext"
@@ -83,10 +95,16 @@
       <Border Grid.Column="0" Margin="0,0,4,0" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="8"
               Background="#FAFBFC"
               ToolTip.Tip="Quest categories (top level) and their entries (children). Select an item to view or edit in the panel on the right.">
-        <Grid RowDefinitions="Auto,*">
+        <Grid RowDefinitions="Auto,Auto,*">
           <TextBlock Grid.Row="0" Text="Quests &amp; entries" FontWeight="SemiBold" Margin="12,10,12,6" FontSize="13"
                      ToolTip.Tip="Journal structure: each quest can have multiple entries. The game shows these in the journal UI."/>
-          <TreeView Name="journalTree" Grid.Row="1" Margin="4,0,4,8">
+          <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="8,0,8,8">
+            <TextBox Name="filterEdit" Grid.Column="0" Watermark="Filter quests and entries"
+                     ToolTip.Tip="Filter journal quests and entries. Filter mode is configurable in Journal Editor Settings."/>
+            <Button Name="filterClearButton" Grid.Column="1" Content="Clear" Margin="8,0,0,0"
+                    ToolTip.Tip="Clear the journal filter."/>
+          </Grid>
+          <TreeView Name="journalTree" Grid.Row="2" Margin="4,0,4,8">
             <TreeView.ItemTemplate>
               <TreeDataTemplate DataType="local:JournalTreeItem" ItemsSource="{Binding Children}">
                 <Border Classes="jrl-tree-item">
@@ -114,27 +132,30 @@
             <!-- Quest details (hidden by default, shown when quest selected) -->
             <StackPanel Name="detailQuest" IsVisible="False" Spacing="10">
               <TextBlock Text="Quest" FontWeight="SemiBold" FontSize="14"/>
-              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" VerticalAlignment="Center" Margin="0,0,8,0"
                            ToolTip.Tip="Display name of the quest category (localized string)."/>
                 <widgets:LocalizedStringEdit Name="questNameEdit" Grid.Row="0" Grid.Column="1" Margin="0,0,0,6"/>
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Planet ID:" VerticalAlignment="Center" Margin="0,0,8,0"
                            ToolTip.Tip="Planet identifier for this quest (0 = no specific planet)."/>
                 <NumericUpDown Name="questPlanetId" Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="int.MaxValue" Margin="0,0,0,6"/>
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Priority:" VerticalAlignment="Center" Margin="0,0,8,0"
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Plot Index:" VerticalAlignment="Center" Margin="0,0,8,0"
+                           ToolTip.Tip="Plot table row index for this quest category."/>
+                <NumericUpDown Name="questPlotIndex" Grid.Row="2" Grid.Column="1" Minimum="0" Maximum="int.MaxValue" Margin="0,0,0,6"/>
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Priority:" VerticalAlignment="Center" Margin="0,0,8,0"
                            ToolTip.Tip="Display priority: Highest, High, Medium, Low, Lowest."/>
-                <ComboBox Name="questPriority" Grid.Row="2" Grid.Column="1" Margin="0,0,0,6"
+                <ComboBox Name="questPriority" Grid.Row="3" Grid.Column="1" Margin="0,0,0,6"
                           ToolTip.Tip="Determines order when multiple quests are shown."/>
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Tag:" VerticalAlignment="Center" Margin="0,0,8,0"
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Tag:" VerticalAlignment="Center" Margin="0,0,8,0"
                            ToolTip.Tip="Optional script/tag reference for this quest."/>
-                <TextBox Name="questTag" Grid.Row="3" Grid.Column="1" Margin="0,0,0,6"
+                <TextBox Name="questTag" Grid.Row="4" Grid.Column="1" Margin="0,0,0,6"
                          ToolTip.Tip="String tag used by scripts to identify this quest."/>
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="Comment:" VerticalAlignment="Center" Margin="0,0,8,0"
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Comment:" VerticalAlignment="Center" Margin="0,0,8,0"
                            ToolTip.Tip="Optional comment (not shown in-game)."/>
-                <TextBox Name="questComment" Grid.Row="4" Grid.Column="1" AcceptsReturn="True" MinHeight="48" Margin="0,0,0,6"
+                <TextBox Name="questComment" Grid.Row="5" Grid.Column="1" AcceptsReturn="True" MinHeight="48" Margin="0,0,0,6"
                          ToolTip.Tip="Editor comment; not displayed in the game journal."/>
-                <TextBlock Grid.Row="5" Grid.Column="0" Text="Entries:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <TextBlock Name="questEntryCount" Grid.Row="5" Grid.Column="1" VerticalAlignment="Center"
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="Entries:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <TextBlock Name="questEntryCount" Grid.Row="6" Grid.Column="1" VerticalAlignment="Center"
                            ToolTip.Tip="Number of journal entries in this quest."/>
               </Grid>
             </StackPanel>

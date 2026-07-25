@@ -68,6 +68,7 @@ namespace OdyTools.Editors
 
         // UI Controls - Sounds
         private ListBox _soundList;
+        private TextBox _soundEdit;
         private Button _addSoundBtn;
         private Button _removeSoundBtn;
         private Button _playSoundBtn;
@@ -87,14 +88,44 @@ namespace OdyTools.Editors
 
         // UI Controls - Comments
         private TextBox _commentsEdit;
+        private TabControl _editorSurface;
 
         private NAudioMediaPlayer _soundPlayer;
+        private bool _loadingSoundSelection;
+        private bool _loadingUts;
+        private bool _clearInitialDirtyOnOpen = true;
+
+        public TextBox TagEdit => _tagEdit;
+        public TextBox ResrefEdit => _resrefEdit;
+        public Slider VolumeSlider => _volumeSlider;
+        public CheckBox ActiveCheckbox => _activeCheckbox;
+        public RadioButton PlayRandomRadio => _playRandomRadio;
+        public RadioButton PlaySpecificRadio => _playSpecificRadio;
+        public RadioButton PlayEverywhereRadio => _playEverywhereRadio;
+        public RadioButton OrderSequentialRadio => _orderSequentialRadio;
+        public RadioButton OrderRandomRadio => _orderRandomRadio;
+        public NumericUpDown IntervalSpin => _intervalSpin;
+        public NumericUpDown IntervalVariationSpin => _intervalVariationSpin;
+        public Slider VolumeVariationSlider => _volumeVariationSlider;
+        public Slider PitchVariationSlider => _pitchVariationSlider;
+        public ListBox SoundList => _soundList;
+        public TextBox SoundEdit => _soundEdit;
+        public RadioButton StyleOnceRadio => _styleOnceRadio;
+        public RadioButton StyleSeamlessRadio => _styleSeamlessRadio;
+        public RadioButton StyleRepeatRadio => _styleRepeatRadio;
+        public NumericUpDown CutoffSpin => _cutoffSpin;
+        public NumericUpDown MaxVolumeDistanceSpin => _maxVolumeDistanceSpin;
+        public NumericUpDown HeightSpin => _heightSpin;
+        public NumericUpDown NorthRandomSpin => _northRandomSpin;
+        public NumericUpDown EastRandomSpin => _eastRandomSpin;
+        public TextBox CommentsEdit => _commentsEdit;
+        internal bool HasStructuredEditorSurface => _editorSurface != null && _soundList != null && _commentsEdit != null;
 
         public OdyToolUTS() : this(null, null) { }
         public OdyToolUTS(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTS", "sound",
-                new[] { ResourceType.UTS },
-                new[] { ResourceType.UTS },
+                new[] { ResourceType.UTS, ResourceType.UTS_XML },
+                new[] { ResourceType.UTS, ResourceType.UTS_XML },
                 installation)
         {
             _installation = installation;
@@ -135,21 +166,129 @@ namespace OdyTools.Editors
                 _nameEditBtn = EditorHelpers.FindControlSafe<Button>(this, "nameEditBtn");
                 _volumeSlider = EditorHelpers.FindControlSafe<Slider>(this, "volumeSlider");
                 _activeCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "activeCheckbox");
+                _playRandomRadio = EditorHelpers.FindControlSafe<RadioButton>(this, "playRandomRadio");
+                _playSpecificRadio = EditorHelpers.FindControlSafe<RadioButton>(this, "playSpecificRadio");
+                _playEverywhereRadio = EditorHelpers.FindControlSafe<RadioButton>(this, "playEverywhereRadio");
+                _orderSequentialRadio = EditorHelpers.FindControlSafe<RadioButton>(this, "orderSequentialRadio");
+                _orderRandomRadio = EditorHelpers.FindControlSafe<RadioButton>(this, "orderRandomRadio");
+                _intervalSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "intervalSpin");
+                _intervalVariationSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "intervalVariationSpin");
+                _volumeVariationSlider = EditorHelpers.FindControlSafe<Slider>(this, "volumeVariationSlider");
+                _pitchVariationSlider = EditorHelpers.FindControlSafe<Slider>(this, "pitchVariationSlider");
+                _soundList = EditorHelpers.FindControlSafe<ListBox>(this, "soundList");
+                _soundEdit = EditorHelpers.FindControlSafe<TextBox>(this, "soundEdit");
+                _addSoundBtn = EditorHelpers.FindControlSafe<Button>(this, "addSoundBtn");
+                _removeSoundBtn = EditorHelpers.FindControlSafe<Button>(this, "removeSoundBtn");
+                _playSoundBtn = EditorHelpers.FindControlSafe<Button>(this, "playSoundBtn");
+                _stopSoundBtn = EditorHelpers.FindControlSafe<Button>(this, "stopSoundBtn");
+                _moveUpBtn = EditorHelpers.FindControlSafe<Button>(this, "moveUpBtn");
+                _moveDownBtn = EditorHelpers.FindControlSafe<Button>(this, "moveDownBtn");
+                _styleOnceRadio = EditorHelpers.FindControlSafe<RadioButton>(this, "styleOnceRadio");
+                _styleSeamlessRadio = EditorHelpers.FindControlSafe<RadioButton>(this, "styleSeamlessRadio");
+                _styleRepeatRadio = EditorHelpers.FindControlSafe<RadioButton>(this, "styleRepeatRadio");
+                _cutoffSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "cutoffSpin");
+                _maxVolumeDistanceSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "maxVolumeDistanceSpin");
+                _heightSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "heightSpin");
+                _northRandomSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "northRandomSpin");
+                _eastRandomSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "eastRandomSpin");
                 _commentsEdit = EditorHelpers.FindControlSafe<TextBox>(this, "commentsEdit");
+                _editorSurface = EditorHelpers.FindControlSafe<TabControl>(this, "editorSurface");
 
-                if (_tagEdit == null || _resrefEdit == null)
+                if (_tagEdit == null || _resrefEdit == null || _soundList == null || _commentsEdit == null)
                 {
                     SetupProgrammaticUI();
                 }
                 else
                 {
+                    BindLoadedControlEvents();
+                    BindDirtyTracking();
                     AttachReferenceSearchMenus();
                 }
             }
         }
 
+        private void BindLoadedControlEvents()
+        {
+            EditorHelpers.BindClick(_nameEditBtn, EditName);
+            EditorHelpers.BindClick(_tagGenerateBtn, GenerateTag);
+            EditorHelpers.BindClick(_resrefGenerateBtn, GenerateResref);
+            EditorHelpers.BindClick(_addSoundBtn, AddSound);
+            EditorHelpers.BindClick(_removeSoundBtn, RemoveSound);
+            EditorHelpers.BindClick(_playSoundBtn, PlaySound);
+            EditorHelpers.BindClick(_stopSoundBtn, StopSound);
+            EditorHelpers.BindClick(_moveUpBtn, MoveSoundUp);
+            EditorHelpers.BindClick(_moveDownBtn, MoveSoundDown);
+            if (_soundList != null)
+            {
+                _soundList.SelectionChanged += (s, e) => LoadSelectedSoundIntoEdit();
+            }
+            if (_soundEdit != null)
+            {
+                _soundEdit.LostFocus += (s, e) => CommitSoundEdit();
+            }
+
+            EditorHelpers.BindRadioChecked(_playRandomRadio, ChangePlay);
+            EditorHelpers.BindRadioChecked(_playSpecificRadio, ChangePlay);
+            EditorHelpers.BindRadioChecked(_playEverywhereRadio, ChangePlay);
+            EditorHelpers.BindRadioChecked(_styleOnceRadio, ChangeStyle);
+            EditorHelpers.BindRadioChecked(_styleSeamlessRadio, ChangeStyle);
+            EditorHelpers.BindRadioChecked(_styleRepeatRadio, ChangeStyle);
+        }
+
+        private void BindDirtyTracking()
+        {
+            if (_tagEdit != null) _tagEdit.TextChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_resrefEdit != null) _resrefEdit.TextChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_volumeSlider != null) _volumeSlider.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_activeCheckbox != null) _activeCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_orderSequentialRadio != null) _orderSequentialRadio.Checked += (s, e) => MarkDirtyAfterLoad();
+            if (_orderRandomRadio != null) _orderRandomRadio.Checked += (s, e) => MarkDirtyAfterLoad();
+            if (_intervalSpin != null) _intervalSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_intervalVariationSpin != null) _intervalVariationSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_volumeVariationSlider != null) _volumeVariationSlider.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_pitchVariationSlider != null) _pitchVariationSlider.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_cutoffSpin != null) _cutoffSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_maxVolumeDistanceSpin != null) _maxVolumeDistanceSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_heightSpin != null) _heightSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_northRandomSpin != null) _northRandomSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_eastRandomSpin != null) _eastRandomSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_commentsEdit != null) _commentsEdit.TextChanged += (s, e) => MarkDirtyAfterLoad();
+        }
+
+        private void MarkDirtyAfterLoad()
+        {
+            if (!_loadingUts)
+            {
+                MarkDocumentDirty();
+            }
+        }
+
+        protected override void OnOpened(EventArgs e)
+        {
+            base.OnOpened(e);
+            if (!_clearInitialDirtyOnOpen)
+            {
+                return;
+            }
+
+            ClearDirty();
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (_clearInitialDirtyOnOpen)
+                {
+                    ClearDirty();
+                    _clearInitialDirtyOnOpen = false;
+                }
+            }, Avalonia.Threading.DispatcherPriority.Background);
+        }
+
         private void AttachReferenceSearchMenus()
         {
+            if (_tagEdit == null || _resrefEdit == null)
+            {
+                return;
+            }
+
             ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
             FieldValueReferenceHelper.AppendFieldValueFindReferencesMenuItem(
                 _tagEdit.ContextMenu,
@@ -271,6 +410,9 @@ namespace OdyTools.Editors
             var soundsPanel = new StackPanel { Orientation = Orientation.Vertical };
             var soundsLabel = new TextBlock { Text = "Sound List:" };
             _soundList = new ListBox();
+            _soundEdit = new TextBox { Watermark = "Selected sound resref" };
+            _soundList.SelectionChanged += (s, e) => LoadSelectedSoundIntoEdit();
+            _soundEdit.LostFocus += (s, e) => CommitSoundEdit();
             var soundButtonsPanel = new StackPanel { Orientation = Orientation.Horizontal };
             _addSoundBtn = new Button { Content = "Add" };
             EditorHelpers.BindClick(_addSoundBtn, AddSound);
@@ -292,6 +434,7 @@ namespace OdyTools.Editors
             soundButtonsPanel.Children.Add(_moveDownBtn);
             soundsPanel.Children.Add(soundsLabel);
             soundsPanel.Children.Add(_soundList);
+            soundsPanel.Children.Add(_soundEdit);
             soundsPanel.Children.Add(soundButtonsPanel);
             soundsGroup.Content = soundsPanel;
             mainPanel.Children.Add(soundsGroup);
@@ -349,8 +492,10 @@ namespace OdyTools.Editors
             commentsGroup.Content = commentsPanel;
             mainPanel.Children.Add(commentsGroup);
 
+            BindDirtyTracking();
+
             scrollViewer.Content = mainPanel;
-            var contentRoot = this.FindControl<Avalonia.Controls.ContentControl>("contentRoot");
+            var contentRoot = EditorHelpers.FindControlSafe<Avalonia.Controls.ContentControl>(this, "contentRoot");
             if (contentRoot != null)
             {
                 contentRoot.Content = scrollViewer;
@@ -363,7 +508,7 @@ namespace OdyTools.Editors
 
         private void SetupUI()
         {
-            var contentRoot = this.FindControl<Avalonia.Controls.ContentControl>("contentRoot");
+            var contentRoot = EditorHelpers.FindControlSafe<Avalonia.Controls.ContentControl>(this, "contentRoot");
             if (contentRoot != null && contentRoot.Content == null)
             {
                 SetupProgrammaticUI();
@@ -383,7 +528,7 @@ namespace OdyTools.Editors
                 throw new ArgumentException("The UTS file data is empty or invalid.");
             }
 
-            var gff = GFF.FromBytes(data);
+            var gff = GFFAuto.ReadGff(data, fileFormat: restype);
             _uts = UTSHelpers.ConstructUts(gff);
             LoadUTS(_uts);
         }
@@ -391,89 +536,100 @@ namespace OdyTools.Editors
         private void LoadUTS(UTS uts)
         {
             _uts = uts;
+            _loadingUts = true;
+            try
+            {
 
-            // Basic
-            if (_nameEdit != null)
-            {
-                _nameEdit.Text = _installation != null ? _installation.String(uts.Name) : uts.Name.StringRef.ToString();
-            }
-            if (_tagEdit != null)
-            {
-                _tagEdit.Text = uts.Tag;
-            }
-            if (_resrefEdit != null)
-            {
-                _resrefEdit.Text = uts.ResRef.ToString();
-            }
-            if (_volumeSlider != null)
-            {
-                _volumeSlider.Value = uts.Volume;
-            }
-            if (_activeCheckbox != null)
-            {
-                _activeCheckbox.IsChecked = uts.Active;
-            }
-
-            // Advanced
-            if (uts.RandomRangeX != 0 && uts.RandomRangeY != 0)
-            {
-                if (_playRandomRadio != null) _playRandomRadio.IsChecked = true;
-            }
-            else if (uts.Positional)
-            {
-                if (_playSpecificRadio != null) _playSpecificRadio.IsChecked = true;
-            }
-            else
-            {
-                if (_playEverywhereRadio != null) _playEverywhereRadio.IsChecked = true;
-            }
-
-            if (_orderSequentialRadio != null) _orderSequentialRadio.IsChecked = !uts.Random;
-            if (_orderRandomRadio != null) _orderRandomRadio.IsChecked = uts.Random;
-            if (_intervalSpin != null) _intervalSpin.Value = uts.Interval;
-            if (_intervalVariationSpin != null) _intervalVariationSpin.Value = uts.IntervalVariance;
-            if (_volumeVariationSlider != null) _volumeVariationSlider.Value = uts.VolumeVariance;
-            if (_pitchVariationSlider != null) _pitchVariationSlider.Value = (int)(uts.PitchVariance * 100);
-
-            // Sounds
-            if (_soundList != null)
-            {
-                _soundList.Items.Clear();
-                if (uts.Sounds != null)
+                // Basic
+                if (_nameEdit != null)
                 {
-                    foreach (var sound in uts.Sounds)
-                    {
-                        _soundList.Items.Add(sound.ToString());
-                    }
+                    _nameEdit.Text = _installation != null ? _installation.String(uts.Name) : uts.Name.StringRef.ToString();
                 }
-            }
+                if (_tagEdit != null)
+                {
+                    _tagEdit.Text = uts.Tag;
+                }
+                if (_resrefEdit != null)
+                {
+                    _resrefEdit.Text = uts.ResRef.ToString();
+                }
+                if (_volumeSlider != null)
+                {
+                    _volumeSlider.Value = uts.Volume;
+                }
+                if (_activeCheckbox != null)
+                {
+                    _activeCheckbox.IsChecked = uts.Active;
+                }
 
-            // Positioning
-            if (uts.Continuous && uts.Looping)
-            {
-                if (_styleSeamlessRadio != null) _styleSeamlessRadio.IsChecked = true;
-            }
-            else if (uts.Looping)
-            {
-                if (_styleRepeatRadio != null) _styleRepeatRadio.IsChecked = true;
-            }
-            else
-            {
-                if (_styleOnceRadio != null) _styleOnceRadio.IsChecked = true;
-            }
+                // Advanced
+                if (uts.RandomRangeX != 0 && uts.RandomRangeY != 0)
+                {
+                    if (_playRandomRadio != null) _playRandomRadio.IsChecked = true;
+                }
+                else if (uts.Positional)
+                {
+                    if (_playSpecificRadio != null) _playSpecificRadio.IsChecked = true;
+                }
+                else
+                {
+                    if (_playEverywhereRadio != null) _playEverywhereRadio.IsChecked = true;
+                }
 
-            if (_cutoffSpin != null) _cutoffSpin.Value = (decimal?)uts.MinDistance;
-            if (_maxVolumeDistanceSpin != null) _maxVolumeDistanceSpin.Value = (decimal?)uts.MaxDistance;
-            if (_heightSpin != null) _heightSpin.Value = (decimal?)uts.Elevation;
-            if (_northRandomSpin != null) _northRandomSpin.Value = (decimal?)uts.RandomRangeY;
-            if (_eastRandomSpin != null) _eastRandomSpin.Value = (decimal?)uts.RandomRangeX;
+                if (_orderSequentialRadio != null) _orderSequentialRadio.IsChecked = !uts.Random;
+                if (_orderRandomRadio != null) _orderRandomRadio.IsChecked = uts.Random;
+                if (_intervalSpin != null) _intervalSpin.Value = uts.Interval;
+                if (_intervalVariationSpin != null) _intervalVariationSpin.Value = uts.IntervalVariance;
+                if (_volumeVariationSlider != null) _volumeVariationSlider.Value = uts.VolumeVariance;
+                if (_pitchVariationSlider != null) _pitchVariationSlider.Value = (int)(uts.PitchVariance * 100);
 
-            // Comments
-            if (_commentsEdit != null) _commentsEdit.Text = uts.Comment;
+                // Sounds
+                if (_soundList != null)
+                {
+                    _soundList.Items.Clear();
+                    if (uts.Sounds != null)
+                    {
+                        foreach (var sound in uts.Sounds)
+                        {
+                            _soundList.Items.Add(sound.ToString());
+                        }
+                    }
+                    LoadSelectedSoundIntoEdit();
+                }
+
+                // Positioning
+                if (uts.Continuous && uts.Looping)
+                {
+                    if (_styleSeamlessRadio != null) _styleSeamlessRadio.IsChecked = true;
+                }
+                else if (uts.Looping)
+                {
+                    if (_styleRepeatRadio != null) _styleRepeatRadio.IsChecked = true;
+                }
+                else
+                {
+                    if (_styleOnceRadio != null) _styleOnceRadio.IsChecked = true;
+                }
+
+                if (_cutoffSpin != null) _cutoffSpin.Value = (decimal?)uts.MinDistance;
+                if (_maxVolumeDistanceSpin != null) _maxVolumeDistanceSpin.Value = (decimal?)uts.MaxDistance;
+                if (_heightSpin != null) _heightSpin.Value = (decimal?)uts.Elevation;
+                if (_northRandomSpin != null) _northRandomSpin.Value = (decimal?)uts.RandomRangeY;
+                if (_eastRandomSpin != null) _eastRandomSpin.Value = (decimal?)uts.RandomRangeX;
+
+                // Comments
+                if (_commentsEdit != null) _commentsEdit.Text = uts.Comment;
+            }
+            finally
+            {
+                _loadingUts = false;
+            }
         }
 
         public override Tuple<byte[], byte[]> Build()
         {
+            CommitSoundEdit();
+
             // Matching Python: uts: UTS = deepcopy(self._uts)
             var uts = CopyUts(_uts);
 
@@ -484,7 +640,7 @@ namespace OdyTools.Editors
             // Note: This matches Python behavior where locstring() returns the stored LocalizedString
             uts.Name = uts.Name ?? LocalizedString.FromInvalid();
             uts.Tag = _tagEdit?.Text ?? "";
-            uts.ResRef = new ResRef(_resrefEdit?.Text ?? "");
+            uts.ResRef = ResRefFromText(_resrefEdit?.Text);
             uts.Volume = (int)(_volumeSlider?.Value ?? 127);
             uts.Active = _activeCheckbox?.IsChecked == true;
 
@@ -502,9 +658,10 @@ namespace OdyTools.Editors
             {
                 foreach (string item in _soundList.Items)
                 {
-                    if (!string.IsNullOrEmpty(item))
+                    string soundResRef = (item ?? string.Empty).Trim();
+                    if (!string.IsNullOrEmpty(soundResRef))
                     {
-                        uts.Sounds.Add(new ResRef(item));
+                        uts.Sounds.Add(new ResRef(soundResRef));
                     }
                 }
             }
@@ -524,8 +681,15 @@ namespace OdyTools.Editors
             // Matching Python: gff: GFF = dismantle_uts(uts); write_gff(gff, data)
             BioWareGame game = _installation?.Game ?? BioWareGame.K2;
             var gff = UTSHelpers.DismantleUts(uts, game);
-            byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTS);
+            ResourceType outputType = _restype == ResourceType.UTS_XML ? ResourceType.UTS_XML : ResourceType.UTS;
+            byte[] data = GFFAuto.BytesGff(gff, outputType);
             return Tuple.Create(data, new byte[0]);
+        }
+
+        private static ResRef ResRefFromText(string text)
+        {
+            string value = (text ?? string.Empty).Trim();
+            return !string.IsNullOrEmpty(value) ? new ResRef(value) : ResRef.FromBlank();
         }
 
         // Matching Python: deepcopy(self._uts)
@@ -596,6 +760,7 @@ namespace OdyTools.Editors
             {
                 if (_intervalSpin != null) _intervalSpin.IsEnabled = false;
             }
+            MarkDirtyAfterLoad();
         }
 
         private void ChangePlay()
@@ -613,6 +778,7 @@ namespace OdyTools.Editors
                 if (_northRandomSpin != null) _northRandomSpin.Value = 0;
                 if (_eastRandomSpin != null) _eastRandomSpin.Value = 0;
             }
+            MarkDirtyAfterLoad();
         }
 
         private void PlaySound()
@@ -695,9 +861,48 @@ namespace OdyTools.Editors
         {
             if (_soundList != null)
             {
-                _soundList.Items.Add("new sound");
+                _soundList.Items.Add(CreateUniqueSoundResRef());
+                _soundList.SelectedIndex = _soundList.Items.Count - 1;
+                LoadSelectedSoundIntoEdit();
                 MarkDocumentDirty();
             }
+        }
+
+        private string CreateUniqueSoundResRef()
+        {
+            const string baseName = "new_sound";
+            var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (_soundList?.Items != null)
+            {
+                foreach (var item in _soundList.Items)
+                {
+                    string value = item?.ToString();
+                    if (!string.IsNullOrWhiteSpace(value))
+                    {
+                        existing.Add(value.Trim());
+                    }
+                }
+            }
+
+            if (!existing.Contains(baseName))
+            {
+                return baseName;
+            }
+
+            for (int i = 1; i < 1000; i++)
+            {
+                string candidate = $"{baseName}{i}";
+                if (candidate.Length > 16)
+                {
+                    candidate = candidate.Substring(0, 16);
+                }
+                if (!existing.Contains(candidate))
+                {
+                    return candidate;
+                }
+            }
+
+            return baseName;
         }
 
         private void RemoveSound()
@@ -705,6 +910,7 @@ namespace OdyTools.Editors
             if (_soundList?.SelectedItem != null)
             {
                 _soundList.Items.Remove(_soundList.SelectedItem);
+                LoadSelectedSoundIntoEdit();
                 MarkDocumentDirty();
             }
         }
@@ -721,6 +927,63 @@ namespace OdyTools.Editors
                 MarkDocumentDirty();
             }
         }
+
+        private void LoadSelectedSoundIntoEdit()
+        {
+            if (_soundEdit == null)
+            {
+                return;
+            }
+
+            _loadingSoundSelection = true;
+            try
+            {
+                _soundEdit.Text = _soundList?.SelectedItem?.ToString() ?? string.Empty;
+                _soundEdit.IsEnabled = _soundList?.SelectedItem != null;
+            }
+            finally
+            {
+                _loadingSoundSelection = false;
+            }
+        }
+
+        private void CommitSoundEdit()
+        {
+            if (_loadingSoundSelection || _soundList == null || _soundEdit == null)
+            {
+                return;
+            }
+
+            int index = _soundList.SelectedIndex;
+            if (index < 0 || index >= _soundList.Items.Count)
+            {
+                return;
+            }
+
+            string value = (_soundEdit.Text ?? string.Empty).Trim();
+            if ((_soundList.Items[index]?.ToString() ?? string.Empty) == value)
+            {
+                return;
+            }
+
+            _loadingSoundSelection = true;
+            try
+            {
+                _soundList.Items.RemoveAt(index);
+                _soundList.Items.Insert(index, value);
+                _soundList.SelectedIndex = index;
+            }
+            finally
+            {
+                _loadingSoundSelection = false;
+            }
+            MarkDocumentDirty();
+        }
+
+        internal void AddSoundForTest() => AddSound();
+        internal void RemoveSoundForTest() => RemoveSound();
+        internal void MoveSoundUpForTest() => MoveSoundUp();
+        internal void MoveSoundDownForTest() => MoveSoundDown();
 
         private void MoveSoundDown()
         {

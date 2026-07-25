@@ -419,6 +419,7 @@ namespace BioWare.Common
 
         // For Toolset Use:
         public static readonly ResourceType MP3 = new ResourceType(25014, "mp3", "Audio", "binary", name: "MP3");
+        public static readonly ResourceType FLAC = new ResourceType(25015, "flac", "Audio", "binary", name: "FLAC");
         public static readonly ResourceType TLK_XML = new ResourceType(50001, "tlk.xml", "Talk Tables", "plaintext", name: "TLK_XML");
         public static readonly ResourceType MDL_ASCII = new ResourceType(50002, "mdl.ascii", "Models", "plaintext", name: "MDL_ASCII");
         public static readonly ResourceType TwoDA_CSV = new ResourceType(50003, "2da.csv", "2D Arrays", "plaintext", name: "TwoDA_CSV");
@@ -446,6 +447,9 @@ namespace BioWare.Common
         public static readonly ResourceType DLG_JSON = new ResourceType(50030, "dlg.json", "Dialogs", "plaintext", targetMember: "DLG", name: "DLG_JSON");
         public static readonly ResourceType DLG_TWINE_HTML = new ResourceType(50031, "twine.html", "Dialogs", "plaintext", name: "DLG_TWINE_HTML");
         public static readonly ResourceType DLG_TWINE_JSON = new ResourceType(50032, "twine.json", "Dialogs", "plaintext", name: "DLG_TWINE_JSON");
+        public static readonly ResourceType UTM_XML = new ResourceType(50033, "utm.xml", "Merchants", "plaintext", targetMember: "UTM", name: "UTM_XML");
+        public static readonly ResourceType UTM_JSON = new ResourceType(50034, "utm.json", "Merchants", "plaintext", targetMember: "UTM", name: "UTM_JSON");
+        public static readonly ResourceType UTP_XML = new ResourceType(50035, "utp.xml", "Placeables", "plaintext", targetMember: "UTP", name: "UTP_XML");
+        public static readonly ResourceType UTP_JSON = new ResourceType(50036, "utp.json", "Placeables", "plaintext", targetMember: "UTP", name: "UTP_JSON");
     }
 }
-

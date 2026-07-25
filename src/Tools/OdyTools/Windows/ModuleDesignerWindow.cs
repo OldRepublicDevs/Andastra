@@ -4,8 +4,10 @@ using System.IO;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using OdyTools.Blender;
 using OdyTools.Data;
 using OdyTools.Dialogs;
+using OdyTools.Editors;
 using OdyTools.Windows;
 using BioWare;
 using BioWare.Common;
@@ -29,6 +31,10 @@ namespace OdyTools.Windows
         private GameModule _module;
         private UndoStack _undoStack;
         private List<object> _selectedInstances; // GITInstance equivalents
+        private Button _openInBlenderButton;
+        private TextBlock _blenderStatusLabel;
+        private Func<string, BlenderInfo> _detectBlender = BlenderDetection.DetectBlender;
+        private Func<BlenderInfo, int, string, string, string, bool, System.Diagnostics.Process> _launchBlender = BlenderDetection.LaunchBlenderWithIpc;
 
         public ModuleDesignerWindowUi Ui { get; private set; }
 
@@ -73,6 +79,32 @@ namespace OdyTools.Windows
             Height = 800;
 
             var panel = new StackPanel();
+            var toolbar = new StackPanel
+            {
+                Orientation = Avalonia.Layout.Orientation.Horizontal,
+                Spacing = 8,
+                Margin = new Avalonia.Thickness(8)
+            };
+
+            _openInBlenderButton = new Button
+            {
+                Name = "openInBlenderButton",
+                Content = "Open in Blender"
+            };
+            ToolTip.SetTip(_openInBlenderButton, "Launch this module in Blender using the kotorblender IPC bridge.");
+            _openInBlenderButton.Click += (s, e) => TryLaunchBlenderForCurrentModule();
+
+            _blenderStatusLabel = new TextBlock
+            {
+                Name = "blenderStatusLabel",
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                Text = "Open a module to use Blender."
+            };
+
+            toolbar.Children.Add(_openInBlenderButton);
+            toolbar.Children.Add(_blenderStatusLabel);
+            panel.Children.Add(toolbar);
+
             var titleLabel = new TextBlock
             {
                 Text = "Module Designer",
@@ -80,6 +112,10 @@ namespace OdyTools.Windows
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
             };
             panel.Children.Add(titleLabel);
+            _moduleTree = new TreeView { Name = "moduleTree" };
+            _propertiesTable = new DataGrid { Name = "propertiesTable" };
+            panel.Children.Add(_moduleTree);
+            panel.Children.Add(_propertiesTable);
             Content = panel;
         }
 
@@ -88,24 +124,39 @@ namespace OdyTools.Windows
 
         private void SetupUI()
         {
-            // Find controls from XAML
-            try
+            _moduleTree = EditorHelpers.FindControlSafe<TreeView>(this, "moduleTree");
+            _propertiesTable = EditorHelpers.FindControlSafe<DataGrid>(this, "propertiesTable");
+            _openInBlenderButton = EditorHelpers.FindControlSafe<Button>(this, "openInBlenderButton");
+            _blenderStatusLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "blenderStatusLabel");
+
+            if (_moduleTree == null)
             {
-                _moduleTree = this.FindControl<TreeView>("moduleTree");
-                _propertiesTable = this.FindControl<DataGrid>("propertiesTable");
+                _moduleTree = new TreeView { Name = "moduleTree" };
             }
-            catch
+
+            if (_propertiesTable == null)
             {
-                // XAML not loaded or controls not found - will use programmatic UI
-                _moduleTree = null;
-                _propertiesTable = null;
+                _propertiesTable = new DataGrid { Name = "propertiesTable" };
+            }
+
+            if (_openInBlenderButton == null)
+            {
+                _openInBlenderButton = new Button { Name = "openInBlenderButton", Content = "Open in Blender" };
+                _openInBlenderButton.Click += (s, e) => TryLaunchBlenderForCurrentModule();
+            }
+
+            if (_blenderStatusLabel == null)
+            {
+                _blenderStatusLabel = new TextBlock { Name = "blenderStatusLabel" };
             }
 
             // Create UI wrapper for testing
             Ui = new ModuleDesignerWindowUi
             {
                 ModuleTree = _moduleTree,
-                PropertiesTable = _propertiesTable
+                PropertiesTable = _propertiesTable,
+                OpenInBlenderButton = _openInBlenderButton,
+                BlenderStatusLabel = _blenderStatusLabel
             };
 
             // Initialize undo stack (matching Python: self.undo_stack: QUndoStack = QUndoStack(self))
@@ -119,6 +170,8 @@ namespace OdyTools.Windows
                 // Matching Python: QTimer().singleShot(33, lambda: self.open_module(mod_filepath))
                 OpenModule(_modulePath);
             }
+
+            RefreshBlenderActionState();
         }
 
         public void OpenModuleWithDialog()
@@ -174,6 +227,7 @@ namespace OdyTools.Windows
 
                 // Matching Python: self._refresh_window_title()
                 RefreshWindowTitle();
+                RefreshBlenderActionState();
 
                 // Matching Python: self.rebuild_resource_tree()
                 RebuildResourceTree();
@@ -189,6 +243,7 @@ namespace OdyTools.Windows
                 _modulePath = null;
                 _moduleName = null;
                 RefreshWindowTitle();
+                RefreshBlenderActionState();
                 RebuildResourceTree();
                 RebuildInstanceList();
             }
@@ -209,6 +264,61 @@ namespace OdyTools.Windows
 
             // Matching Python: self._refresh_window_title()
             RefreshWindowTitle();
+            RefreshBlenderActionState();
+        }
+
+        public bool TryLaunchBlenderForCurrentModule()
+        {
+            if (string.IsNullOrEmpty(_modulePath))
+            {
+                SetBlenderStatus("Open a module before launching Blender.");
+                RefreshBlenderActionState();
+                return false;
+            }
+
+            var blenderInfo = _detectBlender(null);
+            if (blenderInfo == null || !blenderInfo.IsValid)
+            {
+                SetBlenderStatus(blenderInfo?.Error ?? "No valid Blender installation found.");
+                return false;
+            }
+
+            if (!blenderInfo.HasKotorblender)
+            {
+                SetBlenderStatus(blenderInfo.Error ?? "Blender found, but kotorblender is not installed.");
+                return false;
+            }
+
+            var process = _launchBlender(blenderInfo, 7531, _installation?.Path, _modulePath, null, false);
+            if (process == null)
+            {
+                SetBlenderStatus("Failed to launch Blender.");
+                return false;
+            }
+
+            SetBlenderStatus($"Launched Blender for {Path.GetFileName(_modulePath)}.");
+            return true;
+        }
+
+        private void RefreshBlenderActionState()
+        {
+            if (_openInBlenderButton != null)
+            {
+                _openInBlenderButton.IsEnabled = !string.IsNullOrEmpty(_modulePath);
+            }
+
+            if (string.IsNullOrEmpty(_modulePath))
+            {
+                SetBlenderStatus("Open a module to use Blender.");
+            }
+        }
+
+        private void SetBlenderStatus(string status)
+        {
+            if (_blenderStatusLabel != null)
+            {
+                _blenderStatusLabel.Text = status ?? "";
+            }
         }
 
         public void SaveGit()
@@ -418,11 +528,29 @@ namespace OdyTools.Windows
             }
             RefreshWindowTitle();
         }
+
+        internal void SetBlenderServicesForTests(
+            Func<string, BlenderInfo> detectBlender,
+            Func<BlenderInfo, int, string, string, string, bool, System.Diagnostics.Process> launchBlender)
+        {
+            _detectBlender = detectBlender ?? BlenderDetection.DetectBlender;
+            _launchBlender = launchBlender ?? BlenderDetection.LaunchBlenderWithIpc;
+        }
+
+        internal void SetModulePathForTests(string modulePath)
+        {
+            _modulePath = modulePath;
+            _moduleName = string.IsNullOrEmpty(modulePath) ? null : Path.GetFileNameWithoutExtension(modulePath);
+            RefreshWindowTitle();
+            RefreshBlenderActionState();
+        }
     }
 
     public class ModuleDesignerWindowUi
     {
         public TreeView ModuleTree { get; set; }
         public DataGrid PropertiesTable { get; set; }
+        public Button OpenInBlenderButton { get; set; }
+        public TextBlock BlenderStatusLabel { get; set; }
     }
 }

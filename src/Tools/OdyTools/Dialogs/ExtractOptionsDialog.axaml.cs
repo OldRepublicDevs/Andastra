@@ -11,6 +11,8 @@ namespace OdyTools.Dialogs
         private bool _mdlDecompile;
         private bool _mdlExtractTextures;
 
+        public bool? Result { get; private set; }
+
         // Public parameterless constructor for XAML
         public ExtractOptionsDialog() : this(null)
         {
@@ -56,8 +58,8 @@ namespace OdyTools.Dialogs
             _cancelButton = new Button { Content = "Cancel" };
 
             // Connect events
-            _okButton.Click += (s, e) => { UpdateValues(); Close(); };
-            _cancelButton.Click += (s, e) => Close();
+            _okButton.Click += (s, e) => { UpdateValues(); Result = true; Close(); };
+            _cancelButton.Click += (s, e) => { Result = false; Close(); };
             _tpcDecompileCheckbox.IsCheckedChanged += (s, e) => _tpcDecompile = _tpcDecompileCheckbox.IsChecked ?? false;
             _tpcTxiCheckbox.IsCheckedChanged += (s, e) => _tpcExtractTxi = _tpcTxiCheckbox.IsChecked ?? false;
             _mdlDecompileCheckbox.IsCheckedChanged += (s, e) => _mdlDecompile = _mdlDecompileCheckbox.IsChecked ?? false;
@@ -137,11 +139,11 @@ namespace OdyTools.Dialogs
 
             if (_okButton != null)
             {
-                _okButton.Click += (s, e) => { UpdateValues(); Close(); };
+                _okButton.Click += (s, e) => { UpdateValues(); Result = true; Close(); };
             }
             if (_cancelButton != null)
             {
-                _cancelButton.Click += (s, e) => Close();
+                _cancelButton.Click += (s, e) => { Result = false; Close(); };
             }
 
             // Sync checkbox states with properties

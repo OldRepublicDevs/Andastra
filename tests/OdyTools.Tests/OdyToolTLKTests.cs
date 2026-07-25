@@ -76,6 +76,42 @@ namespace OdyTools.Tests
         }
 
         [Test]
+        public async Task OdyToolTLK_SelectAndEditEntry_BuildsUpdatedTextAndSound()
+        {
+            using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+            {
+                await session.Dispatch(() =>
+                {
+                    var tlk = new TLK(Language.English);
+                    tlk.Entries.Add(new TLKEntry("Old line", new ResRef("old_vo")));
+                    tlk.Entries.Add(new TLKEntry("Keep line", new ResRef("keep_vo")));
+                    byte[] origData = TLKAuto.BytesTlk(tlk, ResourceType.TLK);
+
+                    var editor = new OdyToolTLK(null, null);
+                    editor.Load("dialog.tlk", "dialog", ResourceType.TLK, origData);
+
+                    Assert.That(editor.SelectEntryForTest(0), Is.True);
+                    Assert.That(editor.TextEditorEnabledForTest, Is.True);
+                    Assert.That(editor.SoundEditorEnabledForTest, Is.True);
+                    Assert.That(editor.IsDirty, Is.False);
+
+                    Assert.That(editor.EditSelectedEntryForTest("Updated line", "new_vo"), Is.True);
+
+                    Assert.That(editor.SelectedEntryTextForTest, Is.EqualTo("Updated line"));
+                    Assert.That(editor.SelectedEntrySoundForTest, Is.EqualTo("new_vo"));
+                    Assert.That(editor.IsDirty, Is.True);
+
+                    var rebuilt = TLKAuto.ReadTlk(editor.Build().Item1);
+                    Assert.That(rebuilt.Entries.Count, Is.EqualTo(2));
+                    Assert.That(rebuilt.Entries[0].Text, Is.EqualTo("Updated line"));
+                    Assert.That(rebuilt.Entries[0].Voiceover.ToString(), Is.EqualTo("new_vo"));
+                    Assert.That(rebuilt.Entries[1].Text, Is.EqualTo("Keep line"));
+                    Assert.That(rebuilt.Entries[1].Voiceover.ToString(), Is.EqualTo("keep_vo"));
+                }, CancellationToken.None);
+            }
+        }
+
+        [Test]
         public async Task OdyToolTLK_ChangeLanguage_PersistsInBuild()
         {
             using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
@@ -114,6 +150,57 @@ namespace OdyTools.Tests
                     editor.DoFilter("");
                     var result = editor.Build();
                     Assert.That(result.Item1, Is.Not.Null);
+                }, CancellationToken.None);
+            }
+        }
+
+        [Test]
+        public async Task OdyToolTLK_SearchAndJumpPanels_StartHiddenAndToggleLikeHolocron()
+        {
+            using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+            {
+                await session.Dispatch(() =>
+                {
+                    var editor = new OdyToolTLK(null, null);
+
+                    Assert.That(editor.SearchBoxVisibleForTest, Is.False);
+                    Assert.That(editor.JumpBoxVisibleForTest, Is.False);
+
+                    editor.ToggleFilterBox();
+                    editor.ToggleGotoBox();
+
+                    Assert.That(editor.SearchBoxVisibleForTest, Is.True);
+                    Assert.That(editor.JumpBoxVisibleForTest, Is.True);
+                }, CancellationToken.None);
+            }
+        }
+
+        [Test]
+        public async Task OdyToolTLK_JumpToEntry_RespectsActiveFilterLikeHolocron()
+        {
+            using (var session = HeadlessUnitTestSession.StartNew(typeof(TestApp)))
+            {
+                await session.Dispatch(() =>
+                {
+                    var tlk = new TLK(Language.English);
+                    tlk.Entries.Add(new TLKEntry("Alpha line", new ResRef("alpha_vo")));
+                    tlk.Entries.Add(new TLKEntry("Beta line", new ResRef("beta_vo")));
+                    tlk.Entries.Add(new TLKEntry("Gamma line", new ResRef("gamma_vo")));
+
+                    var editor = new OdyToolTLK(null, null);
+                    editor.Load("dialog.tlk", "dialog", ResourceType.TLK, TLKAuto.BytesTlk(tlk, ResourceType.TLK));
+
+                    Assert.That(editor.SelectEntryForTest(0), Is.True);
+                    editor.DoFilter("Gamma");
+
+                    bool jumpedHidden = editor.JumpToEntryForTest(1);
+
+                    Assert.That(jumpedHidden, Is.False, "Filtered-out source rows should not become selected.");
+
+                    bool jumpedVisible = editor.JumpToEntryForTest(2);
+
+                    Assert.That(jumpedVisible, Is.True);
+                    Assert.That(editor.SelectedEntryTextForTest, Is.EqualTo("Gamma line"));
                 }, CancellationToken.None);
             }
         }

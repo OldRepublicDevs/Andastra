@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using OdyTools.Blender;
 using OdyTools.Data;
 using OdyTools.Dialogs;
 using DuplicateRoomsCommand = OdyTools.Windows.DuplicateRoomsCommand;
@@ -15,6 +16,8 @@ namespace OdyTools.Windows
         private OdyInstallation _installation;
         private string _filepath;
         private List<Kit> _kits = new List<Kit>();
+        private Func<string, BlenderInfo> _detectBlender = BlenderDetection.DetectBlender;
+        private Func<BlenderInfo, int, string, string, string, bool, System.Diagnostics.Process> _launchBlender = BlenderDetection.LaunchBlenderWithIpc;
 
 
         public IndoorBuilderWindow(Window parent = null, OdyInstallation installation = null)
@@ -168,6 +171,8 @@ namespace OdyTools.Windows
             Ui.ActionOpen = Open;
             Ui.ActionOpenMod = OpenMod;
             Ui.ActionBuild = BuildMapFromUi;
+            Ui.ActionOpenInBlender = () => TryLaunchBlenderForCurrentMap();
+            RefreshBlenderActionState();
         }
 
         private void LoadKitsFromDefaultPath()
@@ -222,6 +227,10 @@ namespace OdyTools.Windows
 
                 Map.Build(_installation, _kits, outputPath);
                 Ui.LastErrorMessage = null;
+                _filepath = outputPath;
+                RefreshWindowTitle();
+                SetBlenderStatus(string.Empty);
+                RefreshBlenderActionState();
                 return File.Exists(outputPath);
             }
             catch (Exception ex)
@@ -279,6 +288,8 @@ namespace OdyTools.Windows
             _filepath = path;
             UndoStack.SetClean();
             RefreshWindowTitle();
+            SetBlenderStatus(string.Empty);
+            RefreshBlenderActionState();
         }
 
         public bool OpenFromPath(string path)
@@ -299,6 +310,8 @@ namespace OdyTools.Windows
                 UndoStack.Clear();
                 UndoStack.SetClean();
                 RefreshWindowTitle();
+                SetBlenderStatus(string.Empty);
+                RefreshBlenderActionState();
                 Ui.LastMissingRooms = missing;
                 Ui.LastErrorMessage = null;
                 return true;
@@ -342,6 +355,8 @@ namespace OdyTools.Windows
                 UndoStack.Clear();
                 UndoStack.SetClean();
                 RefreshWindowTitle();
+                SetBlenderStatus(string.Empty);
+                RefreshBlenderActionState();
                 Ui.LastMissingRooms = missing;
                 Ui.LastErrorMessage = null;
                 return true;
@@ -351,6 +366,69 @@ namespace OdyTools.Windows
                 Ui.LastErrorMessage = ex.Message;
                 return false;
             }
+        }
+
+        public bool TryLaunchBlenderForCurrentMap()
+        {
+            if (string.IsNullOrEmpty(_filepath))
+            {
+                SetBlenderStatus("Save or open an indoor map before launching Blender.");
+                RefreshBlenderActionState();
+                return false;
+            }
+
+            var blenderInfo = _detectBlender(null);
+            if (blenderInfo == null || !blenderInfo.IsValid)
+            {
+                SetBlenderStatus(blenderInfo?.Error ?? "No valid Blender installation found.");
+                return false;
+            }
+
+            if (!blenderInfo.HasKotorblender)
+            {
+                SetBlenderStatus(blenderInfo.Error ?? "Blender found, but kotorblender is not installed.");
+                return false;
+            }
+
+            var process = _launchBlender(blenderInfo, 7531, _installation?.Path, _filepath, null, false);
+            if (process == null)
+            {
+                SetBlenderStatus("Failed to launch Blender.");
+                return false;
+            }
+
+            SetBlenderStatus($"Launched Blender for {Path.GetFileName(_filepath)}.");
+            return true;
+        }
+
+        private void RefreshBlenderActionState()
+        {
+            if (Ui == null)
+            {
+                return;
+            }
+
+            Ui.ActionOpenInBlenderEnabled = !string.IsNullOrEmpty(_filepath);
+            if (string.IsNullOrEmpty(_filepath))
+            {
+                SetBlenderStatus("Save or open an indoor map to use Blender.");
+            }
+        }
+
+        private void SetBlenderStatus(string status)
+        {
+            if (Ui != null)
+            {
+                Ui.BlenderStatusText = status ?? string.Empty;
+            }
+        }
+
+        internal void SetBlenderServicesForTests(
+            Func<string, BlenderInfo> detectBlender,
+            Func<BlenderInfo, int, string, string, string, bool, System.Diagnostics.Process> launchBlender)
+        {
+            _detectBlender = detectBlender ?? BlenderDetection.DetectBlender;
+            _launchBlender = launchBlender ?? BlenderDetection.LaunchBlenderWithIpc;
         }
 
         public void OpenMod()
@@ -885,6 +963,12 @@ namespace OdyTools.Windows
         public Action ActionOpenMod { get; set; }
 
         public Action ActionBuild { get; set; }
+
+        public Action ActionOpenInBlender { get; set; }
+
+        public bool ActionOpenInBlenderEnabled { get; set; }
+
+        public string BlenderStatusText { get; set; }
 
         public string SaveAsPathOverride { get; set; }
 

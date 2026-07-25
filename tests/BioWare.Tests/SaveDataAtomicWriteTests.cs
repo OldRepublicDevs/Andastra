@@ -101,8 +101,51 @@ namespace BioWare.Tests
                 Assert.That(loaded.AreaName, Is.EqualTo("danm13"));
                 Assert.That(loaded.LastModule, Is.EqualTo("ebo_m12aa"));
                 Assert.That(loaded.SavegameName, Is.EqualTo("Atomic Save Test"));
+                Assert.That(loaded.TimePlayed, Is.EqualTo(1234));
                 Assert.That(loaded.CheatUsed, Is.True);
                 Assert.That(loaded.PcName, Is.EqualTo("Revan"));
+            }
+            finally
+            {
+                TryDeleteDirectory(tempDir);
+            }
+        }
+
+        [Test]
+        public void PartyTable_SaveLoad_RoundtripPersistsResourceFields()
+        {
+            string tempDir = CreateTempDirectory();
+            try
+            {
+                var partyTable = new PartyTable(tempDir)
+                {
+                    Gold = 1000,
+                    XpPool = 5000,
+                    ItemComponents = 3,
+                    ItemChemicals = 4,
+                    CheatUsed = true,
+                    SoloMode = true
+                };
+                partyTable.Members.Add(new PartyMemberEntry
+                {
+                    Index = -1,
+                    IsLeader = true
+                });
+
+                partyTable.Save();
+
+                var loaded = new PartyTable(tempDir);
+                loaded.Load();
+
+                Assert.That(loaded.Gold, Is.EqualTo(1000));
+                Assert.That(loaded.XpPool, Is.EqualTo(5000));
+                Assert.That(loaded.ItemComponents, Is.EqualTo(3));
+                Assert.That(loaded.ItemChemicals, Is.EqualTo(4));
+                Assert.That(loaded.CheatUsed, Is.True);
+                Assert.That(loaded.SoloMode, Is.True);
+                Assert.That(loaded.Members, Has.Count.EqualTo(1));
+                Assert.That(loaded.Members[0].IsLeader, Is.True);
+                Assert.That(loaded.Members[0].Index, Is.EqualTo(-1));
             }
             finally
             {

@@ -108,6 +108,11 @@
           Name="actionFindStrrefNext"
           Header="Find Strref _Next"
           ToolTip.Tip="Jump to the next row matching the strref from Find. Shortcut: F3" />
+        <Separator />
+        <MenuItem
+          Name="actionFindStrrefInstallation"
+          Header="Find StrRef _References in Installation..."
+          ToolTip.Tip="Search the selected game installation for resources that reference the selected soundset strref." />
       </MenuItem>
     </Menu>
 
@@ -148,8 +153,8 @@
           VerticalAlignment="Center"
           FontSize="12"
           Foreground="#3C4043"
-          Text="27 sounds"
-          ToolTip.Tip="Total number of sound event slots in this soundset (KotOR uses 27)." />
+          Text="28 sounds"
+          ToolTip.Tip="Total number of sound event slots in this soundset (KotOR uses 28)." />
       </Grid>
     </Border>
 
@@ -172,7 +177,7 @@
             Background="#E8EAED"
             BorderBrush="#D7DBE6"
             BorderThickness="0,0,0,1">
-            <Grid ColumnDefinitions="130,80,*,110,Auto" RowDefinitions="Auto">
+            <Grid ColumnDefinitions="130,80,*,110,Auto,Auto" RowDefinitions="Auto">
               <TextBlock
                 Grid.Column="0"
                 VerticalAlignment="Center"
@@ -207,6 +212,13 @@
                 FontWeight="SemiBold"
                 Text="Play"
                 ToolTip.Tip="Play the WAV for this entry. Requires talk table and game installation." />
+              <TextBlock
+                Grid.Column="5"
+                Margin="8,0,0,0"
+                VerticalAlignment="Center"
+                FontWeight="SemiBold"
+                Text="Locate"
+                ToolTip.Tip="Show locations for the WAV linked to this entry. Requires talk table and game installation." />
             </Grid>
           </Border>
           <ScrollViewer
@@ -297,7 +309,7 @@
         Name="statusText"
         FontSize="12"
         Foreground="#3C4043"
-        Text="27 sounds | dialog.tlk"
+        Text="28 sounds | dialog.tlk"
         ToolTip.Tip="Summary: number of sound events and the current talk table file. The soundset stores only strrefs; actual WAVs are resolved at runtime from the TLK." />
     </Border>
   </DockPanel>

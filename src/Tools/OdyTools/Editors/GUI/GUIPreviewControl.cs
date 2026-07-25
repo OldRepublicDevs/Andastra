@@ -83,8 +83,9 @@ namespace OdyTools.Editors.GUI
         {
             var node = SelectedNode;
             if (node == null) return null;
-            OdyToolGUIHelpers.GetExtentValues(node, out int left, out int top, out int width, out int height);
-            double x = left * Zoom, y = top * Zoom, w = width * Zoom, h = height * Zoom;
+            var bounds = GetAbsoluteBounds(node);
+            if (!bounds.HasValue) return null;
+            double x = bounds.Value.x * Zoom, y = bounds.Value.y * Zoom, w = bounds.Value.width * Zoom, h = bounds.Value.height * Zoom;
             double hs = Math.Max(4, 10 / Zoom);
             if (p.X >= x - hs / 2 && p.X <= x - hs / 2 + hs && p.Y >= y + h / 2 - hs / 2 && p.Y <= y + h / 2 + hs / 2) return "left";
             if (p.X >= x + w - hs / 2 && p.X <= x + w + hs / 2 && p.Y >= y + h / 2 - hs / 2 && p.Y <= y + h / 2 + hs / 2) return "right";
@@ -151,30 +152,46 @@ namespace OdyTools.Editors.GUI
 
         private GFFStruct HitTestNode(Point p)
         {
-            var list = new List<(GFFStruct node, double depth)>();
-            CollectNodes(Root, 0, list);
+            var list = new List<(GFFStruct node, double x, double y, double width, double height, double depth)>();
+            CollectNodes(Root, 0, 0, 0, list);
             for (int i = list.Count - 1; i >= 0; i--)
             {
-                var node = list[i].node;
-                OdyToolGUIHelpers.GetExtentValues(node, out int left, out int top, out int width, out int height);
-                double x = left * Zoom, y = top * Zoom, w = width * Zoom, h = height * Zoom;
+                var item = list[i];
+                var node = item.node;
+                double x = item.x * Zoom, y = item.y * Zoom, w = item.width * Zoom, h = item.height * Zoom;
                 if (p.X >= x && p.X <= x + w && p.Y >= y && p.Y <= y + h)
                     return node;
             }
             return null;
         }
 
-        private void CollectNodes(GFFStruct node, int depth, List<(GFFStruct, double)> outList)
+        private void CollectNodes(GFFStruct node, double offsetX, double offsetY, int depth, List<(GFFStruct node, double x, double y, double width, double height, double depth)> outList)
         {
             if (node == null) return;
-            outList.Add((node, depth));
+            OdyToolGUIHelpers.GetExtentValues(node, out int left, out int top, out int width, out int height);
+            double x = offsetX + left;
+            double y = offsetY + top;
+            outList.Add((node, x, y, width, height, depth));
             var children = OdyToolGUIHelpers.GetChildren(node);
             if (children != null)
-                foreach (var c in children) CollectNodes(c, depth + 1, outList);
+                foreach (var c in children) CollectNodes(c, x, y, depth + 1, outList);
             var proto = OdyToolGUIHelpers.GetProtoItem(node);
-            if (proto != null) CollectNodes(proto, depth + 1, outList);
+            if (proto != null) CollectNodes(proto, x, y, depth + 1, outList);
             var scroll = OdyToolGUIHelpers.GetScrollBar(node);
-            if (scroll != null) CollectNodes(scroll, depth + 1, outList);
+            if (scroll != null) CollectNodes(scroll, x, y, depth + 1, outList);
+        }
+
+        private (double x, double y, double width, double height)? GetAbsoluteBounds(GFFStruct target)
+        {
+            if (target == null) return null;
+            var list = new List<(GFFStruct node, double x, double y, double width, double height, double depth)>();
+            CollectNodes(Root, 0, 0, 0, list);
+            foreach (var item in list)
+            {
+                if (item.node == target)
+                    return (item.x, item.y, item.width, item.height);
+            }
+            return null;
         }
 
         public override void Render(DrawingContext context)
@@ -224,8 +241,9 @@ namespace OdyTools.Editors.GUI
 
         private void RenderSelectionHandles(DrawingContext context, GFFStruct node, double zoom)
         {
-            OdyToolGUIHelpers.GetExtentValues(node, out int left, out int top, out int width, out int height);
-            double x = left * zoom, y = top * zoom, w = width * zoom, h = height * zoom;
+            var bounds = GetAbsoluteBounds(node);
+            if (!bounds.HasValue) return;
+            double x = bounds.Value.x * zoom, y = bounds.Value.y * zoom, w = bounds.Value.width * zoom, h = bounds.Value.height * zoom;
             var pen = new Pen(Brushes.Lime, 2);
             context.DrawRectangle(null, pen, new Rect(x, y, w, h));
             double hs = Math.Max(4, 10 / zoom);

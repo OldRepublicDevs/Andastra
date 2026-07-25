@@ -42,6 +42,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="$(_OdyToolsRoot)\Editors\StandaloneEditorRouting.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Editors\Standalone\StandaloneInstallationBar.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\AutosaveService.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\AtomicFileWriter.cs" />
     <Compile Include="$(_OdyToolsRoot)\Utils\BackupRotator.cs" />

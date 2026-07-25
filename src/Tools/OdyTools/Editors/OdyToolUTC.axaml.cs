@@ -57,6 +57,7 @@ namespace OdyTools.Editors
         private OdyToolUTCSettings _settings;
         private static GlobalSettings _globalSettings;
         private bool _appearancePreviewHooked;
+        internal int PreviewRefreshCount { get; private set; }
 
         // UI Controls - Basic
         private LocalizedStringEdit _firstNameEdit;
@@ -141,8 +142,8 @@ namespace OdyTools.Editors
         public OdyToolUTC() : this(null, null) { }
         public OdyToolUTC(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTC", "creature",
-                new[] { ResourceType.UTC, ResourceType.BTC, ResourceType.BIC },
-                new[] { ResourceType.UTC, ResourceType.BTC, ResourceType.BIC },
+                new[] { ResourceType.UTC, ResourceType.BTC, ResourceType.BIC, ResourceType.UTC_XML },
+                new[] { ResourceType.UTC, ResourceType.BTC, ResourceType.BIC, ResourceType.UTC_XML },
                 installation)
         {
             _utc = new UTC();
@@ -767,11 +768,54 @@ namespace OdyTools.Editors
             if (result == true)
             {
                 ApplyInstallationFromSettings(_settings);
-                if (_previewRenderer != null) _previewRenderer.Installation = _installation;
-                RefreshCreaturePreview();
-                PopulateScriptComboBoxes();
-                UpdateStatusBar();
             }
+        }
+
+        protected override void OnInstallationChanged()
+        {
+            if (_previewRenderer != null)
+            {
+                _previewRenderer.Installation = _installation;
+            }
+
+            if (_firstNameEdit != null)
+            {
+                _firstNameEdit.SetInstallation(_installation);
+            }
+            if (_lastNameEdit != null)
+            {
+                _lastNameEdit.SetInstallation(_installation);
+            }
+
+            ClearInstallationBackedChoices();
+            if (_utc != null)
+            {
+                LoadUTC(_utc);
+            }
+            else
+            {
+                PopulateScriptComboBoxes();
+                PopulateConversationComboBox();
+                PortraitChanged();
+                RefreshCreaturePreview();
+            }
+
+            UpdateStatusBar();
+        }
+
+        private void ClearInstallationBackedChoices()
+        {
+            if (_scriptFields != null)
+            {
+                foreach (var kv in _scriptFields)
+                {
+                    kv.Value?.Items.Clear();
+                }
+            }
+
+            _conversationEdit?.Items.Clear();
+            _featList?.Items.Clear();
+            _powerList?.Items.Clear();
         }
 
         private void SetupMenuHandlers()
@@ -842,7 +886,7 @@ namespace OdyTools.Editors
             {
                 try
                 {
-                    var gff = GFF.FromBytes(data);
+                    var gff = GFFAuto.ReadGff(data, fileFormat: _restype ?? ResourceType.UTC);
                     _utc = UTCHelpers.ConstructUtc(gff);
                     LoadUTC(_utc);
                 }
@@ -965,6 +1009,33 @@ namespace OdyTools.Editors
         /// Gets the Comments Expander for testing.
         /// </summary>
         public Expander CommentsExpander => _commentsExpander;
+
+        public bool HasStructuredEditorSurface => _tagEdit != null && _resrefEdit != null && _strengthSpin != null && _scriptFields != null;
+        public LocalizedStringEdit FirstNameEdit => _firstNameEdit;
+        public LocalizedStringEdit LastNameEdit => _lastNameEdit;
+        public TextBox TagEdit => _tagEdit;
+        public Button TagGenerateBtn => _tagGenerateBtn;
+        public TextBox ResrefEdit => _resrefEdit;
+        public ComboBox AppearanceSelect => _appearanceSelect;
+        public ComboBox ConversationEdit => _conversationEdit;
+        public Slider AlignmentSlider => _alignmentSlider;
+        public CheckBox PlotCheckbox => _plotCheckbox;
+        public CheckBox NoPermDeathCheckbox => _noPermDeathCheckbox;
+        public CheckBox Min1HpCheckbox => _min1HpCheckbox;
+        public CheckBox DisarmableCheckbox => _disarmableCheckbox;
+        public NumericUpDown StrengthSpin => _strengthSpin;
+        public NumericUpDown DexteritySpin => _dexteritySpin;
+        public NumericUpDown ConstitutionSpin => _constitutionSpin;
+        public NumericUpDown IntelligenceSpin => _intelligenceSpin;
+        public NumericUpDown WisdomSpin => _wisdomSpin;
+        public NumericUpDown CharismaSpin => _charismaSpin;
+        public NumericUpDown ArmorClassSpin => _armorClassSpin;
+        public NumericUpDown BaseHpSpin => _baseHpSpin;
+        public NumericUpDown CurrentHpSpin => _currentHpSpin;
+        public NumericUpDown MaxHpSpin => _maxHpSpin;
+        public NumericUpDown Class1LevelSpin => _class1LevelSpin;
+        public Dictionary<string, ComboBox> ScriptFields => _scriptFields;
+        public TextBox CommentsEdit => _commentsEdit;
 
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
@@ -1256,6 +1327,8 @@ namespace OdyTools.Editors
 
         private void RefreshCreaturePreview()
         {
+            PreviewRefreshCount++;
+
             if (_previewRenderer == null)
             {
                 return;
@@ -1314,10 +1387,10 @@ namespace OdyTools.Editors
             utc.FirstName = _firstNameEdit?.GetLocString() ?? utc.FirstName ?? LocalizedString.FromInvalid();
             utc.LastName = _lastNameEdit?.GetLocString() ?? utc.LastName ?? LocalizedString.FromInvalid();
             utc.Tag = _tagEdit?.Text ?? "";
-            utc.ResRef = new ResRef(_resrefEdit?.Text ?? "");
+            utc.ResRef = ResRefFromText(_resrefEdit?.Text);
             utc.AppearanceId = _appearanceSelect?.SelectedIndex ?? 0;
             utc.SoundsetId = _soundsetSelect?.SelectedIndex ?? 0;
-            utc.Conversation = new ResRef(_conversationEdit?.Text ?? "");
+            utc.Conversation = ResRefFromText(_conversationEdit?.Text);
             utc.PortraitId = _portraitSelect?.SelectedIndex ?? 0;
             utc.Alignment = (int)(_alignmentSlider?.Value ?? 50);
 
@@ -1420,31 +1493,31 @@ namespace OdyTools.Editors
 
             // Scripts - read from UI controls
             if (_scriptFields.ContainsKey("OnBlocked") && _scriptFields["OnBlocked"] != null)
-                utc.OnBlocked = new ResRef(_scriptFields["OnBlocked"].Text);
+                utc.OnBlocked = ResRefFromText(_scriptFields["OnBlocked"].Text);
             if (_scriptFields.ContainsKey("OnAttacked") && _scriptFields["OnAttacked"] != null)
-                utc.OnAttacked = new ResRef(_scriptFields["OnAttacked"].Text);
+                utc.OnAttacked = ResRefFromText(_scriptFields["OnAttacked"].Text);
             if (_scriptFields.ContainsKey("OnNotice") && _scriptFields["OnNotice"] != null)
-                utc.OnNotice = new ResRef(_scriptFields["OnNotice"].Text);
+                utc.OnNotice = ResRefFromText(_scriptFields["OnNotice"].Text);
             if (_scriptFields.ContainsKey("OnDialog") && _scriptFields["OnDialog"] != null)
-                utc.OnDialog = new ResRef(_scriptFields["OnDialog"].Text);
+                utc.OnDialog = ResRefFromText(_scriptFields["OnDialog"].Text);
             if (_scriptFields.ContainsKey("OnDamaged") && _scriptFields["OnDamaged"] != null)
-                utc.OnDamaged = new ResRef(_scriptFields["OnDamaged"].Text);
+                utc.OnDamaged = ResRefFromText(_scriptFields["OnDamaged"].Text);
             if (_scriptFields.ContainsKey("OnDisturbed") && _scriptFields["OnDisturbed"] != null)
-                utc.OnDisturbed = new ResRef(_scriptFields["OnDisturbed"].Text);
+                utc.OnDisturbed = ResRefFromText(_scriptFields["OnDisturbed"].Text);
             if (_scriptFields.ContainsKey("OnDeath") && _scriptFields["OnDeath"] != null)
-                utc.OnDeath = new ResRef(_scriptFields["OnDeath"].Text);
+                utc.OnDeath = ResRefFromText(_scriptFields["OnDeath"].Text);
             if (_scriptFields.ContainsKey("OnEndRound") && _scriptFields["OnEndRound"] != null)
-                utc.OnEndRound = new ResRef(_scriptFields["OnEndRound"].Text);
+                utc.OnEndRound = ResRefFromText(_scriptFields["OnEndRound"].Text);
             if (_scriptFields.ContainsKey("OnEndDialog") && _scriptFields["OnEndDialog"] != null)
-                utc.OnEndDialog = new ResRef(_scriptFields["OnEndDialog"].Text);
+                utc.OnEndDialog = ResRefFromText(_scriptFields["OnEndDialog"].Text);
             if (_scriptFields.ContainsKey("OnHeartbeat") && _scriptFields["OnHeartbeat"] != null)
-                utc.OnHeartbeat = new ResRef(_scriptFields["OnHeartbeat"].Text);
+                utc.OnHeartbeat = ResRefFromText(_scriptFields["OnHeartbeat"].Text);
             if (_scriptFields.ContainsKey("OnSpawn") && _scriptFields["OnSpawn"] != null)
-                utc.OnSpawn = new ResRef(_scriptFields["OnSpawn"].Text);
+                utc.OnSpawn = ResRefFromText(_scriptFields["OnSpawn"].Text);
             if (_scriptFields.ContainsKey("OnSpell") && _scriptFields["OnSpell"] != null)
-                utc.OnSpell = new ResRef(_scriptFields["OnSpell"].Text);
+                utc.OnSpell = ResRefFromText(_scriptFields["OnSpell"].Text);
             if (_scriptFields.ContainsKey("OnUserDefined") && _scriptFields["OnUserDefined"] != null)
-                utc.OnUserDefined = new ResRef(_scriptFields["OnUserDefined"].Text);
+                utc.OnUserDefined = ResRefFromText(_scriptFields["OnUserDefined"].Text);
 
             // Comments - read from UI controls
             utc.Comment = _commentsEdit?.Text ?? "";
@@ -1452,8 +1525,25 @@ namespace OdyTools.Editors
             // Matching Python: gff: GFF = dismantle_utc(utc); write_gff(gff, data)
             Game game = _installation?.Game ?? Game.K2;
             var gff = BioWare.Resource.Formats.GFF.Generics.UTC.UTCHelpers.DismantleUtc(utc, game);
-            byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTC);
+            ResourceType outputType = _restype == ResourceType.UTC_XML
+                ? ResourceType.UTC_XML
+                : (_restype == ResourceType.BTC ? ResourceType.BTC : (_restype == ResourceType.BIC ? ResourceType.BIC : ResourceType.UTC));
+            if (outputType == ResourceType.BTC)
+            {
+                gff.Content = GFFContent.BTC;
+            }
+            else if (outputType == ResourceType.BIC)
+            {
+                gff.Content = GFFContent.BIC;
+            }
+            byte[] data = GFFAuto.BytesGff(gff, outputType);
             return Tuple.Create(data, new byte[0]);
+        }
+
+        private static ResRef ResRefFromText(string text)
+        {
+            string value = (text ?? string.Empty).Trim();
+            return !string.IsNullOrEmpty(value) ? new ResRef(value) : ResRef.FromBlank();
         }
 
         // Matching Python: deepcopy(self._utc)
@@ -1598,6 +1688,7 @@ namespace OdyTools.Editors
             {
                 _tagEdit.Text = _resrefEdit.Text;
             }
+            MarkDocumentDirty();
         }
 
         private void PortraitChanged()
@@ -1946,9 +2037,8 @@ namespace OdyTools.Editors
 
         private void OpenInventory()
         {
-            if (_installation == null || _utc == null)
+            if (_utc == null)
             {
-                System.Console.WriteLine("Installation or UTC is not set");
                 return;
             }
 
@@ -1956,119 +2046,153 @@ namespace OdyTools.Editors
             bool droid = _raceSelect?.SelectedIndex == 0;
 
             // Load capsules to search
-            List<Capsule> capsulesToSearch = new List<Capsule>();
+            List<Capsule> capsulesToSearch = BuildInventoryCapsules();
 
-            if (_filepath != null)
-            {
-                if (BioWare.Tools.FileHelpers.IsSavFile(_filepath))
-                {
-                    // Search capsules inside the .sav outer capsule
-                    try
-                    {
-                        var outerCapsule = new Capsule(_filepath);
-                        foreach (var res in outerCapsule)
-                        {
-                            // Check if the resource name (resname + extension) is a capsule file
-                            string resourceFilename = $"{res.ResName}.{res.ResType.Extension}";
-                            if (BioWare.Tools.FileHelpers.IsCapsuleFile(resourceFilename))
-                            {
-                                // The resource is inside a capsule (since we're iterating through a capsule)
-                                // Construct the nested capsule path: outerCapsulePath/resourceFilename
-                                string nestedCapsulePath = System.IO.Path.Combine(_filepath, resourceFilename);
-                                try
-                                {
-                                    capsulesToSearch.Add(new Capsule(nestedCapsulePath));
-                                }
-                                catch
-                                {
-                                    // Skip invalid capsules
-                                }
-                            }
-                        }
-                    }
-                    catch
-                    {
-                        // Failed to load outer capsule
-                    }
-                }
-                else if (BioWare.Tools.FileHelpers.IsCapsuleFile(_filepath))
-                {
-                    // Get capsules matching the module
-                    // This finds all capsules in the module that match the current file's module
-                    try
-                    {
-                        string root = null;
-                        if (!string.IsNullOrEmpty(_filepath))
-                        {
-                            // Extract root from filepath (similar to Module.filepath_to_root)
-                            string filename = System.IO.Path.GetFileName(_filepath);
-                            if (filename.Contains("_"))
-                            {
-                                root = filename.Substring(0, filename.IndexOf('_'));
-                            }
-                            else if (filename.Contains("."))
-                            {
-                                root = filename.Substring(0, filename.IndexOf('.'));
-                            }
-                        }
-
-                        if (root != null)
-                        {
-                            string caseRoot = root.ToLowerInvariant();
-                            var moduleNames = _installation.ModuleNames();
-                            string filepathFilename = System.IO.Path.GetFileName(_filepath) ?? "";
-
-                            foreach (var kvp in moduleNames)
-                            {
-                                string moduleFilename = kvp.Key;
-                                string moduleFilenameLower = moduleFilename.ToLowerInvariant();
-
-                                // Check if root is contained in module filename and it's not the same as the current filepath
-                                if (moduleFilenameLower.Contains(caseRoot) && moduleFilename != filepathFilename)
-                                {
-                                    string fullModulePath = System.IO.Path.Combine(_installation.ModulePath(), moduleFilename);
-                                    if (System.IO.File.Exists(fullModulePath))
-                                    {
-                                        try
-                                        {
-                                            var capsule = new Capsule(fullModulePath, createIfNotExist: false);
-                                            capsulesToSearch.Add(capsule);
-                                        }
-                                        catch
-                                        {
-                                            // Skip invalid capsule files
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    catch
-                    {
-                        // Failed to get module capsules - continue with empty list
-                    }
-                }
-            }
-
-            // Create inventory dialog
-            var inventoryDialog = new InventoryDialog(
-                this,
-                _installation,
-                capsulesToSearch,
-                new List<string>(), // folders - not used in UTC editor
-                _utc.Inventory ?? new List<InventoryItem>(),
-                _utc.Equipment ?? new Dictionary<EquipmentSlot, InventoryItem>(),
-                droid: droid);
+            var inventoryDialog = CreateInventoryDialog(capsulesToSearch, droid);
 
             // Show dialog and update if OK was clicked
             bool result = inventoryDialog.ShowDialog();
             if (result)
             {
-                _utc.Inventory = inventoryDialog.Inventory;
-                _utc.Equipment = inventoryDialog.Equipment;
-                UpdateItemCount();
-                // Note: update3dPreview() would be called here if 3D preview is implemented
+                ApplyInventoryResult(inventoryDialog.Inventory, inventoryDialog.Equipment);
             }
+        }
+
+        private List<Capsule> BuildInventoryCapsules()
+        {
+            List<Capsule> capsulesToSearch = new List<Capsule>();
+            if (_installation == null || _filepath == null)
+            {
+                return capsulesToSearch;
+            }
+
+            if (BioWare.Tools.FileHelpers.IsSavFile(_filepath))
+            {
+                // Search capsules inside the .sav outer capsule
+                try
+                {
+                    var outerCapsule = new Capsule(_filepath);
+                    foreach (var res in outerCapsule)
+                    {
+                        // Check if the resource name (resname + extension) is a capsule file
+                        string resourceFilename = $"{res.ResName}.{res.ResType.Extension}";
+                        if (BioWare.Tools.FileHelpers.IsCapsuleFile(resourceFilename))
+                        {
+                            // The resource is inside a capsule (since we're iterating through a capsule)
+                            // Construct the nested capsule path: outerCapsulePath/resourceFilename
+                            string nestedCapsulePath = System.IO.Path.Combine(_filepath, resourceFilename);
+                            try
+                            {
+                                capsulesToSearch.Add(new Capsule(nestedCapsulePath));
+                            }
+                            catch
+                            {
+                                // Skip invalid capsules
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Failed to load outer capsule
+                }
+            }
+            else if (BioWare.Tools.FileHelpers.IsCapsuleFile(_filepath))
+            {
+                // Get capsules matching the module
+                // This finds all capsules in the module that match the current file's module
+                try
+                {
+                    string root = null;
+                    if (!string.IsNullOrEmpty(_filepath))
+                    {
+                        // Extract root from filepath (similar to Module.filepath_to_root)
+                        string filename = System.IO.Path.GetFileName(_filepath);
+                        if (filename.Contains("_"))
+                        {
+                            root = filename.Substring(0, filename.IndexOf('_'));
+                        }
+                        else if (filename.Contains("."))
+                        {
+                            root = filename.Substring(0, filename.IndexOf('.'));
+                        }
+                    }
+
+                    if (root != null)
+                    {
+                        string caseRoot = root.ToLowerInvariant();
+                        var moduleNames = _installation.ModuleNames();
+                        string filepathFilename = System.IO.Path.GetFileName(_filepath) ?? "";
+
+                        foreach (var kvp in moduleNames)
+                        {
+                            string moduleFilename = kvp.Key;
+                            string moduleFilenameLower = moduleFilename.ToLowerInvariant();
+
+                            // Check if root is contained in module filename and it's not the same as the current filepath
+                            if (moduleFilenameLower.Contains(caseRoot) && moduleFilename != filepathFilename)
+                            {
+                                string fullModulePath = System.IO.Path.Combine(_installation.ModulePath(), moduleFilename);
+                                if (System.IO.File.Exists(fullModulePath))
+                                {
+                                    try
+                                    {
+                                        var capsule = new Capsule(fullModulePath, createIfNotExist: false);
+                                        capsulesToSearch.Add(capsule);
+                                    }
+                                    catch
+                                    {
+                                        // Skip invalid capsule files
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Failed to get module capsules - continue with empty list
+                }
+            }
+
+            return capsulesToSearch;
+        }
+
+        private InventoryDialog CreateInventoryDialog(List<Capsule> capsulesToSearch, bool droid)
+        {
+            return new InventoryDialog(
+                this,
+                _installation,
+                capsulesToSearch ?? new List<Capsule>(),
+                new List<string>(), // folders - not used in UTC editor
+                _utc.Inventory ?? new List<InventoryItem>(),
+                _utc.Equipment ?? new Dictionary<EquipmentSlot, InventoryItem>(),
+                droid: droid);
+        }
+
+        internal InventoryDialog CreateInventoryDialogForTest()
+        {
+            bool droid = _raceSelect?.SelectedIndex == 0;
+            return CreateInventoryDialog(new List<Capsule>(), droid);
+        }
+
+        internal bool CanOpenInventoryWithoutInstallationForTest()
+        {
+            return _installation == null && _utc != null && BuildInventoryCapsules().Count == 0;
+        }
+
+        internal void ApplyInventoryResult(List<InventoryItem> inventory, Dictionary<EquipmentSlot, InventoryItem> equipment)
+        {
+            if (_utc == null)
+            {
+                return;
+            }
+
+            _utc.Inventory = inventory ?? new List<InventoryItem>();
+            _utc.Equipment = equipment ?? new Dictionary<EquipmentSlot, InventoryItem>();
+            UpdateItemCount();
+            RefreshCreaturePreview();
+            MarkDocumentDirty();
         }
 
         private void UpdateItemCount()

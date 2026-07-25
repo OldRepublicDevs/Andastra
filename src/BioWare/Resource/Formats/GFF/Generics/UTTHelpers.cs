@@ -24,11 +24,11 @@ namespace BioWare.Resource.Formats.GFF.Generics
             // Note: TemplateResRef is NOT read by the engine (k2_win_gog_aspyr_swkotor2.exe:0x00584f40, k1_win_gog_swkotor.exe:0x0058da80)
             utt.ResRef = root.Acquire<ResRef>("TemplateResRef", ResRef.FromBlank());
             // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x00584f40 line 184, k1_win_gog_swkotor.exe:0x0058da80 line 176)
-            utt.AutoRemoveKey = root.Acquire<int>("AutoRemoveKey", 0) != 0;
+            utt.AutoRemoveKey = root.GetUInt8("AutoRemoveKey") != 0;
             // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x00584f40 line 211, k1_win_gog_swkotor.exe:0x0058da80 line 204)
-            utt.FactionId = root.Acquire<int>("Faction", 0);
+            utt.FactionId = (int)root.GetUInt32("Faction");
             // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x00584f40 line 250, k1_win_gog_swkotor.exe:0x0058da80 line 242)
-            utt.Cursor = root.Acquire<int>("Cursor", 0);
+            utt.Cursor = root.GetUInt8("Cursor");
             // Engine default: 0.1 (but only if > _DAT_007b56fc in K2, > _DAT_0073d700 in K1) (k2_win_gog_aspyr_swkotor2.exe:0x00584f40 line 273, k1_win_gog_swkotor.exe:0x0058da80 line 266)
             utt.HighlightHeight = root.Acquire<float>("HighlightHeight", 0.0f);
             // Engine default: "" (k2_win_gog_aspyr_swkotor2.exe:0x00584f40 line 217, k1_win_gog_swkotor.exe:0x0058da80 line 210)
@@ -36,19 +36,19 @@ namespace BioWare.Resource.Formats.GFF.Generics
             // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x00584f40 line 262, k1_win_gog_swkotor.exe:0x0058da80 line 255)
             utt.TypeId = root.Acquire<int>("Type", 0);
             // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x00584f40 line 226, k1_win_gog_swkotor.exe:0x0058da80 line 220)
-            utt.TrapDetectable = root.Acquire<int>("TrapDetectable", 0) != 0;
+            utt.TrapDetectable = root.GetUInt8("TrapDetectable") != 0;
             // Note: TrapDetectDC is calculated from TrapType and OwnerDemolitionsSkill, not read directly (k2_win_gog_aspyr_swkotor2.exe:0x00584f40 line 107, k1_win_gog_swkotor.exe:0x0058da80 line 107)
-            utt.TrapDetectDc = root.Acquire<int>("TrapDetectDC", 0);
+            utt.TrapDetectDc = root.GetUInt8("TrapDetectDC");
             // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x00584f40 line 224, k1_win_gog_swkotor.exe:0x0058da80 line 218)
-            utt.TrapDisarmable = root.Acquire<int>("TrapDisarmable", 0) != 0;
+            utt.TrapDisarmable = root.GetUInt8("TrapDisarmable") != 0;
             // Note: DisarmDC is calculated from TrapType and OwnerDemolitionsSkill, not read directly (k2_win_gog_aspyr_swkotor2.exe:0x00584f40 line 92, k1_win_gog_swkotor.exe:0x0058da80 line 92)
-            utt.TrapDisarmDc = root.Acquire<int>("DisarmDC", 0);
+            utt.TrapDisarmDc = root.GetUInt8("DisarmDC");
             // Note: TrapFlag is NOT read by the engine (k2_win_gog_aspyr_swkotor2.exe:0x00584f40, k1_win_gog_swkotor.exe:0x0058da80)
-            utt.IsTrap = root.Acquire<int>("TrapFlag", 0) != 0;
+            utt.IsTrap = root.GetUInt8("TrapFlag") != 0;
             // Engine default: existing value, but 0 for new objects (k2_win_gog_aspyr_swkotor2.exe:0x00584f40 line 157, k1_win_gog_swkotor.exe:0x0058da80 line 147)
-            utt.TrapOnce = root.Acquire<int>("TrapOneShot", 0) != 0;
+            utt.TrapOnce = root.GetUInt8("TrapOneShot") != 0;
             // Engine default: existing value, but 0 for new objects (k2_win_gog_aspyr_swkotor2.exe:0x00584f40 line 139, k1_win_gog_swkotor.exe:0x0058da80 line 128)
-            utt.TrapType = root.Acquire<int>("TrapType", 0);
+            utt.TrapType = root.GetUInt8("TrapType");
             // Engine default: existing value, but "" (blank ResRef) for new objects (k2_win_gog_aspyr_swkotor2.exe:0x00584f40 line 130, k1_win_gog_swkotor.exe:0x0058da80 line 117)
             utt.OnDisarmScript = root.Acquire<ResRef>("OnDisarm", ResRef.FromBlank());
             // Engine default: existing value, but "" (blank ResRef) for new objects (k2_win_gog_aspyr_swkotor2.exe:0x00584f40 line 125, k1_win_gog_swkotor.exe:0x0058da80 line 111)

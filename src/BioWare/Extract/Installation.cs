@@ -68,11 +68,37 @@ namespace BioWare.Extract
             if (!Directory.Exists(path))
                 throw new DirectoryNotFoundException($"Installation path does not exist: {path}");
 
-            _path = path;
-            _game = DetermineGame(path)
+            string resolvedPath = ResolveGameDataPath(path);
+            _path = resolvedPath;
+            _game = DetermineGame(resolvedPath)
                 ?? throw new InvalidOperationException($"Could not determine game type for path: {path}");
 
-            _resourceManager = new InstallationResourceManager(path, _game);
+            _resourceManager = new InstallationResourceManager(resolvedPath, _game);
+        }
+
+        /// <summary>
+        /// Resolves wrapper install directories to the directory that contains Odyssey game data.
+        /// </summary>
+        public static string ResolveGameDataPath(string installPath)
+        {
+            if (string.IsNullOrWhiteSpace(installPath) || !Directory.Exists(installPath))
+                return installPath;
+
+            if (IsGameDataPath(installPath))
+                return installPath;
+
+            string steamAssetsPath = System.IO.Path.Combine(installPath, "steamassets");
+            if (IsGameDataPath(steamAssetsPath))
+                return steamAssetsPath;
+
+            return installPath;
+        }
+
+        private static bool IsGameDataPath(string path)
+        {
+            return !string.IsNullOrWhiteSpace(path)
+                && Directory.Exists(path)
+                && File.Exists(System.IO.Path.Combine(path, "chitin.key"));
         }
 
         /// <summary>
@@ -83,11 +109,14 @@ namespace BioWare.Extract
             if (string.IsNullOrWhiteSpace(installPath) || !Directory.Exists(installPath))
                 return null;
 
+            installPath = ResolveGameDataPath(installPath);
+
             // Check for k2_win_gog_aspyr_swkotor2.exe (TSL)
             string tsl64Exe = System.IO.Path.Combine(installPath, "k2_win_gog_aspyr_swkotor2.exe");
             string tsl32Exe = System.IO.Path.Combine(installPath, "SWKOTOR2.EXE");
+            string tslLinuxExe = System.IO.Path.Combine(installPath, "KOTOR2");
 
-            if (File.Exists(tsl64Exe) || File.Exists(tsl32Exe))
+            if (File.Exists(tsl64Exe) || File.Exists(tsl32Exe) || File.Exists(tslLinuxExe))
                 return BioWareGame.TSL;
 
             // Check for k1_win_gog_swkotor.exe (K1)
@@ -101,6 +130,10 @@ namespace BioWare.Extract
             string chitinPath = System.IO.Path.Combine(installPath, "chitin.key");
             if (File.Exists(chitinPath))
             {
+                BioWareGame? heuristicGame = BioWare.Tools.Heuristics.DetermineGame(installPath);
+                if (heuristicGame.HasValue && heuristicGame.Value.IsPc())
+                    return heuristicGame.Value.IsK2() ? BioWareGame.TSL : BioWareGame.K1;
+
                 // Try to guess based on module files
                 string modulesPath = GetModulesPath(installPath);
                 if (Directory.Exists(modulesPath))

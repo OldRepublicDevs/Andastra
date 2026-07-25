@@ -41,38 +41,38 @@ namespace BioWare.Resource.Formats.GFF.Generics.UTC
 
             // Extract appearance and identity fields
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 166, k1_win_gog_swkotor.exe:0x005afce0 line 158)
-            utc.SubraceId = root.Acquire<int>("SubraceIndex", 0);
+            utc.SubraceId = root.GetUInt8("SubraceIndex");
             // Engine default: 0xb (11) for non-PC creatures, existing value for PC (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 402, k1_win_gog_swkotor.exe:0x005afce0 line 346)
             // Note: Engine uses 0xb as default when IsPC is false, but for new objects (IsPC=0), 0 is correct
-            utc.PerceptionId = root.Acquire<int>("PerceptionRange", 0);
+            utc.PerceptionId = root.GetUInt8("PerceptionRange");
             // Engine default: existing value, validated against max (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 149-158, k1_win_gog_swkotor.exe:0x005afce0 line 143-150)
-            utc.RaceId = root.Acquire<int>("Race", 0);
+            utc.RaceId = root.GetUInt8("Race");
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 366-368, k1_win_gog_swkotor.exe:0x005afce0 line 313-314)
-            utc.AppearanceId = root.Acquire<int>("Appearance_Type", 0);
+            utc.AppearanceId = root.GetUInt16("Appearance_Type");
             // Engine default: existing value, clamped to max 4 (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 141-146, k1_win_gog_swkotor.exe:0x005afce0 line 135-140)
-            utc.GenderId = root.Acquire<int>("Gender", 0);
+            utc.GenderId = root.GetUInt8("Gender");
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 385-388, k1_win_gog_swkotor.exe:0x005afce0 line 332-335)
-            utc.FactionId = root.Acquire<int>("FactionID", 0);
+            utc.FactionId = root.GetUInt16("FactionID");
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 1028-1033, k1_win_gog_swkotor.exe:0x005afce0 line 951-956)
             utc.WalkrateId = root.Acquire<int>("WalkRate", 0);
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 247, k1_win_gog_swkotor.exe:0x005afce0 line 239)
-            utc.SoundsetId = root.Acquire<int>("SoundSetFile", 0);
+            utc.SoundsetId = root.GetUInt16("SoundSetFile");
             // Engine default: 0xffff (65535) - if >= 0xfffe, reads Portrait ResRef instead (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 305-327, k1_win_gog_swkotor.exe:0x005afce0 line 269-291)
             // Note: For new objects, 0 is correct (engine will use Portrait ResRef if PortraitId is 0xffff)
-            utc.PortraitId = root.Acquire<int>("PortraitId", 0);
+            utc.PortraitId = root.GetUInt16("PortraitId");
             // Engine default: existing value (not explicitly read in loading function, but PaletteID field exists)
-            utc.PaletteId = root.Acquire<int>("PaletteID", 0);
+            utc.PaletteId = root.GetUInt8("PaletteID");
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 399, k1_win_gog_swkotor.exe:0x005afce0 line 343)
-            utc.BodybagId = root.Acquire<int>("BodyBag", 0);
+            utc.BodybagId = root.GetUInt8("BodyBag");
             // Engine default: existing value, read if PortraitId >= 0xfffe (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 316, k1_win_gog_swkotor.exe:0x005afce0 line 280)
             utc.PortraitResRef = root.Acquire<ResRef>("Portrait", ResRef.FromBlank());
-            utc.SaveWill = root.Acquire<int>("SaveWill", 0);
-            utc.SaveFortitude = root.Acquire<int>("SaveFortitude", 0);
-            utc.Morale = root.Acquire<int>("Morale", 0);
-            utc.MoraleRecovery = root.Acquire<int>("MoraleRecovery", 0);
-            utc.MoraleBreakpoint = root.Acquire<int>("MoraleBreakpoint", 0);
-            utc.BodyVariation = root.Acquire<int>("BodyVariation", 0);
-            utc.TextureVariation = root.Acquire<int>("TextureVar", 0);
+            utc.SaveWill = root.GetUInt8("SaveWill");
+            utc.SaveFortitude = root.GetUInt8("SaveFortitude");
+            utc.Morale = root.GetUInt8("Morale");
+            utc.MoraleRecovery = root.GetUInt8("MoraleRecovery");
+            utc.MoraleBreakpoint = root.GetUInt8("MoraleBreakpoint");
+            utc.BodyVariation = root.GetUInt8("BodyVariation");
+            utc.TextureVariation = root.GetUInt8("TextureVar");
 
             // Extract boolean flags - stored as UInt8, use GetUInt8() != 0 (matching UTW fix)
             // Engine default: existing value, inverted (!existing) (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 276-278, k1_win_gog_swkotor.exe:0x005afce0 line 260-262)
@@ -101,50 +101,50 @@ namespace BioWare.Resource.Formats.GFF.Generics.UTC
 
             // Extract stats
             // Engine default: existing value, clamped to max 100 (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 328-334, k1_win_gog_swkotor.exe:0x005afce0 line 292-298)
-            utc.Alignment = root.Acquire<int>("GoodEvil", 0);
+            utc.Alignment = root.GetUInt8("GoodEvil");
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 392, k1_win_gog_swkotor.exe:0x005afce0 line 336-337)
             utc.ChallengeRating = root.Acquire<float>("ChallengeRating", 0.0f);
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 389, K2 only)
             utc.Blindspot = root.Acquire<float>("BlindSpot", 0.0f);
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 286-288, K2 only)
-            utc.MultiplierSet = root.Acquire<int>("MultiplierSet", 0);
+            utc.MultiplierSet = root.GetUInt8("MultiplierSet");
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 244, k1_win_gog_swkotor.exe:0x005afce0 line 236-238)
-            utc.NaturalAc = root.Acquire<int>("NaturalAC", 0);
+            utc.NaturalAc = root.GetUInt8("NaturalAC");
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 616, k1_win_gog_swkotor.exe:0x005afce0 line 550)
-            utc.ReflexBonus = root.Acquire<int>("refbonus", 0);
+            utc.ReflexBonus = root.GetInt16("refbonus");
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 612, k1_win_gog_swkotor.exe:0x005afce0 line 546)
-            utc.WillpowerBonus = root.Acquire<int>("willbonus", 0);
+            utc.WillpowerBonus = root.GetInt16("willbonus");
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 614, k1_win_gog_swkotor.exe:0x005afce0 line 548)
-            utc.FortitudeBonus = root.Acquire<int>("fortbonus", 0);
+            utc.FortitudeBonus = root.GetInt16("fortbonus");
 
             // Extract ability scores
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 175, k1_win_gog_swkotor.exe:0x005afce0 line 167)
-            utc.Strength = root.Acquire<int>("Str", 0);
+            utc.Strength = root.GetUInt8("Str");
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 186, k1_win_gog_swkotor.exe:0x005afce0 line 178)
-            utc.Dexterity = root.Acquire<int>("Dex", 0);
+            utc.Dexterity = root.GetUInt8("Dex");
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 221, k1_win_gog_swkotor.exe:0x005afce0 line 213)
-            utc.Constitution = root.Acquire<int>("Con", 0);
+            utc.Constitution = root.GetUInt8("Con");
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 197, k1_win_gog_swkotor.exe:0x005afce0 line 189)
-            utc.Intelligence = root.Acquire<int>("Int", 0);
+            utc.Intelligence = root.GetUInt8("Int");
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 209, k1_win_gog_swkotor.exe:0x005afce0 line 201)
-            utc.Wisdom = root.Acquire<int>("Wis", 0);
+            utc.Wisdom = root.GetUInt8("Wis");
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 232, k1_win_gog_swkotor.exe:0x005afce0 line 224)
-            utc.Charisma = root.Acquire<int>("Cha", 0);
+            utc.Charisma = root.GetUInt8("Cha");
 
             // Extract experience points (PC and companions in save games; sotor: s.get("Experience", Field::dword))
-            utc.Experience = root.Acquire<int>("Experience", 0);
+            utc.Experience = (int)root.GetUInt32("Experience");
 
             // Extract hit points and force points
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 801-802, k1_win_gog_swkotor.exe:0x005afce0 line 734-735)
-            utc.CurrentHp = root.Acquire<int>("CurrentHitPoints", 0);
+            utc.CurrentHp = root.GetInt16("CurrentHitPoints");
             // Engine default: existing value (not explicitly read in loading function, but MaxHitPoints field exists)
-            utc.MaxHp = root.Acquire<int>("MaxHitPoints", 0);
+            utc.MaxHp = root.GetInt16("MaxHitPoints");
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 792-796, k1_win_gog_swkotor.exe:0x005afce0 line 725-729)
-            utc.Hp = root.Acquire<int>("HitPoints", 0);
+            utc.Hp = root.GetInt16("HitPoints");
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 797-800, k1_win_gog_swkotor.exe:0x005afce0 line 730-733)
-            utc.MaxFp = root.Acquire<int>("ForcePoints", 0);
+            utc.MaxFp = root.GetInt16("ForcePoints");
             // Engine default: existing value (k2_win_gog_aspyr_swkotor2.exe:0x005fb0f0 line 804-806, k1_win_gog_swkotor.exe:0x005afce0 line 737-738)
-            utc.Fp = root.Acquire<int>("CurrentForce", 0);
+            utc.Fp = root.GetInt16("CurrentForce");
 
             // Extract script hooks
             // Engine default: existing value (read by FUN_004ebf20 k1_win_gog_swkotor.exe, FUN_0050c510 k2_win_gog_aspyr_swkotor2.exe)
@@ -171,42 +171,42 @@ namespace BioWare.Resource.Formats.GFF.Generics.UTC
                 var skill0 = skillList.At(0);
                 if (skill0 != null)
                 {
-                    utc.ComputerUse = skill0.Acquire<int>("Rank", 0);
+                    utc.ComputerUse = skill0.GetUInt8("Rank");
                 }
                 var skill1 = skillList.At(1);
                 if (skill1 != null)
                 {
-                    utc.Demolitions = skill1.Acquire<int>("Rank", 0);
+                    utc.Demolitions = skill1.GetUInt8("Rank");
                 }
                 var skill2 = skillList.At(2);
                 if (skill2 != null)
                 {
-                    utc.Stealth = skill2.Acquire<int>("Rank", 0);
+                    utc.Stealth = skill2.GetUInt8("Rank");
                 }
                 var skill3 = skillList.At(3);
                 if (skill3 != null)
                 {
-                    utc.Awareness = skill3.Acquire<int>("Rank", 0);
+                    utc.Awareness = skill3.GetUInt8("Rank");
                 }
                 var skill4 = skillList.At(4);
                 if (skill4 != null)
                 {
-                    utc.Persuade = skill4.Acquire<int>("Rank", 0);
+                    utc.Persuade = skill4.GetUInt8("Rank");
                 }
                 var skill5 = skillList.At(5);
                 if (skill5 != null)
                 {
-                    utc.Repair = skill5.Acquire<int>("Rank", 0);
+                    utc.Repair = skill5.GetUInt8("Rank");
                 }
                 var skill6 = skillList.At(6);
                 if (skill6 != null)
                 {
-                    utc.Security = skill6.Acquire<int>("Rank", 0);
+                    utc.Security = skill6.GetUInt8("Rank");
                 }
                 var skill7 = skillList.At(7);
                 if (skill7 != null)
                 {
-                    utc.TreatInjury = skill7.Acquire<int>("Rank", 0);
+                    utc.TreatInjury = skill7.GetUInt8("Rank");
                 }
             }
 
@@ -215,7 +215,7 @@ namespace BioWare.Resource.Formats.GFF.Generics.UTC
             foreach (var classStruct in classList)
             {
                 int classId = classStruct.Acquire<int>("Class", 0);
-                int classLevel = classStruct.Acquire<int>("ClassLevel", 0);
+                int classLevel = classStruct.GetInt16("ClassLevel");
                 var utcClass = new UTCClass(classId, classLevel);
 
                 // Extract powers from KnownList0
@@ -223,7 +223,7 @@ namespace BioWare.Resource.Formats.GFF.Generics.UTC
                 int index = 0;
                 foreach (var powerStruct in powerList)
                 {
-                    int spell = powerStruct.Acquire<int>("Spell", 0);
+                    int spell = powerStruct.GetUInt16("Spell");
                     utcClass.Powers.Add(spell);
                     index++;
                 }
@@ -236,7 +236,7 @@ namespace BioWare.Resource.Formats.GFF.Generics.UTC
             int featIndex = 0;
             foreach (var featStruct in featList)
             {
-                int featId = featStruct.Acquire<int>("Feat", 0);
+                int featId = featStruct.GetUInt16("Feat");
                 utc.Feats.Add(featId);
                 featIndex++;
             }
@@ -247,7 +247,7 @@ namespace BioWare.Resource.Formats.GFF.Generics.UTC
             {
                 EquipmentSlot slot = (EquipmentSlot)equipmentStruct.StructId;
                 ResRef resref = equipmentStruct.Acquire<ResRef>("EquippedRes", ResRef.FromBlank());
-                bool droppable = equipmentStruct.Acquire<int>("Dropable", 0) != 0;
+                bool droppable = equipmentStruct.GetUInt8("Dropable") != 0;
                 utc.Equipment[slot] = new InventoryItem(resref, droppable);
             }
 
@@ -256,7 +256,7 @@ namespace BioWare.Resource.Formats.GFF.Generics.UTC
             foreach (var itemStruct in itemList)
             {
                 ResRef resref = itemStruct.Acquire<ResRef>("InventoryRes", ResRef.FromBlank());
-                bool droppable = itemStruct.Acquire<int>("Dropable", 0) != 0;
+                bool droppable = itemStruct.GetUInt8("Dropable") != 0;
                 utc.Inventory.Add(new InventoryItem(resref, droppable));
             }
 
@@ -480,4 +480,3 @@ namespace BioWare.Resource.Formats.GFF.Generics.UTC
         }
     }
 }
-

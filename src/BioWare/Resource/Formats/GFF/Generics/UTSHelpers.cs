@@ -39,9 +39,9 @@ namespace BioWare.Resource.Formats.GFF.Generics
             // Note: LocName is NOT read by the engine (k2_win_gog_aspyr_swkotor2.exe:0x005706b0, k1_win_gog_swkotor.exe:0x005c6cd0)
             uts.Name = root.Acquire<LocalizedString>("LocName", LocalizedString.FromInvalid());
             // Engine default: existing value, but 0 for new objects (k2_win_gog_aspyr_swkotor2.exe:0x005706b0 line 57, k1_win_gog_swkotor.exe:0x005c6cd0 line 57)
-            uts.Volume = root.Acquire<int>("Volume", 0);
+            uts.Volume = root.GetUInt8("Volume");
             // Engine default: existing value, but 0 for new objects (k2_win_gog_aspyr_swkotor2.exe:0x005706b0 line 59, k1_win_gog_swkotor.exe:0x005c6cd0 line 59)
-            uts.VolumeVariance = root.Acquire<int>("VolumeVrtn", 0);
+            uts.VolumeVariance = root.GetUInt8("VolumeVrtn");
             // Engine default: existing value, but 0.0 for new objects (k2_win_gog_aspyr_swkotor2.exe:0x005706b0 line 65, k1_win_gog_swkotor.exe:0x005c6cd0 line 65)
             uts.PitchVariance = root.Acquire<float>("PitchVariation", 0.0f);
             // Note: Elevation is NOT read by the engine (k2_win_gog_aspyr_swkotor2.exe:0x005706b0, k1_win_gog_swkotor.exe:0x005c6cd0)

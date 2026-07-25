@@ -141,7 +141,7 @@ namespace OdyTools.Widgets
 
             try
             {
-                _parsedModel = MDLAuto.ReadMdl(_mdlData, 12, 0, _mdxData, 0, 0);
+                _parsedModel = MDLAuto.ReadMdl(_mdlData, 0, null, _mdxData, 0, 0);
                 _drawableModel = MdlToDrawableConverter.Convert(_parsedModel);
                 _convertedModel = new ConversionResult
                 {

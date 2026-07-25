@@ -72,12 +72,13 @@ namespace OdyTools.Editors
 
         // UI Controls - Comments
         private TextBox _commentsEdit;
+        private TabControl _editorSurface;
 
         public OdyToolUTT() : this(null, null) { }
         public OdyToolUTT(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTT", "trigger",
-                new[] { ResourceType.UTT, ResourceType.BTT },
-                new[] { ResourceType.UTT, ResourceType.BTT },
+                new[] { ResourceType.UTT, ResourceType.BTT, ResourceType.UTT_XML },
+                new[] { ResourceType.UTT, ResourceType.BTT, ResourceType.UTT_XML },
                 installation)
         {
             _utt = new UTT();
@@ -165,6 +166,7 @@ namespace OdyTools.Editors
                 _onTrapTriggeredEdit = EditorHelpers.FindControlSafe<ComboBox>(this, "onTrapTriggeredEdit");
                 _onUserDefinedSelect = EditorHelpers.FindControlSafe<ComboBox>(this, "onUserDefinedSelect");
                 _commentsEdit = EditorHelpers.FindControlSafe<TextBox>(this, "commentsEdit");
+                _editorSurface = EditorHelpers.FindControlSafe<TabControl>(this, "editorSurface");
 
                 // If any critical controls are missing, fall back to programmatic UI
                 if (_nameEdit == null || _tagEdit == null || _resrefEdit == null || _commentsEdit == null)
@@ -182,6 +184,11 @@ namespace OdyTools.Editors
 
         private void AttachReferenceSearchMenus()
         {
+            if (_tagEdit == null || _resrefEdit == null)
+            {
+                return;
+            }
+
             ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
             FieldValueReferenceHelper.AppendFieldValueFindReferencesMenuItem(
                 _tagEdit.ContextMenu,
@@ -357,6 +364,11 @@ namespace OdyTools.Editors
                     System.Console.WriteLine($"Failed to setup script combo boxes: {ex.Message}");
                 }
             }
+        }
+
+        protected override void OnInstallationChanged()
+        {
+            SetupInstallation(_installation);
         }
 
         private void SetupProgrammaticUI()
@@ -636,8 +648,8 @@ namespace OdyTools.Editors
             {
                 try
                 {
-                    _originalGff = GFF.FromBytes(data);
-                    var utt = UTTAuto.ReadUtt(data);
+                    _originalGff = GFFAuto.ReadGff(data, fileFormat: _restype ?? ResourceType.UTT);
+                    var utt = UTTHelpers.ConstructUtt(_originalGff);
                     LoadUTT(utt);
                 }
                 catch
@@ -966,37 +978,37 @@ namespace OdyTools.Editors
             // Matching Python: utt.on_click = ResRef(self.ui.onClickEdit.currentText())
             if (_onClickEdit != null)
             {
-                _utt.OnClickScript = !string.IsNullOrEmpty(_onClickEdit.Text) ? new ResRef(_onClickEdit.Text) : new ResRef("");
+                _utt.OnClickScript = ScriptResRefFromText(_onClickEdit.Text);
             }
             // Matching Python: utt.on_disarm = ResRef(self.ui.onDisarmEdit.currentText())
             if (_onDisarmEdit != null)
             {
-                _utt.OnDisarmScript = !string.IsNullOrEmpty(_onDisarmEdit.Text) ? new ResRef(_onDisarmEdit.Text) : new ResRef("");
+                _utt.OnDisarmScript = ScriptResRefFromText(_onDisarmEdit.Text);
             }
             // Matching Python: utt.on_enter = ResRef(self.ui.onEnterSelect.currentText())
             if (_onEnterSelect != null)
             {
-                _utt.OnEnterScript = !string.IsNullOrEmpty(_onEnterSelect.Text) ? new ResRef(_onEnterSelect.Text) : new ResRef("");
+                _utt.OnEnterScript = ScriptResRefFromText(_onEnterSelect.Text);
             }
             // Matching Python: utt.on_exit = ResRef(self.ui.onExitSelect.currentText())
             if (_onExitSelect != null)
             {
-                _utt.OnExitScript = !string.IsNullOrEmpty(_onExitSelect.Text) ? new ResRef(_onExitSelect.Text) : new ResRef("");
+                _utt.OnExitScript = ScriptResRefFromText(_onExitSelect.Text);
             }
             // Matching Python: utt.on_heartbeat = ResRef(self.ui.onHeartbeatSelect.currentText())
             if (_onHeartbeatSelect != null)
             {
-                _utt.OnHeartbeatScript = !string.IsNullOrEmpty(_onHeartbeatSelect.Text) ? new ResRef(_onHeartbeatSelect.Text) : new ResRef("");
+                _utt.OnHeartbeatScript = ScriptResRefFromText(_onHeartbeatSelect.Text);
             }
             // Matching Python: utt.on_trap_triggered = ResRef(self.ui.onTrapTriggeredEdit.currentText())
             if (_onTrapTriggeredEdit != null)
             {
-                _utt.OnTrapTriggeredScript = !string.IsNullOrEmpty(_onTrapTriggeredEdit.Text) ? new ResRef(_onTrapTriggeredEdit.Text) : new ResRef("");
+                _utt.OnTrapTriggeredScript = ScriptResRefFromText(_onTrapTriggeredEdit.Text);
             }
             // Matching Python: utt.on_user_defined = ResRef(self.ui.onUserDefinedSelect.currentText())
             if (_onUserDefinedSelect != null)
             {
-                _utt.OnUserDefinedScript = !string.IsNullOrEmpty(_onUserDefinedSelect.Text) ? new ResRef(_onUserDefinedSelect.Text) : new ResRef("");
+                _utt.OnUserDefinedScript = ScriptResRefFromText(_onUserDefinedSelect.Text);
             }
 
             // Comments
@@ -1053,8 +1065,21 @@ namespace OdyTools.Editors
                 }
             }
 
-            byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTT);
+            ResourceType outputType = _restype == ResourceType.UTT_XML
+                ? ResourceType.UTT_XML
+                : (_restype == ResourceType.BTT ? ResourceType.BTT : ResourceType.UTT);
+            if (outputType == ResourceType.BTT)
+            {
+                gff.Content = GFFContent.BTT;
+            }
+            byte[] data = GFFAuto.BytesGff(gff, outputType);
             return Tuple.Create(data, new byte[0]);
+        }
+
+        private static ResRef ScriptResRefFromText(string text)
+        {
+            string value = (text ?? string.Empty).Trim();
+            return !string.IsNullOrEmpty(value) ? new ResRef(value) : new ResRef("");
         }
 
         private void CopyGffField(GFFStruct sourceStruct, GFFStruct targetStruct, string label, GFFFieldType fieldType)
@@ -1103,6 +1128,7 @@ namespace OdyTools.Editors
             {
                 _tagEdit.Text = _resrefEdit.Text;
             }
+            MarkDocumentDirty();
         }
 
         private void GenerateResref()
@@ -1118,6 +1144,7 @@ namespace OdyTools.Editors
                     _resrefEdit.Text = "m00xx_trg_000";
                 }
             }
+            MarkDocumentDirty();
         }
 
         public override void SaveAs()
@@ -1128,13 +1155,29 @@ namespace OdyTools.Editors
         // Public properties for testing
         public LocalizedStringEdit NameEdit => _nameEdit;
         public TextBox TagEdit => _tagEdit;
+        public Button TagGenerateButton => _tagGenerateButton;
         public TextBox ResrefEdit => _resrefEdit;
+        public Button ResrefGenerateButton => _resrefGenerateButton;
         public CheckBox AutoRemoveKeyCheckbox => _autoRemoveKeyCheckbox;
         public CheckBox IsTrapCheckbox => _isTrapCheckbox;
         public CheckBox ActivateOnceCheckbox => _activateOnceCheckbox;
+        public ComboBox TypeSelect => _typeSelect;
+        public TextBox KeyEdit => _keyEdit;
+        public NumericUpDown HighlightHeightSpin => _highlightHeightSpin;
+        public CheckBox DetectableCheckbox => _detectableCheckbox;
         public NumericUpDown DetectDcSpin => _detectDcSpin;
+        public CheckBox DisarmableCheckbox => _disarmableCheckbox;
         public NumericUpDown DisarmDcSpin => _disarmDcSpin;
+        public ComboBox OnClickEdit => _onClickEdit;
+        public ComboBox OnDisarmEdit => _onDisarmEdit;
+        public ComboBox OnEnterSelect => _onEnterSelect;
+        public ComboBox OnExitSelect => _onExitSelect;
+        public ComboBox OnHeartbeatSelect => _onHeartbeatSelect;
+        public ComboBox OnTrapTriggeredEdit => _onTrapTriggeredEdit;
+        public ComboBox OnUserDefinedSelect => _onUserDefinedSelect;
+        public TextBox CommentsEdit => _commentsEdit;
         public UTT Utt => _utt;
+        internal bool HasStructuredEditorSurface => _editorSurface != null && _typeSelect != null && _trapSelect != null && _onEnterSelect != null && _commentsEdit != null;
 
         // Helper method to populate script combo boxes (matching PyKotor's populate_combo_box and setup_file_context_menu)
         private void SetupScriptComboBoxContextMenu(ComboBox comboBox, string scriptTypeName)

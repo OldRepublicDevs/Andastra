@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using OdyTools.Data;
+using OdyTools.Editors;
 
 namespace OdyTools.Widgets.Settings
 {
@@ -47,14 +48,83 @@ namespace OdyTools.Widgets.Settings
 
             if (xamlLoaded)
             {
-                _pathList = this.FindControl<ListBox>("pathList");
-                _addPathButton = this.FindControl<Button>("addPathButton");
-                _removePathButton = this.FindControl<Button>("removePathButton");
-                _pathFrame = this.FindControl<Border>("pathFrame");
-                _pathNameEdit = this.FindControl<TextBox>("pathNameEdit");
-                _pathDirEdit = this.FindControl<TextBox>("pathDirEdit");
-                _pathTslCheckbox = this.FindControl<CheckBox>("pathTslCheckbox");
+                _pathList = EditorHelpers.FindControlSafe<ListBox>(this, "pathList");
+                _addPathButton = EditorHelpers.FindControlSafe<Button>(this, "addPathButton");
+                _removePathButton = EditorHelpers.FindControlSafe<Button>(this, "removePathButton");
+                _pathFrame = EditorHelpers.FindControlSafe<Border>(this, "pathFrame");
+                _pathNameEdit = EditorHelpers.FindControlSafe<TextBox>(this, "pathNameEdit");
+                _pathDirEdit = EditorHelpers.FindControlSafe<TextBox>(this, "pathDirEdit");
+                _pathTslCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "pathTslCheckbox");
             }
+
+            if (_pathList == null || _addPathButton == null || _removePathButton == null || _pathFrame == null ||
+                _pathNameEdit == null || _pathDirEdit == null || _pathTslCheckbox == null)
+            {
+                SetupProgrammaticUI();
+            }
+        }
+
+        private void SetupProgrammaticUI()
+        {
+            var grid = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("200,5,*")
+            };
+
+            var left = new Grid
+            {
+                RowDefinitions = new RowDefinitions("*,Auto,Auto")
+            };
+            _pathList = new ListBox { Name = "pathList", Margin = new Avalonia.Thickness(0, 0, 0, 5) };
+            Grid.SetRow(_pathList, 0);
+            left.Children.Add(_pathList);
+            _addPathButton = new Button { Name = "addPathButton", Content = "Add", Margin = new Avalonia.Thickness(0, 0, 0, 5) };
+            Grid.SetRow(_addPathButton, 1);
+            left.Children.Add(_addPathButton);
+            _removePathButton = new Button { Name = "removePathButton", Content = "Remove" };
+            Grid.SetRow(_removePathButton, 2);
+            left.Children.Add(_removePathButton);
+            Grid.SetColumn(left, 0);
+            grid.Children.Add(left);
+
+            var separator = new Border { BorderBrush = Avalonia.Media.Brushes.LightGray, BorderThickness = new Avalonia.Thickness(1, 0, 0, 0) };
+            Grid.SetColumn(separator, 1);
+            grid.Children.Add(separator);
+
+            _pathFrame = new Border
+            {
+                Name = "pathFrame",
+                BorderBrush = Avalonia.Media.Brushes.LightGray,
+                BorderThickness = new Avalonia.Thickness(1),
+                Padding = new Avalonia.Thickness(10),
+                IsEnabled = false
+            };
+            var form = new Grid
+            {
+                RowDefinitions = new RowDefinitions("Auto,Auto,Auto")
+            };
+            AddLabeledControl(form, 0, "Name:", _pathNameEdit = new TextBox { Name = "pathNameEdit" });
+            AddLabeledControl(form, 1, "Path:", _pathDirEdit = new TextBox { Name = "pathDirEdit" });
+            AddLabeledControl(form, 2, "TSL:", _pathTslCheckbox = new CheckBox { Name = "pathTslCheckbox" });
+            _pathFrame.Child = form;
+            Grid.SetColumn(_pathFrame, 2);
+            grid.Children.Add(_pathFrame);
+
+            Content = grid;
+        }
+
+        private static void AddLabeledControl(Grid grid, int row, string label, Control control)
+        {
+            var rowGrid = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("Auto,*"),
+                Margin = new Avalonia.Thickness(0, 0, 0, 10)
+            };
+            rowGrid.Children.Add(new TextBlock { Text = label, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, Margin = new Avalonia.Thickness(0, 0, 5, 0) });
+            Grid.SetColumn(control, 1);
+            rowGrid.Children.Add(control);
+            Grid.SetRow(rowGrid, row);
+            grid.Children.Add(rowGrid);
         }
 
         private void SetupValues()

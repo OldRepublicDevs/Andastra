@@ -50,6 +50,10 @@ namespace OdyTools.Editors
         private ModelRenderer _previewRenderer;
         private TextBlock _modelInfoLabel;
         private Border _modelInfoGroupBox;
+        private Grid _editorSurface;
+        private bool _loadingUtd;
+        private bool _dirtyTrackingBound;
+        private bool _clearInitialDirtyOnOpen = true;
 
         // UI Controls - Basic
         private LocalizedStringEdit _nameEdit;
@@ -119,12 +123,13 @@ namespace OdyTools.Editors
         public NumericUpDown DifficultyModSpin => _difficultyModSpin;
         public Dictionary<string, ComboBox> ScriptFields => _scriptFields;
         public TextBox CommentsEdit => _commentsEdit;
+        internal bool HasStructuredEditorSurface => _editorSurface != null && _previewRenderer != null && _modelInfoGroupBox != null;
 
         public OdyToolUTD() : this(null, null) { }
         public OdyToolUTD(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTD", "door",
-                new[] { ResourceType.UTD, ResourceType.BTD },
-                new[] { ResourceType.UTD, ResourceType.BTD },
+                new[] { ResourceType.UTD, ResourceType.BTD, ResourceType.UTD_XML },
+                new[] { ResourceType.UTD, ResourceType.BTD, ResourceType.UTD_XML },
                 installation)
         {
             _installation = installation;
@@ -135,12 +140,18 @@ namespace OdyTools.Editors
 
             InitializeComponent();
             SetupUI();
+            BindDirtyTracking();
             SetupMenuHandlers();
             MinWidth = MinEditorWidth;
             MinHeight = MinEditorHeight;
             Width = MinEditorWidth;
             Height = MinEditorHeight;
-            Opened += (s, e) => { UpdateStatusBar(); _tagEdit?.Focus(); };
+            Opened += (s, e) =>
+            {
+                UpdateStatusBar();
+                _tagEdit?.Focus();
+                ClearInitialDirtyOnOpen();
+            };
             KeyDown += OnWindowKeyDown;
             Update3dPreview();
             New();
@@ -205,6 +216,7 @@ namespace OdyTools.Editors
                 _difficultySpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "difficultySpin");
                 _difficultyModSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "difficultyModSpin");
                 _commentsEdit = EditorHelpers.FindControlSafe<TextBox>(this, "commentsEdit");
+                _editorSurface = EditorHelpers.FindControlSafe<Grid>(this, "editorSurface");
 
                 // Find script fields from XAML
                 string[] scriptNames = { "OnClick", "OnClosed", "OnDamaged", "OnDeath", "OnOpenFailed",
@@ -513,6 +525,28 @@ namespace OdyTools.Editors
             }
         }
 
+        protected override void OnInstallationChanged()
+        {
+            if (_installation != null)
+            {
+                SetupInstallation(_installation);
+                PopulateScriptComboBoxes();
+                PopulateConversationComboBox();
+                return;
+            }
+
+            if (_nameEdit != null)
+            {
+                _nameEdit.SetInstallation(null);
+            }
+
+            _genericdoors2da = null;
+            if (_previewRenderer != null)
+            {
+                _previewRenderer.Installation = null;
+            }
+        }
+
         private void SetupUI()
         {
             if (_statusText == null)
@@ -536,6 +570,11 @@ namespace OdyTools.Editors
 
         private void AttachReferenceSearchMenus()
         {
+            if (_tagEdit == null || _resrefEdit == null)
+            {
+                return;
+            }
+
             ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
             FieldValueReferenceHelper.AppendFieldValueFindReferencesMenuItem(
                 _tagEdit.ContextMenu,
@@ -725,6 +764,90 @@ namespace OdyTools.Editors
                     EditorHelpers.BindLostFocus(kv.Value, OnCommit);
         }
 
+        private void BindDirtyTracking()
+        {
+            if (_dirtyTrackingBound)
+            {
+                return;
+            }
+
+            _dirtyTrackingBound = true;
+            if (_tagEdit != null) _tagEdit.TextChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_resrefEdit != null) _resrefEdit.TextChanged += (s, e) => MarkDirtyAfterLoad();
+            BindComboDirtyTracking(_appearanceSelect);
+            BindComboDirtyTracking(_conversationEdit);
+            if (_min1HpCheckbox != null) _min1HpCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_plotCheckbox != null) _plotCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_staticCheckbox != null) _staticCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_notBlastableCheckbox != null) _notBlastableCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            BindComboDirtyTracking(_factionSelect);
+            if (_animationStateSpin != null) _animationStateSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_currentHpSpin != null) _currentHpSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_maxHpSpin != null) _maxHpSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_hardnessSpin != null) _hardnessSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_fortitudeSpin != null) _fortitudeSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_reflexSpin != null) _reflexSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_willSpin != null) _willSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_needKeyCheckbox != null) _needKeyCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_removeKeyCheckbox != null) _removeKeyCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_keyEdit != null) _keyEdit.TextChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_lockedCheckbox != null) _lockedCheckbox.IsCheckedChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_openLockSpin != null) _openLockSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_difficultySpin != null) _difficultySpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_difficultyModSpin != null) _difficultyModSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_scriptFields != null)
+            {
+                foreach (var comboBox in _scriptFields.Values)
+                {
+                    BindComboDirtyTracking(comboBox);
+                }
+            }
+            if (_commentsEdit != null) _commentsEdit.TextChanged += (s, e) => MarkDirtyAfterLoad();
+        }
+
+        private void BindComboDirtyTracking(ComboBox comboBox)
+        {
+            if (comboBox == null)
+            {
+                return;
+            }
+
+            comboBox.SelectionChanged += (s, e) => MarkDirtyAfterLoad();
+            comboBox.PropertyChanged += (s, e) =>
+            {
+                if (e.Property.Name == nameof(ComboBox.Text))
+                {
+                    MarkDirtyAfterLoad();
+                }
+            };
+        }
+
+        private void MarkDirtyAfterLoad()
+        {
+            if (!_loadingUtd)
+            {
+                MarkDocumentDirty();
+            }
+        }
+
+        private void ClearInitialDirtyOnOpen()
+        {
+            if (!_clearInitialDirtyOnOpen)
+            {
+                return;
+            }
+
+            ClearDirty();
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (_clearInitialDirtyOnOpen)
+                {
+                    ClearDirty();
+                    _clearInitialDirtyOnOpen = false;
+                }
+            }, Avalonia.Threading.DispatcherPriority.Background);
+        }
+
         private void SetupMenuHandlers()
         {
             void Bind(string name, Action handler)
@@ -795,7 +918,7 @@ namespace OdyTools.Editors
             {
                 try
                 {
-                    var gff = GFF.FromBytes(data);
+                    var gff = GFFAuto.ReadGff(data, fileFormat: _restype ?? ResourceType.UTD);
                     _utd = UTDHelpers.ConstructUtd(gff);
                     LoadUTD(_utd);
                 }
@@ -911,82 +1034,90 @@ namespace OdyTools.Editors
         private void LoadUTD(UTD utd)
         {
             _utd = utd;
-
-            // Basic
-            // Matching Python: self.ui.nameEdit.set_locstring(utd.name)
-            if (_nameEdit != null)
+            _loadingUtd = true;
+            try
             {
-                _nameEdit.SetLocString(utd.Name);
+
+                // Basic
+                // Matching Python: self.ui.nameEdit.set_locstring(utd.name)
+                if (_nameEdit != null)
+                {
+                    _nameEdit.SetLocString(utd.Name);
+                }
+                if (_tagEdit != null)
+                {
+                    _tagEdit.Text = utd.Tag;
+                }
+                if (_resrefEdit != null)
+                {
+                    _resrefEdit.Text = utd.ResRef.ToString();
+                }
+                if (_appearanceSelect != null)
+                {
+                    _appearanceSelect.SetSelectedIndex(utd.AppearanceId);
+                }
+                if (_conversationEdit != null)
+                {
+                    _conversationEdit.Text = utd.Conversation.ToString();
+                }
+
+                // Advanced
+                if (_min1HpCheckbox != null) _min1HpCheckbox.IsChecked = utd.Min1Hp;
+                if (_plotCheckbox != null) _plotCheckbox.IsChecked = utd.Plot;
+                if (_staticCheckbox != null) _staticCheckbox.IsChecked = utd.Static;
+                if (_notBlastableCheckbox != null) _notBlastableCheckbox.IsChecked = utd.NotBlastable;
+                if (_factionSelect != null) _factionSelect.SetSelectedIndex(utd.FactionId);
+                if (_animationStateSpin != null) _animationStateSpin.Value = utd.AnimationState;
+                if (_currentHpSpin != null) _currentHpSpin.Value = utd.CurrentHp;
+                if (_maxHpSpin != null) _maxHpSpin.Value = utd.MaximumHp;
+                if (_hardnessSpin != null) _hardnessSpin.Value = utd.Hardness;
+                if (_fortitudeSpin != null) _fortitudeSpin.Value = utd.Fortitude;
+                if (_reflexSpin != null) _reflexSpin.Value = utd.Reflex;
+                if (_willSpin != null) _willSpin.Value = utd.Willpower;
+
+                // Lock
+                if (_needKeyCheckbox != null) _needKeyCheckbox.IsChecked = utd.KeyRequired;
+                if (_removeKeyCheckbox != null) _removeKeyCheckbox.IsChecked = utd.AutoRemoveKey;
+                if (_keyEdit != null) _keyEdit.Text = utd.KeyName;
+                if (_lockedCheckbox != null) _lockedCheckbox.IsChecked = utd.Locked;
+                if (_openLockSpin != null) _openLockSpin.Value = utd.UnlockDc;
+                if (_difficultySpin != null) _difficultySpin.Value = utd.UnlockDiff;
+                if (_difficultyModSpin != null) _difficultyModSpin.Value = utd.UnlockDiffMod;
+
+                // Scripts
+                if (_scriptFields.ContainsKey("OnClick") && _scriptFields["OnClick"] != null)
+                    _scriptFields["OnClick"].Text = utd.OnClick.ToString();
+                if (_scriptFields.ContainsKey("OnClosed") && _scriptFields["OnClosed"] != null)
+                    _scriptFields["OnClosed"].Text = utd.OnClosed.ToString();
+                if (_scriptFields.ContainsKey("OnDamaged") && _scriptFields["OnDamaged"] != null)
+                    _scriptFields["OnDamaged"].Text = utd.OnDamaged.ToString();
+                if (_scriptFields.ContainsKey("OnDeath") && _scriptFields["OnDeath"] != null)
+                    _scriptFields["OnDeath"].Text = utd.OnDeath.ToString();
+                if (_scriptFields.ContainsKey("OnOpenFailed") && _scriptFields["OnOpenFailed"] != null)
+                    _scriptFields["OnOpenFailed"].Text = utd.OnOpenFailed.ToString();
+                if (_scriptFields.ContainsKey("OnHeartbeat") && _scriptFields["OnHeartbeat"] != null)
+                    _scriptFields["OnHeartbeat"].Text = utd.OnHeartbeat.ToString();
+                if (_scriptFields.ContainsKey("OnMelee") && _scriptFields["OnMelee"] != null)
+                    _scriptFields["OnMelee"].Text = utd.OnMelee.ToString();
+                if (_scriptFields.ContainsKey("OnOpen") && _scriptFields["OnOpen"] != null)
+                    _scriptFields["OnOpen"].Text = utd.OnOpen.ToString();
+                if (_scriptFields.ContainsKey("OnUnlock") && _scriptFields["OnUnlock"] != null)
+                    _scriptFields["OnUnlock"].Text = utd.OnUnlock.ToString();
+                if (_scriptFields.ContainsKey("OnUserDefined") && _scriptFields["OnUserDefined"] != null)
+                    _scriptFields["OnUserDefined"].Text = utd.OnUserDefined.ToString();
+                if (_scriptFields.ContainsKey("OnPower") && _scriptFields["OnPower"] != null)
+                    _scriptFields["OnPower"].Text = utd.OnPower.ToString();
+
+                PopulateScriptComboBoxes();
+                PopulateConversationComboBox();
+
+                // Comments
+                if (_commentsEdit != null) _commentsEdit.Text = utd.Comment;
             }
-            if (_tagEdit != null)
+            finally
             {
-                _tagEdit.Text = utd.Tag;
+                _loadingUtd = false;
             }
-            if (_resrefEdit != null)
-            {
-                _resrefEdit.Text = utd.ResRef.ToString();
-            }
-            if (_appearanceSelect != null)
-            {
-                _appearanceSelect.SetSelectedIndex(utd.AppearanceId);
-            }
-            if (_conversationEdit != null)
-            {
-                _conversationEdit.Text = utd.Conversation.ToString();
-            }
-
-            // Advanced
-            if (_min1HpCheckbox != null) _min1HpCheckbox.IsChecked = utd.Min1Hp;
-            if (_plotCheckbox != null) _plotCheckbox.IsChecked = utd.Plot;
-            if (_staticCheckbox != null) _staticCheckbox.IsChecked = utd.Static;
-            if (_notBlastableCheckbox != null) _notBlastableCheckbox.IsChecked = utd.NotBlastable;
-            if (_factionSelect != null) _factionSelect.SetSelectedIndex(utd.FactionId);
-            if (_animationStateSpin != null) _animationStateSpin.Value = utd.AnimationState;
-            if (_currentHpSpin != null) _currentHpSpin.Value = utd.CurrentHp;
-            if (_maxHpSpin != null) _maxHpSpin.Value = utd.MaximumHp;
-            if (_hardnessSpin != null) _hardnessSpin.Value = utd.Hardness;
-            if (_fortitudeSpin != null) _fortitudeSpin.Value = utd.Fortitude;
-            if (_reflexSpin != null) _reflexSpin.Value = utd.Reflex;
-            if (_willSpin != null) _willSpin.Value = utd.Willpower;
-
-            // Lock
-            if (_needKeyCheckbox != null) _needKeyCheckbox.IsChecked = utd.KeyRequired;
-            if (_removeKeyCheckbox != null) _removeKeyCheckbox.IsChecked = utd.AutoRemoveKey;
-            if (_keyEdit != null) _keyEdit.Text = utd.KeyName;
-            if (_lockedCheckbox != null) _lockedCheckbox.IsChecked = utd.Locked;
-            if (_openLockSpin != null) _openLockSpin.Value = utd.UnlockDc;
-            if (_difficultySpin != null) _difficultySpin.Value = utd.UnlockDiff;
-            if (_difficultyModSpin != null) _difficultyModSpin.Value = utd.UnlockDiffMod;
-
-            // Scripts
-            if (_scriptFields.ContainsKey("OnClick") && _scriptFields["OnClick"] != null)
-                _scriptFields["OnClick"].Text = utd.OnClick.ToString();
-            if (_scriptFields.ContainsKey("OnClosed") && _scriptFields["OnClosed"] != null)
-                _scriptFields["OnClosed"].Text = utd.OnClosed.ToString();
-            if (_scriptFields.ContainsKey("OnDamaged") && _scriptFields["OnDamaged"] != null)
-                _scriptFields["OnDamaged"].Text = utd.OnDamaged.ToString();
-            if (_scriptFields.ContainsKey("OnDeath") && _scriptFields["OnDeath"] != null)
-                _scriptFields["OnDeath"].Text = utd.OnDeath.ToString();
-            if (_scriptFields.ContainsKey("OnOpenFailed") && _scriptFields["OnOpenFailed"] != null)
-                _scriptFields["OnOpenFailed"].Text = utd.OnOpenFailed.ToString();
-            if (_scriptFields.ContainsKey("OnHeartbeat") && _scriptFields["OnHeartbeat"] != null)
-                _scriptFields["OnHeartbeat"].Text = utd.OnHeartbeat.ToString();
-            if (_scriptFields.ContainsKey("OnMelee") && _scriptFields["OnMelee"] != null)
-                _scriptFields["OnMelee"].Text = utd.OnMelee.ToString();
-            if (_scriptFields.ContainsKey("OnOpen") && _scriptFields["OnOpen"] != null)
-                _scriptFields["OnOpen"].Text = utd.OnOpen.ToString();
-            if (_scriptFields.ContainsKey("OnUnlock") && _scriptFields["OnUnlock"] != null)
-                _scriptFields["OnUnlock"].Text = utd.OnUnlock.ToString();
-            if (_scriptFields.ContainsKey("OnUserDefined") && _scriptFields["OnUserDefined"] != null)
-                _scriptFields["OnUserDefined"].Text = utd.OnUserDefined.ToString();
-            if (_scriptFields.ContainsKey("OnPower") && _scriptFields["OnPower"] != null)
-                _scriptFields["OnPower"].Text = utd.OnPower.ToString();
-
-            PopulateScriptComboBoxes();
-            PopulateConversationComboBox();
-
-            // Comments
-            if (_commentsEdit != null) _commentsEdit.Text = utd.Comment;
         }
 
         public override Tuple<byte[], byte[]> Build()
@@ -1098,49 +1229,49 @@ namespace OdyTools.Editors
             // Python: utd.on_click = ResRef(self.ui.onClickEdit.currentText())
             if (_scriptFields.ContainsKey("OnClick") && _scriptFields["OnClick"] != null)
             {
-                utd.OnClick = new ResRef(_scriptFields["OnClick"].Text ?? "");
+                utd.OnClick = ResRefFromText(_scriptFields["OnClick"].Text);
             }
             // Python: utd.on_closed = ResRef(self.ui.onClosedEdit.currentText())
             if (_scriptFields.ContainsKey("OnClosed") && _scriptFields["OnClosed"] != null)
             {
-                utd.OnClosed = new ResRef(_scriptFields["OnClosed"].Text ?? "");
+                utd.OnClosed = ResRefFromText(_scriptFields["OnClosed"].Text);
             }
             if (_scriptFields.ContainsKey("OnDamaged") && _scriptFields["OnDamaged"] != null)
             {
-                utd.OnDamaged = new ResRef(_scriptFields["OnDamaged"].Text ?? "");
+                utd.OnDamaged = ResRefFromText(_scriptFields["OnDamaged"].Text);
             }
             if (_scriptFields.ContainsKey("OnDeath") && _scriptFields["OnDeath"] != null)
             {
-                utd.OnDeath = new ResRef(_scriptFields["OnDeath"].Text ?? "");
+                utd.OnDeath = ResRefFromText(_scriptFields["OnDeath"].Text);
             }
             if (_scriptFields.ContainsKey("OnOpenFailed") && _scriptFields["OnOpenFailed"] != null)
             {
-                utd.OnOpenFailed = new ResRef(_scriptFields["OnOpenFailed"].Text ?? "");
+                utd.OnOpenFailed = ResRefFromText(_scriptFields["OnOpenFailed"].Text);
             }
             if (_scriptFields.ContainsKey("OnHeartbeat") && _scriptFields["OnHeartbeat"] != null)
             {
-                utd.OnHeartbeat = new ResRef(_scriptFields["OnHeartbeat"].Text ?? "");
+                utd.OnHeartbeat = ResRefFromText(_scriptFields["OnHeartbeat"].Text);
             }
             if (_scriptFields.ContainsKey("OnMelee") && _scriptFields["OnMelee"] != null)
             {
-                utd.OnMelee = new ResRef(_scriptFields["OnMelee"].Text ?? "");
+                utd.OnMelee = ResRefFromText(_scriptFields["OnMelee"].Text);
             }
             if (_scriptFields.ContainsKey("OnOpen") && _scriptFields["OnOpen"] != null)
             {
-                utd.OnOpen = new ResRef(_scriptFields["OnOpen"].Text ?? "");
+                utd.OnOpen = ResRefFromText(_scriptFields["OnOpen"].Text);
             }
             if (_scriptFields.ContainsKey("OnUnlock") && _scriptFields["OnUnlock"] != null)
             {
-                utd.OnUnlock = new ResRef(_scriptFields["OnUnlock"].Text ?? "");
+                utd.OnUnlock = ResRefFromText(_scriptFields["OnUnlock"].Text);
             }
             if (_scriptFields.ContainsKey("OnUserDefined") && _scriptFields["OnUserDefined"] != null)
             {
-                utd.OnUserDefined = new ResRef(_scriptFields["OnUserDefined"].Text ?? "");
+                utd.OnUserDefined = ResRefFromText(_scriptFields["OnUserDefined"].Text);
             }
             // Python: utd.on_power = ResRef(self.ui.onSpellEdit.currentText())
             if (_scriptFields.ContainsKey("OnPower") && _scriptFields["OnPower"] != null)
             {
-                utd.OnPower = new ResRef(_scriptFields["OnPower"].Text ?? "");
+                utd.OnPower = ResRefFromText(_scriptFields["OnPower"].Text);
             }
 
             // Comments
@@ -1153,8 +1284,21 @@ namespace OdyTools.Editors
             // Build GFF
             Game game = _installation?.Game ?? Game.K2;
             var gff = UTDHelpers.DismantleUtd(utd, game);
-            byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTD);
+            ResourceType outputType = _restype == ResourceType.UTD_XML
+                ? ResourceType.UTD_XML
+                : (_restype == ResourceType.BTD ? ResourceType.BTD : ResourceType.UTD);
+            if (outputType == ResourceType.BTD)
+            {
+                gff.Content = GFFContent.BTD;
+            }
+            byte[] data = GFFAuto.BytesGff(gff, outputType);
             return Tuple.Create(data, new byte[0]);
+        }
+
+        private static ResRef ResRefFromText(string text)
+        {
+            string value = (text ?? string.Empty).Trim();
+            return !string.IsNullOrEmpty(value) ? new ResRef(value) : new ResRef("");
         }
 
         private UTD CopyUTD(UTD source)
@@ -1257,6 +1401,7 @@ namespace OdyTools.Editors
             {
                 _tagEdit.Text = _resrefEdit.Text;
             }
+            MarkDocumentDirty();
         }
 
         private void GenerateResref()
@@ -1265,6 +1410,7 @@ namespace OdyTools.Editors
             {
                 _resrefEdit.Text = !string.IsNullOrEmpty(base._resname) ? base._resname : "m00xx_dor_000";
             }
+            MarkDocumentDirty();
         }
 
         private void EditConversation()

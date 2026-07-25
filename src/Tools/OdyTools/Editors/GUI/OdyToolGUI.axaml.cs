@@ -47,6 +47,9 @@ namespace OdyTools.Editors.GUI
         private int _undoIndex = -1;
         private bool _undoRedoInProgress;
 
+        internal string SelectedControlTagForTest => _selectedNode?.GetString(OdyToolGUIHelpers.TagLabel) ?? "";
+        internal bool HasSelectedControlPropertyPanelForTest => _selectedNode != null && _propertyPanel?.Children?.Count > 1;
+
         public OdyToolGUI() : this(null, null) { }
         public OdyToolGUI(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolGUI", "none", new[] { ResourceType.GUI }, new[] { ResourceType.GUI }, installation)
@@ -76,6 +79,11 @@ namespace OdyTools.Editors.GUI
             var editMenu = new MenuItem { Header = "_Edit" };
             var undoItem = new MenuItem { Header = "_Undo" }; undoItem.Click += (s, e) => Undo(); editMenu.Items.Add(undoItem);
             var redoItem = new MenuItem { Header = "_Redo" }; redoItem.Click += (s, e) => Redo(); editMenu.Items.Add(redoItem);
+            editMenu.Items.Add(new Separator());
+            var addRootItem = new MenuItem { Header = "Add _Root Control" }; addRootItem.Click += (s, e) => AddRootControl(); editMenu.Items.Add(addRootItem);
+            var addChildItem = new MenuItem { Header = "Add _Child Control" }; addChildItem.Click += (s, e) => AddChildControl(); editMenu.Items.Add(addChildItem);
+            var duplicateItem = new MenuItem { Header = "_Duplicate Control" }; duplicateItem.Click += (s, e) => DuplicateSelectedControl(); editMenu.Items.Add(duplicateItem);
+            var deleteItem = new MenuItem { Header = "_Delete Control" }; deleteItem.Click += (s, e) => DeleteSelectedControl(); editMenu.Items.Add(deleteItem);
             menu.Items.Add(editMenu);
             DockPanel.SetDock(menu, Dock.Top);
             mainDock.Children.Add(menu);
@@ -102,6 +110,18 @@ namespace OdyTools.Editors.GUI
             var reloadBtn = new Button { Content = "Reload Images" };
             reloadBtn.Click += (s, e) => ReloadTextures();
             toolStack.Children.Add(reloadBtn);
+            var addRootBtn = new Button { Content = "Add Root" };
+            addRootBtn.Click += (s, e) => AddRootControl();
+            toolStack.Children.Add(addRootBtn);
+            var addChildBtn = new Button { Content = "Add Child" };
+            addChildBtn.Click += (s, e) => AddChildControl();
+            toolStack.Children.Add(addChildBtn);
+            var duplicateBtn = new Button { Content = "Duplicate" };
+            duplicateBtn.Click += (s, e) => DuplicateSelectedControl();
+            toolStack.Children.Add(duplicateBtn);
+            var deleteBtn = new Button { Content = "Delete" };
+            deleteBtn.Click += (s, e) => DeleteSelectedControl();
+            toolStack.Children.Add(deleteBtn);
             var revertBtn = new Button { Content = "Revert" };
             revertBtn.Click += (s, e) => Revert();
             toolStack.Children.Add(revertBtn);
@@ -156,7 +176,7 @@ namespace OdyTools.Editors.GUI
             DockPanel.SetDock(statusBorder, Dock.Bottom);
             mainDock.Children.Add(statusBorder);
 
-            var contentRoot = this.FindControl<ContentControl>("contentRoot");
+            var contentRoot = EditorHelpers.FindControlSafe<ContentControl>(this, "contentRoot");
             if (contentRoot != null) contentRoot.Content = mainDock; else Content = mainDock;
             ApplyDarkMode();
 
@@ -185,6 +205,341 @@ namespace OdyTools.Editors.GUI
                 var found = FindViewModelByData(item?.Children, data);
                 if (found != null) return found;
             }
+            return null;
+        }
+
+        internal bool SelectControlByTagForTest(string tag)
+        {
+            var node = FindControlByTag(_gff?.Root, tag);
+            if (node == null)
+            {
+                return false;
+            }
+
+            _selectedNode = node;
+            _preview.SelectedNode = node;
+            SyncTreeSelectionToNode(node);
+            RefreshPropertyPanel();
+            return true;
+        }
+
+        internal bool EditSelectedControlForTest(string tag, int left, int top, int width, int height)
+        {
+            if (_selectedNode == null)
+            {
+                return false;
+            }
+
+            PushState();
+            _selectedNode.SetString(OdyToolGUIHelpers.TagLabel, tag ?? "");
+            OdyToolGUIHelpers.SetExtentValues(_selectedNode, left, top, width, height);
+            MarkDocumentDirty();
+            LoadTreeAndPreview();
+            _preview.SelectedNode = _selectedNode;
+            SyncTreeSelectionToNode(_selectedNode);
+            RefreshPropertyPanel();
+            _preview.InvalidateVisual();
+            return true;
+        }
+
+        internal bool EditSelectedResRefFieldForTest(string label, string value)
+        {
+            if (_selectedNode == null || string.IsNullOrWhiteSpace(label))
+            {
+                return false;
+            }
+
+            ApplyResRefFieldEdit(_selectedNode, label, value);
+            return true;
+        }
+
+        internal void AddRootControlForTest() => AddRootControl();
+
+        internal bool AddChildControlForTest()
+        {
+            int before = CountControls(_gff?.Root);
+            AddChildControl();
+            return CountControls(_gff?.Root) > before;
+        }
+
+        internal bool DuplicateSelectedControlForTest()
+        {
+            int before = CountControls(_gff?.Root);
+            DuplicateSelectedControl();
+            return CountControls(_gff?.Root) > before;
+        }
+
+        internal bool DeleteSelectedControlForTest()
+        {
+            int before = CountControls(_gff?.Root);
+            DeleteSelectedControl();
+            return CountControls(_gff?.Root) < before;
+        }
+
+        internal int ControlCountForTest => CountControls(_gff?.Root);
+
+        private void AddRootControl()
+        {
+            if (_gff == null)
+                _gff = new GFF(GFFContent.GUI);
+
+            PushState();
+            var controls = EnsureControlList(_gff.Root);
+            var control = CreateDefaultControl(NextControlTag("control"));
+            controls.Add(control);
+            CommitControlListChange(control);
+        }
+
+        private void AddChildControl()
+        {
+            if (_selectedNode == null)
+            {
+                AddRootControl();
+                return;
+            }
+
+            PushState();
+            var children = EnsureControlList(_selectedNode);
+            var control = CreateDefaultControl(NextControlTag($"{SanitizeTag(_selectedNode.GetString(OdyToolGUIHelpers.TagLabel), "control")}_child"));
+            children.Add(control);
+            CommitControlListChange(control);
+        }
+
+        private void DuplicateSelectedControl()
+        {
+            if (_selectedNode == null)
+                return;
+
+            var parentList = FindOwningControlList(_gff?.Root, _selectedNode);
+            if (parentList == null)
+                return;
+
+            PushState();
+            var copy = CloneStruct(_selectedNode);
+            string sourceTag = _selectedNode.GetString(OdyToolGUIHelpers.TagLabel);
+            copy.SetString(OdyToolGUIHelpers.TagLabel, NextControlTag($"{SanitizeTag(sourceTag, "control")}_copy"));
+            OdyToolGUIHelpers.GetExtentValues(copy, out int left, out int top, out int width, out int height);
+            OdyToolGUIHelpers.SetExtentValues(copy, left + 16, top + 16, width, height);
+            parentList.Add(copy);
+            CommitControlListChange(copy);
+        }
+
+        private void DeleteSelectedControl()
+        {
+            if (_selectedNode == null)
+                return;
+
+            var parentList = FindOwningControlList(_gff?.Root, _selectedNode);
+            if (parentList == null)
+                return;
+
+            for (int i = 0; i < parentList.Count; i++)
+            {
+                if (parentList.At(i) != _selectedNode)
+                    continue;
+
+                PushState();
+                parentList.Remove(i);
+                _selectedNode = null;
+                CommitControlListChange(null);
+                return;
+            }
+        }
+
+        private void CommitControlListChange(GFFStruct selected)
+        {
+            _selectedNode = selected;
+            MarkDocumentDirty();
+            LoadTreeAndPreview();
+            _preview.SelectedNode = selected;
+            SyncTreeSelectionToNode(selected);
+            RefreshPropertyPanel();
+            UpdateStatusBar();
+        }
+
+        private GFFList EnsureControlList(GFFStruct node)
+        {
+            if (node == null)
+                return new GFFList();
+
+            if (!node.TryGetList(OdyToolGUIHelpers.ControllistLabel, out var controls))
+            {
+                controls = new GFFList();
+                node.SetList(OdyToolGUIHelpers.ControllistLabel, controls);
+            }
+
+            return controls;
+        }
+
+        private static GFFStruct CreateDefaultControl(string tag)
+        {
+            var control = new GFFStruct(0);
+            control.SetString(OdyToolGUIHelpers.TagLabel, tag);
+            OdyToolGUIHelpers.SetExtentValues(control, 16, 16, 160, 48);
+            control.SetList(OdyToolGUIHelpers.ControllistLabel, new GFFList());
+            return control;
+        }
+
+        private string NextControlTag(string requestedBase)
+        {
+            string baseTag = SanitizeTag(requestedBase, "control");
+            var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            CollectControlTags(_gff?.Root, existing);
+
+            if (!existing.Contains(baseTag))
+                return baseTag;
+
+            for (int i = 2; i < 10000; i++)
+            {
+                string candidate = $"{baseTag}_{i}";
+                if (!existing.Contains(candidate))
+                    return candidate;
+            }
+
+            return $"{baseTag}_{DateTime.UtcNow.Ticks}";
+        }
+
+        private static string SanitizeTag(string value, string fallback)
+        {
+            string tag = string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
+            tag = tag.Replace(' ', '_');
+            return tag.Length <= 64 ? tag : tag.Substring(0, 64);
+        }
+
+        private static void CollectControlTags(GFFStruct node, HashSet<string> tags)
+        {
+            if (node == null || tags == null)
+                return;
+
+            string tag = node.GetString(OdyToolGUIHelpers.TagLabel);
+            if (!string.IsNullOrWhiteSpace(tag))
+                tags.Add(tag);
+
+            var children = OdyToolGUIHelpers.GetChildren(node);
+            if (children != null)
+            {
+                foreach (var child in children)
+                    CollectControlTags(child, tags);
+            }
+
+            CollectControlTags(OdyToolGUIHelpers.GetProtoItem(node), tags);
+            CollectControlTags(OdyToolGUIHelpers.GetScrollBar(node), tags);
+        }
+
+        private static int CountControls(GFFStruct node)
+        {
+            if (node == null)
+                return 0;
+
+            int total = 0;
+            var children = OdyToolGUIHelpers.GetChildren(node);
+            if (children != null)
+            {
+                foreach (var child in children)
+                    total += 1 + CountControls(child);
+            }
+
+            total += CountControls(OdyToolGUIHelpers.GetProtoItem(node));
+            total += CountControls(OdyToolGUIHelpers.GetScrollBar(node));
+            return total;
+        }
+
+        private static GFFList FindOwningControlList(GFFStruct root, GFFStruct target)
+        {
+            if (root == null || target == null)
+                return null;
+
+            var children = OdyToolGUIHelpers.GetChildren(root);
+            if (children != null)
+            {
+                foreach (var child in children)
+                {
+                    if (child == target)
+                        return children;
+
+                    var nested = FindOwningControlList(child, target);
+                    if (nested != null)
+                        return nested;
+                }
+            }
+
+            var protoOwner = FindOwningControlList(OdyToolGUIHelpers.GetProtoItem(root), target);
+            if (protoOwner != null)
+                return protoOwner;
+
+            return FindOwningControlList(OdyToolGUIHelpers.GetScrollBar(root), target);
+        }
+
+        private static GFFStruct CloneStruct(GFFStruct source)
+        {
+            var clone = new GFFStruct(source?.StructId ?? 0);
+            if (source == null)
+                return clone;
+
+            foreach (var (label, fieldType, value) in source)
+                clone.SetField(label, fieldType, CloneFieldValue(fieldType, value));
+
+            return clone;
+        }
+
+        private static object CloneFieldValue(GFFFieldType fieldType, object value)
+        {
+            switch (fieldType)
+            {
+                case GFFFieldType.Struct:
+                    return CloneStruct(value as GFFStruct);
+                case GFFFieldType.List:
+                    var clonedList = new GFFList();
+                    if (value is GFFList sourceList)
+                    {
+                        foreach (var item in sourceList)
+                            clonedList.Add(CloneStruct(item));
+                    }
+                    return clonedList;
+                case GFFFieldType.Binary:
+                    return value is byte[] bytes ? (byte[])bytes.Clone() : Array.Empty<byte>();
+                default:
+                    return value;
+            }
+        }
+
+        private static GFFStruct FindControlByTag(GFFStruct node, string tag)
+        {
+            if (node == null)
+            {
+                return null;
+            }
+
+            if (string.Equals(node.GetString(OdyToolGUIHelpers.TagLabel), tag, StringComparison.OrdinalIgnoreCase))
+            {
+                return node;
+            }
+
+            GFFStruct found = FindControlByTag(OdyToolGUIHelpers.GetProtoItem(node), tag);
+            if (found != null)
+            {
+                return found;
+            }
+
+            found = FindControlByTag(OdyToolGUIHelpers.GetScrollBar(node), tag);
+            if (found != null)
+            {
+                return found;
+            }
+
+            var children = OdyToolGUIHelpers.GetChildren(node);
+            if (children != null)
+            {
+                foreach (var child in children)
+                {
+                    found = FindControlByTag(child, tag);
+                    if (found != null)
+                    {
+                        return found;
+                    }
+                }
+            }
+
             return null;
         }
 
@@ -301,7 +656,7 @@ namespace OdyTools.Editors.GUI
                 case GFFFieldType.ResRef:
                     var resRef = value as ResRef ?? ResRef.FromBlank();
                     var resTxt = new TextBox { Text = resRef.ToString() ?? "", MaxLength = 16 };
-                    resTxt.LostFocus += (s, e) => { _selectedNode.SetResRef(label, ResRef.FromString(((TextBox)s).Text ?? "")); MarkDocumentDirty(); ReloadTextures(); _preview.InvalidateVisual(); };
+                    resTxt.LostFocus += (s, e) => ApplyResRefFieldEdit(_selectedNode, label, ((TextBox)s).Text);
                     input = resTxt;
                     break;
                 case GFFFieldType.Vector3:
@@ -410,6 +765,25 @@ namespace OdyTools.Editors.GUI
                     sp.Children.Add(input);
             }
             return sp;
+        }
+
+        internal static ResRef ResRefFromEditableText(string text)
+        {
+            string value = text?.Trim() ?? string.Empty;
+            return string.IsNullOrEmpty(value) || !ResRef.IsValid(value) ? ResRef.FromBlank() : ResRef.FromString(value);
+        }
+
+        private void ApplyResRefFieldEdit(GFFStruct node, string label, string text)
+        {
+            if (node == null || string.IsNullOrWhiteSpace(label))
+            {
+                return;
+            }
+
+            node.SetResRef(label, ResRefFromEditableText(text));
+            MarkDocumentDirty();
+            ReloadTextures();
+            _preview.InvalidateVisual();
         }
 
         private void OpenMathExpressionDialog(string label, GFFFieldType fieldType, NumericUpDown targetBox)

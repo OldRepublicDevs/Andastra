@@ -25,7 +25,7 @@ namespace OdyTools.Editors.Actions
             }
 
             // Use the model to add the root node (this performs the actual operation)
-            _item = editor.Model.AddRootNode();
+            _item = editor.Model.AddRootNodeCore();
             if (_item == null || _item.Link == null)
             {
                 throw new InvalidOperationException("Failed to create root node");
@@ -64,4 +64,3 @@ namespace OdyTools.Editors.Actions
         public DLGStandardItem Item => _item;
     }
 }
-

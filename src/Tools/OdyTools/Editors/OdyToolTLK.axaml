@@ -72,7 +72,7 @@
         <!-- Main Content -->
         <Grid RowDefinitions="Auto,Auto,*,Auto,Auto">
             <!-- Search Box -->
-            <Border Name="searchBox" Grid.Row="0" Background="#FFFFFF" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="6" Padding="8" Margin="8,6,8,6" IsVisible="True">
+            <Border Name="searchBox" Grid.Row="0" Background="#FFFFFF" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="6" Padding="8" Margin="8,6,8,6" IsVisible="False">
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBox Name="searchEdit" Grid.Column="0" Watermark="Search text or sound..." Margin="0,0,5,0" />
                     <Button Name="searchButton" Grid.Column="1" Content="Search" Width="70" />
@@ -80,7 +80,7 @@
             </Border>
 
             <!-- Jump Box -->
-            <Border Name="jumpBox" Grid.Row="1" Background="#FFFFFF" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="6" Padding="8" Margin="8,0,8,6" IsVisible="True">
+            <Border Name="jumpBox" Grid.Row="1" Background="#FFFFFF" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="6" Padding="8" Margin="8,0,8,6" IsVisible="False">
                 <Grid ColumnDefinitions="Auto,*,Auto">
                     <TextBlock Text="Go To Entry:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" />
                     <NumericUpDown Name="jumpSpinbox" Grid.Column="1" Minimum="0" Maximum="0" Margin="0,0,5,0" />

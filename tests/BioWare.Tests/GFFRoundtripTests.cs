@@ -3,6 +3,8 @@ using System.Linq;
 using BioWare.Common;
 using BioWare.Resource;
 using BioWare.Resource.Formats.GFF;
+using BioWare.Resource.Formats.GFF.Generics;
+using BioWare.Resource.Formats.GFF.Generics.UTC;
 using NUnit.Framework;
 
 namespace BioWare.Tests
@@ -130,6 +132,99 @@ namespace BioWare.Tests
             var c = r.GetStruct("child");
             Assert.That(c.StructId, Is.EqualTo(2));
             Assert.That(c.GetString("leaf"), Is.EqualTo("value"));
+        }
+
+        [Test]
+        public void UTC_DismantleRoundtrip_PreservesNarrowNumericFields()
+        {
+            var utc = new UTC
+            {
+                Tag = "test_creature",
+                ResRef = new ResRef("test_creature"),
+                Conversation = new ResRef("test_dlg"),
+                Alignment = 75,
+                Plot = true,
+                NoPermDeath = true,
+                Min1Hp = true,
+                Disarmable = true,
+                Strength = 16,
+                Dexterity = 14,
+                Constitution = 13,
+                Intelligence = 12,
+                Wisdom = 11,
+                Charisma = 10,
+                NaturalAc = 4,
+                Hp = 30,
+                CurrentHp = 24,
+                MaxHp = 35,
+                OnSpawn = new ResRef("k_spawn"),
+                OnHeartbeat = new ResRef("k_heart"),
+                OnDeath = new ResRef("k_death"),
+                Comment = "edited creature"
+            };
+
+            byte[] data = GFFAuto.BytesGff(UTCHelpers.DismantleUtc(utc, BioWareGame.K2), ResourceType.UTC);
+            var loaded = UTCHelpers.ConstructUtc(GFF.FromBytes(data));
+
+            Assert.That(loaded.Tag, Is.EqualTo("test_creature"));
+            Assert.That(loaded.ResRef.ToString(), Is.EqualTo("test_creature"));
+            Assert.That(loaded.Conversation.ToString(), Is.EqualTo("test_dlg"));
+            Assert.That(loaded.Alignment, Is.EqualTo(75));
+            Assert.That(loaded.Plot, Is.True);
+            Assert.That(loaded.NoPermDeath, Is.True);
+            Assert.That(loaded.Min1Hp, Is.True);
+            Assert.That(loaded.Disarmable, Is.True);
+            Assert.That(loaded.Strength, Is.EqualTo(16));
+            Assert.That(loaded.Dexterity, Is.EqualTo(14));
+            Assert.That(loaded.Constitution, Is.EqualTo(13));
+            Assert.That(loaded.Intelligence, Is.EqualTo(12));
+            Assert.That(loaded.Wisdom, Is.EqualTo(11));
+            Assert.That(loaded.Charisma, Is.EqualTo(10));
+            Assert.That(loaded.NaturalAc, Is.EqualTo(4));
+            Assert.That(loaded.Hp, Is.EqualTo(30));
+            Assert.That(loaded.CurrentHp, Is.EqualTo(24));
+            Assert.That(loaded.MaxHp, Is.EqualTo(35));
+            Assert.That(loaded.OnSpawn.ToString(), Is.EqualTo("k_spawn"));
+            Assert.That(loaded.OnHeartbeat.ToString(), Is.EqualTo("k_heart"));
+            Assert.That(loaded.OnDeath.ToString(), Is.EqualTo("k_death"));
+            Assert.That(loaded.Comment, Is.EqualTo("edited creature"));
+        }
+
+        [Test]
+        public void GIT_DismantleRoundtrip_PreservesEditableInstanceTags()
+        {
+            var git = new GIT();
+            git.Placeables.Add(new GITPlaceable
+            {
+                ResRef = new ResRef("plc_test"),
+                Tag = "placeable_tag",
+                Position = new System.Numerics.Vector3(1.5f, -2.5f, 3.25f),
+                Bearing = 1.125f
+            });
+            git.Sounds.Add(new GITSound
+            {
+                ResRef = new ResRef("snd_test"),
+                Tag = "sound_tag",
+                Position = new System.Numerics.Vector3(4.5f, 5.5f, -6.5f)
+            });
+
+            byte[] data = GFFAuto.BytesGff(GITHelpers.DismantleGit(git, BioWareGame.K2), ResourceType.GIT);
+            var loaded = GITHelpers.ConstructGit(GFF.FromBytes(data));
+
+            Assert.That(loaded.Placeables, Has.Count.EqualTo(1));
+            Assert.That(loaded.Placeables[0].ResRef.ToString(), Is.EqualTo("plc_test"));
+            Assert.That(loaded.Placeables[0].Tag, Is.EqualTo("placeable_tag"));
+            Assert.That(loaded.Placeables[0].Position.X, Is.EqualTo(1.5f).Within(0.001f));
+            Assert.That(loaded.Placeables[0].Position.Y, Is.EqualTo(-2.5f).Within(0.001f));
+            Assert.That(loaded.Placeables[0].Position.Z, Is.EqualTo(3.25f).Within(0.001f));
+            Assert.That(loaded.Placeables[0].Bearing, Is.EqualTo(1.125f).Within(0.001f));
+
+            Assert.That(loaded.Sounds, Has.Count.EqualTo(1));
+            Assert.That(loaded.Sounds[0].ResRef.ToString(), Is.EqualTo("snd_test"));
+            Assert.That(loaded.Sounds[0].Tag, Is.EqualTo("sound_tag"));
+            Assert.That(loaded.Sounds[0].Position.X, Is.EqualTo(4.5f).Within(0.001f));
+            Assert.That(loaded.Sounds[0].Position.Y, Is.EqualTo(5.5f).Within(0.001f));
+            Assert.That(loaded.Sounds[0].Position.Z, Is.EqualTo(-6.5f).Within(0.001f));
         }
     }
 }

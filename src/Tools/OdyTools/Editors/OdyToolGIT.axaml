@@ -38,21 +38,53 @@
         <MenuItem Header="E_xit" Name="actionExit"
                   ToolTip.Tip="Close OdyToolGIT. You will be prompted to save if there are unsaved changes."/>
       </MenuItem>
+      <MenuItem Header="_Edit">
+        <MenuItem Header="_Undo" Name="actionUndoGit" HotKey="Ctrl+Z"
+                  ToolTip.Tip="Undo the last GIT instance edit."/>
+        <MenuItem Header="_Redo" Name="actionRedoGit" HotKey="Ctrl+Y"
+                  ToolTip.Tip="Redo the last undone GIT instance edit."/>
+        <Separator/>
+        <MenuItem Header="_Duplicate Selected" Name="actionDuplicateSelected" HotKey="Ctrl+D"
+                  ToolTip.Tip="Duplicate the selected instance and offset it slightly for immediate editing."/>
+        <MenuItem Header="_Delete Selected" Name="actionDeleteSelected" HotKey="Delete"
+                  ToolTip.Tip="Remove the selected instance from the GIT."/>
+      </MenuItem>
+      <MenuItem Header="_Tools">
+        <MenuItem Header="Open in _Blender" Name="actionOpenInBlender"
+                  ToolTip.Tip="Launch the current GIT in Blender using the kotorblender IPC bridge."/>
+      </MenuItem>
     </Menu>
 
-    <!-- Toolbar: filter -->
+    <!-- Toolbar: filter and visibility -->
     <Border DockPanel.Dock="Top" Padding="12,8" Background="#FAFBFC" BorderBrush="#D7DBE6" BorderThickness="0,0,0,1">
-      <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto">
+      <Grid ColumnDefinitions="Auto,260,Auto,160,Auto,Auto,*" RowDefinitions="Auto" ColumnSpacing="8">
         <TextBlock Grid.Column="0" Text="Filter:" VerticalAlignment="Center" Margin="0,0,8,0"
                    ToolTip.Tip="Filter the instance list by tag or resref. Does not change the GIT file."/>
         <TextBox Name="filterEdit" Grid.Column="1" Watermark="filter by tag or resref..."
                  MaxLength="64"
                  ToolTip.Tip="Type part of a creature, door, placeable, trigger, waypoint, or sound tag/resref to show only matching entries. Leave empty to show all."/>
+        <TextBlock Grid.Column="2" Text="Add:" VerticalAlignment="Center" Margin="8,0,0,0"/>
+        <ComboBox Name="addInstanceType" Grid.Column="3" SelectedIndex="0"
+                  ToolTip.Tip="Choose the type of GIT instance to create."/>
+        <Button Name="addInstanceButton" Grid.Column="4" Content="Add"
+                ToolTip.Tip="Add a new instance of the selected type and select it for editing."/>
+        <TextBlock Grid.Column="5" Text="Show:" VerticalAlignment="Center" Margin="8,0,0,0"/>
+        <StackPanel Name="visibilityPanel" Grid.Column="6" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <CheckBox Content="Creatures" Tag="Creature" IsChecked="True"/>
+          <CheckBox Content="Doors" Tag="Door" IsChecked="True"/>
+          <CheckBox Content="Placeables" Tag="Placeable" IsChecked="True"/>
+          <CheckBox Content="Triggers" Tag="Trigger" IsChecked="True"/>
+          <CheckBox Content="Waypoints" Tag="Waypoint" IsChecked="True"/>
+          <CheckBox Content="Sounds" Tag="Sound" IsChecked="True"/>
+          <CheckBox Content="Stores" Tag="Store" IsChecked="True"/>
+          <CheckBox Content="Encounters" Tag="Encounter" IsChecked="True"/>
+          <CheckBox Content="Cameras" Tag="Camera" IsChecked="True"/>
+        </StackPanel>
       </Grid>
     </Border>
 
-    <!-- Main: instance list + detail -->
-    <Grid ColumnDefinitions="280,*" Margin="8,0,8,8">
+    <!-- Main: instance list + canvas + detail -->
+    <Grid ColumnDefinitions="260,*,320" Margin="8,0,8,8">
       <!-- Left: instance list -->
       <Border Grid.Column="0" Margin="0,0,4,0" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="8"
               Background="#FAFBFC"
@@ -71,8 +103,15 @@
         </Grid>
       </Border>
 
+      <!-- Center: 2D instance canvas -->
+      <Border Grid.Column="1" Margin="4,0,4,0" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="8"
+              Background="#1A1C20" ClipToBounds="True"
+              ToolTip.Tip="2D GIT viewport. Click an instance to select it, drag selected instances to move them, drag empty space to pan, and scroll to zoom.">
+        <local:GITRenderArea Name="renderArea" Focusable="True"/>
+      </Border>
+
       <!-- Right: detail panel -->
-      <Border Grid.Column="1" Margin="4,0,0,0" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="8"
+      <Border Grid.Column="2" Margin="4,0,0,0" BorderBrush="#D7DBE6" BorderThickness="1" CornerRadius="8"
               Background="#FAFBFC" Padding="16">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
           <StackPanel Name="detailPanel" Spacing="12">
@@ -110,6 +149,8 @@
                          ToolTip.Tip="Script/tag identifier. Shown for door, placeable, trigger, waypoint, sound."/>
               </Grid>
               <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+                <Button Name="duplicateInstanceButton" Content="Duplicate"
+                        ToolTip.Tip="Clone the selected instance and offset the copy slightly. Shortcut: Ctrl+D."/>
                 <Button Name="removeInstanceButton" Content="Remove instance"
                         ToolTip.Tip="Remove the selected instance from the GIT. This cannot be undone without reverting the file."/>
               </StackPanel>

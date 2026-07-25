@@ -2,6 +2,7 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using OdyTools.Data;
+using OdyTools.Editors;
 
 namespace OdyTools.Widgets.Settings
 {
@@ -98,19 +99,27 @@ namespace OdyTools.Widgets.Settings
         private void SetupUI()
         {
             // Find controls from XAML
-            _useBetaChannel = this.FindControl<CheckBox>("useBetaChannel");
-            _attemptKeepOldGFFFields = this.FindControl<CheckBox>("attemptKeepOldGFFFields");
-            _saveRimCheck = this.FindControl<CheckBox>("saveRimCheck");
-            _mergeRimCheck = this.FindControl<CheckBox>("mergeRimCheck");
-            _moduleSortOptionComboBox = this.FindControl<ComboBox>("moduleSortOptionComboBox");
-            _greyRimCheck = this.FindControl<CheckBox>("greyRimCheck");
-            _showPreviewUTCCheck = this.FindControl<CheckBox>("showPreviewUTCCheck");
-            _showPreviewUTPCheck = this.FindControl<CheckBox>("showPreviewUTPCheck");
-            _showPreviewUTDCheck = this.FindControl<CheckBox>("showPreviewUTDCheck");
-            _tempDirEdit = this.FindControl<TextBox>("tempDirEdit");
-            _gffEditorCombo = this.FindControl<ComboBox>("gffEditorCombo");
-            _ncsToolEdit = this.FindControl<TextBox>("ncsToolEdit");
-            _nssCompEdit = this.FindControl<TextBox>("nssCompEdit");
+            _useBetaChannel = EditorHelpers.FindControlSafe<CheckBox>(this, "useBetaChannel") ?? _useBetaChannel;
+            _attemptKeepOldGFFFields = EditorHelpers.FindControlSafe<CheckBox>(this, "attemptKeepOldGFFFields") ?? _attemptKeepOldGFFFields;
+            _saveRimCheck = EditorHelpers.FindControlSafe<CheckBox>(this, "saveRimCheck") ?? _saveRimCheck;
+            _mergeRimCheck = EditorHelpers.FindControlSafe<CheckBox>(this, "mergeRimCheck") ?? _mergeRimCheck;
+            _moduleSortOptionComboBox = EditorHelpers.FindControlSafe<ComboBox>(this, "moduleSortOptionComboBox") ?? _moduleSortOptionComboBox;
+            _greyRimCheck = EditorHelpers.FindControlSafe<CheckBox>(this, "greyRimCheck") ?? _greyRimCheck;
+            _showPreviewUTCCheck = EditorHelpers.FindControlSafe<CheckBox>(this, "showPreviewUTCCheck") ?? _showPreviewUTCCheck;
+            _showPreviewUTPCheck = EditorHelpers.FindControlSafe<CheckBox>(this, "showPreviewUTPCheck") ?? _showPreviewUTPCheck;
+            _showPreviewUTDCheck = EditorHelpers.FindControlSafe<CheckBox>(this, "showPreviewUTDCheck") ?? _showPreviewUTDCheck;
+            _tempDirEdit = EditorHelpers.FindControlSafe<TextBox>(this, "tempDirEdit") ?? _tempDirEdit;
+            _gffEditorCombo = EditorHelpers.FindControlSafe<ComboBox>(this, "gffEditorCombo") ?? _gffEditorCombo;
+            _ncsToolEdit = EditorHelpers.FindControlSafe<TextBox>(this, "ncsToolEdit") ?? _ncsToolEdit;
+            _nssCompEdit = EditorHelpers.FindControlSafe<TextBox>(this, "nssCompEdit") ?? _nssCompEdit;
+
+            if (_useBetaChannel == null || _attemptKeepOldGFFFields == null || _saveRimCheck == null ||
+                _mergeRimCheck == null || _moduleSortOptionComboBox == null || _greyRimCheck == null ||
+                _showPreviewUTCCheck == null || _showPreviewUTPCheck == null || _showPreviewUTDCheck == null ||
+                _tempDirEdit == null || _gffEditorCombo == null || _ncsToolEdit == null || _nssCompEdit == null)
+            {
+                SetupProgrammaticUI();
+            }
         }
 
         private void SetupValues()

@@ -153,11 +153,13 @@ namespace BioWare.Resource.Formats.GFF.Generics.ARE
             // Matching Python: are.stealth_xp_loss = root.acquire("StealthXPLoss", 0)
             // Engine default: Uses existing value if field missing (k1_win_gog_swkotor.exe: 0x00508c50 line 527-529, k2_win_gog_aspyr_swkotor2.exe: 0x004e3ff0 line 534-536)
             // For new ARE objects, default is 0
-            are.StealthXpLoss = root.Acquire<int>("StealthXPLoss", 0);
+            uint stealthXpLoss = root.Acquire<uint>("StealthXPLoss", 0);
+            are.StealthXpLoss = stealthXpLoss > int.MaxValue ? int.MaxValue : (int)stealthXpLoss;
             // Matching Python: are.stealth_xp_max = root.acquire("StealthXPMax", 0)
             // Engine default: Uses existing value if field missing (k1_win_gog_swkotor.exe: 0x00508c50 line 516-521, k2_win_gog_aspyr_swkotor2.exe: 0x004e3ff0 line 523-528)
             // For new ARE objects, default is 0
-            are.StealthXpMax = root.Acquire<int>("StealthXPMax", 0);
+            uint stealthXpMax = root.Acquire<uint>("StealthXPMax", 0);
+            are.StealthXpMax = stealthXpMax > int.MaxValue ? int.MaxValue : (int)stealthXpMax;
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:496
             // Original: are.loadscreen_id = root.acquire("LoadScreenID", 0)
             // Engine default: 0 (k1_win_gog_swkotor.exe: 0x00508c50 line 276, k2_win_gog_aspyr_swkotor2.exe: 0x004e3ff0 line 278)
@@ -550,4 +552,3 @@ namespace BioWare.Resource.Formats.GFF.Generics.ARE
         }
     }
 }
-

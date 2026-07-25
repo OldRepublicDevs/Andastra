@@ -31,7 +31,9 @@ namespace BioWare.Resource.Formats.GFF.Generics
             }
 
             // Engine default: 0 (k2_win_gog_aspyr_swkotor2.exe:0x00707290 line 169, k1_win_gog_swkotor.exe:0x006c8e50 line 153)
-            nfo.TimePlayedSeconds = root.Acquire("TIMEPLAYED", 0);
+            nfo.TimePlayedSeconds = root.Exists("TIMEPLAYED")
+                ? unchecked((int)root.GetUInt32("TIMEPLAYED"))
+                : 0;
 
             // Engine default: 0 if not present (k2_win_gog_aspyr_swkotor2.exe:0x00707290 line 205)
             // TIMESTAMP is commonly FILETIME in a 64-bit integer; tolerate both signed/unsigned.
@@ -166,5 +168,4 @@ namespace BioWare.Resource.Formats.GFF.Generics
         }
     }
 }
-
 

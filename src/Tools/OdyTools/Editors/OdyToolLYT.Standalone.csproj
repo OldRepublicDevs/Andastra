@@ -14,6 +14,8 @@
     <Compile Include="EditorWikiMapping.cs" />
     <Compile Include="WindowUtils.cs" />
     <Compile Include="LYT\LYTGraphicsScene.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Blender\BlenderDetection.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Blender\BlenderInfo.cs" />
     <Compile Include="$(_OdyToolsRoot)\Common\CollectionViewSource.cs" />
     <Compile Include="$(_OdyToolsRoot)\Data\OdyInstallation.cs" />
     <Compile Include="$(_OdyToolsRoot)\Data\GITSettings.cs" />

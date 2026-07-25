@@ -73,8 +73,17 @@ namespace BioWare.Resource.Formats.LTR
 
             bool done = false;
 
+            int outerAttempts = 0;
+            const int maxOuterAttempts = 1000;
+
             while (!done)
             {
+                outerAttempts++;
+                if (outerAttempts > maxOuterAttempts)
+                {
+                    throw new InvalidOperationException($"Unable to generate LTR name from seed {seed}; distribution has no valid path.");
+                }
+
                 int attempts = 0;
                 StringBuilder name = new StringBuilder();
 
@@ -322,4 +331,3 @@ namespace BioWare.Resource.Formats.LTR
         }
     }
 }
-

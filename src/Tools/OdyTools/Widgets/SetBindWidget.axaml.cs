@@ -4,6 +4,7 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
+using OdyTools.Editors;
 using OdyTools.Utils;
 
 namespace OdyTools.Widgets
@@ -17,11 +18,13 @@ namespace OdyTools.Widgets
         private TextBox _setKeysEdit;
         private Button _setButton;
         private Button _clearButton;
+        private bool _eventsAttached;
 
         // Public parameterless constructor for XAML
         public SetBindWidget()
         {
             InitializeComponent();
+            SetupUI();
         }
 
         private void InitializeComponent()
@@ -62,15 +65,21 @@ namespace OdyTools.Widgets
             panel.Children.Add(_setButton);
             panel.Children.Add(_clearButton);
             Content = panel;
+            _eventsAttached = true;
         }
 
         private void SetupUI()
         {
             // Find controls from XAML
-            _mouseCombo = this.FindControl<ComboBox>("mouseCombo");
-            _setKeysEdit = this.FindControl<TextBox>("setKeysEdit");
-            _setButton = this.FindControl<Button>("setButton");
-            _clearButton = this.FindControl<Button>("clearButton");
+            _mouseCombo = EditorHelpers.FindControlSafe<ComboBox>(this, "mouseCombo") ?? _mouseCombo;
+            _setKeysEdit = EditorHelpers.FindControlSafe<TextBox>(this, "setKeysEdit") ?? _setKeysEdit;
+            _setButton = EditorHelpers.FindControlSafe<Button>(this, "setButton") ?? _setButton;
+            _clearButton = EditorHelpers.FindControlSafe<Button>(this, "clearButton") ?? _clearButton;
+
+            if (_eventsAttached)
+            {
+                return;
+            }
 
             if (_setButton != null)
             {
@@ -80,6 +89,7 @@ namespace OdyTools.Widgets
             {
                 _clearButton.Click += (s, e) => ClearKeybind();
             }
+            _eventsAttached = true;
         }
 
         private void StartRecording()

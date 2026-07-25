@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using BioWare.Common;
 using BioWare.Resource.Formats.GFF.Generics.DLG;
+using OdyTools.Editors.Actions;
 
 namespace OdyTools.Editors.DLG
 {
@@ -77,6 +78,7 @@ namespace OdyTools.Editors.DLG
             RegisterNodeInFlatLists(link.Node);
             var item = new DLGStandardItem(link);
             _rootItems.Add(item);
+            LoadDlgItemRec(item);
 
             // Register in dictionaries
             if (!_linkToItems.ContainsKey(link))
@@ -202,6 +204,18 @@ namespace OdyTools.Editors.DLG
         /// Adds a root node to the dialog graph.
         /// </summary>
         public DLGStandardItem AddRootNode()
+        {
+            if (_editor != null && _editor.CanRecordModelAction)
+            {
+                var action = new AddRootNodeAction();
+                _editor.ApplyModelAction(action);
+                return action.Item;
+            }
+
+            return AddRootNodeCore();
+        }
+
+        internal DLGStandardItem AddRootNodeCore()
         {
             var newEntry = new DLGEntry();
             newEntry.PlotIndex = -1;
@@ -1070,7 +1084,8 @@ namespace OdyTools.Editors.DLG
                 // Deep copy the link using ToDict/FromDict
                 Dictionary<string, object> nodeMap = new Dictionary<string, object>();
                 Dictionary<string, object> linkDict = pastedLink.ToDict(nodeMap);
-                linkToPaste = DLGLink.FromDict(linkDict, nodeMap);
+                linkToPaste = DLGLink.FromDict(linkDict, new Dictionary<string, object>());
+                RefreshPastedBranchIdentity(linkToPaste);
             }
 
             // Set is_child property based on whether parentItem is a DLGStandardItem or null
@@ -1301,6 +1316,73 @@ namespace OdyTools.Editors.DLG
             if (_editor != null)
             {
                 _editor.UpdateTreeView();
+            }
+        }
+
+        private static void RefreshPastedBranchIdentity(DLGLink rootLink)
+        {
+            var visitedLinks = new HashSet<DLGLink>(ReferenceEqualityComparer<DLGLink>.Instance);
+            var visitedNodes = new HashSet<DLGNode>(ReferenceEqualityComparer<DLGNode>.Instance);
+            var stack = new Stack<DLGLink>();
+
+            if (rootLink != null)
+            {
+                stack.Push(rootLink);
+            }
+
+            while (stack.Count > 0)
+            {
+                var link = stack.Pop();
+                if (link == null || !visitedLinks.Add(link))
+                {
+                    continue;
+                }
+
+                SetIdentityHash(link, Guid.NewGuid().GetHashCode());
+
+                var node = link.Node;
+                if (node == null || !visitedNodes.Add(node))
+                {
+                    continue;
+                }
+
+                SetIdentityHash(node, Guid.NewGuid().GetHashCode());
+
+                foreach (var childLink in node.Links)
+                {
+                    if (childLink != null)
+                    {
+                        stack.Push(childLink);
+                    }
+                }
+            }
+        }
+
+        private static void SetIdentityHash(DLGLink link, int value)
+        {
+            var field = typeof(DLGLink).GetField("_hashCache", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            field?.SetValue(link, value);
+        }
+
+        private static void SetIdentityHash(DLGNode node, int value)
+        {
+            var field = typeof(DLGNode).GetField("_hashCache", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            field?.SetValue(node, value);
+        }
+
+        private sealed class ReferenceEqualityComparer<T> : IEqualityComparer<T>
+            where T : class
+        {
+            public static readonly ReferenceEqualityComparer<T> Instance = new ReferenceEqualityComparer<T>();
+
+            public bool Equals(T x, T y)
+            {
+                return ReferenceEquals(x, y);
+            }
+
+            public int GetHashCode(T obj)
+            {
+                return RuntimeHelpers.GetHashCode(obj);
             }
         }
 

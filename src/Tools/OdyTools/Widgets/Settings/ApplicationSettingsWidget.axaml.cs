@@ -7,6 +7,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using OdyTools.Data;
 using OdyTools.Dialogs;
+using OdyTools.Editors;
 using OdyTools.Utils;
 using FontInfo = OdyTools.Dialogs.FontInfo;
 
@@ -53,20 +54,113 @@ namespace OdyTools.Widgets.Settings
 
             if (xamlLoaded)
             {
-                _resetAttributesButton = this.FindControl<Button>("resetAttributesButton");
-                _currentFontLabel = this.FindControl<TextBlock>("currentFontLabel");
-                _fontButton = this.FindControl<Button>("fontButton");
-                _tableWidget = this.FindControl<DataGrid>("tableWidget");
-                _addButton = this.FindControl<Button>("addButton");
-                _editButton = this.FindControl<Button>("editButton");
-                _removeButton = this.FindControl<Button>("removeButton");
-                _verticalLayoutMisc = this.FindControl<StackPanel>("verticalLayout_misc");
-                _verticalLayout3 = this.FindControl<StackPanel>("verticalLayout_3");
+                _resetAttributesButton = EditorHelpers.FindControlSafe<Button>(this, "resetAttributesButton");
+                _currentFontLabel = EditorHelpers.FindControlSafe<TextBlock>(this, "currentFontLabel");
+                _fontButton = EditorHelpers.FindControlSafe<Button>(this, "fontButton");
+                _tableWidget = EditorHelpers.FindControlSafe<DataGrid>(this, "tableWidget");
+                _addButton = EditorHelpers.FindControlSafe<Button>(this, "addButton");
+                _editButton = EditorHelpers.FindControlSafe<Button>(this, "editButton");
+                _removeButton = EditorHelpers.FindControlSafe<Button>(this, "removeButton");
+                _verticalLayoutMisc = EditorHelpers.FindControlSafe<StackPanel>(this, "verticalLayout_misc");
+                _verticalLayout3 = EditorHelpers.FindControlSafe<StackPanel>(this, "verticalLayout_3");
                 if (_tableWidget != null)
                 {
                     ConfigureDataGridColumns();
                 }
             }
+
+            if (_resetAttributesButton == null || _currentFontLabel == null || _fontButton == null || _tableWidget == null ||
+                _addButton == null || _editButton == null || _removeButton == null || _verticalLayoutMisc == null || _verticalLayout3 == null)
+            {
+                SetupProgrammaticUI();
+            }
+        }
+
+        private void SetupProgrammaticUI()
+        {
+            var root = new Grid
+            {
+                RowDefinitions = new RowDefinitions("Auto,*")
+            };
+
+            _resetAttributesButton = new Button
+            {
+                Name = "resetAttributesButton",
+                Content = "Reset All on this Page",
+                Height = 50,
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+            Grid.SetRow(_resetAttributesButton, 0);
+            root.Children.Add(_resetAttributesButton);
+
+            var scroll = new ScrollViewer();
+            Grid.SetRow(scroll, 1);
+            var stack = new StackPanel { Spacing = 10 };
+            scroll.Content = stack;
+
+            var fontPanel = new StackPanel { Spacing = 5, Margin = new Thickness(5) };
+            _currentFontLabel = new TextBlock { Name = "currentFontLabel", Text = "Current Font: Default" };
+            _fontButton = new Button { Name = "fontButton", Content = "Select Font...", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left };
+            fontPanel.Children.Add(_currentFontLabel);
+            fontPanel.Children.Add(_fontButton);
+            stack.Children.Add(new Expander
+            {
+                Header = "Global Font Settings",
+                IsExpanded = true,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+                Content = fontPanel
+            });
+
+            var envGrid = new Grid
+            {
+                RowDefinitions = new RowDefinitions("*,Auto"),
+                Margin = new Thickness(5)
+            };
+            _tableWidget = new DataGrid { Name = "tableWidget", AutoGenerateColumns = true, Margin = new Thickness(0, 0, 0, 5) };
+            Grid.SetRow(_tableWidget, 0);
+            envGrid.Children.Add(_tableWidget);
+            var envButtons = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5 };
+            _addButton = new Button { Name = "addButton", Content = "Add" };
+            _editButton = new Button { Name = "editButton", Content = "Edit" };
+            _removeButton = new Button { Name = "removeButton", Content = "Remove" };
+            envButtons.Children.Add(_addButton);
+            envButtons.Children.Add(_editButton);
+            envButtons.Children.Add(_removeButton);
+            Grid.SetRow(envButtons, 1);
+            envGrid.Children.Add(envButtons);
+            stack.Children.Add(new Expander
+            {
+                Header = "Environment Variables",
+                IsExpanded = true,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+                Content = envGrid
+            });
+
+            _verticalLayoutMisc = new StackPanel { Name = "verticalLayout_misc", Spacing = 5, Margin = new Thickness(5) };
+            stack.Children.Add(new Expander
+            {
+                Header = "Miscellaneous Settings",
+                IsExpanded = true,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+                Content = _verticalLayoutMisc
+            });
+
+            _verticalLayout3 = new StackPanel { Name = "verticalLayout_3", Spacing = 5, Margin = new Thickness(5) };
+            stack.Children.Add(new Expander
+            {
+                Header = "Experimental settings (may cause app crashes)",
+                IsExpanded = false,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+                Content = _verticalLayout3
+            });
+
+            root.Children.Add(scroll);
+            Content = root;
+            ConfigureDataGridColumns();
         }
 
         private void ConfigureDataGridColumns()

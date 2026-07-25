@@ -435,8 +435,7 @@ namespace OdyTools.Editors
                 return;
             }
 
-            string mode = GetQuickMode();
-            if (mode == "Singles" || _singleRows.Contains(row))
+            if (_singleRows.Contains(row))
             {
                 _ltr.SetSinglesStart(row.Character, Clamp01(row.Start));
                 _ltr.SetSinglesMiddle(row.Character, Clamp01(row.Middle));
@@ -444,12 +443,17 @@ namespace OdyTools.Editors
                 return;
             }
 
-            if (mode == "Doubles" || _doubleRows.Contains(row))
+            if (_doubleRows.Contains(row))
             {
                 string prev = GetSelectedChar(_doublePrevCombo);
                 _ltr.SetDoublesStart(prev, row.Character, Clamp01(row.Start));
                 _ltr.SetDoublesMiddle(prev, row.Character, Clamp01(row.Middle));
                 _ltr.SetDoublesEnd(prev, row.Character, Clamp01(row.End));
+                return;
+            }
+
+            if (!_tripleRows.Contains(row))
+            {
                 return;
             }
 
@@ -939,7 +943,18 @@ namespace OdyTools.Editors
             _generatedNames.Clear();
             for (int i = 0; i < count; i++)
             {
-                _generatedNames.Add(_ltr.Generate());
+                try
+                {
+                    _generatedNames.Add(_ltr.Generate());
+                }
+                catch (InvalidOperationException ex)
+                {
+                    if (_statusText != null)
+                    {
+                        _statusText.Text = Localization.Trf("Name generation failed: {0}", ex.Message);
+                    }
+                    break;
+                }
             }
         }
 
@@ -1101,5 +1116,99 @@ namespace OdyTools.Editors
         {
             _ = RunSaveAsAsync();
         }
+
+        internal void SelectDoublePreviousForTest(string previous)
+        {
+            if (_doublePrevCombo != null)
+            {
+                _doublePrevCombo.SelectedItem = previous;
+            }
+            RefreshDoubleRowsFromModel();
+        }
+
+        internal void SelectTriplePreviousForTest(string previous2, string previous1)
+        {
+            if (_triplePrev2Combo != null)
+            {
+                _triplePrev2Combo.SelectedItem = previous2;
+            }
+            if (_triplePrev1Combo != null)
+            {
+                _triplePrev1Combo.SelectedItem = previous1;
+            }
+            RefreshTripleRowsFromModel();
+        }
+
+        internal void SetQuickModeForTest(int index)
+        {
+            if (_quickModeCombo != null)
+            {
+                _quickModeCombo.SelectedIndex = index;
+            }
+        }
+
+        internal void SelectSingleRowForTest(string character)
+        {
+            var row = _singleRows.First(item => item.Character == character);
+            if (_tableSingles != null)
+            {
+                _tableSingles.SelectedItem = row;
+            }
+            LoadQuickEditFromSelection();
+        }
+
+        internal void EditSingleRowForTest(string character, float start, float middle, float end)
+        {
+            EditRowForTest(_singleRows.First(row => row.Character == character), start, middle, end);
+        }
+
+        internal void EditDoubleRowForTest(string character, float start, float middle, float end)
+        {
+            EditRowForTest(_doubleRows.First(row => row.Character == character), start, middle, end);
+        }
+
+        internal void EditTripleRowForTest(string character, float start, float middle, float end)
+        {
+            EditRowForTest(_tripleRows.First(row => row.Character == character), start, middle, end);
+        }
+
+        private static void EditRowForTest(ProbabilityRow row, float start, float middle, float end)
+        {
+            row.Start = start;
+            row.Middle = middle;
+            row.End = end;
+        }
+
+        internal void SetQuickEditForTest(int modeIndex, string character, float start, float middle, float end)
+        {
+            SetQuickModeForTest(modeIndex);
+            if (_quickCharCombo != null) _quickCharCombo.SelectedItem = character;
+            if (_quickStartSpin != null) _quickStartSpin.Value = (decimal)start;
+            if (_quickMiddleSpin != null) _quickMiddleSpin.Value = (decimal)middle;
+            if (_quickEndSpin != null) _quickEndSpin.Value = (decimal)end;
+        }
+
+        internal void ApplyQuickEditForTest() => ApplyQuickEdit();
+
+        internal void SetUniformVisibleDistributionForTest() => SetUniformVisibleDistribution();
+
+        internal void NormalizeVisibleDistributionForTest() => NormalizeVisibleDistribution();
+
+        internal void GenerateNameSamplesForTest(int count)
+        {
+            if (_generatorCountSpin != null)
+            {
+                _generatorCountSpin.Value = count;
+            }
+            GenerateNameSamples();
+        }
+
+        internal void ClearGeneratedNamesForTest() => _generatedNames.Clear();
+
+        internal IReadOnlyList<string> GeneratedNamesForTest => _generatedNames.ToList();
+
+        internal string StatusTextForTest => _statusText?.Text ?? string.Empty;
+
+        internal string ContextTextForTest => _contextText?.Text ?? string.Empty;
     }
 }

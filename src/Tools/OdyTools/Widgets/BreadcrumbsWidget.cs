@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using OdyTools.Editors;
 
 namespace OdyTools.Widgets
 {
@@ -47,6 +48,7 @@ namespace OdyTools.Widgets
         {
             _layout = new StackPanel
             {
+                Name = "layout",
                 Orientation = Avalonia.Layout.Orientation.Horizontal,
                 Margin = new Avalonia.Thickness(4, 2, 4, 2),
                 Spacing = 2
@@ -62,21 +64,13 @@ namespace OdyTools.Widgets
                 return;
             }
 
-            // Find controls from XAML (may fail if not in visual tree)
-            try
-            {
-                _layout = this.FindControl<StackPanel>("layout");
-            }
-            catch (InvalidOperationException)
-            {
-                // Not in a visual tree (e.g., in unit tests) - will create programmatically
-                _layout = null;
-            }
+            _layout = EditorHelpers.FindControlSafe<StackPanel>(this, "layout");
 
             if (_layout == null)
             {
                 _layout = new StackPanel
                 {
+                    Name = "layout",
                     Orientation = Avalonia.Layout.Orientation.Horizontal,
                     Margin = new Avalonia.Thickness(4, 2, 4, 2),
                     Spacing = 2

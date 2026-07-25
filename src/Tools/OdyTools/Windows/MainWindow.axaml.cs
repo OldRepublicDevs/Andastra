@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -12,6 +13,7 @@ using Avalonia.Platform.Storage;
 using BioWare.Extract;
 using BioWare.Common;
 using BioWare.Resource;
+using BioWare.Resource.Formats.MDL;
 using BioWare.Resource.Formats.TPC;
 using OdyTools.Data;
 using OdyTools.Dialogs;
@@ -77,6 +79,11 @@ namespace OdyTools.Windows
         private MenuItem _actionNewDLG;
         private MenuItem _actionNewUTC;
         private MenuItem _actionNewNSS;
+        private CheckBox _tpcDecompileCheckbox;
+        private CheckBox _tpcTxiCheckbox;
+        private CheckBox _ncsDecompileCheckbox;
+        private CheckBox _mdlDecompileCheckbox;
+        private CheckBox _mdlTexturesCheckbox;
         private bool _coreTabLoaded;
         private bool _modulesTabLoaded;
         private bool _overrideTabLoaded;
@@ -232,6 +239,36 @@ namespace OdyTools.Windows
             }
             catch { }
 
+            try
+            {
+                _tpcDecompileCheckbox = this.FindControl<CheckBox>("tpcDecompileCheckbox");
+            }
+            catch { }
+
+            try
+            {
+                _tpcTxiCheckbox = this.FindControl<CheckBox>("tpcTxiCheckbox");
+            }
+            catch { }
+
+            try
+            {
+                _ncsDecompileCheckbox = this.FindControl<CheckBox>("ncsDecompileCheckbox");
+            }
+            catch { }
+
+            try
+            {
+                _mdlDecompileCheckbox = this.FindControl<CheckBox>("mdlDecompileCheckbox");
+            }
+            catch { }
+
+            try
+            {
+                _mdlTexturesCheckbox = this.FindControl<CheckBox>("mdlTexturesCheckbox");
+            }
+            catch { }
+
             if (!xamlLoaded)
             {
                 SetupProgrammaticUI();
@@ -269,11 +306,21 @@ namespace OdyTools.Windows
             _extractButton = new Button { Content = "Extract Selected" };
             _specialActionButton = new Button { Content = "Designer" };
             _erfEditorButton = new Button { Content = "ERF Editor" };
+            _tpcDecompileCheckbox = new CheckBox { Content = "TPC Decompile", IsChecked = true };
+            _tpcTxiCheckbox = new CheckBox { Content = "TPC Extract TXI" };
+            _ncsDecompileCheckbox = new CheckBox { Content = "NCS Decompile to NSS", IsChecked = true };
+            _mdlDecompileCheckbox = new CheckBox { Content = "MDL Decompile to ASCII" };
+            _mdlTexturesCheckbox = new CheckBox { Content = "MDL Extract Textures" };
             buttonPanel.Children.Add(_openButton);
             buttonPanel.Children.Add(_extractButton);
             buttonPanel.Children.Add(_specialActionButton);
             buttonPanel.Children.Add(_erfEditorButton);
             mainPanel.Children.Add(buttonPanel);
+            mainPanel.Children.Add(_tpcDecompileCheckbox);
+            mainPanel.Children.Add(_tpcTxiCheckbox);
+            mainPanel.Children.Add(_ncsDecompileCheckbox);
+            mainPanel.Children.Add(_mdlDecompileCheckbox);
+            mainPanel.Children.Add(_mdlTexturesCheckbox);
 
             Content = mainPanel;
         }
@@ -318,7 +365,12 @@ namespace OdyTools.Windows
                 OverrideTab = _overrideTab,
                 ActionNewDLG = _actionNewDLG,
                 ActionNewUTC = _actionNewUTC,
-                ActionNewNSS = _actionNewNSS
+                ActionNewNSS = _actionNewNSS,
+                TpcDecompileCheckbox = _tpcDecompileCheckbox,
+                TpcTxiCheckbox = _tpcTxiCheckbox,
+                NcsDecompileCheckbox = _ncsDecompileCheckbox,
+                MdlDecompileCheckbox = _mdlDecompileCheckbox,
+                MdlTexturesCheckbox = _mdlTexturesCheckbox
             };
         }
 
@@ -436,12 +488,27 @@ namespace OdyTools.Windows
         // Wire File -> New submenu items to open new editors
         private void ConnectNewMenuActions()
         {
+            ConnectNewMenuItem("actionNew2DA", () => OpenNewEditor(new OdyTool2DA(this, _active)));
+            ConnectNewMenuItem("actionNewARE", () => OpenNewEditor(new OdyToolARE(this, _active)));
+            ConnectNewMenuItem("actionNewBWM", () => OpenNewEditor(new OdyToolBWM(this, _active)));
             ConnectNewMenuItem("actionNewDLG", () => OpenNewEditor(new OdyTools.Editors.DLG.OdyToolDLG(this, _active)));
             ConnectNewMenuItem("actionNewERF", () => OpenNewEditor(new OdyToolERF(this, _active)));
+            ConnectNewMenuItem("actionNewFAC", () => OpenNewEditor(new OdyToolFAC(this, _active)));
             ConnectNewMenuItem("actionNewGFF", () => OpenNewEditor(new OdyToolGFF(this, _active)));
+            ConnectNewMenuItem("actionNewGIT", () => OpenNewEditor(new OdyToolGIT(this, _active)));
+            ConnectNewMenuItem("actionNewGUI", () => OpenNewEditor(new OdyTools.Editors.GUI.OdyToolGUI(this, _active)));
+            ConnectNewMenuItem("actionNewIFO", () => OpenNewEditor(new OdyToolIFO(this, _active)));
+            ConnectNewMenuItem("actionNewJRL", () => OpenNewEditor(new OdyToolJRL(this, _active)));
+            ConnectNewMenuItem("actionNewLIP", () => OpenNewEditor(new OdyToolLIP(this, _active)));
+            ConnectNewMenuItem("actionNewLTR", () => OpenNewEditor(new OdyToolLTR(this, _active)));
+            ConnectNewMenuItem("actionNewLYT", () => OpenNewEditor(new OdyToolLYT(this, _active)));
+            ConnectNewMenuItem("actionNewMDL", () => OpenNewEditor(new OdyToolMDL(this, _active)));
             ConnectNewMenuItem("actionNewNSS", () => OpenNewEditor(new OdyToolNSS(this, _active)));
+            ConnectNewMenuItem("actionNewPTH", () => OpenNewEditor(new OdyToolPTH(this, _active)));
+            ConnectNewMenuItem("actionNewSAV", () => OpenNewEditor(new OdyToolSAV(this, _active)));
             ConnectNewMenuItem("actionNewSSF", () => OpenNewEditor(new OdyToolSSF(this, _active)));
             ConnectNewMenuItem("actionNewTLK", () => OpenNewEditor(new OdyToolTLK(this, _active)));
+            ConnectNewMenuItem("actionNewTPC", () => OpenNewEditor(new OdyToolTPC(this, _active)));
             ConnectNewMenuItem("actionNewTXT", () => OpenNewEditor(new OdyToolTXT(this, _active)));
             ConnectNewMenuItem("actionNewUTC", () => OpenNewEditor(new OdyToolUTC(this, _active)));
             ConnectNewMenuItem("actionNewUTD", () => OpenNewEditor(new OdyToolUTD(this, _active)));
@@ -452,6 +519,7 @@ namespace OdyTools.Windows
             ConnectNewMenuItem("actionNewUTS", () => OpenNewEditor(new OdyToolUTS(this, _active)));
             ConnectNewMenuItem("actionNewUTT", () => OpenNewEditor(new OdyToolUTT(this, _active)));
             ConnectNewMenuItem("actionNewUTW", () => OpenNewEditor(new OdyToolUTW(this, _active)));
+            ConnectNewMenuItem("actionNewWAV", () => OpenNewEditor(new OdyToolWAV(this, _active)));
         }
 
         private void ConnectNewMenuItem(string name, Action openEditor)
@@ -729,11 +797,15 @@ namespace OdyTools.Windows
             foreach (var resource in resources)
             {
                 string extension = resource.ResType?.Extension ?? "";
-                if (resource.ResType == ResourceType.TPC)
+                if (ShouldDecompileTpc(resource))
                 {
                     extension = "tga"; // ExtractResourceAsync decompiles TPC to TGA
                 }
-                // MDL uses default extension; .mdl.ascii would require an MDL decompiler
+                else if (ShouldDecompileNcs(resource))
+                {
+                    extension = "nss";
+                }
+                // MDL uses default extension; .mdl.ascii would require an MDL decompiler.
                 var identifier = $"{resource.ResName}.{extension}";
                 var savePath = Path.Combine(folderPath, identifier);
                 pathsToWrite[resource] = savePath;
@@ -828,32 +900,347 @@ namespace OdyTools.Windows
         // Extract a single resource
         private async Task ExtractResourceAsync(FileResource resource, string savePath)
         {
-            var data = resource.GetData();
+            var extractedFiles = ExtractResourceFilesForSave(
+                resource,
+                ShouldDecompileTpc(resource),
+                ShouldExtractTxi(resource),
+                ShouldDecompileNcs(resource),
+                _active,
+                savePath,
+                ShouldExtractMdlTextures(resource),
+                ShouldDecompileMdl(resource));
 
-            // Handle resource type specific processing
+            await System.Threading.Tasks.Task.Run(() =>
+            {
+                foreach (var extracted in extractedFiles)
+                {
+                    File.WriteAllBytes(extracted.Path, extracted.Data);
+                }
+            });
+        }
+
+        internal static (byte[] Data, string Extension) ExtractResourceDataForSave(
+            FileResource resource,
+            bool decompileTpc,
+            bool decompileNcs,
+            OdyInstallation installation)
+        {
+            var files = ExtractResourceFilesForSave(
+                resource,
+                decompileTpc,
+                extractTxi: false,
+                decompileNcs,
+                installation,
+                resource == null ? null : resource.Filename());
+
+            var first = files.Count > 0 ? files[0] : (Path: resource?.Filename() ?? "resource.bin", Data: Array.Empty<byte>());
+            return (first.Data, Path.GetExtension(first.Path).TrimStart('.'));
+        }
+
+        internal static List<(string Path, byte[] Data)> ExtractResourceFilesForSave(
+            FileResource resource,
+            bool decompileTpc,
+            bool extractTxi,
+            bool decompileNcs,
+            OdyInstallation installation,
+            string savePath,
+            bool extractMdlTextures = false,
+            bool decompileMdl = false)
+        {
+            if (resource == null)
+            {
+                throw new ArgumentNullException(nameof(resource));
+            }
+
+            if (string.IsNullOrWhiteSpace(savePath))
+            {
+                savePath = resource.Filename();
+            }
+
+            var data = resource.GetData();
+            var extension = ResourceFileExtension(resource.ResType);
+            var results = new List<(string Path, byte[] Data)>();
+
             if (resource.ResType == ResourceType.TPC)
             {
-                // Decompile TPC to TGA format for extraction
                 try
                 {
                     var tpc = TPCAuto.ReadTpc(data);
-                    data = TPCAuto.BytesTpc(tpc, ResourceType.TGA);
-                    savePath = Path.ChangeExtension(savePath, ".tga");
+                    if (decompileTpc)
+                    {
+                        results.Add((Path.ChangeExtension(savePath, ".tga"), TPCAuto.BytesTpc(tpc, ResourceType.TGA)));
+                    }
+                    else
+                    {
+                        results.Add((ChangeResourceExtension(savePath, extension), data));
+                    }
+
+                    var txiText = ResolveTxiSidecarText(resource, tpc, installation);
+                    if (extractTxi && !string.IsNullOrWhiteSpace(txiText))
+                    {
+                        results.Add((Path.ChangeExtension(savePath, ".txi"), Encoding.ASCII.GetBytes(txiText)));
+                    }
+
+                    return results;
                 }
                 catch (Exception ex)
                 {
                     System.Console.WriteLine($"Failed to decompile TPC {resource.ResName}: {ex.Message}");
-                    // Fall back to raw data
+                    results.Add((Path.ChangeExtension(savePath, extension), data));
+                    return results;
                 }
             }
-            else if (resource.ResType == ResourceType.MDL)
-            {
-                // MDL is extracted as binary; decompilation to .mdl.ascii would require an MDL→ASCII converter
-            }
-            // Other types (NCS, etc.) extract as-is; decompilation can be done separately (e.g. NCS via ScriptDecompiler)
 
-            // Write the data to file
-            await System.Threading.Tasks.Task.Run(() => File.WriteAllBytes(savePath, data));
+            if (resource.ResType == ResourceType.NCS && decompileNcs)
+            {
+                try
+                {
+                    var source = ScriptDecompiler.HtDecompileScript(data, installation?.Path, installation?.Tsl ?? false);
+                    results.Add((Path.ChangeExtension(savePath, ".nss"), Encoding.UTF8.GetBytes(source ?? string.Empty)));
+                    return results;
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine($"Failed to decompile NCS {resource.ResName}: {ex.Message}");
+                    var diagnostic = "// Decompile failed: " + ex.Message + Environment.NewLine;
+                    results.Add((Path.ChangeExtension(savePath, ".nss"), Encoding.UTF8.GetBytes(diagnostic)));
+                    return results;
+                }
+            }
+
+            if ((resource.ResType == ResourceType.MDL || resource.ResType == ResourceType.MDL_ASCII) && (decompileMdl || extractMdlTextures))
+            {
+                if (decompileMdl)
+                {
+                    results.Add((ChangeResourceExtension(savePath, ".mdl.ascii"), DecompileMdlResource(resource, data, installation)));
+                }
+                else
+                {
+                    results.Add((ChangeResourceExtension(savePath, extension), data));
+                }
+
+                AddModelTextureResources(results, resource, data, installation, savePath);
+                return results;
+            }
+
+            results.Add((ChangeResourceExtension(savePath, extension), data));
+            return results;
+        }
+
+        private static string ChangeResourceExtension(string path, string extension)
+        {
+            if (string.IsNullOrWhiteSpace(extension))
+            {
+                return path;
+            }
+
+            if (!extension.StartsWith(".", StringComparison.Ordinal))
+            {
+                extension = "." + extension;
+            }
+
+            return path.EndsWith(extension, StringComparison.OrdinalIgnoreCase)
+                ? path
+                : Path.ChangeExtension(path, extension);
+        }
+
+        private static string ResourceFileExtension(ResourceType resourceType)
+        {
+            var extension = resourceType?.Extension ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(extension) || extension.StartsWith(".", StringComparison.Ordinal))
+            {
+                return extension;
+            }
+
+            return "." + extension;
+        }
+
+        private bool ShouldExtractMdlTextures(FileResource resource)
+        {
+            return resource != null
+                && (resource.ResType == ResourceType.MDL || resource.ResType == ResourceType.MDL_ASCII)
+                && (_mdlTexturesCheckbox?.IsChecked ?? false);
+        }
+
+        private bool ShouldDecompileMdl(FileResource resource)
+        {
+            return resource != null
+                && (resource.ResType == ResourceType.MDL || resource.ResType == ResourceType.MDL_ASCII)
+                && (_mdlDecompileCheckbox?.IsChecked ?? false);
+        }
+
+        private static byte[] DecompileMdlResource(FileResource resource, byte[] data, OdyInstallation installation)
+        {
+            if (resource.ResType == ResourceType.MDL_ASCII)
+            {
+                return data;
+            }
+
+            var mdl = MDLAuto.ReadMdl(data, sourceExt: ResolveSiblingMdxData(resource, installation), fileFormat: ResourceType.MDL);
+            return MDLAuto.BytesMdl(mdl, ResourceType.MDL_ASCII);
+        }
+
+        private static void AddModelTextureResources(
+            List<(string Path, byte[] Data)> results,
+            FileResource resource,
+            byte[] data,
+            OdyInstallation installation,
+            string savePath)
+        {
+            if (results == null || resource == null || data == null || installation == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var mdl = resource.ResType == ResourceType.MDL_ASCII
+                    ? MDLAuto.ReadMdl(data, fileFormat: ResourceType.MDL_ASCII)
+                    : MDLAuto.ReadMdl(data, sourceExt: ResolveSiblingMdxData(resource, installation), fileFormat: ResourceType.MDL);
+
+                var textureNames = mdl.AllTextures()
+                    .Concat(mdl.AllLightmaps())
+                    .Where(name => !string.IsNullOrWhiteSpace(name))
+                    .Where(name => !string.Equals(name, "NULL", StringComparison.OrdinalIgnoreCase))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(name => name, StringComparer.OrdinalIgnoreCase);
+
+                var directory = Path.GetDirectoryName(savePath);
+                foreach (var textureName in textureNames)
+                {
+                    var texture = ResolveModelTexture(installation, textureName);
+                    if (texture?.Data == null || texture.Data.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    var filename = textureName + "." + texture.ResType.Extension;
+                    var texturePath = string.IsNullOrWhiteSpace(directory)
+                        ? filename
+                        : Path.Combine(directory, filename);
+                    results.Add((texturePath, texture.Data));
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Failed to extract MDL textures for {resource.ResName}: {ex.Message}");
+            }
+        }
+
+        private static byte[] ResolveSiblingMdxData(FileResource resource, OdyInstallation installation)
+        {
+            if (resource == null)
+            {
+                return null;
+            }
+
+            if (!resource.InsideCapsule && !resource.InsideBif && !string.IsNullOrWhiteSpace(resource.FilePath))
+            {
+                var mdxPath = Path.ChangeExtension(resource.FilePath, ".mdx");
+                if (File.Exists(mdxPath))
+                {
+                    try
+                    {
+                        return File.ReadAllBytes(mdxPath);
+                    }
+                    catch
+                    {
+                        // Fall through to installation lookup.
+                    }
+                }
+            }
+
+            try
+            {
+                return installation?.Resource(resource.ResName, ResourceType.MDX)?.Data;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static BioWare.Extract.ResourceResult ResolveModelTexture(OdyInstallation installation, string textureName)
+        {
+            try
+            {
+                var tpc = installation?.Resource(textureName, ResourceType.TPC);
+                if (tpc?.Data != null && tpc.Data.Length > 0)
+                {
+                    return tpc;
+                }
+
+                var tga = installation?.Resource(textureName, ResourceType.TGA);
+                if (tga?.Data != null && tga.Data.Length > 0)
+                {
+                    return tga;
+                }
+            }
+            catch
+            {
+                return null;
+            }
+
+            return null;
+        }
+
+        private static string ResolveTxiSidecarText(FileResource resource, TPC tpc, OdyInstallation installation)
+        {
+            if (!string.IsNullOrWhiteSpace(tpc?.Txi))
+            {
+                return tpc.Txi;
+            }
+
+            if (resource == null)
+            {
+                return string.Empty;
+            }
+
+            if (!resource.InsideCapsule && !resource.InsideBif && !string.IsNullOrWhiteSpace(resource.FilePath))
+            {
+                var txiPath = Path.ChangeExtension(resource.FilePath, ".txi");
+                if (File.Exists(txiPath))
+                {
+                    try
+                    {
+                        return File.ReadAllText(txiPath, Encoding.ASCII);
+                    }
+                    catch
+                    {
+                        // Fall through to installation lookup.
+                    }
+                }
+            }
+
+            try
+            {
+                var txiResource = installation?.Resource(resource.ResName, ResourceType.TXI);
+                if (txiResource?.Data != null && txiResource.Data.Length > 0)
+                {
+                    return Encoding.ASCII.GetString(txiResource.Data);
+                }
+            }
+            catch
+            {
+                // Ignore missing or unreadable TXI resources.
+            }
+
+            return string.Empty;
+        }
+
+        private bool ShouldDecompileTpc(FileResource resource)
+        {
+            return resource?.ResType == ResourceType.TPC && (_tpcDecompileCheckbox?.IsChecked ?? true);
+        }
+
+        private bool ShouldExtractTxi(FileResource resource)
+        {
+            return resource?.ResType == ResourceType.TPC && (_tpcTxiCheckbox?.IsChecked ?? false);
+        }
+
+        private bool ShouldDecompileNcs(FileResource resource)
+        {
+            return resource?.ResType == ResourceType.NCS && (_ncsDecompileCheckbox?.IsChecked ?? true);
         }
 
         // Show extraction results dialog
@@ -1005,22 +1392,9 @@ namespace OdyTools.Windows
 
         public void UpdateMenus()
         {
-            // Update menu states based on active installation
-            // Enable/disable New menu items that require installation (GFF-based editors)
+            // Update menu states based on active installation.
+            // New editor windows are intentionally available without an installation, matching standalone behavior.
             bool hasInstallation = _active != null;
-            var newItemsRequiringInstallation = new[] {
-                "actionNewDLG", "actionNewNSS", "actionNewUTC", "actionNewUTP", "actionNewUTD",
-                "actionNewUTI", "actionNewUTS", "actionNewUTT", "actionNewUTM", "actionNewUTW", "actionNewUTE"
-            };
-            foreach (var name in newItemsRequiringInstallation)
-            {
-                try
-                {
-                    var item = this.FindControl<MenuItem>(name);
-                    if (item != null) item.IsEnabled = hasInstallation;
-                }
-                catch { /* Control may not exist in test scenarios */ }
-            }
             // Enable/disable Edit menu items that require installation
             foreach (var name in new[] { "actionEditTLK", "actionEditJRL" })
             {
@@ -1515,20 +1889,7 @@ namespace OdyTools.Windows
 
             try
             {
-                var fileInfo = new FileInfo(filepath);
-                string resname = Path.GetFileNameWithoutExtension(filepath);
-                string extension = Path.GetExtension(filepath);
-                ResourceType restype = ResourceType.FromExtension(extension);
-                byte[] data = File.ReadAllBytes(filepath);
-
-                var fileResource = new FileResource(
-                    resname,
-                    restype,
-                    (int)fileInfo.Length,
-                    0x0,
-                    filepath);
-
-                WindowUtils.OpenResourceEditor(fileResource, _active, this);
+                WindowUtils.OpenFilePath(filepath, _active, this);
             }
             catch (Exception ex)
             {
@@ -1585,33 +1946,7 @@ namespace OdyTools.Windows
 
                     try
                     {
-                        // Get file info
-                        var fileInfo = new FileInfo(filepath);
-                        if (!fileInfo.Exists)
-                        {
-                            continue;
-                        }
-
-                        // Get resource name (stem - filename without extension)
-                        string resname = Path.GetFileNameWithoutExtension(filepath);
-
-                        // Get resource type from file extension
-                        string extension = Path.GetExtension(filepath);
-                        ResourceType restype = ResourceType.FromExtension(extension);
-
-                        // Read file data
-                        byte[] data = File.ReadAllBytes(filepath);
-
-                        // Create FileResource
-                        var fileResource = new FileResource(
-                            resname,
-                            restype,
-                            (int)fileInfo.Length,
-                            0x0,
-                            filepath);
-
-                        // Open resource editor
-                        WindowUtils.OpenResourceEditor(fileResource, _active, this);
+                        WindowUtils.OpenFilePath(filepath, _active, this);
                     }
                     catch (Exception ex)
                     {
@@ -2123,5 +2458,10 @@ namespace OdyTools.Windows
         public MenuItem ActionNewDLG { get; set; }
         public MenuItem ActionNewUTC { get; set; }
         public MenuItem ActionNewNSS { get; set; }
+        public CheckBox TpcDecompileCheckbox { get; set; }
+        public CheckBox TpcTxiCheckbox { get; set; }
+        public CheckBox NcsDecompileCheckbox { get; set; }
+        public CheckBox MdlDecompileCheckbox { get; set; }
+        public CheckBox MdlTexturesCheckbox { get; set; }
     }
 }

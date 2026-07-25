@@ -43,17 +43,22 @@ namespace OdyTools.Editors
         private string _audioFilePath;
         private NAudioMediaPlayer _previewPlayer;
         private TextBlock _previewLabel;
+        private Slider _scrubSlider;
+        private TextBlock _scrubTimeLabel;
         private DispatcherTimer _previewTimer;
         private bool _playbackSyncInProgress;
+        private bool _scrubSyncInProgress;
         private ModelRenderer _headPreviewRenderer;
         private ComboBox2DA _appearanceSelect;
         private TextBlock _headPreviewNotice;
+        private Button _chooseInstallationButton;
         private readonly List<byte[]> _undoStack = new List<byte[]>();
         private readonly List<byte[]> _redoStack = new List<byte[]>();
         private bool _undoRedoInProgress;
         private string _findText = "";
         private bool _findMatchCase;
         private int _lastFindIndex = -1;
+        private int _lastFindKeyframeIndex = -1;
 
         public OdyToolLIP() : this(null, null) { }
         public OdyToolLIP(Window parent = null, OdyInstallation installation = null)
@@ -82,7 +87,14 @@ namespace OdyTools.Editors
 
         private void InitializeComponent()
         {
-            Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
+            try
+            {
+                Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
+            }
+            catch
+            {
+            }
+
             SetupUI();
         }
 
@@ -118,10 +130,10 @@ namespace OdyTools.Editors
             var menu = BuildMenu();
             dock.Children.Add(menu);
             DockPanel.SetDock(menu, Dock.Top);
-            dock.Children.Add(BuildEditorPanel());
-            _statusText = new Avalonia.Controls.TextBlock { Name = "statusText", Text = "LIP", Margin = new Avalonia.Thickness(4, 2) };
+            _statusText = new Avalonia.Controls.TextBlock { Name = "statusText", Text = "Ready", Margin = new Avalonia.Thickness(8, 3) };
             dock.Children.Add(_statusText);
             DockPanel.SetDock(_statusText, Dock.Bottom);
+            dock.Children.Add(BuildEditorPanel());
             SetContentOrInject(dock);
         }
 
@@ -129,8 +141,10 @@ namespace OdyTools.Editors
         {
             var root = new Grid
             {
-                Margin = new Avalonia.Thickness(8),
-                ColumnDefinitions = new ColumnDefinitions("320,*"),
+                Margin = new Avalonia.Thickness(12),
+                ColumnDefinitions = new ColumnDefinitions("300,*"),
+                RowDefinitions = new RowDefinitions("*"),
+                ColumnSpacing = 12,
             };
 
             var headPanel = BuildHeadPreviewPanel();
@@ -146,112 +160,142 @@ namespace OdyTools.Editors
 
         private Control BuildHeadPreviewPanel()
         {
-            var panel = new StackPanel
+            var panel = new Grid
             {
-                Margin = new Avalonia.Thickness(0, 0, 8, 0),
-                Spacing = 6,
+                RowDefinitions = new RowDefinitions("Auto,Auto,*,Auto"),
+                RowSpacing = 8,
             };
 
-            panel.Children.Add(new TextBlock
+            var header = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("*,Auto"),
+            };
+            header.Children.Add(new TextBlock
             {
                 Text = "Head preview",
                 FontWeight = Avalonia.Media.FontWeight.SemiBold,
+                FontSize = 14,
+                VerticalAlignment = VerticalAlignment.Center,
+            });
+            var settingsButton = new Button
+            {
+                Content = "Settings...",
+                MinWidth = 92,
+            };
+            settingsButton.Click += (s, e) => _ = ShowSettingsDialogAsync();
+            Grid.SetColumn(settingsButton, 1);
+            header.Children.Add(settingsButton);
+            Grid.SetRow(header, 0);
+            panel.Children.Add(header);
+
+            var appearanceRow = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("Auto,*"),
+                ColumnSpacing = 8,
+            };
+            appearanceRow.Children.Add(new TextBlock
+            {
+                Text = "Appearance:",
+                VerticalAlignment = VerticalAlignment.Center,
             });
 
             _appearanceSelect = new ComboBox2DA { MinWidth = 200 };
             _appearanceSelect.SelectionChanged += (s, e) => RefreshHeadPreview();
-            panel.Children.Add(_appearanceSelect);
+            Grid.SetColumn(_appearanceSelect, 1);
+            appearanceRow.Children.Add(_appearanceSelect);
+            Grid.SetRow(appearanceRow, 1);
+            panel.Children.Add(appearanceRow);
 
             _headPreviewRenderer = new ModelRenderer
             {
-                MinHeight = 220,
-                Height = 260,
+                MinHeight = 240,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch,
             };
             if (_installation != null)
             {
                 _headPreviewRenderer.Installation = _installation;
             }
 
+            Grid.SetRow(_headPreviewRenderer, 2);
             panel.Children.Add(_headPreviewRenderer);
 
+            var noticePanel = new StackPanel
+            {
+                Spacing = 8,
+            };
             _headPreviewNotice = new TextBlock
             {
                 TextWrapping = Avalonia.Media.TextWrapping.Wrap,
                 IsVisible = false,
             };
-            panel.Children.Add(_headPreviewNotice);
+            noticePanel.Children.Add(_headPreviewNotice);
+            _chooseInstallationButton = new Button
+            {
+                Content = "Choose installation...",
+                HorizontalAlignment = HorizontalAlignment.Left,
+            };
+            _chooseInstallationButton.Click += (s, e) => _ = ShowSettingsDialogAsync();
+            noticePanel.Children.Add(_chooseInstallationButton);
+            Grid.SetRow(noticePanel, 3);
+            panel.Children.Add(noticePanel);
 
-            return panel;
+            return CreateSection(panel, new Avalonia.Thickness(10));
         }
 
         private Control BuildLipEditorPanel()
         {
             var root = new Grid
             {
-                RowDefinitions = new RowDefinitions("Auto,Auto,Auto,*,Auto"),
+                RowDefinitions = new RowDefinitions("Auto,Auto,*,Auto"),
                 ColumnDefinitions = new ColumnDefinitions("*"),
+                RowSpacing = 10,
             };
 
+            var audioSection = new StackPanel { Spacing = 8 };
+            audioSection.Children.Add(CreateSectionTitle("Audio"));
             var audioRow = new Grid
             {
                 ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,Auto,Auto"),
-                Margin = new Avalonia.Thickness(0, 0, 0, 8),
+                ColumnSpacing = 6,
             };
             audioRow.Children.Add(new TextBlock
             {
                 Text = "Audio:",
                 VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Avalonia.Thickness(0, 0, 8, 0),
             });
             _audioPathBox = new TextBox { IsReadOnly = true, Watermark = "No audio loaded" };
             Grid.SetColumn(_audioPathBox, 1);
             audioRow.Children.Add(_audioPathBox);
-            _loadAudioButton = new Button { Content = "Load...", Margin = new Avalonia.Thickness(8, 0, 0, 0) };
+            _loadAudioButton = new Button { Content = "Load..." };
             _loadAudioButton.Click += async (s, e) => await LoadAudioFromPickerAsync();
             Grid.SetColumn(_loadAudioButton, 2);
             audioRow.Children.Add(_loadAudioButton);
-            _playPreviewButton = new Button { Content = "Play", Margin = new Avalonia.Thickness(4, 0, 0, 0) };
+            _playPreviewButton = new Button { Content = "Play" };
             _playPreviewButton.Click += (s, e) => PlayPreview();
             Grid.SetColumn(_playPreviewButton, 3);
             audioRow.Children.Add(_playPreviewButton);
-            _stopPreviewButton = new Button { Content = "Stop", Margin = new Avalonia.Thickness(4, 0, 0, 0) };
+            _stopPreviewButton = new Button { Content = "Stop" };
             _stopPreviewButton.Click += (s, e) => StopPreview();
             Grid.SetColumn(_stopPreviewButton, 4);
             audioRow.Children.Add(_stopPreviewButton);
-            Grid.SetRow(audioRow, 0);
-            root.Children.Add(audioRow);
+            UpdatePreviewButtonState();
+            audioSection.Children.Add(audioRow);
+            var audioFrame = CreateSection(audioSection);
+            Grid.SetRow(audioFrame, 0);
+            root.Children.Add(audioFrame);
 
-            var previewRow = new StackPanel
+            var timelineSection = new StackPanel { Spacing = 8 };
+            timelineSection.Children.Add(CreateSectionTitle("Timeline"));
+            var timelineGrid = new Grid
             {
-                Orientation = Orientation.Horizontal,
-                Margin = new Avalonia.Thickness(0, 0, 0, 8),
+                ColumnDefinitions = new ColumnDefinitions("Auto,120,Auto,*"),
+                ColumnSpacing = 8,
             };
-            previewRow.Children.Add(new TextBlock
-            {
-                Text = "Preview:",
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Avalonia.Thickness(0, 0, 8, 0),
-            });
-            _previewLabel = new TextBlock
-            {
-                Text = "None",
-                VerticalAlignment = VerticalAlignment.Center,
-            };
-            previewRow.Children.Add(_previewLabel);
-            Grid.SetRow(previewRow, 1);
-            root.Children.Add(previewRow);
-
-            var durationRow = new Grid
-            {
-                ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"),
-                Margin = new Avalonia.Thickness(0, 0, 0, 8),
-            };
-            durationRow.Children.Add(new TextBlock
+            timelineGrid.Children.Add(new TextBlock
             {
                 Text = "Duration (s):",
                 VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Avalonia.Thickness(0, 0, 8, 0),
             });
             _durationSpin = new NumericUpDown
             {
@@ -263,25 +307,82 @@ namespace OdyTools.Editors
             };
             _durationSpin.ValueChanged += OnDurationSpinChanged;
             Grid.SetColumn(_durationSpin, 1);
-            durationRow.Children.Add(_durationSpin);
-            Grid.SetRow(durationRow, 2);
-            root.Children.Add(durationRow);
+            timelineGrid.Children.Add(_durationSpin);
+            timelineGrid.Children.Add(new TextBlock
+            {
+                Text = "Current shape:",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Avalonia.Thickness(12, 0, 0, 0),
+            });
+            Grid.SetColumn(timelineGrid.Children[timelineGrid.Children.Count - 1], 2);
+            _previewLabel = new TextBlock
+            {
+                Text = "None",
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            Grid.SetColumn(_previewLabel, 3);
+            timelineGrid.Children.Add(_previewLabel);
+            timelineSection.Children.Add(timelineGrid);
 
-            _keyframeList = new ListBox { MinHeight = 180 };
+            var scrubGrid = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"),
+                ColumnSpacing = 8,
+            };
+            scrubGrid.Children.Add(new TextBlock
+            {
+                Text = "Position:",
+                VerticalAlignment = VerticalAlignment.Center,
+            });
+            _scrubSlider = new Slider
+            {
+                Minimum = 0,
+                Maximum = 0,
+                TickFrequency = 0.1,
+                IsSnapToTickEnabled = false,
+                IsEnabled = false,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            _scrubSlider.ValueChanged += (s, e) => OnScrubSliderChanged();
+            Grid.SetColumn(_scrubSlider, 1);
+            scrubGrid.Children.Add(_scrubSlider);
+            _scrubTimeLabel = new TextBlock
+            {
+                Text = "0.000s / 0.000s",
+                MinWidth = 110,
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Right,
+            };
+            Grid.SetColumn(_scrubTimeLabel, 2);
+            scrubGrid.Children.Add(_scrubTimeLabel);
+            timelineSection.Children.Add(scrubGrid);
+            var timelineFrame = CreateSection(timelineSection);
+            Grid.SetRow(timelineFrame, 1);
+            root.Children.Add(timelineFrame);
+
+            var keyframeSection = new Grid
+            {
+                RowDefinitions = new RowDefinitions("Auto,*"),
+                RowSpacing = 8,
+            };
+            keyframeSection.Children.Add(CreateSectionTitle("Keyframes"));
+            _keyframeList = new ListBox { MinHeight = 190 };
             _keyframeList.SelectionChanged += OnKeyframeSelectionChanged;
-            Grid.SetRow(_keyframeList, 3);
-            root.Children.Add(_keyframeList);
+            Grid.SetRow(_keyframeList, 1);
+            keyframeSection.Children.Add(_keyframeList);
+            var keyframeFrame = CreateSection(keyframeSection);
+            Grid.SetRow(keyframeFrame, 2);
+            root.Children.Add(keyframeFrame);
 
             var editRow = new Grid
             {
-                ColumnDefinitions = new ColumnDefinitions("Auto,Auto,*,Auto,Auto,Auto"),
-                Margin = new Avalonia.Thickness(0, 8, 0, 0),
+                ColumnDefinitions = new ColumnDefinitions("Auto,100,Auto,140,*,Auto,Auto,Auto"),
+                ColumnSpacing = 6,
             };
             editRow.Children.Add(new TextBlock
             {
                 Text = "Time (s):",
                 VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Avalonia.Thickness(0, 0, 8, 0),
             });
             _timeSpin = new NumericUpDown
             {
@@ -298,11 +399,10 @@ namespace OdyTools.Editors
             {
                 Text = "Shape:",
                 VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Avalonia.Thickness(12, 0, 8, 0),
             });
             Grid.SetColumn(editRow.Children[editRow.Children.Count - 1], 2);
 
-            _shapeCombo = new ComboBox { MinWidth = 100, VerticalAlignment = VerticalAlignment.Center };
+            _shapeCombo = new ComboBox { MinWidth = 120, VerticalAlignment = VerticalAlignment.Center };
             foreach (LIPShape shape in Enum.GetValues(typeof(LIPShape)))
             {
                 _shapeCombo.Items.Add(shape);
@@ -316,34 +416,53 @@ namespace OdyTools.Editors
             Grid.SetColumn(_shapeCombo, 3);
             editRow.Children.Add(_shapeCombo);
 
-            _addKeyframeButton = new Button { Content = "Add", Margin = new Avalonia.Thickness(8, 0, 0, 0) };
+            _addKeyframeButton = new Button { Content = "Add" };
             _addKeyframeButton.Click += (s, e) => OnAddKeyframeClick();
-            Grid.SetColumn(_addKeyframeButton, 4);
+            Grid.SetColumn(_addKeyframeButton, 5);
             editRow.Children.Add(_addKeyframeButton);
 
-            _updateKeyframeButton = new Button { Content = "Update", Margin = new Avalonia.Thickness(4, 0, 0, 0) };
+            _updateKeyframeButton = new Button { Content = "Update" };
             _updateKeyframeButton.Click += (s, e) => OnUpdateKeyframeClick();
-            Grid.SetColumn(_updateKeyframeButton, 5);
+            Grid.SetColumn(_updateKeyframeButton, 6);
             editRow.Children.Add(_updateKeyframeButton);
 
-            var buttonRow = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                HorizontalAlignment = HorizontalAlignment.Right,
-                Spacing = 6,
-                Margin = new Avalonia.Thickness(0, 8, 0, 0),
-            };
-            _deleteKeyframeButton = new Button { Content = "Delete Selected" };
+            _deleteKeyframeButton = new Button { Content = "Delete" };
             _deleteKeyframeButton.Click += (s, e) => OnDeleteKeyframeClick();
-            buttonRow.Children.Add(_deleteKeyframeButton);
+            Grid.SetColumn(_deleteKeyframeButton, 7);
+            editRow.Children.Add(_deleteKeyframeButton);
 
-            var editPanel = new StackPanel();
-            editPanel.Children.Add(editRow);
-            editPanel.Children.Add(buttonRow);
-            Grid.SetRow(editPanel, 4);
-            root.Children.Add(editPanel);
+            var editFrame = CreateSection(editRow);
+            Grid.SetRow(editFrame, 3);
+            root.Children.Add(editFrame);
 
             return root;
+        }
+
+        private static TextBlock CreateSectionTitle(string text)
+        {
+            return new TextBlock
+            {
+                Text = text,
+                FontWeight = Avalonia.Media.FontWeight.SemiBold,
+            };
+        }
+
+        private static Border CreateSection(Control content)
+        {
+            return CreateSection(content, new Avalonia.Thickness(10));
+        }
+
+        private static Border CreateSection(Control content, Avalonia.Thickness padding)
+        {
+            return new Border
+            {
+                BorderBrush = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(205, 210, 218)),
+                BorderThickness = new Avalonia.Thickness(1),
+                CornerRadius = new Avalonia.CornerRadius(4),
+                Padding = padding,
+                Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(248, 249, 251)),
+                Child = content,
+            };
         }
 
         private void SetupHeadPreview()
@@ -361,11 +480,19 @@ namespace OdyTools.Editors
                 {
                     _appearanceSelect.IsEnabled = false;
                 }
+                if (_chooseInstallationButton != null)
+                {
+                    _chooseInstallationButton.IsVisible = true;
+                }
                 _headPreviewRenderer?.ClearModel();
                 return;
             }
 
             _headPreviewNotice.IsVisible = false;
+            if (_chooseInstallationButton != null)
+            {
+                _chooseInstallationButton.IsVisible = false;
+            }
             if (_appearanceSelect != null)
             {
                 _appearanceSelect.IsEnabled = true;
@@ -377,6 +504,11 @@ namespace OdyTools.Editors
 
             PopulateAppearanceCombo();
             RefreshHeadPreview();
+        }
+
+        protected override void OnInstallationChanged()
+        {
+            SetupHeadPreview();
         }
 
         private void PopulateAppearanceCombo()
@@ -471,6 +603,9 @@ namespace OdyTools.Editors
             }
 
             RefreshKeyframeList();
+            UpdatePreviewButtonState();
+            UpdateStatusBar();
+            MarkDocumentDirty();
         }
 
         private async Task LoadAudioFromPickerAsync()
@@ -536,6 +671,34 @@ namespace OdyTools.Editors
             ResetPreviewDisplay();
         }
 
+        private void ClearAudioPreviewState()
+        {
+            StopPreview();
+            _audioFilePath = null;
+            if (_audioPathBox != null)
+            {
+                _audioPathBox.Text = string.Empty;
+            }
+            if (_previewPlayer != null)
+            {
+                _previewPlayer.SetSource(null);
+            }
+            UpdatePreviewButtonState();
+        }
+
+        private void UpdatePreviewButtonState()
+        {
+            bool hasAudio = !string.IsNullOrWhiteSpace(_audioFilePath);
+            if (_playPreviewButton != null)
+            {
+                _playPreviewButton.IsEnabled = hasAudio;
+            }
+            if (_stopPreviewButton != null)
+            {
+                _stopPreviewButton.IsEnabled = hasAudio;
+            }
+        }
+
         private void StartPreviewTimer()
         {
             if (_previewTimer != null && !_previewTimer.IsEnabled)
@@ -571,6 +734,24 @@ namespace OdyTools.Editors
             }
 
             float currentTime = (float)_previewPlayer.Position.TotalSeconds;
+            UpdatePreviewPosition(currentTime, seekPlayer: false);
+        }
+
+        private void UpdatePreviewPosition(float currentTime, bool seekPlayer)
+        {
+            if (_lip == null)
+            {
+                return;
+            }
+
+            currentTime = ClampPreviewTime(currentTime);
+            if (seekPlayer && _previewPlayer != null)
+            {
+                _previewPlayer.SetPosition(TimeSpan.FromSeconds(currentTime));
+            }
+
+            UpdateScrubControls(currentTime);
+
             LIPShape? shape = GetShapeAtPlaybackTime(_lip, currentTime);
             if (_previewLabel != null)
             {
@@ -614,6 +795,58 @@ namespace OdyTools.Editors
             }
         }
 
+        private void UpdateScrubControls(float currentTime)
+        {
+            _scrubSyncInProgress = true;
+            try
+            {
+                if (_scrubSlider != null)
+                {
+                    _scrubSlider.Maximum = _duration > 0f ? _duration : 0.0;
+                    _scrubSlider.IsEnabled = _duration > 0f;
+                    _scrubSlider.Value = Math.Min(Math.Max(currentTime, 0f), _duration > 0f ? _duration : 0f);
+                }
+
+                if (_scrubTimeLabel != null)
+                {
+                    _scrubTimeLabel.Text = string.Format(
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        "{0:F3}s / {1:F3}s",
+                        currentTime,
+                        _duration);
+                }
+            }
+            finally
+            {
+                _scrubSyncInProgress = false;
+            }
+        }
+
+        private float ClampPreviewTime(float currentTime)
+        {
+            if (float.IsNaN(currentTime) || float.IsInfinity(currentTime))
+            {
+                return 0f;
+            }
+
+            if (_duration <= 0f)
+            {
+                return Math.Max(0f, currentTime);
+            }
+
+            return Math.Max(0f, Math.Min(currentTime, _duration));
+        }
+
+        private void OnScrubSliderChanged()
+        {
+            if (_scrubSyncInProgress || _scrubSlider == null)
+            {
+                return;
+            }
+
+            UpdatePreviewPosition((float)_scrubSlider.Value, seekPlayer: true);
+        }
+
         private void ResetPreviewDisplay()
         {
             if (_previewLabel != null)
@@ -621,7 +854,30 @@ namespace OdyTools.Editors
                 _previewLabel.Text = "None";
             }
 
+            UpdateScrubControls(0f);
             UpdateHeadPlaybackHint(null);
+        }
+
+        private bool TryHandlePlaybackShortcut(Key key, KeyModifiers modifiers)
+        {
+            if (modifiers != KeyModifiers.None)
+            {
+                return false;
+            }
+
+            if (key == Key.Space)
+            {
+                PlayPreview();
+                return true;
+            }
+
+            if (key == Key.Escape)
+            {
+                StopPreview();
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -703,6 +959,7 @@ namespace OdyTools.Editors
                     _timeSpin.Maximum = _duration > 0f ? (decimal)_duration : 999.999m;
                 }
 
+                UpdateScrubControls((float)(_scrubSlider?.Value ?? 0.0));
                 UpdateStatusBar();
             }
             finally
@@ -1010,32 +1267,85 @@ namespace OdyTools.Editors
         private List<string> GetSearchableStrings()
         {
             var list = new List<string>();
+            foreach (var entry in GetSearchEntries())
+            {
+                list.Add(entry.Text);
+            }
+
+            return list;
+        }
+
+        private List<SearchEntry> GetSearchEntries()
+        {
+            var list = new List<SearchEntry>();
             if (_lip == null) return list;
-            list.Add(_duration.ToString(System.Globalization.CultureInfo.InvariantCulture));
-            list.Add(_lip.Length.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            list.Add(new SearchEntry(_duration.ToString(System.Globalization.CultureInfo.InvariantCulture), -1));
+            list.Add(new SearchEntry(_lip.Length.ToString(System.Globalization.CultureInfo.InvariantCulture), -1));
             if (_lip.Frames != null)
-                foreach (var frame in _lip.Frames)
+                for (int frameIndex = 0; frameIndex < _lip.Frames.Count; frameIndex++)
                 {
-                    list.Add(frame.Time.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                    list.Add(frame.Shape.ToString());
+                    var frame = _lip.Frames[frameIndex];
+                    list.Add(new SearchEntry(frame.Time.ToString(System.Globalization.CultureInfo.InvariantCulture), frameIndex));
+                    list.Add(new SearchEntry(frame.Shape.ToString(), frameIndex));
                 }
             return list;
         }
 
         private void FindNextMatch()
         {
-            if (string.IsNullOrEmpty(_findText)) return;
-            var strings = GetSearchableStrings();
-            if (strings.Count == 0) return;
+            TryFindNextMatch();
+        }
+
+        private bool TryFindNextMatch()
+        {
+            if (string.IsNullOrEmpty(_findText))
+            {
+                _lastFindIndex = -1;
+                _lastFindKeyframeIndex = -1;
+                return false;
+            }
+
+            var entries = GetSearchEntries();
+            if (entries.Count == 0)
+            {
+                _lastFindIndex = -1;
+                _lastFindKeyframeIndex = -1;
+                return false;
+            }
+
             string t = _findMatchCase ? _findText : _findText.ToLowerInvariant();
             bool Match(string value) => value != null && (_findMatchCase ? value : value.ToLowerInvariant()).Contains(t);
             int start = _lastFindIndex + 1;
-            for (int i = 0; i < strings.Count; i++)
+            for (int i = 0; i < entries.Count; i++)
             {
-                int idx = (start + i) % strings.Count;
-                if (Match(strings[idx])) { _lastFindIndex = idx; UpdateStatusBar(); return; }
+                int idx = (start + i) % entries.Count;
+                if (!Match(entries[idx].Text))
+                {
+                    continue;
+                }
+
+                _lastFindIndex = idx;
+                SelectFindEntry(entries[idx]);
+                UpdateStatusBar();
+                return true;
             }
+
             _lastFindIndex = -1;
+            _lastFindKeyframeIndex = -1;
+            return false;
+        }
+
+        private void SelectFindEntry(SearchEntry entry)
+        {
+            _lastFindKeyframeIndex = entry.KeyframeIndex;
+            if (entry.KeyframeIndex >= 0 && _keyframeList != null && entry.KeyframeIndex < _keyframeList.Items.Count)
+            {
+                _keyframeList.SelectedIndex = entry.KeyframeIndex;
+                _keyframeList.ScrollIntoView(_keyframeList.SelectedItem);
+                return;
+            }
+
+            _durationSpin?.Focus();
         }
 
         private void OnWindowKeyDown(object sender, KeyEventArgs e)
@@ -1045,8 +1355,7 @@ namespace OdyTools.Editors
             if (e.Key == Key.Y && (e.KeyModifiers & KeyModifiers.Control) != 0) { Redo(); e.Handled = true; return; }
             if (e.Key == Key.F && (e.KeyModifiers & KeyModifiers.Control) != 0) { ShowFindDialog(); e.Handled = true; return; }
             if (e.Key == Key.F3) { FindNextMatch(); e.Handled = true; return; }
-            if (e.Key == Key.Space) { PlayPreview(); e.Handled = true; return; }
-            if (e.Key == Key.Escape) { StopPreview(); e.Handled = true; }
+            if (TryHandlePlaybackShortcut(e.Key, e.KeyModifiers)) { e.Handled = true; }
         }
 
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
@@ -1054,6 +1363,7 @@ namespace OdyTools.Editors
             base.Load(filepath, resref, restype, data);
             _undoStack.Clear();
             _redoStack.Clear();
+            ClearAudioPreviewState();
             try { LoadFromBytes(data); }
             catch (Exception ex)
             {
@@ -1097,6 +1407,7 @@ namespace OdyTools.Editors
             _lip = new LIP();
             _duration = 0.0f;
             _lastFindIndex = -1;
+            ClearAudioPreviewState();
             RefreshKeyframeList();
         }
 
@@ -1110,6 +1421,62 @@ namespace OdyTools.Editors
         public string AudioFilePath => _audioFilePath;
         public bool CanUndo => _undoStack.Count > 0;
         public bool CanRedo => _redoStack.Count > 0;
+        internal string PreviewLabelTextForTest => _previewLabel?.Text;
+        internal string AudioPathBoxTextForTest => _audioPathBox?.Text;
+        internal bool PlayPreviewButtonEnabledForTest => _playPreviewButton?.IsEnabled == true;
+        internal bool StopPreviewButtonEnabledForTest => _stopPreviewButton?.IsEnabled == true;
+        internal decimal? DurationSpinValueForTest => _durationSpin?.Value;
+        internal double ScrubSliderValueForTest => _scrubSlider?.Value ?? 0.0;
+        internal double ScrubSliderMaximumForTest => _scrubSlider?.Maximum ?? 0.0;
+        internal bool ScrubSliderEnabledForTest => _scrubSlider?.IsEnabled == true;
+        internal string ScrubTimeLabelTextForTest => _scrubTimeLabel?.Text;
+        internal int SelectedKeyframeIndexForTest => _keyframeList?.SelectedIndex ?? -1;
+        internal int LastFindKeyframeIndexForTest => _lastFindKeyframeIndex;
+        internal decimal? TimeSpinValueForTest => _timeSpin?.Value;
+        internal LIPShape? ShapeComboSelectedShapeForTest => _shapeCombo?.SelectedItem is LIPShape shape ? shape : (LIPShape?)null;
+        internal void SetFindQueryForTest(string text, bool matchCase = false)
+        {
+            if (!string.Equals(_findText, text ?? "", StringComparison.Ordinal) || _findMatchCase != matchCase)
+            {
+                _lastFindIndex = -1;
+                _lastFindKeyframeIndex = -1;
+            }
+
+            _findText = text ?? "";
+            _findMatchCase = matchCase;
+        }
+        internal bool FindNextForTest()
+        {
+            return TryFindNextMatch();
+        }
+        internal void SetPreviewLabelTextForTest(string text)
+        {
+            if (_previewLabel != null)
+            {
+                _previewLabel.Text = text;
+            }
+        }
+        internal void SeekPreviewForTest(float seconds)
+        {
+            UpdatePreviewPosition(seconds, seekPlayer: false);
+        }
+        internal bool TryHandlePlaybackShortcutForTest(Key key, KeyModifiers modifiers)
+        {
+            return TryHandlePlaybackShortcut(key, modifiers);
+        }
+        internal bool HasProgrammaticEditorSurfaceForTest =>
+            _statusText != null &&
+            _keyframeList != null &&
+            _durationSpin != null &&
+            _timeSpin != null &&
+            _shapeCombo != null &&
+            _audioPathBox != null &&
+            _loadAudioButton != null &&
+            _playPreviewButton != null &&
+            _stopPreviewButton != null &&
+            _headPreviewRenderer != null &&
+            _appearanceSelect != null &&
+            _chooseInstallationButton != null;
         public float Duration
         {
             get => _duration;
@@ -1163,6 +1530,18 @@ namespace OdyTools.Editors
                 _lip.Remove(index);
                 RefreshKeyframeList();
             }
+        }
+
+        private readonly struct SearchEntry
+        {
+            public SearchEntry(string text, int keyframeIndex)
+            {
+                Text = text;
+                KeyframeIndex = keyframeIndex;
+            }
+
+            public string Text { get; }
+            public int KeyframeIndex { get; }
         }
     }
 }

@@ -37,7 +37,6 @@ namespace OdyTools.Editors
 
         private MonacoEditorHost _monacoHost;
         private CodeEditor _codeEdit;
-        private ContentControl _contentRoot;
         private CommandPalette _commandPalette;
         private FindReplaceWidget _findReplaceWidget;
         private BreadcrumbsWidget _breadcrumbs;
@@ -57,15 +56,20 @@ namespace OdyTools.Editors
         private NWScriptSyntaxHighlighter _highlighter;
         private List<(int Line, bool IsError, string Message)> _problemDiagnostics = new List<(int, bool, string)>();
         private Dictionary<string, string> _functions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private bool _loadingDocument;
+        private bool _clearInitialDirtyOnOpen = true;
         private bool _isTsl;
         private const string IndentString = "    ";
+
+        internal string SourceTextForTest => _codeEdit?.Text ?? "";
+        internal string OutputTextForTest => _outputBox?.Text ?? "";
+        internal IReadOnlyList<(int Line, bool IsError, string Message)> DiagnosticsForTest => _problemDiagnostics.ToList();
 
         public OdyToolNSS() : this(null, null) { }
         public OdyToolNSS(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolNSS", "none", GetSupportedTypes(), new[] { ResourceType.NSS }, installation)
         {
             InitializeComponent();
-            _contentRoot = this.FindControl<ContentControl>("contentRoot");
             _isTsl = installation?.Tsl ?? false;
             BuildUI();
             SetupCompleterAndHighlighter();
@@ -149,7 +153,16 @@ namespace OdyTools.Editors
             _codeEdit.FontSize = 12;
             _codeEdit.Background = MonacoColors.EditorBackgroundBrush;
             _codeEdit.Foreground = MonacoColors.EditorForegroundBrush;
-            _codeEdit.TextChanged += (s, e) => { MarkDocumentDirty(); UpdateStatusBar(); UpdateBreadcrumbs(); };
+            _codeEdit.TextChanged += (s, e) =>
+            {
+                if (!_loadingDocument)
+                {
+                    MarkDocumentDirty();
+                }
+
+                UpdateStatusBar();
+                UpdateBreadcrumbs();
+            };
             _codeEdit.KeyUp += (s, e) => UpdateStatusBar();
             Grid.SetRow(_monacoHost, 0);
             sourceEditorGrid.Children.Add(_monacoHost);
@@ -214,7 +227,7 @@ namespace OdyTools.Editors
             _workbenchShell.StatusBarContent = statusBarDock;
 
             mainDock.Children.Add(_workbenchShell);
-            SetContentOrInject(mainDock);
+            Content = mainDock;
         }
 
         private Control CreateSidebarContent()
@@ -360,7 +373,30 @@ namespace OdyTools.Editors
 
         private void SetupSignals()
         {
-            Opened += (s, e) => { UpdateStatusBar(); _codeEdit?.Focus(); };
+            Opened += (s, e) =>
+            {
+                UpdateStatusBar();
+                _codeEdit?.Focus();
+                ClearInitialDirtyOnOpen();
+            };
+        }
+
+        private void ClearInitialDirtyOnOpen()
+        {
+            if (!_clearInitialDirtyOnOpen)
+            {
+                return;
+            }
+
+            ClearDirty();
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (_clearInitialDirtyOnOpen)
+                {
+                    ClearDirty();
+                    _clearInitialDirtyOnOpen = false;
+                }
+            }, Avalonia.Threading.DispatcherPriority.Background);
         }
 
         private MenuItem CreateMenuItem(string header, Action action, Key? key = null, KeyModifiers mod = KeyModifiers.None)
@@ -624,6 +660,34 @@ namespace OdyTools.Editors
             LogToOutput($"Analysis: {_problemDiagnostics.Count} diagnostic(s).");
         }
 
+        internal void SetSourceTextForTest(string source)
+        {
+            if (_codeEdit == null)
+            {
+                return;
+            }
+
+            string next = source ?? "";
+            bool changed = next != (_codeEdit.Text ?? "");
+            _codeEdit.Text = next;
+            if (changed && !_loadingDocument)
+            {
+                MarkDocumentDirty();
+            }
+            UpdateStatusBar();
+            UpdateBreadcrumbs();
+        }
+
+        internal void FormatDocumentForTest()
+        {
+            FormatDocument();
+        }
+
+        internal void AnalyzeCodeForTest()
+        {
+            AnalyzeCode();
+        }
+
         private void RefreshProblemsList()
         {
             if (_problemsList == null) return;
@@ -670,21 +734,38 @@ namespace OdyTools.Editors
                 text = data != null ? Encoding.UTF8.GetString(data) : "";
                 RefreshDisassembly(null);
             }
-            if (_codeEdit != null) _codeEdit.Text = text;
-            _isTsl = _installation?.Tsl ?? false;
-            _highlighter?.UpdateRules(_isTsl);
-            LoadGameFunctions();
-            UpdateStatusBar();
+            _loadingDocument = true;
+            try
+            {
+                if (_codeEdit != null) _codeEdit.Text = text;
+                _isTsl = _installation?.Tsl ?? false;
+                _highlighter?.UpdateRules(_isTsl);
+                LoadGameFunctions();
+                UpdateStatusBar();
+            }
+            finally
+            {
+                _loadingDocument = false;
+            }
         }
 
         public override void New()
         {
             base.New();
-            if (_codeEdit != null) _codeEdit.Text = "";
-            _problemDiagnostics.Clear();
-            RefreshProblemsList();
-            RefreshDisassembly(null);
-            UpdateStatusBar();
+            _loadingDocument = true;
+            try
+            {
+                if (_codeEdit != null) _codeEdit.Text = "";
+                _problemDiagnostics.Clear();
+                RefreshProblemsList();
+                RefreshDisassembly(null);
+                UpdateStatusBar();
+            }
+            finally
+            {
+                _loadingDocument = false;
+            }
+            ClearDirty();
         }
 
         public override Tuple<byte[], byte[]> Build()

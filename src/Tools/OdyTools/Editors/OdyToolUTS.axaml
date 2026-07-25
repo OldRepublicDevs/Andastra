@@ -10,5 +10,167 @@
       <Setter Property="Background" Value="#F3F5F9" />
     </Style>
   </Window.Styles>
-  <ContentControl x:Name="contentRoot"/>
+  <DockPanel LastChildFill="True">
+    <Menu DockPanel.Dock="Top" Name="menuBar">
+      <MenuItem Header="_File">
+        <MenuItem Header="_New" Name="actionNew"/>
+        <MenuItem Header="_Open" Name="actionOpen"/>
+        <MenuItem Header="_Save" Name="actionSave"/>
+        <MenuItem Header="Save _As" Name="actionSaveAs"/>
+        <Separator/>
+        <MenuItem Header="_Revert" Name="actionRevert"/>
+        <Separator/>
+        <MenuItem Header="E_xit" Name="actionExit"/>
+      </MenuItem>
+      <MenuItem Header="_Help" Name="menuHelp"/>
+    </Menu>
+
+    <TabControl Name="editorSurface" Margin="10">
+      <TabItem Header="Basic">
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" ColumnSpacing="10" RowSpacing="8" Margin="8">
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="Name" VerticalAlignment="Center"/>
+          <Grid Grid.Row="0" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <TextBox Name="nameEdit" IsReadOnly="True"/>
+            <Button Name="nameEditBtn" Grid.Column="1" Content="Edit"/>
+          </Grid>
+
+          <TextBlock Grid.Row="1" Grid.Column="0" Text="Tag" VerticalAlignment="Center"/>
+          <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <TextBox Name="tagEdit"/>
+            <Button Name="tagGenerateBtn" Grid.Column="1" Content="Use ResRef"/>
+          </Grid>
+
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Template ResRef" VerticalAlignment="Center"/>
+          <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <TextBox Name="resrefEdit" MaxLength="16"/>
+            <Button Name="resrefGenerateBtn" Grid.Column="1" Content="Use file name"/>
+          </Grid>
+
+          <TextBlock Grid.Row="3" Grid.Column="0" Text="Volume" VerticalAlignment="Center"/>
+          <Slider Name="volumeSlider" Grid.Row="3" Grid.Column="1" Minimum="0" Maximum="255" TickFrequency="1"/>
+
+          <CheckBox Name="activeCheckbox" Grid.Row="4" Grid.Column="1" Content="Active"/>
+        </Grid>
+      </TabItem>
+
+      <TabItem Header="Advanced">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+          <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="10" Margin="8">
+            <Border Grid.Row="0" Grid.Column="0" BorderBrush="#D7DBE6" BorderThickness="1" Padding="8">
+              <StackPanel Spacing="6">
+                <TextBlock Text="Play Style" FontWeight="SemiBold"/>
+                <RadioButton Name="styleOnceRadio" GroupName="UTSStyle" Content="Once"/>
+                <RadioButton Name="styleRepeatRadio" GroupName="UTSStyle" Content="Repeating"/>
+                <RadioButton Name="styleSeamlessRadio" GroupName="UTSStyle" Content="Seamless Looping"/>
+              </StackPanel>
+            </Border>
+
+            <Border Grid.Row="0" Grid.Column="1" BorderBrush="#D7DBE6" BorderThickness="1" Padding="8">
+              <StackPanel Spacing="6">
+                <TextBlock Text="Play Order" FontWeight="SemiBold"/>
+                <RadioButton Name="orderSequentialRadio" GroupName="UTSOrder" Content="Sequential"/>
+                <RadioButton Name="orderRandomRadio" GroupName="UTSOrder" Content="Random"/>
+              </StackPanel>
+            </Border>
+
+            <Border Grid.Row="1" Grid.Column="0" BorderBrush="#D7DBE6" BorderThickness="1" Padding="8">
+              <StackPanel Spacing="8">
+                <TextBlock Text="Interval" FontWeight="SemiBold"/>
+                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="8">
+                  <TextBlock Grid.Row="0" Grid.Column="0" Text="Interval (s)" VerticalAlignment="Center"/>
+                  <NumericUpDown Name="intervalSpin" Grid.Row="0" Grid.Column="1" Minimum="0" Maximum="2147483647"/>
+                  <TextBlock Grid.Row="1" Grid.Column="0" Text="Variation (s)" VerticalAlignment="Center"/>
+                  <NumericUpDown Name="intervalVariationSpin" Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="2147483647"/>
+                </Grid>
+              </StackPanel>
+            </Border>
+
+            <Border Grid.Row="1" Grid.Column="1" BorderBrush="#D7DBE6" BorderThickness="1" Padding="8">
+              <StackPanel Spacing="8">
+                <TextBlock Text="Variation" FontWeight="SemiBold"/>
+                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="8">
+                  <TextBlock Grid.Row="0" Grid.Column="0" Text="Volume" VerticalAlignment="Center"/>
+                  <Slider Name="volumeVariationSlider" Grid.Row="0" Grid.Column="1" Minimum="0" Maximum="255" TickFrequency="1"/>
+                  <TextBlock Grid.Row="1" Grid.Column="0" Text="Pitch" VerticalAlignment="Center"/>
+                  <Slider Name="pitchVariationSlider" Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="100" TickFrequency="1"/>
+                </Grid>
+              </StackPanel>
+            </Border>
+          </Grid>
+        </ScrollViewer>
+      </TabItem>
+
+      <TabItem Header="Sounds">
+        <Grid ColumnDefinitions="*,120" RowDefinitions="*,Auto" ColumnSpacing="10" RowSpacing="8" Margin="8">
+          <ListBox Name="soundList"/>
+          <TextBox Name="soundEdit" Grid.Row="1" Watermark="Selected sound resref"/>
+          <StackPanel Grid.Column="1" Spacing="8">
+            <Button Name="addSoundBtn" Content="Add"/>
+            <Button Name="removeSoundBtn" Content="Remove"/>
+            <Separator/>
+            <Button Name="moveUpBtn" Content="Move Up"/>
+            <Button Name="moveDownBtn" Content="Move Down"/>
+            <Separator/>
+            <Button Name="playSoundBtn" Content="Play"/>
+            <Button Name="stopSoundBtn" Content="Stop"/>
+          </StackPanel>
+        </Grid>
+      </TabItem>
+
+      <TabItem Header="Positioning">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+          <Grid RowDefinitions="Auto,Auto" RowSpacing="10" Margin="8">
+            <Border BorderBrush="#D7DBE6" BorderThickness="1" Padding="8">
+              <StackPanel Spacing="6">
+                <TextBlock Text="Playback Position" FontWeight="SemiBold"/>
+                <RadioButton Name="playEverywhereRadio" GroupName="UTSPlayMode" Content="Plays everywhere in area"/>
+                <RadioButton Name="playRandomRadio" GroupName="UTSPlayMode" Content="Plays from a random position each time"/>
+                <RadioButton Name="playSpecificRadio" GroupName="UTSPlayMode" Content="Plays from a specific position"/>
+              </StackPanel>
+            </Border>
+
+            <Grid Grid.Row="1" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="10">
+              <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" BorderBrush="#D7DBE6" BorderThickness="1" Padding="8">
+                <StackPanel Spacing="8">
+                  <TextBlock Text="Volume Distances" FontWeight="SemiBold"/>
+                  <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="8">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Cutoff distance (m)" VerticalAlignment="Center"/>
+                    <NumericUpDown Name="cutoffSpin" Grid.Row="0" Grid.Column="1" Minimum="0" Maximum="10000"/>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Max volume distance (m)" VerticalAlignment="Center"/>
+                    <NumericUpDown Name="maxVolumeDistanceSpin" Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="10000"/>
+                  </Grid>
+                </StackPanel>
+              </Border>
+
+              <Border Grid.Row="1" Grid.Column="0" BorderBrush="#D7DBE6" BorderThickness="1" Padding="8">
+                <StackPanel Spacing="8">
+                  <TextBlock Text="Height" FontWeight="SemiBold"/>
+                  <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                    <TextBlock Grid.Column="0" Text="Height (m)" VerticalAlignment="Center"/>
+                    <NumericUpDown Name="heightSpin" Grid.Column="1" Minimum="-10000" Maximum="10000"/>
+                  </Grid>
+                </StackPanel>
+              </Border>
+
+              <Border Grid.Row="1" Grid.Column="1" BorderBrush="#D7DBE6" BorderThickness="1" Padding="8">
+                <StackPanel Spacing="8">
+                  <TextBlock Text="Random Range" FontWeight="SemiBold"/>
+                  <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="8">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="North/South" VerticalAlignment="Center"/>
+                    <NumericUpDown Name="northRandomSpin" Grid.Row="0" Grid.Column="1" Minimum="0" Maximum="10000"/>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="East/West" VerticalAlignment="Center"/>
+                    <NumericUpDown Name="eastRandomSpin" Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="10000"/>
+                  </Grid>
+                </StackPanel>
+              </Border>
+            </Grid>
+          </Grid>
+        </ScrollViewer>
+      </TabItem>
+
+      <TabItem Header="Comments">
+        <TextBox Name="commentsEdit" Margin="8" AcceptsReturn="True" AcceptsTab="True"/>
+      </TabItem>
+    </TabControl>
+  </DockPanel>
 </Window>

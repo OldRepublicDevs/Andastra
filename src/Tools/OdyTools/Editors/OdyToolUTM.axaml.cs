@@ -59,12 +59,16 @@ namespace OdyTools.Editors
         // UI Controls - Comments
         private TextBox _commentsEdit;
         public TextBox CommentsEdit => _commentsEdit;
+        private TabControl _editorSurface;
+        internal bool HasStructuredEditorSurface => _editorSurface != null && _nameEdit != null && _markUpSpin != null && _onOpenEdit != null && _commentsEdit != null;
+        private bool _loadingUtm;
+        private bool _clearInitialDirtyOnOpen = true;
 
         public OdyToolUTM() : this(null, null) { }
         public OdyToolUTM(Window parent = null, OdyInstallation installation = null)
             : base(parent, "OdyToolUTM", "merchant",
-                new[] { ResourceType.UTM, ResourceType.BTM },
-                new[] { ResourceType.UTM, ResourceType.BTM },
+                new[] { ResourceType.UTM, ResourceType.BTM, ResourceType.UTM_XML, ResourceType.UTM_JSON },
+                new[] { ResourceType.UTM, ResourceType.BTM, ResourceType.UTM_XML, ResourceType.UTM_JSON },
                 installation)
         {
             _installation = installation;
@@ -87,19 +91,20 @@ namespace OdyTools.Editors
                 xamlLoaded = true;
 
                 // Try to find controls from XAML
-                _nameEdit = this.FindControl<LocalizedStringEdit>("nameEdit");
-                _nameEditBtn = this.FindControl<Button>("nameEditBtn");
-                _tagEdit = this.FindControl<TextBox>("tagEdit");
-                _tagGenerateBtn = this.FindControl<Button>("tagGenerateButton");
-                _resrefEdit = this.FindControl<TextBox>("resrefEdit");
-                _resrefGenerateBtn = this.FindControl<Button>("resrefGenerateButton");
-                _idSpin = this.FindControl<NumericUpDown>("idSpin");
-                _inventoryButton = this.FindControl<Button>("inventoryButton");
-                _markUpSpin = this.FindControl<NumericUpDown>("markUpSpin");
-                _markDownSpin = this.FindControl<NumericUpDown>("markDownSpin");
-                _onOpenEdit = this.FindControl<ComboBox>("onOpenEdit");
+                _editorSurface = EditorHelpers.FindControlSafe<TabControl>(this, "editorSurface");
+                _nameEdit = EditorHelpers.FindControlSafe<LocalizedStringEdit>(this, "nameEdit");
+                _nameEditBtn = EditorHelpers.FindControlSafe<Button>(this, "nameEditBtn");
+                _tagEdit = EditorHelpers.FindControlSafe<TextBox>(this, "tagEdit");
+                _tagGenerateBtn = EditorHelpers.FindControlSafe<Button>(this, "tagGenerateButton");
+                _resrefEdit = EditorHelpers.FindControlSafe<TextBox>(this, "resrefEdit");
+                _resrefGenerateBtn = EditorHelpers.FindControlSafe<Button>(this, "resrefGenerateButton");
+                _idSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "idSpin");
+                _inventoryButton = EditorHelpers.FindControlSafe<Button>(this, "inventoryButton");
+                _markUpSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "markUpSpin");
+                _markDownSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "markDownSpin");
+                _onOpenEdit = EditorHelpers.FindControlSafe<ComboBox>(this, "onOpenEdit");
                 if (_onOpenEdit != null) { _onOpenEdit.IsEditable = true; SetupScriptComboBoxContextMenu(_onOpenEdit, "OnOpenStore"); }
-                _storeFlagSelect = this.FindControl<ComboBox>("storeFlagSelect");
+                _storeFlagSelect = EditorHelpers.FindControlSafe<ComboBox>(this, "storeFlagSelect");
                 // Ensure ComboBox has items populated (even if loaded from XAML)
                 if (_storeFlagSelect != null && _storeFlagSelect.Items.Count == 0)
                 {
@@ -107,7 +112,7 @@ namespace OdyTools.Editors
                     _storeFlagSelect.Items.Add("Only Sell");
                     _storeFlagSelect.Items.Add("Buy and Sell");
                 }
-                _commentsEdit = this.FindControl<TextBox>("commentsEdit");
+                _commentsEdit = EditorHelpers.FindControlSafe<TextBox>(this, "commentsEdit");
 
                 // Check if all critical controls were found
                 if (_nameEdit == null || _tagEdit == null || _resrefEdit == null || _idSpin == null)
@@ -125,18 +130,25 @@ namespace OdyTools.Editors
             {
                 SetupProgrammaticUI();
                 SetupSignals();
+                BindDirtyTracking();
                 AttachReferenceSearchMenus();
             }
             else
             {
                 // XAML loaded, set up signals
                 SetupSignals();
+                BindDirtyTracking();
                 AttachReferenceSearchMenus();
             }
         }
 
         private void AttachReferenceSearchMenus()
         {
+            if (_tagEdit == null || _resrefEdit == null)
+            {
+                return;
+            }
+
             ReferenceSearchHelper.AttachTagFindReferencesMenu(_tagEdit, this, _installation);
             FieldValueReferenceHelper.AppendFieldValueFindReferencesMenuItem(
                 _tagEdit.ContextMenu,
@@ -161,6 +173,55 @@ namespace OdyTools.Editors
             EditorHelpers.BindClick(_nameEditBtn, ChangeName);
         }
 
+        private void BindDirtyTracking()
+        {
+            if (_tagEdit != null) _tagEdit.TextChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_resrefEdit != null) _resrefEdit.TextChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_idSpin != null) _idSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_markUpSpin != null) _markUpSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_markDownSpin != null) _markDownSpin.ValueChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_onOpenEdit != null)
+            {
+                _onOpenEdit.SelectionChanged += (s, e) => MarkDirtyAfterLoad();
+                _onOpenEdit.PropertyChanged += (s, e) =>
+                {
+                    if (e.Property.Name == nameof(ComboBox.Text))
+                    {
+                        MarkDirtyAfterLoad();
+                    }
+                };
+            }
+            if (_storeFlagSelect != null) _storeFlagSelect.SelectionChanged += (s, e) => MarkDirtyAfterLoad();
+            if (_commentsEdit != null) _commentsEdit.TextChanged += (s, e) => MarkDirtyAfterLoad();
+        }
+
+        private void MarkDirtyAfterLoad()
+        {
+            if (!_loadingUtm)
+            {
+                MarkDocumentDirty();
+            }
+        }
+
+        protected override void OnOpened(EventArgs e)
+        {
+            base.OnOpened(e);
+            if (!_clearInitialDirtyOnOpen)
+            {
+                return;
+            }
+
+            ClearDirty();
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (_clearInitialDirtyOnOpen)
+                {
+                    ClearDirty();
+                    _clearInitialDirtyOnOpen = false;
+                }
+            }, Avalonia.Threading.DispatcherPriority.Background);
+        }
+
         private void SetupInstallation(OdyInstallation installation)
         {
             _installation = installation;
@@ -168,6 +229,12 @@ namespace OdyTools.Editors
             {
                 _nameEdit.SetInstallation(installation);
             }
+        }
+
+        protected override void OnInstallationChanged()
+        {
+            SetupInstallation(_installation);
+            PopulateScriptComboBoxes();
         }
 
         private void PopulateScriptComboBoxes()
@@ -368,7 +435,7 @@ namespace OdyTools.Editors
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
-            var gff = GFF.FromBytes(data);
+            var gff = GFFAuto.ReadGff(data, fileFormat: restype);
             _utm = UTMHelpers.ConstructUtm(gff);
             LoadUTM(_utm);
         }
@@ -376,49 +443,57 @@ namespace OdyTools.Editors
         private void LoadUTM(UTM utm)
         {
             _utm = utm;
+            _loadingUtm = true;
+            try
+            {
 
-            // Basic
-            if (_nameEdit != null)
-            {
-                _nameEdit.SetLocString(utm.Name);
-            }
-            if (_tagEdit != null)
-            {
-                _tagEdit.Text = utm.Tag;
-            }
-            if (_resrefEdit != null)
-            {
-                _resrefEdit.Text = utm.ResRef.ToString();
-            }
-            if (_idSpin != null)
-            {
-                _idSpin.Value = (decimal)utm.Id;
-            }
-            if (_markUpSpin != null)
-            {
-                _markUpSpin.Value = (decimal)utm.MarkUp;
-            }
-            if (_markDownSpin != null)
-            {
-                _markDownSpin.Value = (decimal)utm.MarkDown;
-            }
-            if (_onOpenEdit != null)
-            {
-                _onOpenEdit.Text = utm.OnOpenScript.ToString();
-            }
-            if (_storeFlagSelect != null)
-            {
-                int index = (utm.CanBuy ? 1 : 0) + (utm.CanSell ? 2 : 0) - 1;
-                if (index >= 0 && index < _storeFlagSelect.Items.Count)
+                // Basic
+                if (_nameEdit != null)
                 {
-                    _storeFlagSelect.SelectedIndex = index;
+                    _nameEdit.SetLocString(utm.Name);
+                }
+                if (_tagEdit != null)
+                {
+                    _tagEdit.Text = utm.Tag;
+                }
+                if (_resrefEdit != null)
+                {
+                    _resrefEdit.Text = utm.ResRef.ToString();
+                }
+                if (_idSpin != null)
+                {
+                    _idSpin.Value = (decimal)utm.Id;
+                }
+                if (_markUpSpin != null)
+                {
+                    _markUpSpin.Value = (decimal)utm.MarkUp;
+                }
+                if (_markDownSpin != null)
+                {
+                    _markDownSpin.Value = (decimal)utm.MarkDown;
+                }
+                if (_onOpenEdit != null)
+                {
+                    _onOpenEdit.Text = utm.OnOpenScript.ToString();
+                }
+                if (_storeFlagSelect != null)
+                {
+                    int index = (utm.CanBuy ? 1 : 0) + (utm.CanSell ? 2 : 0) - 1;
+                    if (index >= 0 && index < _storeFlagSelect.Items.Count)
+                    {
+                        _storeFlagSelect.SelectedIndex = index;
+                    }
+                }
+
+                // Comments
+                if (_commentsEdit != null)
+                {
+                    _commentsEdit.Text = utm.Comment;
                 }
             }
-
-            // Comments
-            if (_commentsEdit != null)
+            finally
             {
-                _commentsEdit.Text = utm.Comment;
+                _loadingUtm = false;
             }
 
             PopulateScriptComboBoxes();
@@ -463,7 +538,7 @@ namespace OdyTools.Editors
                 utm.MarkDown = 0;
             }
             // Python always reads from UI, even if empty (creates blank ResRef)
-            utm.OnOpenScript = _onOpenEdit != null ? new ResRef(_onOpenEdit.Text ?? "") : utm.OnOpenScript;
+            utm.OnOpenScript = _onOpenEdit != null ? ResRefFromText(_onOpenEdit.Text) : utm.OnOpenScript;
 
             // Python always reads from UI without null checks - currentIndex() returns -1 if nothing selected
             // In Avalonia, SelectedIndex can be 0 (first item), so we need to check for >= 0, not > 0
@@ -483,8 +558,21 @@ namespace OdyTools.Editors
             // Build GFF
             var game = _installation?.Game ?? Game.K2;
             var gff = UTMHelpers.DismantleUtm(utm, game);
-            byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTM);
+            ResourceType outputType = _restype == ResourceType.UTM_XML || _restype == ResourceType.UTM_JSON
+                ? _restype
+                : (_restype == ResourceType.BTM ? ResourceType.BTM : ResourceType.UTM);
+            if (outputType == ResourceType.BTM)
+            {
+                gff.Content = GFFContent.BTM;
+            }
+            byte[] data = GFFAuto.BytesGff(gff, outputType);
             return Tuple.Create(data, new byte[0]);
+        }
+
+        private static ResRef ResRefFromText(string text)
+        {
+            string value = (text ?? string.Empty).Trim();
+            return !string.IsNullOrEmpty(value) ? new ResRef(value) : new ResRef("");
         }
 
         private UTM CopyUTM(UTM source)
@@ -583,9 +671,23 @@ namespace OdyTools.Editors
 
         private void OpenInventory()
         {
-            if (_installation == null) return;
+            if (_utm == null) return;
 
+            var inventoryEditor = CreateInventoryDialog(BuildInventoryCapsules());
+
+            if (inventoryEditor.ShowDialog())
+            {
+                ApplyInventoryResult(inventoryEditor.Inventory);
+            }
+        }
+
+        private List<Capsule> BuildInventoryCapsules()
+        {
             var capsules = new List<Capsule>();
+            if (_installation == null)
+            {
+                return capsules;
+            }
 
             try
             {
@@ -633,17 +735,25 @@ namespace OdyTools.Editors
                 System.Console.WriteLine($"Exception suppressed: {ex.Message}");
             }
 
+            return capsules;
+        }
+
+        private InventoryDialog CreateInventoryDialog(List<Capsule> capsules)
+        {
             // Convert UTMItem list to InventoryItem list for the dialog
             var inventoryItems = new List<InventoryItem>();
             foreach (var utmItem in _utm.Items)
             {
-                inventoryItems.Add(new InventoryItem(utmItem.ResRef));
+                inventoryItems.Add(new InventoryItem(
+                    utmItem.ResRef,
+                    droppable: utmItem.Droppable != 0,
+                    infinite: utmItem.Infinite != 0));
             }
 
-            var inventoryEditor = new InventoryDialog(
+            return new InventoryDialog(
                 this,
                 _installation,
-                capsules,
+                capsules ?? new List<Capsule>(),
                 new List<string>(), // folders parameter
                 inventoryItems,
                 new Dictionary<EquipmentSlot, InventoryItem>(), // equipment parameter
@@ -651,23 +761,40 @@ namespace OdyTools.Editors
                 hideEquipment: true,
                 isStore: true
             );
+        }
 
-            if (inventoryEditor.ShowDialog())
+        internal InventoryDialog CreateInventoryDialogForTest()
+        {
+            return CreateInventoryDialog(new List<Capsule>());
+        }
+
+        internal bool CanOpenInventoryWithoutInstallationForTest()
+        {
+            return _installation == null && _utm != null && BuildInventoryCapsules().Count == 0;
+        }
+
+        internal void ApplyInventoryResult(List<InventoryItem> inventory)
+        {
+            if (_utm == null)
             {
-                // Convert InventoryItem list back to UTMItem list
-                _utm.Items.Clear();
-                if (inventoryEditor.Inventory != null)
+                return;
+            }
+
+            _utm.Items.Clear();
+            if (inventory != null)
+            {
+                foreach (var invItem in inventory)
                 {
-                    foreach (var invItem in inventoryEditor.Inventory)
+                    _utm.Items.Add(new UTMItem
                     {
-                        var utmItem = new UTMItem
-                        {
-                            ResRef = invItem.ResRef
-                        };
-                        _utm.Items.Add(utmItem);
-                    }
+                        ResRef = invItem.ResRef,
+                        Infinite = invItem.Infinite ? 1 : 0,
+                        Droppable = invItem.Droppable ? 1 : 0
+                    });
                 }
             }
+
+            MarkDocumentDirty();
         }
 
         public override void SaveAs()

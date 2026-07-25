@@ -34,13 +34,63 @@
     <Compile Remove="Editors\Standalone\OdyTool2DA\**" />
     <Compile Remove="Dialogs\InsertInstanceDialog.axaml.cs" />
   </ItemGroup>
-  <!-- Use default AvaloniaXaml; remove main app and per-editor standalone XAML (no code-behind in this build) -->
+  <!-- Keep the unified standalone XAML set explicit. Default Avalonia globbing
+       also picks up main-app and dialog/theme XAML whose backing types are
+       intentionally excluded from this launcher project. -->
   <ItemGroup>
-    <AvaloniaXaml Remove="App.axaml" />
-    <AvaloniaXaml Remove="**\App.axaml" />
-    <AvaloniaXaml Remove="Editors\Standalone\OdyTool2DA\**" />
-    <AvaloniaXaml Remove="Dialogs\InsertInstanceDialog.axaml" />
-    <AvaloniaXaml Remove="Themes\MonacoTheme.axaml" />
+    <AvaloniaXaml Remove="**/*.axaml" />
+    <AvaloniaXaml Remove="**\*.axaml" />
+    <AvaloniaXaml Include="Editors/Standalone/EditorStandaloneHost/EditorStandaloneApp.axaml" />
+    <AvaloniaXaml Include="Editors/OdyTool2DA.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolARE.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolBWM.axaml" />
+    <AvaloniaXaml Include="Editors/DLG/OdyToolDLG.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolERF.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolFAC.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolGFF.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolGIT.axaml" />
+    <AvaloniaXaml Include="Editors/GUI/OdyToolGUI.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolIFO.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolJRL.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolLIP.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolLTR.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolLYT.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolMDL.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolNSS.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolPTH.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolSAV.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolSSF.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolTLK.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolTPC.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolTXT.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolUTC.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolUTC_ScriptsTab.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolUTD.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolUTE.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolUTI.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolUTM.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolUTP.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolUTS.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolUTT.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolUTW.axaml" />
+    <AvaloniaXaml Include="Editors/OdyToolWAV.axaml" />
+    <AvaloniaXaml Include="Dialogs/ColorPickerDialog.axaml" />
+    <AvaloniaXaml Include="Dialogs/DLGSettingsDialog.axaml" />
+    <AvaloniaXaml Include="Dialogs/EditorHelpDialog.axaml" />
+    <AvaloniaXaml Include="Dialogs/ExtractOptionsDialog.axaml" />
+    <AvaloniaXaml Include="Dialogs/FileResultsDialog.axaml" />
+    <AvaloniaXaml Include="Dialogs/LoadFromModuleDialog.axaml" />
+    <AvaloniaXaml Include="Dialogs/LocalizedStringDialog.axaml" />
+    <AvaloniaXaml Include="Dialogs/PropertyEditorDialog.axaml" />
+    <AvaloniaXaml Include="Dialogs/UTCSettingsDialog.axaml" />
+    <AvaloniaXaml Include="Dialogs/Edit/DialogAnimationDialog.axaml" />
+    <AvaloniaXaml Include="Dialogs/Edit/DialogModelDialog.axaml" />
+    <AvaloniaXaml Include="Widgets/Edit/ColorEdit.axaml" />
+    <AvaloniaXaml Include="Widgets/Edit/ComboBox2DA.axaml" />
+    <AvaloniaXaml Include="Widgets/Edit/GFFFieldSpinBox.axaml" />
+    <AvaloniaXaml Include="Widgets/LocalizedStringEdit.axaml" />
+    <AvaloniaXaml Include="Widgets/MediaPlayerWidget.axaml" />
+    <AvaloniaXaml Include="Widgets/Settings/InstallationsWidget.axaml" />
   </ItemGroup>
   <!-- OutputType -->
   <PropertyGroup Condition="'$(RuntimeIdentifier)'=='' OR $(RuntimeIdentifier.StartsWith('win'))">

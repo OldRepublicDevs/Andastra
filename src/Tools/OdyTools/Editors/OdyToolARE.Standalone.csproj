@@ -13,6 +13,7 @@
     <Compile Include="$(_OdyToolsRoot)\Widgets\LocalizedStringEdit.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\ColorPickerDialog.axaml.cs" />
     <Compile Include="$(_OdyToolsRoot)\Dialogs\LocalizedStringDialog.axaml.cs" />
+    <Compile Include="$(_OdyToolsRoot)\Dialogs\ResourceLocationDialog.cs" />
     <Compile Include="Editor.cs" />
     <Compile Include="EditorHelpers.cs" />
     <Compile Include="EditorWikiMapping.cs" />

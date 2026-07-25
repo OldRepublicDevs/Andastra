@@ -216,6 +216,117 @@ namespace OdyTools.Data
             SetValue("Installations", installations);
         }
 
+        public string AddOrUpdateInstallation(string desiredName, string path, bool tsl)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return null;
+            }
+
+            string resolvedPath;
+            try
+            {
+                resolvedPath = System.IO.Path.GetFullPath(path);
+            }
+            catch
+            {
+                resolvedPath = path.Trim();
+            }
+
+            var installations = Installations() ?? new Dictionary<string, Dictionary<string, object>>();
+            foreach (var kvp in installations)
+            {
+                var existingPath = ReadInstallationPath(kvp.Value);
+                if (PathsEqual(existingPath, resolvedPath))
+                {
+                    kvp.Value["name"] = kvp.Key;
+                    kvp.Value["path"] = resolvedPath;
+                    kvp.Value["tsl"] = tsl;
+                    SetInstallations(installations);
+                    return kvp.Key;
+                }
+            }
+
+            var name = MakeUniqueInstallationName(installations, desiredName, resolvedPath);
+            installations[name] = new Dictionary<string, object>
+            {
+                { "name", name },
+                { "path", resolvedPath },
+                { "tsl", tsl }
+            };
+            SetInstallations(installations);
+            return name;
+        }
+
+        private static string ReadInstallationPath(Dictionary<string, object> data)
+        {
+            if (data == null || !data.ContainsKey("path"))
+            {
+                return null;
+            }
+
+            return data["path"]?.ToString();
+        }
+
+        private static bool PathsEqual(string left, string right)
+        {
+            if (string.IsNullOrWhiteSpace(left) || string.IsNullOrWhiteSpace(right))
+            {
+                return false;
+            }
+
+            try
+            {
+                left = System.IO.Path.GetFullPath(left);
+            }
+            catch
+            {
+                left = left.Trim();
+            }
+
+            try
+            {
+                right = System.IO.Path.GetFullPath(right);
+            }
+            catch
+            {
+                right = right.Trim();
+            }
+
+            return string.Equals(left, right, StringComparison.Ordinal);
+        }
+
+        private static string MakeUniqueInstallationName(
+            Dictionary<string, Dictionary<string, object>> installations,
+            string desiredName,
+            string path)
+        {
+            var name = string.IsNullOrWhiteSpace(desiredName)
+                ? System.IO.Path.GetFileName(path.TrimEnd(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar))
+                : desiredName.Trim();
+
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                name = "Installation";
+            }
+
+            if (!installations.ContainsKey(name))
+            {
+                return name;
+            }
+
+            var index = 2;
+            string candidate;
+            do
+            {
+                candidate = name + " " + index;
+                index++;
+            }
+            while (installations.ContainsKey(candidate));
+
+            return candidate;
+        }
+
         /// <summary>
         /// Calls PathTools.FindKotorPathsFromDefault(), builds installation entries for any found paths,
         /// and merges them into the current installations (existing names are not overwritten).

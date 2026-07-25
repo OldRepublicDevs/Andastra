@@ -4,7 +4,7 @@ Editor tests for OdyTools, mirroring the Python editor tests under `PyKotor/Tool
 
 ## Editor coverage
 
-- **TPC, TXT, UTC, UTD, UTE, UTI, UTM, UTP, UTS, UTT, UTW** – TPC/TXT/UT*/WAV/2DA/… via dedicated or GFF-based tests  
+- **TPC, TXT, UTC, UTD, UTE, UTI, UTM, UTP, UTS, UTT, UTW** – TPC common image imports/build format selection plus TXT/UT*/WAV/2DA/… via dedicated or GFF-based tests  
 - **WAV, 2DA, ARE, BWM, DLG, ERF, GFF, GIT, IFO, JRL, LIP, LTR, MDL, NSS, PTH, save, SSF, TLK** – covered by `*EditorTests.cs` and `GFFBasedEditorTests.cs`
 
 **Test classes:** `OdyToolBWMTests`, `OdyToolDLGTests`, `OdyToolERFTests`, `OdyToolFACTests`, `OdyToolGFFTests`, `OdyToolGFFBasedTests` (UTC, UTD, UTE, UTI, UTM, UTP, UTS, UTT, UTW, ARE, GIT, IFO, JRL, PTH), `OdyToolLIPTests`, `OdyToolLTRTests`, `OdyToolMDLTests`, `OdyToolNSSTests`, `OdyToolSAVTests`, `OdyToolSSFTests`, `OdyToolTLKTests`, `OdyToolTPCTests`, `OdyTool2DATests`, `OdyToolTXTTests`, `OdyToolWAVTests`, `ReferenceFinderTests`, `ScriptsDisassemblyTests`, `IndoorMapBuildTests`, `IndoorMapBuildWalkmeshTests`, `IndoorMapIoTests`, `IndoorMapWindowFileOpsTests`.
@@ -13,30 +13,13 @@ Tests use **Avalonia headless** (`HeadlessUnitTestSession.StartNew(typeof(TestAp
 
 ### Test counts and timeouts
 
-- **39 tests** run by default. **4 tests** are marked **Explicit** and skipped unless run by name or with explicit filter.
+- The default suite runs the broad OdyTools editor coverage. No OdyTools editor tests are marked **Explicit**.
 - **Full default run** can take **about 15–25 minutes** (NSS and SSF editors are slow in headless). Do not set an overly low run timeout.
 - Per-test timeouts:
   - **NSS:** 90 s (two tests), 120 s (one test).
   - **SSF:** 180 s (LoadAndBuild), 120 s (New), 90 s (LoadEmpty).
-  - **GFF-based:** 60 s most; 120 s for IFO, UTD, UTP (those three are Explicit).
-  - **JRL** (Explicit): 60 s.
-
-### Explicit tests (skipped by default)
-
-| Test | Reason |
-|------|--------|
-| **OdyToolIFO_LoadMinimalGff_BuildsValidGff** | Editor init exceeds ~2 min in headless. |
-| **OdyToolUTD_LoadMinimalGff_BuildsValidGff** | Same. |
-| **OdyToolUTP_LoadMinimalGff_BuildsValidGff** | Same. |
-| **OdyToolJRL_LoadMinimalGff_BuildsValidGff** | `HeadlessUnitTestSession.Dispose()` throws NRE after this editor. |
-
-To run an explicit test from the command line, use the test name in the filter and enable explicit runs, e.g.:
-
-```bash
-dotnet test "tests\OdyTools.Tests\OdyTools.Tests.csproj" --filter "FullyQualifiedName~OdyToolIFO_LoadMinimalGff" -c Debug --no-build -- NUnit.RunConfiguration.ExplicitlyRunExplicitTests=true
-```
-
-(Or run them from Test Explorer by selecting the test.)
+  - **GFF-based:** 60 s most; 120 s for IFO, UTD, UTP.
+  - **Structured IFO/JRL field-edit tests:** 120-180 s.
 
 ## Running tests
 

@@ -14,13 +14,13 @@ What follows is an exhaustive list of features and improvements that would bring
 
 - **Pre-existing empty grid on New:** New documents should always open with at least one data column and one row so the user can click a cell and type immediately, with no need to open a file or use menus. Row label column (#) and one data column (e.g. “Column1”) and one empty row is the minimum. This has been implemented.
 - **Empty-state overlay only when truly empty:** When the document has zero rows (e.g. after opening an empty file), show a short overlay message (“No rows — add rows or open a file”) so the grid area never looks like an unexplained void, but the overlay should not appear when there is at least one row.
-- **Starter template option:** Optional “New from template” (e.g. empty 10×5 grid, or game-specific 2DA templates like appearance.2da structure) so power users can start from a known shape.
+- **Starter template option:** “New 10x5 Grid” is available from the File menu so power users can start from a larger known sheet shape. Game-specific templates such as appearance.2da remain optional future work.
 
 ### 2. Grid Interaction and Navigation
 
 - **Click-to-edit and in-cell editing:** Single click selects the cell; double-click or F2 enters in-cell edit mode with cursor in the cell; Escape cancels, Enter commits and moves down. The formula bar should stay in sync and support editing the same value.
 - **Arrow-key and Tab navigation:** Arrow keys and Tab/Shift+Tab move selection and commit any pending edit; wrap at edges (optional) and support “Enter moves down” vs “Enter stays in cell” as a preference.
-- **Go To Cell (e.g. Ctrl+G):** Dialog or quick-jump to row index and/or column name (e.g. “R5, name”) for large tables.
+- **Go To Cell (e.g. Ctrl+G):** Dialog or quick-jump to row index and/or column name (e.g. “R5, name”) for large tables. This has been implemented; row-only input remains supported.
 - **Extended selection with Shift+Click and Ctrl+Click:** Rectangular range selection (e.g. click cell A1, Shift+click cell C5 selects the block); Ctrl+Click adds disjoint cells or rows to selection for bulk operations.
 - **Column and row header selection:** Clicking column header selects entire column; clicking row header (#) selects entire row; corner cell could select all. This enables “Select Column” and “Select Row” in a discoverable way.
 - **Visible focus and selection styling:** Clear focus rectangle and distinct background for selected cell(s) and selected row/column headers so keyboard and mouse users always see where they are.
@@ -54,8 +54,8 @@ What follows is an exhaustive list of features and improvements that would bring
 
 ### 6. Find, Replace, and Filter
 
-- **Find (Ctrl+F):** Find dialog: search in current column, all columns, or row labels; match case, whole cell; next/previous; highlight all matches.
-- **Replace (Ctrl+H):** Replace one, replace all in selection or in sheet; optional regex for advanced users.
+- **Find (Ctrl+F):** Find dialog supports all-column search, row-label search, current-column search, match case, whole-cell mode, regex mode, next/previous navigation, and highlight-all match collection.
+- **Replace (Ctrl+H):** Replace one and replace all now support sheet-wide replacement, active-range/selected-row replacement, and regex replacement for advanced users.
 - **Row filter:** Already present (filter by text); extend with “filter by column” dropdown (e.g. show only rows where column “race” equals “Human”) and clear filter button.
 - **Filter by multiple columns (optional):** AND/OR conditions per column for expert users.
 - **Sort:** Already present (A–Z, Z–A by current column); add “Sort by multiple columns” (e.g. sort by column A, then by column B) and “Restore original order” if we keep a hidden row index.
@@ -117,12 +117,12 @@ What follows is an exhaustive list of features and improvements that would bring
 | Grid | In-cell editing (double-click / F2) | High |
 | Grid | Shift+Click range, Ctrl+Click multi-select | High |
 | Grid | Column/row header click selects entire column/row | High |
-| Clipboard | Paste over range, paste special options | Medium |
+| Clipboard | Paste over range, paste transposed, paste by header | Done |
 | Rows/Columns | Insert N rows, column resize persist | Medium |
-| Find/Replace | Find in column, replace all, regex option | Medium |
+| Find/Replace | Find in row labels/columns, whole-cell find, previous find, highlight all, replace all, selected-range replace, regex option | Done |
 | Accessibility | Full keyboard + shortcuts list + screen reader | High |
 | Status | Dirty indicator, “N rows hidden” | Low |
-| 2DA-specific | Column templates, ResRef validation | Low |
+| 2DA-specific | ResRef validation done; column templates remain | Low |
 | Performance | Virtualized grid for large 2DAs | Medium |
 
 Implementing the high-priority items above would make the 2DA Editor robust, intuitive, and accessible for both quick data entry and expert table editing, with the main area always offering a real, clickable, typable spreadsheet from the start.

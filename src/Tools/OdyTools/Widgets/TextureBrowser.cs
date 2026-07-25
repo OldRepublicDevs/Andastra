@@ -25,6 +25,7 @@ namespace OdyTools.Widgets
     public class TextureBrowser : UserControl
     {
         private ListBox _textureList;
+        private TextBlock _statusLabel;
         private Dictionary<string, string> _textures; // Maps texture name to file path
         private string _selectedTexture;
 
@@ -181,7 +182,7 @@ namespace OdyTools.Widgets
             mainPanel.Children.Add(_textureList);
 
             // Create status label
-            var statusLabel = new TextBlock
+            _statusLabel = new TextBlock
             {
                 Name = "statusLabel",
                 Text = "No textures imported",
@@ -189,7 +190,7 @@ namespace OdyTools.Widgets
                 Foreground = new SolidColorBrush(Color.FromRgb(150, 150, 150)),
                 Margin = new Thickness(0, 4, 0, 0)
             };
-            mainPanel.Children.Add(statusLabel);
+            mainPanel.Children.Add(_statusLabel);
 
             Content = mainPanel;
         }
@@ -300,21 +301,19 @@ namespace OdyTools.Widgets
 
             _textureList.ItemsSource = textureNames;
 
-            // Update status label
-            var statusLabel = this.FindControl<TextBlock>("statusLabel");
-            if (statusLabel != null)
+            if (_statusLabel != null)
             {
                 if (textureNames.Count == 0)
                 {
-                    statusLabel.Text = "No textures imported";
+                    _statusLabel.Text = "No textures imported";
                 }
                 else if (textureNames.Count == 1)
                 {
-                    statusLabel.Text = "1 texture available";
+                    _statusLabel.Text = "1 texture available";
                 }
                 else
                 {
-                    statusLabel.Text = $"{textureNames.Count} textures available";
+                    _statusLabel.Text = $"{textureNames.Count} textures available";
                 }
             }
         }

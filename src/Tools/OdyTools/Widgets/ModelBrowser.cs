@@ -24,6 +24,7 @@ namespace OdyTools.Widgets
     public class ModelBrowser : UserControl
     {
         private ListBox _modelList;
+        private TextBlock _statusLabel;
         private Dictionary<string, string> _models; // Maps model name to file path
         private string _selectedModel;
 
@@ -180,7 +181,7 @@ namespace OdyTools.Widgets
             mainPanel.Children.Add(_modelList);
 
             // Create status label
-            var statusLabel = new TextBlock
+            _statusLabel = new TextBlock
             {
                 Name = "statusLabel",
                 Text = "No models imported",
@@ -188,7 +189,7 @@ namespace OdyTools.Widgets
                 Foreground = new SolidColorBrush(Color.FromRgb(150, 150, 150)),
                 Margin = new Thickness(0, 4, 0, 0)
             };
-            mainPanel.Children.Add(statusLabel);
+            mainPanel.Children.Add(_statusLabel);
 
             Content = mainPanel;
         }
@@ -299,21 +300,19 @@ namespace OdyTools.Widgets
 
             _modelList.ItemsSource = modelNames;
 
-            // Update status label
-            var statusLabel = this.FindControl<TextBlock>("statusLabel");
-            if (statusLabel != null)
+            if (_statusLabel != null)
             {
                 if (modelNames.Count == 0)
                 {
-                    statusLabel.Text = "No models imported";
+                    _statusLabel.Text = "No models imported";
                 }
                 else if (modelNames.Count == 1)
                 {
-                    statusLabel.Text = "1 model available";
+                    _statusLabel.Text = "1 model available";
                 }
                 else
                 {
-                    statusLabel.Text = $"{modelNames.Count} models available";
+                    _statusLabel.Text = $"{modelNames.Count} models available";
                 }
             }
         }
@@ -356,4 +355,3 @@ namespace OdyTools.Widgets
         }
     }
 }
-
